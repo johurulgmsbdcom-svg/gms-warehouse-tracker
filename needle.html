@@ -53,41 +53,73 @@
 <td id="totalBalance">0</td>
 </tr>
 </tfoot>
-
 </table>
 
 <script>
 
-// 🔥 FULL 82 ITEM LIST
 const items = [
-["DBX1",7,25],["DBX1",8,1],["DBX1-KN",8,0],["DBX1-NS",8,0],
-["DBX1",9,32],["DBX1-KN",9,0],["DBX1-NS","8LP",0],
-["DBX1-SF","9B",0], // SL 8 added
-["DBX1-SF","9B",0],["DBXK5-KK","9B",0],
-["DBX1",10,8],["DBX1-KN",10,0],["DBX1",11,1],
-["DBX1","12SPI",0],["DBX1",12,12],["DBX1",14,22],
-["DBXK5-KK","9S",0],["DBX1","12SPD",0],
-["DCX1",7,23],["DCX1",8,0],["DCX1-KN",8,1],
-["DCX1",9,15],["DCX1-SF","9LP",0],["DCX1-NS",8,0],
-["DCX1",10,9],["DCX1",11,34],["DCX1",12,4],
-["DCX1",14,0],["UYX128",7,15],["UYX128-KN",8,7],
-["UYX128",9,19],["UYX128","9SPD",0],["UYX128-KN",9,0],
-["UYX128-KK-KN",9,0],["UYX128-KK",7,0],
-["UYX128",10,46],["UYX128-KN","10PD",0],
-["UY128-NY2","10SPD",0],["UYX128",11,2],
-["UYX128","11SPD",0],["UYX128-KN",11,0],
-["UYX128-KN","11PD",0],["UYX128",12,1],
-["UY128++GAS",12,0],["UYX128",14,35],
-["DPX5-NS",8,0],["UY/UOX113",9,16],
-["UY/UOX113",11,21],["UY/UOX113",14,30],
-["DVX57",12,22],["DPX5",9,11],
-["DPX5","10SPD",20],["DPX5",11,10],
-["DPX5","9SLP",0],["DPX5",12,17],
-["DPX5","12SPD",30],["DPX5","14SPD",0],
-["DPX5",14,39],["DPX17",9,8],["DPX17",11,9]
+["DBX1",7,25],
+["DBX1",8,1],
+["DBX1-KN",8,0],
+["DBX1-NS",8,0],
+["DBX1",9,32],
+["DBX1-KN",9,0],
+["DBX1-NS","8LP",0],
+["DBX1-SF","9B",0],
+["DBX1-SF","9B",0],
+["DBXK5-KK","9B",0],
+["DBX1",10,8],
+["DBX1-KN",10,0],
+["DBX1",11,1],
+["DBX1","12SPI",0],
+["DBX1",12,12],
+["DBX1",14,22],
+["DBXK5-KK","9S",0],
+["DBX1","12SPD",0],
+["DCX1",7,23],
+["DCX1",8,0],
+["DCX1-KN",8,1],
+["DCX1",9,15],
+["DCX1-SF","9LP",0],
+["DCX1-NS",8,0],
+["DCX1",10,9],
+["DCX1",11,34],
+["DCX1",12,4],
+["DCX1",14,0],
+["UYX128",7,15],
+["UYX128-KN",8,7],
+["UYX128",9,19],
+["UYX128","9SPD",0],
+["UYX128-KN",9,0],
+["UYX128-KK-KN",9,0],
+["UYX128-KK",7,0],
+["UYX128",10,46],
+["UYX128-KN","10PD",0],
+["UY128-NY2","10SPD",0],
+["UYX128",11,2],
+["UYX128","11SPD",0],
+["UYX128-KN",11,0],
+["UYX128-KN","11PD",0],
+["UYX128",12,1],
+["UY128++GAS",12,0],
+["UYX128",14,35],
+["DPX5-NS",8,0],
+["UY/UOX113",9,16],
+["UY/UOX113",11,21],
+["UY/UOX113",14,30],
+["DVX57",12,22],
+["DPX5",9,11],
+["DPX5","10SPD",20],
+["DPX5",11,10],
+["DPX5","9SLP",0],
+["DPX5",12,17],
+["DPX5","12SPD",30],
+["DPX5","14SPD",0],
+["DPX5",14,39],
+["DPX17",9,8],
+["DPX17",11,9]
 ];
 
-// 🔥 LOAD TABLE
 function loadTable(){
 let html="";
 items.forEach((item,i)=>{
@@ -104,19 +136,17 @@ html+=`
 `;
 });
 document.getElementById("tableBody").innerHTML=html;
+updateTotal();
 }
 
-// 🔥 CALCULATION
 function calc(i){
 let p=Number(document.getElementById("p"+i).innerText)||0;
 let r=Number(document.getElementById("r"+i).value)||0;
 let d=Number(document.getElementById("d"+i).value)||0;
-
 document.getElementById("b"+i).innerText=p+r-d;
 updateTotal();
 }
 
-// 🔥 TOTAL CALCULATION
 function updateTotal(){
 let totalPrevious=0;
 let totalReceive=0;
@@ -124,10 +154,10 @@ let totalDelivery=0;
 let totalBalance=0;
 
 for(let i=0;i<items.length;i++){
-totalPrevious+=Number(document.getElementById("p"+i).innerText)||0;
-totalReceive+=Number(document.getElementById("r"+i).value)||0;
-totalDelivery+=Number(document.getElementById("d"+i).value)||0;
-totalBalance+=Number(document.getElementById("b"+i).innerText)||0;
+totalPrevious += Number(document.getElementById("p"+i).innerText)||0;
+totalReceive += Number(document.getElementById("r"+i).value)||0;
+totalDelivery += Number(document.getElementById("d"+i).value)||0;
+totalBalance += Number(document.getElementById("b"+i).innerText)||0;
 }
 
 document.getElementById("totalPrevious").innerText=totalPrevious;
@@ -136,9 +166,7 @@ document.getElementById("totalDelivery").innerText=totalDelivery;
 document.getElementById("totalBalance").innerText=totalBalance;
 }
 
-// START
 loadTable();
-updateTotal();
 
 </script>
 
