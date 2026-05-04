@@ -10,120 +10,109 @@
 
 <div style="text-align:center; margin-bottom:20px;">
   <label>Date:</label>
-  <input type="date" id="postDate" style="padding:5px;">
+  <input type="date" id="postDate">
 
   <label style="margin-left:20px;">Floor:</label>
-  <select id="floor" style="padding:5px;">
-    <option value="Kadom R">Kadom R</option>
-    <option value="Kadom N">Kadom N</option>
-    <option value="Shapla R">Shapla R</option>
-    <option value="Shapla N">Shapla N</option>
-    <option value="Poddo R">Poddo R</option>
-    <option value="Poddo N">Poddo N</option>
-    <option value="Belly R">Belly R</option>
-    <option value="Belly N">Belly N</option>
-    <option value="Sample R">Sample R</option>
-    <option value="Sample N">Sample N</option>
-    <option value="EMBROIDERY R">EMBROIDERY R</option>
-    <option value="EMBROIDERY N">EMBROIDERY N</option>
+  <select id="floor">
+    <option>Kadom R</option>
+    <option>Kadom N</option>
+    <option>Shapla R</option>
+    <option>Shapla N</option>
+    <option>Poddo R</option>
+    <option>Poddo N</option>
+    <option>Belly R</option>
+    <option>Belly N</option>
+    <option>Sample R</option>
+    <option>Sample N</option>
+    <option>EMBROIDERY R</option>
+    <option>EMBROIDERY N</option>
   </select>
 </div>
 
-<table border="1" style="width:90%; margin:auto; text-align:center; border-collapse:collapse;">
-  <tr style="background:#1e293b;">
-    <th>Needle Type</th>
-    <th>Size</th>
-    <th>Previous</th>
-    <th>Receive</th>
-    <th>Delivery</th>
-    <th>Balance</th>
-  </tr>
+<table border="1" style="width:95%; margin:auto; text-align:center;">
+  <thead style="background:#1e293b;">
+    <tr>
+      <th>Needle Type</th>
+      <th>Size</th>
+      <th>Previous</th>
+      <th>Receive</th>
+      <th>Delivery</th>
+      <th>Balance</th>
+    </tr>
+  </thead>
 
-  <tr>
-    <td>DBX1</td>
-    <td>7</td>
-    <td id="p1">13</td>
-    <td><input type="number" id="r1" oninput="calculate()"></td>
-    <td><input type="number" id="d1" oninput="calculate()"></td>
-    <td id="b1">13</td>
-  </tr>
-
-  <tr>
-    <td>DBX1</td>
-    <td>8</td>
-    <td id="p2">3</td>
-    <td><input type="number" id="r2" oninput="calculate()"></td>
-    <td><input type="number" id="d2" oninput="calculate()"></td>
-    <td id="b2">3</td>
-  </tr>
-
-  <tr>
-    <td>DBX1</td>
-    <td>9</td>
-    <td id="p3">20</td>
-    <td><input type="number" id="r3" oninput="calculate()"></td>
-    <td><input type="number" id="d3" oninput="calculate()"></td>
-    <td id="b3">20</td>
-  </tr>
-
-  <tr>
-    <td>DBX1-KN</td>
-    <td>9</td>
-    <td id="p4">51</td>
-    <td><input type="number" id="r4" oninput="calculate()"></td>
-    <td><input type="number" id="d4" oninput="calculate()"></td>
-    <td id="b4">51</td>
-  </tr>
-
-  <tr>
-    <td>DBX1-KN</td>
-    <td>09PD</td>
-    <td id="p5">66</td>
-    <td><input type="number" id="r5" oninput="calculate()"></td>
-    <td><input type="number" id="d5" oninput="calculate()"></td>
-    <td id="b5">66</td>
-  </tr>
+  <tbody id="tableBody"></tbody>
 </table>
 
 <br>
 
 <div style="text-align:center;">
-  <button onclick="calculate()" style="padding:8px 18px;">Calculate</button>
-
-  <button onclick="submitData()" style="padding:8px 18px; background:green; color:white; margin-left:10px;">
+  <button onclick="submitData()" style="padding:10px 20px; background:green; color:white;">
     Submit
-  </button>
-
-  <br><br>
-
-  <button onclick="window.location.href='index.html'" style="padding:8px 18px;">
-    Back Home
   </button>
 </div>
 
 <script>
-function calculate(){
-  for(let i = 1; i <= 5; i++){
-    let previous = Number(document.getElementById("p" + i).innerText) || 0;
-    let receive = Number(document.getElementById("r" + i).value) || 0;
-    let delivery = Number(document.getElementById("d" + i).value) || 0;
 
-    let balance = previous + receive - delivery;
-    document.getElementById("b" + i).innerText = balance;
-  }
+// 🔥 ALL ITEM LIST (তোমার Excel থেকে)
+const items = [
+["DBX1",7,25],["DBX1",8,1],["DBX1-KN",8,0],["DBX1-NS",8,0],
+["DBX1",9,32],["DBX1-KN",9,0],["DBX1-NS","8LP",0],
+["DBX1-SF","9B",0],["DBXK5-KK","9B",0],["DBX1",10,8],
+["DBX1-KN",10,0],["DBX1",11,1],["DBX1","12SPI",0],
+["DBX1",12,12],["DBX1",14,22],["DBXK5-KK","9S",0],
+["DBX1","12SPD",0],["DCX1",7,23],["DCX1",8,0],
+["DCX1-KN",8,1],["DCX1",9,15],["DCX1-SF","9LP",0],
+["DCX1-NS",8,0],["DCX1",10,9],["DCX1",11,34],
+["DCX1",12,4],["DCX1",14,0],["UYX128",7,15],
+["UYX128-KN",8,7],["UYX128",9,19],["UYX128","9SPD",0],
+["UYX128-KN",9,0],["UYX128-KK-KN",9,0],["UYX128-KK",7,0],
+["UYX128",10,46],["UYX128-KN","10PD",0],["UY128-NY2","10SPD",0],
+["UYX128",11,2],["UYX128","11SPD",0],["UYX128-KN",11,0],
+["UYX128-KN","11PD",0],["UYX128",12,1],["UY128++GAS",12,0],
+["UYX128",14,35],["DPX5-NS",8,0],["UY/UOX113",9,16],
+["UY/UOX113",11,21],["UY/UOX113",14,30],["DVX57",12,22],
+["DPX5",9,11],["DPX5","10SPD",20],["DPX5",11,10],
+["DPX5","9SLP",0],["DPX5",12,17],["DPX5","12SPD",30],
+["DPX5","14SPD",0],["DPX5",14,39],["DPX17",9,8],
+["DPX17",11,9]
+];
+
+// 🔥 TABLE LOAD
+function loadTable(){
+  let html = "";
+  items.forEach((item, i)=>{
+    html += `
+      <tr>
+        <td>${item[0]}</td>
+        <td>${item[1]}</td>
+        <td id="p${i}">${item[2]}</td>
+        <td><input type="number" id="r${i}" oninput="calc(${i})"></td>
+        <td><input type="number" id="d${i}" oninput="calc(${i})"></td>
+        <td id="b${i}">${item[2]}</td>
+      </tr>
+    `;
+  });
+  document.getElementById("tableBody").innerHTML = html;
 }
 
+// 🔥 CALCULATION
+function calc(i){
+  let p = Number(document.getElementById("p"+i).innerText) || 0;
+  let r = Number(document.getElementById("r"+i).value) || 0;
+  let d = Number(document.getElementById("d"+i).value) || 0;
+
+  document.getElementById("b"+i).innerText = p + r - d;
+}
+
+// 🔥 SUBMIT (next step Firebase)
 function submitData(){
-  let date = document.getElementById("postDate").value;
-  let floor = document.getElementById("floor").value;
-
-  if(date === ""){
-    alert("Please select date");
-    return;
-  }
-
-  alert("Submitted Successfully\nDate: " + date + "\nFloor: " + floor);
+  alert("Next step: Firebase save system");
 }
+
+// LOAD ON START
+loadTable();
+
 </script>
 
 </body>
