@@ -1,29 +1,29 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Needle Posting</title>
+  <title>Needle Daily Posting</title>
 </head>
 
 <body style="background:#0f172a; color:white; font-family:Arial;">
 
 <h2 style="text-align:center;">Needle Daily Posting</h2>
+
 <div style="text-align:center; margin-bottom:20px;">
   <label>Date:</label>
-  <input type="date">
+  <input type="date" id="postDate" style="padding:5px;">
 
   <label style="margin-left:20px;">Floor:</label>
-  <select>
-   <select id="floor">
-  <option>Kadom</option>
-  <option>Shapla</option>
-  <option>Poddo</option>
-  <option>Belly</option>
-  <option>Sample</option>
-  <option>EMBROIDERY</option>
-</select>
+  <select id="floor" style="padding:5px;">
+    <option value="Kadom">Kadom</option>
+    <option value="Shapla">Shapla</option>
+    <option value="Poddo">Poddo</option>
+    <option value="Belly">Belly</option>
+    <option value="Sample">Sample</option>
+    <option value="EMBROIDERY">EMBROIDERY</option>
   </select>
 </div>
-<table border="1" style="width:80%; margin:auto; text-align:center;">
+
+<table border="1" style="width:90%; margin:auto; text-align:center; border-collapse:collapse;">
   <tr style="background:#1e293b;">
     <th>Needle Type</th>
     <th>Size</th>
@@ -36,42 +36,87 @@
   <tr>
     <td>DBX1</td>
     <td>7</td>
-    <td>13</td>
-    <td><input type="number" id="r1"></td>
-    <td><input type="number" id="d1"></td>
-    <td id="b1">0</td>
+    <td id="p1">13</td>
+    <td><input type="number" id="r1" oninput="calculate()"></td>
+    <td><input type="number" id="d1" oninput="calculate()"></td>
+    <td id="b1">13</td>
   </tr>
 
   <tr>
     <td>DBX1</td>
     <td>8</td>
-    <td>3</td>
-    <td><input type="number" id="r2"></td>
-    <td><input type="number" id="d2"></td>
-    <td id="b2">0</td>
+    <td id="p2">3</td>
+    <td><input type="number" id="r2" oninput="calculate()"></td>
+    <td><input type="number" id="d2" oninput="calculate()"></td>
+    <td id="b2">3</td>
   </tr>
 
+  <tr>
+    <td>DBX1</td>
+    <td>9</td>
+    <td id="p3">20</td>
+    <td><input type="number" id="r3" oninput="calculate()"></td>
+    <td><input type="number" id="d3" oninput="calculate()"></td>
+    <td id="b3">20</td>
+  </tr>
+
+  <tr>
+    <td>DBX1-KN</td>
+    <td>9</td>
+    <td id="p4">51</td>
+    <td><input type="number" id="r4" oninput="calculate()"></td>
+    <td><input type="number" id="d4" oninput="calculate()"></td>
+    <td id="b4">51</td>
+  </tr>
+
+  <tr>
+    <td>DBX1-KN</td>
+    <td>09PD</td>
+    <td id="p5">66</td>
+    <td><input type="number" id="r5" oninput="calculate()"></td>
+    <td><input type="number" id="d5" oninput="calculate()"></td>
+    <td id="b5">66</td>
+  </tr>
 </table>
 
-<br><br>
+<br>
 
 <div style="text-align:center;">
-  <button onclick="calculate()">Calculate</button>
+  <button onclick="calculate()" style="padding:8px 18px;">Calculate</button>
+
+  <button onclick="submitData()" style="padding:8px 18px; background:green; color:white; margin-left:10px;">
+    Submit
+  </button>
+
+  <br><br>
+
+  <button onclick="window.location.href='index.html'" style="padding:8px 18px;">
+    Back Home
+  </button>
 </div>
 
 <script>
 function calculate(){
-  let r1 = Number(document.getElementById("r1").value) || 0;
-  let d1 = Number(document.getElementById("d1").value) || 0;
-  let prev1 = 13;
+  for(let i = 1; i <= 5; i++){
+    let previous = Number(document.getElementById("p" + i).innerText) || 0;
+    let receive = Number(document.getElementById("r" + i).value) || 0;
+    let delivery = Number(document.getElementById("d" + i).value) || 0;
 
-  document.getElementById("b1").innerText = prev1 + r1 - d1;
+    let balance = previous + receive - delivery;
+    document.getElementById("b" + i).innerText = balance;
+  }
+}
 
-  let r2 = Number(document.getElementById("r2").value) || 0;
-  let d2 = Number(document.getElementById("d2").value) || 0;
-  let prev2 = 3;
+function submitData(){
+  let date = document.getElementById("postDate").value;
+  let floor = document.getElementById("floor").value;
 
-  document.getElementById("b2").innerText = prev2 + r2 - d2;
+  if(date === ""){
+    alert("Please select date");
+    return;
+  }
+
+  alert("Submitted Successfully\nDate: " + date + "\nFloor: " + floor);
 }
 </script>
 
