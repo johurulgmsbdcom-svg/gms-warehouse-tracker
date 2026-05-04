@@ -1,123 +1,131 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Needle Daily Posting</title>
+<title>Needle Daily Posting</title>
 </head>
-
-<body style="background:#0f172a; color:white; font-family:Arial;">
+<body style="background:#0f172a;color:white;font-family:Arial;">
 
 <h2 style="text-align:center;">Needle Daily Posting</h2>
 
-<div style="text-align:center; margin-bottom:20px;">
-  <label>Date:</label>
-  <input type="date" id="postDate">
+<div style="text-align:center;margin-bottom:20px;">
+Date: <input type="date" id="postDate">
 
-  <label style="margin-left:20px;">Floor:</label>
-  <select id="floor">
-    <option>Kadom R</option>
-    <option>Kadom N</option>
-    <option>Shapla R</option>
-    <option>Shapla N</option>
-    <option>Poddo R</option>
-    <option>Poddo N</option>
-    <option>Belly R</option>
-    <option>Belly N</option>
-    <option>Sample R</option>
-    <option>Sample N</option>
-    <option>EMBROIDERY R</option>
-    <option>EMBROIDERY N</option>
-  </select>
+Floor:
+<select id="floor">
+<option>Kadom R</option><option>Kadom N</option>
+<option>Shapla R</option><option>Shapla N</option>
+<option>Poddo R</option><option>Poddo N</option>
+<option>Belly R</option><option>Belly N</option>
+<option>Sample R</option><option>Sample N</option>
+<option>EMBROIDERY R</option><option>EMBROIDERY N</option>
+</select>
 </div>
 
-<table border="1" style="width:95%; margin:auto; text-align:center;">
+<table border="1" style="width:98%;margin:auto;text-align:center;border-collapse:collapse;">
 <thead style="background:#1e293b;">
 <tr>
-<th>SL</th>
-<th>Needle Type</th>
-<th>Size</th>
-<th>Previous</th>
-<th>Receive</th>
-<th>Delivery</th>
-<th>Balance</th>
+<th>SL</th><th>Needle Type</th><th>Size</th><th>Previous</th>
+<th>Receive</th><th>Delivery</th><th>Present Stock</th>
 </tr>
 </thead>
 
 <tbody id="tableBody"></tbody>
 
-<tfoot style="background:#334155; font-weight:bold;">
+<tfoot style="background:#334155;font-weight:bold;">
 <tr>
 <td colspan="3">TOTAL</td>
 <td id="totalPrevious">0</td>
 <td id="totalReceive">0</td>
 <td id="totalDelivery">0</td>
-<td id="totalBalance">0</td>
+<td id="totalPresent">0</td>
 </tr>
 </tfoot>
 </table>
 
 <script>
-
-const items = [
-["DBX1",7,25],
-["DBX1",8,1],
-["DBX1-KN",8,0],
-["DBX1-NS",8,0],
-["DBX1",9,32],
-["DBX1-KN",9,0],
-["DBX1-NS","8LP",0],
-["DBX1-SF","9B",0],
-["DBX1-SF","9B",0],
-["DBXK5-KK","9B",0],
-["DBX1",10,8],
-["DBX1-KN",10,0],
-["DBX1",11,1],
-["DBX1","12SPI",0],
-["DBX1",12,12],
-["DBX1",14,22],
-["DBXK5-KK","9S",0],
-["DBX1","12SPD",0],
-["DCX1",7,23],
-["DCX1",8,0],
-["DCX1-KN",8,1],
-["DCX1",9,15],
-["DCX1-SF","9LP",0],
-["DCX1-NS",8,0],
-["DCX1",10,9],
-["DCX1",11,34],
-["DCX1",12,4],
-["DCX1",14,0],
-["UYX128",7,15],
-["UYX128-KN",8,7],
-["UYX128",9,19],
-["UYX128","9SPD",0],
-["UYX128-KN",9,0],
-["UYX128-KK-KN",9,0],
-["UYX128-KK",7,0],
-["UYX128",10,46],
-["UYX128-KN","10PD",0],
-["UY128-NY2","10SPD",0],
-["UYX128",11,2],
-["UYX128","11SPD",0],
-["UYX128-KN",11,0],
-["UYX128-KN","11PD",0],
-["UYX128",12,1],
-["UY128++GAS",12,0],
-["UYX128",14,35],
-["DPX5-NS",8,0],
-["UY/UOX113",9,16],
-["UY/UOX113",11,21],
-["UY/UOX113",14,30],
-["DVX57",12,22],
-["DPX5",9,11],
-["DPX5","10SPD",20],
-["DPX5",11,10],
-["DPX5","9SLP",0],
-["DPX5",12,17],
-["DPX5","12SPD",30],
-["DPX5","14SPD",0],
-["DPX5",14,39],
-["DPX17",9,8],
-["DPX17",11,9]
+const items=[
+[1,"DBX1","7",25],
+[2,"DBX1","8",1],
+[3,"DBX1- KN","8",0],
+[4,"DBX1- NS","8",0],
+[5,"DBX1","9",32],
+[6,"DBX1 -KN","9",0],
+[7,"DBX1-NS","8LP",0],
+[8,"DBX1-SF","9B",0],
+[9,"DBX1 -SF","9B",0],
+[10,"DBXK5-KK","9B",0],
+[11,"DBX1","10",8],
+[12,"DBX1 KN","10",0],
+[13,"DBX1","11",1],
+[14,"DBX1","12SPI",0],
+[15,"DBX1","12",12],
+[16,"DBX1","14",22],
+[17,"DBXK5-KK","9S",0],
+[18,"DBX1","12SPD",0],
+[19,"DCX1","7",23],
+[20,"DCX1","8",0],
+[21,"DCX1- KN","8",1],
+[22,"DCX1","9",15],
+[23,"DCX1 SF","9LP",0],
+[24,"DCX1-NS","8",0],
+[25,"DCX1","10",9],
+[26,"DCX1","11",34],
+[27,"DCX1","12",4],
+[28,"DCX1","14",0],
+[29,"UYX128","7",15],
+[30,"UYX128 -KN","8",7],
+[31,"UYX128","9",19],
+[32,"UYX128","9SPD",0],
+[33,"UYX128 -KN","9",0],
+[34,"UYX128 KK- KN","9",0],
+[35,"UYX128 -KK","7",0],
+[36,"UYX128","10",46],
+[37,"UYX128 -KN","10PD",0],
+[38,"UY128-NY2","10SPD",0],
+[39,"UYX128","11",2],
+[40,"UYX128","11SPD",0],
+[41,"UYX128 -KN","11",0],
+[42,"UYX128 -KN","11PD",0],
+[43,"UYX128","12",1],
+[44,"UY128++GAS","12",0],
+[45,"UYX128","14",35],
+[46,"DPX5-NS","8",0],
+[47,"UY/UOX113","9",16],
+[48,"UY/UOX113","11",21],
+[49,"UY/UOX113","12",0],
+[50,"UY/UOX113","14",30],
+[51,"DVX57","12",22],
+[52,"DPX5","9",11],
+[53,"DPX5","10SPD",20],
+[54,"DPX5","11",10],
+[55,"DPX5","9 SLP",0],
+[56,"DPX5","12",17],
+[57,"DPX5","12SPD",30],
+[58,"DPX5","14SPD",0],
+[59,"DPX5","14",39],
+[60,"DPX17","9",8],
+[61,"DPX17","11",9],
+[62,"UYX128-KK KN","10",0],
+[63,"DPX5-KN","8",0],
+[64,"DBX1-SF","8",0],
+[65,"DBX1-NS","9",0],
+[66,"DCX1- KN","9",0],
+[67,"DPX5-NS","9",0],
+[68,"UYX128-KK","8",0],
+[69,"UOX113","11SPI",0],
+[70,"DBX1-SF","8LP",0],
+[71,"DBX1-SF","9LP",0],
+[72,"DBX1-SF","11LP",0],
+[73,"DCX1-SF","8LP",0],
+[74,"DCX1-SF","9LP",0],
+[75,"DCX1-SF","11LP",0],
+[76,"UYX128-SF","9LP",33],
+[77,"UYX128-SF","10PD",0],
+[78,"UYX128-SF","10LP",0],
+[79,"UYX128-SAN","10",20],
+[80,"UYX128-SAN","11",0],
+[81,"UYX128-SAN","12",20],
+[82,"DPX5-SF","11LP",0]
 ];
 
 function loadTable(){
@@ -125,13 +133,13 @@ let html="";
 items.forEach((item,i)=>{
 html+=`
 <tr>
-<td>${i+1}</td>
 <td>${item[0]}</td>
 <td>${item[1]}</td>
-<td id="p${i}">${item[2]}</td>
-<td><input type="number" id="r${i}" oninput="calc(${i})"></td>
-<td><input type="number" id="d${i}" oninput="calc(${i})"></td>
-<td id="b${i}">${item[2]}</td>
+<td>${item[2]}</td>
+<td id="p${i}">${item[3]}</td>
+<td><input type="number" id="r${i}" oninput="calc(${i})" style="width:70px"></td>
+<td><input type="number" id="d${i}" oninput="calc(${i})" style="width:70px"></td>
+<td id="b${i}">${item[3]}</td>
 </tr>
 `;
 });
@@ -148,26 +156,22 @@ updateTotal();
 }
 
 function updateTotal(){
-let totalPrevious=0;
-let totalReceive=0;
-let totalDelivery=0;
-let totalBalance=0;
+let totalPrevious=0,totalReceive=0,totalDelivery=0,totalPresent=0;
 
 for(let i=0;i<items.length;i++){
-totalPrevious += Number(document.getElementById("p"+i).innerText)||0;
-totalReceive += Number(document.getElementById("r"+i).value)||0;
-totalDelivery += Number(document.getElementById("d"+i).value)||0;
-totalBalance += Number(document.getElementById("b"+i).innerText)||0;
+totalPrevious+=Number(document.getElementById("p"+i).innerText)||0;
+totalReceive+=Number(document.getElementById("r"+i).value)||0;
+totalDelivery+=Number(document.getElementById("d"+i).value)||0;
+totalPresent+=Number(document.getElementById("b"+i).innerText)||0;
 }
 
 document.getElementById("totalPrevious").innerText=totalPrevious;
 document.getElementById("totalReceive").innerText=totalReceive;
 document.getElementById("totalDelivery").innerText=totalDelivery;
-document.getElementById("totalBalance").innerText=totalBalance;
+document.getElementById("totalPresent").innerText=totalPresent;
 }
 
 loadTable();
-
 </script>
 
 </body>
