@@ -915,7 +915,12 @@ if(snap.exists()){
 let x=snap.data();
 showMonthlySummary(x.opening||0,x.totalReceive||0,x.totalDelivery||0,x.present||0);
 } else {
-clearMonthlySummary();
+// Monthly data na thakle current table er opening/total show korbe
+let opening=Number(document.getElementById("totalPrevious").innerText)||0;
+let receive=Number(document.getElementById("totalReceive").innerText)||0;
+let delivery=Number(document.getElementById("totalDelivery").innerText)||0;
+let present=Number(document.getElementById("totalPresent").innerText)||0;
+showMonthlySummary(opening,receive,delivery,present);
 }
 }
 
@@ -927,7 +932,11 @@ document.getElementById("monthPresent").innerText=present;
 }
 
 function clearMonthlySummary(){
-showMonthlySummary(0,0,0,0);
+let opening=Number(document.getElementById("totalPrevious")?.innerText)||0;
+let receive=Number(document.getElementById("totalReceive")?.innerText)||0;
+let delivery=Number(document.getElementById("totalDelivery")?.innerText)||0;
+let present=Number(document.getElementById("totalPresent")?.innerText)||0;
+showMonthlySummary(opening,receive,delivery,present);
 }
 
 document.getElementById("postDate").addEventListener("change", loadData);
