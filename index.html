@@ -2,21 +2,25 @@
 <html>
 <head>
 <title>GMS MCD SYSTEM</title>
+
 <style>
 :root{
-  --bg:#0b0f19;
-  --card:#111827;
-  --nav:#020617;
+  --bg:#07111f;
+  --card:#101b2d;
+  --card2:#14233a;
   --text:#ffffff;
-  --muted:#94a3b8;
-  --border:#334155;
+  --muted:#9fb0c7;
+  --border:#263855;
   --blue:#2563eb;
+  --green:#22c55e;
+  --orange:#f59e0b;
+  --red:#ef4444;
 }
 
 body.light{
-  --bg:#f1f5f9;
+  --bg:#eef3f9;
   --card:#ffffff;
-  --nav:#e2e8f0;
+  --card2:#f8fafc;
   --text:#0f172a;
   --muted:#64748b;
   --border:#cbd5e1;
@@ -26,60 +30,194 @@ body{
   margin:0;
   background:var(--bg);
   color:var(--text);
-  font-family:Segoe UI, Arial;
+  font-family:Segoe UI,Arial,sans-serif;
 }
 
+/* HEADER */
 .header{
+  height:58px;
   background:var(--card);
-  padding:16px 24px;
-  display:flex;
-  justify-content:space-between;
-  align-items:center;
   border-bottom:1px solid var(--border);
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  padding:0 22px;
 }
 
-.logo{font-size:22px;font-weight:bold}
-.sub{font-size:12px;color:var(--muted)}
-.live{color:#22c55e;font-weight:bold;margin-right:15px}
+.logo{
+  font-size:22px;
+  font-weight:900;
+}
 
-.themeBtn{
-  padding:9px 18px;
-  background:var(--blue);
-  color:white;
-  border:0;
-  border-radius:20px;
-  cursor:pointer;
+.sub{
+  font-size:12px;
+  color:var(--muted);
+}
+
+.rightTop{
+  display:flex;
+  align-items:center;
+  gap:14px;
   font-weight:bold;
 }
 
+.live{
+  color:var(--green);
+}
+
+.themeBtn{
+  background:var(--blue);
+  color:white;
+  border:0;
+  padding:9px 18px;
+  border-radius:30px;
+  font-weight:bold;
+  cursor:pointer;
+}
+
+/* NAV */
 .nav{
   display:flex;
-  gap:10px;
-  padding:14px;
-  background:var(--nav);
+  gap:12px;
+  padding:14px 18px;
+  background:rgba(255,255,255,0.03);
   border-bottom:1px solid var(--border);
 }
 
 .nav button{
-  padding:15px 24px;
   background:var(--card);
   color:var(--text);
   border:1px solid var(--border);
-  border-radius:10px;
-  cursor:pointer;
+  padding:14px 26px;
+  border-radius:12px;
   font-size:16px;
-  font-weight:bold;
+  font-weight:800;
+  cursor:pointer;
 }
 
 .nav button:hover,
 .nav button.active{
-  background:var(--blue);
+  background:linear-gradient(135deg,#2563eb,#7c3aed);
   color:white;
 }
 
-.page{display:none;padding:22px}
-.activePage{display:block}
+/* PAGE */
+.page{
+  display:none;
+  padding:22px;
+}
 
+.activePage{
+  display:block;
+}
+
+/* DASHBOARD */
+.dashTitle{
+  font-size:26px;
+  font-weight:900;
+  margin-bottom:5px;
+}
+
+.dashSub{
+  color:var(--muted);
+  margin-bottom:20px;
+}
+
+.summaryGrid{
+  display:grid;
+  grid-template-columns:repeat(4,1fr);
+  gap:16px;
+  margin-bottom:20px;
+}
+
+.summaryCard{
+  background:linear-gradient(135deg,var(--card),var(--card2));
+  border:1px solid var(--border);
+  border-radius:18px;
+  padding:22px;
+  box-shadow:0 12px 25px rgba(0,0,0,.18);
+}
+
+.summaryCard .label{
+  color:var(--muted);
+  font-size:13px;
+  font-weight:700;
+}
+
+.summaryCard .num{
+  font-size:30px;
+  font-weight:900;
+  margin-top:8px;
+}
+
+.mainDash{
+  display:grid;
+  grid-template-columns:2fr 1fr;
+  gap:18px;
+}
+
+.panel{
+  background:linear-gradient(135deg,var(--card),var(--card2));
+  border:1px solid var(--border);
+  border-radius:20px;
+  padding:20px;
+  box-shadow:0 12px 28px rgba(0,0,0,.22);
+}
+
+.panel h3{
+  margin:0 0 15px 0;
+  font-size:20px;
+}
+
+.stockRow{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  background:rgba(255,255,255,.05);
+  border:1px solid var(--border);
+  padding:14px 16px;
+  border-radius:14px;
+  margin-bottom:12px;
+}
+
+.stockName{
+  font-size:14px;
+  font-weight:800;
+}
+
+.stockValue{
+  font-size:22px;
+  font-weight:900;
+  color:var(--green);
+}
+
+.bar{
+  width:100%;
+  height:8px;
+  background:rgba(255,255,255,.12);
+  border-radius:20px;
+  overflow:hidden;
+  margin-top:8px;
+}
+
+.fill{
+  height:100%;
+  background:linear-gradient(90deg,#22c55e,#2563eb);
+  width:55%;
+}
+
+.needleBox{
+  text-align:center;
+  padding:24px;
+}
+
+.bigNeedle{
+  font-size:46px;
+  font-weight:900;
+  color:var(--orange);
+}
+
+/* COMMON */
 .grid{
   display:grid;
   grid-template-columns:repeat(3,1fr);
@@ -89,24 +227,25 @@ body{
 .card{
   background:var(--card);
   border:1px solid var(--border);
-  padding:28px;
-  border-radius:14px;
+  padding:30px;
+  border-radius:16px;
   text-align:center;
   font-size:18px;
-  font-weight:bold;
+  font-weight:900;
   cursor:pointer;
+  box-shadow:0 8px 20px rgba(0,0,0,.15);
 }
 
 .card:hover{
-  background:var(--blue);
+  background:linear-gradient(135deg,#2563eb,#7c3aed);
   color:white;
 }
 
 select,input,textarea{
   width:100%;
-  padding:13px;
+  padding:14px;
   margin-top:6px;
-  border-radius:8px;
+  border-radius:10px;
   border:1px solid var(--border);
   background:var(--card);
   color:var(--text);
@@ -116,21 +255,15 @@ select,input,textarea{
 .btn{
   padding:13px 24px;
   background:var(--blue);
-  border:0;
   color:white;
-  border-radius:8px;
-  cursor:pointer;
+  border:0;
+  border-radius:10px;
   font-weight:bold;
-  margin-top:10px;
+  cursor:pointer;
+  margin-top:12px;
 }
 
-.search{
-  display:flex;
-  gap:10px;
-}
-
-.search input{flex:1}
-
+/* FOOTER */
 .footer{
   position:fixed;
   bottom:10px;
@@ -156,7 +289,13 @@ select,input,textarea{
   width:28px;
   height:28px;
   border-radius:50%;
-  border:2px solid #22c55e;
+  border:2px solid var(--green);
+}
+
+@media(max-width:900px){
+  .summaryGrid,.mainDash,.grid{
+    grid-template-columns:1fr;
+  }
 }
 </style>
 </head>
@@ -169,7 +308,7 @@ select,input,textarea{
     <div class="sub">GMS TEXTILES LTD & GMS COMPOSITE KNITTING</div>
   </div>
 
-  <div>
+  <div class="rightTop">
     <span class="live">● Firebase Live</span>
     <button class="themeBtn" onclick="toggleTheme()">🌙 / ☀️</button>
   </div>
@@ -184,9 +323,75 @@ select,input,textarea{
   <button onclick="openPage('notice',this)">Notice</button>
 </div>
 
+<!-- DASHBOARD -->
 <div id="home" class="page activePage">
+
+  <div class="dashTitle">Dashboard Overview</div>
+  <div class="dashSub">Today stock live summary from Firebase</div>
+
+  <div class="summaryGrid">
+    <div class="summaryCard">
+      <div class="label">Accessories MCD Items</div>
+      <div class="num">3</div>
+    </div>
+
+    <div class="summaryCard">
+      <div class="label">Accessories Present Stock</div>
+      <div class="num" id="totalAccStock">0</div>
+    </div>
+
+    <div class="summaryCard">
+      <div class="label">Needle Present Stock</div>
+      <div class="num" id="topNeedleStock">0</div>
+    </div>
+
+    <div class="summaryCard">
+      <div class="label">System Status</div>
+      <div class="num" style="color:var(--green);font-size:24px;">LIVE</div>
+    </div>
+  </div>
+
+  <div class="mainDash">
+
+    <div class="panel">
+      <h3>📦 Accessories MCD Today Stock</h3>
+
+      <div class="stockRow">
+        <div>
+          <div class="stockName">Sewing Thread</div>
+          <div class="bar"><div class="fill"></div></div>
+        </div>
+        <div class="stockValue" id="sewingStock">0</div>
+      </div>
+
+      <div class="stockRow">
+        <div>
+          <div class="stockName">Twill Tape</div>
+          <div class="bar"><div class="fill" style="width:45%;background:linear-gradient(90deg,#f59e0b,#22c55e)"></div></div>
+        </div>
+        <div class="stockValue" id="twillStock">0</div>
+      </div>
+
+      <div class="stockRow">
+        <div>
+          <div class="stockName">Accessories With Sample</div>
+          <div class="bar"><div class="fill" style="width:65%;background:linear-gradient(90deg,#7c3aed,#2563eb)"></div></div>
+        </div>
+        <div class="stockValue" id="accessoriesStock">0</div>
+      </div>
+    </div>
+
+    <div class="panel needleBox">
+      <h3>🪡 Needle Report Today</h3>
+      <div class="bigNeedle" id="needleStock">0</div>
+      <div style="color:var(--muted);font-weight:bold;">Total Present Stock</div>
+    </div>
+
+  </div>
+
 </div>
 
+<!-- NEW ENTRY -->
 <div id="entry" class="page">
   <h2>New Entry</h2>
 
@@ -219,10 +424,10 @@ select,input,textarea{
   <button class="btn" onclick="loadEntry()">Open Entry</button>
 
   <br><br>
-
   <div id="entryBox" class="grid"></div>
 </div>
 
+<!-- REPORTS -->
 <div id="reports" class="page">
   <h2>Reports</h2>
 
@@ -255,10 +460,10 @@ select,input,textarea{
   <button class="btn" onclick="loadReport()">Show Report</button>
 
   <br><br>
-
   <div id="reportBox" class="grid"></div>
 </div>
 
+<!-- NEEDLE -->
 <div id="needle" class="page">
   <h2>Needle Section</h2>
 
@@ -269,9 +474,9 @@ select,input,textarea{
   </div>
 </div>
 
+<!-- NOTICE -->
 <div id="notice" class="page">
   <h2>Notice Board</h2>
-
   <textarea placeholder="Notice likho..." style="height:120px;"></textarea>
   <br>
   <button class="btn">Save Notice</button>
@@ -284,36 +489,44 @@ select,input,textarea{
   </div>
 </div>
 
-<script>
-function openPage(id,btn){
-  document.querySelectorAll(".page").forEach(p=>{
-    p.classList.remove("activePage");
-  });
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-app.js";
+import { getFirestore, collection, getDocs } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-firestore.js";
 
+const firebaseConfig = {
+  apiKey: "AIzaSyD-wBCF5eeWMHobLFOhBzKW7aB2pagz9-w",
+  authDomain: "gms-warehouse-tracker-7f57e.firebaseapp.com",
+  projectId: "gms-warehouse-tracker-7f57e",
+  storageBucket: "gms-warehouse-tracker-7f57e.firebasestorage.app",
+  messagingSenderId: "992250313291",
+  appId: "1:992250313291:web:ee3bceae76d4d53bc26bce"
+};
+
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+
+window.openPage=function(id,btn){
+  document.querySelectorAll(".page").forEach(p=>p.classList.remove("activePage"));
   document.getElementById(id).classList.add("activePage");
 
-  document.querySelectorAll(".nav button").forEach(b=>{
-    b.classList.remove("active");
-  });
-
+  document.querySelectorAll(".nav button").forEach(b=>b.classList.remove("active"));
   btn.classList.add("active");
+
+  if(id==="home"){
+    loadDashboardStock();
+  }
 }
 
-function toggleTheme(){
+window.toggleTheme=function(){
   document.body.classList.toggle("light");
-
-  if(document.body.classList.contains("light")){
-    localStorage.setItem("theme","light");
-  }else{
-    localStorage.setItem("theme","dark");
-  }
+  localStorage.setItem("theme",document.body.classList.contains("light") ? "light" : "dark");
 }
 
 if(localStorage.getItem("theme")==="light"){
   document.body.classList.add("light");
 }
 
-function loadEntry(){
+window.loadEntry=function(){
   let mcd=document.getElementById("entryMcd").value;
   let box=document.getElementById("entryBox");
   box.innerHTML="";
@@ -337,7 +550,7 @@ function loadEntry(){
   }
 }
 
-function loadReport(){
+window.loadReport=function(){
   let mcd=document.getElementById("reportMcd").value;
   let box=document.getElementById("reportBox");
   box.innerHTML="";
@@ -360,6 +573,84 @@ function loadReport(){
     `;
   }
 }
+
+async function getLatestPresent(collectionName, openingStock){
+  let snap = await getDocs(collection(db, collectionName));
+
+  let rows=[];
+  snap.forEach(docSnap=>{
+    let x=docSnap.data();
+    if(x.date){
+      rows.push(x);
+    }
+  });
+
+  rows.sort((a,b)=>a.date.localeCompare(b.date));
+
+  if(rows.length===0){
+    return openingStock;
+  }
+
+  let totalReceive=0;
+  let totalDelivery=0;
+
+  rows.forEach(x=>{
+    totalReceive += Number(x.receive)||0;
+    totalDelivery += Number(x.delivery)||0;
+  });
+
+  return openingStock + totalReceive - totalDelivery;
+}
+
+async function getNeedlePresent(){
+  let snap = await getDocs(collection(db,"dailyPosting"));
+
+  let latestByFloor={};
+
+  snap.forEach(docSnap=>{
+    let x=docSnap.data();
+    if(x.floor && x.date){
+      if(!latestByFloor[x.floor] || x.date > latestByFloor[x.floor].date){
+        latestByFloor[x.floor]=x;
+      }
+    }
+  });
+
+  let total=0;
+
+  Object.values(latestByFloor).forEach(x=>{
+    if(x.rows){
+      x.rows.forEach(r=>{
+        total += Number(r.present)||0;
+      });
+    }
+  });
+
+  return total;
+}
+
+async function loadDashboardStock(){
+  try{
+    let sewing = await getLatestPresent("sewingThread",133322);
+    let twill = await getLatestPresent("twillTape",171255);
+    let acc = await getLatestPresent("accessoriesSample",171255);
+    let needle = await getNeedlePresent();
+
+    document.getElementById("sewingStock").innerText=sewing;
+    document.getElementById("twillStock").innerText=twill;
+    document.getElementById("accessoriesStock").innerText=acc;
+
+    let totalAcc = sewing + twill + acc;
+    document.getElementById("totalAccStock").innerText=totalAcc;
+
+    document.getElementById("needleStock").innerText=needle;
+    document.getElementById("topNeedleStock").innerText=needle;
+  }catch(e){
+    console.log(e);
+  }
+}
+
+loadDashboardStock();
 </script>
 
 </body>
