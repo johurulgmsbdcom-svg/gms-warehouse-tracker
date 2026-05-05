@@ -1,150 +1,247 @@
 <!DOCTYPE html>
 <html>
 <head>
-<title>Accessories Stock</title>
-
+<title>Daily Accessories Stock</title>
 <style>
 body{margin:0;background:#0b0f19;color:white;font-family:Arial}
 .box{padding:20px}
-h2,h3{text-align:center}
+h2,h3{text-align:center;margin:4px}
 table{width:100%;border-collapse:collapse;margin-top:15px;background:white;color:black}
 th,td{border:1px solid #000;padding:8px;text-align:center}
-input{width:90%;padding:6px;text-align:center}
-button{padding:10px 20px;background:#2563eb;color:white;border:0;border-radius:6px;margin:5px}
+input{width:90%;padding:7px;text-align:center}
+button{padding:10px 22px;background:#2563eb;color:white;border:0;border-radius:8px;font-weight:bold;cursor:pointer}
+.deleteBtn{background:#dc2626}
+.excelBtn{background:#16a34a}
 .total{background:#92d050;font-weight:bold}
 </style>
-
 </head>
 
 <body>
 <div class="box">
 
 <h2>GMS TEXTILES LTD</h2>
-<h3>Accessories (MCD)</h3>
+<h3>Tansutrapur, Kaliakair, Gazipur.</h3>
+<h3>Accessorie ( MCD )</h3>
 <h3>Daily Accessories Stock</h3>
 
 Date:
-<input type="date" id="date">
-<button onclick="saveData()">Save</button>
-<button onclick="loadData()">Load</button>
+<input type="date" id="postDate" style="padding:8px;width:180px">
 
-<table id="table">
+<button onclick="saveData()">Save Data</button>
+<button class="deleteBtn" onclick="deleteData()">Delete Data</button>
+<button class="excelBtn" onclick="exportExcel()">Export Excel</button>
+<button onclick="location.href='index.html'">Back Home</button>
+
+<table id="reportTable">
 <thead>
 <tr>
-<th>Item</th>
+<th>Discription</th>
 <th>Unit</th>
-<th>Previous</th>
-<th>Receive</th>
-<th>Delivery</th>
-<th>Present</th>
+<th>Previous Qty</th>
+<th>Received Qty</th>
+<th>Delivery Qty</th>
+<th>Present Stock</th>
+<th>Remarks</th>
 </tr>
 </thead>
 
-<tbody id="tbody"></tbody>
+<tbody>
+<tr>
+<td>Accessories With Sample</td>
+<td>Pcs</td>
+<td id="previous">171255</td>
+<td><input type="number" id="receive" oninput="calc()"></td>
+<td><input type="number" id="delivery" oninput="calc()"></td>
+<td id="present">171255</td>
+<td><input id="remarks"></td>
+</tr>
+</tbody>
 
 <tfoot>
 <tr class="total">
 <td colspan="2">TOTAL</td>
-<td id="tPrev">0</td>
-<td id="tRec">0</td>
-<td id="tDel">0</td>
-<td id="tPres">0</td>
+<td id="totalPrevious">171255</td>
+<td id="totalReceive">0</td>
+<td id="totalDelivery">0</td>
+<td id="totalPresent">171255</td>
+<td></td>
 </tr>
 </tfoot>
+</table>
+
+<br>
+
+<h3>Monthly Summary</h3>
+<table>
+<tr>
+<th>Opening</th>
+<th>Total Receive</th>
+<th>Total Delivery</th>
+<th>Present Stock</th>
+</tr>
+<tr class="total">
+<td id="mOpening">171255</td>
+<td id="mReceive">0</td>
+<td id="mDelivery">0</td>
+<td id="mPresent">171255</td>
+</tr>
 </table>
 
 </div>
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-app.js";
-import { getFirestore, doc, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-firestore.js";
+import { getFirestore, doc, setDoc, getDoc, deleteDoc, collection, getDocs } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-firestore.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyD-wBCF5eeWMHobLFOhBzKW7aB2pagz9-w",
   authDomain: "gms-warehouse-tracker-7f57e.firebaseapp.com",
-  projectId: "gms-warehouse-tracker-7f57e"
+  projectId: "gms-warehouse-tracker-7f57e",
+  storageBucket: "gms-warehouse-tracker-7f57e.firebasestorage.app",
+  messagingSenderId: "992250313291",
+  appId: "1:992250313291:web:ee3bceae76d4d53bc26bce"
 };
 
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
-const items = [
-  {name:"Sewing Thread", unit:"Cone", opening:133322},
-  {name:"Twill Tape", unit:"Yds", opening:171255},
-  {name:"Accessories With Sample", unit:"Pcs", opening:171255}
-];
-
-function render(){
-  let html="";
-  items.forEach((it,i)=>{
-    html+=`
-    <tr>
-      <td>${it.name}</td>
-      <td>${it.unit}</td>
-      <td id="p${i}">${it.opening}</td>
-      <td><input id="r${i}" oninput="calc()"></td>
-      <td><input id="d${i}" oninput="calc()"></td>
-      <td id="b${i}">${it.opening}</td>
-    </tr>`;
-  });
-  document.getElementById("tbody").innerHTML=html;
-}
+const openingStock = 171255;
+const collectionName = "accessoriesSample";
 
 function calc(){
-  let tp=0,tr=0,td=0,tb=0;
+  let p = Number(document.getElementById("previous").innerText) || 0;
+  let r = Number(document.getElementById("receive").value) || 0;
+  let d = Number(document.getElementById("delivery").value) || 0;
+  let b = p + r - d;
 
-  items.forEach((it,i)=>{
-    let p=Number(document.getElementById("p"+i).innerText);
-    let r=Number(document.getElementById("r"+i).value)||0;
-    let d=Number(document.getElementById("d"+i).value)||0;
-    let b=p+r-d;
-
-    document.getElementById("b"+i).innerText=b;
-
-    tp+=p; tr+=r; td+=d; tb+=b;
-  });
-
-  tPrev.innerText=tp;
-  tRec.innerText=tr;
-  tDel.innerText=td;
-  tPres.innerText=tb;
+  document.getElementById("present").innerText = b;
+  document.getElementById("totalPrevious").innerText = p;
+  document.getElementById("totalReceive").innerText = r;
+  document.getElementById("totalDelivery").innerText = d;
+  document.getElementById("totalPresent").innerText = b;
 }
 
 async function saveData(){
-  let date=document.getElementById("date").value;
+  let date = document.getElementById("postDate").value;
 
-  let data=[];
-  items.forEach((it,i)=>{
-    data.push({
-      r:Number(document.getElementById("r"+i).value)||0,
-      d:Number(document.getElementById("d"+i).value)||0
-    });
+  if(!date){
+    alert("Date select koro");
+    return;
+  }
+
+  calc();
+
+  await setDoc(doc(db, collectionName, date),{
+    date:date,
+    receive:Number(document.getElementById("receive").value) || 0,
+    delivery:Number(document.getElementById("delivery").value) || 0,
+    remarks:document.getElementById("remarks").value || ""
   });
 
-  await setDoc(doc(db,"accessories",date),{items:data});
-  alert("Saved");
+  await loadData();
+  alert("Saved Successfully");
+}
+
+async function deleteData(){
+  let date = document.getElementById("postDate").value;
+
+  if(!date){
+    alert("Date select koro");
+    return;
+  }
+
+  if(!confirm("Ei date er data delete korba?")) return;
+
+  await deleteDoc(doc(db, collectionName, date));
+
+  document.getElementById("receive").value = "";
+  document.getElementById("delivery").value = "";
+  document.getElementById("remarks").value = "";
+
+  await loadData();
+  alert("Deleted Successfully");
 }
 
 async function loadData(){
-  let date=document.getElementById("date").value;
+  let date = document.getElementById("postDate").value;
+  if(!date) return;
 
-  let snap=await getDoc(doc(db,"accessories",date));
+  let todaySnap = await getDoc(doc(db, collectionName, date));
 
-  if(snap.exists()){
-    let data=snap.data().items;
-
-    data.forEach((it,i)=>{
-      document.getElementById("r"+i).value=it.r;
-      document.getElementById("d"+i).value=it.d;
-    });
-
-    calc();
+  if(todaySnap.exists()){
+    let data = todaySnap.data();
+    document.getElementById("receive").value = data.receive || "";
+    document.getElementById("delivery").value = data.delivery || "";
+    document.getElementById("remarks").value = data.remarks || "";
+  }else{
+    document.getElementById("receive").value = "";
+    document.getElementById("delivery").value = "";
+    document.getElementById("remarks").value = "";
   }
+
+  await loadMonthlySummary();
 }
 
-window.calc=calc;
+async function loadMonthlySummary(){
+  let date = document.getElementById("postDate").value;
+  if(!date) return;
 
-render();
+  let month = date.slice(0,7);
+  let totalReceive = 0;
+  let totalDelivery = 0;
+
+  let snap = await getDocs(collection(db, collectionName));
+
+  snap.forEach(docSnap=>{
+    let data = docSnap.data();
+
+    if(data.date && data.date.slice(0,7) === month && data.date <= date){
+      totalReceive += Number(data.receive) || 0;
+      totalDelivery += Number(data.delivery) || 0;
+    }
+  });
+
+  let todayReceive = Number(document.getElementById("receive").value) || 0;
+  let todayDelivery = Number(document.getElementById("delivery").value) || 0;
+
+  let beforeTodayReceive = totalReceive - todayReceive;
+  let beforeTodayDelivery = totalDelivery - todayDelivery;
+
+  let dailyPrevious = openingStock + beforeTodayReceive - beforeTodayDelivery;
+  let dailyPresent = dailyPrevious + todayReceive - todayDelivery;
+  let monthlyPresent = openingStock + totalReceive - totalDelivery;
+
+  document.getElementById("previous").innerText = dailyPrevious;
+  document.getElementById("present").innerText = dailyPresent;
+
+  document.getElementById("totalPrevious").innerText = dailyPrevious;
+  document.getElementById("totalReceive").innerText = todayReceive;
+  document.getElementById("totalDelivery").innerText = todayDelivery;
+  document.getElementById("totalPresent").innerText = dailyPresent;
+
+  document.getElementById("mOpening").innerText = openingStock;
+  document.getElementById("mReceive").innerText = totalReceive;
+  document.getElementById("mDelivery").innerText = totalDelivery;
+  document.getElementById("mPresent").innerText = monthlyPresent;
+}
+
+function exportExcel(){
+  let table = document.getElementById("reportTable").outerHTML;
+  let file = new Blob([table], {type:"application/vnd.ms-excel"});
+  let a = document.createElement("a");
+  a.href = URL.createObjectURL(file);
+  a.download = "accessories-report.xls";
+  a.click();
+}
+
+document.getElementById("postDate").addEventListener("change", loadData);
+
+window.calc = calc;
+window.saveData = saveData;
+window.deleteData = deleteData;
+window.exportExcel = exportExcel;
+
+calc();
 </script>
 
 </body>
