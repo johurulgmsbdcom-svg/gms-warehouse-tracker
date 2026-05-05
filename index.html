@@ -1,135 +1,53 @@
 <!DOCTYPE html>
 <html>
 <head>
-<title>GMS MCD SYSTEM</title>
+<title>Daily Sewing Thread Stock</title>
 
 <style>
 body{
   margin:0;
-  font-family:Segoe UI;
   background:#0b0f19;
   color:white;
+  font-family:Arial;
 }
 
-/* LIGHT MODE */
-.light{
-  background:#f1f5f9;
-  color:#111;
+.box{padding:20px}
+
+h2,h3{text-align:center;margin:4px}
+
+table{
+  width:100%;
+  border-collapse:collapse;
+  margin-top:15px;
+  background:#fff;
+  color:#000;
 }
 
-/* HEADER */
-.header{
-  background:#111827;
-  padding:15px 25px;
-  display:flex;
-  justify-content:space-between;
-  align-items:center;
-}
-.logo{font-size:22px;font-weight:bold}
-.sub{font-size:12px;color:#aaa}
-
-/* NAV */
-.nav{
-  display:flex;
-  gap:10px;
-  padding:12px;
-  background:#020617;
-}
-.nav button{
-  padding:14px 22px;
-  background:#1e293b;
-  border:none;
-  color:white;
-  border-radius:10px;
-  cursor:pointer;
-  font-size:15px;
-  font-weight:600;
-}
-.nav button:hover,
-.nav button.active{
-  background:#2563eb;
-}
-
-/* PAGE */
-.page{
-  display:none;
-  padding:20px;
-}
-.activePage{
-  display:block;
-}
-
-/* CARD */
-.grid{
-  display:grid;
-  grid-template-columns:repeat(4,1fr);
-  gap:15px;
-}
-.card{
-  background:#1e293b;
-  padding:25px;
-  border-radius:12px;
+th,td{
+  border:1px solid #000;
+  padding:8px;
   text-align:center;
-  cursor:pointer;
-  font-size:18px;
-  font-weight:bold;
-}
-.card:hover{background:#2563eb}
-
-/* INPUT */
-select,input{
-  width:100%;
-  padding:12px;
-  border-radius:8px;
-  margin-top:6px;
-  border:1px solid #333;
-  background:#020617;
-  color:white;
 }
 
-.btn{
-  padding:12px 20px;
+input{
+  width:90%;
+  padding:7px;
+  text-align:center;
+}
+
+button{
+  padding:10px 25px;
   background:#2563eb;
-  border:none;
   color:white;
+  border:0;
   border-radius:8px;
-  margin-top:10px;
-  cursor:pointer;
-}
-
-/* SEARCH */
-.search{
-  display:flex;
-  gap:10px;
-}
-.search input{flex:1}
-
-/* FOOTER */
-.footer{
-  position:fixed;
-  bottom:10px;
-  width:100%;
-  display:flex;
-  justify-content:center;
-}
-
-.profile{
-  display:flex;
-  align-items:center;
-  gap:8px;
-  background:#111827;
-  padding:6px 14px;
-  border-radius:30px;
-  border:1px solid #334155;
-  color:#94a3b8;
   font-weight:bold;
+  margin:5px;
 }
 
-.profile img{
-  width:28px;
-  height:28px;
-  border-radius:50%;
-  border:2px solid #22c55e;
+.total{
+  background:#92d050;
+  font-weight:bold;
 }
 </style>
 
@@ -137,135 +55,213 @@ select,input{
 
 <body>
 
-<!-- HEADER -->
-<div class="header">
-  <div>
-    <div class="logo">GMS MCD SYSTEM</div>
-    <div class="sub">GMS TEXTILES LTD & COMPOSITE</div>
-  </div>
+<div class="box">
 
-  <button onclick="toggleTheme()" class="btn">🌙 / ☀️</button>
+<h2>GMS TEXTILES LTD</h2>
+<h3>Tansutrapur, Kaliakair, Gazipur</h3>
+<h3>Accessories (MCD)</h3>
+<h3>Daily Sewing Thread Stock</h3>
+
+Date:
+<input type="date" id="postDate">
+
+<button onclick="saveData()">Save</button>
+<button onclick="location.href='index.html'">Back</button>
+
+<table>
+<thead>
+<tr>
+<th>Description</th>
+<th>Unit</th>
+<th>Previous</th>
+<th>Receive</th>
+<th>Delivery</th>
+<th>Present</th>
+<th>Remarks</th>
+</tr>
+</thead>
+
+<tbody>
+<tr>
+<td>Sewing Thread</td>
+<td>Cone</td>
+<td id="previous">133322</td>
+<td><input id="receive" type="number" oninput="calc()"></td>
+<td><input id="delivery" type="number" oninput="calc()"></td>
+<td id="present">133322</td>
+<td><input id="remarks"></td>
+</tr>
+</tbody>
+
+<tfoot>
+<tr class="total">
+<td colspan="2">TOTAL</td>
+<td id="tPrev">133322</td>
+<td id="tRec">0</td>
+<td id="tDel">0</td>
+<td id="tPres">133322</td>
+<td></td>
+</tr>
+</tfoot>
+</table>
+
+<h3>Monthly Summary</h3>
+
+<table>
+<tr>
+<th>Opening</th>
+<th>Total Receive</th>
+<th>Total Delivery</th>
+<th>Present Stock</th>
+</tr>
+
+<tr class="total">
+<td id="mOpen">133322</td>
+<td id="mRec">0</td>
+<td id="mDel">0</td>
+<td id="mPres">133322</td>
+</tr>
+</table>
+
 </div>
 
-<!-- NAV -->
-<div class="nav">
-  <button class="active" onclick="openPage('home',this)">Dashboard</button>
-  <button onclick="openPage('entry',this)">New Entry</button>
-  <button onclick="openPage('reports',this)">Reports</button>
-  <button onclick="openPage('needle',this)">Needle</button>
-  <button onclick="openPage('manpower',this)">Manpower</button>
-  <button onclick="openPage('notice',this)">Notice</button>
-</div>
+<script type="module">
 
-<!-- HOME (BLACK EMPTY) -->
-<div id="home" class="page activePage"></div>
+import { initializeApp } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-app.js";
+import { getFirestore, doc, setDoc, getDoc, collection, getDocs } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-firestore.js";
 
-<!-- ENTRY -->
-<div id="entry" class="page">
-  <h2>New Entry</h2>
+const firebaseConfig = {
+  apiKey: "AIzaSyD-wBCF5eeWMHobLFOhBzKW7aB2pagz9-w",
+  authDomain: "gms-warehouse-tracker-7f57e.firebaseapp.com",
+  projectId: "gms-warehouse-tracker-7f57e",
+  storageBucket: "gms-warehouse-tracker-7f57e.firebasestorage.app",
+  messagingSenderId: "992250313291",
+  appId: "1:992250313291:web:ee3bceae76d4d53bc26bce"
+};
 
-  <label>Company</label>
-  <select>
-    <option>GMS TEXTILES LTD</option>
-    <option>GMS COMPOSITE KNITTING</option>
-  </select>
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
 
-  <br><br>
+const openingStock = 133322;
 
-  <label>MCD</label>
-  <select id="mcd">
-    <option>GREY FABRIC MCD</option>
-    <option>SHIPMENT MCD</option>
-    <option>BILLING SECTION</option>
-    <option>OUTER WEAR MCD</option>
-    <option>YARN MCD</option>
-    <option>PRINTING MCD</option>
-    <option>JHUT MCD</option>
-    <option>GENERAL MCD</option>
-    <option>ACCESSORIES MCD</option>
-    <option>LEFTOVER MCD</option>
-    <option>FINISH FABRIC MCD</option>
-    <option>YARN DYEING MCD</option>
-    <option>CHEMICAL MCD</option>
-    <option>GENERAL TECHNICAL MCD</option>
-  </select>
 
-  <button class="btn" onclick="loadEntry()">Open</button>
+// 🔹 CALCULATION
+function calc(){
+  let p = Number(document.getElementById("previous").innerText)||0;
+  let r = Number(document.getElementById("receive").value)||0;
+  let d = Number(document.getElementById("delivery").value)||0;
 
-  <br><br>
+  let b = p + r - d;
 
-  <div id="entryBox" class="grid"></div>
-</div>
+  document.getElementById("present").innerText = b;
 
-<!-- REPORT -->
-<div id="reports" class="page">
-  <h2>Reports</h2>
-  <div id="reportBox" class="grid"></div>
-</div>
+  document.getElementById("tPrev").innerText = p;
+  document.getElementById("tRec").innerText = r;
+  document.getElementById("tDel").innerText = d;
+  document.getElementById("tPres").innerText = b;
 
-<!-- NEEDLE -->
-<div id="needle" class="page">
-  <h2>Needle Section</h2>
-  <div class="grid">
-    <div class="card" onclick="location.href='needle.html'">Needle Entry</div>
-    <div class="card">Needle Monthly</div>
-  </div>
-</div>
-
-<!-- MANPOWER -->
-<div id="manpower" class="page">
-  <h2>Manpower</h2>
-  <div class="search">
-    <input placeholder="Search ID / Name">
-    <button class="btn">Search</button>
-  </div>
-</div>
-
-<!-- NOTICE -->
-<div id="notice" class="page">
-  <h2>Notice Board</h2>
-  <textarea style="width:100%;height:120px;background:#020617;color:white"></textarea>
-</div>
-
-<!-- FOOTER -->
-<div class="footer">
-  <div class="profile">
-    <img src="https://i.ibb.co/5hzT1VGk/IMG.jpg">
-    Powered by JOHURUL
-  </div>
-</div>
-
-<!-- JS -->
-<script>
-function openPage(id,btn){
-  document.querySelectorAll(".page").forEach(p=>p.classList.remove("activePage"));
-  document.getElementById(id).classList.add("activePage");
-
-  document.querySelectorAll(".nav button").forEach(b=>b.classList.remove("active"));
-  btn.classList.add("active");
+  loadMonthlySummary();
 }
 
-function toggleTheme(){
-  document.body.classList.toggle("light");
-}
 
-function loadEntry(){
-  let mcd=document.getElementById("mcd").value;
-  let box=document.getElementById("entryBox");
+// 🔹 SAVE
+async function saveData(){
+  let date = document.getElementById("postDate").value;
 
-  if(mcd==="ACCESSORIES MCD"){
-    box.innerHTML=`
-      <div class="card" onclick="location.href='sewing-thread.html'">Sewing Thread</div>
-      <div class="card">Twill Tape</div>
-      <div class="card">Accessories</div>
-      <div class="card">Manpower</div>
-    `;
-  }else if(mcd==="GENERAL TECHNICAL MCD"){
-    box.innerHTML=`<div class="card" onclick="location.href='needle.html'">Needle Entry</div>`;
-  }else{
-    box.innerHTML=`<div class="card">${mcd} Entry</div>`;
+  if(!date){
+    alert("Date select koro");
+    return;
   }
+
+  await setDoc(doc(db,"sewingThread",date),{
+    date:date,
+    previous:Number(previous.innerText)||0,
+    receive:Number(receive.value)||0,
+    delivery:Number(delivery.value)||0,
+    present:Number(present.innerText)||0,
+    remarks:remarks.value || ""
+  });
+
+  alert("Saved!");
 }
+
+
+// 🔹 LOAD DAILY
+async function loadData(){
+  let date = postDate.value;
+  if(!date) return;
+
+  let today = await getDoc(doc(db,"sewingThread",date));
+
+  if(today.exists()){
+    let d = today.data();
+
+    previous.innerText = d.previous;
+    receive.value = d.receive;
+    delivery.value = d.delivery;
+    remarks.value = d.remarks || "";
+
+    calc();
+    return;
+  }
+
+  // 🔹 previous day
+  let dt = new Date(date);
+  dt.setDate(dt.getDate()-1);
+  let prevDate = dt.toISOString().slice(0,10);
+
+  let prevSnap = await getDoc(doc(db,"sewingThread",prevDate));
+
+  if(prevSnap.exists()){
+    previous.innerText = prevSnap.data().present;
+  }else{
+    previous.innerText = openingStock;
+  }
+
+  receive.value="";
+  delivery.value="";
+  remarks.value="";
+
+  calc();
+}
+
+
+// 🔹 MONTHLY SUMMARY
+async function loadMonthlySummary(){
+  let date = postDate.value;
+  if(!date) return;
+
+  let month = date.slice(0,7);
+
+  let totalR = 0;
+  let totalD = 0;
+
+  let snap = await getDocs(collection(db,"sewingThread"));
+
+  snap.forEach(docSnap=>{
+    let d = docSnap.data();
+
+    if(d.date && d.date.slice(0,7)===month){
+      totalR += Number(d.receive)||0;
+      totalD += Number(d.delivery)||0;
+    }
+  });
+
+  mOpen.innerText = openingStock;
+  mRec.innerText = totalR;
+  mDel.innerText = totalD;
+  mPres.innerText = Number(present.innerText)||0;
+}
+
+
+// 🔹 AUTO LOAD
+postDate.addEventListener("change",loadData);
+
+window.calc = calc;
+window.saveData = saveData;
+
+calc();
+
 </script>
 
 </body>
