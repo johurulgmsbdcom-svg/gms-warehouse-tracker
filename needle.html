@@ -2,6 +2,19 @@
 <html>
 <head>
 <title>Needle Daily Posting</title>
+<style>
+button{padding:10px 25px;border:0;border-radius:6px;color:white;font-weight:bold;cursor:pointer;margin:3px}
+.deleteBtn{background:#dc2626}
+.excelBtn{background:#16a34a}
+.pdfBtn{background:#7c3aed}
+.homeBtn{background:#2563eb}
+.saveBtn{background:green}
+@media print{
+  body{background:white!important;color:black!important}
+  button,input[type="date"],select{display:none!important}
+  table{color:black!important;background:white!important}
+}
+</style>
 </head>
 
 <body style="background:#0f172a;color:white;font-family:Arial;">
@@ -28,12 +41,14 @@ Floor:
 </select>
 
 <br><br>
-<button onclick="saveData()" style="padding:10px 25px;background:green;color:white;font-weight:bold;">
-💾 Save Data
-</button>
+<button class="saveBtn" onclick="saveData()">💾 Save Data</button>
+<button class="deleteBtn" onclick="deleteData()">Delete Data</button>
+<button class="excelBtn" onclick="exportExcel()">Export Excel</button>
+<button class="pdfBtn" onclick="exportPDF()">PDF / Print</button>
+<button class="homeBtn" onclick="location.href='index.html'">Back Home</button>
 </div>
 
-<table border="1" style="width:98%;margin:auto;text-align:center;border-collapse:collapse;">
+<table id="reportTable" border="1" style="width:98%;margin:auto;text-align:center;border-collapse:collapse;">
 <thead style="background:#1e293b;">
 <tr>
 <th>SL</th>
@@ -61,7 +76,7 @@ Floor:
 
 <div style="width:98%;margin:20px auto;text-align:center;">
 <h3>Monthly Summary</h3>
-<table border="1" style="width:60%;margin:auto;text-align:center;border-collapse:collapse;">
+<table id="summaryTable" border="1" style="width:60%;margin:auto;text-align:center;border-collapse:collapse;">
 <thead style="background:#1e293b;">
 <tr><th>Opening</th><th>Total Receive</th><th>Total Delivery</th><th>Present Stock</th></tr>
 </thead>
@@ -75,7 +90,7 @@ Floor:
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-app.js";
-import { getFirestore, doc, setDoc, getDoc, collection, query, where, getDocs } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-firestore.js";
+import { getFirestore, doc, setDoc, getDoc, deleteDoc, collection, getDocs } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-firestore.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyD-wBCF5eeWMHobLFOhBzKW7aB2pagz9-w",
@@ -742,214 +757,243 @@ const floorData = {
 };
 
 
+
 function getItems(){
   let floor=document.getElementById("floor").value;
   return floorData[floor] || [];
 }
 
-function getDateParts(dateStr){
-  let d=new Date(dateStr+"T00:00:00");
-  return {
-    month: dateStr.slice(0,7),
-    prevDate: new Date(d.getTime()-24*60*60*1000).toISOString().slice(0,10)
-  };
+function getMonth(date){
+  return date.slice(0,7);
 }
 
 function loadTable(customPrevious=null){
-let items=getItems();
-let html="";
+  let items=getItems();
+  let html="";
 
-items.forEach((item,i)=>{
-let previous = customPrevious && customPrevious[i] !== undefined ? customPrevious[i] : item[3];
-html+=`
-<tr>
-<td>${item[0]}</td>
-<td>${item[1]}</td>
-<td>${item[2]}</td>
-<td id="p${i}">${previous}</td>
-<td><input type="number" id="r${i}" oninput="calc(${i})" style="width:70px"></td>
-<td><input type="number" id="d${i}" oninput="calc(${i})" style="width:70px"></td>
-<td id="b${i}">${previous}</td>
-</tr>`;
-});
+  items.forEach((item,i)=>{
+    let previous = customPrevious && customPrevious[i] !== undefined ? customPrevious[i] : item[3];
+    html+=`
+    <tr>
+      <td>${item[0]}</td>
+      <td>${item[1]}</td>
+      <td>${item[2]}</td>
+      <td id="p${i}">${previous}</td>
+      <td><input type="number" id="r${i}" oninput="calc(${i})" style="width:70px"></td>
+      <td><input type="number" id="d${i}" oninput="calc(${i})" style="width:70px"></td>
+      <td id="b${i}">${previous}</td>
+    </tr>`;
+  });
 
-document.getElementById("tableBody").innerHTML=html;
-updateTotal();
+  document.getElementById("tableBody").innerHTML=html;
+  updateTotal();
 }
 
 function calc(i){
-let p=Number(document.getElementById("p"+i).innerText)||0;
-let r=Number(document.getElementById("r"+i).value)||0;
-let d=Number(document.getElementById("d"+i).value)||0;
-document.getElementById("b"+i).innerText=p+r-d;
-updateTotal();
+  let p=Number(document.getElementById("p"+i).innerText)||0;
+  let r=Number(document.getElementById("r"+i).value)||0;
+  let d=Number(document.getElementById("d"+i).value)||0;
+  document.getElementById("b"+i).innerText=p+r-d;
+  updateTotal();
 }
 
 function updateTotal(){
-let items=getItems();
-let tp=0,tr=0,td=0,tb=0;
+  let items=getItems();
+  let tp=0,tr=0,td=0,tb=0;
 
-for(let i=0;i<items.length;i++){
-tp+=Number(document.getElementById("p"+i)?.innerText)||0;
-tr+=Number(document.getElementById("r"+i)?.value)||0;
-td+=Number(document.getElementById("d"+i)?.value)||0;
-tb+=Number(document.getElementById("b"+i)?.innerText)||0;
-}
+  for(let i=0;i<items.length;i++){
+    tp+=Number(document.getElementById("p"+i)?.innerText)||0;
+    tr+=Number(document.getElementById("r"+i)?.value)||0;
+    td+=Number(document.getElementById("d"+i)?.value)||0;
+    tb+=Number(document.getElementById("b"+i)?.innerText)||0;
+  }
 
-document.getElementById("totalPrevious").innerText=tp;
-document.getElementById("totalReceive").innerText=tr;
-document.getElementById("totalDelivery").innerText=td;
-document.getElementById("totalPresent").innerText=tb;
-
-// Daily table total ke Monthly Summary te sathe sathe show korbe
-showMonthlySummary(tp,tr,td,tb);
+  document.getElementById("totalPrevious").innerText=tp;
+  document.getElementById("totalReceive").innerText=tr;
+  document.getElementById("totalDelivery").innerText=td;
+  document.getElementById("totalPresent").innerText=tb;
 }
 
 async function saveData(){
-let date=document.getElementById("postDate").value;
-let floor=document.getElementById("floor").value;
-let items=getItems();
+  let date=document.getElementById("postDate").value;
+  let floor=document.getElementById("floor").value;
+  let items=getItems();
 
-if(!date){
-alert("Date select koro");
-return;
+  if(!date){
+    alert("Date select koro");
+    return;
+  }
+
+  let rows=[];
+  for(let i=0;i<items.length;i++){
+    rows.push({
+      sl:items[i][0],
+      needleType:items[i][1],
+      size:items[i][2],
+      opening:Number(items[i][3])||0,
+      previous:Number(document.getElementById("p"+i).innerText)||0,
+      receive:Number(document.getElementById("r"+i).value)||0,
+      delivery:Number(document.getElementById("d"+i).value)||0,
+      present:Number(document.getElementById("b"+i).innerText)||0
+    });
+  }
+
+  await setDoc(doc(db,"dailyPosting",floor+"_"+date),{
+    date:date,
+    month:getMonth(date),
+    floor:floor,
+    rows:rows
+  });
+
+  await loadData();
+  alert("Saved Successfully");
 }
 
-let rows=[];
-for(let i=0;i<items.length;i++){
-rows.push({
-sl: items[i][0],
-needleType: items[i][1],
-size: items[i][2],
-previous: Number(document.getElementById("p"+i).innerText)||0,
-receive: Number(document.getElementById("r"+i).value)||0,
-delivery: Number(document.getElementById("d"+i).value)||0,
-present: Number(document.getElementById("b"+i).innerText)||0
-});
-}
+async function deleteData(){
+  let date=document.getElementById("postDate").value;
+  let floor=document.getElementById("floor").value;
 
-let month=date.slice(0,7);
-await setDoc(doc(db,"dailyPosting",floor+"_"+date),{
-date: date,
-month: month,
-floor: floor,
-rows: rows,
-totalPrevious: Number(document.getElementById("totalPrevious").innerText)||0,
-totalReceive: Number(document.getElementById("totalReceive").innerText)||0,
-totalDelivery: Number(document.getElementById("totalDelivery").innerText)||0,
-totalPresent: Number(document.getElementById("totalPresent").innerText)||0
-});
+  if(!date){
+    alert("Date select koro");
+    return;
+  }
 
-await updateMonthlySummary(floor, month);
-alert("Saved Successfully");
+  if(!confirm("Ei date er data delete korba?")) return;
+
+  await deleteDoc(doc(db,"dailyPosting",floor+"_"+date));
+  await loadData();
+  alert("Deleted Successfully");
 }
 
 async function loadData(){
-let date=document.getElementById("postDate").value;
-let floor=document.getElementById("floor").value;
-let items=getItems();
+  let date=document.getElementById("postDate").value;
+  let floor=document.getElementById("floor").value;
+  let items=getItems();
 
-if(!date){
-  loadTable();
-  clearMonthlySummary();
-  return;
+  if(!date){
+    loadTable();
+    showMonthlySummary(0,0,0,0);
+    return;
+  }
+
+  let month=getMonth(date);
+  let snap=await getDocs(collection(db,"dailyPosting"));
+  let monthRows=[];
+
+  snap.forEach(docSnap=>{
+    let data=docSnap.data();
+    if(data.floor===floor && data.month===month && data.date<=date){
+      monthRows.push(data);
+    }
+  });
+
+  monthRows.sort((a,b)=>a.date.localeCompare(b.date));
+
+  let todayData=null;
+  monthRows.forEach(row=>{
+    if(row.date===date) todayData=row;
+  });
+
+  let monthlyReceive=Array(items.length).fill(0);
+  let monthlyDelivery=Array(items.length).fill(0);
+
+  monthRows.forEach(day=>{
+    if(day.rows){
+      day.rows.forEach((row,i)=>{
+        monthlyReceive[i]+=Number(row.receive)||0;
+        monthlyDelivery[i]+=Number(row.delivery)||0;
+      });
+    }
+  });
+
+  let todayReceive=Array(items.length).fill(0);
+  let todayDelivery=Array(items.length).fill(0);
+
+  if(todayData && todayData.rows){
+    todayData.rows.forEach((row,i)=>{
+      todayReceive[i]=Number(row.receive)||0;
+      todayDelivery[i]=Number(row.delivery)||0;
+    });
+  }
+
+  let previousList=[];
+
+  for(let i=0;i<items.length;i++){
+    let opening=Number(items[i][3])||0;
+    let beforeReceive=monthlyReceive[i]-todayReceive[i];
+    let beforeDelivery=monthlyDelivery[i]-todayDelivery[i];
+    previousList[i]=opening+beforeReceive-beforeDelivery;
+  }
+
+  loadTable(previousList);
+
+  for(let i=0;i<items.length;i++){
+    document.getElementById("r"+i).value = todayReceive[i] || "";
+    document.getElementById("d"+i).value = todayDelivery[i] || "";
+    calc(i);
+  }
+
+  updateMonthlySummary(monthlyReceive,monthlyDelivery);
 }
 
-// 1) Same date saved data thakle full load hobe
-let snap=await getDoc(doc(db,"dailyPosting",floor+"_"+date));
-if(snap.exists()){
-let data=snap.data().rows || [];
-let prev=data.map(x=>Number(x.previous)||0);
-loadTable(prev);
-for(let i=0;i<data.length;i++){
-if(document.getElementById("r"+i)){
-document.getElementById("r"+i).value=data[i].receive || 0;
-document.getElementById("d"+i).value=data[i].delivery || 0;
-calc(i);
-}
-}
-updateTotal();
-await loadMonthlySummary(floor,date.slice(0,7));
-return;
-}
+function updateMonthlySummary(monthlyReceive,monthlyDelivery){
+  let items=getItems();
+  let opening=0, receive=0, delivery=0, present=0;
 
-// 2) Same date data na thakle previous day present -> today previous hobe
-let parts=getDateParts(date);
-let prevSnap=await getDoc(doc(db,"dailyPosting",floor+"_"+parts.prevDate));
-if(prevSnap.exists()){
-let prevRows=prevSnap.data().rows || [];
-let carry=prevRows.map(x=>Number(x.present)||0);
-loadTable(carry);
-} else {
-loadTable();
-}
+  for(let i=0;i<items.length;i++){
+    let op=Number(items[i][3])||0;
+    let r=Number(monthlyReceive[i])||0;
+    let d=Number(monthlyDelivery[i])||0;
+    opening+=op;
+    receive+=r;
+    delivery+=d;
+    present+=op+r-d;
+  }
 
-// New date e receive/delivery blank thakbe
-updateTotal();
-await loadMonthlySummary(floor,date.slice(0,7));
-}
-
-async function updateMonthlySummary(floor, month){
-let q=query(collection(db,"dailyPosting"), where("floor","==",floor), where("month","==",month));
-let qs=await getDocs(q);
-let docs=[];
-qs.forEach(d=>docs.push(d.data()));
-docs.sort((a,b)=>a.date.localeCompare(b.date));
-
-let opening=0, receive=0, delivery=0, present=0;
-if(docs.length>0){
-opening=Number(docs[0].totalPrevious)||0;
-docs.forEach(x=>{
-receive+=Number(x.totalReceive)||0;
-delivery+=Number(x.totalDelivery)||0;
-});
-present=opening+receive-delivery;
-}
-
-await setDoc(doc(db,"monthlySummary",floor+"_"+month),{
-floor:floor, month:month, opening:opening, totalReceive:receive, totalDelivery:delivery, present:present
-});
-showMonthlySummary(opening,receive,delivery,present);
-}
-
-async function loadMonthlySummary(floor, month){
-let snap=await getDoc(doc(db,"monthlySummary",floor+"_"+month));
-if(snap.exists()){
-let x=snap.data();
-showMonthlySummary(x.opening||0,x.totalReceive||0,x.totalDelivery||0,x.present||0);
-} else {
-// Monthly data na thakle current table er opening/total show korbe
-let opening=Number(document.getElementById("totalPrevious").innerText)||0;
-let receive=Number(document.getElementById("totalReceive").innerText)||0;
-let delivery=Number(document.getElementById("totalDelivery").innerText)||0;
-let present=Number(document.getElementById("totalPresent").innerText)||0;
-showMonthlySummary(opening,receive,delivery,present);
-}
+  showMonthlySummary(opening,receive,delivery,present);
 }
 
 function showMonthlySummary(opening,receive,delivery,present){
-document.getElementById("monthOpening").innerText=opening;
-document.getElementById("monthReceive").innerText=receive;
-document.getElementById("monthDelivery").innerText=delivery;
-document.getElementById("monthPresent").innerText=present;
+  document.getElementById("monthOpening").innerText=opening;
+  document.getElementById("monthReceive").innerText=receive;
+  document.getElementById("monthDelivery").innerText=delivery;
+  document.getElementById("monthPresent").innerText=present;
 }
 
-function clearMonthlySummary(){
-let opening=Number(document.getElementById("totalPrevious")?.innerText)||0;
-let receive=Number(document.getElementById("totalReceive")?.innerText)||0;
-let delivery=Number(document.getElementById("totalDelivery")?.innerText)||0;
-let present=Number(document.getElementById("totalPresent")?.innerText)||0;
-showMonthlySummary(opening,receive,delivery,present);
+function exportExcel(){
+  let title=`
+    <h2>Needle Daily Posting</h2>
+    <h3>Floor: ${document.getElementById("floor").value}</h3>
+    <h3>Date: ${document.getElementById("postDate").value}</h3>
+  `;
+
+  let table1=document.getElementById("reportTable").outerHTML;
+  let table2=document.getElementById("summaryTable").outerHTML;
+
+  let file=new Blob([title+table1+"<br>"+table2],{
+    type:"application/vnd.ms-excel"
+  });
+
+  let a=document.createElement("a");
+  a.href=URL.createObjectURL(file);
+  a.download="needle-report.xls";
+  a.click();
 }
 
-document.getElementById("postDate").addEventListener("change", loadData);
+function exportPDF(){
+  window.print();
+}
+
+document.getElementById("postDate").addEventListener("change",loadData);
 
 window.loadTable=loadTable;
 window.calc=calc;
 window.updateTotal=updateTotal;
 window.saveData=saveData;
+window.deleteData=deleteData;
 window.loadData=loadData;
-
+window.exportExcel=exportExcel;
+window.exportPDF=exportPDF;
 
 
 loadTable();
