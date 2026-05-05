@@ -6,10 +6,11 @@
 body{margin:0;background:#0b0f19;color:white;font-family:Arial}
 .box{padding:20px}
 h2,h3{text-align:center;margin:4px}
-table{width:100%;border-collapse:collapse;margin-top:15px;background:#fff;color:#000}
+table{width:100%;border-collapse:collapse;margin-top:15px;background:white;color:black}
 th,td{border:1px solid #000;padding:8px;text-align:center}
 input{width:90%;padding:7px;text-align:center}
-button{padding:10px 25px;background:#2563eb;color:white;border:0;border-radius:8px;font-weight:bold}
+button{padding:10px 22px;background:#2563eb;color:white;border:0;border-radius:8px;font-weight:bold;cursor:pointer}
+.deleteBtn{background:#dc2626}
 .total{background:#92d050;font-weight:bold}
 </style>
 </head>
@@ -24,7 +25,9 @@ button{padding:10px 25px;background:#2563eb;color:white;border:0;border-radius:8
 
 Date:
 <input type="date" id="postDate" style="padding:8px;width:180px">
+
 <button onclick="saveData()">Save Data</button>
+<button class="deleteBtn" onclick="deleteData()">Delete Data</button>
 <button onclick="location.href='index.html'">Back Home</button>
 
 <table>
@@ -86,7 +89,7 @@ Date:
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-app.js";
-import { getFirestore, doc, setDoc, getDoc, collection, getDocs } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-firestore.js";
+import { getFirestore, doc, setDoc, getDoc, deleteDoc, collection, getDocs } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-firestore.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyD-wBCF5eeWMHobLFOhBzKW7aB2pagz9-w",
@@ -126,16 +129,34 @@ async function saveData(){
   calc();
 
   await setDoc(doc(db,"sewingThread",date),{
-    date: date,
-    previous: Number(document.getElementById("previous").innerText) || 0,
-    receive: Number(document.getElementById("receive").value) || 0,
-    delivery: Number(document.getElementById("delivery").value) || 0,
-    present: Number(document.getElementById("present").innerText) || 0,
-    remarks: document.getElementById("remarks").value || ""
+    date:date,
+    receive:Number(document.getElementById("receive").value) || 0,
+    delivery:Number(document.getElementById("delivery").value) || 0,
+    remarks:document.getElementById("remarks").value || ""
   });
 
-  await loadMonthlySummary();
+  await loadData();
   alert("Saved Successfully");
+}
+
+async function deleteData(){
+  let date = document.getElementById("postDate").value;
+
+  if(!date){
+    alert("Date select koro");
+    return;
+  }
+
+  if(!confirm("Ei date er data delete korba?")) return;
+
+  await deleteDoc(doc(db,"sewingThread",date));
+
+  document.getElementById("receive").value = "";
+  document.getElementById("delivery").value = "";
+  document.getElementById("remarks").value = "";
+
+  await loadData();
+  alert("Deleted Successfully");
 }
 
 async function loadData(){
@@ -146,46 +167,16 @@ async function loadData(){
 
   if(todaySnap.exists()){
     let data = todaySnap.data();
-
-    document.getElementById("previous").innerText = data.previous || openingStock;
     document.getElementById("receive").value = data.receive || "";
     document.getElementById("delivery").value = data.delivery || "";
     document.getElementById("remarks").value = data.remarks || "";
-
-    calc();
-    await loadMonthlySummary();
-    return;
+  }else{
+    document.getElementById("receive").value = "";
+    document.getElementById("delivery").value = "";
+    document.getElementById("remarks").value = "";
   }
 
-  let prevPresent = await getLastPresentBefore(date);
-
-  document.getElementById("previous").innerText = prevPresent;
-  document.getElementById("receive").value = "";
-  document.getElementById("delivery").value = "";
-  document.getElementById("remarks").value = "";
-
-  calc();
   await loadMonthlySummary();
-}
-
-async function getLastPresentBefore(date){
-  let snap = await getDocs(collection(db,"sewingThread"));
-  let rows = [];
-
-  snap.forEach(docSnap=>{
-    let data = docSnap.data();
-    if(data.date && data.date < date){
-      rows.push(data);
-    }
-  });
-
-  rows.sort((a,b)=>a.date.localeCompare(b.date));
-
-  if(rows.length > 0){
-    return Number(rows[rows.length-1].present) || openingStock;
-  }
-
-  return openingStock;
 }
 
 async function loadMonthlySummary(){
@@ -194,47 +185,51 @@ async function loadMonthlySummary(){
 
   let month = date.slice(0,7);
 
+  let totalReceive = 0;
+  let totalDelivery = 0;
+
   let snap = await getDocs(collection(db,"sewingThread"));
-  let monthRows = [];
 
   snap.forEach(docSnap=>{
     let data = docSnap.data();
 
     if(data.date && data.date.slice(0,7) === month && data.date <= date){
-      monthRows.push(data);
+      totalReceive += Number(data.receive) || 0;
+      totalDelivery += Number(data.delivery) || 0;
     }
   });
 
-  monthRows.sort((a,b)=>a.date.localeCompare(b.date));
+  let previous = openingStock + totalReceive - totalDelivery;
 
-  let opening = openingStock;
-  let totalReceive = 0;
-  let totalDelivery = 0;
-  let presentStock = Number(document.getElementById("present").innerText) || openingStock;
+  let todayReceive = Number(document.getElementById("receive").value) || 0;
+  let todayDelivery = Number(document.getElementById("delivery").value) || 0;
 
-  if(monthRows.length > 0){
-    opening = Number(monthRows[0].previous) || openingStock;
+  let beforeTodayReceive = totalReceive - todayReceive;
+  let beforeTodayDelivery = totalDelivery - todayDelivery;
 
-    monthRows.forEach(row=>{
-      totalReceive += Number(row.receive) || 0;
-      totalDelivery += Number(row.delivery) || 0;
-      presentStock = Number(row.present) || presentStock;
-    });
-  }else{
-    opening = Number(document.getElementById("previous").innerText) || openingStock;
-    presentStock = Number(document.getElementById("present").innerText) || opening;
-  }
+  let dailyPrevious = openingStock + beforeTodayReceive - beforeTodayDelivery;
+  let dailyPresent = dailyPrevious + todayReceive - todayDelivery;
+  let monthlyPresent = openingStock + totalReceive - totalDelivery;
 
-  document.getElementById("mOpening").innerText = opening;
+  document.getElementById("previous").innerText = dailyPrevious;
+  document.getElementById("present").innerText = dailyPresent;
+
+  document.getElementById("totalPrevious").innerText = dailyPrevious;
+  document.getElementById("totalReceive").innerText = todayReceive;
+  document.getElementById("totalDelivery").innerText = todayDelivery;
+  document.getElementById("totalPresent").innerText = dailyPresent;
+
+  document.getElementById("mOpening").innerText = openingStock;
   document.getElementById("mReceive").innerText = totalReceive;
   document.getElementById("mDelivery").innerText = totalDelivery;
-  document.getElementById("mPresent").innerText = presentStock;
+  document.getElementById("mPresent").innerText = monthlyPresent;
 }
 
 document.getElementById("postDate").addEventListener("change", loadData);
 
 window.calc = calc;
 window.saveData = saveData;
+window.deleteData = deleteData;
 
 calc();
 </script>
