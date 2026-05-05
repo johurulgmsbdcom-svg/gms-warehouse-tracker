@@ -60,7 +60,7 @@ Date:
 <td id="previous">21514393</td>
 <td><input type="number" id="receive" oninput="calc()"></td>
 <td><input type="number" id="delivery" oninput="calc()"></td>
-<td id="present">171255</td>
+<td id="present">21514393</td>
 <td><input id="remarks"></td>
 </tr>
 </tbody>
@@ -68,10 +68,10 @@ Date:
 <tfoot>
 <tr class="total">
 <td colspan="2">TOTAL</td>
-<td id="totalPrevious">171255</td>
+<td id="totalPrevious">21514393</td>
 <td id="totalReceive">0</td>
 <td id="totalDelivery">0</td>
-<td id="totalPresent">171255</td>
+<td id="totalPresent">21514393</td>
 <td></td>
 </tr>
 </tfoot>
@@ -80,7 +80,7 @@ Date:
 <br>
 
 <h3>Monthly Summary</h3>
-<table>
+<table id="summaryTable">
 <tr>
 <th>Opening</th>
 <th>Total Receive</th>
@@ -88,10 +88,10 @@ Date:
 <th>Present Stock</th>
 </tr>
 <tr class="total">
-<td id="mOpening">171255</td>
+<td id="mOpening">21514393</td>
 <td id="mReceive">0</td>
 <td id="mDelivery">0</td>
-<td id="mPresent">171255</td>
+<td id="mPresent">21514393</td>
 </tr>
 </table>
 
@@ -113,7 +113,7 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
-const openingStock = 171255;
+const openingStock = 21514393;
 const collectionName = "accessoriesSample";
 
 function calc(){
@@ -234,8 +234,6 @@ async function loadMonthlySummary(){
 }
 
 function exportExcel(){
-  let table1 = document.getElementById("reportTable").outerHTML;
-  let summary = document.querySelectorAll("table")[1].outerHTML;
   let title = `
     <h2>GMS TEXTILES LTD</h2>
     <h3>Tansutrapur, Kaliakair, Gazipur.</h3>
@@ -243,7 +241,10 @@ function exportExcel(){
     <h3>Daily Accessories Stock</h3>
   `;
 
-  let file = new Blob([title + table1 + "<br>" + summary], {
+  let table1 = document.getElementById("reportTable").outerHTML;
+  let table2 = document.getElementById("summaryTable").outerHTML;
+
+  let file = new Blob([title + table1 + "<br>" + table2], {
     type:"application/vnd.ms-excel"
   });
 
