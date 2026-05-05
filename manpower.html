@@ -6,21 +6,21 @@
 body{margin:0;background:#0b0f19;color:white;font-family:Arial}
 .box{padding:20px}
 h2,h3{text-align:center;margin:4px}
+.top{text-align:center;margin-top:10px}
 table{width:100%;border-collapse:collapse;margin-top:15px;background:white;color:black}
 th,td{border:1px solid #000;padding:8px;text-align:center}
 input,select{padding:8px;border-radius:6px;border:1px solid #333}
-button{padding:10px 20px;background:#2563eb;color:white;border:0;border-radius:8px;font-weight:bold;cursor:pointer;margin:4px}
+button{padding:10px 18px;background:#2563eb;color:white;border:0;border-radius:8px;font-weight:bold;cursor:pointer;margin:4px}
 .deleteBtn{background:#dc2626}
 .excelBtn{background:#16a34a}
 .pdfBtn{background:#7c3aed}
 .total{background:#92d050;font-weight:bold}
 .empImg{width:45px;height:45px;border-radius:50%;object-fit:cover}
-.formBox{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-top:15px}
-.hidden{display:none}
+.formBox{display:none;grid-template-columns:repeat(4,1fr);gap:10px;margin-top:15px}
+.summary{font-size:20px;font-weight:bold;text-align:center;margin-top:10px}
 @media print{
   body{background:white;color:black}
-  button,.formBox,.topControl{display:none}
-  .box{padding:0}
+  button,.top,.formBox{display:none!important}
 }
 </style>
 </head>
@@ -30,17 +30,17 @@ button{padding:10px 20px;background:#2563eb;color:white;border:0;border-radius:8
 
 <h2>GMS TEXTILES LTD</h2>
 <h3>Tansutrapur, Kaliakair, Gazipur.</h3>
-<h3 id="mcdTitle">Accessorie ( MCD )</h3>
+<h3 id="mcdTitle">GREY FABRIC MCD</h3>
 <h3>Manpower List</h3>
 
-<div class="topControl">
-<label>Company:</label>
+<div class="top">
+Company:
 <select id="company">
   <option>GMS TEXTILES LTD</option>
   <option>GMS COMPOSITE KNITTING</option>
 </select>
 
-<label>MCD:</label>
+MCD:
 <select id="mcd" onchange="loadData()">
   <option>GREY FABRIC MCD</option>
   <option>SHIPMENT MCD</option>
@@ -65,25 +65,26 @@ button{padding:10px 20px;background:#2563eb;color:white;border:0;border-radius:8
 <button onclick="location.href='index.html'">Back Home</button>
 </div>
 
-<div id="formArea" class="hidden">
-  <div class="formBox">
-    <input id="image" placeholder="Image link">
-    <input id="empId" placeholder="Employee ID">
-    <input id="empName" placeholder="Employee Name">
-    <input id="designation" placeholder="Designation">
-    <input id="joinDate" type="date" onchange="showJobAge()">
-    <input id="jobAge" placeholder="Job Age" readonly>
-    <input id="section" placeholder="Section Name">
-    <input id="salary" type="number" placeholder="Salary">
-    <input id="jobDesc" placeholder="Job Description">
-  </div>
+<div id="formBox" class="formBox">
+  <input id="image" placeholder="Image Link">
+  <input id="empId" placeholder="Employee ID">
+  <input id="empName" placeholder="Employee Name">
+  <input id="designation" placeholder="Designation">
+  <input id="joinDate" type="date" onchange="updateJobAge()">
+  <input id="jobAge" placeholder="Job Age" readonly>
+  <input id="section" placeholder="Section Name">
+  <input id="salary" type="number" placeholder="Salary">
+  <input id="jobDesc" placeholder="Job Description">
 
-  <br>
   <button onclick="saveData()">Save Employee</button>
-  <button class="deleteBtn" onclick="deleteEmployee()">Delete By Employee ID</button>
+  <button onclick="clearForm()">Clear</button>
 </div>
 
-<h3 id="totalText">Total Manpower: 0</h3>
+<div class="summary">
+  Total Manpower: <span id="totalManpower">0</span>
+  &nbsp;&nbsp; | &nbsp;&nbsp;
+  Total Salary: <span id="totalSalary">0</span>
+</div>
 
 <table id="reportTable">
 <thead>
@@ -97,6 +98,7 @@ button{padding:10px 20px;background:#2563eb;color:white;border:0;border-radius:8
 <th>Section Name</th>
 <th>Selery</th>
 <th>Job Description</th>
+<th>Action</th>
 </tr>
 </thead>
 
@@ -104,7 +106,7 @@ button{padding:10px 20px;background:#2563eb;color:white;border:0;border-radius:8
 
 <tfoot>
 <tr class="total">
-<td colspan="9" id="mcdTotal">Total: 0</td>
+<td colspan="10" id="mcdTotal">GREY FABRIC MCD Total: 0 | Salary: 0</td>
 </tr>
 </tfoot>
 </table>
@@ -128,40 +130,40 @@ const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
 function showForm(){
-  document.getElementById("formArea").classList.remove("hidden");
+  document.getElementById("formBox").style.display="grid";
 }
 
 function getJobAge(joinDate){
   if(!joinDate) return "";
 
-  let start = new Date(joinDate);
-  let today = new Date();
+  let start=new Date(joinDate);
+  let today=new Date();
 
-  let years = today.getFullYear() - start.getFullYear();
-  let months = today.getMonth() - start.getMonth();
+  let years=today.getFullYear()-start.getFullYear();
+  let months=today.getMonth()-start.getMonth();
 
-  if(today.getDate() < start.getDate()){
+  if(today.getDate()<start.getDate()){
     months--;
   }
 
-  if(months < 0){
+  if(months<0){
     years--;
-    months += 12;
+    months+=12;
   }
 
-  if(years < 0) return "";
+  if(years<0) return "";
 
-  return years + " Year " + months + " Month";
+  return years+" Year "+months+" Month";
 }
 
-function showJobAge(){
-  let joinDate=document.getElementById("joinDate").value;
-  document.getElementById("jobAge").value=getJobAge(joinDate);
+function updateJobAge(){
+  document.getElementById("jobAge").value=getJobAge(document.getElementById("joinDate").value);
 }
 
 async function saveData(){
-  let empId=document.getElementById("empId").value.trim();
+  let company=document.getElementById("company").value;
   let mcd=document.getElementById("mcd").value;
+  let empId=document.getElementById("empId").value.trim();
 
   if(!empId){
     alert("Employee ID dao");
@@ -169,17 +171,16 @@ async function saveData(){
   }
 
   await setDoc(doc(db,"manpower",mcd+"_"+empId),{
-    company:document.getElementById("company").value,
+    company:company,
     mcd:mcd,
-    image:document.getElementById("image").value,
+    image:document.getElementById("image").value.trim(),
     empId:empId,
-    empName:document.getElementById("empName").value,
-    designation:document.getElementById("designation").value,
+    empName:document.getElementById("empName").value.trim(),
+    designation:document.getElementById("designation").value.trim(),
     joinDate:document.getElementById("joinDate").value,
-    jobAge:getJobAge(document.getElementById("joinDate").value),
-    section:document.getElementById("section").value,
+    section:document.getElementById("section").value.trim(),
     salary:Number(document.getElementById("salary").value)||0,
-    jobDesc:document.getElementById("jobDesc").value
+    jobDesc:document.getElementById("jobDesc").value.trim()
   });
 
   clearForm();
@@ -187,20 +188,12 @@ async function saveData(){
   alert("Saved Successfully");
 }
 
-async function deleteEmployee(){
-  let empId=document.getElementById("empId").value.trim();
+async function deleteEmployee(empId){
   let mcd=document.getElementById("mcd").value;
-
-  if(!empId){
-    alert("Delete korte Employee ID dao");
-    return;
-  }
 
   if(!confirm("Ei employee delete korba?")) return;
 
   await deleteDoc(doc(db,"manpower",mcd+"_"+empId));
-
-  clearForm();
   await loadData();
   alert("Deleted Successfully");
 }
@@ -208,16 +201,19 @@ async function deleteEmployee(){
 async function loadData(){
   let mcd=document.getElementById("mcd").value;
   document.getElementById("mcdTitle").innerText=mcd;
+
   let snap=await getDocs(collection(db,"manpower"));
 
   let html="";
   let count=0;
+  let totalSalary=0;
 
   snap.forEach(docSnap=>{
     let x=docSnap.data();
 
     if(x.mcd===mcd){
       count++;
+      totalSalary+=Number(x.salary)||0;
 
       html+=`
       <tr>
@@ -228,15 +224,17 @@ async function loadData(){
         <td>${x.joinDate||""}</td>
         <td>${getJobAge(x.joinDate)||""}</td>
         <td>${x.section||""}</td>
-        <td>${x.salary||0}</td>
+        <td>${Number(x.salary)||0}</td>
         <td>${x.jobDesc||""}</td>
+        <td><button class="deleteBtn" onclick="deleteEmployee('${x.empId}')">Delete</button></td>
       </tr>`;
     }
   });
 
   document.getElementById("tableBody").innerHTML=html;
-  document.getElementById("totalText").innerText="Total Manpower: "+count;
-  document.getElementById("mcdTotal").innerText=mcd+" Total: "+count;
+  document.getElementById("totalManpower").innerText=count;
+  document.getElementById("totalSalary").innerText=totalSalary;
+  document.getElementById("mcdTotal").innerText=mcd+" Total: "+count+" | Salary: "+totalSalary;
 }
 
 function clearForm(){
@@ -251,14 +249,13 @@ function exportExcel(){
     <h3>Tansutrapur, Kaliakair, Gazipur.</h3>
     <h3>${document.getElementById("mcd").value}</h3>
     <h3>Manpower List</h3>
+    <h3>Total Manpower: ${document.getElementById("totalManpower").innerText}</h3>
+    <h3>Total Salary: ${document.getElementById("totalSalary").innerText}</h3>
   `;
 
   let table=document.getElementById("reportTable").outerHTML;
 
-  let file=new Blob([title+table],{
-    type:"application/vnd.ms-excel"
-  });
-
+  let file=new Blob([title+table],{type:"application/vnd.ms-excel"});
   let a=document.createElement("a");
   a.href=URL.createObjectURL(file);
   a.download="manpower-report.xls";
@@ -273,7 +270,8 @@ window.showForm=showForm;
 window.saveData=saveData;
 window.deleteEmployee=deleteEmployee;
 window.loadData=loadData;
-window.showJobAge=showJobAge;
+window.clearForm=clearForm;
+window.updateJobAge=updateJobAge;
 window.exportExcel=exportExcel;
 window.exportPDF=exportPDF;
 
