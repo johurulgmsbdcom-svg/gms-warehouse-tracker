@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Manpower List</title>
+<style>
+body{margin:0;background:#0b0f19;color:white;font-family:Arial}
+.box{padding:20px}
+h2,h3{text-align:center;margin:4px}
+table{width:100%;border-collapse:collapse;margin-top:15px;background:white;color:black}
+th,td{border:1px solid #000;padding:8px;text-align:center}
+input,select{padding:8px;border-radius:6px;border:1px solid #333}
+button{padding:10px 20px;background:#2563eb;color:white;border:0;border-radius:8px;font-weight:bold;cursor:pointer}
+.deleteBtn{background:#dc2626}
+.total{background:#92d050;font-weight:bold}
+.empImg{width:45px;height:45px;border-radius:50%;object-fit:cover}
+.formBox{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-top:15px}
+</style>
+</head>
+
+<body>
+<div class="box">
+
+<h2>GMS TEXTILES LTD</h2>
+<h3>Tansutrapur, Kaliakair, Gazipur.</h3>
+<h3>Accessorie ( MCD )</h3>
+<h3>Manpower List</h3>
+
+<label>Company:</label>
+<select id="company">
+  <option>GMS TEXTILES LTD</option>
+  <option>GMS COMPOSITE KNITTING</option>
+</select>
+
+<label>MCD:</label>
+<select id="mcd">
+  <option>GREY FABRIC MCD</option>
+  <option>SHIPMENT MCD</option>
+  <option>BILLING SECTION</option>
+  <option>OUTER WEAR MCD</option>
+  <option>YARN MCD</option>
+  <option>PRINTING MCD</option>
+  <option>JHUT MCD</option>
+  <option>GENERAL MCD</option>
+  <option>ACCESSORIES MCD</option>
+  <option>LEFTOVER MCD</option>
+  <option>FINISH FABRIC MCD</option>
+  <option>YARN DYEING MCD</option>
+  <option>CHEMICAL MCD</option>
+  <option>GENERAL TECHNICAL MCD</option>
+</select>
+
+<button onclick="loadData()">Show Manpower</button>
+<button onclick="location.href='index.html'">Back Home</button>
+
+<div class="formBox">
+  <input id="image" placeholder="Image link">
+  <input id="empId" placeholder="Employee ID">
+  <input id="empName" placeholder="Employee Name">
+  <input id="designation" placeholder="Designation">
+  <input id="joinDate" type="date">
+  <input id="section" placeholder="Section Name">
+  <input id="salary" type="number" placeholder="Salary">
+  <input id="jobDesc" placeholder="Job Description">
+</div>
+
+<br>
+<button onclick="saveData()">Save Employee</button>
+<button class="deleteBtn" onclick="deleteEmployee()">Delete By Employee ID</button>
+
+<h3 id="totalText">Total Manpower: 0</h3>
+
+<table>
+<thead>
+<tr>
+<th>Image</th>
+<th>Employee ID</th>
+<th>Employee Name</th>
+<th>Designation</th>
+<th>Join Date</th>
+<th>Section Name</th>
+<th>Selery</th>
+<th>Job Description</th>
+</tr>
+</thead>
+
+<tbody id="tableBody"></tbody>
+
+<tfoot>
+<tr class="total">
+<td colspan="8" id="mcdTotal">Total: 0</td>
+</tr>
+</tfoot>
+</table>
+
+</div>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-app.js";
+import { getFirestore, doc, setDoc, getDoc, deleteDoc, collection, getDocs } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-firestore.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyD-wBCF5eeWMHobLFOhBzKW7aB2pagz9-w",
+  authDomain: "gms-warehouse-tracker-7f57e.firebaseapp.com",
+  projectId: "gms-warehouse-tracker-7f57e",
+  storageBucket: "gms-warehouse-tracker-7f57e.firebasestorage.app",
+  messagingSenderId: "992250313291",
+  appId: "1:992250313291:web:ee3bceae76d4d53bc26bce"
+};
+
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+
+function key(){
+  return document.getElementById("mcd").value + "_" + document.getElementById("empId").value;
+}
+
+async function saveData(){
+  let empId=document.getElementById("empId").value.trim();
+  let mcd=document.getElementById("mcd").value;
+
+  if(!empId){
+    alert("Employee ID dao");
+    return;
+  }
+
+  await setDoc(doc(db,"manpower",mcd+"_"+empId),{
+    company:document.getElementById("company").value,
+    mcd:mcd,
+    image:document.getElementById("image").value,
+    empId:empId,
+    empName:document.getElementById("empName").value,
+    designation:document.getElementById("designation").value,
+    joinDate:document.getElementById("joinDate").value,
+    section:document.getElementById("section").value,
+    salary:Number(document.getElementById("salary").value)||0,
+    jobDesc:document.getElementById("jobDesc").value
+  });
+
+  clearForm();
+  await loadData();
+  alert("Saved Successfully");
+}
+
+async function deleteEmployee(){
+  let empId=document.getElementById("empId").value.trim();
+  let mcd=document.getElementById("mcd").value;
+
+  if(!empId){
+    alert("Delete korte Employee ID dao");
+    return;
+  }
+
+  if(!confirm("Ei employee delete korba?")) return;
+
+  await deleteDoc(doc(db,"manpower",mcd+"_"+empId));
+
+  clearForm();
+  await loadData();
+  alert("Deleted Successfully");
+}
+
+async function loadData(){
+  let mcd=document.getElementById("mcd").value;
+  let snap=await getDocs(collection(db,"manpower"));
+
+  let html="";
+  let count=0;
+
+  snap.forEach(docSnap=>{
+    let x=docSnap.data();
+
+    if(x.mcd===mcd){
+      count++;
+
+      html+=`
+      <tr>
+        <td>${x.image ? `<img class="empImg" src="${x.image}">` : ""}</td>
+        <td>${x.empId||""}</td>
+        <td>${x.empName||""}</td>
+        <td>${x.designation||""}</td>
+        <td>${x.joinDate||""}</td>
+        <td>${x.section||""}</td>
+        <td>${x.salary||0}</td>
+        <td>${x.jobDesc||""}</td>
+      </tr>`;
+    }
+  });
+
+  document.getElementById("tableBody").innerHTML=html;
+  document.getElementById("totalText").innerText="Total Manpower: "+count;
+  document.getElementById("mcdTotal").innerText=mcd+" Total: "+count;
+}
+
+function clearForm(){
+  ["image","empId","empName","designation","joinDate","section","salary","jobDesc"].forEach(id=>{
+    document.getElementById(id).value="";
+  });
+}
+
+document.getElementById("mcd").addEventListener("change",loadData);
+
+window.saveData=saveData;
+window.deleteEmployee=deleteEmployee;
+window.loadData=loadData;
+
+loadData();
+</script>
+
+</body>
+</html>
