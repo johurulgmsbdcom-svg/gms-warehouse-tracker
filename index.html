@@ -14,7 +14,6 @@
   --blue:#2563eb;
   --green:#22c55e;
   --orange:#f59e0b;
-  --red:#ef4444;
 }
 
 body.light{
@@ -33,7 +32,6 @@ body{
   font-family:Segoe UI,Arial,sans-serif;
 }
 
-/* HEADER */
 .header{
   height:58px;
   background:var(--card);
@@ -75,7 +73,6 @@ body{
   cursor:pointer;
 }
 
-/* NAV */
 .nav{
   display:flex;
   gap:12px;
@@ -101,7 +98,6 @@ body{
   color:white;
 }
 
-/* PAGE */
 .page{
   display:none;
   padding:22px;
@@ -111,7 +107,6 @@ body{
   display:block;
 }
 
-/* DASHBOARD */
 .dashTitle{
   font-size:26px;
   font-weight:900;
@@ -217,7 +212,6 @@ body{
   color:var(--orange);
 }
 
-/* COMMON */
 .grid{
   display:grid;
   grid-template-columns:repeat(3,1fr);
@@ -263,7 +257,6 @@ select,input,textarea{
   margin-top:12px;
 }
 
-/* FOOTER */
 .footer{
   position:fixed;
   bottom:10px;
@@ -323,7 +316,6 @@ select,input,textarea{
   <button onclick="openPage('notice',this)">Notice</button>
 </div>
 
-<!-- DASHBOARD -->
 <div id="home" class="page activePage">
 
   <div class="dashTitle">Dashboard Overview</div>
@@ -384,14 +376,13 @@ select,input,textarea{
     <div class="panel needleBox">
       <h3>🪡 Needle Report Today</h3>
       <div class="bigNeedle" id="needleStock">0</div>
-      <div style="color:var(--muted);font-weight:bold;">Total Present Stock</div>
+      <div style="color:var(--muted);font-weight:bold;">12 Floor Total Present Stock</div>
     </div>
 
   </div>
 
 </div>
 
-<!-- NEW ENTRY -->
 <div id="entry" class="page">
   <h2>New Entry</h2>
 
@@ -427,7 +418,6 @@ select,input,textarea{
   <div id="entryBox" class="grid"></div>
 </div>
 
-<!-- REPORTS -->
 <div id="reports" class="page">
   <h2>Reports</h2>
 
@@ -463,7 +453,6 @@ select,input,textarea{
   <div id="reportBox" class="grid"></div>
 </div>
 
-<!-- NEEDLE -->
 <div id="needle" class="page">
   <h2>Needle Section</h2>
 
@@ -474,7 +463,6 @@ select,input,textarea{
   </div>
 </div>
 
-<!-- NOTICE -->
 <div id="notice" class="page">
   <h2>Notice Board</h2>
   <textarea placeholder="Notice likho..." style="height:120px;"></textarea>
@@ -504,6 +492,21 @@ const firebaseConfig = {
 
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
+
+const FLOOR_OPENING = {
+  "Kadom R": 618,
+  "Kadom N": 443,
+  "Poddo R": 1889,
+  "Poddo N": 401,
+  "Shapla R": 1171,
+  "Shapla N": 573,
+  "Sample R": 1138,
+  "Sample N": 251,
+  "EMBROIDERY R": 1011,
+  "EMBROIDERY N": 287,
+  "Belly R": 796,
+  "Belly N": 335
+};
 
 window.openPage=function(id,btn){
   document.querySelectorAll(".page").forEach(p=>p.classList.remove("activePage"));
@@ -604,25 +607,36 @@ async function getLatestPresent(collectionName, openingStock){
 
 async function getNeedlePresent(){
   let snap = await getDocs(collection(db,"dailyPosting"));
-
-  let latestByFloor={};
+  let latestByFloor = {};
 
   snap.forEach(docSnap=>{
-    let x=docSnap.data();
+    let x = docSnap.data();
+
     if(x.floor && x.date){
       if(!latestByFloor[x.floor] || x.date > latestByFloor[x.floor].date){
-        latestByFloor[x.floor]=x;
+        latestByFloor[x.floor] = x;
       }
     }
   });
 
-  let total=0;
+  let total = 0;
 
-  Object.values(latestByFloor).forEach(x=>{
-    if(x.rows){
-      x.rows.forEach(r=>{
-        total += Number(r.present)||0;
-      });
+  Object.keys(FLOOR_OPENING).forEach(floor=>{
+    if(latestByFloor[floor]){
+      let x = latestByFloor[floor];
+
+      if(x.rows){
+        let floorTotal = 0;
+        x.rows.forEach(r=>{
+          floorTotal += Number(r.present) || 0;
+        });
+        total += floorTotal;
+      }else{
+        total += Number(x.totalPresent) || FLOOR_OPENING[floor];
+      }
+
+    }else{
+      total += FLOOR_OPENING[floor];
     }
   });
 
