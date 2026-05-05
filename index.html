@@ -1,16 +1,142 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>GMS Warehouse Tracker</title>
+<title>GMS Warehouse Dashboard</title>
+<style>
+body{margin:0;background:#eef2f7;font-family:Arial;color:#0f172a}
+.header{background:white;padding:14px 22px;display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid #cbd5e1}
+.logo{font-size:20px;font-weight:bold}
+.sub{font-size:12px;color:#64748b}
+.nav{display:flex;gap:10px;padding:14px;background:#f1f5f9}
+.nav button{padding:12px 20px;border:1px solid #cbd5e1;border-radius:8px;background:white;font-weight:bold;cursor:pointer}
+.nav button:hover,.active{background:#2563eb!important;color:white}
+.box{background:white;margin:16px;padding:22px;border-radius:12px;border:1px solid #dbe3ef}
+.grid{display:grid;grid-template-columns:repeat(4,1fr);gap:15px}
+.card{padding:22px;border-radius:12px;background:#f8fafc;border:1px solid #cbd5e1;text-align:center;font-weight:bold;cursor:pointer}
+.card:hover{background:#dbeafe}
+.search{display:flex;gap:10px;margin-top:15px}
+.search input{flex:1;padding:14px;border:1px solid #94a3b8;border-radius:8px;font-size:16px}
+.search button{padding:14px 25px;background:#2563eb;color:white;border:0;border-radius:8px;font-weight:bold}
+select{padding:12px;width:100%;font-size:16px;border-radius:8px;border:1px solid #94a3b8}
+.hidden{display:none}
+</style>
 </head>
-<body style="background:#0f172a; color:white; font-family:Arial; text-align:center;">
 
-  <h1>GMS Warehouse & Manpower Tracker</h1>
-  <p>Welcome to your system</p>
+<body>
 
-<button onclick="window.location.href='needle.html'">
-    Needle Posting
+<div class="header">
+  <div>
+    <div class="logo">GMS Warehouse & Manpower Tracker</div>
+    <div class="sub">GMS TEXTILES LTD. & GMS COMPOSITE KNITTING</div>
+  </div>
+  <div>🟢 Firebase Live</div>
+</div>
+
+<div class="nav">
+  <button class="active" onclick="showPage('dashboard')">Dashboard</button>
+  <button onclick="showPage('newEntry')">New Entry</button>
+  <button onclick="showPage('reports')">Reports</button>
+  <button onclick="location.href='notice.html'">Notice Board</button>
+  <button onclick="location.href='manpower.html'">Manpower List</button>
+</div>
+
+<div id="dashboard" class="box">
+  <h2>Dashboard</h2>
+  <p>Search report, manpower ID, card no, name, floor or MCD.</p>
+
+  <div class="search">
+    <input id="searchInput" placeholder="Search report / manpower ID / card / MCD...">
+    <button onclick="searchInfo()">Search</button>
+  </div>
+
+  <br>
+  <div class="grid">
+    <div class="card" onclick="location.href='needle.html'">Needle Daily Posting</div>
+    <div class="card" onclick="showPage('reports')">Monthly Reports</div>
+    <div class="card" onclick="location.href='manpower.html'">Manpower List</div>
+    <div class="card" onclick="location.href='notice.html'">Notice Board</div>
+  </div>
+</div>
+
+<div id="newEntry" class="box hidden">
+  <h2>New Entry</h2>
+
+  <label>Company</label>
+  <select id="company">
+    <option>GMS TEXTILES LTD</option>
+    <option>GMS COMPOSITE KNITTING</option>
+  </select>
+
+  <br><br>
+
+  <label>Department / MCD</label>
+  <select id="dept">
+    <option>GREY FABRIC MCD</option>
+    <option>SHIPMENT MCD</option>
+    <option>BILLING SECTION</option>
+    <option>OUTER WEAR MCD</option>
+    <option>YARN MCD</option>
+    <option>PRINTING MCD</option>
+    <option>JHUT MCD</option>
+    <option>GENERAL MCD</option>
+    <option>ACCESSORIES MCD</option>
+    <option>LEFTOVER MCD</option>
+    <option>FINISH FABRIC MCD</option>
+    <option>YARN DYEING MCD</option>
+    <option>CHEMICAL MCD</option>
+    <option>GENERAL TECHNICAL MCD</option>
+  </select>
+
+  <br><br>
+
+  <button onclick="openDept()" style="padding:12px 25px;background:#2563eb;color:white;border:0;border-radius:6px;">
+    Open Department
   </button>
+</div>
+
+<div id="reports" class="box hidden">
+  <h2>Reports</h2>
+  <div class="grid">
+    <div class="card" onclick="location.href='needle.html'">Needle Daily Report</div>
+    <div class="card" onclick="location.href='monthly.html'">Needle Monthly Report</div>
+    <div class="card" onclick="location.href='daily-report.html'">All Daily Reports</div>
+    <div class="card" onclick="location.href='manpower.html'">Manpower Report</div>
+    <div class="card" onclick="alert('Accessories Report pore add korbo')">Accessories Report</div>
+    <div class="card" onclick="alert('Sewing Thread Report pore add korbo')">Sewing Thread Report</div>
+    <div class="card" onclick="alert('Twill Tape Report pore add korbo')">Twill Tape Report</div>
+    <div class="card" onclick="alert('Chemical Report pore add korbo')">Chemical Report</div>
+  </div>
+</div>
+
+<script>
+function showPage(id){
+  document.getElementById("dashboard").classList.add("hidden");
+  document.getElementById("newEntry").classList.add("hidden");
+  document.getElementById("reports").classList.add("hidden");
+  document.getElementById(id).classList.remove("hidden");
+}
+
+function searchInfo(){
+  let q=document.getElementById("searchInput").value.trim();
+  if(q===""){
+    alert("Search text likho");
+    return;
+  }
+  localStorage.setItem("searchQuery", q);
+  location.href="search.html";
+}
+
+function openDept(){
+  let dept=document.getElementById("dept").value;
+  if(dept==="ACCESSORIES MCD"){
+    location.href="accessories.html";
+  }else if(dept==="GENERAL TECHNICAL MCD"){
+    location.href="needle.html";
+  }else{
+    alert(dept + " page pore add korbo");
+  }
+}
+</script>
 
 </body>
 </html>
