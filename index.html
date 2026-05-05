@@ -1,132 +1,4 @@
-<!DOCTYPE html>
-<html>
-<head>
-<title>Daily Sewing Thread Stock</title>
-
-<style>
-body{
-  margin:0;
-  background:#0b0f19;
-  color:white;
-  font-family:Arial;
-}
-
-.box{padding:20px}
-
-h2,h3{text-align:center;margin:4px}
-
-table{
-  width:100%;
-  border-collapse:collapse;
-  margin-top:15px;
-  background:#fff;
-  color:#000;
-}
-
-th,td{
-  border:1px solid #000;
-  padding:8px;
-  text-align:center;
-}
-
-input{
-  width:90%;
-  padding:7px;
-  text-align:center;
-}
-
-button{
-  padding:10px 25px;
-  background:#2563eb;
-  color:white;
-  border:0;
-  border-radius:8px;
-  font-weight:bold;
-  margin:5px;
-}
-
-.total{
-  background:#92d050;
-  font-weight:bold;
-}
-</style>
-
-</head>
-
-<body>
-
-<div class="box">
-
-<h2>GMS TEXTILES LTD</h2>
-<h3>Tansutrapur, Kaliakair, Gazipur</h3>
-<h3>Accessories (MCD)</h3>
-<h3>Daily Sewing Thread Stock</h3>
-
-Date:
-<input type="date" id="postDate">
-
-<button onclick="saveData()">Save</button>
-<button onclick="location.href='index.html'">Back</button>
-
-<table>
-<thead>
-<tr>
-<th>Description</th>
-<th>Unit</th>
-<th>Previous</th>
-<th>Receive</th>
-<th>Delivery</th>
-<th>Present</th>
-<th>Remarks</th>
-</tr>
-</thead>
-
-<tbody>
-<tr>
-<td>Sewing Thread</td>
-<td>Cone</td>
-<td id="previous">133322</td>
-<td><input id="receive" type="number" oninput="calc()"></td>
-<td><input id="delivery" type="number" oninput="calc()"></td>
-<td id="present">133322</td>
-<td><input id="remarks"></td>
-</tr>
-</tbody>
-
-<tfoot>
-<tr class="total">
-<td colspan="2">TOTAL</td>
-<td id="tPrev">133322</td>
-<td id="tRec">0</td>
-<td id="tDel">0</td>
-<td id="tPres">133322</td>
-<td></td>
-</tr>
-</tfoot>
-</table>
-
-<h3>Monthly Summary</h3>
-
-<table>
-<tr>
-<th>Opening</th>
-<th>Total Receive</th>
-<th>Total Delivery</th>
-<th>Present Stock</th>
-</tr>
-
-<tr class="total">
-<td id="mOpen">133322</td>
-<td id="mRec">0</td>
-<td id="mDel">0</td>
-<td id="mPres">133322</td>
-</tr>
-</table>
-
-</div>
-
 <script type="module">
-
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-app.js";
 import { getFirestore, doc, setDoc, getDoc, collection, getDocs } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-firestore.js";
 
@@ -144,125 +16,127 @@ const db = getFirestore(app);
 
 const openingStock = 133322;
 
-
-// 🔹 CALCULATION
 function calc(){
-  let p = Number(document.getElementById("previous").innerText)||0;
-  let r = Number(document.getElementById("receive").value)||0;
-  let d = Number(document.getElementById("delivery").value)||0;
-
+  let p = Number(document.getElementById("previous").innerText) || 0;
+  let r = Number(document.getElementById("receive").value) || 0;
+  let d = Number(document.getElementById("delivery").value) || 0;
   let b = p + r - d;
 
   document.getElementById("present").innerText = b;
-
-  document.getElementById("tPrev").innerText = p;
-  document.getElementById("tRec").innerText = r;
-  document.getElementById("tDel").innerText = d;
-  document.getElementById("tPres").innerText = b;
-
-  loadMonthlySummary();
+  document.getElementById("totalPrevious").innerText = p;
+  document.getElementById("totalReceive").innerText = r;
+  document.getElementById("totalDelivery").innerText = d;
+  document.getElementById("totalPresent").innerText = b;
 }
 
-
-// 🔹 SAVE
 async function saveData(){
   let date = document.getElementById("postDate").value;
-
   if(!date){
     alert("Date select koro");
     return;
   }
 
+  calc();
+
   await setDoc(doc(db,"sewingThread",date),{
-    date:date,
-    previous:Number(previous.innerText)||0,
-    receive:Number(receive.value)||0,
-    delivery:Number(delivery.value)||0,
-    present:Number(present.innerText)||0,
-    remarks:remarks.value || ""
+    date: date,
+    previous: Number(document.getElementById("previous").innerText) || 0,
+    receive: Number(document.getElementById("receive").value) || 0,
+    delivery: Number(document.getElementById("delivery").value) || 0,
+    present: Number(document.getElementById("present").innerText) || 0,
+    remarks: document.getElementById("remarks").value || ""
   });
 
-  alert("Saved!");
+  await loadMonthlySummary();
+  alert("Saved Successfully");
 }
 
-
-// 🔹 LOAD DAILY
 async function loadData(){
-  let date = postDate.value;
+  let date = document.getElementById("postDate").value;
   if(!date) return;
 
-  let today = await getDoc(doc(db,"sewingThread",date));
+  let todaySnap = await getDoc(doc(db,"sewingThread",date));
 
-  if(today.exists()){
-    let d = today.data();
+  if(todaySnap.exists()){
+    let data = todaySnap.data();
 
-    previous.innerText = d.previous;
-    receive.value = d.receive;
-    delivery.value = d.delivery;
-    remarks.value = d.remarks || "";
-
+    document.getElementById("previous").innerText = data.previous || openingStock;
+    document.getElementById("receive").value = data.receive || "";
+    document.getElementById("delivery").value = data.delivery || "";
+    document.getElementById("remarks").value = data.remarks || "";
     calc();
+    await loadMonthlySummary();
     return;
   }
 
-  // 🔹 previous day
-  let dt = new Date(date);
-  dt.setDate(dt.getDate()-1);
-  let prevDate = dt.toISOString().slice(0,10);
+  let d = new Date(date);
+  d.setDate(d.getDate() - 1);
+  let prevDate = d.toISOString().slice(0,10);
 
   let prevSnap = await getDoc(doc(db,"sewingThread",prevDate));
 
   if(prevSnap.exists()){
-    previous.innerText = prevSnap.data().present;
+    document.getElementById("previous").innerText = prevSnap.data().present || openingStock;
   }else{
-    previous.innerText = openingStock;
+    document.getElementById("previous").innerText = openingStock;
   }
 
-  receive.value="";
-  delivery.value="";
-  remarks.value="";
+  document.getElementById("receive").value = "";
+  document.getElementById("delivery").value = "";
+  document.getElementById("remarks").value = "";
 
   calc();
+  await loadMonthlySummary();
 }
 
-
-// 🔹 MONTHLY SUMMARY
 async function loadMonthlySummary(){
-  let date = postDate.value;
+  let date = document.getElementById("postDate").value;
   if(!date) return;
 
   let month = date.slice(0,7);
 
-  let totalR = 0;
-  let totalD = 0;
+  let totalReceive = 0;
+  let totalDelivery = 0;
+  let firstPrevious = null;
+  let latestPresent = Number(document.getElementById("present").innerText) || 0;
 
   let snap = await getDocs(collection(db,"sewingThread"));
 
-  snap.forEach(docSnap=>{
-    let d = docSnap.data();
+  let monthRows = [];
 
-    if(d.date && d.date.slice(0,7)===month){
-      totalR += Number(d.receive)||0;
-      totalD += Number(d.delivery)||0;
+  snap.forEach(docSnap=>{
+    let data = docSnap.data();
+    if(data.date && data.date.slice(0,7) === month){
+      monthRows.push(data);
     }
   });
 
-  mOpen.innerText = openingStock;
-  mRec.innerText = totalR;
-  mDel.innerText = totalD;
-  mPres.innerText = Number(present.innerText)||0;
+  monthRows.sort((a,b)=>a.date.localeCompare(b.date));
+
+  monthRows.forEach((data,index)=>{
+    if(index === 0){
+      firstPrevious = Number(data.previous) || openingStock;
+    }
+
+    totalReceive += Number(data.receive) || 0;
+    totalDelivery += Number(data.delivery) || 0;
+    latestPresent = Number(data.present) || latestPresent;
+  });
+
+  if(firstPrevious === null){
+    firstPrevious = Number(document.getElementById("previous").innerText) || openingStock;
+  }
+
+  document.getElementById("mOpening").innerText = firstPrevious;
+  document.getElementById("mReceive").innerText = totalReceive;
+  document.getElementById("mDelivery").innerText = totalDelivery;
+  document.getElementById("mPresent").innerText = latestPresent;
 }
 
-
-// 🔹 AUTO LOAD
-postDate.addEventListener("change",loadData);
+document.getElementById("postDate").addEventListener("change", loadData);
 
 window.calc = calc;
 window.saveData = saveData;
 
 calc();
-
 </script>
-
-</body>
-</html>
