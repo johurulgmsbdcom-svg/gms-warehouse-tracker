@@ -6,9 +6,15 @@
 <style>
 body{
   margin:0;
-  background:#0b0f19;
-  color:#fff;
   font-family:Segoe UI;
+  background:#0b0f19;
+  color:white;
+}
+
+/* LIGHT MODE */
+.light{
+  background:#f1f5f9;
+  color:#111;
 }
 
 /* HEADER */
@@ -18,30 +24,22 @@ body{
   display:flex;
   justify-content:space-between;
   align-items:center;
-  border-bottom:1px solid #222;
 }
-.logo{
-  font-size:22px;
-  font-weight:bold;
-}
-.sub{
-  font-size:12px;
-  color:#aaa;
-}
+.logo{font-size:22px;font-weight:bold}
+.sub{font-size:12px;color:#aaa}
 
-/* NAVBAR */
+/* NAV */
 .nav{
   display:flex;
   gap:10px;
   padding:12px;
   background:#020617;
-  border-bottom:1px solid #222;
 }
 .nav button{
   padding:14px 22px;
-  background:#111827;
-  border:1px solid #333;
-  color:#fff;
+  background:#1e293b;
+  border:none;
+  color:white;
   border-radius:10px;
   cursor:pointer;
   font-size:15px;
@@ -61,33 +59,30 @@ body{
   display:block;
 }
 
-/* CARD BUTTON */
+/* CARD */
 .grid{
   display:grid;
   grid-template-columns:repeat(4,1fr);
   gap:15px;
 }
 .card{
-  background:#111827;
-  padding:30px;
+  background:#1e293b;
+  padding:25px;
   border-radius:12px;
   text-align:center;
   cursor:pointer;
-  border:1px solid #333;
   font-size:18px;
   font-weight:bold;
 }
-.card:hover{
-  background:#2563eb;
-}
+.card:hover{background:#2563eb}
 
-/* FORM */
+/* INPUT */
 select,input{
   width:100%;
   padding:12px;
-  margin-top:6px;
   border-radius:8px;
-  border:1px solid #444;
+  margin-top:6px;
+  border:1px solid #333;
   background:#020617;
   color:white;
 }
@@ -98,8 +93,8 @@ select,input{
   border:none;
   color:white;
   border-radius:8px;
-  cursor:pointer;
   margin-top:10px;
+  cursor:pointer;
 }
 
 /* SEARCH */
@@ -107,9 +102,37 @@ select,input{
   display:flex;
   gap:10px;
 }
-.search input{flex:1;}
+.search input{flex:1}
 
+/* FOOTER */
+.footer{
+  position:fixed;
+  bottom:10px;
+  width:100%;
+  display:flex;
+  justify-content:center;
+}
+
+.profile{
+  display:flex;
+  align-items:center;
+  gap:8px;
+  background:#111827;
+  padding:6px 14px;
+  border-radius:30px;
+  border:1px solid #334155;
+  color:#94a3b8;
+  font-weight:bold;
+}
+
+.profile img{
+  width:28px;
+  height:28px;
+  border-radius:50%;
+  border:2px solid #22c55e;
+}
 </style>
+
 </head>
 
 <body>
@@ -120,6 +143,8 @@ select,input{
     <div class="logo">GMS MCD SYSTEM</div>
     <div class="sub">GMS TEXTILES LTD & COMPOSITE</div>
   </div>
+
+  <button onclick="toggleTheme()" class="btn">🌙 / ☀️</button>
 </div>
 
 <!-- NAV -->
@@ -132,17 +157,15 @@ select,input{
   <button onclick="openPage('notice',this)">Notice</button>
 </div>
 
-<!-- ================= HOME (BLACK EMPTY) ================= -->
-<div id="home" class="page activePage">
-  <!-- EMPTY BLACK PAGE (as you wanted) -->
-</div>
+<!-- HOME (BLACK EMPTY) -->
+<div id="home" class="page activePage"></div>
 
-<!-- ================= ENTRY ================= -->
+<!-- ENTRY -->
 <div id="entry" class="page">
   <h2>New Entry</h2>
 
   <label>Company</label>
-  <select id="company">
+  <select>
     <option>GMS TEXTILES LTD</option>
     <option>GMS COMPOSITE KNITTING</option>
   </select>
@@ -174,50 +197,46 @@ select,input{
   <div id="entryBox" class="grid"></div>
 </div>
 
-<!-- ================= REPORT ================= -->
+<!-- REPORT -->
 <div id="reports" class="page">
   <h2>Reports</h2>
-
   <div id="reportBox" class="grid"></div>
 </div>
 
-<!-- ================= NEEDLE ================= -->
+<!-- NEEDLE -->
 <div id="needle" class="page">
   <h2>Needle Section</h2>
-
   <div class="grid">
-    <div class="card" onclick="location.href='needle.html'">Needle Daily Entry</div>
-    <div class="card">Needle Monthly Report</div>
-    <div class="card">All Needle Reports</div>
+    <div class="card" onclick="location.href='needle.html'">Needle Entry</div>
+    <div class="card">Needle Monthly</div>
   </div>
 </div>
 
-<!-- ================= MANPOWER ================= -->
+<!-- MANPOWER -->
 <div id="manpower" class="page">
   <h2>Manpower</h2>
-
   <div class="search">
-    <input placeholder="Search ID / Name / Card">
+    <input placeholder="Search ID / Name">
     <button class="btn">Search</button>
   </div>
-
-  <br>
-
-  <div class="card">Total Manpower: 0</div>
 </div>
 
-<!-- ================= NOTICE ================= -->
+<!-- NOTICE -->
 <div id="notice" class="page">
   <h2>Notice Board</h2>
-
-  <textarea style="width:100%;height:120px;background:#020617;color:white;border:1px solid #333"></textarea>
-  <br>
-  <button class="btn">Save Notice</button>
+  <textarea style="width:100%;height:120px;background:#020617;color:white"></textarea>
 </div>
 
-<!-- ================= JS ================= -->
-<script>
+<!-- FOOTER -->
+<div class="footer">
+  <div class="profile">
+    <img src="https://i.ibb.co/5hzT1VGk/IMG.jpg">
+    Powered by JOHURUL
+  </div>
+</div>
 
+<!-- JS -->
+<script>
 function openPage(id,btn){
   document.querySelectorAll(".page").forEach(p=>p.classList.remove("activePage"));
   document.getElementById(id).classList.add("activePage");
@@ -226,11 +245,13 @@ function openPage(id,btn){
   btn.classList.add("active");
 }
 
+function toggleTheme(){
+  document.body.classList.toggle("light");
+}
+
 function loadEntry(){
   let mcd=document.getElementById("mcd").value;
   let box=document.getElementById("entryBox");
-
-  box.innerHTML="";
 
   if(mcd==="ACCESSORIES MCD"){
     box.innerHTML=`
@@ -239,23 +260,12 @@ function loadEntry(){
       <div class="card">Accessories</div>
       <div class="card">Manpower</div>
     `;
-  }
-
-  else if(mcd==="GENERAL TECHNICAL MCD"){
-    box.innerHTML=`
-      <div class="card" onclick="location.href='needle.html'">Needle Entry</div>
-      <div class="card">Technical Manpower</div>
-    `;
-  }
-
-  else{
-    box.innerHTML=`
-      <div class="card">${mcd} Entry</div>
-      <div class="card">${mcd} Manpower</div>
-    `;
+  }else if(mcd==="GENERAL TECHNICAL MCD"){
+    box.innerHTML=`<div class="card" onclick="location.href='needle.html'">Needle Entry</div>`;
+  }else{
+    box.innerHTML=`<div class="card">${mcd} Entry</div>`;
   }
 }
-
 </script>
 
 </body>
