@@ -9,11 +9,19 @@ h2,h3{text-align:center;margin:4px}
 table{width:100%;border-collapse:collapse;margin-top:15px;background:white;color:black}
 th,td{border:1px solid #000;padding:8px;text-align:center}
 input,select{padding:8px;border-radius:6px;border:1px solid #333}
-button{padding:10px 20px;background:#2563eb;color:white;border:0;border-radius:8px;font-weight:bold;cursor:pointer}
+button{padding:10px 20px;background:#2563eb;color:white;border:0;border-radius:8px;font-weight:bold;cursor:pointer;margin:4px}
 .deleteBtn{background:#dc2626}
+.excelBtn{background:#16a34a}
+.pdfBtn{background:#7c3aed}
 .total{background:#92d050;font-weight:bold}
 .empImg{width:45px;height:45px;border-radius:50%;object-fit:cover}
 .formBox{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-top:15px}
+.hidden{display:none}
+@media print{
+  body{background:white;color:black}
+  button,.formBox,.topControl{display:none}
+  .box{padding:0}
+}
 </style>
 </head>
 
@@ -22,9 +30,10 @@ button{padding:10px 20px;background:#2563eb;color:white;border:0;border-radius:8
 
 <h2>GMS TEXTILES LTD</h2>
 <h3>Tansutrapur, Kaliakair, Gazipur.</h3>
-<h3>Accessorie ( MCD )</h3>
+<h3 id="mcdTitle">Accessorie ( MCD )</h3>
 <h3>Manpower List</h3>
 
+<div class="topControl">
 <label>Company:</label>
 <select id="company">
   <option>GMS TEXTILES LTD</option>
@@ -32,7 +41,7 @@ button{padding:10px 20px;background:#2563eb;color:white;border:0;border-radius:8
 </select>
 
 <label>MCD:</label>
-<select id="mcd">
+<select id="mcd" onchange="loadData()">
   <option>GREY FABRIC MCD</option>
   <option>SHIPMENT MCD</option>
   <option>BILLING SECTION</option>
@@ -49,27 +58,34 @@ button{padding:10px 20px;background:#2563eb;color:white;border:0;border-radius:8
   <option>GENERAL TECHNICAL MCD</option>
 </select>
 
-<button onclick="loadData()">Show Manpower</button>
+<button onclick="showForm()">Add Manpower</button>
+<button onclick="loadData()">Show Report</button>
+<button class="excelBtn" onclick="exportExcel()">Export Excel</button>
+<button class="pdfBtn" onclick="exportPDF()">PDF / Print</button>
 <button onclick="location.href='index.html'">Back Home</button>
-
-<div class="formBox">
-  <input id="image" placeholder="Image link">
-  <input id="empId" placeholder="Employee ID">
-  <input id="empName" placeholder="Employee Name">
-  <input id="designation" placeholder="Designation">
-  <input id="joinDate" type="date">
-  <input id="section" placeholder="Section Name">
-  <input id="salary" type="number" placeholder="Salary">
-  <input id="jobDesc" placeholder="Job Description">
 </div>
 
-<br>
-<button onclick="saveData()">Save Employee</button>
-<button class="deleteBtn" onclick="deleteEmployee()">Delete By Employee ID</button>
+<div id="formArea" class="hidden">
+  <div class="formBox">
+    <input id="image" placeholder="Image link">
+    <input id="empId" placeholder="Employee ID">
+    <input id="empName" placeholder="Employee Name">
+    <input id="designation" placeholder="Designation">
+    <input id="joinDate" type="date" onchange="showJobAge()">
+    <input id="jobAge" placeholder="Job Age" readonly>
+    <input id="section" placeholder="Section Name">
+    <input id="salary" type="number" placeholder="Salary">
+    <input id="jobDesc" placeholder="Job Description">
+  </div>
+
+  <br>
+  <button onclick="saveData()">Save Employee</button>
+  <button class="deleteBtn" onclick="deleteEmployee()">Delete By Employee ID</button>
+</div>
 
 <h3 id="totalText">Total Manpower: 0</h3>
 
-<table>
+<table id="reportTable">
 <thead>
 <tr>
 <th>Image</th>
@@ -77,6 +93,7 @@ button{padding:10px 20px;background:#2563eb;color:white;border:0;border-radius:8
 <th>Employee Name</th>
 <th>Designation</th>
 <th>Join Date</th>
+<th>Job Age</th>
 <th>Section Name</th>
 <th>Selery</th>
 <th>Job Description</th>
@@ -87,7 +104,7 @@ button{padding:10px 20px;background:#2563eb;color:white;border:0;border-radius:8
 
 <tfoot>
 <tr class="total">
-<td colspan="8" id="mcdTotal">Total: 0</td>
+<td colspan="9" id="mcdTotal">Total: 0</td>
 </tr>
 </tfoot>
 </table>
@@ -96,7 +113,7 @@ button{padding:10px 20px;background:#2563eb;color:white;border:0;border-radius:8
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-app.js";
-import { getFirestore, doc, setDoc, getDoc, deleteDoc, collection, getDocs } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-firestore.js";
+import { getFirestore, doc, setDoc, deleteDoc, collection, getDocs } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-firestore.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyD-wBCF5eeWMHobLFOhBzKW7aB2pagz9-w",
@@ -110,8 +127,36 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
-function key(){
-  return document.getElementById("mcd").value + "_" + document.getElementById("empId").value;
+function showForm(){
+  document.getElementById("formArea").classList.remove("hidden");
+}
+
+function getJobAge(joinDate){
+  if(!joinDate) return "";
+
+  let start = new Date(joinDate);
+  let today = new Date();
+
+  let years = today.getFullYear() - start.getFullYear();
+  let months = today.getMonth() - start.getMonth();
+
+  if(today.getDate() < start.getDate()){
+    months--;
+  }
+
+  if(months < 0){
+    years--;
+    months += 12;
+  }
+
+  if(years < 0) return "";
+
+  return years + " Year " + months + " Month";
+}
+
+function showJobAge(){
+  let joinDate=document.getElementById("joinDate").value;
+  document.getElementById("jobAge").value=getJobAge(joinDate);
 }
 
 async function saveData(){
@@ -131,6 +176,7 @@ async function saveData(){
     empName:document.getElementById("empName").value,
     designation:document.getElementById("designation").value,
     joinDate:document.getElementById("joinDate").value,
+    jobAge:getJobAge(document.getElementById("joinDate").value),
     section:document.getElementById("section").value,
     salary:Number(document.getElementById("salary").value)||0,
     jobDesc:document.getElementById("jobDesc").value
@@ -161,6 +207,7 @@ async function deleteEmployee(){
 
 async function loadData(){
   let mcd=document.getElementById("mcd").value;
+  document.getElementById("mcdTitle").innerText=mcd;
   let snap=await getDocs(collection(db,"manpower"));
 
   let html="";
@@ -179,6 +226,7 @@ async function loadData(){
         <td>${x.empName||""}</td>
         <td>${x.designation||""}</td>
         <td>${x.joinDate||""}</td>
+        <td>${getJobAge(x.joinDate)||""}</td>
         <td>${x.section||""}</td>
         <td>${x.salary||0}</td>
         <td>${x.jobDesc||""}</td>
@@ -192,16 +240,42 @@ async function loadData(){
 }
 
 function clearForm(){
-  ["image","empId","empName","designation","joinDate","section","salary","jobDesc"].forEach(id=>{
+  ["image","empId","empName","designation","joinDate","jobAge","section","salary","jobDesc"].forEach(id=>{
     document.getElementById(id).value="";
   });
 }
 
-document.getElementById("mcd").addEventListener("change",loadData);
+function exportExcel(){
+  let title=`
+    <h2>GMS TEXTILES LTD</h2>
+    <h3>Tansutrapur, Kaliakair, Gazipur.</h3>
+    <h3>${document.getElementById("mcd").value}</h3>
+    <h3>Manpower List</h3>
+  `;
 
+  let table=document.getElementById("reportTable").outerHTML;
+
+  let file=new Blob([title+table],{
+    type:"application/vnd.ms-excel"
+  });
+
+  let a=document.createElement("a");
+  a.href=URL.createObjectURL(file);
+  a.download="manpower-report.xls";
+  a.click();
+}
+
+function exportPDF(){
+  window.print();
+}
+
+window.showForm=showForm;
 window.saveData=saveData;
 window.deleteEmployee=deleteEmployee;
 window.loadData=loadData;
+window.showJobAge=showJobAge;
+window.exportExcel=exportExcel;
+window.exportPDF=exportPDF;
 
 loadData();
 </script>
