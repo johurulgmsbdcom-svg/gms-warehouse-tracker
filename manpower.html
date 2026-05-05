@@ -11,8 +11,8 @@ table{width:100%;border-collapse:collapse;margin-top:15px;background:white;color
 th,td{border:1px solid #000;padding:8px;text-align:center}
 input,select{padding:8px;border-radius:6px;border:1px solid #333}
 button{padding:10px 18px;background:#2563eb;color:white;border:0;border-radius:8px;font-weight:bold;cursor:pointer;margin:4px}
-button:disabled{opacity:.6;cursor:not-allowed}
 .deleteBtn{background:#dc2626}
+.editBtn{background:#f59e0b}
 .excelBtn{background:#16a34a}
 .pdfBtn{background:#7c3aed}
 .clearBtn{background:#64748b}
@@ -20,16 +20,19 @@ button:disabled{opacity:.6;cursor:not-allowed}
 .empImg{width:45px;height:45px;border-radius:50%;object-fit:cover}
 .formBox{display:none;grid-template-columns:repeat(4,1fr);gap:10px;margin-top:15px}
 .summary{font-size:20px;font-weight:bold;text-align:center;margin-top:10px}
-.savingRow{opacity:.55}
-.status{font-size:14px;color:#22c55e;font-weight:bold;margin-left:10px}
-@media print{
-  body{background:white;color:black}
-  button,.top,.formBox{display:none!important}
-}
+#toast{position:fixed;right:20px;top:20px;background:#16a34a;color:white;padding:14px 22px;border-radius:10px;display:none;font-weight:bold;z-index:9999}
+#spinner{position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,.45);display:none;align-items:center;justify-content:center;z-index:9998}
+.loader{width:55px;height:55px;border:6px solid #ddd;border-top:6px solid #2563eb;border-radius:50%;animation:spin 1s linear infinite}
+@keyframes spin{100%{transform:rotate(360deg)}}
+@media print{body{background:white;color:black}button,.top,.formBox{display:none!important}}
 </style>
 </head>
 
 <body>
+
+<div id="toast"></div>
+<div id="spinner"><div class="loader"></div></div>
+
 <div class="box">
 
 <h2>GMS TEXTILES LTD</h2>
@@ -40,55 +43,53 @@ button:disabled{opacity:.6;cursor:not-allowed}
 <div class="top">
 Company:
 <select id="company">
-  <option>GMS TEXTILES LTD</option>
-  <option>GMS COMPOSITE KNITTING</option>
+<option>GMS TEXTILES LTD</option>
+<option>GMS COMPOSITE KNITTING</option>
 </select>
 
 MCD:
-<select id="mcd" onchange="loadData()">
-  <option>GREY FABRIC MCD</option>
-  <option>SHIPMENT MCD</option>
-  <option>BILLING SECTION</option>
-  <option>OUTER WEAR MCD</option>
-  <option>YARN MCD</option>
-  <option>PRINTING MCD</option>
-  <option>JHUT MCD</option>
-  <option>GENERAL MCD</option>
-  <option>ACCESSORIES MCD</option>
-  <option>LEFTOVER MCD</option>
-  <option>FINISH FABRIC MCD</option>
-  <option>YARN DYEING MCD</option>
-  <option>CHEMICAL MCD</option>
-  <option>GENERAL TECHNICAL MCD</option>
+<select id="mcd" onchange="startRealtime()">
+<option>GREY FABRIC MCD</option>
+<option>SHIPMENT MCD</option>
+<option>BILLING SECTION</option>
+<option>OUTER WEAR MCD</option>
+<option>YARN MCD</option>
+<option>PRINTING MCD</option>
+<option>JHUT MCD</option>
+<option>GENERAL MCD</option>
+<option>ACCESSORIES MCD</option>
+<option>LEFTOVER MCD</option>
+<option>FINISH FABRIC MCD</option>
+<option>YARN DYEING MCD</option>
+<option>CHEMICAL MCD</option>
+<option>GENERAL TECHNICAL MCD</option>
 </select>
 
 <button onclick="showForm()">Add Manpower</button>
-<button onclick="loadData()">Show Report</button>
 <button class="excelBtn" onclick="exportExcel()">Export Excel</button>
 <button class="pdfBtn" onclick="exportPDF()">PDF / Print</button>
 <button onclick="location.href='index.html'">Back Home</button>
-<span id="status" class="status"></span>
 </div>
 
 <div id="formBox" class="formBox">
-  <input id="image" placeholder="Image Link">
-  <input id="empId" placeholder="Employee ID">
-  <input id="empName" placeholder="Employee Name">
-  <input id="designation" placeholder="Designation">
-  <input id="joinDate" type="date" onchange="updateJobAge()">
-  <input id="jobAge" placeholder="Job Age" readonly>
-  <input id="section" placeholder="Section Name">
-  <input id="salary" type="number" placeholder="Salary">
-  <input id="jobDesc" placeholder="Job Description">
+<input id="image" placeholder="Image Link">
+<input id="empId" placeholder="Employee ID">
+<input id="empName" placeholder="Employee Name">
+<input id="designation" placeholder="Designation">
+<input id="joinDate" type="date" onchange="updateJobAge()">
+<input id="jobAge" placeholder="Job Age" readonly>
+<input id="section" placeholder="Section Name">
+<input id="salary" type="number" placeholder="Salary">
+<input id="jobDesc" placeholder="Job Description">
 
-  <button onclick="saveData()">Save Employee</button>
-  <button class="clearBtn" onclick="clearForm()">Clear</button>
+<button id="saveBtn" onclick="saveData()">Save Employee</button>
+<button class="clearBtn" onclick="clearForm()">Clear</button>
 </div>
 
 <div class="summary">
-  Total Manpower: <span id="totalManpower">0</span>
-  &nbsp;&nbsp; | &nbsp;&nbsp;
-  Total Salary: <span id="totalSalary">0</span>
+Total Manpower: <span id="totalManpower">0</span>
+&nbsp;&nbsp; | &nbsp;&nbsp;
+Total Salary: <span id="totalSalary">0</span>
 </div>
 
 <table id="reportTable">
@@ -111,7 +112,7 @@ MCD:
 
 <tfoot>
 <tr class="total">
-<td colspan="10" id="mcdTotal">GREY FABRIC MCD Total: 0 | Salary: 0</td>
+<td colspan="10" id="mcdTotal">Total: 0 | Salary: 0</td>
 </tr>
 </tfoot>
 </table>
@@ -120,7 +121,7 @@ MCD:
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-app.js";
-import { getFirestore, doc, setDoc, deleteDoc, collection, getDocs, enableIndexedDbPersistence } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-firestore.js";
+import { getFirestore, doc, setDoc, deleteDoc, collection, onSnapshot } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-firestore.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyD-wBCF5eeWMHobLFOhBzKW7aB2pagz9-w",
@@ -134,17 +135,19 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
-enableIndexedDbPersistence(db).catch(()=>{});
+let unsubscribe = null;
+let editMode = false;
 
-let currentRows = [];
-
-function showStatus(msg){
-  document.getElementById("status").innerText = msg;
-  setTimeout(()=>{ document.getElementById("status").innerText = ""; }, 2500);
+function toast(msg,color="#16a34a"){
+  let t=document.getElementById("toast");
+  t.innerText=msg;
+  t.style.background=color;
+  t.style.display="block";
+  setTimeout(()=>t.style.display="none",2500);
 }
 
-function setButtonsDisabled(state){
-  document.querySelectorAll("button").forEach(btn=>btn.disabled=state);
+function spinner(show){
+  document.getElementById("spinner").style.display=show?"flex":"none";
 }
 
 function showForm(){
@@ -153,25 +156,14 @@ function showForm(){
 
 function getJobAge(joinDate){
   if(!joinDate) return "";
-
   let start=new Date(joinDate);
   let today=new Date();
-
-  let years=today.getFullYear()-start.getFullYear();
-  let months=today.getMonth()-start.getMonth();
-
-  if(today.getDate()<start.getDate()){
-    months--;
-  }
-
-  if(months<0){
-    years--;
-    months+=12;
-  }
-
-  if(years<0) return "";
-
-  return years+" Year "+months+" Month";
+  let y=today.getFullYear()-start.getFullYear();
+  let m=today.getMonth()-start.getMonth();
+  if(today.getDate()<start.getDate()) m--;
+  if(m<0){y--;m+=12;}
+  if(y<0) return "";
+  return y+" Year "+m+" Month";
 }
 
 function updateJobAge(){
@@ -179,36 +171,87 @@ function updateJobAge(){
 }
 
 function getFormData(){
-  let company=document.getElementById("company").value;
-  let mcd=document.getElementById("mcd").value;
-  let empId=document.getElementById("empId").value.trim();
-
   return {
-    company: company,
-    mcd: mcd,
-    image: document.getElementById("image").value.trim(),
-    empId: empId,
-    empName: document.getElementById("empName").value.trim(),
-    designation: document.getElementById("designation").value.trim(),
-    joinDate: document.getElementById("joinDate").value,
-    section: document.getElementById("section").value.trim(),
-    salary: Number(document.getElementById("salary").value)||0,
-    jobDesc: document.getElementById("jobDesc").value.trim()
+    company:document.getElementById("company").value,
+    mcd:document.getElementById("mcd").value,
+    image:document.getElementById("image").value.trim(),
+    empId:document.getElementById("empId").value.trim(),
+    empName:document.getElementById("empName").value.trim(),
+    designation:document.getElementById("designation").value.trim(),
+    joinDate:document.getElementById("joinDate").value,
+    section:document.getElementById("section").value.trim(),
+    salary:Number(document.getElementById("salary").value)||0,
+    jobDesc:document.getElementById("jobDesc").value.trim()
   };
 }
 
-function renderTable(rows){
+async function saveData(){
+  let x=getFormData();
+  if(!x.empId){
+    toast("Employee ID dao","#dc2626");
+    return;
+  }
+
+  spinner(true);
+
+  try{
+    await setDoc(doc(db,"manpower",x.mcd+"_"+x.empId),x);
+    clearForm();
+    toast(editMode ? "Updated Successfully ✅" : "Saved Successfully ✅");
+    editMode=false;
+    document.getElementById("saveBtn").innerText="Save Employee";
+  }catch(e){
+    toast("Save failed ❌","#dc2626");
+  }
+
+  spinner(false);
+}
+
+function editEmployee(empId){
+  let row = window.currentRows.find(x=>x.empId===empId);
+  if(!row) return;
+
+  showForm();
+
+  document.getElementById("image").value=row.image||"";
+  document.getElementById("empId").value=row.empId||"";
+  document.getElementById("empName").value=row.empName||"";
+  document.getElementById("designation").value=row.designation||"";
+  document.getElementById("joinDate").value=row.joinDate||"";
+  document.getElementById("jobAge").value=getJobAge(row.joinDate)||"";
+  document.getElementById("section").value=row.section||"";
+  document.getElementById("salary").value=row.salary||"";
+  document.getElementById("jobDesc").value=row.jobDesc||"";
+
+  editMode=true;
+  document.getElementById("saveBtn").innerText="Update Employee";
+}
+
+async function deleteEmployee(empId){
+  let mcd=document.getElementById("mcd").value;
+  if(!confirm("Ei employee delete korba?")) return;
+
+  spinner(true);
+
+  try{
+    await deleteDoc(doc(db,"manpower",mcd+"_"+empId));
+    toast("Deleted Successfully ✅");
+  }catch(e){
+    toast("Delete failed ❌","#dc2626");
+  }
+
+  spinner(false);
+}
+
+function render(rows){
   let mcd=document.getElementById("mcd").value;
   document.getElementById("mcdTitle").innerText=mcd;
 
   let html="";
-  let count=0;
   let totalSalary=0;
 
   rows.forEach(x=>{
-    count++;
-    totalSalary += Number(x.salary)||0;
-
+    totalSalary+=Number(x.salary)||0;
     html+=`
     <tr>
       <td>${x.image ? `<img class="empImg" src="${x.image}">` : ""}</td>
@@ -220,116 +263,60 @@ function renderTable(rows){
       <td>${x.section||""}</td>
       <td>${Number(x.salary)||0}</td>
       <td>${x.jobDesc||""}</td>
-      <td><button class="deleteBtn" onclick="deleteEmployee('${x.empId}')">Delete</button></td>
+      <td>
+        <button class="editBtn" onclick="editEmployee('${x.empId}')">Edit</button>
+        <button class="deleteBtn" onclick="deleteEmployee('${x.empId}')">Delete</button>
+      </td>
     </tr>`;
   });
 
   document.getElementById("tableBody").innerHTML=html;
-  document.getElementById("totalManpower").innerText=count;
+  document.getElementById("totalManpower").innerText=rows.length;
   document.getElementById("totalSalary").innerText=totalSalary;
-  document.getElementById("mcdTotal").innerText=mcd+" Total: "+count+" | Salary: "+totalSalary;
+  document.getElementById("mcdTotal").innerText=mcd+" Total: "+rows.length+" | Salary: "+totalSalary;
 }
 
-function addInstantRow(x){
-  let exists = currentRows.findIndex(r=>r.empId===x.empId);
-  if(exists >= 0){
-    currentRows[exists] = x;
-  }else{
-    currentRows.push(x);
-  }
-  renderTable(currentRows);
-}
-
-async function saveData(){
-  let x = getFormData();
-
-  if(!x.empId){
-    alert("Employee ID dao");
-    return;
-  }
-
-  setButtonsDisabled(true);
-  showStatus("Saving...");
-
-  addInstantRow(x);
-
-  try{
-    await setDoc(doc(db,"manpower",x.mcd+"_"+x.empId),x);
-    clearForm();
-    await loadData(false);
-    showStatus("Saved Successfully ✅");
-  }catch(e){
-    alert("Save failed. Internet/Firebase check koro.");
-    await loadData(false);
-  }
-
-  setButtonsDisabled(false);
-}
-
-async function deleteEmployee(empId){
-  let mcd=document.getElementById("mcd").value;
-
-  if(!confirm("Ei employee delete korba?")) return;
-
-  setButtonsDisabled(true);
-  showStatus("Deleting...");
-
-  currentRows = currentRows.filter(x=>x.empId!==empId);
-  renderTable(currentRows);
-
-  try{
-    await deleteDoc(doc(db,"manpower",mcd+"_"+empId));
-    await loadData(false);
-    showStatus("Deleted Successfully ✅");
-  }catch(e){
-    alert("Delete failed. Internet/Firebase check koro.");
-    await loadData(false);
-  }
-
-  setButtonsDisabled(false);
-}
-
-async function loadData(showMsg=true){
+function startRealtime(){
   let mcd=document.getElementById("mcd").value;
   document.getElementById("mcdTitle").innerText=mcd;
 
-  if(showMsg) showStatus("Loading...");
+  if(unsubscribe) unsubscribe();
 
-  let snap=await getDocs(collection(db,"manpower"));
+  spinner(true);
 
-  currentRows=[];
+  unsubscribe = onSnapshot(collection(db,"manpower"), snap=>{
+    let rows=[];
 
-  snap.forEach(docSnap=>{
-    let x=docSnap.data();
+    snap.forEach(docSnap=>{
+      let x=docSnap.data();
+      if(x.mcd===mcd){
+        rows.push(x);
+      }
+    });
 
-    if(x.mcd===mcd){
-      currentRows.push(x);
-    }
+    rows.sort((a,b)=>(a.empId||"").localeCompare(b.empId||""));
+    window.currentRows=rows;
+    render(rows);
+    spinner(false);
   });
-
-  currentRows.sort((a,b)=>(a.empId||"").localeCompare(b.empId||""));
-
-  renderTable(currentRows);
-
-  if(showMsg) showStatus("Loaded ✅");
 }
 
 function clearForm(){
   ["image","empId","empName","designation","joinDate","jobAge","section","salary","jobDesc"].forEach(id=>{
     document.getElementById(id).value="";
   });
+  editMode=false;
+  document.getElementById("saveBtn").innerText="Save Employee";
 }
 
 function exportExcel(){
   let title=`
-    <h2>GMS TEXTILES LTD</h2>
-    <h3>Tansutrapur, Kaliakair, Gazipur.</h3>
-    <h3>${document.getElementById("mcd").value}</h3>
-    <h3>Manpower List</h3>
-    <h3>Total Manpower: ${document.getElementById("totalManpower").innerText}</h3>
-    <h3>Total Salary: ${document.getElementById("totalSalary").innerText}</h3>
+  <h2>GMS TEXTILES LTD</h2>
+  <h3>${document.getElementById("mcd").value}</h3>
+  <h3>Manpower List</h3>
+  <h3>Total Manpower: ${document.getElementById("totalManpower").innerText}</h3>
+  <h3>Total Salary: ${document.getElementById("totalSalary").innerText}</h3>
   `;
-
   let table=document.getElementById("reportTable").outerHTML;
   let file=new Blob([title+table],{type:"application/vnd.ms-excel"});
   let a=document.createElement("a");
@@ -345,13 +332,15 @@ function exportPDF(){
 window.showForm=showForm;
 window.saveData=saveData;
 window.deleteEmployee=deleteEmployee;
-window.loadData=loadData;
+window.editEmployee=editEmployee;
 window.clearForm=clearForm;
 window.updateJobAge=updateJobAge;
+window.startRealtime=startRealtime;
 window.exportExcel=exportExcel;
 window.exportPDF=exportPDF;
 
-loadData(false);
+window.currentRows=[];
+startRealtime();
 </script>
 
 </body>
