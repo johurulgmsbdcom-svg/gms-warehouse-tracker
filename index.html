@@ -1,242 +1,411 @@
 <!DOCTYPE html>
 <html>
 <head>
-<title>Daily Sewing Thread Stock</title>
+<title>GMS MCD SYSTEM</title>
+
 <style>
-body{margin:0;background:#0b0f19;color:white;font-family:Arial}
-.box{padding:20px}
-h2,h3{text-align:center;margin:4px}
-table{width:100%;border-collapse:collapse;margin-top:15px;background:#fff;color:#000}
-th,td{border:1px solid #000;padding:8px;text-align:center}
-input{width:90%;padding:7px;text-align:center}
-button{padding:10px 25px;background:#2563eb;color:white;border:0;border-radius:8px;font-weight:bold}
-.total{background:#92d050;font-weight:bold}
+:root{
+  --bg:#0b0f19;
+  --card:#111827;
+  --nav:#020617;
+  --text:#ffffff;
+  --muted:#94a3b8;
+  --border:#334155;
+  --blue:#2563eb;
+}
+
+body.light{
+  --bg:#f1f5f9;
+  --card:#ffffff;
+  --nav:#e2e8f0;
+  --text:#0f172a;
+  --muted:#64748b;
+  --border:#cbd5e1;
+}
+
+body{
+  margin:0;
+  background:var(--bg);
+  color:var(--text);
+  font-family:Segoe UI, Arial;
+}
+
+.header{
+  background:var(--card);
+  padding:16px 24px;
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  border-bottom:1px solid var(--border);
+}
+
+.logo{font-size:22px;font-weight:bold}
+.sub{font-size:12px;color:var(--muted)}
+
+.live{
+  color:#22c55e;
+  font-weight:bold;
+  margin-right:15px;
+}
+
+.themeBtn{
+  padding:9px 18px;
+  background:var(--blue);
+  color:white;
+  border:0;
+  border-radius:20px;
+  cursor:pointer;
+  font-weight:bold;
+}
+
+.nav{
+  display:flex;
+  gap:10px;
+  padding:14px;
+  background:var(--nav);
+  border-bottom:1px solid var(--border);
+}
+
+.nav button{
+  padding:15px 24px;
+  background:var(--card);
+  color:var(--text);
+  border:1px solid var(--border);
+  border-radius:10px;
+  cursor:pointer;
+  font-size:16px;
+  font-weight:bold;
+}
+
+.nav button:hover,
+.nav button.active{
+  background:var(--blue);
+  color:white;
+}
+
+.page{
+  display:none;
+  padding:22px;
+}
+
+.activePage{display:block}
+
+.grid{
+  display:grid;
+  grid-template-columns:repeat(4,1fr);
+  gap:16px;
+}
+
+.card{
+  background:var(--card);
+  border:1px solid var(--border);
+  padding:28px;
+  border-radius:14px;
+  text-align:center;
+  font-size:18px;
+  font-weight:bold;
+  cursor:pointer;
+}
+
+.card:hover{
+  background:var(--blue);
+  color:white;
+}
+
+select,input,textarea{
+  width:100%;
+  padding:13px;
+  margin-top:6px;
+  border-radius:8px;
+  border:1px solid var(--border);
+  background:var(--card);
+  color:var(--text);
+  font-size:15px;
+}
+
+.btn{
+  padding:13px 24px;
+  background:var(--blue);
+  border:0;
+  color:white;
+  border-radius:8px;
+  cursor:pointer;
+  font-weight:bold;
+  margin-top:10px;
+}
+
+.search{
+  display:flex;
+  gap:10px;
+}
+
+.search input{flex:1}
+
+.footer{
+  position:fixed;
+  bottom:10px;
+  width:100%;
+  display:flex;
+  justify-content:center;
+  pointer-events:none;
+}
+
+.profile{
+  display:flex;
+  align-items:center;
+  gap:8px;
+  background:var(--card);
+  color:var(--muted);
+  padding:7px 14px;
+  border-radius:30px;
+  border:1px solid var(--border);
+  font-weight:bold;
+}
+
+.profile img{
+  width:28px;
+  height:28px;
+  border-radius:50%;
+  border:2px solid #22c55e;
+}
 </style>
 </head>
 
 <body>
-<div class="box">
 
-<h2>GMS TEXTILES LTD</h2>
-<h3>Tansutrapur, Kaliakair, Gazipur.</h3>
-<h3>Accessorie ( MCD )</h3>
-<h3>Daily Sewing Thread Stock</h3>
+<div class="header">
+  <div>
+    <div class="logo">GMS MCD SYSTEM</div>
+    <div class="sub">GMS TEXTILES LTD & GMS COMPOSITE KNITTING</div>
+  </div>
 
-Date:
-<input type="date" id="postDate" style="padding:8px;width:180px">
-<button onclick="saveData()">Save Data</button>
-<button onclick="location.href='index.html'">Back Home</button>
-
-<table>
-<thead>
-<tr>
-<th>Discription</th>
-<th>Unit</th>
-<th>Previous Qty</th>
-<th>Received Qty</th>
-<th>Delivery Qty</th>
-<th>Present Stock</th>
-<th>Remarks</th>
-</tr>
-</thead>
-
-<tbody>
-<tr>
-<td>Sewing Thread</td>
-<td>Cone</td>
-<td id="previous">133322</td>
-<td><input type="number" id="receive" oninput="calc()"></td>
-<td><input type="number" id="delivery" oninput="calc()"></td>
-<td id="present">133322</td>
-<td><input id="remarks"></td>
-</tr>
-</tbody>
-
-<tfoot>
-<tr class="total">
-<td colspan="2">TOTAL</td>
-<td id="totalPrevious">133322</td>
-<td id="totalReceive">0</td>
-<td id="totalDelivery">0</td>
-<td id="totalPresent">133322</td>
-<td></td>
-</tr>
-</tfoot>
-</table>
-
-<br>
-
-<h3>Monthly Summary</h3>
-<table>
-<tr>
-<th>Opening</th>
-<th>Total Receive</th>
-<th>Total Delivery</th>
-<th>Present Stock</th>
-</tr>
-<tr class="total">
-<td id="mOpening">133322</td>
-<td id="mReceive">0</td>
-<td id="mDelivery">0</td>
-<td id="mPresent">133322</td>
-</tr>
-</table>
-
+  <div>
+    <span class="live">● Firebase Live</span>
+    <button class="themeBtn" onclick="toggleTheme()">🌙 / ☀️</button>
+  </div>
 </div>
 
-<script type="module">
-import { initializeApp } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-app.js";
-import { getFirestore, doc, setDoc, getDoc, collection, getDocs } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-firestore.js";
+<div class="nav">
+  <button class="active" onclick="openPage('home',this)">Dashboard</button>
+  <button onclick="openPage('entry',this)">New Entry</button>
+  <button onclick="openPage('reports',this)">Reports</button>
+  <button onclick="openPage('needle',this)">Needle</button>
+  <button onclick="openPage('manpower',this)">Manpower</button>
+  <button onclick="openPage('notice',this)">Notice</button>
+</div>
 
-const firebaseConfig = {
-  apiKey: "AIzaSyD-wBCF5eeWMHobLFOhBzKW7aB2pagz9-w",
-  authDomain: "gms-warehouse-tracker-7f57e.firebaseapp.com",
-  projectId: "gms-warehouse-tracker-7f57e",
-  storageBucket: "gms-warehouse-tracker-7f57e.firebasestorage.app",
-  messagingSenderId: "992250313291",
-  appId: "1:992250313291:web:ee3bceae76d4d53bc26bce"
-};
+<!-- HOME PAGE -->
+<div id="home" class="page activePage">
+  <!-- Home page black/blank thakbe. Pore chart add korbo. -->
+</div>
 
-const app = initializeApp(firebaseConfig);
-const db = getFirestore(app);
+<!-- NEW ENTRY -->
+<div id="entry" class="page">
+  <h2>New Entry</h2>
 
-const openingStock = 133322;
+  <label>Company</label>
+  <select id="entryCompany">
+    <option>GMS TEXTILES LTD</option>
+    <option>GMS COMPOSITE KNITTING</option>
+  </select>
 
-function calc(){
-  let p = Number(document.getElementById("previous").innerText) || 0;
-  let r = Number(document.getElementById("receive").value) || 0;
-  let d = Number(document.getElementById("delivery").value) || 0;
-  let b = p + r - d;
+  <br><br>
 
-  document.getElementById("present").innerText = b;
-  document.getElementById("totalPrevious").innerText = p;
-  document.getElementById("totalReceive").innerText = r;
-  document.getElementById("totalDelivery").innerText = d;
-  document.getElementById("totalPresent").innerText = b;
-}
+  <label>Department / MCD</label>
+  <select id="entryMcd">
+    <option>GREY FABRIC MCD</option>
+    <option>SHIPMENT MCD</option>
+    <option>BILLING SECTION</option>
+    <option>OUTER WEAR MCD</option>
+    <option>YARN MCD</option>
+    <option>PRINTING MCD</option>
+    <option>JHUT MCD</option>
+    <option>GENERAL MCD</option>
+    <option>ACCESSORIES MCD</option>
+    <option>LEFTOVER MCD</option>
+    <option>FINISH FABRIC MCD</option>
+    <option>YARN DYEING MCD</option>
+    <option>CHEMICAL MCD</option>
+    <option>GENERAL TECHNICAL MCD</option>
+  </select>
 
-async function saveData(){
-  let date = document.getElementById("postDate").value;
+  <button class="btn" onclick="loadEntry()">Open Entry</button>
 
-  if(!date){
-    alert("Date select koro");
-    return;
-  }
+  <br><br>
 
-  calc();
+  <div id="entryBox" class="grid"></div>
+</div>
 
-  await setDoc(doc(db,"sewingThread",date),{
-    date: date,
-    previous: Number(document.getElementById("previous").innerText) || 0,
-    receive: Number(document.getElementById("receive").value) || 0,
-    delivery: Number(document.getElementById("delivery").value) || 0,
-    present: Number(document.getElementById("present").innerText) || 0,
-    remarks: document.getElementById("remarks").value || ""
+<!-- REPORTS -->
+<div id="reports" class="page">
+  <h2>Reports</h2>
+
+  <label>Company</label>
+  <select id="reportCompany">
+    <option>GMS TEXTILES LTD</option>
+    <option>GMS COMPOSITE KNITTING</option>
+  </select>
+
+  <br><br>
+
+  <label>Department / MCD</label>
+  <select id="reportMcd">
+    <option>GREY FABRIC MCD</option>
+    <option>SHIPMENT MCD</option>
+    <option>BILLING SECTION</option>
+    <option>OUTER WEAR MCD</option>
+    <option>YARN MCD</option>
+    <option>PRINTING MCD</option>
+    <option>JHUT MCD</option>
+    <option>GENERAL MCD</option>
+    <option>ACCESSORIES MCD</option>
+    <option>LEFTOVER MCD</option>
+    <option>FINISH FABRIC MCD</option>
+    <option>YARN DYEING MCD</option>
+    <option>CHEMICAL MCD</option>
+    <option>GENERAL TECHNICAL MCD</option>
+  </select>
+
+  <button class="btn" onclick="loadReport()">Show Report</button>
+
+  <br><br>
+
+  <div id="reportBox" class="grid"></div>
+</div>
+
+<!-- NEEDLE -->
+<div id="needle" class="page">
+  <h2>Needle Section</h2>
+
+  <div class="grid">
+    <div class="card" onclick="location.href='needle.html'">Needle Daily Entry</div>
+    <div class="card">Needle Monthly Report</div>
+    <div class="card">All Needle Reports</div>
+    <div class="card">Needle Manpower</div>
+  </div>
+</div>
+
+<!-- MANPOWER -->
+<div id="manpower" class="page">
+  <h2>Manpower List</h2>
+
+  <div class="search">
+    <input placeholder="Search manpower ID / card / name...">
+    <button class="btn">Search</button>
+  </div>
+
+  <br>
+
+  <div class="grid">
+    <div class="card">Total Manpower: 0</div>
+    <div class="card">Add Manpower</div>
+    <div class="card">Salary Report</div>
+    <div class="card">ID Card Search</div>
+  </div>
+</div>
+
+<!-- NOTICE -->
+<div id="notice" class="page">
+  <h2>Notice Board</h2>
+
+  <textarea placeholder="Notice likho..." style="height:120px;"></textarea>
+  <br>
+  <button class="btn">Save Notice</button>
+</div>
+
+<!-- FOOTER -->
+<div class="footer">
+  <div class="profile">
+    <img src="https://i.ibb.co/5hzT1VGk/IMG.jpg" onerror="this.style.display='none'">
+    Powered by JOHURUL
+  </div>
+</div>
+
+<script>
+function openPage(id,btn){
+  document.querySelectorAll(".page").forEach(p=>{
+    p.classList.remove("activePage");
   });
 
-  await loadMonthlySummary();
-  alert("Saved Successfully");
-}
+  document.getElementById(id).classList.add("activePage");
 
-async function loadData(){
-  let date = document.getElementById("postDate").value;
-  if(!date) return;
-
-  let todaySnap = await getDoc(doc(db,"sewingThread",date));
-
-  if(todaySnap.exists()){
-    let data = todaySnap.data();
-
-    document.getElementById("previous").innerText = data.previous || openingStock;
-    document.getElementById("receive").value = data.receive || "";
-    document.getElementById("delivery").value = data.delivery || "";
-    document.getElementById("remarks").value = data.remarks || "";
-
-    calc();
-    await loadMonthlySummary();
-    return;
-  }
-
-  let prevPresent = await getLastPresentBefore(date);
-
-  document.getElementById("previous").innerText = prevPresent;
-  document.getElementById("receive").value = "";
-  document.getElementById("delivery").value = "";
-  document.getElementById("remarks").value = "";
-
-  calc();
-  await loadMonthlySummary();
-}
-
-async function getLastPresentBefore(date){
-  let snap = await getDocs(collection(db,"sewingThread"));
-  let rows = [];
-
-  snap.forEach(docSnap=>{
-    let data = docSnap.data();
-    if(data.date && data.date < date){
-      rows.push(data);
-    }
+  document.querySelectorAll(".nav button").forEach(b=>{
+    b.classList.remove("active");
   });
 
-  rows.sort((a,b)=>a.date.localeCompare(b.date));
-
-  if(rows.length > 0){
-    return Number(rows[rows.length-1].present) || openingStock;
-  }
-
-  return openingStock;
+  btn.classList.add("active");
 }
 
-async function loadMonthlySummary(){
-  let date = document.getElementById("postDate").value;
-  if(!date) return;
+function toggleTheme(){
+  document.body.classList.toggle("light");
 
-  let month = date.slice(0,7);
-
-  let snap = await getDocs(collection(db,"sewingThread"));
-  let monthRows = [];
-
-  snap.forEach(docSnap=>{
-    let data = docSnap.data();
-
-    if(data.date && data.date.slice(0,7) === month && data.date <= date){
-      monthRows.push(data);
-    }
-  });
-
-  monthRows.sort((a,b)=>a.date.localeCompare(b.date));
-
-  let opening = openingStock;
-  let totalReceive = 0;
-  let totalDelivery = 0;
-  let presentStock = Number(document.getElementById("present").innerText) || openingStock;
-
-  if(monthRows.length > 0){
-    opening = Number(monthRows[0].previous) || openingStock;
-
-    monthRows.forEach(row=>{
-      totalReceive += Number(row.receive) || 0;
-      totalDelivery += Number(row.delivery) || 0;
-      presentStock = Number(row.present) || presentStock;
-    });
+  if(document.body.classList.contains("light")){
+    localStorage.setItem("theme","light");
   }else{
-    opening = Number(document.getElementById("previous").innerText) || openingStock;
-    presentStock = Number(document.getElementById("present").innerText) || opening;
+    localStorage.setItem("theme","dark");
   }
-
-  document.getElementById("mOpening").innerText = opening;
-  document.getElementById("mReceive").innerText = totalReceive;
-  document.getElementById("mDelivery").innerText = totalDelivery;
-  document.getElementById("mPresent").innerText = presentStock;
 }
 
-document.getElementById("postDate").addEventListener("change", loadData);
+if(localStorage.getItem("theme")==="light"){
+  document.body.classList.add("light");
+}
 
-window.calc = calc;
-window.saveData = saveData;
+function loadEntry(){
+  let mcd=document.getElementById("entryMcd").value;
+  let box=document.getElementById("entryBox");
+  box.innerHTML="";
 
-calc();
+  if(mcd==="ACCESSORIES MCD"){
+    box.innerHTML=`
+      <div class="card" onclick="location.href='sewing-thread.html'">Sewing Thread</div>
+      <div class="card">Twill Tape</div>
+      <div class="card">Accessories</div>
+      <div class="card" onclick="openPage('manpower',document.querySelectorAll('.nav button')[4])">Manpower</div>
+    `;
+  }
+  else if(mcd==="GENERAL TECHNICAL MCD"){
+    box.innerHTML=`
+      <div class="card" onclick="location.href='needle.html'">Needle Entry</div>
+      <div class="card">Technical Manpower</div>
+    `;
+  }
+  else{
+    box.innerHTML=`
+      <div class="card">${mcd} Daily Entry</div>
+      <div class="card">${mcd} Manpower</div>
+    `;
+  }
+}
+
+function loadReport(){
+  let mcd=document.getElementById("reportMcd").value;
+  let box=document.getElementById("reportBox");
+  box.innerHTML="";
+
+  if(mcd==="ACCESSORIES MCD"){
+    box.innerHTML=`
+      <div class="card" onclick="location.href='sewing-thread.html'">Sewing Thread Daily Report</div>
+      <div class="card">Sewing Thread Monthly Report</div>
+      <div class="card">Twill Tape Report</div>
+      <div class="card">Accessories Report</div>
+      <div class="card">Accessories Manpower Report</div>
+    `;
+  }
+  else if(mcd==="GENERAL TECHNICAL MCD"){
+    box.innerHTML=`
+      <div class="card" onclick="location.href='needle.html'">Needle Daily Report</div>
+      <div class="card">Needle Monthly Report</div>
+      <div class="card">Technical Manpower Report</div>
+    `;
+  }
+  else{
+    box.innerHTML=`
+      <div class="card">${mcd} Daily Report</div>
+      <div class="card">${mcd} Monthly Report</div>
+      <div class="card">${mcd} Manpower Report</div>
+    `;
+  }
+}
 </script>
 
 </body>
