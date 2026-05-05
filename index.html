@@ -1,24 +1,25 @@
 <!DOCTYPE html>
 <html>
 <head>
-<title>GMS Warehouse Dashboard</title>
+<title>GMS Warehouse System</title>
 <style>
 body{margin:0;background:#eef2f7;font-family:Arial;color:#0f172a}
 .header{background:white;padding:14px 22px;display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid #cbd5e1}
 .logo{font-size:20px;font-weight:bold}
 .sub{font-size:12px;color:#64748b}
 .nav{display:flex;gap:10px;padding:14px;background:#f1f5f9}
-.nav button{padding:12px 20px;border:1px solid #cbd5e1;border-radius:8px;background:white;font-weight:bold;cursor:pointer}
+.nav button{padding:12px 18px;border:1px solid #cbd5e1;border-radius:8px;background:white;font-weight:bold;cursor:pointer}
 .nav button:hover,.active{background:#2563eb!important;color:white}
 .box{background:white;margin:16px;padding:22px;border-radius:12px;border:1px solid #dbe3ef}
+.hidden{display:none}
+.search{display:flex;gap:10px;margin-top:15px}
+.search input{flex:1;padding:14px;border:1px solid #94a3b8;border-radius:8px;font-size:16px}
+.search button,.mainBtn{padding:14px 25px;background:#2563eb;color:white;border:0;border-radius:8px;font-weight:bold;cursor:pointer}
+select,input{padding:12px;width:100%;font-size:16px;border-radius:8px;border:1px solid #94a3b8}
 .grid{display:grid;grid-template-columns:repeat(4,1fr);gap:15px}
 .card{padding:22px;border-radius:12px;background:#f8fafc;border:1px solid #cbd5e1;text-align:center;font-weight:bold;cursor:pointer}
 .card:hover{background:#dbeafe}
-.search{display:flex;gap:10px;margin-top:15px}
-.search input{flex:1;padding:14px;border:1px solid #94a3b8;border-radius:8px;font-size:16px}
-.search button{padding:14px 25px;background:#2563eb;color:white;border:0;border-radius:8px;font-weight:bold}
-select{padding:12px;width:100%;font-size:16px;border-radius:8px;border:1px solid #94a3b8}
-.hidden{display:none}
+.small{color:#64748b;font-size:13px}
 </style>
 </head>
 
@@ -36,25 +37,26 @@ select{padding:12px;width:100%;font-size:16px;border-radius:8px;border:1px solid
   <button class="active" onclick="showPage('dashboard')">Dashboard</button>
   <button onclick="showPage('newEntry')">New Entry</button>
   <button onclick="showPage('reports')">Reports</button>
-  <button onclick="location.href='notice.html'">Notice Board</button>
-  <button onclick="location.href='manpower.html'">Manpower List</button>
+  <button onclick="showPage('notice')">Notice Board</button>
+  <button onclick="showPage('manpower')">Manpower List</button>
 </div>
 
 <div id="dashboard" class="box">
   <h2>Dashboard</h2>
-  <p>Search report, manpower ID, card no, name, floor or MCD.</p>
+  <p class="small">Later ekhane chart add hobe.</p>
 
   <div class="search">
-    <input id="searchInput" placeholder="Search report / manpower ID / card / MCD...">
+    <input id="searchInput" placeholder="Search manpower ID / card / name / report / MCD...">
     <button onclick="searchInfo()">Search</button>
   </div>
 
   <br>
+
   <div class="grid">
-    <div class="card" onclick="location.href='needle.html'">Needle Daily Posting</div>
-    <div class="card" onclick="showPage('reports')">Monthly Reports</div>
-    <div class="card" onclick="location.href='manpower.html'">Manpower List</div>
-    <div class="card" onclick="location.href='notice.html'">Notice Board</div>
+    <div class="card" onclick="showPage('newEntry')">➕ New Entry</div>
+    <div class="card" onclick="showPage('reports')">📊 Reports</div>
+    <div class="card" onclick="showPage('manpower')">👥 Manpower List</div>
+    <div class="card" onclick="showPage('notice')">📢 Notice Board</div>
   </div>
 </div>
 
@@ -62,7 +64,7 @@ select{padding:12px;width:100%;font-size:16px;border-radius:8px;border:1px solid
   <h2>New Entry</h2>
 
   <label>Company</label>
-  <select id="company">
+  <select id="entryCompany">
     <option>GMS TEXTILES LTD</option>
     <option>GMS COMPOSITE KNITTING</option>
   </select>
@@ -70,7 +72,7 @@ select{padding:12px;width:100%;font-size:16px;border-radius:8px;border:1px solid
   <br><br>
 
   <label>Department / MCD</label>
-  <select id="dept">
+  <select id="entryMcd">
     <option>GREY FABRIC MCD</option>
     <option>SHIPMENT MCD</option>
     <option>BILLING SECTION</option>
@@ -89,31 +91,111 @@ select{padding:12px;width:100%;font-size:16px;border-radius:8px;border:1px solid
 
   <br><br>
 
-  <button onclick="openDept()" style="padding:12px 25px;background:#2563eb;color:white;border:0;border-radius:6px;">
-    Open Department
-  </button>
+  <button class="mainBtn" onclick="openEntry()">Open Entry</button>
+
+  <br><br>
+
+  <div id="accessoriesEntry" class="hidden">
+    <h3>Accessories MCD</h3>
+    <div class="grid">
+      <div class="card" onclick="alert('Sewing Thread Entry pore add korbo')">Sewing Thread</div>
+      <div class="card" onclick="alert('Twill Tape Entry pore add korbo')">Twill Tape</div>
+      <div class="card" onclick="alert('Accessories Item Entry pore add korbo')">Accessories</div>
+      <div class="card" onclick="showPage('manpower')">Manpower Entry</div>
+    </div>
+  </div>
 </div>
 
 <div id="reports" class="box hidden">
   <h2>Reports</h2>
+
+  <label>Company</label>
+  <select id="reportCompany">
+    <option>GMS TEXTILES LTD</option>
+    <option>GMS COMPOSITE KNITTING</option>
+  </select>
+
+  <br><br>
+
+  <label>Department / MCD</label>
+  <select id="reportMcd">
+    <option>GREY FABRIC MCD</option>
+    <option>SHIPMENT MCD</option>
+    <option>BILLING SECTION</option>
+    <option>OUTER WEAR MCD</option>
+    <option>YARN MCD</option>
+    <option>PRINTING MCD</option>
+    <option>JHUT MCD</option>
+    <option>GENERAL MCD</option>
+    <option>ACCESSORIES MCD</option>
+    <option>LEFTOVER MCD</option>
+    <option>FINISH FABRIC MCD</option>
+    <option>YARN DYEING MCD</option>
+    <option>CHEMICAL MCD</option>
+    <option>GENERAL TECHNICAL MCD</option>
+  </select>
+
+  <br><br>
+
+  <button class="mainBtn" onclick="openReport()">Show Report</button>
+
+  <br><br>
+
   <div class="grid">
     <div class="card" onclick="location.href='needle.html'">Needle Daily Report</div>
-    <div class="card" onclick="location.href='monthly.html'">Needle Monthly Report</div>
-    <div class="card" onclick="location.href='daily-report.html'">All Daily Reports</div>
-    <div class="card" onclick="location.href='manpower.html'">Manpower Report</div>
-    <div class="card" onclick="alert('Accessories Report pore add korbo')">Accessories Report</div>
-    <div class="card" onclick="alert('Sewing Thread Report pore add korbo')">Sewing Thread Report</div>
-    <div class="card" onclick="alert('Twill Tape Report pore add korbo')">Twill Tape Report</div>
-    <div class="card" onclick="alert('Chemical Report pore add korbo')">Chemical Report</div>
+    <div class="card" onclick="alert('Monthly Report page pore add korbo')">Monthly Report</div>
+    <div class="card" onclick="alert('All Daily Reports pore add korbo')">All Daily Reports</div>
+    <div class="card" onclick="showPage('manpower')">Manpower Report</div>
   </div>
+</div>
+
+<div id="notice" class="box hidden">
+  <h2>Notice Board</h2>
+  <p>No notice added yet.</p>
+</div>
+
+<div id="manpower" class="box hidden">
+  <h2>Manpower List</h2>
+  <p class="small">Same MCD theke entry dile ekhane total manpower show hobe. Search diye ID/card/name pawa jabe.</p>
+
+  <div class="search">
+    <input placeholder="Search manpower ID / card / name...">
+    <button onclick="alert('Manpower search pore add korbo')">Search</button>
+  </div>
+
+  <br>
+  <button class="mainBtn" onclick="alert('Manpower entry form pore add korbo')">Add Manpower</button>
 </div>
 
 <script>
 function showPage(id){
-  document.getElementById("dashboard").classList.add("hidden");
-  document.getElementById("newEntry").classList.add("hidden");
-  document.getElementById("reports").classList.add("hidden");
+  ["dashboard","newEntry","reports","notice","manpower"].forEach(x=>{
+    document.getElementById(x).classList.add("hidden");
+  });
   document.getElementById(id).classList.remove("hidden");
+}
+
+function openEntry(){
+  let mcd=document.getElementById("entryMcd").value;
+  document.getElementById("accessoriesEntry").classList.add("hidden");
+
+  if(mcd==="GENERAL TECHNICAL MCD"){
+    location.href="needle.html";
+  }else if(mcd==="ACCESSORIES MCD"){
+    document.getElementById("accessoriesEntry").classList.remove("hidden");
+  }else{
+    alert(mcd + " entry pore add korbo");
+  }
+}
+
+function openReport(){
+  let mcd=document.getElementById("reportMcd").value;
+
+  if(mcd==="GENERAL TECHNICAL MCD"){
+    location.href="needle.html";
+  }else{
+    alert(mcd + " report pore add korbo");
+  }
 }
 
 function searchInfo(){
@@ -122,19 +204,7 @@ function searchInfo(){
     alert("Search text likho");
     return;
   }
-  localStorage.setItem("searchQuery", q);
-  location.href="search.html";
-}
-
-function openDept(){
-  let dept=document.getElementById("dept").value;
-  if(dept==="ACCESSORIES MCD"){
-    location.href="accessories.html";
-  }else if(dept==="GENERAL TECHNICAL MCD"){
-    location.href="needle.html";
-  }else{
-    alert(dept + " page pore add korbo");
-  }
+  alert("Search system pore add korbo: " + q);
 }
 </script>
 
