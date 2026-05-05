@@ -59,9 +59,23 @@ Floor:
 </tfoot>
 </table>
 
+<div style="width:98%;margin:20px auto;text-align:center;">
+<h3>Monthly Summary</h3>
+<table border="1" style="width:60%;margin:auto;text-align:center;border-collapse:collapse;">
+<thead style="background:#1e293b;">
+<tr><th>Opening</th><th>Total Receive</th><th>Total Delivery</th><th>Present Stock</th></tr>
+</thead>
+<tbody>
+<tr style="background:#334155;font-weight:bold;">
+<td id="monthOpening">0</td><td id="monthReceive">0</td><td id="monthDelivery">0</td><td id="monthPresent">0</td>
+</tr>
+</tbody>
+</table>
+</div>
+
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-app.js";
-import { getFirestore, doc, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-firestore.js";
+import { getFirestore, doc, setDoc, getDoc, collection, query, where, getDocs } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-firestore.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyD-wBCF5eeWMHobLFOhBzKW7aB2pagz9-w",
@@ -727,21 +741,35 @@ const floorData = {
 ]
 };
 
-function loadTable(){
-let floor=document.getElementById("floor").value;
-let items=floorData[floor] || [];
+
+function getItems(){
+  let floor=document.getElementById("floor").value;
+  return floorData[floor] || [];
+}
+
+function getDateParts(dateStr){
+  let d=new Date(dateStr+"T00:00:00");
+  return {
+    month: dateStr.slice(0,7),
+    prevDate: new Date(d.getTime()-24*60*60*1000).toISOString().slice(0,10)
+  };
+}
+
+function loadTable(customPrevious=null){
+let items=getItems();
 let html="";
 
 items.forEach((item,i)=>{
+let previous = customPrevious && customPrevious[i] !== undefined ? customPrevious[i] : item[3];
 html+=`
 <tr>
 <td>${item[0]}</td>
 <td>${item[1]}</td>
 <td>${item[2]}</td>
-<td id="p${i}">${item[3]}</td>
+<td id="p${i}">${previous}</td>
 <td><input type="number" id="r${i}" oninput="calc(${i})" style="width:70px"></td>
 <td><input type="number" id="d${i}" oninput="calc(${i})" style="width:70px"></td>
-<td id="b${i}">${item[3]}</td>
+<td id="b${i}">${previous}</td>
 </tr>`;
 });
 
@@ -758,15 +786,14 @@ updateTotal();
 }
 
 function updateTotal(){
-let floor=document.getElementById("floor").value;
-let items=floorData[floor] || [];
+let items=getItems();
 let tp=0,tr=0,td=0,tb=0;
 
 for(let i=0;i<items.length;i++){
-tp+=Number(document.getElementById("p"+i).innerText)||0;
-tr+=Number(document.getElementById("r"+i).value)||0;
-td+=Number(document.getElementById("d"+i).value)||0;
-tb+=Number(document.getElementById("b"+i).innerText)||0;
+tp+=Number(document.getElementById("p"+i)?.innerText)||0;
+tr+=Number(document.getElementById("r"+i)?.value)||0;
+td+=Number(document.getElementById("d"+i)?.value)||0;
+tb+=Number(document.getElementById("b"+i)?.innerText)||0;
 }
 
 document.getElementById("totalPrevious").innerText=tp;
@@ -775,11 +802,10 @@ document.getElementById("totalDelivery").innerText=td;
 document.getElementById("totalPresent").innerText=tb;
 }
 
-
 async function saveData(){
 let date=document.getElementById("postDate").value;
 let floor=document.getElementById("floor").value;
-let items=floorData[floor] || [];
+let items=getItems();
 
 if(!date){
 alert("Date select koro");
@@ -799,8 +825,10 @@ present: Number(document.getElementById("b"+i).innerText)||0
 });
 }
 
+let month=date.slice(0,7);
 await setDoc(doc(db,"dailyPosting",floor+"_"+date),{
 date: date,
+month: month,
 floor: floor,
 rows: rows,
 totalPrevious: Number(document.getElementById("totalPrevious").innerText)||0,
@@ -809,20 +837,27 @@ totalDelivery: Number(document.getElementById("totalDelivery").innerText)||0,
 totalPresent: Number(document.getElementById("totalPresent").innerText)||0
 });
 
+await updateMonthlySummary(floor, month);
 alert("Saved Successfully");
 }
 
 async function loadData(){
 let date=document.getElementById("postDate").value;
 let floor=document.getElementById("floor").value;
+let items=getItems();
 
-if(!date) return;
+if(!date){
+  loadTable();
+  clearMonthlySummary();
+  return;
+}
 
+// 1) Same date saved data thakle full load hobe
 let snap=await getDoc(doc(db,"dailyPosting",floor+"_"+date));
-if(!snap.exists()) return;
-
+if(snap.exists()){
 let data=snap.data().rows || [];
-
+let prev=data.map(x=>Number(x.previous)||0);
+loadTable(prev);
 for(let i=0;i<data.length;i++){
 if(document.getElementById("r"+i)){
 document.getElementById("r"+i).value=data[i].receive || 0;
@@ -831,6 +866,68 @@ calc(i);
 }
 }
 updateTotal();
+await loadMonthlySummary(floor,date.slice(0,7));
+return;
+}
+
+// 2) Same date data na thakle previous day present -> today previous hobe
+let parts=getDateParts(date);
+let prevSnap=await getDoc(doc(db,"dailyPosting",floor+"_"+parts.prevDate));
+if(prevSnap.exists()){
+let prevRows=prevSnap.data().rows || [];
+let carry=prevRows.map(x=>Number(x.present)||0);
+loadTable(carry);
+} else {
+loadTable();
+}
+
+// New date e receive/delivery blank thakbe
+updateTotal();
+await loadMonthlySummary(floor,date.slice(0,7));
+}
+
+async function updateMonthlySummary(floor, month){
+let q=query(collection(db,"dailyPosting"), where("floor","==",floor), where("month","==",month));
+let qs=await getDocs(q);
+let docs=[];
+qs.forEach(d=>docs.push(d.data()));
+docs.sort((a,b)=>a.date.localeCompare(b.date));
+
+let opening=0, receive=0, delivery=0, present=0;
+if(docs.length>0){
+opening=Number(docs[0].totalPrevious)||0;
+docs.forEach(x=>{
+receive+=Number(x.totalReceive)||0;
+delivery+=Number(x.totalDelivery)||0;
+});
+present=opening+receive-delivery;
+}
+
+await setDoc(doc(db,"monthlySummary",floor+"_"+month),{
+floor:floor, month:month, opening:opening, totalReceive:receive, totalDelivery:delivery, present:present
+});
+showMonthlySummary(opening,receive,delivery,present);
+}
+
+async function loadMonthlySummary(floor, month){
+let snap=await getDoc(doc(db,"monthlySummary",floor+"_"+month));
+if(snap.exists()){
+let x=snap.data();
+showMonthlySummary(x.opening||0,x.totalReceive||0,x.totalDelivery||0,x.present||0);
+} else {
+clearMonthlySummary();
+}
+}
+
+function showMonthlySummary(opening,receive,delivery,present){
+document.getElementById("monthOpening").innerText=opening;
+document.getElementById("monthReceive").innerText=receive;
+document.getElementById("monthDelivery").innerText=delivery;
+document.getElementById("monthPresent").innerText=present;
+}
+
+function clearMonthlySummary(){
+showMonthlySummary(0,0,0,0);
 }
 
 document.getElementById("postDate").addEventListener("change", loadData);
@@ -840,6 +937,7 @@ window.calc=calc;
 window.updateTotal=updateTotal;
 window.saveData=saveData;
 window.loadData=loadData;
+
 
 
 loadTable();
