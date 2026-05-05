@@ -12,7 +12,7 @@
 Date: <input type="date" id="postDate">
 
 Floor:
-<select id="floor" onchange="loadTable()">
+<select id="floor" onchange="loadTable(); loadData();">
 <option>Kadom R</option>
 <option>Kadom N</option>
 <option>Shapla R</option>
@@ -26,6 +26,11 @@ Floor:
 <option>EMBROIDERY R</option>
 <option>EMBROIDERY N</option>
 </select>
+
+<br><br>
+<button onclick="saveData()" style="padding:10px 25px;background:green;color:white;font-weight:bold;">
+💾 Save Data
+</button>
 </div>
 
 <table border="1" style="width:98%;margin:auto;text-align:center;border-collapse:collapse;">
@@ -54,7 +59,22 @@ Floor:
 </tfoot>
 </table>
 
-<script>
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-app.js";
+import { getFirestore, doc, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-firestore.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyD-wBCF5eeWMHobLFOhBzKW7aB2pagz9-w",
+  authDomain: "gms-warehouse-tracker-7f57e.firebaseapp.com",
+  projectId: "gms-warehouse-tracker-7f57e",
+  storageBucket: "gms-warehouse-tracker-7f57e.firebasestorage.app",
+  messagingSenderId: "992250313291",
+  appId: "1:992250313291:web:ee3bceae76d4d53bc26bce"
+};
+
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+
 const floorData = {
 "Kadom R": [
 [1,"DBX1","7",25],[2,"DBX1","8",1],[3,"DBX1- KN","8",0],[4,"DBX1- NS","8",0],
@@ -754,6 +774,73 @@ document.getElementById("totalReceive").innerText=tr;
 document.getElementById("totalDelivery").innerText=td;
 document.getElementById("totalPresent").innerText=tb;
 }
+
+
+async function saveData(){
+let date=document.getElementById("postDate").value;
+let floor=document.getElementById("floor").value;
+let items=floorData[floor] || [];
+
+if(!date){
+alert("Date select koro");
+return;
+}
+
+let rows=[];
+for(let i=0;i<items.length;i++){
+rows.push({
+sl: items[i][0],
+needleType: items[i][1],
+size: items[i][2],
+previous: Number(document.getElementById("p"+i).innerText)||0,
+receive: Number(document.getElementById("r"+i).value)||0,
+delivery: Number(document.getElementById("d"+i).value)||0,
+present: Number(document.getElementById("b"+i).innerText)||0
+});
+}
+
+await setDoc(doc(db,"dailyPosting",floor+"_"+date),{
+date: date,
+floor: floor,
+rows: rows,
+totalPrevious: Number(document.getElementById("totalPrevious").innerText)||0,
+totalReceive: Number(document.getElementById("totalReceive").innerText)||0,
+totalDelivery: Number(document.getElementById("totalDelivery").innerText)||0,
+totalPresent: Number(document.getElementById("totalPresent").innerText)||0
+});
+
+alert("Saved Successfully");
+}
+
+async function loadData(){
+let date=document.getElementById("postDate").value;
+let floor=document.getElementById("floor").value;
+
+if(!date) return;
+
+let snap=await getDoc(doc(db,"dailyPosting",floor+"_"+date));
+if(!snap.exists()) return;
+
+let data=snap.data().rows || [];
+
+for(let i=0;i<data.length;i++){
+if(document.getElementById("r"+i)){
+document.getElementById("r"+i).value=data[i].receive || 0;
+document.getElementById("d"+i).value=data[i].delivery || 0;
+calc(i);
+}
+}
+updateTotal();
+}
+
+document.getElementById("postDate").addEventListener("change", loadData);
+
+window.loadTable=loadTable;
+window.calc=calc;
+window.updateTotal=updateTotal;
+window.saveData=saveData;
+window.loadData=loadData;
+
 
 loadTable();
 </script>
