@@ -11,7 +11,15 @@ th,td{border:1px solid #000;padding:8px;text-align:center}
 input{width:90%;padding:7px;text-align:center}
 button{padding:10px 22px;background:#2563eb;color:white;border:0;border-radius:8px;font-weight:bold;cursor:pointer}
 .deleteBtn{background:#dc2626}
+.excelBtn{background:#16a34a}
+.pdfBtn{background:#7c3aed}
 .total{background:#92d050;font-weight:bold}
+
+@media print{
+  body{background:white;color:black}
+  button,input[type="date"]{display:none}
+  .box{padding:0}
+}
 </style>
 </head>
 
@@ -28,9 +36,11 @@ Date:
 
 <button onclick="saveData()">Save Data</button>
 <button class="deleteBtn" onclick="deleteData()">Delete Data</button>
+<button class="excelBtn" onclick="exportExcel()">Export Excel</button>
+<button class="pdfBtn" onclick="exportPDF()">Download PDF / Print</button>
 <button onclick="location.href='index.html'">Back Home</button>
 
-<table>
+<table id="reportTable">
 <thead>
 <tr>
 <th>Discription</th>
@@ -70,7 +80,7 @@ Date:
 <br>
 
 <h3>Monthly Summary</h3>
-<table>
+<table id="summaryTable">
 <tr>
 <th>Opening</th>
 <th>Total Receive</th>
@@ -223,11 +233,38 @@ async function loadMonthlySummary(){
   document.getElementById("mPresent").innerText = monthlyPresent;
 }
 
+function exportExcel(){
+  let title = `
+    <h2>GMS TEXTILES LTD</h2>
+    <h3>Tansutrapur, Kaliakair, Gazipur.</h3>
+    <h3>Accessorie ( MCD )</h3>
+    <h3>Daily Twill Tape Stock</h3>
+  `;
+
+  let table1 = document.getElementById("reportTable").outerHTML;
+  let table2 = document.getElementById("summaryTable").outerHTML;
+
+  let file = new Blob([title + table1 + "<br>" + table2], {
+    type:"application/vnd.ms-excel"
+  });
+
+  let a = document.createElement("a");
+  a.href = URL.createObjectURL(file);
+  a.download = "twill-tape-report.xls";
+  a.click();
+}
+
+function exportPDF(){
+  window.print();
+}
+
 document.getElementById("postDate").addEventListener("change", loadData);
 
 window.calc = calc;
 window.saveData = saveData;
 window.deleteData = deleteData;
+window.exportExcel = exportExcel;
+window.exportPDF = exportPDF;
 
 calc();
 </script>
