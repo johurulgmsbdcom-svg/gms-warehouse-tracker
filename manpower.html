@@ -11,13 +11,17 @@ table{width:100%;border-collapse:collapse;margin-top:15px;background:white;color
 th,td{border:1px solid #000;padding:8px;text-align:center}
 input,select{padding:8px;border-radius:6px;border:1px solid #333}
 button{padding:10px 18px;background:#2563eb;color:white;border:0;border-radius:8px;font-weight:bold;cursor:pointer;margin:4px}
+button:disabled{opacity:.6;cursor:not-allowed}
 .deleteBtn{background:#dc2626}
 .excelBtn{background:#16a34a}
 .pdfBtn{background:#7c3aed}
+.clearBtn{background:#64748b}
 .total{background:#92d050;font-weight:bold}
 .empImg{width:45px;height:45px;border-radius:50%;object-fit:cover}
 .formBox{display:none;grid-template-columns:repeat(4,1fr);gap:10px;margin-top:15px}
 .summary{font-size:20px;font-weight:bold;text-align:center;margin-top:10px}
+.savingRow{opacity:.55}
+.status{font-size:14px;color:#22c55e;font-weight:bold;margin-left:10px}
 @media print{
   body{background:white;color:black}
   button,.top,.formBox{display:none!important}
@@ -63,6 +67,7 @@ MCD:
 <button class="excelBtn" onclick="exportExcel()">Export Excel</button>
 <button class="pdfBtn" onclick="exportPDF()">PDF / Print</button>
 <button onclick="location.href='index.html'">Back Home</button>
+<span id="status" class="status"></span>
 </div>
 
 <div id="formBox" class="formBox">
@@ -77,7 +82,7 @@ MCD:
   <input id="jobDesc" placeholder="Job Description">
 
   <button onclick="saveData()">Save Employee</button>
-  <button onclick="clearForm()">Clear</button>
+  <button class="clearBtn" onclick="clearForm()">Clear</button>
 </div>
 
 <div class="summary">
@@ -115,7 +120,7 @@ MCD:
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-app.js";
-import { getFirestore, doc, setDoc, deleteDoc, collection, getDocs } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-firestore.js";
+import { getFirestore, doc, setDoc, deleteDoc, collection, getDocs, enableIndexedDbPersistence } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-firestore.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyD-wBCF5eeWMHobLFOhBzKW7aB2pagz9-w",
@@ -128,6 +133,19 @@ const firebaseConfig = {
 
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
+
+enableIndexedDbPersistence(db).catch(()=>{});
+
+let currentRows = [];
+
+function showStatus(msg){
+  document.getElementById("status").innerText = msg;
+  setTimeout(()=>{ document.getElementById("status").innerText = ""; }, 2500);
+}
+
+function setButtonsDisabled(state){
+  document.querySelectorAll("button").forEach(btn=>btn.disabled=state);
+}
 
 function showForm(){
   document.getElementById("formBox").style.display="grid";
@@ -160,32 +178,92 @@ function updateJobAge(){
   document.getElementById("jobAge").value=getJobAge(document.getElementById("joinDate").value);
 }
 
-async function saveData(){
+function getFormData(){
   let company=document.getElementById("company").value;
   let mcd=document.getElementById("mcd").value;
   let empId=document.getElementById("empId").value.trim();
 
-  if(!empId){
+  return {
+    company: company,
+    mcd: mcd,
+    image: document.getElementById("image").value.trim(),
+    empId: empId,
+    empName: document.getElementById("empName").value.trim(),
+    designation: document.getElementById("designation").value.trim(),
+    joinDate: document.getElementById("joinDate").value,
+    section: document.getElementById("section").value.trim(),
+    salary: Number(document.getElementById("salary").value)||0,
+    jobDesc: document.getElementById("jobDesc").value.trim()
+  };
+}
+
+function renderTable(rows){
+  let mcd=document.getElementById("mcd").value;
+  document.getElementById("mcdTitle").innerText=mcd;
+
+  let html="";
+  let count=0;
+  let totalSalary=0;
+
+  rows.forEach(x=>{
+    count++;
+    totalSalary += Number(x.salary)||0;
+
+    html+=`
+    <tr>
+      <td>${x.image ? `<img class="empImg" src="${x.image}">` : ""}</td>
+      <td>${x.empId||""}</td>
+      <td>${x.empName||""}</td>
+      <td>${x.designation||""}</td>
+      <td>${x.joinDate||""}</td>
+      <td>${getJobAge(x.joinDate)||""}</td>
+      <td>${x.section||""}</td>
+      <td>${Number(x.salary)||0}</td>
+      <td>${x.jobDesc||""}</td>
+      <td><button class="deleteBtn" onclick="deleteEmployee('${x.empId}')">Delete</button></td>
+    </tr>`;
+  });
+
+  document.getElementById("tableBody").innerHTML=html;
+  document.getElementById("totalManpower").innerText=count;
+  document.getElementById("totalSalary").innerText=totalSalary;
+  document.getElementById("mcdTotal").innerText=mcd+" Total: "+count+" | Salary: "+totalSalary;
+}
+
+function addInstantRow(x){
+  let exists = currentRows.findIndex(r=>r.empId===x.empId);
+  if(exists >= 0){
+    currentRows[exists] = x;
+  }else{
+    currentRows.push(x);
+  }
+  renderTable(currentRows);
+}
+
+async function saveData(){
+  let x = getFormData();
+
+  if(!x.empId){
     alert("Employee ID dao");
     return;
   }
 
-  await setDoc(doc(db,"manpower",mcd+"_"+empId),{
-    company:company,
-    mcd:mcd,
-    image:document.getElementById("image").value.trim(),
-    empId:empId,
-    empName:document.getElementById("empName").value.trim(),
-    designation:document.getElementById("designation").value.trim(),
-    joinDate:document.getElementById("joinDate").value,
-    section:document.getElementById("section").value.trim(),
-    salary:Number(document.getElementById("salary").value)||0,
-    jobDesc:document.getElementById("jobDesc").value.trim()
-  });
+  setButtonsDisabled(true);
+  showStatus("Saving...");
 
-  clearForm();
-  await loadData();
-  alert("Saved Successfully");
+  addInstantRow(x);
+
+  try{
+    await setDoc(doc(db,"manpower",x.mcd+"_"+x.empId),x);
+    clearForm();
+    await loadData(false);
+    showStatus("Saved Successfully ✅");
+  }catch(e){
+    alert("Save failed. Internet/Firebase check koro.");
+    await loadData(false);
+  }
+
+  setButtonsDisabled(false);
 }
 
 async function deleteEmployee(empId){
@@ -193,48 +271,47 @@ async function deleteEmployee(empId){
 
   if(!confirm("Ei employee delete korba?")) return;
 
-  await deleteDoc(doc(db,"manpower",mcd+"_"+empId));
-  await loadData();
-  alert("Deleted Successfully");
+  setButtonsDisabled(true);
+  showStatus("Deleting...");
+
+  currentRows = currentRows.filter(x=>x.empId!==empId);
+  renderTable(currentRows);
+
+  try{
+    await deleteDoc(doc(db,"manpower",mcd+"_"+empId));
+    await loadData(false);
+    showStatus("Deleted Successfully ✅");
+  }catch(e){
+    alert("Delete failed. Internet/Firebase check koro.");
+    await loadData(false);
+  }
+
+  setButtonsDisabled(false);
 }
 
-async function loadData(){
+async function loadData(showMsg=true){
   let mcd=document.getElementById("mcd").value;
   document.getElementById("mcdTitle").innerText=mcd;
 
+  if(showMsg) showStatus("Loading...");
+
   let snap=await getDocs(collection(db,"manpower"));
 
-  let html="";
-  let count=0;
-  let totalSalary=0;
+  currentRows=[];
 
   snap.forEach(docSnap=>{
     let x=docSnap.data();
 
     if(x.mcd===mcd){
-      count++;
-      totalSalary+=Number(x.salary)||0;
-
-      html+=`
-      <tr>
-        <td>${x.image ? `<img class="empImg" src="${x.image}">` : ""}</td>
-        <td>${x.empId||""}</td>
-        <td>${x.empName||""}</td>
-        <td>${x.designation||""}</td>
-        <td>${x.joinDate||""}</td>
-        <td>${getJobAge(x.joinDate)||""}</td>
-        <td>${x.section||""}</td>
-        <td>${Number(x.salary)||0}</td>
-        <td>${x.jobDesc||""}</td>
-        <td><button class="deleteBtn" onclick="deleteEmployee('${x.empId}')">Delete</button></td>
-      </tr>`;
+      currentRows.push(x);
     }
   });
 
-  document.getElementById("tableBody").innerHTML=html;
-  document.getElementById("totalManpower").innerText=count;
-  document.getElementById("totalSalary").innerText=totalSalary;
-  document.getElementById("mcdTotal").innerText=mcd+" Total: "+count+" | Salary: "+totalSalary;
+  currentRows.sort((a,b)=>(a.empId||"").localeCompare(b.empId||""));
+
+  renderTable(currentRows);
+
+  if(showMsg) showStatus("Loaded ✅");
 }
 
 function clearForm(){
@@ -254,7 +331,6 @@ function exportExcel(){
   `;
 
   let table=document.getElementById("reportTable").outerHTML;
-
   let file=new Blob([title+table],{type:"application/vnd.ms-excel"});
   let a=document.createElement("a");
   a.href=URL.createObjectURL(file);
@@ -275,7 +351,7 @@ window.updateJobAge=updateJobAge;
 window.exportExcel=exportExcel;
 window.exportPDF=exportPDF;
 
-loadData();
+loadData(false);
 </script>
 
 </body>
