@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Audit History</title>
+
+<style>
+:root{
+  --bg:#07111f;
+  --card:#101b2d;
+  --card2:#14233a;
+  --text:#ffffff;
+  --muted:#9fb0c7;
+  --border:#263855;
+  --blue:#2563eb;
+  --green:#22c55e;
+  --red:#ef4444;
+}
+
+body{
+  margin:0;
+  background:var(--bg);
+  color:var(--text);
+  font-family:Segoe UI,Arial,sans-serif;
+}
+
+.header{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  padding:16px 22px;
+  background:var(--card);
+  border-bottom:1px solid var(--border);
+}
+
+.logo{
+  font-size:24px;
+  font-weight:900;
+}
+
+.sub{
+  color:var(--muted);
+  font-size:12px;
+}
+
+.btn{
+  border:none;
+  border-radius:12px;
+  padding:12px 18px;
+  background:var(--blue);
+  color:white;
+  font-weight:900;
+  cursor:pointer;
+}
+
+.page{
+  padding:18px;
+}
+
+.card{
+  background:linear-gradient(135deg,var(--card),var(--card2));
+  border:1px solid var(--border);
+  border-radius:18px;
+  padding:18px;
+}
+
+.auditItem{
+  border:1px solid var(--border);
+  border-radius:14px;
+  padding:14px;
+  margin-top:12px;
+  background:rgba(255,255,255,.03);
+}
+
+.top{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  margin-bottom:8px;
+}
+
+.user{
+  font-weight:900;
+  color:#22c55e;
+}
+
+.date{
+  color:var(--muted);
+  font-size:12px;
+}
+
+.action{
+  font-size:15px;
+  line-height:1.6;
+}
+
+.empty{
+  text-align:center;
+  color:var(--muted);
+  padding:40px;
+}
+</style>
+</head>
+
+<body>
+
+<div class="header">
+
+  <div>
+    <div class="logo">📜 AUDIT HISTORY</div>
+    <div class="sub">Live User Activity Tracking</div>
+  </div>
+
+  <div>
+    <button class="btn"
+      onclick="location.href='index.html'">
+      🏠 Dashboard
+    </button>
+  </div>
+
+</div>
+
+<div class="page">
+
+  <div class="card">
+
+    <h2>🕒 System Activity</h2>
+
+    <div id="auditList" class="empty">
+      Loading...
+    </div>
+
+  </div>
+
+</div>
+
+<script type="module">
+
+import { initializeApp }
+from "https://www.gstatic.com/firebasejs/12.12.1/firebase-app.js";
+
+import {
+  getFirestore,
+  collection,
+  getDocs
+}
+from "https://www.gstatic.com/firebasejs/12.12.1/firebase-firestore.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyD-wBCF5eeWMHobLFOhBzKW7aB2pagz9-w",
+  authDomain: "gms-warehouse-tracker-7f57e.firebaseapp.com",
+  projectId: "gms-warehouse-tracker-7f57e",
+  storageBucket: "gms-warehouse-tracker-7f57e.firebasestorage.app",
+  messagingSenderId: "992250313291",
+  appId: "1:992250313291:web:ee3bceae76d4d53bc26bce"
+};
+
+const app = initializeApp(firebaseConfig);
+
+const db = getFirestore(app);
+
+async function loadAudit(){
+
+  let snap =
+    await getDocs(collection(db,"auditHistory"));
+
+  let rows=[];
+
+  snap.forEach(d=>{
+
+    rows.push({
+      id:d.id,
+      ...d.data()
+    });
+
+  });
+
+  rows.sort((a,b)=>
+    (b.createdAt || "").localeCompare(a.createdAt || "")
+  );
+
+  let html="";
+
+  rows.forEach(r=>{
+
+    let date =
+      new Date(r.createdAt).toLocaleString();
+
+    html += `
+      <div class="auditItem">
+
+        <div class="top">
+
+          <div class="user">
+            👤 ${r.user || "Unknown"}
+          </div>
+
+          <div class="date">
+            ${date}
+          </div>
+
+        </div>
+
+        <div class="action">
+          ${r.action || ""}
+        </div>
+
+      </div>
+    `;
+
+  });
+
+  document.getElementById("auditList").innerHTML =
+    html || '<div class="empty">No activity found</div>';
+
+}
+
+loadAudit();
+
+</script>
+
+</body>
+</html>
