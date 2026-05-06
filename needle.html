@@ -58,6 +58,7 @@ Floor:
 <th>Receive</th>
 <th>Delivery</th>
 <th>Present Stock</th>
+<th id="bnHeader">BNR</th>
 </tr>
 </thead>
 
@@ -70,6 +71,7 @@ Floor:
 <td id="totalReceive">0</td>
 <td id="totalDelivery">0</td>
 <td id="totalPresent">0</td>
+<td id="totalBN">0</td>
 </tr>
 </tfoot>
 </table>
@@ -78,11 +80,11 @@ Floor:
 <h3>Monthly Summary</h3>
 <table id="summaryTable" border="1" style="width:60%;margin:auto;text-align:center;border-collapse:collapse;">
 <thead style="background:#1e293b;">
-<tr><th>Opening</th><th>Total Receive</th><th>Total Delivery</th><th>Present Stock</th></tr>
+<tr><th>Opening</th><th>Total Receive</th><th>Total Delivery</th><th>Present Stock</th><th id="monthBNHeader">Total BNR</th></tr>
 </thead>
 <tbody>
 <tr style="background:#334155;font-weight:bold;">
-<td id="monthOpening">0</td><td id="monthReceive">0</td><td id="monthDelivery">0</td><td id="monthPresent">0</td>
+<td id="monthOpening">0</td><td id="monthReceive">0</td><td id="monthDelivery">0</td><td id="monthPresent">0</td><td id="monthBN">0</td>
 </tr>
 </tbody>
 </table>
@@ -769,6 +771,10 @@ function getMonth(date){
 
 function loadTable(customPrevious=null){
   let items=getItems();
+  let floor=document.getElementById("floor").value;
+  let bnName = floor.includes("N") ? "BNF" : "BNR";
+  document.getElementById("bnHeader").innerText = bnName;
+  document.getElementById("monthBNHeader").innerText = "Total " + bnName;
   let html="";
 
   items.forEach((item,i)=>{
@@ -782,6 +788,7 @@ function loadTable(customPrevious=null){
       <td><input type="number" id="r${i}" oninput="calc(${i})" style="width:70px"></td>
       <td><input type="number" id="d${i}" oninput="calc(${i})" style="width:70px"></td>
       <td id="b${i}">${previous}</td>
+      <td><input type="number" id="bn${i}" oninput="updateTotal()" style="width:70px"></td>
     </tr>`;
   });
 
@@ -799,19 +806,21 @@ function calc(i){
 
 function updateTotal(){
   let items=getItems();
-  let tp=0,tr=0,td=0,tb=0;
+  let tp=0,tr=0,td=0,tb=0,tbn=0;
 
   for(let i=0;i<items.length;i++){
     tp+=Number(document.getElementById("p"+i)?.innerText)||0;
     tr+=Number(document.getElementById("r"+i)?.value)||0;
     td+=Number(document.getElementById("d"+i)?.value)||0;
     tb+=Number(document.getElementById("b"+i)?.innerText)||0;
+    tbn+=Number(document.getElementById("bn"+i)?.value)||0;
   }
 
   document.getElementById("totalPrevious").innerText=tp;
   document.getElementById("totalReceive").innerText=tr;
   document.getElementById("totalDelivery").innerText=td;
   document.getElementById("totalPresent").innerText=tb;
+  document.getElementById("totalBN").innerText=tbn;
 }
 
 async function saveData(){
@@ -834,7 +843,8 @@ async function saveData(){
       previous:Number(document.getElementById("p"+i).innerText)||0,
       receive:Number(document.getElementById("r"+i).value)||0,
       delivery:Number(document.getElementById("d"+i).value)||0,
-      present:Number(document.getElementById("b"+i).innerText)||0
+      present:Number(document.getElementById("b"+i).innerText)||0,
+      bn:Number(document.getElementById("bn"+i).value)||0
     });
   }
 
@@ -872,7 +882,7 @@ async function loadData(){
 
   if(!date){
     loadTable();
-    showMonthlySummary(0,0,0,0);
+    showMonthlySummary(0,0,0,0,0);
     return;
   }
 
@@ -896,23 +906,27 @@ async function loadData(){
 
   let monthlyReceive=Array(items.length).fill(0);
   let monthlyDelivery=Array(items.length).fill(0);
+  let monthlyBN=Array(items.length).fill(0);
 
   monthRows.forEach(day=>{
     if(day.rows){
       day.rows.forEach((row,i)=>{
         monthlyReceive[i]+=Number(row.receive)||0;
         monthlyDelivery[i]+=Number(row.delivery)||0;
+        monthlyBN[i]+=Number(row.bn)||0;
       });
     }
   });
 
   let todayReceive=Array(items.length).fill(0);
   let todayDelivery=Array(items.length).fill(0);
+  let todayBN=Array(items.length).fill(0);
 
   if(todayData && todayData.rows){
     todayData.rows.forEach((row,i)=>{
       todayReceive[i]=Number(row.receive)||0;
       todayDelivery[i]=Number(row.delivery)||0;
+      todayBN[i]=Number(row.bn)||0;
     });
   }
 
@@ -930,15 +944,16 @@ async function loadData(){
   for(let i=0;i<items.length;i++){
     document.getElementById("r"+i).value = todayReceive[i] || "";
     document.getElementById("d"+i).value = todayDelivery[i] || "";
+    document.getElementById("bn"+i).value = todayBN[i] || "";
     calc(i);
   }
 
-  updateMonthlySummary(monthlyReceive,monthlyDelivery);
+  updateMonthlySummary(monthlyReceive,monthlyDelivery,monthlyBN);
 }
 
-function updateMonthlySummary(monthlyReceive,monthlyDelivery){
+function updateMonthlySummary(monthlyReceive,monthlyDelivery,monthlyBN){
   let items=getItems();
-  let opening=0, receive=0, delivery=0, present=0;
+  let opening=0, receive=0, delivery=0, present=0, bn=0;
 
   for(let i=0;i<items.length;i++){
     let op=Number(items[i][3])||0;
@@ -948,16 +963,18 @@ function updateMonthlySummary(monthlyReceive,monthlyDelivery){
     receive+=r;
     delivery+=d;
     present+=op+r-d;
+    bn+=Number(monthlyBN[i])||0;
   }
 
-  showMonthlySummary(opening,receive,delivery,present);
+  showMonthlySummary(opening,receive,delivery,present,bn);
 }
 
-function showMonthlySummary(opening,receive,delivery,present){
+function showMonthlySummary(opening,receive,delivery,present,bn){
   document.getElementById("monthOpening").innerText=opening;
   document.getElementById("monthReceive").innerText=receive;
   document.getElementById("monthDelivery").innerText=delivery;
   document.getElementById("monthPresent").innerText=present;
+  document.getElementById("monthBN").innerText=bn;
 }
 
 function exportExcel(){
