@@ -5,24 +5,30 @@
 <style>
 body{margin:0;background:#0f172a;color:white;font-family:Arial}
 .box{padding:18px}
-h2,h3{text-align:center;margin:5px}
-.controls{text-align:center;margin:18px 0}
-button{padding:10px 24px;border:0;border-radius:7px;color:white;font-weight:bold;cursor:pointer;margin:4px}
+h2,h3{text-align:center;margin:4px}
+.top{text-align:center;margin:15px}
+select,input,button{padding:9px;margin:4px;border-radius:6px;border:0}
+button{background:#2563eb;color:white;font-weight:bold;cursor:pointer}
 .excelBtn{background:#16a34a}
 .pdfBtn{background:#7c3aed}
 .homeBtn{background:#2563eb}
-.loadBtn{background:#0ea5e9}
-select,input{padding:8px;border-radius:5px;border:1px solid #888}
-table{width:98%;margin:15px auto;border-collapse:collapse;text-align:center;background:#0f172a;color:white}
-th,td{border:1px solid #64748b;padding:5px}
-thead{background:#1e293b;font-weight:bold}
-tfoot,.total{background:#334155;font-weight:bold}
-.summaryTable{width:70%}
+.reportPage{background:white;color:black;width:210mm;min-height:297mm;margin:15px auto;padding:10mm;box-sizing:border-box}
+table{width:100%;border-collapse:collapse;color:black;text-align:center;font-size:11px;margin-top:10px}
+th,td{border:1px solid #000;padding:4px}
+th{background:#e5e7eb}
+.total{background:#92d050;font-weight:bold}
+.sectionTitle{background:#1e293b;color:white;font-weight:bold;font-size:14px}
+.grand{background:#ffff00;font-weight:bold;font-size:15px}
+
+@page{size:A4 portrait;margin:8mm}
+
 @media print{
-  body{background:white!important;color:black!important}
-  .controls,button,input,select{display:none!important}
-  table{background:white!important;color:black!important}
-  thead,tfoot,.total{background:#eee!important;color:black!important}
+  body{background:white;color:black}
+  .top,button{display:none!important}
+  .box{padding:0}
+  .reportPage{width:auto;min-height:auto;margin:0;padding:0;box-shadow:none}
+  table{font-size:10px}
+  h2,h3{color:black}
 }
 </style>
 </head>
@@ -31,79 +37,39 @@ tfoot,.total{background:#334155;font-weight:bold}
 <div class="box">
 
 <h2>GMS TEXTILES LTD</h2>
-<h3>Needle Monthly Report</h3>
+<h3>Needle Range Report</h3>
 
-<div class="controls">
-Month:
-<input type="month" id="reportMonth">
-
+<div class="top">
 Floor:
-<select id="floor">
-<option>Kadom R</option>
-<option>Kadom N</option>
-<option>Shapla R</option>
-<option>Shapla N</option>
-<option>Poddo R</option>
-<option>Poddo N</option>
-<option>Belly R</option>
-<option>Belly N</option>
-<option>Sample R</option>
-<option>Sample N</option>
-<option>EMBROIDERY R</option>
-<option>EMBROIDERY N</option>
+<select id="floorSelect">
+  <option value="ALL">ALL FLOOR</option>
+  <option>Kadom R</option>
+  <option>Kadom N</option>
+  <option>Shapla R</option>
+  <option>Shapla N</option>
+  <option>Poddo R</option>
+  <option>Poddo N</option>
+  <option>Belly R</option>
+  <option>Belly N</option>
+  <option>Sample R</option>
+  <option>Sample N</option>
+  <option>EMBROIDERY R</option>
+  <option>EMBROIDERY N</option>
 </select>
 
-<button class="loadBtn" onclick="loadMonthlyReport()">Show Report</button>
+From:
+<input type="date" id="fromDate">
+
+To:
+<input type="date" id="toDate">
+
+<button onclick="loadReport()">Show Report</button>
 <button class="excelBtn" onclick="exportExcel()">Export Excel</button>
-<button class="pdfBtn" onclick="exportPDF()">PDF / Print</button>
+<button class="pdfBtn" onclick="window.print()">PDF / Print</button>
 <button class="homeBtn" onclick="location.href='index.html'">Back Home</button>
 </div>
 
-<table id="reportTable">
-<thead>
-<tr>
-<th>SL</th>
-<th>Needle Type</th>
-<th>Size</th>
-<th>Previous</th>
-<th>Monthly Receive</th>
-<th>Monthly Delivery</th>
-<th>Present Stock</th>
-</tr>
-</thead>
-
-<tbody id="tableBody"></tbody>
-
-<tfoot>
-<tr>
-<td colspan="3">TOTAL</td>
-<td id="totalPrevious">0</td>
-<td id="totalReceive">0</td>
-<td id="totalDelivery">0</td>
-<td id="totalPresent">0</td>
-</tr>
-</tfoot>
-</table>
-
-<h3>Monthly Summary</h3>
-<table id="summaryTable" class="summaryTable">
-<thead>
-<tr>
-<th>Opening</th>
-<th>Total Receive</th>
-<th>Total Delivery</th>
-<th>Present Stock</th>
-</tr>
-</thead>
-<tbody>
-<tr class="total">
-<td id="monthOpening">0</td>
-<td id="monthReceive">0</td>
-<td id="monthDelivery">0</td>
-<td id="monthPresent">0</td>
-</tr>
-</tbody>
-</table>
+<div id="reportArea"></div>
 
 </div>
 
@@ -123,771 +89,171 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
-const floorData = {
-"Kadom R": [
-[1,"DBX1","7",25],[2,"DBX1","8",1],[3,"DBX1- KN","8",0],[4,"DBX1- NS","8",0],
-[5,"DBX1","9",32],[6,"DBX1 -KN","9",0],[7,"DBX1-NS","8LP",0],[8,"DBX1-SF","9B",0],
-[9,"DBX1 -SF","9B",0],[10,"DBXK5-KK","9B",0],[11,"DBX1","10",8],[12,"DBX1 KN","10",0],
-[13,"DBX1","11",1],[14,"DBX1","12SPI",0],[15,"DBX1","12",12],[16,"DBX1","14",22],
-[17,"DBXK5-KK","9S",0],[18,"DBX1","12SPD",0],[19,"DCX1","7",23],[20,"DCX1","8",0],
-[21,"DCX1- KN","8",1],[22,"DCX1","9",15],[23,"DCX1 SF","9LP",0],[24,"DCX1-NS","8",0],
-[25,"DCX1","10",9],[26,"DCX1","11",34],[27,"DCX1","12",4],[28,"DCX1","14",0],
-[29,"UYX128","7",15],[30,"UYX128 -KN","8",7],[31,"UYX128","9",19],[32,"UYX128","9SPD",0],
-[33,"UYX128 -KN","9",0],[34,"UYX128 KK- KN","9",0],[35,"UYX128 -KK","7",0],
-[36,"UYX128","10",46],[37,"UYX128 -KN","10PD",0],[38,"UY128-NY2","10SPD",0],
-[39,"UYX128","11",2],[40,"UYX128","11SPD",0],[41,"UYX128 -KN","11",0],
-[42,"UYX128 -KN","11PD",0],[43,"UYX128","12",1],[44,"UY128++GAS","12",0],
-[45,"UYX128","14",35],[46,"DPX5-NS","8",0],[47,"UY/UOX113","9",16],
-[48,"UY/UOX113","11",21],[49,"UY/UOX113","12",0],[50,"UY/UOX113","14",30],
-[51,"DVX57","12",22],[52,"DPX5","9",11],[53,"DPX5","10SPD",20],[54,"DPX5","11",10],
-[55,"DPX5","9 SLP",0],[56,"DPX5","12",17],[57,"DPX5","12SPD",30],[58,"DPX5","14SPD",0],
-[59,"DPX5","14",39],[60,"DPX17","9",8],[61,"DPX17","11",9],[62,"UYX128-KK KN","10",0],
-[63,"DPX5-KN","8",0],[64,"DBX1-SF","8",0],[65,"DBX1-NS","9",0],[66,"DCX1- KN","9",0],
-[67,"DPX5-NS","9",0],[68,"UYX128-KK","8",0],[69,"UOX113","11SPI",0],[70,"DBX1-SF","8LP",0],
-[71,"DBX1-SF","9LP",0],[72,"DBX1-SF","11LP",0],[73,"DCX1-SF","8LP",0],[74,"DCX1-SF","9LP",0],
-[75,"DCX1-SF","11LP",0],[76,"UYX128-SF","9LP",33],[77,"UYX128-SF","10PD",0],
-[78,"UYX128-SF","10LP",0],[79,"UYX128-SAN","10",20],[80,"UYX128-SAN","11",0],
-[81,"UYX128-SAN","12",20],[82,"DPX5-SF","11LP",0]
-],
+const FLOORS = [
+  "Kadom R","Kadom N",
+  "Shapla R","Shapla N",
+  "Poddo R","Poddo N",
+  "Belly R","Belly N",
+  "Sample R","Sample N",
+  "EMBROIDERY R","EMBROIDERY N"
+];
 
-"Kadom N": [
-[1,"DBX1","7",16],[2,"DBX1","8",0],[3,"DBX1- KN","8",0],[4,"DBX1- NS","8",0],
-[5,"DBX1","9",30],[6,"DBX1 -KN","9",0],[7,"DBX1 -NS","9",0],[8,"DBX1 -SF","9B",0],
-[9,"DBXK5-KK","9B",0],[10,"DBX1","10",0],[11,"DBX1 -KN","10",0],[12,"DBX1 SF","10",0],
-[13,"DBX1","11",24],[14,"DBX1","12",0],[15,"DBX1","14",0],[16,"DBXK5-KK","9S",0],
-[17,"DBX1","12SPD",0],[18,"DCX1","7",20],[19,"DCX1","8",0],[20,"DCX1- KN","8",30],
-[21,"DCX1","9",24],[22,"DCX1 SF","9LP",0],[23,"DCX1","9JPD",0],[24,"DCX1","10",0],
-[25,"DCX1","11",28],[26,"DCX1","12",10],[27,"DCX1","14",0],[28,"UYX128","7",20],
-[29,"UYX128","8",0],[30,"UYX128 -KN","8",20],[31,"UYX128","9",2],[32,"UYX128 -KN","9",0],
-[33,"UYX128 KK- KN","9",0],[34,"UYX128 -NY2","9B",0],[35,"UYX128","10",10],
-[36,"UYX128 -KN","10PD",0],[37,"UYX128","11",20],[38,"UYX128","11SLP+",0],
-[39,"UYX128 -KN","11",0],[40,"UYX128 -KN","11HP",0],[41,"UYX128 -KN","11PD",0],
-[42,"UYX128","12",20],[43,"UYX128","14",0],[44,"UYX128 -NY2","14S",0],
-[45,"UY/UOX113","9",20],[46,"UY/UOX113","11",10],[47,"UY/UOX113","14",0],
-[48,"DVX57","14",0],[49,"DPX5","9",20],[50,"DPX5","9SPD",0],[51,"DPX5","10SPD",0],
-[52,"DPX5","11",25],[53,"DPX5","12",10],[54,"DPX5","14",44],[55,"DPX17","9",20],
-[56,"DPX17","11",20],[57,"FLX118 -GCS","9",0],[58,"FLX118 -GCS","11",0]
- ],
+async function loadReport(){
+  let selectedFloor=document.getElementById("floorSelect").value;
+  let from=document.getElementById("fromDate").value;
+  let to=document.getElementById("toDate").value;
 
-"Poddo R": [
-[1,"DBX1","7",18],
-[2,"DBX1","8",3],
-[3,"DBX1- KN","8",0],
-[4,"DBX1- NS","8",0],
-[5,"DBX1","9",1],
-[6,"DBX1 -KN","9",0],
-[7,"DBX1-KN","09PD",31],
-[8,"DBX1 -NS","9",0],
-[9,"DBX1 -SF","9B",0],
-[10,"DBXK5-KK","9B",0],
-[11,"DBX1","10",6],
-[12,"DBX1 KN","10",0],
-[13,"DBX1","11",2],
-[14,"DBX1 KK","11J",0],
-[15,"DBX1","12",10],
-[16,"DBX1","14",20],
-[17,"DBXK5-KK","9S",0],
-[18,"TQX1","16",40],
-[19,"DCX1","7",44],
-[20,"DCX1","8",77],
-[21,"DCX1- KN","8",0],
-[22,"DCX1","9",27],
-[23,"DCX1 SF","9LP",0],
-[24,"DMX13-KN","10",0],
-[25,"DCX1","10",7],
-[26,"DCX1","11",3],
-[27,"DCX1","12",10],
-[28,"DCX1","14",14],
-[29,"UYX128","7",30],
-[30,"UYX128 -KN","8",36],
-[31,"UYX128","9",49],
-[32,"UY128","9 SPD",20],
-[33,"UYX128 -KN","9",0],
-[34,"UYX128 KK- KN","9",20],
-[35,"UYX128 -NY2","9B",0],
-[36,"UYX128","10",59],
-[37,"UYX128 -KN","10PD",0],
-[38,"UY128 NY2","10SPD",0],
-[39,"UYX128","11",19],
-[40,"UYX128","11SLP+",0],
-[41,"UYX128 -KN","11HP",40],
-[42,"UYX128 -KN-KN","11",16],
-[43,"UYX128","12",1],
-[44,"UY128++SAN","12",20],
-[45,"UYX128","14",68],
-[46,"UYX128 -NY2","14S",0],
-[47,"UY/UOX113","9",0],
-[48,"UY/UOX113","11",10],
-[49,"UY/UOX113","12",12],
-[50,"UY/UOX113","14",18],
-[51,"DVX57","14",39],
-[52,"DPX5","9",40],
-[53,"DVX57","12",42],
-[54,"DPX5","11",3],
-[55,"DPX5++","11SPD",0],
-[56,"DPX5","12",9],
-[57,"DPX5","12SPD",0],
-[58,"DPX5","14SPD",0],
-[59,"DPX5","14",38],
-[60,"DPX17","9",4],
-[61,"DPX17","11",18],
-[62,"FLX118 -GCS","10",33],
-[63,"FLX118 -GCS","11",0],
-[64,"DBX1-SF","8LP",24],
-[65,"DBX1-SF","9LP",0],
-[66,"DBX1-SF","10LP",185],
-[67,"DBX1-SF","11LP",0],
-[68,"DCX1-SF","8LP",0],
-[69,"DCX1-SF","9AP",13],
-[70,"DCX1-SF","10LP",0],
-[71,"DCX1-SF","11LP",8],
-[72,"UYX128-KN","8LP",0],
-[73,"UYX128-SF","8LP",81],
-[74,"UYX128-SAN","9XS",11],
-[75,"UYX128-SF","9LP",0],
-[76,"UYX128-KK-KN","9LP",0],
-[77,"UYX128-SAN","10XS",16],
-[78,"UYX128-SF","10LP",0],
-[79,"UYX128-SF","10PD",20],
-[80,"UYX128-KK-KN","10LP",57],
-[81,"UYX128-KN","11LP",70],
-[82,"UYX128-SF","11LP",0],
-[83,"UYX128-SF","11PD",0],
-[84,"UYX128-KK-KN","11LP",140],
-[85,"DPX5-KN","8LP",100],
-[86,"DPX5-SF","9LP",100],
-[87,"DPX5-SF","10LP",107],
-[88,"DPX5-SF","11LP",0]
-]
-  ,
-
-"Poddo N": [
-[1,"DBX1","7",0],
-[2,"DBX1","8",0],
-[3,"DBX1- KN","8",0],
-[4,"DBX1- NS","8",0],
-[5,"DBX1","9",3],
-[6,"DBX1 -KN","9",0],
-[7,"DBX1 -NS","9",0],
-[8,"DBX1 -SF","9B",0],
-[9,"DBXK5-KK","9B",0],
-[10,"DBX1","10",0],
-[11,"DBX1 -KN","10",0],
-[12,"DBX1 SF","10",0],
-[13,"DBX1","11",0],
-[14,"DBX1","12",0],
-[15,"DBX1","14",0],
-[16,"DBXK5-KK","9S",0],
-[17,"DBX1","12SPD",0],
-[18,"DCX1","7",0],
-[19,"DCX1","8",0],
-[20,"DCX1","9",3],
-[21,"DCX1- KN","8",0],
-[22,"DCX1 SF","9LP",0],
-[23,"DCX1","9JPD",0],
-[24,"DCX1","10",0],
-[25,"DCX1","11",0],
-[26,"DCX1","12",0],
-[27,"DCX1","14",0],
-[28,"UYX128","7",0],
-[29,"UYX128","8",0],
-[30,"UYX128","9",0],
-[31,"UYX128 -KN","8",0],
-[32,"UYX128 -KN","9",0],
-[33,"UYX128 KK- KN","9",0],
-[34,"UYX128 -NY2","9B",0],
-[35,"UYX128","10",0],
-[36,"UYX128 -KN","10PD",0],
-[37,"UYX128","11",0],
-[38,"UYX128","11SLP+",0],
-[39,"UYX128 -KN","11",0],
-[40,"UYX128 -KN","11HP",0],
-[41,"UYX128 -KN","11PD",0],
-[42,"UYX128","12",0],
-[43,"UYX128","14",0],
-[44,"UYX128 -NY2","14S",0],
-[45,"UY/UOX113","9",37],
-[46,"UY/UOX113","11",63],
-[47,"UY/UOX113","12",50],
-[48,"UY/UOX113","14",0],
-[49,"DVX57","14",104],
-[50,"DPX5","9",60],
-[51,"DPX5","9SPD",0],
-[52,"DPX5","10SPD",0],
-[53,"DPX5","11",9],
-[54,"DPX5","12",0],
-[55,"DPX5","12SPD",0],
-[56,"DPX5","14SPD",0],
-[57,"DPX5","14",0],
-[58,"DPX17","9",0],
-[59,"DPX17","11",56],
-[60,"FLX118 -GCS","11",16],
-[61,"DVX57","12",0]
-]
-  ,
-
-"Shapla R": [
-[1,"DBX1","7",25],
-[2,"DBX1","8",16],
-[3,"DBX1- KN","8",0],
-[4,"DBX1- NS","8",0],
-[5,"DBX1","9",16],
-[6,"DBX1 -KN","10",0],
-[7,"DBX1-KN","9PD",0],
-[8,"DBX1 -NS","9",0],
-[9,"DBX1 -SF","9B",0],
-[10,"DBXK5-KK","9B",50],
-[11,"DBX1","10",37],
-[12,"DBX1","11",70],
-[13,"DBX1","12SPI",0],
-[14,"DBX1","12",0],
-[15,"DBX1","14",11],
-[16,"DBX1","14SPD",30],
-[17,"DBX1","12SPD",0],
-[18,"DCX1","7",46],
-[19,"DCX1","8",14],
-[20,"DCX1- KN","8",0],
-[21,"DCX1","9",68],
-[22,"DCX1 SF","9LP",0],
-[23,"DMX13-KN","10",0],
-[24,"DCX1","10",36],
-[25,"DCX1","11",54],
-[26,"DCX1","12",10],
-[27,"DCX1","14",0],
-[28,"UYX128","7",11],
-[29,"UYX128 -KN","8",0],
-[30,"UYX128","9",52],
-[31,"UY128","9SPD",30],
-[32,"UYX128 -KN","9",0],
-[33,"UYX128 KK- KN","9",20],
-[34,"UYX128 -NY2","9B",0],
-[35,"UYX128","10",43],
-[36,"UYX128 -KN-KN","10",30],
-[37,"UYX128","11",33],
-[38,"UY128 NY2","10SPD",30],
-[39,"UYX128 KN","11SLP+",35],
-[40,"UYX128 -Kk-kn","11",30],
-[41,"UYX128 -KN","11PD",0],
-[42,"UYX128","12",23],
-[43,"UY128++GAS","12",0],
-[44,"UYX128","14",15],
-[45,"UYX128 -NY2","14S",0],
-[46,"UY/UOX113","9",22],
-[47,"UY/UOX113","11",20],
-[48,"DVX57","12",0],
-[49,"UY/UOX113","14",55],
-[50,"DVX57","14",24],
-[51,"DPX5","9",9],
-[52,"DPX5++","9SLP",36],
-[53,"DPX5","10SPD",22],
-[54,"DPX5","11",25],
-[55,"DPX5","11SPD",0],
-[56,"DPX5","12",26],
-[57,"DPX5","12SPD",0],
-[58,"DPX5","14SPD",13],
-[59,"DPX5","14",0],
-[60,"DPX17","9",21],
-[61,"DPX17","11",45],
-[62,"FLX118 -GCS","9",0],
-[63,"FLX118 -GCS","11",18]
-]
-  ,
-
-"Shapla N": [
-[1,"DBX1","7",16],
-[2,"DBX1","8",0],
-[3,"DBX1- KN","8",0],
-[4,"DBX1- NS","8",0],
-[5,"DBX1","9",27],
-[6,"DBX1 -KN","9",0],
-[7,"DBX1 -NS","9",0],
-[8,"DBX1 -SF","9B",0],
-[9,"DBXK5-KK","9B",0],
-[10,"DBX1","10",0],
-[11,"DBX1 -KN","10",0],
-[12,"DBX1 SF","10",0],
-[13,"DBX1","11",29],
-[14,"DBX1","12",54],
-[15,"DBX1","14",0],
-[16,"DBXK5-KK","9S",0],
-[17,"DBX1","12SPD",0],
-[18,"DCX1","7",27],
-[19,"DCX1","8",46],
-[20,"DCX1- KN","8",0],
-[21,"DCX1","9",79],
-[22,"DCX1 SF","9LP",0],
-[23,"DCX1","9JPD",0],
-[24,"DCX1","10",0],
-[25,"DCX1","11",23],
-[26,"DCX1","12",0],
-[27,"DCX1","14",0],
-[28,"UYX128","7",0],
-[29,"UYX128","8",0],
-[30,"UYX128 -KN","8",0],
-[31,"UYX128","9",27],
-[32,"UYX128 -KN","9",0],
-[33,"UYX128 KK- KN","9",0],
-[34,"UYX128 -NY2","9B",0],
-[35,"UYX128","10",47],
-[36,"UYX128 -KN","10PD",0],
-[37,"UYX128","11",5],
-[38,"UYX128","11SLP+",0],
-[39,"UYX128 -KN","11",0],
-[40,"UYX128 -KN","11HP",0],
-[41,"UYX128 -KN","11PD",0],
-[42,"UYX128","12",39],
-[43,"UYX128","14",0],
-[44,"UYX128 -NY2","14S",0],
-[45,"UY/UOX113","9",16],
-[46,"UY/UOX113","11",18],
-[47,"UY/UOX113","12",0],
-[48,"UY/UOX113","14",0],
-[49,"DVX57","14",30],
-[50,"DPX5","9",24],
-[51,"DPX5","9SPD",0],
-[52,"DPX5","10SPD",0],
-[53,"DPX5","11",10],
-[54,"DPX5","12",0],
-[55,"DPX5","12SPD",0],
-[56,"DPX5","14SPD",0],
-[57,"DPX5","14",0],
-[58,"DPX17","9",0],
-[59,"DPX17","11",6],
-[60,"FLX118 -GCS","9",0],
-[61,"FLX118 -GCS","11",50]
-]
-  ,
-
-"Sample R": [
-[1,"DBX1","7",33],
-[2,"DBX1","8",51],
-[3,"DBX1- KN","8",0],
-[4,"DBX1- NS","8",20],
-[5,"DBX1","9",7],
-[6,"DBX1 -KN","9",24],
-[7,"DBX1 -NS","9",0],
-[8,"DBX1 -SF","9B",0],
-[9,"DBXK5-KK","9B",0],
-[10,"DBX1","10",15],
-[11,"DBX1 -KN","10",0],
-[12,"DBX1 SF","10",0],
-[13,"DBX1","11",43],
-[14,"DBX1","12",30],
-[15,"DBX1","14",18],
-[16,"DBXK5-KK","9S",0],
-[17,"DBX1","12SPD",0],
-[18,"DCX1","7",40],
-[19,"DCX1","8",11],
-[20,"DCX1- KN","8",50],
-[21,"DCX1","9",23],
-[22,"DCX1 SF","9LP",0],
-[23,"DCX1","9JPD",0],
-[24,"DCX1","10",11],
-[25,"DCX1","11",30],
-[26,"DCX1","12",30],
-[27,"DCX1","14",26],
-[28,"UYX128","7",35],
-[29,"UYX128 KK- KK","8",0],
-[30,"UYX128 -KN","8",40],
-[31,"UYX128","9",55],
-[32,"UYX128 -KN","9",0],
-[33,"UYX128 KK- KN","9",10],
-[34,"UYX128 -NY2","9B",0],
-[35,"UYX128","10",48],
-[36,"UYX128 -KN","10PD",0],
-[37,"UYX128","11",13],
-[38,"UYX128","11SLP+",0],
-[39,"UYX128 -KN","11",0],
-[40,"UYX128 -KN","11HP",0],
-[41,"UYX128 -KN","11PD",0],
-[42,"UYX128","12",39],
-[43,"UYX128","14",24],
-[44,"UYX128 -NY2","14S",0],
-[45,"UY/UOX113","9",65],
-[46,"UY/UOX113","11",47],
-[47,"UY/UOX113","14",25],
-[48,"DOX558","12",0],
-[49,"DPX5","9",60],
-[50,"DPX5","9SPD",0],
-[51,"DPX5","10SPD",0],
-[52,"DPX5","11",26],
-[53,"DPX5","12",0],
-[54,"DPX5","12SPD",10],
-[55,"DPX5","14SPD",0],
-[56,"DPX5","14",31],
-[57,"DPX17","9",59],
-[58,"DPX17","11",60],
-[59,"DVX558","12",0],
-[60,"FLX118 -GCS","11",29]
-]
-  ,
-
-"Sample N": [
-[1,"DBX1","7",10],
-[2,"DBX1","8",0],
-[3,"DBX1- KN","8",0],
-[4,"DBX1- NS","8",0],
-[5,"DBX1","9",23],
-[6,"DBX1 -KN","9",0],
-[7,"DBX1 -NS","9",0],
-[8,"DBX1 -SF","9B",0],
-[9,"DBXK5-KK","9B",0],
-[10,"DBX1","10",0],
-[11,"DBX1 -KN","10",0],
-[12,"DBX1 SF","10",0],
-[13,"DBX1","11",20],
-[14,"DBX1","12",0],
-[15,"DBX1","14",0],
-[16,"DBXK5-KK","9S",0],
-[17,"DBX1","12SPD",0],
-[18,"DCX1","7",10],
-[19,"DCX1","8",0],
-[20,"DCX1- KN","8",0],
-[21,"DCX1","9",41],
-[22,"DCX1 SF","9LP",0],
-[23,"DCX1","9JPD",0],
-[24,"DCX1","10",0],
-[25,"DCX1","11",0],
-[26,"DCX1","12",0],
-[27,"DCX1","14",0],
-[28,"UYX128","7",10],
-[29,"UYX128","8",0],
-[30,"UYX128 -KN","8",0],
-[31,"UYX128","9",19],
-[32,"UYX128 -KN","9",0],
-[33,"UYX128 KK- KN","9",0],
-[34,"UYX128 -NY2","9B",0],
-[35,"UYX128","10",0],
-[36,"UYX128 -KN","10PD",0],
-[37,"UYX128","11",20],
-[38,"UYX128","11SLP+",0],
-[39,"UYX128 -KN","11",0],
-[40,"UYX128 -KN","11HP",0],
-[41,"UYX128 -KN","11PD",0],
-[42,"UYX128","12",0],
-[43,"UYX128","14",0],
-[44,"UYX128 -NY2","14S",0],
-[45,"UY/UOX113","9",0],
-[46,"UY/UOX113","11",40],
-[47,"UY/UOX113","14",0],
-[48,"DVX57","14",0],
-[49,"DPX5","9",0],
-[50,"DPX5","9SPD",0],
-[51,"DPX5","10SPD",0],
-[52,"DPX5","11",20],
-[53,"DPX5","12",0],
-[54,"DPX5","14",0],
-[55,"DPX17","9",0],
-[56,"DPX17","11",20],
-[57,"FLX118 -GCS","9",0],
-[58,"FLX118 -GCS","11",18]
-]
-  ,
-
-"EMBROIDERY R": [
-[1,"DBX1","7",120],
-[2,"DBX1","8",214],
-[3,"DBX1","9",234],
-[4,"DBX1","10",0],
-[5,"DBX1","11",181],
-[6,"DBX1","12",0],
-[7,"DBX1","14",35],
-[8,"DCX1","9",0],
-[9,"DCX1","11",37],
-[10,"DPX5","9",0],
-[11,"DBXK5KK","9",0],
-[12,"DBXK5KK","10",20],
-[13,"DPX5","11",0],
-[14,"DPX5","14",0],
-[15,"PHXC70","14",65],
-[16,"PHXC70","16",39],
-[17,"TVX64","14",0],
-[18,"TVX64","16",35],
-[19,"TQX1","14",0],
-[20,"TQX1","16",0],
-[21,"UOX113","14",31],
-[22,"UOX113","16",0]
-]
-  ,
-
-"EMBROIDERY N": [
-[1,"DBX1","7",22],
-[2,"DBX1","8",37],
-[3,"DBX1","9",36],
-[4,"DBX1","10",0],
-[5,"DBX1","11",10],
-[6,"DBX1","12",0],
-[7,"DBX1","14",15],
-[8,"DCX1","9",0],
-[9,"DCX1","11",68],
-[10,"DPX5","9",0],
-[11,"134 SAN DPX5","10",0],
-[12,"134 SAN DPX5","11",0],
-[13,"DPX5","11",0],
-[14,"DPX5","14",0],
-[15,"PHXC70","14",9],
-[16,"PHXC70","16",20],
-[17,"TVX64","14",0],
-[18,"TVX64","16",28],
-[19,"TQX1","14",0],
-[20,"TQX1","16",0],
-[21,"UOX113","14",42],
-[22,"UOX113","16",0]
-]
-  ,
-
-"Belly R": [
-[1,"DBX1","7",7],
-[2,"DBX1","8",27],
-[3,"DBX1- KN","8",0],
-[4,"DBX1-NS","8LP",0],
-[5,"DBX1","9",100],
-[6,"DBX1 -KN","10",0],
-[7,"DBX1-KN","9PD",0],
-[8,"DBX1 -NS","9",0],
-[9,"DBX1","10",0],
-[10,"DBXK5-NS","10",0],
-[11,"DBX1-SF","10",0],
-[12,"DBX1","11",54],
-[13,"DBX1 NS","11J",0],
-[14,"DBX1","12",33],
-[15,"DBX1","14",31],
-[16,"DBXK5-KK","9S",0],
-[17,"DBX1","12SPD",0],
-[18,"DCX1","7",0],
-[19,"DCX1","9",8],
-[20,"DCX1- KN","8",0],
-[21,"DCX1","8",0],
-[22,"DCX1-NS","9",0],
-[23,"DCX1- KN","9",60],
-[24,"DCX1","10",14],
-[25,"DCX1","11",43],
-[26,"DCX1","12",11],
-[27,"DCX1","14",13],
-[28,"UYX128","7",0],
-[29,"UYX128 -KN","8",0],
-[30,"UYX128","9",10],
-[31,"UY128","9SPD",0],
-[32,"UYX128 -KN","9",0],
-[33,"UYX128 KK","7",0],
-[34,"UYX128 -NY2","9B",0],
-[35,"UYX128","10",20],
-[36,"DPX5","7",0],
-[37,"DPX5-NS","11",25],
-[38,"UYX128","11",23],
-[39,"DPX5-NS","9",20],
-[40,"UYX128 -KN","11",0],
-[41,"UYX128 -KN","11PD",0],
-[42,"UYX128","12",20],
-[43,"UY128++GAS","12",0],
-[44,"UYX128","14",16],
-[45,"UYX128 -NY2","14S",0],
-[46,"UY/UOX113","9",0],
-[47,"UY/UOX113","12",0],
-[48,"DPX5-NS","10",40],
-[49,"DCX1-NS","8",0],
-[50,"DVX57","14",0],
-[51,"DPX5","9",50],
-[52,"DPX5","9SLP",0],
-[53,"DPX5","10SPD",18],
-[54,"DPX5","11",40],
-[55,"DPX5","11SPD",0],
-[56,"DPX5","12",20],
-[57,"DPX5","12SPD",10],
-[58,"DPX5","14SPD",20],
-[59,"DPX5","14",15],
-[60,"DPX17","9",0],
-[61,"DPX17","11",28],
-[62,"FLX118 -GCS","9",0],
-[63,"FLX118 -GCS","11",0],
-[64,"UYX128 -KK","8",0],
-[65,"UOX113","11SPI",20]
-]
-  ,
-
-"Belly N": [
-[1,"DBX1","7",0],
-[2,"DBX1","8",12],
-[3,"DBX1- KN","8",0],
-[4,"DBX1-SF","8",0],
-[5,"DBX1","9",12],
-[6,"DBX1 -KN","9",0],
-[7,"DBX1 -NS","9",0],
-[8,"DBX1 -SF","9B",0],
-[9,"DBXK5-KK","9B",0],
-[10,"DBX1","10",0],
-[11,"DBX1 -KN","10",0],
-[12,"DBX1 SF","10",0],
-[13,"DBX1","11",21],
-[14,"DBX1","12",20],
-[15,"DBX1","14",16],
-[16,"DBXK5-KK","9S",0],
-[17,"DBX1","12SPD",0],
-[18,"DCX1","7",0],
-[19,"DCX1","8",0],
-[20,"DCX1- KN","8",0],
-[21,"DCX1","9",12],
-[22,"DCX1 SF","9LP",0],
-[23,"DCX1- KN","9",0],
-[24,"DCX1","10",0],
-[25,"DCX1","11",20],
-[26,"DCX1","12",18],
-[27,"DCX1","14",20],
-[28,"UYX128","7",0],
-[29,"UYX128","8",0],
-[30,"UYX128 -KN","8",0],
-[31,"UYX128","9",26],
-[32,"UYX128","9SPD",0],
-[33,"UYX128 KK","7",0],
-[34,"UYX128 KK- KN","9",0],
-[35,"UYX128 -NY2","9B",0],
-[36,"UYX128","10",18],
-[37,"DPX5-KN","9",0],
-[38,"DPX5","7",0],
-[39,"UYX128","11",38],
-[40,"UYX128","11SLP+",0],
-[41,"UYX128 -KN","11",0],
-[42,"UYX128 -KN","11HP",0],
-[43,"UYX128 -KN","11PD",0],
-[44,"UYX128","12",28],
-[45,"UYX128","14",0],
-[46,"UYX128 -NY2","14S",0],
-[47,"UY/UOX113","9",0],
-[48,"UY/UOX113","11",0],
-[49,"UY/UOX113","12",0],
-[50,"UY/UOX113","14",0],
-[51,"DVX57","14",0],
-[52,"DPX5","11",9],
-[53,"DPX5","9SPD",0],
-[54,"DPX5","10SPD",0],
-[55,"DPX5","9",11],
-[56,"DPX5","12",15],
-[57,"DPX5","12SPD",0],
-[58,"DPX5","14SPD",0],
-[59,"DPX5","14",20],
-[60,"DPX17","9",0],
-[61,"DPX17","11",19],
-[62,"FLX118 -GCS","9",0],
-[63,"FLX118 -GCS","11",0],
-[64,"UYX128-KK","8",0],
-[65,"UOX113","9SPD",0],
-[66,"UOX113","11SPI",0]
-]
-};
-
-function getItems(){
-  let floorName=document.getElementById("floor").value;
-  return floorData[floorName] || [];
-}
-
-function setCurrentMonth(){
-  let now=new Date();
-  let m=String(now.getMonth()+1).padStart(2,"0");
-  document.getElementById("reportMonth").value=now.getFullYear()+"-"+m;
-}
-
-async function loadMonthlyReport(){
-  let month=document.getElementById("reportMonth").value;
-  let floorName=document.getElementById("floor").value;
-  let items=getItems();
-
-  if(!month){
-    alert("Month select koro");
+  if(!from || !to){
+    alert("From date and To date select koro");
     return;
   }
 
-  let monthlyReceive=Array(items.length).fill(0);
-  let monthlyDelivery=Array(items.length).fill(0);
-
   let snap=await getDocs(collection(db,"dailyPosting"));
+
+  let floors = selectedFloor==="ALL" ? FLOORS : [selectedFloor];
+
+  let floorMap={};
+  floors.forEach(f=>floorMap[f]={});
 
   snap.forEach(docSnap=>{
     let data=docSnap.data();
 
-    if(data.floor===floorName && data.month===month && data.rows){
-      data.rows.forEach((row,i)=>{
-        monthlyReceive[i]+=Number(row.receive)||0;
-        monthlyDelivery[i]+=Number(row.delivery)||0;
-      });
-    }
+    if(!data.date || !data.floor || !data.rows) return;
+    if(!floors.includes(data.floor)) return;
+    if(data.date < from || data.date > to) return;
+
+    data.rows.forEach(row=>{
+      let key=(row.needleType||"")+"___"+(row.size||"");
+
+      if(!floorMap[data.floor][key]){
+        floorMap[data.floor][key]={
+          sl:row.sl || "",
+          needleType:row.needleType || "",
+          size:row.size || "",
+          firstDate:data.date,
+          previous:Number(row.previous)||0,
+          receive:0,
+          delivery:0
+        };
+      }
+
+      if(data.date < floorMap[data.floor][key].firstDate){
+        floorMap[data.floor][key].firstDate=data.date;
+        floorMap[data.floor][key].previous=Number(row.previous)||0;
+      }
+
+      floorMap[data.floor][key].receive += Number(row.receive)||0;
+      floorMap[data.floor][key].delivery += Number(row.delivery)||0;
+    });
   });
 
-  let html="";
-  let totalPrevious=0;
-  let totalReceive=0;
-  let totalDelivery=0;
-  let totalPresent=0;
+  let grandPrevious=0;
+  let grandReceive=0;
+  let grandDelivery=0;
+  let grandPresent=0;
 
-  items.forEach((item,i)=>{
-    let previous=Number(item[3])||0;
-    let receive=Number(monthlyReceive[i])||0;
-    let delivery=Number(monthlyDelivery[i])||0;
-    let present=previous+receive-delivery;
+  let html=`
+  <div class="reportPage">
+    <h2>GMS TEXTILES LTD</h2>
+    <h3>Tansutrapur, Kaliakair, Gazipur.</h3>
+    <h3>Needle Report</h3>
+    <h3>${from} to ${to}</h3>
+  `;
 
-    totalPrevious+=previous;
-    totalReceive+=receive;
-    totalDelivery+=delivery;
-    totalPresent+=present;
+  floors.forEach(floor=>{
+    let rows=Object.values(floorMap[floor]).sort((a,b)=>Number(a.sl)-Number(b.sl));
+
+    let floorPrevious=0;
+    let floorReceive=0;
+    let floorDelivery=0;
+    let floorPresent=0;
 
     html+=`
-    <tr>
-      <td>${item[0]}</td>
-      <td>${item[1]}</td>
-      <td>${item[2]}</td>
-      <td>${previous}</td>
-      <td>${receive}</td>
-      <td>${delivery}</td>
-      <td>${present}</td>
-    </tr>`;
+    <table>
+      <tr class="sectionTitle">
+        <td colspan="7">${floor}</td>
+      </tr>
+      <tr>
+        <th>SL</th>
+        <th>Needle Type</th>
+        <th>Size</th>
+        <th>Previous</th>
+        <th>Total Receive</th>
+        <th>Total Delivery</th>
+        <th>Present Stock</th>
+      </tr>
+    `;
+
+    if(rows.length===0){
+      html+=`<tr><td colspan="7">No Data</td></tr>`;
+    }else{
+      rows.forEach(r=>{
+        let present = r.previous + r.receive - r.delivery;
+
+        floorPrevious += r.previous;
+        floorReceive += r.receive;
+        floorDelivery += r.delivery;
+        floorPresent += present;
+
+        html+=`
+        <tr>
+          <td>${r.sl}</td>
+          <td>${r.needleType}</td>
+          <td>${r.size}</td>
+          <td>${r.previous}</td>
+          <td>${r.receive}</td>
+          <td>${r.delivery}</td>
+          <td>${present}</td>
+        </tr>`;
+      });
+    }
+
+    grandPrevious += floorPrevious;
+    grandReceive += floorReceive;
+    grandDelivery += floorDelivery;
+    grandPresent += floorPresent;
+
+    html+=`
+      <tr class="total">
+        <td colspan="3">${floor} TOTAL</td>
+        <td>${floorPrevious}</td>
+        <td>${floorReceive}</td>
+        <td>${floorDelivery}</td>
+        <td>${floorPresent}</td>
+      </tr>
+    </table>`;
   });
 
-  document.getElementById("tableBody").innerHTML=html;
+  html+=`
+    <table>
+      <tr class="grand">
+        <td>ALL TOTAL</td>
+        <td>Previous: ${grandPrevious}</td>
+        <td>Receive: ${grandReceive}</td>
+        <td>Delivery: ${grandDelivery}</td>
+        <td>Present: ${grandPresent}</td>
+      </tr>
+    </table>
+  </div>`;
 
-  document.getElementById("totalPrevious").innerText=totalPrevious;
-  document.getElementById("totalReceive").innerText=totalReceive;
-  document.getElementById("totalDelivery").innerText=totalDelivery;
-  document.getElementById("totalPresent").innerText=totalPresent;
-
-  document.getElementById("monthOpening").innerText=totalPrevious;
-  document.getElementById("monthReceive").innerText=totalReceive;
-  document.getElementById("monthDelivery").innerText=totalDelivery;
-  document.getElementById("monthPresent").innerText=totalPresent;
+  document.getElementById("reportArea").innerHTML=html;
 }
 
 function exportExcel(){
-  let month=document.getElementById("reportMonth").value;
-  let floorName=document.getElementById("floor").value;
+  let html=document.getElementById("reportArea").innerHTML;
 
-  let title=`
-    <h2>GMS TEXTILES LTD</h2>
-    <h3>Needle Monthly Report</h3>
-    <h3>Floor: ${floorName}</h3>
-    <h3>Month: ${month}</h3>
-  `;
+  let file=new Blob([html],{
+    type:"application/vnd.ms-excel"
+  });
 
-  let table1=document.getElementById("reportTable").outerHTML;
-  let table2=document.getElementById("summaryTable").outerHTML;
-
-  let file=new Blob([title+table1+"<br>"+table2],{type:"application/vnd.ms-excel"});
   let a=document.createElement("a");
   a.href=URL.createObjectURL(file);
-  a.download="needle-monthly-report.xls";
+  a.download="needle-range-report.xls";
   a.click();
 }
 
-function exportPDF(){
-  window.print();
-}
-
-document.getElementById("floor").addEventListener("change",loadMonthlyReport);
-document.getElementById("reportMonth").addEventListener("change",loadMonthlyReport);
-
-window.loadMonthlyReport=loadMonthlyReport;
+window.loadReport=loadReport;
 window.exportExcel=exportExcel;
-window.exportPDF=exportPDF;
-
-setCurrentMonth();
-loadMonthlyReport();
 </script>
 
 </body>
