@@ -1,12 +1,172 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>GMS Login</title>
+
+<style>
+:root{
+  --bg:#07111f;
+  --card:#101b2d;
+  --card2:#14233a;
+  --text:#ffffff;
+  --muted:#9fb0c7;
+  --border:#263855;
+  --blue:#2563eb;
+  --green:#22c55e;
+  --red:#ef4444;
+}
+
+body{
+  margin:0;
+  background:linear-gradient(135deg,#07111f,#0f172a);
+  font-family:Segoe UI,Arial,sans-serif;
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  min-height:100vh;
+  color:white;
+}
+
+.loginBox{
+  width:360px;
+  max-width:90%;
+  background:linear-gradient(135deg,var(--card),var(--card2));
+  border:1px solid var(--border);
+  border-radius:22px;
+  padding:28px;
+  box-shadow:0 15px 35px rgba(0,0,0,.35);
+}
+
+.logoArea{
+  text-align:center;
+  margin-bottom:18px;
+}
+
+.logoArea img{
+  width:85px;
+  height:85px;
+  object-fit:contain;
+  margin-bottom:8px;
+}
+
+.logoTitle{
+  font-size:24px;
+  font-weight:900;
+}
+
+.sub{
+  color:var(--muted);
+  font-size:12px;
+  margin-top:4px;
+}
+
+.inputBox{
+  margin-top:14px;
+}
+
+.inputBox label{
+  display:block;
+  margin-bottom:6px;
+  color:#cbd5e1;
+  font-size:13px;
+  font-weight:800;
+}
+
+.inputBox input{
+  width:100%;
+  padding:13px;
+  border-radius:12px;
+  border:1px solid var(--border);
+  background:#0b1220;
+  color:white;
+  font-size:15px;
+  box-sizing:border-box;
+}
+
+.loginBtn{
+  width:100%;
+  margin-top:22px;
+  padding:14px;
+  border:none;
+  border-radius:14px;
+  background:linear-gradient(135deg,#2563eb,#22c55e);
+  color:white;
+  font-size:16px;
+  font-weight:900;
+  cursor:pointer;
+}
+
+.loginBtn:disabled{
+  opacity:.6;
+  cursor:not-allowed;
+}
+
+.msg{
+  margin-top:14px;
+  text-align:center;
+  font-size:13px;
+  font-weight:800;
+  color:#fca5a5;
+}
+
+.demo{
+  margin-top:18px;
+  background:rgba(255,255,255,.05);
+  border:1px solid rgba(255,255,255,.08);
+  border-radius:12px;
+  padding:12px;
+  font-size:12px;
+  color:#cbd5e1;
+  line-height:1.6;
+}
+
+.footer{
+  text-align:center;
+  margin-top:18px;
+  font-size:11px;
+  color:#94a3b8;
+}
+</style>
+</head>
+
+<body>
+
+<div class="loginBox">
+
+  <div class="logoArea">
+    <img src="logo.png" onerror="this.style.display='none'">
+
+    <div class="logoTitle">GMS MCD SYSTEM</div>
+    <div class="sub">Secure Login Portal</div>
+  </div>
+
+  <div class="inputBox">
+    <label>Email</label>
+    <input type="email" id="email" placeholder="Enter email">
+  </div>
+
+  <div class="inputBox">
+    <label>Password</label>
+    <input type="password" id="password" placeholder="Enter password">
+  </div>
+
+  <button class="loginBtn" id="loginBtn" onclick="login()">🔐 LOGIN</button>
+
+  <div id="msg" class="msg"></div>
+
+  <div class="demo">
+    👑 Admin Login<br>
+    Email: admin@gms.com<br>
+    Password: 123456
+  </div>
+
+  <div class="footer">Powered by JOHURUL</div>
+
+</div>
+
 <script type="module">
-
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-app.js";
-
-import {
-  getFirestore,
-  collection,
-  getDocs
-} from "https://www.gstatic.com/firebasejs/12.12.1/firebase-firestore.js";
+import { getFirestore, collection, getDocs } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-firestore.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyD-wBCF5eeWMHobLFOhBzKW7aB2pagz9-w",
@@ -20,60 +180,73 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
-window.login = async function(){
-
-  let email=document.getElementById("email").value.trim();
-  let password=document.getElementById("password").value.trim();
-
-  const snap = await getDocs(collection(db,"users"));
-
-  let found=false;
-
-  snap.forEach(doc=>{
-
-    let u=doc.data();
-
-    if(u.email===email && u.password===password){
-
-      found=true;
-
-      localStorage.setItem("gmsUser",JSON.stringify(u));
-
-      alert("Login Success ✅");
-
-      // ADMIN
-      if(u.role==="admin"){
-
-        window.location.href="admin.html";
-
-      }
-
-      // FULL ACCESS USER
-      else if(u.role==="full"){
-
-        window.location.href="index.html";
-
-      }
-
-      // NORMAL USER
-      else{
-
-        localStorage.setItem("userMCD",u.mcd);
-
-        window.location.href="index.html";
-
-      }
-
-    }
-
-  });
-
-  if(!found){
-
-    alert("Wrong Email or Password ❌");
-
-  }
-
+function showMsg(text){
+  document.getElementById("msg").innerText = text;
 }
 
+window.login = async function(){
+
+  let email = document.getElementById("email").value.trim().toLowerCase();
+  let password = document.getElementById("password").value.trim();
+  let btn = document.getElementById("loginBtn");
+
+  if(!email || !password){
+    showMsg("Email and password lagbe ❌");
+    return;
+  }
+
+  btn.disabled = true;
+  btn.innerText = "Checking...";
+
+  try{
+    const snap = await getDocs(collection(db,"users"));
+    let loginUser = null;
+
+    snap.forEach(docSnap=>{
+      let u = docSnap.data();
+
+      let dbEmail = (u.email || "").trim().toLowerCase();
+      let dbPass = (u.password || "").trim();
+
+      if(dbEmail === email && dbPass === password){
+        loginUser = {
+          id: docSnap.id,
+          name: u.name || "",
+          email: u.email || "",
+          password: u.password || "",
+          role: u.role || "user",
+          mcd: u.mcd || "",
+          mcdAccess: Array.isArray(u.mcdAccess) ? u.mcdAccess : (u.mcd ? [u.mcd] : []),
+          needleAccess: u.needleAccess === true
+        };
+      }
+    });
+
+    if(!loginUser){
+      showMsg("Wrong Email or Password ❌");
+      btn.disabled = false;
+      btn.innerText = "🔐 LOGIN";
+      return;
+    }
+
+    localStorage.setItem("gmsUser", JSON.stringify(loginUser));
+
+    showMsg("Login Success ✅");
+
+    if(loginUser.role === "admin"){
+      window.location.href = "admin.html";
+    }else{
+      window.location.href = "index.html";
+    }
+
+  }catch(error){
+    console.log(error);
+    showMsg("Firebase connection problem ❌");
+    btn.disabled = false;
+    btn.innerText = "🔐 LOGIN";
+  }
+};
 </script>
+
+</body>
+</html>
