@@ -5,27 +5,218 @@
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
 <style>
-:root{--bg:#07111f;--card:#101b2d;--card2:#14233a;--text:#fff;--muted:#9fb0c7;--border:#263855;--blue:#2563eb;--green:#22c55e;--red:#ef4444;--orange:#f59e0b}
-body.light{--bg:#eef3f9;--card:#fff;--card2:#f8fafc;--text:#0f172a;--muted:#64748b;--border:#cbd5e1}
-body{margin:0;background:var(--bg);color:var(--text);font-family:Segoe UI,Arial;padding:20px}
-.header{display:flex;justify-content:space-between;align-items:center;background:var(--card);padding:15px 20px;border-radius:16px;border:1px solid var(--border)}
-button{padding:10px 18px;border:0;border-radius:10px;background:var(--blue);color:white;font-weight:bold;cursor:pointer;margin:4px}
-h2,h3{text-align:center;margin:6px}
-.kpi{display:grid;grid-template-columns:repeat(4,1fr);gap:15px;margin:18px 0}
-.card{background:linear-gradient(135deg,var(--card),var(--card2));border:1px solid var(--border);border-radius:18px;padding:18px;box-shadow:0 8px 22px rgba(0,0,0,.22)}
-.label{color:var(--muted);font-size:13px;font-weight:bold}
-.value{font-size:28px;font-weight:900;color:var(--green);margin-top:8px}
-.chartGrid{display:grid;grid-template-columns:2fr 1fr;gap:18px;margin-bottom:18px}
-.floorGrid{display:grid;grid-template-columns:repeat(3,1fr);gap:15px}
-.floorBox{background:linear-gradient(135deg,var(--card),var(--card2));border:1px solid var(--border);border-radius:18px;padding:15px}
-.floorBox h3{text-align:left;margin:0 0 10px}
-.row{display:flex;justify-content:space-between;border-bottom:1px solid var(--border);padding:8px 0;font-weight:bold}
-.ok{color:var(--green)}.low{color:var(--red)}
-.alertBox{background:rgba(239,68,68,.12);border:1px solid var(--red);color:#fecaca;padding:12px;border-radius:12px;margin:10px 0;font-weight:bold}
-select,input{padding:10px;border-radius:8px;border:1px solid var(--border);background:var(--card);color:var(--text)}
-@page{size:A4 portrait;margin:8mm}
-@media print{button,.header .right,.controls{display:none!important}body{background:white;color:black}.card,.floorBox{box-shadow:none;color:black;background:white}}
-@media(max-width:900px){.kpi,.chartGrid,.floorGrid{grid-template-columns:1fr}.header{display:block;text-align:center}}
+:root{
+  --bg:#07111f;
+  --card:#101b2d;
+  --card2:#14233a;
+  --text:#ffffff;
+  --muted:#9fb0c7;
+  --border:#263855;
+  --blue:#2563eb;
+  --green:#22c55e;
+  --red:#ef4444;
+}
+
+body.light{
+  --bg:#eef3f9;
+  --card:#ffffff;
+  --card2:#f8fafc;
+  --text:#0f172a;
+  --muted:#64748b;
+  --border:#cbd5e1;
+}
+
+body{
+  margin:0;
+  background:var(--bg);
+  color:var(--text);
+  font-family:Segoe UI,Arial,sans-serif;
+  padding:16px;
+}
+
+.header{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  background:var(--card);
+  border:1px solid var(--border);
+  padding:14px 18px;
+  border-radius:16px;
+  margin-bottom:12px;
+}
+
+.header h2{
+  margin:0;
+  font-size:22px;
+}
+
+.sub{
+  color:var(--muted);
+  font-size:12px;
+  font-weight:800;
+  margin-top:4px;
+}
+
+button{
+  padding:9px 15px;
+  border:0;
+  border-radius:10px;
+  background:var(--blue);
+  color:white;
+  font-weight:900;
+  cursor:pointer;
+  margin:3px;
+}
+
+.controls{
+  text-align:center;
+  margin:12px 0;
+}
+
+input{
+  padding:9px;
+  border-radius:8px;
+  border:1px solid var(--border);
+  background:var(--card);
+  color:var(--text);
+}
+
+/* KPI */
+.kpi{
+  display:grid;
+  grid-template-columns:repeat(4,1fr);
+  gap:12px;
+  margin:14px 0;
+}
+
+.kpiCard{
+  background:linear-gradient(135deg,var(--card),var(--card2));
+  border:1px solid var(--border);
+  border-radius:16px;
+  padding:14px;
+  box-shadow:0 8px 18px rgba(0,0,0,.18);
+}
+
+.label{
+  color:var(--muted);
+  font-size:12px;
+  font-weight:900;
+}
+
+.value{
+  font-size:24px;
+  font-weight:900;
+  color:var(--green);
+  margin-top:6px;
+}
+
+/* ALERT */
+.alertBox{
+  background:rgba(239,68,68,.12);
+  border:1px solid var(--red);
+  color:#fecaca;
+  padding:10px 12px;
+  border-radius:12px;
+  margin:8px 0;
+  font-size:13px;
+  font-weight:900;
+}
+
+/* CHART */
+.chartGrid{
+  display:grid;
+  grid-template-columns:1.4fr .8fr;
+  gap:14px;
+  margin-bottom:14px;
+}
+
+.chartCard{
+  background:linear-gradient(135deg,var(--card),var(--card2));
+  border:1px solid var(--border);
+  border-radius:16px;
+  padding:14px;
+  box-shadow:0 8px 18px rgba(0,0,0,.18);
+  height:260px;
+}
+
+.chartCard h3{
+  margin:0 0 8px 0;
+  font-size:15px;
+  font-weight:900;
+}
+
+.chartCard canvas{
+  max-height:210px!important;
+}
+
+/* FLOOR */
+.floorGrid{
+  display:grid;
+  grid-template-columns:repeat(4,1fr);
+  gap:12px;
+}
+
+.floorBox{
+  background:linear-gradient(135deg,var(--card),var(--card2));
+  border:1px solid var(--border);
+  border-radius:15px;
+  padding:12px;
+  box-shadow:0 8px 18px rgba(0,0,0,.16);
+}
+
+.floorBox h3{
+  margin:0 0 8px 0;
+  font-size:15px;
+}
+
+.row{
+  display:flex;
+  justify-content:space-between;
+  border-bottom:1px solid var(--border);
+  padding:6px 0;
+  font-size:12px;
+  font-weight:800;
+}
+
+.ok{color:var(--green)}
+.low{color:var(--red)}
+
+@page{
+  size:A4 portrait;
+  margin:8mm;
+}
+
+@media print{
+  button,.controls,.right{
+    display:none!important;
+  }
+
+  body{
+    background:white;
+    color:black;
+  }
+
+  .header,.kpiCard,.chartCard,.floorBox{
+    background:white;
+    color:black;
+    box-shadow:none;
+  }
+}
+
+@media(max-width:900px){
+  .header{
+    display:block;
+    text-align:center;
+  }
+
+  .kpi,.chartGrid,.floorGrid{
+    grid-template-columns:1fr;
+  }
+
+  .chartCard{
+    height:250px;
+  }
+}
 </style>
 </head>
 
@@ -34,8 +225,9 @@ select,input{padding:10px;border-radius:8px;border:1px solid var(--border);backg
 <div class="header">
   <div>
     <h2>🏭 Needle Floor Wise Dashboard</h2>
-    <div style="color:var(--muted);font-weight:bold">Firebase Live Stock • Monthly Graph • Low Stock Warning</div>
+    <div class="sub">Firebase Live • Floor Stock • Monthly Summary • Low Stock Alert</div>
   </div>
+
   <div class="right">
     <button onclick="loadDashboard()">🔄 Refresh</button>
     <button onclick="window.print()">🖨️ PDF</button>
@@ -45,7 +237,7 @@ select,input{padding:10px;border-radius:8px;border:1px solid var(--border);backg
   </div>
 </div>
 
-<div class="controls" style="text-align:center;margin:15px">
+<div class="controls">
   Month:
   <input type="month" id="monthInput" onchange="loadDashboard()">
 </div>
@@ -53,18 +245,34 @@ select,input{padding:10px;border-radius:8px;border:1px solid var(--border);backg
 <div id="alerts"></div>
 
 <div class="kpi">
-  <div class="card"><div class="label">🪡 Total Present Stock</div><div class="value" id="totalStock">0</div></div>
-  <div class="card"><div class="label">📥 Monthly Receive</div><div class="value" id="totalReceive">0</div></div>
-  <div class="card"><div class="label">📤 Monthly Delivery</div><div class="value" id="totalDelivery">0</div></div>
-  <div class="card"><div class="label">⚠️ Low Stock Floor</div><div class="value" id="lowCount">0</div></div>
+  <div class="kpiCard">
+    <div class="label">🪡 Total Present Stock</div>
+    <div class="value" id="totalStock">0</div>
+  </div>
+
+  <div class="kpiCard">
+    <div class="label">📥 Monthly Receive</div>
+    <div class="value" id="totalReceive">0</div>
+  </div>
+
+  <div class="kpiCard">
+    <div class="label">📤 Monthly Delivery</div>
+    <div class="value" id="totalDelivery">0</div>
+  </div>
+
+  <div class="kpiCard">
+    <div class="label">⚠️ Low Stock Floor</div>
+    <div class="value" id="lowCount">0</div>
+  </div>
 </div>
 
 <div class="chartGrid">
-  <div class="card">
+  <div class="chartCard">
     <h3>📈 Floor Wise Present Stock</h3>
     <canvas id="floorChart"></canvas>
   </div>
-  <div class="card">
+
+  <div class="chartCard">
     <h3>📊 Monthly Receive / Delivery</h3>
     <canvas id="monthlyChart"></canvas>
   </div>
@@ -89,15 +297,22 @@ const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
 const FLOOR_OPENING = {
-  "Kadom R":618,"Kadom N":443,
-  "Poddo R":1889,"Poddo N":401,
-  "Shapla R":1171,"Shapla N":573,
-  "Sample R":1138,"Sample N":251,
-  "EMBROIDERY R":1011,"EMBROIDERY N":287,
-  "Belly R":796,"Belly N":335
+  "Kadom R":618,
+  "Kadom N":443,
+  "Poddo R":1889,
+  "Poddo N":401,
+  "Shapla R":1171,
+  "Shapla N":573,
+  "Sample R":1138,
+  "Sample N":251,
+  "EMBROIDERY R":1011,
+  "EMBROIDERY N":287,
+  "Belly R":796,
+  "Belly N":335
 };
 
 const FLOORS = Object.keys(FLOOR_OPENING);
+
 let floorChart=null;
 let monthlyChart=null;
 
@@ -111,7 +326,10 @@ function getStatus(floor, stock){
 
 function toggleTheme(){
   document.body.classList.toggle("light");
-  localStorage.setItem("needleDashTheme",document.body.classList.contains("light") ? "light" : "dark");
+  localStorage.setItem(
+    "needleDashTheme",
+    document.body.classList.contains("light") ? "light" : "dark"
+  );
 }
 
 if(localStorage.getItem("needleDashTheme")==="light"){
@@ -133,29 +351,29 @@ async function loadDashboard(){
   let snap=await getDocs(collection(db,"dailyPosting"));
 
   let latestByFloor={};
-  let monthReceiveByFloor={};
-  let monthDeliveryByFloor={};
+  let receiveMap={};
+  let deliveryMap={};
 
   FLOORS.forEach(f=>{
-    monthReceiveByFloor[f]=0;
-    monthDeliveryByFloor[f]=0;
+    receiveMap[f]=0;
+    deliveryMap[f]=0;
   });
 
   snap.forEach(docSnap=>{
     let data=docSnap.data();
+
     if(!data.floor || !data.date || !data.rows) return;
+    if(!FLOORS.includes(data.floor)) return;
 
-    if(FLOORS.includes(data.floor)){
-      if(!latestByFloor[data.floor] || data.date > latestByFloor[data.floor].date){
-        latestByFloor[data.floor]=data;
-      }
+    if(!latestByFloor[data.floor] || data.date > latestByFloor[data.floor].date){
+      latestByFloor[data.floor]=data;
+    }
 
-      if(data.date.slice(0,7)===month){
-        data.rows.forEach(r=>{
-          monthReceiveByFloor[data.floor]+=Number(r.receive)||0;
-          monthDeliveryByFloor[data.floor]+=Number(r.delivery)||0;
-        });
-      }
+    if(data.date.slice(0,7)===month){
+      data.rows.forEach(r=>{
+        receiveMap[data.floor]+=Number(r.receive)||0;
+        deliveryMap[data.floor]+=Number(r.delivery)||0;
+      });
     }
   });
 
@@ -177,11 +395,15 @@ async function loadDashboard(){
 
     floorStocks[floor]=stock;
     totalStock+=stock;
-    totalReceive+=monthReceiveByFloor[floor];
-    totalDelivery+=monthDeliveryByFloor[floor];
+    totalReceive+=receiveMap[floor];
+    totalDelivery+=deliveryMap[floor];
 
     if(stock <= getLowLimit(floor)){
-      lowFloors.push({floor,stock,limit:getLowLimit(floor)});
+      lowFloors.push({
+        floor:floor,
+        stock:stock,
+        limit:getLowLimit(floor)
+      });
     }
   });
 
@@ -191,21 +413,29 @@ async function loadDashboard(){
   document.getElementById("lowCount").innerText=lowFloors.length;
 
   renderAlerts(lowFloors);
-  renderFloors(floorStocks,monthReceiveByFloor,monthDeliveryByFloor);
-  renderCharts(floorStocks,monthReceiveByFloor,monthDeliveryByFloor);
+  renderFloors(floorStocks,receiveMap,deliveryMap);
+  renderCharts(floorStocks,receiveMap,deliveryMap);
 }
 
 function renderAlerts(lowFloors){
   let box=document.getElementById("alerts");
 
   if(lowFloors.length===0){
-    box.innerHTML=`<div class="alertBox" style="background:rgba(34,197,94,.12);border-color:#22c55e;color:#bbf7d0">✅ All floor stock OK</div>`;
+    box.innerHTML=`
+      <div class="alertBox" style="background:rgba(34,197,94,.12);border-color:#22c55e;color:#bbf7d0">
+        ✅ All floor stock OK
+      </div>
+    `;
     return;
   }
 
   let html="";
   lowFloors.forEach(x=>{
-    html+=`<div class="alertBox">⚠️ ${x.floor} LOW STOCK — Present: ${x.stock}, Limit: ${x.limit}</div>`;
+    html+=`
+      <div class="alertBox">
+        ⚠️ ${x.floor} LOW STOCK — Present: ${x.stock}, Limit: ${x.limit}
+      </div>
+    `;
   });
 
   box.innerHTML=html;
@@ -217,17 +447,38 @@ function renderFloors(floorStocks,receiveMap,deliveryMap){
   FLOORS.forEach(floor=>{
     let stock=floorStocks[floor];
     let status=getStatus(floor,stock);
-    let low=status.includes("LOW");
+    let isLow=status.includes("LOW");
 
     html+=`
-    <div class="floorBox">
-      <h3>🏭 ${floor}</h3>
-      <div class="row"><span>Present Stock</span><span class="${low?'low':'ok'}">${stock}</span></div>
-      <div class="row"><span>Monthly Receive</span><span>${receiveMap[floor]}</span></div>
-      <div class="row"><span>Monthly Delivery</span><span>${deliveryMap[floor]}</span></div>
-      <div class="row"><span>Limit</span><span>${getLowLimit(floor)}</span></div>
-      <div class="row"><span>Status</span><span class="${low?'low':'ok'}">${status}</span></div>
-    </div>`;
+      <div class="floorBox">
+        <h3>🏭 ${floor}</h3>
+
+        <div class="row">
+          <span>Present</span>
+          <span class="${isLow ? 'low' : 'ok'}">${stock}</span>
+        </div>
+
+        <div class="row">
+          <span>Receive</span>
+          <span>${receiveMap[floor]}</span>
+        </div>
+
+        <div class="row">
+          <span>Delivery</span>
+          <span>${deliveryMap[floor]}</span>
+        </div>
+
+        <div class="row">
+          <span>Limit</span>
+          <span>${getLowLimit(floor)}</span>
+        </div>
+
+        <div class="row">
+          <span>Status</span>
+          <span class="${isLow ? 'low' : 'ok'}">${status}</span>
+        </div>
+      </div>
+    `;
   });
 
   document.getElementById("floorArea").innerHTML=html;
@@ -236,6 +487,7 @@ function renderFloors(floorStocks,receiveMap,deliveryMap){
 function renderCharts(floorStocks,receiveMap,deliveryMap){
   let labels=FLOORS;
   let stockData=labels.map(f=>floorStocks[f]);
+
   let receiveTotal=labels.reduce((a,f)=>a+receiveMap[f],0);
   let deliveryTotal=labels.reduce((a,f)=>a+deliveryMap[f],0);
 
@@ -246,24 +498,62 @@ function renderCharts(floorStocks,receiveMap,deliveryMap){
     type:"bar",
     data:{
       labels:labels,
-      datasets:[{label:"Present Stock",data:stockData,borderWidth:1}]
+      datasets:[{
+        label:"Present Stock",
+        data:stockData,
+        borderWidth:1,
+        borderRadius:8
+      }]
     },
-    options:{responsive:true,plugins:{legend:{display:false}},scales:{y:{beginAtZero:true}}}
+    options:{
+      responsive:true,
+      maintainAspectRatio:false,
+      plugins:{
+        legend:{display:false}
+      },
+      scales:{
+        y:{beginAtZero:true},
+        x:{
+          grid:{display:false},
+          ticks:{
+            font:{size:9}
+          }
+        }
+      }
+    }
   });
 
   monthlyChart=new Chart(document.getElementById("monthlyChart"),{
     type:"doughnut",
     data:{
       labels:["Receive","Delivery"],
-      datasets:[{data:[receiveTotal,deliveryTotal]}]
+      datasets:[{
+        data:[receiveTotal,deliveryTotal]
+      }]
     },
-    options:{responsive:true,plugins:{legend:{position:"bottom"}}}
+    options:{
+      responsive:true,
+      maintainAspectRatio:false,
+      cutout:"65%",
+      plugins:{
+        legend:{
+          position:"bottom",
+          labels:{
+            font:{size:11},
+            boxWidth:12
+          }
+        }
+      }
+    }
   });
 }
 
 function exportExcel(){
   let html=document.body.innerHTML;
-  let file=new Blob([html],{type:"application/vnd.ms-excel"});
+  let file=new Blob([html],{
+    type:"application/vnd.ms-excel"
+  });
+
   let a=document.createElement("a");
   a.href=URL.createObjectURL(file);
   a.download="needle-dashboard.xls";
