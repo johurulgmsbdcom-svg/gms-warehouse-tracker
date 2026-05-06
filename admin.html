@@ -39,6 +39,7 @@ body{
   color:white;
   font-weight:900;
   cursor:pointer;
+  margin:3px;
 }
 .btn.red{background:var(--red)}
 .btn.green{background:var(--green)}
@@ -79,8 +80,6 @@ table{
   border-collapse:collapse;
   margin-top:16px;
   background:var(--card);
-  border-radius:14px;
-  overflow:hidden;
 }
 th,td{
   border:1px solid var(--border);
@@ -88,9 +87,7 @@ th,td{
   text-align:center;
   font-size:13px;
 }
-th{
-  background:var(--card2);
-}
+th{background:var(--card2)}
 .roleAdmin{color:var(--green);font-weight:900}
 .roleFull{color:var(--orange);font-weight:900}
 .roleUser{color:var(--blue);font-weight:900}
@@ -126,6 +123,7 @@ th{
   <div>
     <button class="btn" onclick="location.href='index.html'">🏠 Dashboard</button>
     <button class="btn" onclick="toggleTheme()">🌙 / ☀️</button>
+    <button class="btn red" onclick="logout()">🚪 Logout</button>
   </div>
 </div>
 
@@ -233,6 +231,12 @@ window.toggleTheme=function(){
 
 if(localStorage.getItem("adminTheme")==="light"){
   document.body.classList.add("light");
+}
+
+window.logout=function(){
+  localStorage.removeItem("gmsUser");
+  localStorage.removeItem("userMCD");
+  window.location.href="login.html";
 }
 
 function toast(msg){
