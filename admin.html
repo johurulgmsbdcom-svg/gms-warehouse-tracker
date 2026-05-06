@@ -13,97 +13,30 @@ body.light{
   --bg:#eef3f9;--card:#fff;--card2:#f8fafc;
   --text:#0f172a;--muted:#64748b;--border:#cbd5e1;
 }
-body{
-  margin:0;
-  background:var(--bg);
-  color:var(--text);
-  font-family:Segoe UI,Arial,sans-serif;
-}
-.header{
-  display:flex;
-  justify-content:space-between;
-  align-items:center;
-  padding:15px 22px;
-  background:var(--card);
-  border-bottom:1px solid var(--border);
-}
+body{margin:0;background:var(--bg);color:var(--text);font-family:Segoe UI,Arial,sans-serif}
+.header{display:flex;justify-content:space-between;align-items:center;padding:15px 22px;background:var(--card);border-bottom:1px solid var(--border)}
 .logoArea{display:flex;align-items:center;gap:10px}
 .logoArea img{width:42px;height:42px;object-fit:contain;border-radius:8px}
-.logo{font-size:22px;font-weight:900}
-.sub{font-size:12px;color:var(--muted)}
-.btn{
-  border:0;
-  border-radius:10px;
-  padding:11px 18px;
-  background:var(--blue);
-  color:white;
-  font-weight:900;
-  cursor:pointer;
-  margin:3px;
-}
-.btn.red{background:var(--red)}
-.btn.green{background:var(--green)}
-.btn.orange{background:var(--orange)}
-.page{padding:20px}
-.grid{
-  display:grid;
-  grid-template-columns:repeat(4,1fr);
-  gap:14px;
-  margin-bottom:18px;
-}
-.card{
-  background:linear-gradient(135deg,var(--card),var(--card2));
-  border:1px solid var(--border);
-  border-radius:16px;
-  padding:16px;
-  box-shadow:0 8px 20px rgba(0,0,0,.18);
-}
+.logo{font-size:22px;font-weight:900}.sub{font-size:12px;color:var(--muted)}
+.btn{border:0;border-radius:10px;padding:10px 15px;background:var(--blue);color:white;font-weight:900;cursor:pointer;margin:3px}
+.btn.red{background:var(--red)}.btn.green{background:var(--green)}.btn.orange{background:var(--orange)}
+.page{padding:18px}
+.grid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:16px}
+.card{background:linear-gradient(135deg,var(--card),var(--card2));border:1px solid var(--border);border-radius:16px;padding:16px;box-shadow:0 8px 20px rgba(0,0,0,.18)}
 .label{font-size:12px;color:var(--muted);font-weight:900}
 .num{font-size:26px;color:var(--green);font-weight:900;margin-top:6px}
-.formGrid{
-  display:grid;
-  grid-template-columns:repeat(3,1fr);
-  gap:12px;
-}
-input,select{
-  width:100%;
-  box-sizing:border-box;
-  padding:12px;
-  border-radius:10px;
-  border:1px solid var(--border);
-  background:var(--card);
-  color:var(--text);
-  font-size:14px;
-}
-table{
-  width:100%;
-  border-collapse:collapse;
-  margin-top:16px;
-  background:var(--card);
-}
-th,td{
-  border:1px solid var(--border);
-  padding:10px;
-  text-align:center;
-  font-size:13px;
-}
+.formGrid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+input,select{width:100%;box-sizing:border-box;padding:12px;border-radius:10px;border:1px solid var(--border);background:var(--card);color:var(--text);font-size:14px}
+.mcdBox{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:10px}
+.checkItem{background:rgba(255,255,255,.04);border:1px solid var(--border);border-radius:10px;padding:8px;font-size:12px;font-weight:800}
+.checkItem input{width:auto;margin-right:6px}
+table{width:100%;border-collapse:collapse;margin-top:16px;background:var(--card)}
+th,td{border:1px solid var(--border);padding:9px;text-align:center;font-size:12px}
 th{background:var(--card2)}
-.roleAdmin{color:var(--green);font-weight:900}
-.roleFull{color:var(--orange);font-weight:900}
-.roleUser{color:var(--blue);font-weight:900}
-.toast{
-  position:fixed;
-  right:18px;
-  bottom:18px;
-  background:var(--green);
-  color:white;
-  padding:13px 20px;
-  border-radius:12px;
-  font-weight:900;
-  display:none;
-}
+.roleAdmin{color:var(--green);font-weight:900}.roleFull{color:var(--orange);font-weight:900}.roleUser{color:var(--blue);font-weight:900}
+.toast{position:fixed;right:18px;bottom:18px;background:var(--green);color:white;padding:13px 20px;border-radius:12px;font-weight:900;display:none}
 @media(max-width:900px){
-  .grid,.formGrid{grid-template-columns:1fr}
+  .grid,.formGrid,.mcdBox{grid-template-columns:1fr}
   .header{display:block;text-align:center}
 }
 </style>
@@ -116,7 +49,7 @@ th{background:var(--card2)}
     <img src="logo.png" onerror="this.style.display='none'">
     <div>
       <div class="logo">👑 GMS ADMIN PANEL</div>
-      <div class="sub">User Permission • MCD Access • Report Control</div>
+      <div class="sub">Add • Edit • Delete • MCD Permission • Needle Access</div>
     </div>
   </div>
 
@@ -130,29 +63,16 @@ th{background:var(--card2)}
 <div class="page">
 
   <div class="grid">
-    <div class="card">
-      <div class="label">👤 Total Users</div>
-      <div class="num" id="totalUsers">0</div>
-    </div>
-
-    <div class="card">
-      <div class="label">👑 Admin</div>
-      <div class="num" id="totalAdmin">0</div>
-    </div>
-
-    <div class="card">
-      <div class="label">🌍 Full Access</div>
-      <div class="num" id="totalFull">0</div>
-    </div>
-
-    <div class="card">
-      <div class="label">📂 MCD User</div>
-      <div class="num" id="totalNormal">0</div>
-    </div>
+    <div class="card"><div class="label">👤 Total Users</div><div class="num" id="totalUsers">0</div></div>
+    <div class="card"><div class="label">👑 Admin</div><div class="num" id="totalAdmin">0</div></div>
+    <div class="card"><div class="label">🌍 Full Access</div><div class="num" id="totalFull">0</div></div>
+    <div class="card"><div class="label">📂 Normal User</div><div class="num" id="totalNormal">0</div></div>
   </div>
 
   <div class="card">
-    <h2>➕ Add / Update User</h2>
+    <h2 id="formTitle">➕ Add User</h2>
+
+    <input type="hidden" id="editId">
 
     <div class="formGrid">
       <input id="name" placeholder="User Name">
@@ -165,25 +85,18 @@ th{background:var(--card2)}
         <option value="admin">Admin</option>
       </select>
 
-      <select id="mcd">
-        <option>GREY FABRIC MCD</option>
-        <option>SHIPMENT MCD</option>
-        <option>BILLING SECTION</option>
-        <option>OUTER WEAR MCD</option>
-        <option>YARN MCD</option>
-        <option>PRINTING MCD</option>
-        <option>JHUT MCD</option>
-        <option>GENERAL MCD</option>
-        <option>ACCESSORIES MCD</option>
-        <option>LEFTOVER MCD</option>
-        <option>FINISH FABRIC MCD</option>
-        <option>YARN DYEING MCD</option>
-        <option>CHEMICAL MCD</option>
-        <option>GENERAL TECHNICAL MCD</option>
+      <select id="needleAccess">
+        <option value="no">Needle Access: No</option>
+        <option value="yes">Needle Access: Yes</option>
       </select>
 
       <button class="btn green" onclick="saveUser()">💾 Save User</button>
     </div>
+
+    <h3>📂 Select MCD Access</h3>
+    <div id="mcdChecks" class="mcdBox"></div>
+
+    <button class="btn orange" onclick="clearForm()">🧹 Clear Form</button>
   </div>
 
   <div class="card" style="margin-top:16px">
@@ -196,7 +109,8 @@ th{background:var(--card2)}
           <th>Email</th>
           <th>Password</th>
           <th>Role</th>
-          <th>MCD</th>
+          <th>MCD Access</th>
+          <th>Needle</th>
           <th>Action</th>
         </tr>
       </thead>
@@ -210,7 +124,15 @@ th{background:var(--card2)}
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-app.js";
-import { getFirestore, collection, addDoc, getDocs, deleteDoc, doc } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-firestore.js";
+import {
+  getFirestore,
+  collection,
+  addDoc,
+  getDocs,
+  deleteDoc,
+  doc,
+  updateDoc
+} from "https://www.gstatic.com/firebasejs/12.12.1/firebase-firestore.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyD-wBCF5eeWMHobLFOhBzKW7aB2pagz9-w",
@@ -224,10 +146,29 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
+const MCD_LIST = [
+  "GREY FABRIC MCD",
+  "SHIPMENT MCD",
+  "BILLING SECTION",
+  "OUTER WEAR MCD",
+  "YARN MCD",
+  "PRINTING MCD",
+  "JHUT MCD",
+  "GENERAL MCD",
+  "ACCESSORIES MCD",
+  "LEFTOVER MCD",
+  "FINISH FABRIC MCD",
+  "YARN DYEING MCD",
+  "CHEMICAL MCD",
+  "GENERAL TECHNICAL MCD"
+];
+
+let allUsers = [];
+
 window.toggleTheme=function(){
   document.body.classList.toggle("light");
   localStorage.setItem("adminTheme",document.body.classList.contains("light") ? "light" : "dark");
-}
+};
 
 if(localStorage.getItem("adminTheme")==="light"){
   document.body.classList.add("light");
@@ -237,7 +178,7 @@ window.logout=function(){
   localStorage.removeItem("gmsUser");
   localStorage.removeItem("userMCD");
   window.location.href="login.html";
-}
+};
 
 function toast(msg){
   let t=document.getElementById("toast");
@@ -246,34 +187,102 @@ function toast(msg){
   setTimeout(()=>t.style.display="none",1800);
 }
 
+function renderMcdChecks(selected=[]){
+  let html="";
+  MCD_LIST.forEach(mcd=>{
+    let checked = selected.includes(mcd) ? "checked" : "";
+    html += `
+      <label class="checkItem">
+        <input type="checkbox" class="mcdCheck" value="${mcd}" ${checked}>
+        ${mcd}
+      </label>
+    `;
+  });
+  document.getElementById("mcdChecks").innerHTML=html;
+}
+
+function getSelectedMCD(){
+  let arr=[];
+  document.querySelectorAll(".mcdCheck:checked").forEach(c=>{
+    arr.push(c.value);
+  });
+  return arr;
+}
+
+window.clearForm=function(){
+  document.getElementById("formTitle").innerText="➕ Add User";
+  document.getElementById("editId").value="";
+  document.getElementById("name").value="";
+  document.getElementById("email").value="";
+  document.getElementById("password").value="";
+  document.getElementById("role").value="user";
+  document.getElementById("needleAccess").value="no";
+  renderMcdChecks([]);
+};
+
 window.saveUser=async function(){
+  let editId=document.getElementById("editId").value;
   let name=document.getElementById("name").value.trim();
   let email=document.getElementById("email").value.trim();
   let password=document.getElementById("password").value.trim();
   let role=document.getElementById("role").value;
-  let mcd=document.getElementById("mcd").value;
+  let mcdAccess=getSelectedMCD();
+  let needleAccess=document.getElementById("needleAccess").value==="yes";
 
   if(!name || !email || !password){
     alert("Name, Email, Password lagbe");
     return;
   }
 
-  await addDoc(collection(db,"users"),{
+  let userData={
     name:name,
     email:email,
     password:password,
     role:role,
-    mcd:mcd,
-    createdAt:new Date().toISOString()
-  });
+    mcdAccess:mcdAccess,
+    needleAccess:needleAccess,
+    updatedAt:new Date().toISOString()
+  };
 
-  document.getElementById("name").value="";
-  document.getElementById("email").value="";
-  document.getElementById("password").value="";
+  if(editId){
+    await updateDoc(doc(db,"users",editId),userData);
+    toast("User Updated ✅");
+  }else{
+    userData.createdAt=new Date().toISOString();
+    await addDoc(collection(db,"users"),userData);
+    toast("User Saved ✅");
+  }
 
-  toast("User Saved ✅");
+  clearForm();
   loadUsers();
-}
+};
+
+window.editUser=function(id){
+  let found=allUsers.find(x=>x.id===id);
+  if(!found) return;
+
+  let u=found.data;
+
+  document.getElementById("formTitle").innerText="✏️ Edit User";
+  document.getElementById("editId").value=id;
+  document.getElementById("name").value=u.name || "";
+  document.getElementById("email").value=u.email || "";
+  document.getElementById("password").value=u.password || "";
+  document.getElementById("role").value=u.role || "user";
+  document.getElementById("needleAccess").value=u.needleAccess ? "yes" : "no";
+
+  let selected = [];
+
+  if(Array.isArray(u.mcdAccess)){
+    selected = u.mcdAccess;
+  }else if(u.mcd){
+    selected = [u.mcd];
+  }
+
+  renderMcdChecks(selected);
+
+  window.scrollTo({top:0,behavior:"smooth"});
+};
 
 window.deleteUser=async function(id){
   if(confirm("Delete this user?")){
@@ -281,15 +290,17 @@ window.deleteUser=async function(id){
     toast("User Deleted ✅");
     loadUsers();
   }
-}
+};
 
 async function loadUsers(){
   let snap=await getDocs(collection(db,"users"));
   let html="";
   let total=0,admin=0,full=0,normal=0;
+  allUsers=[];
 
   snap.forEach(d=>{
     let u=d.data();
+    allUsers.push({id:d.id,data:u});
     total++;
 
     if(u.role==="admin") admin++;
@@ -298,14 +309,23 @@ async function loadUsers(){
 
     let roleClass = u.role==="admin" ? "roleAdmin" : u.role==="full" ? "roleFull" : "roleUser";
 
+    let mcdText="";
+    if(Array.isArray(u.mcdAccess)){
+      mcdText = u.mcdAccess.join(", ");
+    }else{
+      mcdText = u.mcd || "";
+    }
+
     html+=`
       <tr>
         <td>${u.name || ""}</td>
         <td>${u.email || ""}</td>
         <td>${u.password || ""}</td>
         <td class="${roleClass}">${u.role || ""}</td>
-        <td>${u.mcd || ""}</td>
+        <td>${mcdText}</td>
+        <td>${u.needleAccess ? "✅ Yes" : "❌ No"}</td>
         <td>
+          <button class="btn orange" onclick="editUser('${d.id}')">✏️ Edit</button>
           <button class="btn red" onclick="deleteUser('${d.id}')">🗑 Delete</button>
         </td>
       </tr>
@@ -319,6 +339,7 @@ async function loadUsers(){
   document.getElementById("totalNormal").innerText=normal;
 }
 
+renderMcdChecks([]);
 loadUsers();
 </script>
 
