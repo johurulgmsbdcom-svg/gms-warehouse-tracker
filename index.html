@@ -118,100 +118,6 @@ body{
   margin-bottom:20px;
 }
 
-.summaryGrid{
-  display:grid;
-  grid-template-columns:repeat(4,1fr);
-  gap:16px;
-  margin-bottom:20px;
-}
-
-.summaryCard{
-  background:linear-gradient(135deg,var(--card),var(--card2));
-  border:1px solid var(--border);
-  border-radius:18px;
-  padding:22px;
-  box-shadow:0 12px 25px rgba(0,0,0,.18);
-}
-
-.summaryCard .label{
-  color:var(--muted);
-  font-size:13px;
-  font-weight:700;
-}
-
-.summaryCard .num{
-  font-size:30px;
-  font-weight:900;
-  margin-top:8px;
-}
-
-.mainDash{
-  display:grid;
-  grid-template-columns:2fr 1fr;
-  gap:18px;
-}
-
-.panel{
-  background:linear-gradient(135deg,var(--card),var(--card2));
-  border:1px solid var(--border);
-  border-radius:20px;
-  padding:20px;
-  box-shadow:0 12px 28px rgba(0,0,0,.22);
-}
-
-.panel h3{
-  margin:0 0 15px 0;
-  font-size:20px;
-}
-
-.stockRow{
-  display:flex;
-  align-items:center;
-  justify-content:space-between;
-  background:rgba(255,255,255,.05);
-  border:1px solid var(--border);
-  padding:14px 16px;
-  border-radius:14px;
-  margin-bottom:12px;
-}
-
-.stockName{
-  font-size:14px;
-  font-weight:800;
-}
-
-.stockValue{
-  font-size:22px;
-  font-weight:900;
-  color:var(--green);
-}
-
-.bar{
-  width:100%;
-  height:8px;
-  background:rgba(255,255,255,.12);
-  border-radius:20px;
-  overflow:hidden;
-  margin-top:8px;
-}
-
-.fill{
-  height:100%;
-  background:linear-gradient(90deg,#22c55e,#2563eb);
-  width:55%;
-}
-
-.needleBox{
-  text-align:center;
-  padding:24px;
-}
-
-.bigNeedle{
-  font-size:46px;
-  font-weight:900;
-  color:var(--orange);
-}
-
 .grid{
   display:grid;
   grid-template-columns:repeat(3,1fr);
@@ -285,8 +191,59 @@ select,input,textarea{
   border:2px solid var(--green);
 }
 
+/* DASHBOARD */
+
+.mcdDashboard{
+  display:grid;
+  grid-template-columns:repeat(3,1fr);
+  gap:18px;
+}
+
+.mcdBox{
+  background:linear-gradient(135deg,var(--card),var(--card2));
+  border:1px solid var(--border);
+  border-radius:20px;
+  padding:18px;
+  box-shadow:0 12px 28px rgba(0,0,0,.22);
+}
+
+.mcdBox h3{
+  margin:0 0 12px 0;
+  font-size:18px;
+}
+
+.miniRow{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  padding:9px 0;
+  border-bottom:1px solid var(--border);
+  font-size:13px;
+  font-weight:700;
+}
+
+.miniValue{
+  color:var(--green);
+  font-size:16px;
+  font-weight:900;
+}
+
+.miniChart{
+  height:7px;
+  background:rgba(255,255,255,.10);
+  border-radius:20px;
+  overflow:hidden;
+  margin-top:10px;
+}
+
+.miniFill{
+  height:100%;
+  width:60%;
+  background:linear-gradient(90deg,#22c55e,#2563eb);
+}
+
 @media(max-width:900px){
-  .summaryGrid,.mainDash,.grid{
+  .mcdDashboard,.grid{
     grid-template-columns:1fr;
   }
 }
@@ -316,72 +273,18 @@ select,input,textarea{
   <button onclick="openPage('notice',this)">Notice</button>
 </div>
 
+<!-- HOME -->
+
 <div id="home" class="page activePage">
 
   <div class="dashTitle">Dashboard Overview</div>
-  <div class="dashSub">Today stock live summary from Firebase</div>
+  <div class="dashSub">All MCD report summary / stock / manpower live view</div>
 
-  <div class="summaryGrid">
-    <div class="summaryCard">
-      <div class="label">Accessories MCD Items</div>
-      <div class="num">3</div>
-    </div>
-
-    <div class="summaryCard">
-      <div class="label">Accessories Present Stock</div>
-      <div class="num" id="totalAccStock">0</div>
-    </div>
-
-    <div class="summaryCard">
-      <div class="label">Needle Present Stock</div>
-      <div class="num" id="topNeedleStock">0</div>
-    </div>
-
-    <div class="summaryCard">
-      <div class="label">System Status</div>
-      <div class="num" style="color:var(--green);font-size:24px;">LIVE</div>
-    </div>
-  </div>
-
-  <div class="mainDash">
-
-    <div class="panel">
-      <h3>📦 Accessories MCD Today Stock</h3>
-
-      <div class="stockRow">
-        <div>
-          <div class="stockName">Sewing Thread</div>
-          <div class="bar"><div class="fill"></div></div>
-        </div>
-        <div class="stockValue" id="sewingStock">0</div>
-      </div>
-
-      <div class="stockRow">
-        <div>
-          <div class="stockName">Twill Tape</div>
-          <div class="bar"><div class="fill" style="width:45%;background:linear-gradient(90deg,#f59e0b,#22c55e)"></div></div>
-        </div>
-        <div class="stockValue" id="twillStock">0</div>
-      </div>
-
-      <div class="stockRow">
-        <div>
-          <div class="stockName">Accessories With Sample</div>
-          <div class="bar"><div class="fill" style="width:65%;background:linear-gradient(90deg,#7c3aed,#2563eb)"></div></div>
-        </div>
-        <div class="stockValue" id="accessoriesStock">0</div>
-      </div>
-    </div>
-
-    <div class="panel needleBox">
-      <h3>🪡 Needle Report Today</h3>
-      <div class="bigNeedle" id="needleStock">0</div>
-      <div style="color:var(--muted);font-weight:bold;">All Floor Total Present Stock</div>
-    </div>
-
-  </div>
+  <div id="mcdDashboard" class="mcdDashboard"></div>
 
 </div>
+
+<!-- ENTRY -->
 
 <div id="entry" class="page">
   <h2>New Entry</h2>
@@ -396,19 +299,7 @@ select,input,textarea{
 
   <label>Department / MCD</label>
   <select id="entryMcd">
-    <option>GREY FABRIC MCD</option>
-    <option>SHIPMENT MCD</option>
-    <option>BILLING SECTION</option>
-    <option>OUTER WEAR MCD</option>
-    <option>YARN MCD</option>
-    <option>PRINTING MCD</option>
-    <option>JHUT MCD</option>
-    <option>GENERAL MCD</option>
     <option>ACCESSORIES MCD</option>
-    <option>LEFTOVER MCD</option>
-    <option>FINISH FABRIC MCD</option>
-    <option>YARN DYEING MCD</option>
-    <option>CHEMICAL MCD</option>
     <option>GENERAL TECHNICAL MCD</option>
   </select>
 
@@ -418,32 +309,14 @@ select,input,textarea{
   <div id="entryBox" class="grid"></div>
 </div>
 
+<!-- REPORT -->
+
 <div id="reports" class="page">
   <h2>Reports</h2>
 
-  <label>Company</label>
-  <select id="reportCompany">
-    <option>GMS TEXTILES LTD</option>
-    <option>GMS COMPOSITE KNITTING</option>
-  </select>
-
-  <br><br>
-
   <label>Department / MCD</label>
   <select id="reportMcd">
-    <option>GREY FABRIC MCD</option>
-    <option>SHIPMENT MCD</option>
-    <option>BILLING SECTION</option>
-    <option>OUTER WEAR MCD</option>
-    <option>YARN MCD</option>
-    <option>PRINTING MCD</option>
-    <option>JHUT MCD</option>
-    <option>GENERAL MCD</option>
     <option>ACCESSORIES MCD</option>
-    <option>LEFTOVER MCD</option>
-    <option>FINISH FABRIC MCD</option>
-    <option>YARN DYEING MCD</option>
-    <option>CHEMICAL MCD</option>
     <option>GENERAL TECHNICAL MCD</option>
   </select>
 
@@ -453,14 +326,13 @@ select,input,textarea{
   <div id="reportBox" class="grid"></div>
 </div>
 
+<!-- NEEDLE -->
+
 <div id="needle" class="page">
   <h2>Needle Section</h2>
 
   <div class="grid">
-
-    <div class="card" onclick="location.href='needle.html'">
-      Needle Daily Entry
-    </div>
+    <div class="card" onclick="location.href='needle.html'">Needle Daily Entry</div>
 
     <div class="card" onclick="location.href='needle-monthly.html'">
       Needle Monthly Report
@@ -471,29 +343,40 @@ select,input,textarea{
     </div>
 
     <div class="card" onclick="location.href='all-needle-summary.html'">
-      Needle Summary
+      All Needle Summary
     </div>
-
   </div>
 </div>
 
+<!-- NOTICE -->
+
 <div id="notice" class="page">
   <h2>Notice Board</h2>
+
   <textarea placeholder="Notice likho..." style="height:120px;"></textarea>
+
   <br>
+
   <button class="btn">Save Notice</button>
 </div>
 
+<!-- FOOTER -->
+
 <div class="footer">
   <div class="profile">
-    <img src="https://i.ibb.co/5hzT1VGk/IMG.jpg" onerror="this.style.display='none'">
+    <img src="https://i.ibb.co/5hzT1VGk/IMG.jpg">
     Powered by JOHURUL
   </div>
 </div>
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-app.js";
-import { getFirestore, collection, getDocs } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-firestore.js";
+
+import {
+  getFirestore,
+  collection,
+  getDocs
+} from "https://www.gstatic.com/firebasejs/12.12.1/firebase-firestore.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyD-wBCF5eeWMHobLFOhBzKW7aB2pagz9-w",
@@ -508,25 +391,31 @@ const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
 const FLOOR_OPENING = {
-  "Kadom R": 618,
-  "Kadom N": 443,
-  "Poddo R": 1889,
-  "Poddo N": 401,
-  "Shapla R": 1171,
-  "Shapla N": 573,
-  "Sample R": 1138,
-  "Sample N": 251,
-  "EMBROIDERY R": 1011,
-  "EMBROIDERY N": 287,
-  "Belly R": 796,
-  "Belly N": 335
+  "Kadom R":618,
+  "Kadom N":443,
+  "Poddo R":1889,
+  "Poddo N":401,
+  "Shapla R":1171,
+  "Shapla N":573,
+  "Sample R":1138,
+  "Sample N":251,
+  "EMBROIDERY R":1011,
+  "EMBROIDERY N":287,
+  "Belly R":796,
+  "Belly N":335
 };
 
 window.openPage=function(id,btn){
-  document.querySelectorAll(".page").forEach(p=>p.classList.remove("activePage"));
+  document.querySelectorAll(".page").forEach(p=>{
+    p.classList.remove("activePage");
+  });
+
   document.getElementById(id).classList.add("activePage");
 
-  document.querySelectorAll(".nav button").forEach(b=>b.classList.remove("active"));
+  document.querySelectorAll(".nav button").forEach(b=>{
+    b.classList.remove("active");
+  });
+
   btn.classList.add("active");
 
   if(id==="home"){
@@ -536,7 +425,13 @@ window.openPage=function(id,btn){
 
 window.toggleTheme=function(){
   document.body.classList.toggle("light");
-  localStorage.setItem("theme",document.body.classList.contains("light") ? "light" : "dark");
+
+  localStorage.setItem(
+    "theme",
+    document.body.classList.contains("light")
+      ? "light"
+      : "dark"
+  );
 }
 
 if(localStorage.getItem("theme")==="light"){
@@ -546,7 +441,6 @@ if(localStorage.getItem("theme")==="light"){
 window.loadEntry=function(){
   let mcd=document.getElementById("entryMcd").value;
   let box=document.getElementById("entryBox");
-  box.innerHTML="";
 
   if(mcd==="ACCESSORIES MCD"){
     box.innerHTML=`
@@ -554,15 +448,9 @@ window.loadEntry=function(){
       <div class="card" onclick="location.href='twill-tape.html'">Twill Tape</div>
       <div class="card" onclick="location.href='accessories.html'">Accessories</div>
     `;
-  }
-  else if(mcd==="GENERAL TECHNICAL MCD"){
+  }else{
     box.innerHTML=`
       <div class="card" onclick="location.href='needle.html'">Needle Entry</div>
-    `;
-  }
-  else{
-    box.innerHTML=`
-      <div class="card">${mcd} Daily Entry</div>
     `;
   }
 }
@@ -570,7 +458,6 @@ window.loadEntry=function(){
 window.loadReport=function(){
   let mcd=document.getElementById("reportMcd").value;
   let box=document.getElementById("reportBox");
-  box.innerHTML="";
 
   if(mcd==="ACCESSORIES MCD"){
     box.innerHTML=`
@@ -578,25 +465,22 @@ window.loadReport=function(){
       <div class="card" onclick="location.href='twill-tape.html'">Twill Tape Report</div>
       <div class="card" onclick="location.href='accessories.html'">Accessories Report</div>
     `;
-  }
-  else if(mcd==="GENERAL TECHNICAL MCD"){
+  }else{
     box.innerHTML=`
       <div class="card" onclick="location.href='needle.html'">Needle Report</div>
-    `;
-  }
-  else{
-    box.innerHTML=`
-      <div class="card">${mcd} Report</div>
     `;
   }
 }
 
 async function getLatestPresent(collectionName, openingStock){
+
   let snap = await getDocs(collection(db, collectionName));
 
   let rows=[];
+
   snap.forEach(docSnap=>{
     let x=docSnap.data();
+
     if(x.date){
       rows.push(x);
     }
@@ -604,52 +488,75 @@ async function getLatestPresent(collectionName, openingStock){
 
   rows.sort((a,b)=>a.date.localeCompare(b.date));
 
-  if(rows.length===0){
-    return openingStock;
-  }
-
-  let totalReceive=0;
-  let totalDelivery=0;
+  let r=0,d=0;
 
   rows.forEach(x=>{
-    totalReceive += Number(x.receive)||0;
-    totalDelivery += Number(x.delivery)||0;
+    r += Number(x.receive)||0;
+    d += Number(x.delivery)||0;
   });
 
-  return openingStock + totalReceive - totalDelivery;
+  return openingStock + r - d;
+}
+
+async function getManpowerSummary(){
+
+  let snap = await getDocs(collection(db,"manpower"));
+
+  let map={};
+
+  snap.forEach(docSnap=>{
+
+    let x=docSnap.data();
+
+    let mcd=x.mcd || "UNKNOWN";
+
+    if(!map[mcd]){
+      map[mcd]={
+        count:0,
+        salary:0
+      };
+    }
+
+    map[mcd].count++;
+    map[mcd].salary += Number(x.salary)||0;
+  });
+
+  return map;
 }
 
 async function getNeedlePresent(){
+
   let snap = await getDocs(collection(db,"dailyPosting"));
-  let latestByFloor = {};
+
+  let latestByFloor={};
 
   snap.forEach(docSnap=>{
-    let x = docSnap.data();
+
+    let x=docSnap.data();
 
     if(x.floor && x.date){
-      if(!latestByFloor[x.floor] || x.date > latestByFloor[x.floor].date){
-        latestByFloor[x.floor] = x;
+
+      if(
+        !latestByFloor[x.floor] ||
+        x.date > latestByFloor[x.floor].date
+      ){
+        latestByFloor[x.floor]=x;
       }
     }
   });
 
-  let total = 0;
+  let total=0;
 
   Object.keys(FLOOR_OPENING).forEach(floor=>{
-    if(latestByFloor[floor]){
-      let x = latestByFloor[floor];
 
-      if(x.rows){
-        let floorTotal = 0;
-        x.rows.forEach(r=>{
-          floorTotal += Number(r.present) || 0;
-        });
-        total += floorTotal;
-      }else{
-        total += Number(x.totalPresent) || FLOOR_OPENING[floor];
-      }
+    if(latestByFloor[floor] && latestByFloor[floor].rows){
+
+      latestByFloor[floor].rows.forEach(r=>{
+        total += Number(r.present)||0;
+      });
 
     }else{
+
       total += FLOOR_OPENING[floor];
     }
   });
@@ -658,24 +565,112 @@ async function getNeedlePresent(){
 }
 
 async function loadDashboardStock(){
-  try{
-    let sewing = await getLatestPresent("sewingThread",133322);
-    let twill = await getLatestPresent("twillTape",171255);
-    let acc = await getLatestPresent("accessoriesSample",21514393);
-    let needle = await getNeedlePresent();
 
-    document.getElementById("sewingStock").innerText=sewing;
-    document.getElementById("twillStock").innerText=twill;
-    document.getElementById("accessoriesStock").innerText=acc;
+  let sewing =
+    await getLatestPresent("sewingThread",133322);
 
-    let totalAcc = sewing + twill + acc;
-    document.getElementById("totalAccStock").innerText=totalAcc;
+  let twill =
+    await getLatestPresent("twillTape",171255);
 
-    document.getElementById("needleStock").innerText=needle;
-    document.getElementById("topNeedleStock").innerText=needle;
-  }catch(e){
-    console.log(e);
-  }
+  let accessories =
+    await getLatestPresent("accessoriesSample",21514393);
+
+  let needle =
+    await getNeedlePresent();
+
+  let manpower =
+    await getManpowerSummary();
+
+  let html=`
+  <div class="mcdBox">
+    <h3>ACCESSORIES MCD</h3>
+
+    <div class="miniRow">
+      <span>Sewing Thread</span>
+      <span class="miniValue">${sewing}</span>
+    </div>
+
+    <div class="miniRow">
+      <span>Twill Tape</span>
+      <span class="miniValue">${twill}</span>
+    </div>
+
+    <div class="miniRow">
+      <span>Accessories Sample</span>
+      <span class="miniValue">${accessories}</span>
+    </div>
+
+    <div class="miniRow">
+      <span>Needle Stock</span>
+      <span class="miniValue">${needle}</span>
+    </div>
+
+    <div class="miniRow">
+      <span>Manpower</span>
+      <span class="miniValue">
+        ${(manpower["ACCESSORIES MCD"]?.count)||0}
+      </span>
+    </div>
+
+    <div class="miniRow">
+      <span>Total Salary</span>
+      <span class="miniValue">
+        ${(manpower["ACCESSORIES MCD"]?.salary)||0}
+      </span>
+    </div>
+
+    <div class="miniChart">
+      <div class="miniFill"></div>
+    </div>
+  </div>
+
+  <div class="mcdBox">
+    <h3>GENERAL TECHNICAL MCD</h3>
+
+    <div class="miniRow">
+      <span>Needle Stock</span>
+      <span class="miniValue">${needle}</span>
+    </div>
+
+    <div class="miniRow">
+      <span>Manpower</span>
+      <span class="miniValue">
+        ${(manpower["GENERAL TECHNICAL MCD"]?.count)||0}
+      </span>
+    </div>
+
+    <div class="miniRow">
+      <span>Total Salary</span>
+      <span class="miniValue">
+        ${(manpower["GENERAL TECHNICAL MCD"]?.salary)||0}
+      </span>
+    </div>
+
+    <div class="miniChart">
+      <div class="miniFill" style="width:70%"></div>
+    </div>
+  </div>
+
+  <div class="mcdBox">
+    <h3>OTHER MCD REPORTS</h3>
+
+    <div class="miniRow">
+      <span>Future Reports</span>
+      <span class="miniValue">LIVE</span>
+    </div>
+
+    <div class="miniRow">
+      <span>Dashboard Ready</span>
+      <span class="miniValue">OK</span>
+    </div>
+
+    <div class="miniChart">
+      <div class="miniFill" style="width:40%"></div>
+    </div>
+  </div>
+  `;
+
+  document.getElementById("mcdDashboard").innerHTML=html;
 }
 
 loadDashboardStock();
