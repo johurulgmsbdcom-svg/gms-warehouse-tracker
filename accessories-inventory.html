@@ -1,117 +1,26 @@
 <!DOCTYPE html>
 <html>
 <head>
-<title>Accessories Inventory Report</title>
-
-<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<title>Accessories Inventory Posting</title>
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
 
 <style>
-body{
-  margin:0;
-  background:#07111f;
-  color:white;
-  font-family:Arial,sans-serif;
-}
-.header{
-  text-align:center;
-  padding:12px;
-}
-.header h2,.header h3,.header h4{
-  margin:2px;
-}
-.controls{
-  text-align:center;
-  margin:10px;
-}
-button{
-  padding:10px 16px;
-  border:0;
-  border-radius:8px;
-  color:white;
-  font-weight:bold;
-  cursor:pointer;
-  margin:4px;
-}
-.save{background:#16a34a}
-.add{background:#f59e0b}
-.show{background:#2563eb}
-.excel{background:#059669}
-.print{background:#7c3aed}
-.home{background:#0f766e}
-.del{background:#dc2626}
-
-input,select{
-  padding:8px;
-  border-radius:5px;
-  border:1px solid #999;
-  font-size:16px;
-}
-
-table{
-  width:98%;
-  margin:10px auto;
-  border-collapse:collapse;
-  background:white;
-  color:black;
-  font-size:12px;
-}
-th,td{
-  border:1px solid #000;
-  padding:5px;
-  text-align:center;
-}
-th{
-  background:#2f6b55;
-  color:white;
-}
-td input{
-  width:100%;
-  box-sizing:border-box;
-  border:0;
-  outline:none;
-  text-align:center;
-  font-size:16px;
-}
-.reportTitle{
-  background:white;
-  color:black;
-  width:98%;
-  margin:10px auto 0;
-  padding:8px 0;
-  text-align:center;
-  border:1px solid #000;
-  border-bottom:0;
-}
-.toast{
-  position:fixed;
-  right:20px;
-  bottom:20px;
-  background:#22c55e;
-  color:white;
-  padding:12px 20px;
-  border-radius:10px;
-  font-weight:bold;
-  display:none;
-}
-@page{
-  size:A4 landscape;
-  margin:8mm;
-}
-@media print{
-  body{
-    background:white;
-    color:black;
-  }
-  .controls,.noPrint{
-    display:none!important;
-  }
-  table{
-    width:100%;
-    font-size:10px;
-  }
-  .reportTitle{
-    width:100%;
-  }
+body{margin:0;background:#07111f;color:white;font-family:Arial,sans-serif}
+.header{text-align:center;padding:12px}
+.header h2,.header h3,.header h4{margin:3px}
+.controls{text-align:center;margin:10px}
+button{padding:10px 14px;border:0;border-radius:8px;color:white;font-weight:bold;margin:4px}
+.add{background:#f59e0b}.save{background:#16a34a}.home{background:#0f766e}.report{background:#2563eb}.del{background:#dc2626}
+input,select{font-size:16px;padding:7px;border-radius:6px;border:1px solid #999}
+.tableWrap{overflow-x:auto;width:100%}
+table{min-width:1250px;width:98%;margin:10px auto;border-collapse:collapse;background:white;color:black;font-size:12px}
+th,td{border:1px solid #000;padding:5px;text-align:center}
+th{background:#2f6b55;color:white}
+td input,td select{width:100%;box-sizing:border-box;border:0;outline:none;text-align:center;font-size:16px}
+.toast{position:fixed;right:15px;bottom:15px;background:#22c55e;padding:12px 18px;border-radius:10px;font-weight:bold;display:none}
+@media(max-width:700px){
+  table{font-size:11px}
+  .header h2{font-size:26px}
 }
 </style>
 </head>
@@ -120,260 +29,166 @@ td input{
 
 <div class="header">
   <h2>GMS Textiles Ltd</h2>
-  <h4>Tansutrapur, Kaliakair, Gazipur.</h4>
+  <h4>Tansutrapur, Kaliakair, Gazipur</h4>
   <h4>Accessories MCD</h4>
-  <h3>Accessories Physically Inventory Report</h3>
+  <h3>Accessories Inventory Posting</h3>
 </div>
 
-<div class="controls noPrint">
+<div class="controls">
   Posting Date:
   <input type="date" id="postingDate">
-
-  From:
-  <input type="date" id="fromDate">
-
-  To:
-  <input type="date" id="toDate">
-
   <button class="add" onclick="addRow()">➕ Add Row</button>
   <button class="save" onclick="savePosting()">💾 Save Posting</button>
-  <button class="show" onclick="loadReport()">🔍 Show Report</button>
-  <button class="excel" onclick="exportExcel()">📊 Excel</button>
-  <button class="print" onclick="window.print()">🖨 PDF / Print</button>
+  <button class="report" onclick="location.href='accessories-inventory-report.html'">📊 Report</button>
   <button class="home" onclick="location.href='index.html'">🏠 Home</button>
 </div>
 
-<div class="reportTitle">
-  <b>Accessories Physically Inventory Report</b>
-</div>
-
-<table id="reportTable">
-  <thead>
-    <tr>
-      <th>Inventory Date</th>
-      <th>Received Date</th>
-      <th>Challan No</th>
-      <th>Buyer Name</th>
-      <th>Style</th>
-      <th>Order</th>
-      <th>Name of Item</th>
-      <th>Unit</th>
-      <th>Challan Qty</th>
-      <th>Receive Qty</th>
-      <th>Short</th>
-      <th>Excess</th>
-      <th>Weight/Grm</th>
-      <th>Reported By</th>
-      <th class="noPrint">Action</th>
-    </tr>
-  </thead>
-
-  <tbody id="tbody"></tbody>
+<div class="tableWrap">
+<table>
+<thead>
+<tr>
+  <th>Received Date</th>
+  <th>Challan No</th>
+  <th>Buyer Name</th>
+  <th>Style</th>
+  <th>Order</th>
+  <th>Name of Item</th>
+  <th>Unit</th>
+  <th>Challan Qty</th>
+  <th>Receive Qty</th>
+  <th>Due Qty</th>
+  <th>Short</th>
+  <th>Excess</th>
+  <th>Reported By</th>
+  <th>Action</th>
+</tr>
+</thead>
+<tbody id="tbody"></tbody>
 </table>
+</div>
 
 <div id="toast" class="toast">Saved ✅</div>
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-app.js";
+import { getFirestore, collection, addDoc } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-firestore.js";
 
-import {
-  getFirestore,
-  collection,
-  addDoc,
-  getDocs
-} from "https://www.gstatic.com/firebasejs/12.12.1/firebase-firestore.js";
-
-const firebaseConfig = {
-  apiKey: "AIzaSyD-wBCF5eeWMHobLFOhBzKW7aB2pagz9-w",
-  authDomain: "gms-warehouse-tracker-7f57e.firebaseapp.com",
-  projectId: "gms-warehouse-tracker-7f57e",
-  storageBucket: "gms-warehouse-tracker-7f57e.firebasestorage.app",
-  messagingSenderId: "992250313291",
-  appId: "1:992250313291:web:ee3bceae76d4d53bc26bce"
+const firebaseConfig={
+  apiKey:"AIzaSyD-wBCF5eeWMHobLFOhBzKW7aB2pagz9-w",
+  authDomain:"gms-warehouse-tracker-7f57e.firebaseapp.com",
+  projectId:"gms-warehouse-tracker-7f57e",
+  storageBucket:"gms-warehouse-tracker-7f57e.firebasestorage.app",
+  messagingSenderId:"992250313291",
+  appId:"1:992250313291:web:ee3bceae76d4d53bc26bce"
 };
 
-const app = initializeApp(firebaseConfig);
-const db = getFirestore(app);
+const app=initializeApp(firebaseConfig);
+const db=getFirestore(app);
 
-const user = JSON.parse(localStorage.getItem("gmsUser") || "null");
-
-if(!user){
-  window.location.href="login.html";
-}
+const user=JSON.parse(localStorage.getItem("gmsUser")||"null");
+if(!user){window.location.href="login.html"}
 
 let rows=[];
 
-function today(){
-  return new Date().toISOString().slice(0,10);
-}
-
+function today(){return new Date().toISOString().slice(0,10)}
 document.getElementById("postingDate").value=today();
-document.getElementById("fromDate").value=today();
-document.getElementById("toDate").value=today();
 
 function toast(msg){
   let t=document.getElementById("toast");
   t.innerText=msg;
   t.style.display="block";
-  setTimeout(()=>t.style.display="none",1600);
+  setTimeout(()=>t.style.display="none",1500);
 }
 
 function blankRow(){
   return {
-    inventoryDate:document.getElementById("postingDate").value,
     receivedDate:document.getElementById("postingDate").value,
     challanNo:"",
     buyerName:"",
     style:"",
     orderNo:"",
     itemName:"",
-    unit:"Pcs",
-    challanQty:0,
-    receiveQty:0,
-    short:0,
-    excess:0,
-    weight:0,
-    reportedBy:user.name || user.email || "User"
+    unit:"",
+    challanQty:"",
+    receiveQty:"",
+    dueQty:"",
+    short:"",
+    excess:"",
+    reportedBy:user.name||user.email||"User"
   };
 }
 
-function renderRows(editMode=true){
-  let html="";
+function calc(i){
+  let c=Number(rows[i].challanQty)||0;
+  let r=Number(rows[i].receiveQty)||0;
+  rows[i].dueQty = c>r ? c-r : "";
+}
 
+function render(){
+  let html="";
   rows.forEach((r,i)=>{
     html+=`
-      <tr>
-        <td>${editMode ? `<input type="date" value="${r.inventoryDate||''}" onchange="rows[${i}].inventoryDate=this.value">` : (r.inventoryDate||"")}</td>
-
-        <td>${editMode ? `<input type="date" value="${r.receivedDate||''}" onchange="rows[${i}].receivedDate=this.value">` : (r.receivedDate||"")}</td>
-
-        <td>${editMode ? `<input value="${r.challanNo||''}" onchange="rows[${i}].challanNo=this.value">` : (r.challanNo||"")}</td>
-
-        <td>${editMode ? `<input value="${r.buyerName||''}" onchange="rows[${i}].buyerName=this.value">` : (r.buyerName||"")}</td>
-
-        <td>${editMode ? `<input value="${r.style||''}" onchange="rows[${i}].style=this.value">` : (r.style||"")}</td>
-
-        <td>${editMode ? `<input value="${r.orderNo||''}" onchange="rows[${i}].orderNo=this.value">` : (r.orderNo||"")}</td>
-
-        <td>${editMode ? `<input value="${r.itemName||''}" onchange="rows[${i}].itemName=this.value">` : (r.itemName||"")}</td>
-
-        <td>${editMode ? `<input value="${r.unit||''}" onchange="rows[${i}].unit=this.value">` : (r.unit||"")}</td>
-
-        <td>${editMode ? `<input type="number" value="${r.challanQty||0}" onchange="rows[${i}].challanQty=Number(this.value);autoCalc(${i});renderRows(true)">` : (r.challanQty||0)}</td>
-
-        <td>${editMode ? `<input type="number" value="${r.receiveQty||0}" onchange="rows[${i}].receiveQty=Number(this.value);autoCalc(${i});renderRows(true)">` : (r.receiveQty||0)}</td>
-
-        <td>${r.short||0}</td>
-        <td>${r.excess||0}</td>
-
-        <td>${editMode ? `<input type="number" value="${r.weight||0}" onchange="rows[${i}].weight=Number(this.value)">` : (r.weight||0)}</td>
-
-        <td>${r.reportedBy||""}</td>
-
-        <td class="noPrint">${editMode ? `<button class="del" onclick="deleteRow(${i})">Delete</button>` : ""}</td>
-      </tr>
-    `;
+    <tr>
+      <td><input type="date" value="${r.receivedDate||''}" onchange="rows[${i}].receivedDate=this.value"></td>
+      <td><input value="${r.challanNo||''}" onchange="rows[${i}].challanNo=this.value"></td>
+      <td><input value="${r.buyerName||''}" onchange="rows[${i}].buyerName=this.value"></td>
+      <td><input value="${r.style||''}" onchange="rows[${i}].style=this.value"></td>
+      <td><input value="${r.orderNo||''}" onchange="rows[${i}].orderNo=this.value"></td>
+      <td><input value="${r.itemName||''}" onchange="rows[${i}].itemName=this.value"></td>
+      <td>
+        <select onchange="rows[${i}].unit=this.value">
+          <option value="">Select</option>
+          <option ${r.unit==="Pcs"?"selected":""}>Pcs</option>
+          <option ${r.unit==="Cone"?"selected":""}>Cone</option>
+          <option ${r.unit==="Yds"?"selected":""}>Yds</option>
+        </select>
+      </td>
+      <td><input type="number" value="${r.challanQty||''}" onchange="rows[${i}].challanQty=this.value;calc(${i});render()"></td>
+      <td><input type="number" value="${r.receiveQty||''}" onchange="rows[${i}].receiveQty=this.value;calc(${i});render()"></td>
+      <td>${r.dueQty||""}</td>
+      <td><input type="number" value="${r.short||''}" onchange="rows[${i}].short=this.value"></td>
+      <td><input type="number" value="${r.excess||''}" onchange="rows[${i}].excess=this.value"></td>
+      <td>${r.reportedBy||""}</td>
+      <td><button class="del" onclick="deleteRow(${i})">🗑 Delete</button></td>
+    </tr>`;
   });
-
   document.getElementById("tbody").innerHTML=html;
 }
 
-window.autoCalc=function(i){
-  let c=Number(rows[i].challanQty||0);
-  let r=Number(rows[i].receiveQty||0);
-
-  rows[i].short = c>r ? c-r : 0;
-  rows[i].excess = r>c ? r-c : 0;
-
-  if(rows[i].short > 0){
-    alert("⚠️ SHORT QTY FOUND: " + rows[i].short);
-  }
-};
-
 window.addRow=function(){
   rows.push(blankRow());
-  renderRows(true);
+  render();
 };
 
 window.deleteRow=function(i){
   rows.splice(i,1);
-  renderRows(true);
+  render();
 };
 
 window.savePosting=async function(){
-  if(rows.length===0){
-    alert("Row add koro");
-    return;
-  }
-
-  let validRows=rows.filter(r=>
-    r.challanNo || r.buyerName || r.itemName || r.receiveQty
-  );
-
-  if(validRows.length===0){
-    alert("Data nai");
-    return;
-  }
+  let valid=rows.filter(r=>r.challanNo||r.buyerName||r.itemName||r.receiveQty);
+  if(valid.length===0){alert("Data nai");return}
 
   await addDoc(collection(db,"accessoriesInventory"),{
     postingDate:document.getElementById("postingDate").value,
-    rows:validRows,
-    userId:user.id || "",
-    userName:user.name || "",
-    userEmail:user.email || "",
+    rows:valid,
+    userId:user.id||"",
+    userName:user.name||"",
+    userEmail:user.email||"",
     createdAt:new Date().toISOString()
   });
 
   rows=[];
   addRow();
-
   toast("Posting Saved ✅");
-};
-
-window.loadReport=async function(){
-  let from=document.getElementById("fromDate").value;
-  let to=document.getElementById("toDate").value;
-
-  let snap=await getDocs(collection(db,"accessoriesInventory"));
-
-  let reportRows=[];
-
-  snap.forEach(d=>{
-    let x=d.data();
-
-    if(x.postingDate>=from && x.postingDate<=to){
-      (x.rows||[]).forEach(r=>{
-        reportRows.push(r);
-      });
-    }
-  });
-
-  rows=reportRows;
-  renderRows(false);
-};
-
-window.exportExcel=function(){
-  let table=document.getElementById("reportTable").outerHTML;
-  let file=new Blob([table],{
-    type:"application/vnd.ms-excel"
-  });
-
-  let a=document.createElement("a");
-  a.href=URL.createObjectURL(file);
-  a.download="accessories-inventory-report.xls";
-  a.click();
 };
 
 document.addEventListener("keydown",function(e){
   if(e.key==="Enter" && e.target.tagName==="INPUT"){
     e.preventDefault();
-
-    let inputs=[...document.querySelectorAll("td input")];
+    let inputs=[...document.querySelectorAll("td input,td select")];
     let index=inputs.indexOf(e.target);
-
-    if(index>=0 && inputs[index+1]){
-      inputs[index+1].focus();
-    }
+    if(inputs[index+1]) inputs[index+1].focus();
   }
 });
 
