@@ -3,224 +3,62 @@
 <head>
 <title>GMS MCD SYSTEM</title>
 
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
 <style>
 :root{
-  --bg:#07111f;
-  --card:#101b2d;
-  --card2:#14233a;
-  --text:#ffffff;
-  --muted:#9fb0c7;
-  --border:#263855;
-  --blue:#2563eb;
-  --green:#22c55e;
-  --orange:#f59e0b;
+  --bg:#07111f; --card:#101b2d; --card2:#14233a;
+  --text:#ffffff; --muted:#9fb0c7; --border:#263855;
+  --blue:#2563eb; --green:#22c55e; --orange:#f59e0b;
 }
-
 body.light{
-  --bg:#eef3f9;
-  --card:#ffffff;
-  --card2:#f8fafc;
-  --text:#0f172a;
-  --muted:#64748b;
-  --border:#cbd5e1;
+  --bg:#eef3f9; --card:#ffffff; --card2:#f8fafc;
+  --text:#0f172a; --muted:#64748b; --border:#cbd5e1;
 }
+body{margin:0;background:var(--bg);color:var(--text);font-family:Segoe UI,Arial,sans-serif;padding-bottom:95px}
+.header{height:58px;background:var(--card);border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;padding:0 22px}
+.logo{font-size:22px;font-weight:900}.sub{font-size:12px;color:var(--muted)}
+.rightTop{display:flex;align-items:center;gap:14px;font-weight:bold}.live{color:var(--green)}
+.themeBtn{background:var(--blue);color:white;border:0;padding:9px 18px;border-radius:30px;font-weight:bold;cursor:pointer}
+.nav{display:flex;gap:12px;padding:14px 18px;background:rgba(255,255,255,.03);border-bottom:1px solid var(--border);flex-wrap:wrap}
+.nav button{background:var(--card);color:var(--text);border:1px solid var(--border);padding:14px 26px;border-radius:12px;font-size:16px;font-weight:800;cursor:pointer}
+.nav button:hover,.nav button.active{background:linear-gradient(135deg,#2563eb,#7c3aed);color:white}
+.page{display:none;padding:22px}.activePage{display:block}
+.dashTitle{font-size:26px;font-weight:900;margin-bottom:5px}.dashSub{color:var(--muted);margin-bottom:20px}
+.grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
+.card{background:var(--card);border:1px solid var(--border);padding:30px;border-radius:16px;text-align:center;font-size:18px;font-weight:900;cursor:pointer;box-shadow:0 8px 20px rgba(0,0,0,.15);display:flex;align-items:center;justify-content:center;gap:10px;min-height:70px}
+.card:hover{background:linear-gradient(135deg,#2563eb,#7c3aed);color:white}
+select,input,textarea{width:100%;padding:14px;margin-top:6px;border-radius:10px;border:1px solid var(--border);background:var(--card);color:var(--text);font-size:15px}
+.btn{padding:13px 24px;background:var(--blue);color:white;border:0;border-radius:10px;font-weight:bold;cursor:pointer;margin-top:12px}
 
-body{
-  margin:0;
-  background:var(--bg);
-  color:var(--text);
-  font-family:Segoe UI,Arial,sans-serif;
-}
+.kpiGrid{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:18px}
+.kpiCard{background:linear-gradient(135deg,var(--card),var(--card2));border:1px solid var(--border);border-radius:18px;padding:18px;box-shadow:0 10px 24px rgba(0,0,0,.2)}
+.kpiLabel{color:var(--muted);font-size:13px;font-weight:800}
+.kpiValue{font-size:28px;font-weight:900;margin-top:8px;color:var(--green)}
 
-.header{
-  height:58px;
-  background:var(--card);
-  border-bottom:1px solid var(--border);
-  display:flex;
-  align-items:center;
-  justify-content:space-between;
-  padding:0 22px;
-}
+.chartGrid{display:grid;grid-template-columns:2fr 1fr;gap:18px;margin-bottom:18px}
+.chartBox{background:linear-gradient(135deg,var(--card),var(--card2));border:1px solid var(--border);border-radius:20px;padding:18px;box-shadow:0 12px 28px rgba(0,0,0,.22)}
+.chartBox h3{margin:0 0 12px 0}
 
-.logo{font-size:22px;font-weight:900}
-.sub{font-size:12px;color:var(--muted)}
+.mcdDashboard{display:grid;grid-template-columns:repeat(3,1fr);gap:18px}
+.mcdBox{background:linear-gradient(135deg,var(--card),var(--card2));border:1px solid var(--border);border-radius:20px;padding:18px;box-shadow:0 12px 28px rgba(0,0,0,.22)}
+.mcdBox h3{margin:0 0 12px 0;font-size:18px;display:flex;align-items:center;gap:8px}
+.miniRow{display:flex;justify-content:space-between;align-items:center;padding:9px 0;border-bottom:1px solid var(--border);font-size:13px;font-weight:700}
+.miniValue{color:var(--green);font-size:16px;font-weight:900}
+.miniChart{height:7px;background:rgba(255,255,255,.10);border-radius:20px;overflow:hidden;margin-top:10px}
+.miniFill{height:100%;width:60%;background:linear-gradient(90deg,#22c55e,#2563eb)}
 
-.rightTop{
-  display:flex;
-  align-items:center;
-  gap:14px;
-  font-weight:bold;
-}
-
-.live{color:var(--green)}
-
-.themeBtn{
-  background:var(--blue);
-  color:white;
-  border:0;
-  padding:9px 18px;
-  border-radius:30px;
-  font-weight:bold;
-  cursor:pointer;
-}
-
-.nav{
-  display:flex;
-  gap:12px;
-  padding:14px 18px;
-  background:rgba(255,255,255,0.03);
-  border-bottom:1px solid var(--border);
-}
-
-.nav button{
-  background:var(--card);
-  color:var(--text);
-  border:1px solid var(--border);
-  padding:14px 26px;
-  border-radius:12px;
-  font-size:16px;
-  font-weight:800;
-  cursor:pointer;
-}
-
-.nav button:hover,
-.nav button.active{
-  background:linear-gradient(135deg,#2563eb,#7c3aed);
-  color:white;
-}
-
-.page{display:none;padding:22px}
-.activePage{display:block}
-
-.dashTitle{font-size:26px;font-weight:900;margin-bottom:5px}
-.dashSub{color:var(--muted);margin-bottom:20px}
-
-.grid{
-  display:grid;
-  grid-template-columns:repeat(3,1fr);
-  gap:16px;
-}
-
-.card{
-  background:var(--card);
-  border:1px solid var(--border);
-  padding:30px;
-  border-radius:16px;
-  text-align:center;
-  font-size:18px;
-  font-weight:900;
-  cursor:pointer;
-  box-shadow:0 8px 20px rgba(0,0,0,.15);
-}
-
-.card:hover{
-  background:linear-gradient(135deg,#2563eb,#7c3aed);
-  color:white;
-}
-
-select,input,textarea{
-  width:100%;
-  padding:14px;
-  margin-top:6px;
-  border-radius:10px;
-  border:1px solid var(--border);
-  background:var(--card);
-  color:var(--text);
-  font-size:15px;
-}
-
-.btn{
-  padding:13px 24px;
-  background:var(--blue);
-  color:white;
-  border:0;
-  border-radius:10px;
-  font-weight:bold;
-  cursor:pointer;
-  margin-top:12px;
-}
-
-.footer{
-  position:fixed;
-  bottom:10px;
-  width:100%;
-  display:flex;
-  justify-content:center;
-  pointer-events:none;
-}
-
-.profile{
-  display:flex;
-  align-items:center;
-  gap:8px;
-  background:var(--card);
-  color:var(--muted);
-  padding:7px 14px;
-  border-radius:30px;
-  border:1px solid var(--border);
-  font-weight:bold;
-}
-
-.profile img{
-  width:28px;
-  height:28px;
-  border-radius:50%;
-  border:2px solid var(--green);
-}
-
-.mcdDashboard{
-  display:grid;
-  grid-template-columns:repeat(3,1fr);
-  gap:18px;
-}
-
-.mcdBox{
-  background:linear-gradient(135deg,var(--card),var(--card2));
-  border:1px solid var(--border);
-  border-radius:20px;
-  padding:18px;
-  box-shadow:0 12px 28px rgba(0,0,0,.22);
-}
-
-.mcdBox h3{
-  margin:0 0 12px 0;
-  font-size:18px;
-}
-
-.miniRow{
-  display:flex;
-  justify-content:space-between;
-  align-items:center;
-  padding:9px 0;
-  border-bottom:1px solid var(--border);
-  font-size:13px;
-  font-weight:700;
-}
-
-.miniValue{
-  color:var(--green);
-  font-size:16px;
-  font-weight:900;
-}
-
-.miniChart{
-  height:7px;
-  background:rgba(255,255,255,.10);
-  border-radius:20px;
-  overflow:hidden;
-  margin-top:10px;
-}
-
-.miniFill{
-  height:100%;
-  width:60%;
-  background:linear-gradient(90deg,#22c55e,#2563eb);
-}
+.creditFooter{position:fixed;bottom:10px;left:50%;transform:translateX(-50%);display:flex;align-items:center;gap:10px;background:rgba(16,27,45,.92);border:1px solid var(--border);padding:8px 14px;border-radius:40px;box-shadow:0 10px 25px rgba(0,0,0,.25);z-index:999;backdrop-filter:blur(10px)}
+body.light .creditFooter{background:rgba(255,255,255,.96)}
+.creditItem{display:flex;align-items:center;gap:8px;color:var(--text);white-space:nowrap}
+.creditItem img{width:34px;height:34px;border-radius:50%;border:2px solid var(--green);object-fit:cover;background:#fff}
+.creditText{line-height:1.2;font-size:11px;font-weight:700}.creditText b{font-size:12px}
+.creditText span{display:block;color:var(--muted);font-size:10px;font-weight:600}
+.creditDivider{width:1px;height:30px;background:var(--border)}
 
 @media(max-width:900px){
-  .mcdDashboard,.grid{
-    grid-template-columns:1fr;
-  }
+  .mcdDashboard,.grid,.kpiGrid,.chartGrid{grid-template-columns:1fr}
+  .creditFooter{width:94%;overflow-x:auto;justify-content:flex-start;border-radius:18px;padding:8px 10px}
 }
 </style>
 </head>
@@ -232,7 +70,6 @@ select,input,textarea{
     <div class="logo">🏭 GMS MCD SYSTEM</div>
     <div class="sub">GMS TEXTILES LTD & GMS COMPOSITE KNITTING</div>
   </div>
-
   <div class="rightTop">
     <span class="live">● Firebase Live</span>
     <button class="themeBtn" onclick="toggleTheme()">🌙 / ☀️</button>
@@ -250,51 +87,68 @@ select,input,textarea{
 
 <div id="home" class="page activePage">
   <div class="dashTitle">📊 Dashboard Overview</div>
-  <div class="dashSub">All MCD report summary / stock / manpower live view</div>
-  <div id="mcdDashboard" class="mcdDashboard"></div>
+  <div class="dashSub">Live Chart Graph + KPI Dashboard + MCD Summary</div>
+
+  <div class="kpiGrid">
+    <div class="kpiCard"><div class="kpiLabel">📦 Total Accessories Stock</div><div class="kpiValue" id="kpiAccessories">0</div></div>
+    <div class="kpiCard"><div class="kpiLabel">🪡 Total Needle Stock</div><div class="kpiValue" id="kpiNeedle">0</div></div>
+    <div class="kpiCard"><div class="kpiLabel">👨‍🏭 Total Manpower</div><div class="kpiValue" id="kpiManpower">0</div></div>
+    <div class="kpiCard"><div class="kpiLabel">💰 Total Salary</div><div class="kpiValue" id="kpiSalary">0</div></div>
+  </div>
+
+  <div class="chartGrid">
+    <div class="chartBox">
+      <h3>📈 Accessories Stock Chart</h3>
+      <canvas id="accessoriesChart"></canvas>
+    </div>
+
+    <div class="chartBox">
+      <h3>🎯 KPI Mix Chart</h3>
+      <canvas id="kpiChart"></canvas>
+    </div>
+  </div>
+
+  <div id="mcdDashboard" class="mcdDashboard">Loading...</div>
 </div>
 
 <div id="entry" class="page">
   <h2>➕ New Entry</h2>
-
   <label>🏢 Company</label>
   <select id="entryCompany">
     <option>GMS TEXTILES LTD</option>
     <option>GMS COMPOSITE KNITTING</option>
   </select>
-
   <br><br>
-
   <label>📂 Department / MCD</label>
   <select id="entryMcd">
-    <option>ACCESSORIES MCD</option>
-    <option>GENERAL TECHNICAL MCD</option>
+    <option>GREY FABRIC MCD</option><option>SHIPMENT MCD</option><option>BILLING SECTION</option>
+    <option>OUTER WEAR MCD</option><option>YARN MCD</option><option>PRINTING MCD</option>
+    <option>JHUT MCD</option><option>GENERAL MCD</option><option>ACCESSORIES MCD</option>
+    <option>LEFTOVER MCD</option><option>FINISH FABRIC MCD</option><option>YARN DYEING MCD</option>
+    <option>CHEMICAL MCD</option><option>GENERAL TECHNICAL MCD</option>
   </select>
-
   <button class="btn" onclick="loadEntry()">🚀 Open Entry</button>
-
   <br><br>
   <div id="entryBox" class="grid"></div>
 </div>
 
 <div id="reports" class="page">
   <h2>📑 Reports</h2>
-
   <label>📂 Department / MCD</label>
   <select id="reportMcd">
-    <option>ACCESSORIES MCD</option>
-    <option>GENERAL TECHNICAL MCD</option>
+    <option>GREY FABRIC MCD</option><option>SHIPMENT MCD</option><option>BILLING SECTION</option>
+    <option>OUTER WEAR MCD</option><option>YARN MCD</option><option>PRINTING MCD</option>
+    <option>JHUT MCD</option><option>GENERAL MCD</option><option>ACCESSORIES MCD</option>
+    <option>LEFTOVER MCD</option><option>FINISH FABRIC MCD</option><option>YARN DYEING MCD</option>
+    <option>CHEMICAL MCD</option><option>GENERAL TECHNICAL MCD</option>
   </select>
-
   <button class="btn" onclick="loadReport()">📊 Show Report</button>
-
   <br><br>
   <div id="reportBox" class="grid"></div>
 </div>
 
 <div id="needle" class="page">
   <h2>🪡 Needle Section</h2>
-
   <div class="grid">
     <div class="card" onclick="location.href='needle.html'">🪡 Needle Daily Entry</div>
     <div class="card" onclick="location.href='needle-monthly.html'">📅 Needle Monthly Report</div>
@@ -310,10 +164,20 @@ select,input,textarea{
   <button class="btn">💾 Save Notice</button>
 </div>
 
-<div class="footer">
-  <div class="profile">
-    <img src="https://i.ibb.co/5hzT1VGk/IMG.jpg">
-    Powered by JOHURUL
+<div class="creditFooter">
+  <div class="creditItem">
+    <img src="https://i.ibb.co/5hzT1VGk/IMG.jpg" onerror="this.style.display='none'">
+    <div class="creditText"><b>Powered by JOHURUL</b><span>System Developer & Dashboard Design</span></div>
+  </div>
+  <div class="creditDivider"></div>
+  <div class="creditItem">
+    <img src="https://i.ibb.co/DDqvG3pD/nazir.jpg" onerror="this.style.display='none'">
+    <div class="creditText"><b>Md. Nazir Hossain</b><span>System Planning & Report Guideline</span></div>
+  </div>
+  <div class="creditDivider"></div>
+  <div class="creditItem">
+    <img src="https://i.ibb.co/k6WC4fBm/asad.jpg" onerror="this.style.display='none'">
+    <div class="creditText"><b>Md. Asaduzzaman</b><span>Operational Support & Report Management</span></div>
   </div>
 </div>
 
@@ -334,36 +198,27 @@ const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
 const FLOOR_OPENING = {
-  "Kadom R":618,
-  "Kadom N":443,
-  "Poddo R":1889,
-  "Poddo N":401,
-  "Shapla R":1171,
-  "Shapla N":573,
-  "Sample R":1138,
-  "Sample N":251,
-  "EMBROIDERY R":1011,
-  "EMBROIDERY N":287,
-  "Belly R":796,
-  "Belly N":335
+  "Kadom R":618,"Kadom N":443,"Poddo R":1889,"Poddo N":401,
+  "Shapla R":1171,"Shapla N":573,"Sample R":1138,"Sample N":251,
+  "EMBROIDERY R":1011,"EMBROIDERY N":287,"Belly R":796,"Belly N":335
 };
 
+const MCD_LIST = [
+  "GREY FABRIC MCD","SHIPMENT MCD","BILLING SECTION","OUTER WEAR MCD",
+  "YARN MCD","PRINTING MCD","JHUT MCD","GENERAL MCD","ACCESSORIES MCD",
+  "LEFTOVER MCD","FINISH FABRIC MCD","YARN DYEING MCD","CHEMICAL MCD",
+  "GENERAL TECHNICAL MCD"
+];
+
+let accessoriesChart=null;
+let kpiChart=null;
+
 window.openPage=function(id,btn){
-  document.querySelectorAll(".page").forEach(p=>{
-    p.classList.remove("activePage");
-  });
-
+  document.querySelectorAll(".page").forEach(p=>p.classList.remove("activePage"));
   document.getElementById(id).classList.add("activePage");
-
-  document.querySelectorAll(".nav button").forEach(b=>{
-    b.classList.remove("active");
-  });
-
+  document.querySelectorAll(".nav button").forEach(b=>b.classList.remove("active"));
   btn.classList.add("active");
-
-  if(id==="home"){
-    loadDashboardStock();
-  }
+  if(id==="home") loadDashboardStock();
 }
 
 window.toggleTheme=function(){
@@ -385,10 +240,10 @@ window.loadEntry=function(){
       <div class="card" onclick="location.href='twill-tape.html'">📏 Twill Tape</div>
       <div class="card" onclick="location.href='accessories.html'">📦 Accessories</div>
     `;
+  }else if(mcd==="GENERAL TECHNICAL MCD"){
+    box.innerHTML=`<div class="card" onclick="location.href='needle.html'">🪡 Needle Entry</div>`;
   }else{
-    box.innerHTML=`
-      <div class="card" onclick="location.href='needle.html'">🪡 Needle Entry</div>
-    `;
+    box.innerHTML=`<div class="card">📝 ${mcd} Daily Entry</div>`;
   }
 }
 
@@ -402,53 +257,46 @@ window.loadReport=function(){
       <div class="card" onclick="location.href='twill-tape.html'">📏 Twill Tape Report</div>
       <div class="card" onclick="location.href='accessories.html'">📦 Accessories Report</div>
     `;
+  }else if(mcd==="GENERAL TECHNICAL MCD"){
+    box.innerHTML=`<div class="card" onclick="location.href='needle.html'">🪡 Needle Report</div>`;
   }else{
-    box.innerHTML=`
-      <div class="card" onclick="location.href='needle.html'">🪡 Needle Report</div>
-    `;
+    box.innerHTML=`<div class="card">📑 ${mcd} Report</div>`;
   }
 }
 
 async function getLatestPresent(collectionName, openingStock){
   let snap = await getDocs(collection(db, collectionName));
   let rows=[];
-
   snap.forEach(docSnap=>{
     let x=docSnap.data();
-    if(x.date){
-      rows.push(x);
-    }
+    if(x.date) rows.push(x);
   });
-
   rows.sort((a,b)=>a.date.localeCompare(b.date));
-
   let r=0,d=0;
-
   rows.forEach(x=>{
     r += Number(x.receive)||0;
     d += Number(x.delivery)||0;
   });
-
   return openingStock + r - d;
 }
 
 async function getManpowerSummary(){
   let snap = await getDocs(collection(db,"manpower"));
   let map={};
+  let totalCount=0;
+  let totalSalary=0;
 
   snap.forEach(docSnap=>{
     let x=docSnap.data();
     let mcd=x.mcd || "UNKNOWN";
-
-    if(!map[mcd]){
-      map[mcd]={count:0,salary:0};
-    }
-
+    if(!map[mcd]) map[mcd]={count:0,salary:0};
     map[mcd].count++;
     map[mcd].salary += Number(x.salary)||0;
+    totalCount++;
+    totalSalary += Number(x.salary)||0;
   });
 
-  return map;
+  return {map,totalCount,totalSalary};
 }
 
 async function getNeedlePresent(){
@@ -457,7 +305,6 @@ async function getNeedlePresent(){
 
   snap.forEach(docSnap=>{
     let x=docSnap.data();
-
     if(x.floor && x.date){
       if(!latestByFloor[x.floor] || x.date > latestByFloor[x.floor].date){
         latestByFloor[x.floor]=x;
@@ -466,7 +313,6 @@ async function getNeedlePresent(){
   });
 
   let total=0;
-
   Object.keys(FLOOR_OPENING).forEach(floor=>{
     if(latestByFloor[floor] && latestByFloor[floor].rows){
       latestByFloor[floor].rows.forEach(r=>{
@@ -476,49 +322,111 @@ async function getNeedlePresent(){
       total += FLOOR_OPENING[floor];
     }
   });
-
   return total;
 }
 
+function renderCharts(sewing,twill,accessories,needle,totalManpower,totalSalary){
+  let accCtx=document.getElementById("accessoriesChart");
+  let kpiCtx=document.getElementById("kpiChart");
+
+  if(accessoriesChart) accessoriesChart.destroy();
+  if(kpiChart) kpiChart.destroy();
+
+  accessoriesChart = new Chart(accCtx,{
+    type:"bar",
+    data:{
+      labels:["Sewing Thread","Twill Tape","Accessories Sample"],
+      datasets:[{
+        label:"Present Stock",
+        data:[sewing,twill,accessories],
+        borderWidth:1
+      }]
+    },
+    options:{
+      responsive:true,
+      plugins:{legend:{display:false}},
+      scales:{y:{beginAtZero:true}}
+    }
+  });
+
+  kpiChart = new Chart(kpiCtx,{
+    type:"doughnut",
+    data:{
+      labels:["Needle","Manpower","Salary"],
+      datasets:[{
+        data:[needle,totalManpower,totalSalary]
+      }]
+    },
+    options:{
+      responsive:true,
+      plugins:{legend:{position:"bottom"}}
+    }
+  });
+}
+
 async function loadDashboardStock(){
-  let sewing = await getLatestPresent("sewingThread",133322);
-  let twill = await getLatestPresent("twillTape",171255);
-  let accessories = await getLatestPresent("accessoriesSample",21514393);
-  let needle = await getNeedlePresent();
-  let manpower = await getManpowerSummary();
+  try{
+    let sewing = await getLatestPresent("sewingThread",133322);
+    let twill = await getLatestPresent("twillTape",171255);
+    let accessories = await getLatestPresent("accessoriesSample",21514393);
+    let needle = await getNeedlePresent();
+    let manpowerData = await getManpowerSummary();
+    let manpower = manpowerData.map;
 
-  let accessoriesMP = manpower["ACCESSORIES MCD"] || {count:0,salary:0};
-  let technicalMP = manpower["GENERAL TECHNICAL MCD"] || {count:0,salary:0};
+    let totalAccessories = sewing + twill + accessories;
 
-  let html=`
-  <div class="mcdBox">
-    <h3>📦 ACCESSORIES MCD</h3>
-    <div class="miniRow"><span>🧵 Sewing Thread</span><span class="miniValue">${sewing}</span></div>
-    <div class="miniRow"><span>📏 Twill Tape</span><span class="miniValue">${twill}</span></div>
-    <div class="miniRow"><span>📦 Accessories Sample</span><span class="miniValue">${accessories}</span></div>
-    <div class="miniRow"><span>🪡 Needle Stock</span><span class="miniValue">${needle}</span></div>
-    <div class="miniRow"><span>👨‍🏭 Total Manpower</span><span class="miniValue">${accessoriesMP.count}</span></div>
-    <div class="miniRow"><span>💰 Total Salary</span><span class="miniValue">${accessoriesMP.salary}</span></div>
-    <div class="miniChart"><div class="miniFill"></div></div>
-  </div>
+    document.getElementById("kpiAccessories").innerText=totalAccessories;
+    document.getElementById("kpiNeedle").innerText=needle;
+    document.getElementById("kpiManpower").innerText=manpowerData.totalCount;
+    document.getElementById("kpiSalary").innerText=manpowerData.totalSalary;
 
-  <div class="mcdBox">
-    <h3>🛠️ GENERAL TECHNICAL MCD</h3>
-    <div class="miniRow"><span>🪡 Needle Stock</span><span class="miniValue">${needle}</span></div>
-    <div class="miniRow"><span>👨‍🏭 Total Manpower</span><span class="miniValue">${technicalMP.count}</span></div>
-    <div class="miniRow"><span>💰 Total Salary</span><span class="miniValue">${technicalMP.salary}</span></div>
-    <div class="miniChart"><div class="miniFill" style="width:70%"></div></div>
-  </div>
+    renderCharts(sewing,twill,accessories,needle,manpowerData.totalCount,manpowerData.totalSalary);
 
-  <div class="mcdBox">
-    <h3>📂 OTHER MCD REPORTS</h3>
-    <div class="miniRow"><span>📊 Future Reports</span><span class="miniValue">LIVE</span></div>
-    <div class="miniRow"><span>✅ Dashboard Ready</span><span class="miniValue">OK</span></div>
-    <div class="miniChart"><div class="miniFill" style="width:40%"></div></div>
-  </div>
-  `;
+    let html="";
 
-  document.getElementById("mcdDashboard").innerHTML=html;
+    MCD_LIST.forEach(mcd=>{
+      let mp = manpower[mcd] || {count:0,salary:0};
+
+      if(mcd==="ACCESSORIES MCD"){
+        html+=`
+        <div class="mcdBox">
+          <h3>📦 ACCESSORIES MCD</h3>
+          <div class="miniRow"><span>🧵 Sewing Thread</span><span class="miniValue">${sewing}</span></div>
+          <div class="miniRow"><span>📏 Twill Tape</span><span class="miniValue">${twill}</span></div>
+          <div class="miniRow"><span>📦 Accessories Sample</span><span class="miniValue">${accessories}</span></div>
+          <div class="miniRow"><span>👨‍🏭 Total Manpower</span><span class="miniValue">${mp.count}</span></div>
+          <div class="miniRow"><span>💰 Total Salary</span><span class="miniValue">${mp.salary}</span></div>
+          <div class="miniChart"><div class="miniFill"></div></div>
+        </div>`;
+      }
+      else if(mcd==="GENERAL TECHNICAL MCD"){
+        html+=`
+        <div class="mcdBox">
+          <h3>🛠️ GENERAL TECHNICAL MCD</h3>
+          <div class="miniRow"><span>🪡 Needle Stock</span><span class="miniValue">${needle}</span></div>
+          <div class="miniRow"><span>👨‍🏭 Total Manpower</span><span class="miniValue">${mp.count}</span></div>
+          <div class="miniRow"><span>💰 Total Salary</span><span class="miniValue">${mp.salary}</span></div>
+          <div class="miniRow"><span>📊 Report Status</span><span class="miniValue">LIVE</span></div>
+          <div class="miniChart"><div class="miniFill" style="width:70%"></div></div>
+        </div>`;
+      }
+      else{
+        html+=`
+        <div class="mcdBox">
+          <h3>📂 ${mcd}</h3>
+          <div class="miniRow"><span>👨‍🏭 Total Manpower</span><span class="miniValue">${mp.count}</span></div>
+          <div class="miniRow"><span>💰 Total Salary</span><span class="miniValue">${mp.salary}</span></div>
+          <div class="miniRow"><span>📊 Stock / Report</span><span class="miniValue">Pending</span></div>
+          <div class="miniChart"><div class="miniFill" style="width:35%"></div></div>
+        </div>`;
+      }
+    });
+
+    document.getElementById("mcdDashboard").innerHTML=html;
+  }catch(e){
+    document.getElementById("mcdDashboard").innerHTML="Firebase data load error";
+    console.log(e);
+  }
 }
 
 loadDashboardStock();
