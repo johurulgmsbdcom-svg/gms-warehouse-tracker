@@ -1,25 +1,123 @@
 <!DOCTYPE html>
 <html>
 <head>
-<title>All Needle Reports</title>
+<title>All Needle BNR / BNF Reports</title>
+
 <style>
-body{margin:0;background:#0f172a;color:white;font-family:Arial}
+body{
+  margin:0;
+  background:#0f172a;
+  color:white;
+  font-family:Arial;
+}
+
 .box{padding:18px}
 h2,h3{text-align:center;margin:4px}
-.top{text-align:center;margin:15px}
-select,input,button{padding:9px;margin:4px;border-radius:6px;border:0}
-button{background:#2563eb;color:white;font-weight:bold;cursor:pointer}
+
+.top{
+  text-align:center;
+  margin:15px;
+}
+
+select,input,button{
+  padding:9px;
+  margin:4px;
+  border-radius:6px;
+  border:0;
+}
+
+button{
+  background:#2563eb;
+  color:white;
+  font-weight:bold;
+  cursor:pointer;
+}
+
 .excelBtn{background:#16a34a}
 .pdfBtn{background:#7c3aed}
 .homeBtn{background:#2563eb}
-table{width:98%;margin:15px auto;border-collapse:collapse;background:white;color:black;text-align:center}
-th,td{border:1px solid #000;padding:6px}
-th{background:#e5e7eb}
-.total{background:#92d050;font-weight:bold}
-.sectionTitle{background:#1e293b;color:white;font-weight:bold}
+
+.reportPage{
+  background:white;
+  color:black;
+  width:210mm;
+  min-height:297mm;
+  margin:15px auto;
+  padding:10mm;
+  box-sizing:border-box;
+}
+
+table{
+  width:100%;
+  border-collapse:collapse;
+  color:black;
+  text-align:center;
+  font-size:12px;
+  margin-top:10px;
+}
+
+th,td{
+  border:1px solid #000;
+  padding:4px;
+}
+
+th{
+  background:#e5e7eb;
+}
+
+.total{
+  background:#92d050;
+  font-weight:bold;
+}
+
+.sectionTitle{
+  background:#1e293b;
+  color:white;
+  font-weight:bold;
+  font-size:14px;
+}
+
+.grand{
+  background:#ffff00;
+  font-weight:bold;
+  font-size:15px;
+}
+
+@page{
+  size:A4 portrait;
+  margin:8mm;
+}
+
 @media print{
-  body{background:white;color:black}
-  .top,button{display:none!important}
+  body{
+    background:white;
+    color:black;
+  }
+
+  .top,button{
+    display:none!important;
+  }
+
+  .box{
+    padding:0;
+  }
+
+  .reportPage{
+    width:auto;
+    min-height:auto;
+    margin:0;
+    padding:0;
+    box-shadow:none;
+    page-break-after:always;
+  }
+
+  table{
+    font-size:11px;
+  }
+
+  h2,h3{
+    color:black;
+  }
 }
 </style>
 </head>
@@ -28,7 +126,7 @@ th{background:#e5e7eb}
 <div class="box">
 
 <h2>GMS TEXTILES LTD</h2>
-<h3>All Needle Reports</h3>
+<h3>All Needle BNR / BNF Reports</h3>
 
 <div class="top">
 Report:
@@ -72,20 +170,41 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
-const R_FLOORS = ["Kadom R","Shapla R","Poddo R","Belly R","Sample R","EMBROIDERY R"];
-const N_FLOORS = ["Kadom N","Shapla N","Poddo N","Belly N","Sample N","EMBROIDERY N"];
+const R_FLOORS = [
+  "Kadom R",
+  "Shapla R",
+  "Poddo R",
+  "Belly R",
+  "Sample R",
+  "EMBROIDERY R"
+];
+
+const N_FLOORS = [
+  "Kadom N",
+  "Shapla N",
+  "Poddo N",
+  "Belly N",
+  "Sample N",
+  "EMBROIDERY N"
+];
 
 function changePeriod(){
   let p=document.getElementById("periodType").value;
-  document.getElementById("monthInput").style.display = p==="monthly" ? "inline-block" : "none";
-  document.getElementById("weekInput").style.display = p==="weekly" ? "inline-block" : "none";
+
+  document.getElementById("monthInput").style.display =
+    p==="monthly" ? "inline-block" : "none";
+
+  document.getElementById("weekInput").style.display =
+    p==="weekly" ? "inline-block" : "none";
 }
 
 function getWeekRange(dateStr){
   let d=new Date(dateStr);
   let day=d.getDay();
+
   let diff=d.getDate()-day+1;
   let monday=new Date(d.setDate(diff));
+
   let sunday=new Date(monday);
   sunday.setDate(monday.getDate()+6);
 
@@ -107,17 +226,29 @@ async function loadReport(){
   let type=document.getElementById("reportType").value;
   let period=document.getElementById("periodType").value;
 
-  let start="", end="", titleDate="";
+  let start="";
+  let end="";
+  let titleDate="";
 
   if(period==="monthly"){
     let m=document.getElementById("monthInput").value;
-    if(!m){alert("Month select koro");return;}
+
+    if(!m){
+      alert("Month select koro");
+      return;
+    }
+
     start=m+"-01";
     end=m+"-31";
     titleDate=m;
   }else{
     let d=document.getElementById("weekInput").value;
-    if(!d){alert("Week date select koro");return;}
+
+    if(!d){
+      alert("Week date select koro");
+      return;
+    }
+
     let r=getWeekRange(d);
     start=r.start;
     end=r.end;
@@ -125,12 +256,15 @@ async function loadReport(){
   }
 
   let floors = type==="BNR" ? R_FLOORS : N_FLOORS;
+
   let snap = await getDocs(collection(db,"dailyPosting"));
 
   let floorMap={};
   let grandTotal=0;
 
-  floors.forEach(f=>floorMap[f]={});
+  floors.forEach(f=>{
+    floorMap[f]={};
+  });
 
   snap.forEach(docSnap=>{
     let data=docSnap.data();
@@ -140,6 +274,8 @@ async function loadReport(){
     if(data.date < start || data.date > end) return;
 
     data.rows.forEach(row=>{
+      if(!row.needleType) return;
+
       let key=(row.needleType||"")+"___"+(row.size||"");
       let val=getBNValue(row,type);
 
@@ -158,17 +294,25 @@ async function loadReport(){
   });
 
   let html=`
-  <h3>${type} ${period==="monthly" ? "Monthly" : "Weekly"} Report</h3>
-  <h3>${titleDate}</h3>
+  <div class="reportPage">
+    <h2>GMS TEXTILES LTD</h2>
+    <h3>Tansutrapur, Kaliakair, Gazipur.</h3>
+    <h3>All Needle ${type} ${period==="monthly" ? "Monthly" : "Weekly"} Report</h3>
+    <h3>${titleDate}</h3>
   `;
 
   floors.forEach(floor=>{
-    let rows=Object.values(floorMap[floor]).sort((a,b)=>Number(a.sl)-Number(b.sl));
+    let rows=Object.values(floorMap[floor])
+      .sort((a,b)=>Number(a.sl)-Number(b.sl));
+
     let floorTotal=0;
 
     html+=`
     <table>
-      <tr class="sectionTitle"><td colspan="4">${floor}</td></tr>
+      <tr class="sectionTitle">
+        <td colspan="4">${floor}</td>
+      </tr>
+
       <tr>
         <th>SL</th>
         <th>Needle Type</th>
@@ -178,10 +322,14 @@ async function loadReport(){
     `;
 
     if(rows.length===0){
-      html+=`<tr><td colspan="4">No Data</td></tr>`;
+      html+=`
+      <tr>
+        <td colspan="4">No Data</td>
+      </tr>`;
     }else{
       rows.forEach(r=>{
         floorTotal += Number(r.qty)||0;
+
         html+=`
         <tr>
           <td>${r.sl}</td>
@@ -194,29 +342,34 @@ async function loadReport(){
 
     html+=`
       <tr class="total">
-        <td colspan="3">TOTAL</td>
+        <td colspan="3">${floor} TOTAL</td>
         <td>${floorTotal}</td>
       </tr>
     </table>`;
   });
 
   html+=`
-  <table>
-    <tr class="total">
-      <td>ALL ${type} TOTAL</td>
-      <td>${grandTotal}</td>
-    </tr>
-  </table>`;
+    <table>
+      <tr class="grand">
+        <td>ALL ${type} TOTAL</td>
+        <td>${grandTotal}</td>
+      </tr>
+    </table>
+  </div>`;
 
   document.getElementById("reportArea").innerHTML=html;
 }
 
 function exportExcel(){
   let html=document.getElementById("reportArea").innerHTML;
-  let file=new Blob([html],{type:"application/vnd.ms-excel"});
+
+  let file=new Blob([html],{
+    type:"application/vnd.ms-excel"
+  });
+
   let a=document.createElement("a");
   a.href=URL.createObjectURL(file);
-  a.download="all-needle-report.xls";
+  a.download="all-needle-bnr-bnf-report.xls";
   a.click();
 }
 
