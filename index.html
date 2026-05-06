@@ -16,8 +16,14 @@ body.light{
 }
 body{margin:0;background:var(--bg);color:var(--text);font-family:Segoe UI,Arial;padding-bottom:90px}
 .header{height:58px;background:var(--card);border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;padding:0 22px}
-.logo{font-size:22px;font-weight:900}.sub{font-size:12px;color:var(--muted)}
-.rightTop{display:flex;align-items:center;gap:14px;font-weight:bold}.live{color:var(--green)}
+
+.logoArea{display:flex;align-items:center;gap:10px}
+.companyLogo{width:42px;height:42px;object-fit:contain;border-radius:8px}
+.logo{font-size:22px;font-weight:900}
+.sub{font-size:12px;color:var(--muted)}
+
+.rightTop{display:flex;align-items:center;gap:14px;font-weight:bold}
+.live{color:var(--green)}
 .themeBtn{background:var(--blue);color:white;border:0;padding:9px 18px;border-radius:30px;font-weight:bold;cursor:pointer}
 
 .nav{display:flex;gap:12px;padding:14px 18px;background:rgba(255,255,255,.03);border-bottom:1px solid var(--border);flex-wrap:wrap}
@@ -32,19 +38,30 @@ body{margin:0;background:var(--bg);color:var(--text);font-family:Segoe UI,Arial;
 .topCard .label{color:var(--muted);font-size:12px;font-weight:800}
 .topCard .num{font-size:24px;font-weight:900;color:var(--green);margin-top:6px}
 
+.livePulse{
+  color:#22c55e!important;
+  font-size:22px!important;
+  animation:pulseLive 1s infinite;
+}
+@keyframes pulseLive{
+  0%{transform:scale(1);opacity:1}
+  50%{transform:scale(1.08);opacity:.65}
+  100%{transform:scale(1);opacity:1}
+}
+
 .summaryLine{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:14px}
 .sumBox{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:12px;text-align:center;font-weight:900}
 .sumBox span{display:block;color:var(--muted);font-size:11px}
 .sumBox b{display:block;color:var(--green);font-size:20px;margin-top:5px}
 
-.chartGrid{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px}
-.chartBox{height:275px;background:linear-gradient(135deg,var(--card),var(--card2));border:1px solid var(--border);border-radius:18px;padding:14px;box-shadow:0 8px 20px rgba(0,0,0,.18)}
-.chartBox h3{margin:0 0 8px 0;font-size:16px}
-.chartBox canvas{max-height:220px!important}
-
-.needleSmall{background:linear-gradient(135deg,var(--card),var(--card2));border:1px solid var(--border);border-radius:18px;padding:14px;margin-bottom:14px;text-align:center}
+.needleSmall{background:linear-gradient(135deg,var(--card),var(--card2));border:1px solid var(--border);border-radius:18px;padding:12px;margin-bottom:14px;text-align:center}
 .needleSmall span{color:var(--muted);font-weight:800;font-size:13px}
-.needleSmall b{display:block;color:var(--green);font-size:28px;margin-top:4px}
+.needleSmall b{display:block;color:var(--green);font-size:26px;margin-top:3px}
+
+.chartGrid{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px}
+.chartBox{height:240px;background:linear-gradient(135deg,var(--card),var(--card2));border:1px solid var(--border);border-radius:18px;padding:12px;box-shadow:0 6px 16px rgba(0,0,0,.16)}
+.chartBox h3{margin:0 0 5px 0;font-size:14px;font-weight:800}
+.chartBox canvas{max-height:185px!important}
 
 .mcdDashboard{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
 .mcdBox{background:linear-gradient(135deg,var(--card),var(--card2));border:1px solid var(--border);border-radius:18px;padding:15px;box-shadow:0 8px 20px rgba(0,0,0,.18)}
@@ -78,10 +95,14 @@ body.light .creditFooter{background:rgba(255,255,255,.96)}
 <body>
 
 <div class="header">
-  <div>
-    <div class="logo">🏭 GMS MCD SYSTEM</div>
-    <div class="sub">GMS TEXTILES LTD & GMS COMPOSITE KNITTING</div>
+  <div class="logoArea">
+    <img src="logo.png" class="companyLogo" onerror="this.style.display='none'">
+    <div>
+      <div class="logo">GMS MCD SYSTEM</div>
+      <div class="sub">GMS TEXTILES LTD & GMS COMPOSITE KNITTING</div>
+    </div>
   </div>
+
   <div class="rightTop">
     <span class="live">● Firebase Live</span>
     <button class="themeBtn" onclick="toggleTheme()">🌙 / ☀️</button>
@@ -102,15 +123,37 @@ body.light .creditFooter{background:rgba(255,255,255,.96)}
   <div class="dashSub">Accessories stock + Needle stock + MCD live summary</div>
 
   <div class="topGrid">
-    <div class="topCard"><div class="label">👨‍🏭 Total Manpower</div><div class="num" id="kpiManpower">0</div></div>
-    <div class="topCard"><div class="label">💰 Total Salary</div><div class="num" id="kpiSalary">0</div></div>
-    <div class="topCard"><div class="label">📦 Accessories With Sample</div><div class="num" id="kpiAccessories">0</div></div>
+    <div class="topCard">
+      <div class="label">👨‍🏭 Total Manpower</div>
+      <div class="num" id="kpiManpower">0</div>
+    </div>
+
+    <div class="topCard">
+      <div class="label">💰 Total Salary</div>
+      <div class="num" id="kpiSalary">0</div>
+    </div>
+
+    <div class="topCard liveUpdateCard">
+      <div class="label">🟢 Live Update</div>
+      <div class="num livePulse">Firebase Sync</div>
+    </div>
   </div>
 
   <div class="summaryLine">
-    <div class="sumBox"><span>📦 Accessories With Sample Stock</span><b id="sumAccessories">0</b></div>
-    <div class="sumBox"><span>🧵 Sewing Thread Stock</span><b id="sumSewing">0</b></div>
-    <div class="sumBox"><span>📏 Twill Tape Stock</span><b id="sumTwill">0</b></div>
+    <div class="sumBox">
+      <span>📦 Accessories With Sample Stock</span>
+      <b id="sumAccessories">0</b>
+    </div>
+
+    <div class="sumBox">
+      <span>🧵 Sewing Thread Stock</span>
+      <b id="sumSewing">0</b>
+    </div>
+
+    <div class="sumBox">
+      <span>📏 Twill Tape Stock</span>
+      <b id="sumTwill">0</b>
+    </div>
   </div>
 
   <div class="needleSmall">
@@ -123,6 +166,7 @@ body.light .creditFooter{background:rgba(255,255,255,.96)}
       <h3>📈 Accessories Stock Chart</h3>
       <canvas id="accessoriesChart"></canvas>
     </div>
+
     <div class="chartBox">
       <h3>🏭 Needle Floor Wise Stock</h3>
       <canvas id="needleChart"></canvas>
@@ -139,35 +183,61 @@ body.light .creditFooter{background:rgba(255,255,255,.96)}
     <option>GMS TEXTILES LTD</option>
     <option>GMS COMPOSITE KNITTING</option>
   </select>
+
   <br><br>
+
   <label>📂 Department / MCD</label>
   <select id="entryMcd">
-    <option>GREY FABRIC MCD</option><option>SHIPMENT MCD</option><option>BILLING SECTION</option>
-    <option>OUTER WEAR MCD</option><option>YARN MCD</option><option>PRINTING MCD</option>
-    <option>JHUT MCD</option><option>GENERAL MCD</option><option>ACCESSORIES MCD</option>
-    <option>LEFTOVER MCD</option><option>FINISH FABRIC MCD</option><option>YARN DYEING MCD</option>
-    <option>CHEMICAL MCD</option><option>GENERAL TECHNICAL MCD</option>
+    <option>GREY FABRIC MCD</option>
+    <option>SHIPMENT MCD</option>
+    <option>BILLING SECTION</option>
+    <option>OUTER WEAR MCD</option>
+    <option>YARN MCD</option>
+    <option>PRINTING MCD</option>
+    <option>JHUT MCD</option>
+    <option>GENERAL MCD</option>
+    <option>ACCESSORIES MCD</option>
+    <option>LEFTOVER MCD</option>
+    <option>FINISH FABRIC MCD</option>
+    <option>YARN DYEING MCD</option>
+    <option>CHEMICAL MCD</option>
+    <option>GENERAL TECHNICAL MCD</option>
   </select>
+
   <button class="btn" onclick="loadEntry()">🚀 Open Entry</button>
-  <br><br><div id="entryBox" class="grid"></div>
+  <br><br>
+  <div id="entryBox" class="grid"></div>
 </div>
 
 <div id="reports" class="page">
   <h2>📑 Reports</h2>
+
   <label>📂 Department / MCD</label>
   <select id="reportMcd">
-    <option>GREY FABRIC MCD</option><option>SHIPMENT MCD</option><option>BILLING SECTION</option>
-    <option>OUTER WEAR MCD</option><option>YARN MCD</option><option>PRINTING MCD</option>
-    <option>JHUT MCD</option><option>GENERAL MCD</option><option>ACCESSORIES MCD</option>
-    <option>LEFTOVER MCD</option><option>FINISH FABRIC MCD</option><option>YARN DYEING MCD</option>
-    <option>CHEMICAL MCD</option><option>GENERAL TECHNICAL MCD</option>
+    <option>GREY FABRIC MCD</option>
+    <option>SHIPMENT MCD</option>
+    <option>BILLING SECTION</option>
+    <option>OUTER WEAR MCD</option>
+    <option>YARN MCD</option>
+    <option>PRINTING MCD</option>
+    <option>JHUT MCD</option>
+    <option>GENERAL MCD</option>
+    <option>ACCESSORIES MCD</option>
+    <option>LEFTOVER MCD</option>
+    <option>FINISH FABRIC MCD</option>
+    <option>YARN DYEING MCD</option>
+    <option>CHEMICAL MCD</option>
+    <option>GENERAL TECHNICAL MCD</option>
   </select>
+
   <button class="btn" onclick="loadReport()">📊 Show Report</button>
-  <br><br><div id="reportBox" class="grid"></div>
+  <br><br>
+  <div id="reportBox" class="grid"></div>
 </div>
 
 <div id="needle" class="page">
   <h2>🪡 Needle Section</h2>
+
   <div class="grid">
     <div class="card" onclick="location.href='needle.html'">🪡 Needle Daily Entry</div>
     <div class="card" onclick="location.href='needle-dashboard.html'">🏭 Floor Wise Dashboard</div>
@@ -180,7 +250,8 @@ body.light .creditFooter{background:rgba(255,255,255,.96)}
 <div id="notice" class="page">
   <h2>📢 Notice Board</h2>
   <textarea placeholder="Notice likho..." style="height:120px;"></textarea>
-  <br><button class="btn">💾 Save Notice</button>
+  <br>
+  <button class="btn">💾 Save Notice</button>
 </div>
 
 <div class="creditFooter">
@@ -244,11 +315,15 @@ window.toggleTheme=function(){
   document.body.classList.toggle("light");
   localStorage.setItem("theme",document.body.classList.contains("light") ? "light" : "dark");
 };
-if(localStorage.getItem("theme")==="light"){document.body.classList.add("light");}
+
+if(localStorage.getItem("theme")==="light"){
+  document.body.classList.add("light");
+}
 
 window.loadEntry=function(){
   let mcd=document.getElementById("entryMcd").value;
   let box=document.getElementById("entryBox");
+
   if(mcd==="ACCESSORIES MCD"){
     box.innerHTML=`
       <div class="card" onclick="location.href='sewing-thread.html'">🧵 Sewing Thread</div>
@@ -264,6 +339,7 @@ window.loadEntry=function(){
 window.loadReport=function(){
   let mcd=document.getElementById("reportMcd").value;
   let box=document.getElementById("reportBox");
+
   if(mcd==="ACCESSORIES MCD"){
     box.innerHTML=`
       <div class="card" onclick="location.href='sewing-thread.html'">🧵 Sewing Thread Report</div>
@@ -279,16 +355,20 @@ window.loadReport=function(){
 async function getLatestPresent(collectionName, openingStock){
   let snap = await getDocs(collection(db, collectionName));
   let rows=[];
+
   snap.forEach(docSnap=>{
     let x=docSnap.data();
     if(x.date) rows.push(x);
   });
+
   rows.sort((a,b)=>a.date.localeCompare(b.date));
+
   let r=0,d=0;
   rows.forEach(x=>{
     r += Number(x.receive)||0;
     d += Number(x.delivery)||0;
   });
+
   return openingStock + r - d;
 }
 
@@ -296,15 +376,22 @@ async function getManpowerSummary(){
   let snap = await getDocs(collection(db,"manpower"));
   let map={};
   let totalCount=0,totalSalary=0;
+
   snap.forEach(docSnap=>{
     let x=docSnap.data();
     let mcd=x.mcd || "UNKNOWN";
-    if(!map[mcd]) map[mcd]={count:0,salary:0};
+
+    if(!map[mcd]){
+      map[mcd]={count:0,salary:0};
+    }
+
     map[mcd].count++;
     map[mcd].salary += Number(x.salary)||0;
+
     totalCount++;
     totalSalary += Number(x.salary)||0;
   });
+
   return {map,totalCount,totalSalary};
 }
 
@@ -314,6 +401,7 @@ async function getNeedleFloorStock(){
 
   snap.forEach(docSnap=>{
     let x=docSnap.data();
+
     if(x.floor && x.date){
       if(!latestByFloor[x.floor] || x.date > latestByFloor[x.floor].date){
         latestByFloor[x.floor]=x;
@@ -360,7 +448,10 @@ function renderCharts(sewing,accessories,twill,floorStocks){
       responsive:true,
       maintainAspectRatio:false,
       plugins:{legend:{display:false}},
-      scales:{y:{beginAtZero:true},x:{grid:{display:false}}}
+      scales:{
+        y:{beginAtZero:true},
+        x:{grid:{display:false}}
+      }
     }
   });
 
@@ -379,7 +470,13 @@ function renderCharts(sewing,accessories,twill,floorStocks){
       responsive:true,
       maintainAspectRatio:false,
       plugins:{legend:{display:false}},
-      scales:{y:{beginAtZero:true},x:{ticks:{font:{size:10}},grid:{display:false}}}
+      scales:{
+        y:{beginAtZero:true},
+        x:{
+          ticks:{font:{size:8}},
+          grid:{display:false}
+        }
+      }
     }
   });
 }
@@ -395,7 +492,6 @@ async function loadDashboardStock(){
 
     document.getElementById("kpiManpower").innerText=manpowerData.totalCount;
     document.getElementById("kpiSalary").innerText=manpowerData.totalSalary;
-    document.getElementById("kpiAccessories").innerText=accessories;
 
     document.getElementById("sumAccessories").innerText=accessories;
     document.getElementById("sumSewing").innerText=sewing;
@@ -405,6 +501,7 @@ async function loadDashboardStock(){
     renderCharts(sewing,accessories,twill,needleData.floorStocks);
 
     let html="";
+
     MCD_LIST.forEach(mcd=>{
       let mp = manpower[mcd] || {count:0,salary:0};
 
@@ -453,5 +550,6 @@ async function loadDashboardStock(){
 
 loadDashboardStock();
 </script>
+
 </body>
 </html>
