@@ -1,0 +1,504 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Billing Manpower Report</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+
+<style>
+:root{
+  --bg:#07111f;
+  --card:#101b2d;
+  --card2:#14233a;
+  --text:#ffffff;
+  --muted:#9fb0c7;
+  --border:#263855;
+  --blue:#2563eb;
+  --green:#22c55e;
+  --red:#ef4444;
+  --orange:#f59e0b;
+}
+body{
+  margin:0;
+  background:var(--bg);
+  color:var(--text);
+  font-family:Segoe UI,Arial,sans-serif;
+}
+.header{
+  text-align:center;
+  padding:14px;
+}
+.header h2,.header h3,.header h4{margin:2px}
+.controls{
+  background:linear-gradient(135deg,var(--card),var(--card2));
+  border:1px solid var(--border);
+  border-radius:18px;
+  padding:14px;
+  margin:12px;
+  display:grid;
+  grid-template-columns:repeat(4,1fr);
+  gap:10px;
+}
+label{
+  font-size:12px;
+  color:var(--muted);
+  font-weight:900;
+}
+input,select{
+  width:100%;
+  padding:11px;
+  border-radius:10px;
+  border:1px solid var(--border);
+  background:#0b1220;
+  color:white;
+  font-size:16px;
+  box-sizing:border-box;
+}
+button{
+  padding:11px 16px;
+  border:0;
+  border-radius:10px;
+  color:white;
+  font-weight:900;
+  cursor:pointer;
+  margin:4px;
+}
+.save{background:var(--green)}
+.show{background:var(--blue)}
+.excel{background:#059669}
+.print{background:#7c3aed}
+.home{background:#0f766e}
+.del{background:var(--red)}
+.add{background:var(--orange)}
+
+.kpi{
+  display:grid;
+  grid-template-columns:repeat(4,1fr);
+  gap:12px;
+  margin:12px;
+}
+.kpiBox{
+  background:linear-gradient(135deg,var(--card),var(--card2));
+  border:1px solid var(--border);
+  border-radius:16px;
+  padding:14px;
+  text-align:center;
+}
+.kpiBox span{
+  color:var(--muted);
+  font-size:12px;
+  font-weight:900;
+}
+.kpiBox b{
+  display:block;
+  color:var(--green);
+  font-size:26px;
+  margin-top:6px;
+}
+.chartBox{
+  background:white;
+  color:black;
+  border-radius:16px;
+  padding:12px;
+  margin:12px;
+}
+table{
+  width:98%;
+  margin:12px auto;
+  border-collapse:collapse;
+  background:white;
+  color:black;
+  font-size:13px;
+}
+th,td{
+  border:1px solid #000;
+  padding:7px;
+  text-align:center;
+}
+th{
+  background:#1f4e79;
+  color:white;
+}
+.totalRow{
+  background:#d9ead3;
+  font-weight:bold;
+}
+.toast{
+  position:fixed;
+  right:20px;
+  bottom:20px;
+  background:#22c55e;
+  color:white;
+  padding:12px 20px;
+  border-radius:10px;
+  font-weight:bold;
+  display:none;
+}
+@page{
+  size:A4 landscape;
+  margin:8mm;
+}
+@media print{
+  body{
+    background:white;
+    color:black;
+  }
+  .controls,.btnArea,.noPrint{
+    display:none!important;
+  }
+  table{
+    width:100%;
+    font-size:11px;
+  }
+  .chartBox{
+    width:100%;
+    margin:8px 0;
+  }
+}
+@media(max-width:900px){
+  .controls,.kpi{
+    grid-template-columns:1fr;
+  }
+}
+</style>
+</head>
+
+<body>
+
+<div class="header">
+  <h2>GMS TEXTILES LTD</h2>
+  <h4>Tansutrapur, Kaliakair, Gazipur</h4>
+  <h4>Billing Section</h4>
+  <h3>Daily Manpower Attendance Report</h3>
+</div>
+
+<div class="controls noPrint">
+  <div>
+    <label>Report Date</label>
+    <input type="date" id="reportDate">
+  </div>
+
+  <div>
+    <label>Company</label>
+    <select id="company">
+      <option>GMS TEXTILES LTD</option>
+      <option>GMS COMPOSITE KNITTING</option>
+    </select>
+  </div>
+
+  <div>
+    <label>MCD / Department</label>
+    <select id="mcd">
+      <option>GREY FABRIC MCD</option>
+      <option>SHIPMENT MCD</option>
+      <option>BILLING SECTION</option>
+      <option>OUTER WEAR MCD</option>
+      <option>YARN MCD</option>
+      <option>PRINTING MCD</option>
+      <option>JHUT MCD</option>
+      <option>GENERAL MCD</option>
+      <option>ACCESSORIES MCD</option>
+      <option>LEFTOVER MCD</option>
+      <option>FINISH FABRIC MCD</option>
+      <option>YARN DYEING MCD</option>
+      <option>CHEMICAL MCD</option>
+      <option>GENERAL TECHNICAL MCD</option>
+    </select>
+  </div>
+
+  <div>
+    <label>Total Manpower</label>
+    <input type="number" id="totalManpower" value="0" oninput="calculatePresent()">
+  </div>
+
+  <div>
+    <label>Leave</label>
+    <input type="number" id="leaveQty" value="0" oninput="calculatePresent()">
+  </div>
+
+  <div>
+    <label>Absent</label>
+    <input type="number" id="absentQty" value="0" oninput="calculatePresent()">
+  </div>
+
+  <div>
+    <label>Today Present</label>
+    <input type="number" id="presentQty" value="0" readonly>
+  </div>
+
+  <div style="display:flex;align-items:end;gap:5px;flex-wrap:wrap">
+    <button class="save" onclick="saveReport()">💾 Save</button>
+    <button class="show" onclick="loadReport()">🔍 Show</button>
+  </div>
+</div>
+
+<div class="btnArea" style="text-align:center">
+  From:
+  <input type="date" id="fromDate">
+  To:
+  <input type="date" id="toDate">
+
+  <button class="show" onclick="loadRangeReport()">📅 Date Report</button>
+  <button class="excel" onclick="exportExcel()">📊 Excel</button>
+  <button class="print" onclick="window.print()">🖨 PDF / Print</button>
+  <button class="home" onclick="location.href='index.html'">🏠 Home</button>
+</div>
+
+<div class="kpi">
+  <div class="kpiBox"><span>👨‍🏭 Total Manpower</span><b id="kpiTotal">0</b></div>
+  <div class="kpiBox"><span>🏖 Leave</span><b id="kpiLeave">0</b></div>
+  <div class="kpiBox"><span>❌ Absent</span><b id="kpiAbsent">0</b></div>
+  <div class="kpiBox"><span>✅ Today Present</span><b id="kpiPresent">0</b></div>
+</div>
+
+<div class="chartBox">
+  <canvas id="manpowerChart" height="80"></canvas>
+</div>
+
+<table id="reportTable">
+  <thead>
+    <tr>
+      <th>SL</th>
+      <th>Date</th>
+      <th>Company</th>
+      <th>MCD</th>
+      <th>Total Manpower</th>
+      <th>Leave</th>
+      <th>Absent</th>
+      <th>Today Present</th>
+      <th>Reported By</th>
+      <th class="noPrint">Action</th>
+    </tr>
+  </thead>
+  <tbody id="tbody"></tbody>
+  <tfoot>
+    <tr class="totalRow">
+      <td colspan="4">All MCD Total</td>
+      <td id="gtTotal">0</td>
+      <td id="gtLeave">0</td>
+      <td id="gtAbsent">0</td>
+      <td id="gtPresent">0</td>
+      <td></td>
+      <td class="noPrint"></td>
+    </tr>
+  </tfoot>
+</table>
+
+<div id="toast" class="toast">Saved ✅</div>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-app.js";
+import {
+  getFirestore,
+  collection,
+  addDoc,
+  getDocs,
+  deleteDoc,
+  doc,
+  query,
+  where
+} from "https://www.gstatic.com/firebasejs/12.12.1/firebase-firestore.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyD-wBCF5eeWMHobLFOhBzKW7aB2pagz9-w",
+  authDomain: "gms-warehouse-tracker-7f57e.firebaseapp.com",
+  projectId: "gms-warehouse-tracker-7f57e",
+  storageBucket: "gms-warehouse-tracker-7f57e.firebasestorage.app",
+  messagingSenderId: "992250313291",
+  appId: "1:992250313291:web:ee3bceae76d4d53bc26bce"
+};
+
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+
+const user = JSON.parse(localStorage.getItem("gmsUser") || "null");
+if(!user){
+  window.location.href="login.html";
+}
+
+let chart;
+
+function today(){
+  return new Date().toISOString().slice(0,10);
+}
+
+document.getElementById("reportDate").value=today();
+document.getElementById("fromDate").value=today();
+document.getElementById("toDate").value=today();
+
+function toast(msg){
+  let t=document.getElementById("toast");
+  t.innerText=msg;
+  t.style.display="block";
+  setTimeout(()=>t.style.display="none",1600);
+}
+
+window.calculatePresent=function(){
+  let total=Number(document.getElementById("totalManpower").value)||0;
+  let leave=Number(document.getElementById("leaveQty").value)||0;
+  let absent=Number(document.getElementById("absentQty").value)||0;
+  let present=total-leave-absent;
+
+  if(present<0) present=0;
+
+  document.getElementById("presentQty").value=present;
+};
+
+window.saveReport=async function(){
+  calculatePresent();
+
+  let date=document.getElementById("reportDate").value;
+  let company=document.getElementById("company").value;
+  let mcd=document.getElementById("mcd").value;
+  let total=Number(document.getElementById("totalManpower").value)||0;
+  let leave=Number(document.getElementById("leaveQty").value)||0;
+  let absent=Number(document.getElementById("absentQty").value)||0;
+  let present=Number(document.getElementById("presentQty").value)||0;
+
+  await addDoc(collection(db,"billingManpowerReport"),{
+    date:date,
+    company:company,
+    mcd:mcd,
+    totalManpower:total,
+    leave:leave,
+    absent:absent,
+    present:present,
+    reportedBy:user.name || user.email || "User",
+    userId:user.id || "",
+    createdAt:new Date().toISOString()
+  });
+
+  toast("Manpower Report Saved ✅");
+
+  document.getElementById("totalManpower").value=0;
+  document.getElementById("leaveQty").value=0;
+  document.getElementById("absentQty").value=0;
+  document.getElementById("presentQty").value=0;
+
+  loadReport();
+};
+
+window.loadReport=async function(){
+  let date=document.getElementById("reportDate").value;
+  document.getElementById("fromDate").value=date;
+  document.getElementById("toDate").value=date;
+  loadRangeReport();
+};
+
+window.loadRangeReport=async function(){
+  let from=document.getElementById("fromDate").value;
+  let to=document.getElementById("toDate").value;
+
+  let snap=await getDocs(collection(db,"billingManpowerReport"));
+  let rows=[];
+
+  snap.forEach(d=>{
+    let x=d.data();
+    if(x.date>=from && x.date<=to){
+      rows.push({id:d.id,...x});
+    }
+  });
+
+  rows.sort((a,b)=>a.date.localeCompare(b.date));
+
+  renderTable(rows);
+};
+
+function renderTable(rows){
+  let html="";
+  let gtTotal=0,gtLeave=0,gtAbsent=0,gtPresent=0;
+
+  rows.forEach((r,i)=>{
+    gtTotal+=Number(r.totalManpower)||0;
+    gtLeave+=Number(r.leave)||0;
+    gtAbsent+=Number(r.absent)||0;
+    gtPresent+=Number(r.present)||0;
+
+    html+=`
+      <tr>
+        <td>${i+1}</td>
+        <td>${r.date||""}</td>
+        <td>${r.company||""}</td>
+        <td>${r.mcd||""}</td>
+        <td>${r.totalManpower||0}</td>
+        <td>${r.leave||0}</td>
+        <td>${r.absent||0}</td>
+        <td>${r.present||0}</td>
+        <td>${r.reportedBy||""}</td>
+        <td class="noPrint">
+          <button class="del" onclick="deleteRow('${r.id}')">Delete</button>
+        </td>
+      </tr>
+    `;
+  });
+
+  document.getElementById("tbody").innerHTML=html || `<tr><td colspan="10">No Data Found</td></tr>`;
+
+  document.getElementById("gtTotal").innerText=gtTotal;
+  document.getElementById("gtLeave").innerText=gtLeave;
+  document.getElementById("gtAbsent").innerText=gtAbsent;
+  document.getElementById("gtPresent").innerText=gtPresent;
+
+  document.getElementById("kpiTotal").innerText=gtTotal;
+  document.getElementById("kpiLeave").innerText=gtLeave;
+  document.getElementById("kpiAbsent").innerText=gtAbsent;
+  document.getElementById("kpiPresent").innerText=gtPresent;
+
+  renderChart(gtTotal,gtLeave,gtAbsent,gtPresent);
+}
+
+function renderChart(total,leave,absent,present){
+  if(chart) chart.destroy();
+
+  chart=new Chart(document.getElementById("manpowerChart"),{
+    type:"bar",
+    data:{
+      labels:["Total","Leave","Absent","Present"],
+      datasets:[{
+        label:"Manpower",
+        data:[total,leave,absent,present],
+        borderWidth:1,
+        borderRadius:10
+      }]
+    },
+    options:{
+      responsive:true,
+      plugins:{
+        legend:{display:false},
+        title:{
+          display:true,
+          text:"Billing Section Manpower Summary"
+        }
+      },
+      scales:{
+        y:{beginAtZero:true},
+        x:{grid:{display:false}}
+      }
+    }
+  });
+}
+
+window.deleteRow=async function(id){
+  if(confirm("Delete this report?")){
+    await deleteDoc(doc(db,"billingManpowerReport",id));
+    toast("Deleted ✅");
+    loadRangeReport();
+  }
+};
+
+window.exportExcel=function(){
+  let table=document.getElementById("reportTable").outerHTML;
+  let file=new Blob([table],{type:"application/vnd.ms-excel"});
+  let a=document.createElement("a");
+  a.href=URL.createObjectURL(file);
+  a.download="billing-manpower-report.xls";
+  a.click();
+};
+
+calculatePresent();
+loadReport();
+</script>
+
+</body>
+</html>
