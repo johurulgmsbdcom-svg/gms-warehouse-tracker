@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>All Needle Summary</title>
+<style>
+body{margin:0;background:#0f172a;color:white;font-family:Arial}
+.box{padding:18px}
+h2,h3{text-align:center;margin:4px}
+.top{text-align:center;margin:15px}
+select,input,button{padding:9px;margin:4px;border-radius:6px;border:0}
+button{background:#2563eb;color:white;font-weight:bold;cursor:pointer}
+.excelBtn{background:#16a34a}
+.pdfBtn{background:#7c3aed}
+.homeBtn{background:#2563eb}
+
+.reportPage{
+  background:white;
+  color:black;
+  width:210mm;
+  min-height:297mm;
+  margin:15px auto;
+  padding:10mm;
+  box-sizing:border-box;
+}
+
+table{width:100%;border-collapse:collapse;color:black;text-align:center;font-size:11px;margin-top:10px}
+th,td{border:1px solid #000;padding:4px}
+th{background:#e5e7eb}
+.total{background:#92d050;font-weight:bold}
+.grand{background:#ffff00;font-weight:bold;font-size:14px}
+
+@page{size:A4 portrait;margin:8mm}
+@media print{
+  body{background:white;color:black}
+  .top,button{display:none!important}
+  .box{padding:0}
+  .reportPage{width:auto;min-height:auto;margin:0;padding:0}
+  table{font-size:10px}
+}
+</style>
+</head>
+
+<body>
+<div class="box">
+
+<h2>GMS TEXTILES LTD</h2>
+<h3>All Needle Summary Report</h3>
+
+<div class="top">
+From:
+<input type="date" id="fromDate">
+
+To:
+<input type="date" id="toDate">
+
+<button onclick="loadReport()">Show Report</button>
+<button class="excelBtn" onclick="exportExcel()">Export Excel</button>
+<button class="pdfBtn" onclick="window.print()">PDF / Print</button>
+<button class="homeBtn" onclick="location.href='index.html'">Back Home</button>
+</div>
+
+<div id="reportArea"></div>
+
+</div>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-app.js";
+import { getFirestore, collection, getDocs } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-firestore.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyD-wBCF5eeWMHobLFOhBzKW7aB2pagz9-w",
+  authDomain: "gms-warehouse-tracker-7f57e.firebaseapp.com",
+  projectId: "gms-warehouse-tracker-7f57e",
+  storageBucket: "gms-warehouse-tracker-7f57e.firebasestorage.app",
+  messagingSenderId: "992250313291",
+  appId: "1:992250313291:web:ee3bceae76d4d53bc26bce"
+};
+
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+
+async function loadReport(){
+  let from=document.getElementById("fromDate").value;
+  let to=document.getElementById("toDate").value;
+
+  if(!from || !to){
+    alert("From date and To date select koro");
+    return;
+  }
+
+  let snap=await getDocs(collection(db,"dailyPosting"));
+
+  let floorItemMap={};
+
+  snap.forEach(docSnap=>{
+    let data=docSnap.data();
+
+    if(!data.date || !data.floor || !data.rows) return;
+    if(data.date < from || data.date > to) return;
+
+    data.rows.forEach(row=>{
+      let key=data.floor+"___"+(row.needleType||"")+"___"+(row.size||"");
+
+      if(!floorItemMap[key]){
+        floorItemMap[key]={
+          sl:row.sl || "",
+          needleType:row.needleType || "",
+          size:row.size || "",
+          firstDate:data.date,
+          previous:Number(row.previous)||0,
+          receive:0,
+          delivery:0
+        };
+      }
+
+      if(data.date < floorItemMap[key].firstDate){
+        floorItemMap[key].firstDate=data.date;
+        floorItemMap[key].previous=Number(row.previous)||0;
+      }
+
+      floorItemMap[key].receive += Number(row.receive)||0;
+      floorItemMap[key].delivery += Number(row.delivery)||0;
+    });
+  });
+
+  let itemMap={};
+
+  Object.values(floorItemMap).forEach(x=>{
+    let key=(x.needleType||"")+"___"+(x.size||"");
+
+    if(!itemMap[key]){
+      itemMap[key]={
+        needleType:x.needleType,
+        size:x.size,
+        previous:0,
+        receive:0,
+        delivery:0
+      };
+    }
+
+    itemMap[key].previous += x.previous;
+    itemMap[key].receive += x.receive;
+    itemMap[key].delivery += x.delivery;
+  });
+
+  let rows=Object.values(itemMap).sort((a,b)=>{
+    return (a.needleType+a.size).localeCompare(b.needleType+b.size);
+  });
+
+  let totalPrevious=0;
+  let totalReceive=0;
+  let totalDelivery=0;
+  let totalPresent=0;
+
+  let html=`
+  <div class="reportPage">
+    <h2>GMS TEXTILES LTD</h2>
+    <h3>Tansutrapur, Kaliakair, Gazipur.</h3>
+    <h3>All Floor Needle Summary Report</h3>
+    <h3>${from} to ${to}</h3>
+
+    <table>
+      <tr>
+        <th>SL</th>
+        <th>Needle Type</th>
+        <th>Size</th>
+        <th>Previous</th>
+        <th>Total Receive</th>
+        <th>Total Delivery</th>
+        <th>Present Stock</th>
+      </tr>
+  `;
+
+  if(rows.length===0){
+    html+=`<tr><td colspan="7">No Data Found</td></tr>`;
+  }else{
+    rows.forEach((r,i)=>{
+      let present=r.previous+r.receive-r.delivery;
+
+      totalPrevious+=r.previous;
+      totalReceive+=r.receive;
+      totalDelivery+=r.delivery;
+      totalPresent+=present;
+
+      html+=`
+      <tr>
+        <td>${i+1}</td>
+        <td>${r.needleType}</td>
+        <td>${r.size}</td>
+        <td>${r.previous}</td>
+        <td>${r.receive}</td>
+        <td>${r.delivery}</td>
+        <td>${present}</td>
+      </tr>`;
+    });
+  }
+
+  html+=`
+      <tr class="total">
+        <td colspan="3">TOTAL</td>
+        <td>${totalPrevious}</td>
+        <td>${totalReceive}</td>
+        <td>${totalDelivery}</td>
+        <td>${totalPresent}</td>
+      </tr>
+    </table>
+
+    <table>
+      <tr class="grand">
+        <td>ALL FLOOR TOTAL PRESENT STOCK</td>
+        <td>${totalPresent}</td>
+      </tr>
+    </table>
+  </div>`;
+
+  document.getElementById("reportArea").innerHTML=html;
+}
+
+function exportExcel(){
+  let html=document.getElementById("reportArea").innerHTML;
+  let file=new Blob([html],{type:"application/vnd.ms-excel"});
+  let a=document.createElement("a");
+  a.href=URL.createObjectURL(file);
+  a.download="all-needle-summary-report.xls";
+  a.click();
+}
+
+window.loadReport=loadReport;
+window.exportExcel=exportExcel;
+</script>
+
+</body>
+</html>
