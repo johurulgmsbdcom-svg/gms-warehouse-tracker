@@ -1,186 +1,79 @@
-<!DOCTYPE html>
-<html>
-<head>
-<title>GMS Login</title>
+<script type="module">
 
-<style>
-:root{
-  --bg:#07111f;
-  --card:#101b2d;
-  --card2:#14233a;
-  --text:#ffffff;
-  --muted:#9fb0c7;
-  --border:#263855;
-  --blue:#2563eb;
-  --green:#22c55e;
-}
+import { initializeApp } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-app.js";
 
-body{
-  margin:0;
-  background:linear-gradient(135deg,#07111f,#0f172a);
-  font-family:Segoe UI,Arial,sans-serif;
-  display:flex;
-  justify-content:center;
-  align-items:center;
-  height:100vh;
-  color:white;
-}
+import {
+  getFirestore,
+  collection,
+  getDocs
+} from "https://www.gstatic.com/firebasejs/12.12.1/firebase-firestore.js";
 
-.loginBox{
-  width:360px;
-  background:linear-gradient(135deg,var(--card),var(--card2));
-  border:1px solid var(--border);
-  border-radius:22px;
-  padding:30px;
-  box-shadow:0 15px 35px rgba(0,0,0,.35);
-}
+const firebaseConfig = {
+  apiKey: "AIzaSyD-wBCF5eeWMHobLFOhBzKW7aB2pagz9-w",
+  authDomain: "gms-warehouse-tracker-7f57e.firebaseapp.com",
+  projectId: "gms-warehouse-tracker-7f57e",
+  storageBucket: "gms-warehouse-tracker-7f57e.firebasestorage.app",
+  messagingSenderId: "992250313291",
+  appId: "1:992250313291:web:ee3bceae76d4d53bc26bce"
+};
 
-.logoArea{
-  text-align:center;
-  margin-bottom:20px;
-}
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
 
-.logoArea img{
-  width:90px;
-  height:90px;
-  object-fit:contain;
-  margin-bottom:10px;
-}
+window.login = async function(){
 
-.logoTitle{
-  font-size:24px;
-  font-weight:900;
-}
+  let email=document.getElementById("email").value.trim();
+  let password=document.getElementById("password").value.trim();
 
-.sub{
-  color:var(--muted);
-  font-size:12px;
-  margin-top:4px;
-}
+  const snap = await getDocs(collection(db,"users"));
 
-.inputBox{
-  margin-top:15px;
-}
+  let found=false;
 
-.inputBox label{
-  display:block;
-  margin-bottom:6px;
-  color:#cbd5e1;
-  font-size:13px;
-  font-weight:800;
-}
+  snap.forEach(doc=>{
 
-.inputBox input{
-  width:100%;
-  padding:13px;
-  border-radius:12px;
-  border:1px solid var(--border);
-  background:#0b1220;
-  color:white;
-  font-size:15px;
-  box-sizing:border-box;
-}
+    let u=doc.data();
 
-.loginBtn{
-  width:100%;
-  margin-top:22px;
-  padding:14px;
-  border:none;
-  border-radius:14px;
-  background:linear-gradient(135deg,#2563eb,#22c55e);
-  color:white;
-  font-size:16px;
-  font-weight:900;
-  cursor:pointer;
-}
+    if(u.email===email && u.password===password){
 
-.loginBtn:hover{
-  opacity:.92;
-}
+      found=true;
 
-.demo{
-  margin-top:18px;
-  background:rgba(255,255,255,.05);
-  border:1px solid rgba(255,255,255,.08);
-  border-radius:12px;
-  padding:12px;
-  font-size:12px;
-  color:#cbd5e1;
-  line-height:1.6;
-}
+      localStorage.setItem("gmsUser",JSON.stringify(u));
 
-.footer{
-  text-align:center;
-  margin-top:18px;
-  font-size:11px;
-  color:#94a3b8;
-}
-</style>
-</head>
+      alert("Login Success ✅");
 
-<body>
+      // ADMIN
+      if(u.role==="admin"){
 
-<div class="loginBox">
+        window.location.href="admin.html";
 
-  <div class="logoArea">
-    <img src="logo.png" onerror="this.style.display='none'">
+      }
 
-    <div class="logoTitle">
-      GMS MCD SYSTEM
-    </div>
+      // FULL ACCESS USER
+      else if(u.role==="full"){
 
-    <div class="sub">
-      Secure Login Portal
-    </div>
-  </div>
+        window.location.href="index.html";
 
-  <div class="inputBox">
-    <label>Email</label>
-    <input type="email" id="email" placeholder="Enter email">
-  </div>
+      }
 
-  <div class="inputBox">
-    <label>Password</label>
-    <input type="password" id="password" placeholder="Enter password">
-  </div>
+      // NORMAL USER
+      else{
 
-  <button class="loginBtn" onclick="login()">
-    🔐 LOGIN
-  </button>
+        localStorage.setItem("userMCD",u.mcd);
 
-  <div class="demo">
-    👑 Admin Example<br>
-    Email: admin@gms.com<br>
-    Password: 123456
-  </div>
+        window.location.href="index.html";
 
-  <div class="footer">
-    Powered by JOHURUL
-  </div>
+      }
 
-</div>
+    }
 
-<script>
-function login(){
+  });
 
-  let email=document.getElementById("email").value;
-  let password=document.getElementById("password").value;
+  if(!found){
 
-  if(email==="admin@gms.com" && password==="123456"){
-    
-    localStorage.setItem("gmsUser","admin");
-
-    alert("Admin Login Success");
-
-    window.location.href="index.html";
-
-  }else{
-
-    alert("Wrong Email or Password");
+    alert("Wrong Email or Password ❌");
 
   }
-}
-</script>
 
-</body>
-</html>
+}
+
+</script>
