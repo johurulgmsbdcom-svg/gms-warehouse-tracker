@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Grey Fabric Monthly Report</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<style>
+body{margin:0;background:#07111f;color:white;font-family:Arial,sans-serif}
+.header{text-align:center;padding:14px}
+.header h2,.header h3,.header h4{margin:2px}
+.controls{text-align:center;margin:10px}
+input{padding:8px;border-radius:6px;border:1px solid #999}
+button{padding:10px 18px;border:0;border-radius:8px;color:white;font-weight:bold;cursor:pointer;margin:4px}
+.show{background:#2563eb}.excel{background:#059669}.print{background:#7c3aed}.home{background:#0f766e}
+table{width:98%;margin:10px auto;border-collapse:collapse;background:white;color:black;font-size:12px}
+th,td{border:1px solid #000;padding:5px;text-align:center}
+th{background:#e2f0d9}
+.totalRow{background:#d9ead3;font-weight:bold}
+.grandRow{background:#ddd;font-weight:bold;font-size:15px}
+.chartBox{width:98%;margin:10px auto;background:white;padding:10px}
+@page{size:A4 landscape;margin:8mm}
+@media print{
+  body{background:white;color:black}
+  .controls{display:none!important}
+  table{font-size:10px;width:100%}
+  .chartBox{width:100%}
+}
+</style>
+</head>
+
+<body>
+
+<div class="header">
+  <h2>GMS Textiles Ltd</h2>
+  <h4>Tansutrapur, Kaliakair, Gazipur</h4>
+  <h4>Grey Fabric MCD</h4>
+  <h3>Grey Fabric Date Range / Monthly Report</h3>
+</div>
+
+<div class="controls">
+  From:
+  <input type="date" id="fromDate">
+  To:
+  <input type="date" id="toDate">
+
+  <button class="show" onclick="loadReport()">🔍 Show Report</button>
+  <button class="excel" onclick="exportExcel()">📊 Excel</button>
+  <button class="print" onclick="window.print()">🖨 PDF / Print</button>
+  <button class="home" onclick="location.href='index.html'">🏠 Home</button>
+</div>
+
+<table id="reportTable">
+  <thead>
+    <tr>
+      <th>SL</th>
+      <th>Date</th>
+      <th>Year</th>
+      <th>Fabric Type</th>
+      <th>Previous Qty</th>
+      <th>Opening Balance</th>
+      <th>Delivery Qty</th>
+      <th>Total Delivery</th>
+      <th>Closing Balance</th>
+    </tr>
+  </thead>
+  <tbody id="tbody"></tbody>
+  <tfoot>
+    <tr class="grandRow">
+      <td colspan="4">Grand Total</td>
+      <td id="gtPrev">0.00</td>
+      <td id="gtOpen">0.00</td>
+      <td id="gtDelivery">0.00</td>
+      <td id="gtTotalDelivery">0.00</td>
+      <td id="gtClosing">0.00</td>
+    </tr>
+  </tfoot>
+</table>
+
+<div class="chartBox">
+  <canvas id="monthlyChart" height="90"></canvas>
+</div>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-app.js";
+import { getFirestore, collection, getDocs } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-firestore.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyD-wBCF5eeWMHobLFOhBzKW7aB2pagz9-w",
+  authDomain: "gms-warehouse-tracker-7f57e.firebaseapp.com",
+  projectId: "gms-warehouse-tracker-7f57e",
+  storageBucket: "gms-warehouse-tracker-7f57e.firebasestorage.app",
+  messagingSenderId: "992250313291",
+  appId: "1:992250313291:web:ee3bceae76d4d53bc26bce"
+};
+
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+
+let chart;
+
+function today(){
+  return new Date().toISOString().slice(0,10);
+}
+
+function monthStart(){
+  let d=new Date();
+  return d.toISOString().slice(0,7)+"-01";
+}
+
+document.getElementById("fromDate").value=monthStart();
+document.getElementById("toDate").value=today();
+
+function format(n){
+  return Number(n||0).toLocaleString("en-US",{
+    minimumFractionDigits:2,
+    maximumFractionDigits:2
+  });
+}
+
+async function loadReport(){
+  let from=document.getElementById("fromDate").value;
+  let to=document.getElementById("toDate").value;
+
+  let snap=await getDocs(collection(db,"greyFabricStock"));
+  let rows=[];
+
+  snap.forEach(d=>{
+    let x=d.data();
+    if(x.date>=from && x.date<=to){
+      (x.rows||[]).forEach(r=>{
+        rows.push({
+          date:x.date,
+          year:r.year||"",
+          fabric:r.fabric||"",
+          previous:Number(r.previous)||0,
+          opening:Number(r.opening)||0,
+          delivery:Number(r.delivery)||0,
+          totalDelivery:Number(r.totalDelivery)||0,
+          closing:Number(r.closing)||0
+        });
+      });
+    }
+  });
+
+  rows.sort((a,b)=>a.date.localeCompare(b.date));
+
+  let html="";
+  let gtPrev=0,gtOpen=0,gtDelivery=0,gtTotalDelivery=0,gtClosing=0;
+
+  rows.forEach((r,i)=>{
+    gtPrev+=r.previous;
+    gtOpen+=r.opening;
+    gtDelivery+=r.delivery;
+    gtTotalDelivery+=r.totalDelivery;
+    gtClosing+=r.closing;
+
+    html+=`
+      <tr>
+        <td>${i+1}</td>
+        <td>${r.date}</td>
+        <td>${r.year}</td>
+        <td>${r.fabric}</td>
+        <td>${format(r.previous)}</td>
+        <td>${format(r.opening)}</td>
+        <td>${format(r.delivery)}</td>
+        <td>${format(r.totalDelivery)}</td>
+        <td>${format(r.closing)}</td>
+      </tr>
+    `;
+  });
+
+  document.getElementById("tbody").innerHTML =
+    html || `<tr><td colspan="9">No data found</td></tr>`;
+
+  document.getElementById("gtPrev").innerText=format(gtPrev);
+  document.getElementById("gtOpen").innerText=format(gtOpen);
+  document.getElementById("gtDelivery").innerText=format(gtDelivery);
+  document.getElementById("gtTotalDelivery").innerText=format(gtTotalDelivery);
+  document.getElementById("gtClosing").innerText=format(gtClosing);
+
+  renderChart(rows);
+}
+
+function renderChart(rows){
+  let map={};
+
+  rows.forEach(r=>{
+    if(!map[r.date]){
+      map[r.date]=0;
+    }
+    map[r.date]+=r.closing;
+  });
+
+  let labels=Object.keys(map);
+  let data=Object.values(map);
+
+  if(chart) chart.destroy();
+
+  chart=new Chart(document.getElementById("monthlyChart"),{
+    type:"bar",
+    data:{
+      labels:labels,
+      datasets:[{
+        label:"Date Wise Closing Balance",
+        data:data,
+        borderWidth:1
+      }]
+    },
+    options:{
+      responsive:true,
+      plugins:{
+        title:{
+          display:true,
+          text:"Grey Fabric Closing Balance Chart"
+        }
+      },
+      scales:{
+        y:{beginAtZero:true},
+        x:{ticks:{font:{size:10}}}
+      }
+    }
+  });
+}
+
+window.exportExcel=function(){
+  let table=document.getElementById("reportTable").outerHTML;
+  let file=new Blob([table],{type:"application/vnd.ms-excel"});
+  let a=document.createElement("a");
+  a.href=URL.createObjectURL(file);
+  a.download="grey-fabric-date-range-report.xls";
+  a.click();
+};
+
+window.loadReport=loadReport;
+loadReport();
+</script>
+
+</body>
+</html>
