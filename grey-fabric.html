@@ -1,0 +1,493 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Grey Fabric Stock Report</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<style>
+body{
+  margin:0;
+  background:#07111f;
+  color:white;
+  font-family:Arial,sans-serif;
+}
+.header{
+  text-align:center;
+  padding:14px;
+}
+.header h2,.header h3,.header h4{
+  margin:2px;
+}
+.controls{
+  text-align:center;
+  margin:10px;
+}
+button{
+  padding:10px 18px;
+  border:0;
+  border-radius:8px;
+  color:white;
+  font-weight:bold;
+  cursor:pointer;
+  margin:4px;
+}
+.save{background:#16a34a}
+.del{background:#dc2626}
+.excel{background:#059669}
+.print{background:#7c3aed}
+.home{background:#2563eb}
+.add{background:#f59e0b}
+input,select{
+  padding:7px;
+  border-radius:5px;
+  border:1px solid #999;
+}
+table{
+  width:98%;
+  margin:10px auto;
+  border-collapse:collapse;
+  background:white;
+  color:black;
+  font-size:13px;
+}
+th,td{
+  border:1px solid #000;
+  padding:5px;
+  text-align:center;
+}
+th{
+  background:#e2f0d9;
+}
+.totalRow{
+  background:#d9ead3;
+  font-weight:bold;
+}
+.grandRow{
+  background:#ddd;
+  font-weight:bold;
+  font-size:16px;
+}
+.num{
+  width:90px;
+}
+.fabricInput{
+  width:170px;
+}
+.chartBox{
+  width:98%;
+  margin:10px auto;
+  background:white;
+  padding:10px;
+}
+.toast{
+  position:fixed;
+  right:20px;
+  bottom:20px;
+  background:#22c55e;
+  color:white;
+  padding:12px 20px;
+  border-radius:10px;
+  font-weight:bold;
+  display:none;
+}
+@page{
+  size:A4 landscape;
+  margin:8mm;
+}
+@media print{
+  body{
+    background:white;
+    color:black;
+  }
+  .controls,.noPrint{
+    display:none!important;
+  }
+  table{
+    font-size:11px;
+    width:100%;
+  }
+  .chartBox{
+    width:100%;
+  }
+}
+</style>
+</head>
+
+<body>
+
+<div class="header">
+  <h2>GMS Textiles Ltd</h2>
+  <h4>Tansutrapur, Kaliakair, Gazipur</h4>
+  <h4>Grey Fabric MCD</h4>
+  <h3>Grey Fabric Stock Report</h3>
+</div>
+
+<div class="controls">
+  Date:
+  <input type="date" id="reportDate">
+
+  <button class="save" onclick="saveData()">💾 Save Data</button>
+  <button class="del" onclick="deleteData()">🗑 Delete Date Data</button>
+  <button class="add" onclick="addRow()">➕ Add Row</button>
+  <button class="excel" onclick="exportExcel()">📊 Export Excel</button>
+  <button class="print" onclick="window.print()">🖨 PDF / Print</button>
+  <button class="home" onclick="location.href='index.html'">🏠 Back Home</button>
+</div>
+
+<table id="reportTable">
+  <thead>
+    <tr>
+      <th>Year</th>
+      <th>Fabric Type</th>
+      <th>Previous Qty</th>
+      <th>Opening Balance (Kgs)</th>
+      <th>Last Delivery Date</th>
+      <th>Delivery Qty (Kgs)</th>
+      <th>Total Delivery (Kgs)</th>
+      <th>Closing Balance (Kgs)</th>
+      <th class="noPrint">Action</th>
+    </tr>
+  </thead>
+
+  <tbody id="tbody"></tbody>
+
+  <tfoot>
+    <tr class="grandRow">
+      <td colspan="2">Grand Total</td>
+      <td id="gtPrev">0.00</td>
+      <td id="gtOpen">0.00</td>
+      <td>0.00</td>
+      <td id="gtDelivery">0.00</td>
+      <td id="gtTotalDelivery">0.00</td>
+      <td id="gtClosing">0.00</td>
+      <td class="noPrint"></td>
+    </tr>
+  </tfoot>
+</table>
+
+<div class="chartBox">
+  <canvas id="stockChart" height="90"></canvas>
+</div>
+
+<div id="toast" class="toast">Saved ✅</div>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-app.js";
+import {
+  getFirestore,
+  collection,
+  addDoc,
+  getDocs,
+  deleteDoc,
+  doc,
+  query,
+  where
+} from "https://www.gstatic.com/firebasejs/12.12.1/firebase-firestore.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyD-wBCF5eeWMHobLFOhBzKW7aB2pagz9-w",
+  authDomain: "gms-warehouse-tracker-7f57e.firebaseapp.com",
+  projectId: "gms-warehouse-tracker-7f57e",
+  storageBucket: "gms-warehouse-tracker-7f57e.firebasestorage.app",
+  messagingSenderId: "992250313291",
+  appId: "1:992250313291:web:ee3bceae76d4d53bc26bce"
+};
+
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+
+let chart;
+
+let defaultRows = [
+  {year:"2018", fabric:"Leftover Grey Fabric", previous:427},
+  {year:"2019", fabric:"Leftover Grey Fabric", previous:1069},
+  {year:"2020", fabric:"Leftover Grey Fabric", previous:8282},
+  {year:"2021", fabric:"Leftover Grey Fabric", previous:48954},
+  {year:"2022", fabric:"Leftover Grey Fabric", previous:30823},
+  {year:"2023", fabric:"Leftover Grey Fabric", previous:82351},
+  {year:"2024", fabric:"Leftover Grey Fabric", previous:65449},
+  {year:"2025", fabric:"Leftover Grey Fabric", previous:1677},
+  {year:"Without Sticker", fabric:"All Sticker Missing", previous:39312},
+  {year:"Textile-25", fabric:"Textiles Running Fabric-25/26", previous:0},
+  {year:"Composite-25", fabric:"Composite Fab.(Tex Knit)-25/26", previous:0},
+  {year:"For Dyeing-25", fabric:"Composite Fab.(For Dyeing)-25/26", previous:0}
+];
+
+let rows = [];
+
+function today(){
+  return new Date().toISOString().slice(0,10);
+}
+
+document.getElementById("reportDate").value = today();
+
+function format(n){
+  return Number(n || 0).toLocaleString("en-US",{
+    minimumFractionDigits:2,
+    maximumFractionDigits:2
+  });
+}
+
+function toast(msg){
+  let t=document.getElementById("toast");
+  t.innerText=msg;
+  t.style.display="block";
+  setTimeout(()=>t.style.display="none",1600);
+}
+
+function renderRows(){
+  let html="";
+
+  rows.forEach((r,i)=>{
+    let opening = Number(r.opening || r.previous || 0);
+    let delivery = Number(r.delivery || 0);
+    let totalDelivery = Number(r.totalDelivery || delivery || 0);
+    let closing = opening - delivery;
+
+    r.opening = opening;
+    r.totalDelivery = totalDelivery;
+    r.closing = closing;
+
+    html+=`
+      <tr>
+        <td><input value="${r.year}" onchange="rows[${i}].year=this.value;calculate()" style="width:80px"></td>
+
+        <td>
+          <input class="fabricInput" value="${r.fabric}"
+          onchange="rows[${i}].fabric=this.value;calculate()">
+        </td>
+
+        <td>${format(r.previous)}</td>
+
+        <td>
+          <input class="num" type="number" value="${opening}"
+          onchange="rows[${i}].opening=Number(this.value);calculate()">
+        </td>
+
+        <td>
+          <input type="date" value="${r.lastDate || ""}"
+          onchange="rows[${i}].lastDate=this.value;calculate()">
+        </td>
+
+        <td>
+          <input class="num" type="number" value="${delivery}"
+          onchange="rows[${i}].delivery=Number(this.value);calculate()">
+        </td>
+
+        <td>${format(totalDelivery)}</td>
+
+        <td><b>${format(closing)}</b></td>
+
+        <td class="noPrint">
+          <button class="del" onclick="removeRow(${i})">Delete</button>
+        </td>
+      </tr>
+    `;
+  });
+
+  document.getElementById("tbody").innerHTML=html;
+  calculate();
+}
+
+window.addRow=function(){
+  rows.push({
+    year:"",
+    fabric:"New Fabric",
+    previous:0,
+    opening:0,
+    lastDate:"",
+    delivery:0,
+    totalDelivery:0,
+    closing:0
+  });
+  renderRows();
+};
+
+window.removeRow=function(i){
+  if(confirm("Delete this row?")){
+    rows.splice(i,1);
+    renderRows();
+  }
+};
+
+function calculate(){
+  let gtPrev=0, gtOpen=0, gtDelivery=0, gtTotalDelivery=0, gtClosing=0;
+
+  rows.forEach(r=>{
+    let previous=Number(r.previous || 0);
+    let opening=Number(r.opening || previous || 0);
+    let delivery=Number(r.delivery || 0);
+    let totalDelivery=Number(r.totalDelivery || delivery || 0);
+    let closing=opening-delivery;
+
+    r.opening=opening;
+    r.closing=closing;
+    r.totalDelivery=totalDelivery;
+
+    gtPrev+=previous;
+    gtOpen+=opening;
+    gtDelivery+=delivery;
+    gtTotalDelivery+=totalDelivery;
+    gtClosing+=closing;
+  });
+
+  document.getElementById("gtPrev").innerText=format(gtPrev);
+  document.getElementById("gtOpen").innerText=format(gtOpen);
+  document.getElementById("gtDelivery").innerText=format(gtDelivery);
+  document.getElementById("gtTotalDelivery").innerText=format(gtTotalDelivery);
+  document.getElementById("gtClosing").innerText=format(gtClosing);
+
+  renderChart();
+}
+
+function renderChart(){
+  let labels=rows.map(r=>r.year || r.fabric);
+  let data=rows.map(r=>Number(r.closing || 0));
+
+  if(chart) chart.destroy();
+
+  chart = new Chart(document.getElementById("stockChart"),{
+    type:"bar",
+    data:{
+      labels:labels,
+      datasets:[{
+        label:"Closing Balance (Kgs)",
+        data:data,
+        borderWidth:1
+      }]
+    },
+    options:{
+      responsive:true,
+      plugins:{
+        legend:{display:false},
+        title:{
+          display:true,
+          text:"Closing Balance (Kgs)"
+        }
+      },
+      scales:{
+        y:{beginAtZero:true},
+        x:{ticks:{font:{size:10}}}
+      }
+    }
+  });
+}
+
+async function getPreviousDayData(date){
+  let snap = await getDocs(collection(db,"greyFabricStock"));
+  let all=[];
+
+  snap.forEach(d=>{
+    let x=d.data();
+    if(x.date < date){
+      all.push(x);
+    }
+  });
+
+  all.sort((a,b)=>b.date.localeCompare(a.date));
+
+  return all.length ? all[0] : null;
+}
+
+async function loadData(){
+  let date=document.getElementById("reportDate").value;
+
+  let q=query(
+    collection(db,"greyFabricStock"),
+    where("date","==",date)
+  );
+
+  let snap=await getDocs(q);
+
+  if(!snap.empty){
+    let data=snap.docs[0].data();
+    rows=data.rows || [];
+    renderRows();
+    return;
+  }
+
+  let prev=await getPreviousDayData(date);
+
+  if(prev && prev.rows){
+    rows=prev.rows.map(r=>({
+      year:r.year,
+      fabric:r.fabric,
+      previous:Number(r.closing || 0),
+      opening:Number(r.closing || 0),
+      lastDate:"",
+      delivery:0,
+      totalDelivery:Number(r.totalDelivery || 0),
+      closing:Number(r.closing || 0)
+    }));
+  }else{
+    rows=defaultRows.map(r=>({
+      year:r.year,
+      fabric:r.fabric,
+      previous:r.previous,
+      opening:r.previous,
+      lastDate:"",
+      delivery:0,
+      totalDelivery:0,
+      closing:r.previous
+    }));
+  }
+
+  renderRows();
+}
+
+window.saveData=async function(){
+  let date=document.getElementById("reportDate").value;
+
+  await deleteDateOnly(date);
+
+  await addDoc(collection(db,"greyFabricStock"),{
+    date:date,
+    rows:rows,
+    savedAt:new Date().toISOString()
+  });
+
+  toast("Saved ✅");
+};
+
+async function deleteDateOnly(date){
+  let q=query(
+    collection(db,"greyFabricStock"),
+    where("date","==",date)
+  );
+
+  let snap=await getDocs(q);
+
+  for(let d of snap.docs){
+    await deleteDoc(doc(db,"greyFabricStock",d.id));
+  }
+}
+
+window.deleteData=async function(){
+  let date=document.getElementById("reportDate").value;
+
+  if(confirm("Delete this date data?")){
+    await deleteDateOnly(date);
+    toast("Deleted ✅");
+    loadData();
+  }
+};
+
+window.exportExcel=function(){
+  let table=document.getElementById("reportTable").outerHTML;
+  let file=new Blob([table],{
+    type:"application/vnd.ms-excel"
+  });
+
+  let a=document.createElement("a");
+  a.href=URL.createObjectURL(file);
+  a.download="grey-fabric-stock-report.xls";
+  a.click();
+};
+
+document.getElementById("reportDate").addEventListener("change",loadData);
+
+loadData();
+</script>
+
+</body>
+</html>
