@@ -1,232 +1,307 @@
 <!DOCTYPE html>
 <html>
 <head>
-<title>All Needle Summary</title>
+<title>All Needle BNR / BNF Report</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+
 <style>
-body{margin:0;background:#0f172a;color:white;font-family:Arial}
-.box{padding:18px}
-h2,h3{text-align:center;margin:4px}
-.top{text-align:center;margin:15px}
-select,input,button{padding:9px;margin:4px;border-radius:6px;border:0}
-button{background:#2563eb;color:white;font-weight:bold;cursor:pointer}
-.excelBtn{background:#16a34a}
-.pdfBtn{background:#7c3aed}
-.homeBtn{background:#2563eb}
-
-.reportPage{
-  background:white;
-  color:black;
-  width:210mm;
-  min-height:297mm;
-  margin:15px auto;
-  padding:10mm;
-  box-sizing:border-box;
-}
-
-table{width:100%;border-collapse:collapse;color:black;text-align:center;font-size:11px;margin-top:10px}
-th,td{border:1px solid #000;padding:4px}
-th{background:#e5e7eb}
-.total{background:#92d050;font-weight:bold}
-.grand{background:#ffff00;font-weight:bold;font-size:14px}
-
-@page{size:A4 portrait;margin:8mm}
+body{margin:0;background:#07111f;color:white;font-family:Arial,sans-serif}
+.header{text-align:center;padding:12px}
+.header h2,.header h3,.header h4{margin:3px}
+.controls{text-align:center;margin:10px}
+button{padding:10px 14px;border:0;border-radius:8px;color:white;font-weight:bold;margin:4px;cursor:pointer}
+.show{background:#2563eb}.excel{background:#059669}.print{background:#7c3aed}.home{background:#0f766e}.del{background:#dc2626}
+input,select{font-size:16px;padding:7px;border-radius:6px;border:1px solid #999}
+.kpi{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin:10px}
+.kpiBox{background:#101b2d;border:1px solid #263855;border-radius:14px;padding:12px;text-align:center}
+.kpiBox span{font-size:12px;color:#9fb0c7;font-weight:bold}
+.kpiBox b{display:block;color:#22c55e;font-size:24px;margin-top:5px}
+.tableWrap{overflow-x:auto;width:100%}
+table{min-width:1250px;width:98%;margin:10px auto;border-collapse:collapse;background:white;color:black;font-size:12px}
+th,td{border:1px solid #000;padding:6px;text-align:center}
+th{background:#9fc5e8;font-weight:bold}
+.totalRow{background:#d9ead3;font-weight:bold}
+.chartBox{width:96%;margin:10px auto;background:white;color:black;border-radius:10px;padding:10px}
+@page{size:A4 landscape;margin:6mm}
 @media print{
   body{background:white;color:black}
-  .top,button{display:none!important}
-  .box{padding:0}
-  .reportPage{width:auto;min-height:auto;margin:0;padding:0}
-  table{font-size:10px}
+  .controls,.kpi,.noPrint{display:none!important}
+  table{width:100%;min-width:0;font-size:9px}
+  th,td{padding:3px}
+  .chartBox{width:100%;margin:4px 0}
 }
+@media(max-width:700px){.kpi{grid-template-columns:1fr 1fr}}
 </style>
 </head>
 
 <body>
-<div class="box">
 
-<h2>GMS TEXTILES LTD</h2>
-<h3>All Needle Summary Report</h3>
-
-<div class="top">
-From:
-<input type="date" id="fromDate">
-
-To:
-<input type="date" id="toDate">
-
-<button onclick="loadReport()">Show Report</button>
-<button class="excelBtn" onclick="exportExcel()">Export Excel</button>
-<button class="pdfBtn" onclick="window.print()">PDF / Print</button>
-<button class="homeBtn" onclick="location.href='index.html'">Back Home</button>
+<div class="header">
+  <h2>GMS Textiles Ltd</h2>
+  <h4>Needle MCD</h4>
+  <h3>All Needle BNR / BNF Report</h3>
 </div>
 
-<div id="reportArea"></div>
+<div class="controls noPrint">
+  From: <input type="date" id="fromDate">
+  To: <input type="date" id="toDate">
 
+  Floor:
+  <select id="floorFilter">
+    <option value="">All Floor</option>
+    <option>SHAPLA</option>
+    <option>PODDO</option>
+    <option>SAMPLE</option>
+    <option>KADOM</option>
+    <option>BELLY</option>
+    <option>Embroidery</option>
+  </select>
+
+  Type:
+  <select id="typeFilter">
+    <option value="">All</option>
+    <option value="BNR">BNR</option>
+    <option value="BNF">BNF</option>
+  </select>
+
+  <button class="show" onclick="loadReport()">🔍 Show</button>
+  <button class="excel" onclick="exportExcel()">📊 Excel</button>
+  <button class="print" onclick="window.print()">🖨 PDF / Print</button>
+  <button class="home" onclick="location.href='needle.html'">🪡 Entry</button>
+  <button class="home" onclick="location.href='index.html'">🏠 Home</button>
+</div>
+
+<div class="kpi">
+  <div class="kpiBox"><span>📌 Total BNR</span><b id="kpiBNR">0</b></div>
+  <div class="kpiBox"><span>📌 Total BNF</span><b id="kpiBNF">0</b></div>
+  <div class="kpiBox"><span>📦 Total Qty</span><b id="kpiQty">0</b></div>
+  <div class="kpiBox"><span>📅 Total Report</span><b id="kpiReport">0</b></div>
+</div>
+
+<div class="tableWrap">
+<table id="reportTable">
+<thead>
+<tr>
+  <th>Date</th>
+  <th>Floor</th>
+  <th>Type</th>
+  <th>Needle Size / Item</th>
+  <th>Buyer</th>
+  <th>Style</th>
+  <th>Line</th>
+  <th>Machine</th>
+  <th>Qty</th>
+  <th>Reason / Remarks</th>
+  <th>Reported By</th>
+</tr>
+</thead>
+<tbody id="tbody"></tbody>
+<tfoot>
+<tr class="totalRow">
+  <td colspan="8">Grand Total</td>
+  <td id="gtQty">0</td>
+  <td colspan="2"></td>
+</tr>
+</tfoot>
+</table>
+</div>
+
+<div class="chartBox">
+  <canvas id="bnChart" height="90"></canvas>
 </div>
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-app.js";
 import { getFirestore, collection, getDocs } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-firestore.js";
 
-const firebaseConfig = {
-  apiKey: "AIzaSyD-wBCF5eeWMHobLFOhBzKW7aB2pagz9-w",
-  authDomain: "gms-warehouse-tracker-7f57e.firebaseapp.com",
-  projectId: "gms-warehouse-tracker-7f57e",
-  storageBucket: "gms-warehouse-tracker-7f57e.firebasestorage.app",
-  messagingSenderId: "992250313291",
-  appId: "1:992250313291:web:ee3bceae76d4d53bc26bce"
+const firebaseConfig={
+  apiKey:"AIzaSyD-wBCF5eeWMHobLFOhBzKW7aB2pagz9-w",
+  authDomain:"gms-warehouse-tracker-7f57e.firebaseapp.com",
+  projectId:"gms-warehouse-tracker-7f57e",
+  storageBucket:"gms-warehouse-tracker-7f57e.firebasestorage.app",
+  messagingSenderId:"992250313291",
+  appId:"1:992250313291:web:ee3bceae76d4d53bc26bce"
 };
 
-const app = initializeApp(firebaseConfig);
-const db = getFirestore(app);
+const app=initializeApp(firebaseConfig);
+const db=getFirestore(app);
+
+let chart;
+
+function today(){return new Date().toISOString().slice(0,10)}
+document.getElementById("fromDate").value=today();
+document.getElementById("toDate").value=today();
+
+function n(v){return Number(v)||0}
+
+function pick(obj,keys){
+  for(let k of keys){
+    if(obj && obj[k]!==undefined && obj[k]!==null && obj[k]!=="") return obj[k];
+  }
+  return "";
+}
+
+function normalizeRows(docData){
+  let rows=[];
+
+  let date=pick(docData,["date","postingDate","reportDate"]);
+  let floor=pick(docData,["floor","floorName"]);
+  let reportedBy=pick(docData,["reportedBy","userName","name"]);
+
+  let sourceRows=docData.rows || docData.items || docData.bnrRows || docData.needleRows || [];
+
+  if(Array.isArray(sourceRows) && sourceRows.length){
+    sourceRows.forEach(r=>{
+      let type=String(pick(r,["type","reportType","bnType","status"])).toUpperCase();
+
+      let bnr=n(pick(r,["bnr","BNR","broken","brokenQty"]));
+      let bnf=n(pick(r,["bnf","BNF","found","bnfQty"]));
+
+      if(type==="BNR" || bnr>0){
+        rows.push({
+          date,
+          floor:pick(r,["floor","floorName"])||floor,
+          type:"BNR",
+          item:pick(r,["needleSize","item","itemName","description"]),
+          buyer:pick(r,["buyer","buyerName"]),
+          style:pick(r,["style","styleName"]),
+          line:pick(r,["line","lineNo"]),
+          machine:pick(r,["machine","machineNo"]),
+          qty:bnr || n(pick(r,["qty","quantity"])),
+          remarks:pick(r,["remarks","reason"]),
+          reportedBy:pick(r,["reportedBy"])||reportedBy
+        });
+      }
+
+      if(type==="BNF" || bnf>0){
+        rows.push({
+          date,
+          floor:pick(r,["floor","floorName"])||floor,
+          type:"BNF",
+          item:pick(r,["needleSize","item","itemName","description"]),
+          buyer:pick(r,["buyer","buyerName"]),
+          style:pick(r,["style","styleName"]),
+          line:pick(r,["line","lineNo"]),
+          machine:pick(r,["machine","machineNo"]),
+          qty:bnf || n(pick(r,["qty","quantity"])),
+          remarks:pick(r,["remarks","reason"]),
+          reportedBy:pick(r,["reportedBy"])||reportedBy
+        });
+      }
+    });
+  }
+
+  return rows;
+}
 
 async function loadReport(){
   let from=document.getElementById("fromDate").value;
   let to=document.getElementById("toDate").value;
+  let floorFilter=document.getElementById("floorFilter").value;
+  let typeFilter=document.getElementById("typeFilter").value;
 
-  if(!from || !to){
-    alert("From date and To date select koro");
-    return;
+  let all=[];
+
+  let collections=["needleReports","dailyPosting","needleBNRBNF","allNeedleReports"];
+
+  for(let col of collections){
+    try{
+      let snap=await getDocs(collection(db,col));
+      snap.forEach(d=>{
+        let x=d.data();
+        all.push(...normalizeRows(x));
+      });
+    }catch(e){}
   }
 
-  let snap=await getDocs(collection(db,"dailyPosting"));
-
-  let floorItemMap={};
-
-  snap.forEach(docSnap=>{
-    let data=docSnap.data();
-
-    if(!data.date || !data.floor || !data.rows) return;
-    if(data.date < from || data.date > to) return;
-
-    data.rows.forEach(row=>{
-      let key=data.floor+"___"+(row.needleType||"")+"___"+(row.size||"");
-
-      if(!floorItemMap[key]){
-        floorItemMap[key]={
-          sl:row.sl || "",
-          needleType:row.needleType || "",
-          size:row.size || "",
-          firstDate:data.date,
-          previous:Number(row.previous)||0,
-          receive:0,
-          delivery:0
-        };
-      }
-
-      if(data.date < floorItemMap[key].firstDate){
-        floorItemMap[key].firstDate=data.date;
-        floorItemMap[key].previous=Number(row.previous)||0;
-      }
-
-      floorItemMap[key].receive += Number(row.receive)||0;
-      floorItemMap[key].delivery += Number(row.delivery)||0;
-    });
+  let filtered=all.filter(r=>{
+    if(from && r.date<from) return false;
+    if(to && r.date>to) return false;
+    if(floorFilter && r.floor!==floorFilter) return false;
+    if(typeFilter && r.type!==typeFilter) return false;
+    return true;
   });
 
-  let itemMap={};
+  filtered.sort((a,b)=>(a.date||"").localeCompare(b.date||""));
 
-  Object.values(floorItemMap).forEach(x=>{
-    let key=(x.needleType||"")+"___"+(x.size||"");
+  let html="";
+  let totalBNR=0,totalBNF=0,totalQty=0;
 
-    if(!itemMap[key]){
-      itemMap[key]={
-        needleType:x.needleType,
-        size:x.size,
-        previous:0,
-        receive:0,
-        delivery:0
-      };
-    }
+  filtered.forEach(r=>{
+    if(r.type==="BNR") totalBNR+=n(r.qty);
+    if(r.type==="BNF") totalBNF+=n(r.qty);
+    totalQty+=n(r.qty);
 
-    itemMap[key].previous += x.previous;
-    itemMap[key].receive += x.receive;
-    itemMap[key].delivery += x.delivery;
+    html+=`
+    <tr>
+      <td>${r.date||""}</td>
+      <td>${r.floor||""}</td>
+      <td>${r.type||""}</td>
+      <td>${r.item||""}</td>
+      <td>${r.buyer||""}</td>
+      <td>${r.style||""}</td>
+      <td>${r.line||""}</td>
+      <td>${r.machine||""}</td>
+      <td>${r.qty||""}</td>
+      <td>${r.remarks||""}</td>
+      <td>${r.reportedBy||""}</td>
+    </tr>`;
   });
 
-  let rows=Object.values(itemMap).sort((a,b)=>{
-    return (a.needleType+a.size).localeCompare(b.needleType+b.size);
-  });
+  document.getElementById("tbody").innerHTML=html || `<tr><td colspan="11">No BNR/BNF Data Found</td></tr>`;
+  document.getElementById("gtQty").innerText=totalQty;
 
-  let totalPrevious=0;
-  let totalReceive=0;
-  let totalDelivery=0;
-  let totalPresent=0;
+  document.getElementById("kpiBNR").innerText=totalBNR;
+  document.getElementById("kpiBNF").innerText=totalBNF;
+  document.getElementById("kpiQty").innerText=totalQty;
+  document.getElementById("kpiReport").innerText=filtered.length;
 
-  let html=`
-  <div class="reportPage">
-    <h2>GMS TEXTILES LTD</h2>
-    <h3>Tansutrapur, Kaliakair, Gazipur.</h3>
-    <h3>All Floor Needle Summary Report</h3>
-    <h3>${from} to ${to}</h3>
-
-    <table>
-      <tr>
-        <th>SL</th>
-        <th>Needle Type</th>
-        <th>Size</th>
-        <th>Previous</th>
-        <th>Total Receive</th>
-        <th>Total Delivery</th>
-        <th>Present Stock</th>
-      </tr>
-  `;
-
-  if(rows.length===0){
-    html+=`<tr><td colspan="7">No Data Found</td></tr>`;
-  }else{
-    rows.forEach((r,i)=>{
-      let present=r.previous+r.receive-r.delivery;
-
-      totalPrevious+=r.previous;
-      totalReceive+=r.receive;
-      totalDelivery+=r.delivery;
-      totalPresent+=present;
-
-      html+=`
-      <tr>
-        <td>${i+1}</td>
-        <td>${r.needleType}</td>
-        <td>${r.size}</td>
-        <td>${r.previous}</td>
-        <td>${r.receive}</td>
-        <td>${r.delivery}</td>
-        <td>${present}</td>
-      </tr>`;
-    });
-  }
-
-  html+=`
-      <tr class="total">
-        <td colspan="3">TOTAL</td>
-        <td>${totalPrevious}</td>
-        <td>${totalReceive}</td>
-        <td>${totalDelivery}</td>
-        <td>${totalPresent}</td>
-      </tr>
-    </table>
-
-    <table>
-      <tr class="grand">
-        <td>ALL FLOOR TOTAL PRESENT STOCK</td>
-        <td>${totalPresent}</td>
-      </tr>
-    </table>
-  </div>`;
-
-  document.getElementById("reportArea").innerHTML=html;
-}
-
-function exportExcel(){
-  let html=document.getElementById("reportArea").innerHTML;
-  let file=new Blob([html],{type:"application/vnd.ms-excel"});
-  let a=document.createElement("a");
-  a.href=URL.createObjectURL(file);
-  a.download="all-needle-summary-report.xls";
-  a.click();
+  renderChart(totalBNR,totalBNF);
 }
 
 window.loadReport=loadReport;
-window.exportExcel=exportExcel;
+
+function renderChart(bnr,bnf){
+  if(chart) chart.destroy();
+
+  chart=new Chart(document.getElementById("bnChart"),{
+    type:"bar",
+    data:{
+      labels:["BNR","BNF"],
+      datasets:[{
+        label:"Qty",
+        data:[bnr,bnf],
+        borderRadius:8,
+        borderWidth:1
+      }]
+    },
+    options:{
+      responsive:true,
+      plugins:{legend:{display:false},title:{display:true,text:"BNR / BNF Chart"}},
+      scales:{y:{beginAtZero:true}}
+    }
+  });
+}
+
+window.exportExcel=function(){
+  let clone=document.getElementById("reportTable").cloneNode(true);
+  let html=`
+    <html><head><meta charset="UTF-8"></head>
+    <body>
+      <h2>GMS Textiles Ltd</h2>
+      <h3>All Needle BNR / BNF Report</h3>
+      ${clone.outerHTML}
+    </body></html>`;
+
+  let file=new Blob([html],{type:"application/vnd.ms-excel"});
+  let a=document.createElement("a");
+  a.href=URL.createObjectURL(file);
+  a.download="all-needle-bnr-bnf-report.xls";
+  a.click();
+}
+
+loadReport();
 </script>
 
 </body>
