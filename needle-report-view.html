@@ -11,26 +11,29 @@ body{margin:0;background:#07111f;color:white;font-family:Arial,sans-serif}
 .header h2,.header h3,.header h4{margin:3px}
 .controls{text-align:center;margin:10px}
 button{padding:10px 14px;border:0;border-radius:8px;color:white;font-weight:bold;margin:4px;cursor:pointer}
-.show{background:#2563eb}.excel{background:#059669}.print{background:#7c3aed}.home{background:#0f766e}.edit{background:#f59e0b}.del{background:#dc2626}.save{background:#16a34a}
+.show{background:#2563eb}.excel{background:#059669}.print{background:#7c3aed}.home{background:#0f766e}.edit{background:#f59e0b}.del{background:#dc2626}.save{background:#16a34a}.add{background:#f59e0b}
 input,select{font-size:16px;padding:7px;border-radius:6px;border:1px solid #999}
 .kpi{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin:10px}
 .kpiBox{background:#101b2d;border:1px solid #263855;border-radius:14px;padding:12px;text-align:center}
 .kpiBox span{font-size:12px;color:#9fb0c7;font-weight:bold}
 .kpiBox b{display:block;color:#22c55e;font-size:24px;margin-top:5px}
 .tableWrap{overflow-x:auto;width:100%}
-table{min-width:1200px;width:98%;margin:10px auto;border-collapse:collapse;background:white;color:black;font-size:12px}
+table{min-width:1450px;width:98%;margin:10px auto;border-collapse:collapse;background:white;color:black;font-size:12px}
 th,td{border:1px solid #000;padding:6px;text-align:center}
-th{background:#f3f4f6;font-weight:bold}
+th{background:#9fc5e8;font-weight:bold}
 td input{width:100%;box-sizing:border-box;border:0;outline:none;text-align:center;font-size:14px}
 .totalRow{background:#d9ead3;font-weight:bold}
+.totalCell{font-weight:bold;background:#e5e7eb}
+.reportBox{border:1px solid #263855;border-radius:14px;margin:14px;padding:8px;background:#101b2d}
 .chartBox{width:96%;margin:10px auto;background:white;color:black;border-radius:10px;padding:10px}
 .toast{position:fixed;right:15px;bottom:15px;background:#22c55e;color:white;padding:12px 18px;border-radius:10px;font-weight:bold;display:none}
 @page{size:A4 landscape;margin:6mm}
 @media print{
   body{background:white;color:black}
   .controls,.kpi,.noPrint{display:none!important}
-  table{width:100%;min-width:0;font-size:10px}
-  th,td{padding:3px}
+  .reportBox{border:0;margin:0;padding:0;background:white}
+  table{width:100%;min-width:0;font-size:8px;margin:3px 0}
+  th,td{padding:2px}
   .chartBox{width:100%;margin:4px 0}
 }
 @media(max-width:700px){
@@ -79,43 +82,7 @@ td input{width:100%;box-sizing:border-box;border:0;outline:none;text-align:cente
   <div class="kpiBox"><span>📌 Total Issue</span><b id="kpiIssue">0</b></div>
 </div>
 
-<div class="tableWrap">
-<table id="reportTable">
-<thead>
-<tr>
-  <th>Date</th>
-  <th>Needle Booth</th>
-  <th>Total Sewing Line</th>
-  <th>Machine Plan</th>
-  <th>Sewing Running Machine</th>
-  <th>Broken Needle</th>
-  <th>Missing Needle</th>
-  <th>Change Needle</th>
-  <th>Total Issue</th>
-  <th>Per Machine Avg. Needle Use</th>
-  <th>Reported By</th>
-  <th class="noPrint">Action</th>
-</tr>
-</thead>
-<tbody id="tbody"></tbody>
-<tfoot>
-<tr class="totalRow">
-  <td>Grand Total</td>
-  <td id="gtBooth">0</td>
-  <td id="gtLine">0</td>
-  <td id="gtPlan">0</td>
-  <td id="gtRunning">0</td>
-  <td id="gtBroken">0</td>
-  <td id="gtMissing">0</td>
-  <td id="gtChange">0</td>
-  <td id="gtIssue">0</td>
-  <td id="gtAvg">0</td>
-  <td></td>
-  <td class="noPrint"></td>
-</tr>
-</tfoot>
-</table>
-</div>
+<div id="reportArea"></div>
 
 <div class="chartBox">
   <canvas id="issueChart" height="90"></canvas>
@@ -168,6 +135,12 @@ function toast(msg){
 function calcRow(r){
   r.totalIssue=n(r.brokenNeedle)+n(r.missingNeedle)+n(r.changeNeedle);
   r.avgUse=r.totalIssue>0 ? n(r.runningMachine)/r.totalIssue : 0;
+
+  if(!Array.isArray(r.floorRows)) r.floorRows=[];
+  r.floorRows.forEach(fr=>{
+    fr.presentStock=n(fr.previousQty)+n(fr.receivedQty)-n(fr.deliveryQty);
+  });
+
   return r;
 }
 
@@ -201,43 +174,67 @@ async function loadReport(){
   render();
 }
 
-function render(){
-  let html="";
-  let gtBooth=0,gtLine=0,gtPlan=0,gtRunning=0,gtBroken=0,gtMissing=0,gtChange=0,gtIssue=0;
+function issueTable(r,i){
+  if(r.edit){
+    return `
+    <table class="mainTable">
+      <thead>
+        <tr>
+          <th>Date</th>
+          <th>Needle Booth</th>
+          <th>Total Sewing Line</th>
+          <th>Machine Plan</th>
+          <th>Sewing Running Machine</th>
+          <th>Broken Needle</th>
+          <th>Missing Needle</th>
+          <th>Change Needle</th>
+          <th>Total Issue</th>
+          <th>Per Machine Avg. Needle Use</th>
+          <th>Reported By</th>
+          <th class="noPrint">Action</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><input type="date" value="${r.date||''}" onchange="rows[${i}].date=this.value"></td>
+          <td><input type="number" value="${r.needleBooth||0}" onchange="rows[${i}].needleBooth=this.value"></td>
+          <td><input type="number" value="${r.totalSewingLine||0}" onchange="rows[${i}].totalSewingLine=this.value"></td>
+          <td><input type="number" value="${r.machinePlan||0}" onchange="rows[${i}].machinePlan=this.value"></td>
+          <td><input type="number" value="${r.runningMachine||0}" onchange="rows[${i}].runningMachine=this.value;render()"></td>
+          <td><input type="number" value="${r.brokenNeedle||0}" onchange="rows[${i}].brokenNeedle=this.value;render()"></td>
+          <td><input type="number" value="${r.missingNeedle||0}" onchange="rows[${i}].missingNeedle=this.value;render()"></td>
+          <td><input type="number" value="${r.changeNeedle||0}" onchange="rows[${i}].changeNeedle=this.value;render()"></td>
+          <td class="totalCell">${r.totalIssue}</td>
+          <td class="totalCell">${Number(r.avgUse||0).toFixed(2)}</td>
+          <td>${r.reportedBy||""}</td>
+          <td class="noPrint">
+            <button class="save" onclick="saveEdit(${i})">💾 Save</button>
+            <button class="del" onclick="cancelEdit()">Cancel</button>
+          </td>
+        </tr>
+      </tbody>
+    </table>`;
+  }
 
-  rows.forEach((r,i)=>{
-    calcRow(r);
-
-    gtBooth+=n(r.needleBooth);
-    gtLine+=n(r.totalSewingLine);
-    gtPlan+=n(r.machinePlan);
-    gtRunning+=n(r.runningMachine);
-    gtBroken+=n(r.brokenNeedle);
-    gtMissing+=n(r.missingNeedle);
-    gtChange+=n(r.changeNeedle);
-    gtIssue+=n(r.totalIssue);
-
-    if(r.edit){
-      html+=`
+  return `
+  <table class="mainTable">
+    <thead>
       <tr>
-        <td><input type="date" value="${r.date||''}" onchange="rows[${i}].date=this.value"></td>
-        <td><input type="number" value="${r.needleBooth||0}" onchange="rows[${i}].needleBooth=this.value"></td>
-        <td><input type="number" value="${r.totalSewingLine||0}" onchange="rows[${i}].totalSewingLine=this.value"></td>
-        <td><input type="number" value="${r.machinePlan||0}" onchange="rows[${i}].machinePlan=this.value"></td>
-        <td><input type="number" value="${r.runningMachine||0}" onchange="rows[${i}].runningMachine=this.value;render()"></td>
-        <td><input type="number" value="${r.brokenNeedle||0}" onchange="rows[${i}].brokenNeedle=this.value;render()"></td>
-        <td><input type="number" value="${r.missingNeedle||0}" onchange="rows[${i}].missingNeedle=this.value;render()"></td>
-        <td><input type="number" value="${r.changeNeedle||0}" onchange="rows[${i}].changeNeedle=this.value;render()"></td>
-        <td>${r.totalIssue}</td>
-        <td>${Number(r.avgUse||0).toFixed(2)}</td>
-        <td>${r.reportedBy||""}</td>
-        <td class="noPrint">
-          <button class="save" onclick="saveEdit(${i})">💾 Save</button>
-          <button class="del" onclick="cancelEdit()">Cancel</button>
-        </td>
-      </tr>`;
-    }else{
-      html+=`
+        <th>Date</th>
+        <th>Needle Booth</th>
+        <th>Total Sewing Line</th>
+        <th>Machine Plan</th>
+        <th>Sewing Running Machine</th>
+        <th>Broken Needle</th>
+        <th>Missing Needle</th>
+        <th>Change Needle</th>
+        <th>Total Issue</th>
+        <th>Per Machine Avg. Needle Use</th>
+        <th>Reported By</th>
+        <th class="noPrint">Action</th>
+      </tr>
+    </thead>
+    <tbody>
       <tr>
         <td>${r.date||""}</td>
         <td>${r.needleBooth||0}</td>
@@ -254,23 +251,101 @@ function render(){
           <button class="edit" onclick="editRow(${i})">✏️ Edit</button>
           <button class="del" onclick="deleteRow(${i})">🗑 Delete</button>
         </td>
+      </tr>
+    </tbody>
+  </table>`;
+}
+
+function floorTable(r,i){
+  let floorRows=r.floorRows||[];
+
+  let body=floorRows.map((fr,j)=>{
+    if(r.edit){
+      return `
+      <tr>
+        <td><input value="${fr.description||""}" onchange="rows[${i}].floorRows[${j}].description=this.value"></td>
+        <td><input value="${fr.floorName||""}" onchange="rows[${i}].floorRows[${j}].floorName=this.value"></td>
+        <td><input type="number" value="${fr.previousQty||""}" onchange="rows[${i}].floorRows[${j}].previousQty=this.value;render()"></td>
+        <td><input type="number" value="${fr.receivedQty||""}" onchange="rows[${i}].floorRows[${j}].receivedQty=this.value;render()"></td>
+        <td><input type="number" value="${fr.deliveryQty||""}" onchange="rows[${i}].floorRows[${j}].deliveryQty=this.value;render()"></td>
+        <td class="totalCell">${fr.presentStock||0}</td>
+        <td><input value="${fr.remarks||""}" onchange="rows[${i}].floorRows[${j}].remarks=this.value"></td>
+        <td class="noPrint"><button class="del" onclick="deleteFloorRow(${i},${j})">Delete</button></td>
       </tr>`;
     }
+
+    return `
+    <tr>
+      <td>${fr.description||""}</td>
+      <td>${fr.floorName||""}</td>
+      <td>${fr.previousQty||0}</td>
+      <td>${fr.receivedQty||""}</td>
+      <td>${fr.deliveryQty||""}</td>
+      <td>${fr.presentStock||0}</td>
+      <td>${fr.remarks||""}</td>
+      <td class="noPrint"></td>
+    </tr>`;
+  }).join("");
+
+  let totalPrev=0,totalRcv=0,totalDlv=0,totalPresent=0;
+  floorRows.forEach(fr=>{
+    totalPrev+=n(fr.previousQty);
+    totalRcv+=n(fr.receivedQty);
+    totalDlv+=n(fr.deliveryQty);
+    totalPresent+=n(fr.presentStock);
   });
 
-  let gtAvg=gtIssue>0 ? gtRunning/gtIssue : 0;
+  return `
+  <table class="floorTable">
+    <thead>
+      <tr>
+        <th>Description</th>
+        <th>Floor Name</th>
+        <th>Previous Qty</th>
+        <th>Received Qty</th>
+        <th>Delivery Qty</th>
+        <th>Present Stock</th>
+        <th>Remarks</th>
+        <th class="noPrint">Action</th>
+      </tr>
+    </thead>
+    <tbody>
+      ${body || `<tr><td colspan="8">No Floor Data</td></tr>`}
+    </tbody>
+    <tfoot>
+      <tr class="totalRow">
+        <td colspan="2">Grand Total</td>
+        <td>${totalPrev}</td>
+        <td>${totalRcv}</td>
+        <td>${totalDlv}</td>
+        <td>${totalPresent}</td>
+        <td></td>
+        <td class="noPrint"></td>
+      </tr>
+    </tfoot>
+  </table>
+  ${r.edit ? `<div class="controls noPrint"><button class="add" onclick="addFloorRow(${i})">➕ Add Floor Row</button></div>` : ""}`;
+}
 
-  document.getElementById("tbody").innerHTML=html || `<tr><td colspan="12">No Data Found</td></tr>`;
+function render(){
+  let html="";
+  let gtBroken=0,gtMissing=0,gtChange=0,gtIssue=0;
 
-  document.getElementById("gtBooth").innerText=gtBooth;
-  document.getElementById("gtLine").innerText=gtLine;
-  document.getElementById("gtPlan").innerText=gtPlan;
-  document.getElementById("gtRunning").innerText=gtRunning;
-  document.getElementById("gtBroken").innerText=gtBroken;
-  document.getElementById("gtMissing").innerText=gtMissing;
-  document.getElementById("gtChange").innerText=gtChange;
-  document.getElementById("gtIssue").innerText=gtIssue;
-  document.getElementById("gtAvg").innerText=gtAvg.toFixed(2);
+  rows.forEach((r,i)=>{
+    calcRow(r);
+    gtBroken+=n(r.brokenNeedle);
+    gtMissing+=n(r.missingNeedle);
+    gtChange+=n(r.changeNeedle);
+    gtIssue+=n(r.totalIssue);
+
+    html+=`
+    <div class="reportBox">
+      ${issueTable(r,i)}
+      ${floorTable(r,i)}
+    </div>`;
+  });
+
+  document.getElementById("reportArea").innerHTML=html || `<div style="text-align:center;padding:30px;color:#9fb0c7;font-weight:bold">No Data Found</div>`;
 
   document.getElementById("kpiBroken").innerText=gtBroken;
   document.getElementById("kpiMissing").innerText=gtMissing;
@@ -314,6 +389,25 @@ window.cancelEdit=function(){
   loadReport();
 };
 
+window.addFloorRow=function(i){
+  if(!rows[i].floorRows)rows[i].floorRows=[];
+  rows[i].floorRows.push({
+    description:"",
+    floorName:"",
+    previousQty:"",
+    receivedQty:"",
+    deliveryQty:"",
+    presentStock:"",
+    remarks:""
+  });
+  render();
+};
+
+window.deleteFloorRow=function(i,j){
+  rows[i].floorRows.splice(j,1);
+  render();
+};
+
 window.saveEdit=async function(i){
   let r=calcRow(rows[i]);
 
@@ -328,6 +422,7 @@ window.saveEdit=async function(i){
     changeNeedle:n(r.changeNeedle),
     totalIssue:n(r.totalIssue),
     avgUse:n(r.avgUse),
+    floorRows:r.floorRows||[],
     reportedBy:r.reportedBy||"",
     updatedAt:new Date().toISOString()
   });
@@ -345,8 +440,8 @@ window.deleteRow=async function(i){
 };
 
 window.exportExcel=function(){
-  let clone=document.getElementById("reportTable").cloneNode(true);
-  clone.querySelectorAll(".noPrint").forEach(x=>x.remove());
+  let area=document.getElementById("reportArea").cloneNode(true);
+  area.querySelectorAll(".noPrint,.controls").forEach(x=>x.remove());
 
   let html=`
     <html>
@@ -354,7 +449,7 @@ window.exportExcel=function(){
       <body>
         <h2>GMS Textiles Ltd</h2>
         <h3>Needle Daily Report</h3>
-        ${clone.outerHTML}
+        ${area.innerHTML}
       </body>
     </html>
   `;
