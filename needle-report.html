@@ -6,28 +6,140 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
 
 <style>
-body{margin:0;background:#07111f;color:white;font-family:Arial,sans-serif}
-.header{text-align:center;padding:12px}
+body{
+  margin:0;
+  background:#07111f;
+  color:white;
+  font-family:Arial,sans-serif;
+}
+.header{text-align:center;padding:10px}
 .header h2,.header h3,.header h4{margin:3px}
-.controls{text-align:center;margin:10px}
-button{padding:10px 14px;border:0;border-radius:8px;color:white;font-weight:bold;margin:4px;cursor:pointer}
-.save{background:#16a34a}.report{background:#2563eb}.home{background:#0f766e}.print{background:#7c3aed}
-input{font-size:15px;padding:6px;border-radius:6px;border:1px solid #999}
-.tableWrap{overflow-x:auto;width:100%}
-.reportTable{min-width:1450px;width:98%;margin:10px auto;border-collapse:collapse;background:white;color:black;font-size:12px}
-th,td{border:1px solid #000;padding:6px;text-align:center}
-th{background:#9fc5e8;font-weight:bold}
-td input{width:100%;box-sizing:border-box;border:0;outline:none;text-align:center;font-size:14px}
-.totalCell{font-weight:bold;background:#e5e7eb}
-.chartBox{width:96%;margin:12px auto;background:white;color:black;border-radius:10px;padding:10px}
-.toast{position:fixed;right:15px;bottom:15px;background:#22c55e;color:white;padding:12px 18px;border-radius:10px;font-weight:bold;display:none}
-@page{size:A4 landscape;margin:6mm}
+
+.controls{
+  text-align:center;
+  margin:10px;
+}
+
+button{
+  padding:10px 14px;
+  border:0;
+  border-radius:8px;
+  color:white;
+  font-weight:bold;
+  margin:4px;
+  cursor:pointer;
+}
+.save{background:#16a34a}
+.report{background:#2563eb}
+.home{background:#0f766e}
+.print{background:#7c3aed}
+.del{background:#dc2626}
+
+input{
+  font-size:13px;
+  padding:5px;
+  border-radius:5px;
+  border:1px solid #999;
+}
+
+.tableWrap{
+  overflow-x:auto;
+  width:100%;
+}
+
+.reportTable{
+  min-width:1500px;
+  width:98%;
+  margin:10px auto;
+  border-collapse:collapse;
+  background:white;
+  color:black;
+  font-size:11px;
+}
+
+th,td{
+  border:1px solid #000;
+  padding:5px;
+  text-align:center;
+  white-space:normal;
+  word-break:break-word;
+}
+
+th{
+  background:#9fc5e8;
+  font-weight:bold;
+}
+
+td input{
+  width:100%;
+  box-sizing:border-box;
+  border:0;
+  outline:none;
+  text-align:center;
+  font-size:13px;
+}
+
+.totalCell{
+  font-weight:bold;
+  background:#e5e7eb;
+}
+
+.chartBox{
+  width:96%;
+  margin:12px auto;
+  background:white;
+  color:black;
+  border-radius:10px;
+  padding:10px;
+}
+
+.toast{
+  position:fixed;
+  right:15px;
+  bottom:15px;
+  background:#22c55e;
+  color:white;
+  padding:12px 18px;
+  border-radius:10px;
+  font-weight:bold;
+  display:none;
+  z-index:9999;
+}
+
+@page{
+  size:A4 landscape;
+  margin:5mm;
+}
+
 @media print{
-  body{background:white;color:black}
-  .controls,.noPrint{display:none!important}
-  table{width:100%;min-width:0;font-size:8px}
-  th,td{padding:2px}
-  .chartBox{width:100%;margin:4px 0}
+  body{
+    background:white;
+    color:black;
+  }
+
+  .controls,.noPrint{
+    display:none!important;
+  }
+
+  .header h2{font-size:16px}
+  .header h3,.header h4{font-size:11px}
+
+  .reportTable{
+    width:100%;
+    min-width:0;
+    font-size:7px;
+    margin:0;
+  }
+
+  th,td{
+    padding:2px;
+  }
+
+  .chartBox{
+    width:100%;
+    margin:4px 0;
+    padding:4px;
+  }
 }
 </style>
 </head>
@@ -45,6 +157,7 @@ td input{width:100%;box-sizing:border-box;border:0;outline:none;text-align:cente
   <input type="date" id="reportDate">
 
   <button class="save" onclick="saveReport()">💾 Save</button>
+  <button class="del" onclick="deleteData()">🗑 Delete Data</button>
   <button class="report" onclick="location.href='needle-report-view.html'">📑 Report</button>
   <button class="print" onclick="window.print()">🖨 PDF / Print</button>
   <button class="home" onclick="location.href='index.html'">🏠 Home</button>
@@ -78,7 +191,7 @@ td input{width:100%;box-sizing:border-box;border:0;outline:none;text-align:cente
 </div>
 
 <div class="chartBox">
-  <canvas id="issueChart" height="90"></canvas>
+  <canvas id="issueChart" height="80"></canvas>
 </div>
 
 <div id="toast" class="toast">Saved ✅</div>
@@ -125,6 +238,16 @@ const defaultFloorRows=[
 
 let floorRows=JSON.parse(JSON.stringify(defaultFloorRows));
 
+let issueData={
+  needleBooth:6,
+  totalSewingLine:56,
+  machinePlan:3468,
+  runningMachine:2254,
+  brokenNeedle:213,
+  missingNeedle:26,
+  changeNeedle:1310
+};
+
 function today(){
   return new Date().toISOString().slice(0,10);
 }
@@ -138,26 +261,35 @@ function toast(msg){
   let t=byId("toast");
   t.innerText=msg;
   t.style.display="block";
-  setTimeout(()=>t.style.display="none",1500);
+  setTimeout(()=>t.style.display="none",1600);
 }
 
-function totalIssue(){
-  return n(byId("brokenNeedle").value)+n(byId("missingNeedle").value)+n(byId("changeNeedle").value);
-}
-
-function avgUse(){
-  let total=totalIssue();
-  let running=n(byId("runningMachine").value);
-  return total>0 ? running/total : 0;
-}
-
-function calcFloor(i){
+function calcFloorRow(i){
   let r=floorRows[i];
   r.presentStock=n(r.previousQty)+n(r.receivedQty)-n(r.deliveryQty);
 }
 
+function totalIssue(){
+  return n(issueData.brokenNeedle)+n(issueData.missingNeedle)+n(issueData.changeNeedle);
+}
+
+function avgUse(){
+  let issue=totalIssue();
+  return issue>0 ? n(issueData.runningMachine)/issue : 0;
+}
+
+function saveIssueInputs(){
+  issueData.needleBooth=n(byId("needleBooth")?.value);
+  issueData.totalSewingLine=n(byId("totalSewingLine")?.value);
+  issueData.machinePlan=n(byId("machinePlan")?.value);
+  issueData.runningMachine=n(byId("runningMachine")?.value);
+  issueData.brokenNeedle=n(byId("brokenNeedle")?.value);
+  issueData.missingNeedle=n(byId("missingNeedle")?.value);
+  issueData.changeNeedle=n(byId("changeNeedle")?.value);
+}
+
 function render(){
-  floorRows.forEach((r,i)=>calcFloor(i));
+  floorRows.forEach((r,i)=>calcFloorRow(i));
 
   let html="";
 
@@ -167,24 +299,56 @@ function render(){
     html+=`
     <tr>
       ${first ? `
-      <td rowspan="${floorRows.length}"><input type="number" id="needleBooth" value="6" oninput="calculate()"></td>
-      <td rowspan="${floorRows.length}"><input type="number" id="totalSewingLine" value="56" oninput="calculate()"></td>
-      <td rowspan="${floorRows.length}"><input type="number" id="machinePlan" value="3468" oninput="calculate()"></td>
-      <td rowspan="${floorRows.length}"><input type="number" id="runningMachine" value="2254" oninput="calculate()"></td>
-      <td rowspan="${floorRows.length}"><input type="number" id="brokenNeedle" value="213" oninput="calculate()"></td>
-      <td rowspan="${floorRows.length}"><input type="number" id="missingNeedle" value="26" oninput="calculate()"></td>
-      <td rowspan="${floorRows.length}"><input type="number" id="changeNeedle" value="1310" oninput="calculate()"></td>
-      <td rowspan="${floorRows.length}" class="totalCell" id="totalIssue">1549</td>
-      <td rowspan="${floorRows.length}" class="totalCell" id="avgUse">1.46</td>
+      <td rowspan="${floorRows.length}">
+        <input type="number" id="needleBooth" value="${issueData.needleBooth}" oninput="calculate()">
+      </td>
+      <td rowspan="${floorRows.length}">
+        <input type="number" id="totalSewingLine" value="${issueData.totalSewingLine}" oninput="calculate()">
+      </td>
+      <td rowspan="${floorRows.length}">
+        <input type="number" id="machinePlan" value="${issueData.machinePlan}" oninput="calculate()">
+      </td>
+      <td rowspan="${floorRows.length}">
+        <input type="number" id="runningMachine" value="${issueData.runningMachine}" oninput="calculate()">
+      </td>
+      <td rowspan="${floorRows.length}">
+        <input type="number" id="brokenNeedle" value="${issueData.brokenNeedle}" oninput="calculate()">
+      </td>
+      <td rowspan="${floorRows.length}">
+        <input type="number" id="missingNeedle" value="${issueData.missingNeedle}" oninput="calculate()">
+      </td>
+      <td rowspan="${floorRows.length}">
+        <input type="number" id="changeNeedle" value="${issueData.changeNeedle}" oninput="calculate()">
+      </td>
+      <td rowspan="${floorRows.length}" class="totalCell" id="totalIssue">${totalIssue()}</td>
+      <td rowspan="${floorRows.length}" class="totalCell" id="avgUse">${avgUse().toFixed(2)}</td>
       ` : ``}
 
-      <td><input value="${r.description}" onchange="floorRows[${i}].description=this.value"></td>
-      <td><input value="${r.floorName}" onchange="floorRows[${i}].floorName=this.value"></td>
-      <td><input type="number" value="${r.previousQty}" onchange="floorRows[${i}].previousQty=this.value;renderAfterInput()"></td>
-      <td><input type="number" value="${r.receivedQty}" onchange="floorRows[${i}].receivedQty=this.value;renderAfterInput()"></td>
-      <td><input type="number" value="${r.deliveryQty}" onchange="floorRows[${i}].deliveryQty=this.value;renderAfterInput()"></td>
-      <td class="totalCell">${r.presentStock}</td>
-      <td><input value="${r.remarks}" onchange="floorRows[${i}].remarks=this.value"></td>
+      <td>
+        <input value="${r.description||""}" oninput="floorRows[${i}].description=this.value">
+      </td>
+
+      <td>
+        <input value="${r.floorName||""}" oninput="floorRows[${i}].floorName=this.value">
+      </td>
+
+      <td>
+        <input type="number" value="${r.previousQty||""}" oninput="floorRows[${i}].previousQty=this.value;updateFloorPresent(${i})">
+      </td>
+
+      <td>
+        <input type="number" value="${r.receivedQty||""}" oninput="floorRows[${i}].receivedQty=this.value;updateFloorPresent(${i})">
+      </td>
+
+      <td>
+        <input type="number" value="${r.deliveryQty||""}" oninput="floorRows[${i}].deliveryQty=this.value;updateFloorPresent(${i})">
+      </td>
+
+      <td class="totalCell" id="present_${i}">${r.presentStock||0}</td>
+
+      <td>
+        <input value="${r.remarks||""}" oninput="floorRows[${i}].remarks=this.value">
+      </td>
     </tr>`;
   });
 
@@ -192,42 +356,23 @@ function render(){
   calculate();
 }
 
-window.renderAfterInput=function(){
-  let booth=byId("needleBooth")?.value||6;
-  let line=byId("totalSewingLine")?.value||56;
-  let plan=byId("machinePlan")?.value||3468;
-  let running=byId("runningMachine")?.value||2254;
-  let broken=byId("brokenNeedle")?.value||213;
-  let missing=byId("missingNeedle")?.value||26;
-  let change=byId("changeNeedle")?.value||1310;
-
-  render();
-
-  byId("needleBooth").value=booth;
-  byId("totalSewingLine").value=line;
-  byId("machinePlan").value=plan;
-  byId("runningMachine").value=running;
-  byId("brokenNeedle").value=broken;
-  byId("missingNeedle").value=missing;
-  byId("changeNeedle").value=change;
-
-  calculate();
-}
+window.updateFloorPresent=function(i){
+  calcFloorRow(i);
+  let cell=byId("present_"+i);
+  if(cell) cell.innerText=floorRows[i].presentStock;
+};
 
 window.calculate=function(){
-  let broken=n(byId("brokenNeedle")?.value);
-  let missing=n(byId("missingNeedle")?.value);
-  let change=n(byId("changeNeedle")?.value);
-  let running=n(byId("runningMachine")?.value);
+  saveIssueInputs();
 
-  let issue=broken+missing+change;
-  let avg=issue>0 ? running/issue : 0;
+  let issue=totalIssue();
+  let avg=avgUse();
 
   if(byId("totalIssue")) byId("totalIssue").innerText=issue;
   if(byId("avgUse")) byId("avgUse").innerText=avg.toFixed(2);
 
-  renderChart(broken,missing,change);
-}
+  renderChart(issueData.brokenNeedle,issueData.missingNeedle,issueData.changeNeedle);
+};
 
 function renderChart(broken,missing,change){
   if(chart) chart.destroy();
@@ -278,14 +423,63 @@ async function getPreviousData(date){
   return all[0]||null;
 }
 
+async function loadSavedDate(){
+  let date=byId("reportDate").value;
+  let q=query(collection(db,"needleDailyReport"),where("date","==",date));
+  let snap=await getDocs(q);
+
+  if(!snap.empty){
+    let data=snap.docs[0].data();
+
+    issueData={
+      needleBooth:n(data.needleBooth)||6,
+      totalSewingLine:n(data.totalSewingLine)||56,
+      machinePlan:n(data.machinePlan)||3468,
+      runningMachine:n(data.runningMachine)||2254,
+      brokenNeedle:n(data.brokenNeedle)||0,
+      missingNeedle:n(data.missingNeedle)||0,
+      changeNeedle:n(data.changeNeedle)||0
+    };
+
+    floorRows=(data.floorRows||defaultFloorRows).map(r=>({
+      description:r.description||"",
+      floorName:r.floorName||"",
+      previousQty:n(r.previousQty),
+      receivedQty:r.receivedQty||"",
+      deliveryQty:r.deliveryQty||"",
+      presentStock:n(r.presentStock),
+      remarks:r.remarks||""
+    }));
+
+    render();
+    return true;
+  }
+
+  return false;
+}
+
 async function loadInitial(){
   let date=byId("reportDate").value;
+
+  let hasSaved=await loadSavedDate();
+  if(hasSaved) return;
+
+  issueData={
+    needleBooth:6,
+    totalSewingLine:56,
+    machinePlan:3468,
+    runningMachine:2254,
+    brokenNeedle:213,
+    missingNeedle:26,
+    changeNeedle:1310
+  };
+
   let prev=await getPreviousData(date);
 
   if(prev){
     floorRows=(prev.floorRows||[]).map(r=>({
-      description:r.description,
-      floorName:r.floorName,
+      description:r.description||"",
+      floorName:r.floorName||"",
       previousQty:n(r.presentStock),
       receivedQty:"",
       deliveryQty:"",
@@ -303,31 +497,59 @@ window.saveReport=async function(){
   calculate();
 
   let date=byId("reportDate").value;
-  floorRows.forEach((r,i)=>calcFloor(i));
+  if(!date){
+    alert("Date select koro");
+    return;
+  }
+
+  floorRows.forEach((r,i)=>calcFloorRow(i));
 
   await deleteSameDate(date);
 
   await addDoc(collection(db,"needleDailyReport"),{
     date:date,
-    needleBooth:n(byId("needleBooth").value),
-    totalSewingLine:n(byId("totalSewingLine").value),
-    machinePlan:n(byId("machinePlan").value),
-    runningMachine:n(byId("runningMachine").value),
-    brokenNeedle:n(byId("brokenNeedle").value),
-    missingNeedle:n(byId("missingNeedle").value),
-    changeNeedle:n(byId("changeNeedle").value),
-    totalIssue:n(byId("totalIssue").innerText),
-    avgUse:n(byId("avgUse").innerText),
+    needleBooth:n(issueData.needleBooth),
+    totalSewingLine:n(issueData.totalSewingLine),
+    machinePlan:n(issueData.machinePlan),
+    runningMachine:n(issueData.runningMachine),
+    brokenNeedle:n(issueData.brokenNeedle),
+    missingNeedle:n(issueData.missingNeedle),
+    changeNeedle:n(issueData.changeNeedle),
+    totalIssue:totalIssue(),
+    avgUse:Number(avgUse().toFixed(2)),
     floorRows:floorRows,
     reportedBy:user.name||user.email||"User",
     userId:user.id||"",
     createdAt:new Date().toISOString()
   });
 
-  toast("Needle Issue Saved ✅");
-}
+  toast("Needle Issue Saved Firebase ✅");
+};
+
+window.deleteData=async function(){
+  let date=byId("reportDate").value;
+  if(!date){
+    alert("Date select koro");
+    return;
+  }
+
+  if(!confirm("Ei date er Needle Issue data delete korba?")) return;
+
+  await deleteSameDate(date);
+  toast("Deleted ✅");
+  await loadInitial();
+};
 
 byId("reportDate").addEventListener("change",loadInitial);
+
+document.addEventListener("keydown",function(e){
+  if(e.key==="Enter" && e.target.tagName==="INPUT"){
+    e.preventDefault();
+    let inputs=[...document.querySelectorAll("td input")];
+    let idx=inputs.indexOf(e.target);
+    if(inputs[idx+1]) inputs[idx+1].focus();
+  }
+});
 
 loadInitial();
 </script>
