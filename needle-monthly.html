@@ -2,41 +2,36 @@
 <html>
 <head>
 <title>Needle Monthly Report</title>
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
 
 <style>
 body{margin:0;background:#07111f;color:white;font-family:Arial,sans-serif}
 .header{text-align:center;padding:12px}
-.header h2,.header h3,.header h4{margin:3px}
+.header h2,.header h3{margin:4px}
 .controls{text-align:center;margin:10px}
 button{padding:10px 14px;border:0;border-radius:8px;color:white;font-weight:bold;margin:4px;cursor:pointer}
-.show{background:#2563eb}.excel{background:#059669}.print{background:#7c3aed}.home{background:#0f766e}
-input,select{font-size:16px;padding:7px;border-radius:6px;border:1px solid #999}
-
+.show{background:#2563eb}.excel{background:#16a34a}.print{background:#7c3aed}.home{background:#0f766e}
+input,select{font-size:16px;padding:8px;border-radius:6px;border:1px solid #999}
+.tableWrap{overflow-x:auto;width:100%}
+table{min-width:1050px;width:98%;margin:10px auto;border-collapse:collapse;background:white;color:black;font-size:12px}
+th,td{border:1px solid #000;padding:5px;text-align:center}
+th{background:#9fc5e8;font-weight:bold}
+.floorTitle{background:#1e293b!important;color:white!important;font-size:15px}
+.totalRow{background:#d9ead3;font-weight:bold}
+.grandRow{background:#ffe599;font-weight:bold;font-size:14px}
 .kpi{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin:10px}
 .kpiBox{background:#101b2d;border:1px solid #263855;border-radius:14px;padding:12px;text-align:center}
 .kpiBox span{font-size:12px;color:#9fb0c7;font-weight:bold}
 .kpiBox b{display:block;color:#22c55e;font-size:24px;margin-top:5px}
 
-.tableWrap{overflow-x:auto;width:100%}
-table{min-width:1350px;width:98%;margin:10px auto;border-collapse:collapse;background:white;color:black;font-size:11px}
-th,td{border:1px solid #000;padding:5px;text-align:center}
-th{background:#9fc5e8;font-weight:bold}
-.floorTitle{background:#1e293b!important;color:white!important;font-size:14px}
-.totalRow{background:#d9ead3;font-weight:bold}
-.grandRow{background:#ffe599;font-weight:bold}
-
-.chartBox{width:96%;margin:10px auto;background:white;color:black;border-radius:10px;padding:10px}
-
 @page{size:A4 landscape;margin:5mm}
 @media print{
   body{background:white;color:black}
-  .controls,.kpi,.chartBox,.noPrint{display:none!important}
-  table{width:100%;min-width:0;font-size:8px;margin:2px 0;page-break-inside:auto}
-  th,td{padding:2px}
+  .controls,.kpi,.noPrint{display:none!important}
   .header h2{font-size:16px}
-  .header h3,.header h4{font-size:11px}
+  .header h3{font-size:11px}
+  table{width:100%;min-width:0;font-size:8px;margin:2px 0}
+  th,td{padding:2px}
 }
 @media(max-width:700px){.kpi{grid-template-columns:1fr 1fr}}
 </style>
@@ -46,15 +41,12 @@ th{background:#9fc5e8;font-weight:bold}
 
 <div class="header">
   <h2>GMS Textiles Ltd</h2>
-  <h4>Needle MCD</h4>
-  <h3>Needle Monthly / Date Wise Report</h3>
+  <h3>Needle Monthly Report</h3>
 </div>
 
 <div class="controls noPrint">
-  From: <input type="date" id="fromDate">
-  To: <input type="date" id="toDate">
-
-  Month: <input type="month" id="monthInput">
+  Month:
+  <input type="month" id="monthInput">
 
   Floor:
   <select id="floorFilter">
@@ -73,7 +65,6 @@ th{background:#9fc5e8;font-weight:bold}
     <option>Belly N</option>
   </select>
 
-  <button class="show" onclick="setMonthRange()">📅 Month Load</button>
   <button class="show" onclick="loadReport()">🔍 Show</button>
   <button class="excel" onclick="exportExcel()">📊 Excel</button>
   <button class="print" onclick="window.print()">🖨 PDF / Print</button>
@@ -82,17 +73,13 @@ th{background:#9fc5e8;font-weight:bold}
 </div>
 
 <div class="kpi">
-  <div class="kpiBox"><span>📥 Total Received</span><b id="kpiReceive">0</b></div>
+  <div class="kpiBox"><span>📥 Total Receive</span><b id="kpiReceive">0</b></div>
   <div class="kpiBox"><span>📤 Total Delivery</span><b id="kpiDelivery">0</b></div>
   <div class="kpiBox"><span>📦 Present Stock</span><b id="kpiPresent">0</b></div>
-  <div class="kpiBox"><span>🏭 Floor Count</span><b id="kpiFloor">0</b></div>
+  <div class="kpiBox"><span>📌 Total BNR/BNF</span><b id="kpiBN">0</b></div>
 </div>
 
 <div id="reportArea"></div>
-
-<div class="chartBox">
-  <canvas id="monthlyChart" height="85"></canvas>
-</div>
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-app.js";
@@ -110,7 +97,7 @@ const firebaseConfig={
 const app=initializeApp(firebaseConfig);
 const db=getFirestore(app);
 
-const ALL_FLOORS=[
+const FLOORS=[
   "Kadom R","Kadom N",
   "Poddo R","Poddo N",
   "Shapla R","Shapla N",
@@ -119,29 +106,10 @@ const ALL_FLOORS=[
   "Belly R","Belly N"
 ];
 
-let chart;
-
-function today(){return new Date().toISOString().slice(0,10)}
 function ym(){return new Date().toISOString().slice(0,7)}
-function n(v){return Number(v)||0}
-
-document.getElementById("fromDate").value=today();
-document.getElementById("toDate").value=today();
 document.getElementById("monthInput").value=ym();
 
-window.setMonthRange=function(){
-  let m=document.getElementById("monthInput").value;
-  if(!m){alert("Month select koro");return;}
-
-  let first=m+"-01";
-  let d=new Date(first);
-  let last=new Date(d.getFullYear(),d.getMonth()+1,0).toISOString().slice(0,10);
-
-  document.getElementById("fromDate").value=first;
-  document.getElementById("toDate").value=last;
-
-  loadReport();
-};
+function n(v){return Number(v)||0}
 
 function pick(row,keys){
   for(let k of keys){
@@ -150,134 +118,149 @@ function pick(row,keys){
   return "";
 }
 
-function normalizeItemRows(data){
-  let out=[];
+function bnFieldByFloor(floor){
+  return String(floor||"").trim().toUpperCase().endsWith(" R") ? "BNR" : "BNF";
+}
+
+function normalizeRows(data){
   let date=data.date || data.postingDate || "";
   let floor=data.floor || data.floorName || "";
+  let rows=data.rows || [];
 
-  if(!Array.isArray(data.rows)) return out;
+  if(!date || !floor || !Array.isArray(rows)) return [];
 
-  data.rows.forEach(r=>{
-    let item=pick(r,["needleType","item","itemName","description","size"]);
-    let size=pick(r,["size","needleSize"]);
-    let itemName=item && size ? item+" - "+size : (item || size || "Needle");
+  return rows.map(r=>{
+    let needleType=pick(r,["needleType","item","itemName","description"]) || "";
+    let size=pick(r,["size","needleSize"]) || "";
+    let receive=n(pick(r,["receive","received","receiveQty","receivedQty"]));
+    let delivery=n(pick(r,["delivery","deliveryQty","issue","issued"]));
+    let present=n(pick(r,["present","presentStock","closing","closingStock"]));
+    let previous=n(pick(r,["previous","previousQty","opening","openingStock"]));
+    let bnr=n(pick(r,["bnr","BNR"]));
+    let bnf=n(pick(r,["bnf","BNF"]));
 
-    out.push({
+    return {
       date,
-      floor:pick(r,["floor","floorName"]) || floor,
+      floor,
       sl:pick(r,["sl","SL"]) || "",
-      item:itemName,
-      previous:n(pick(r,["previousQty","previous","opening","openingStock"])),
-      received:n(pick(r,["receivedQty","receiveQty","received","receive"])),
-      delivery:n(pick(r,["deliveryQty","delivery","issue","issued"])),
-      present:n(pick(r,["presentStock","present","closing","closingStock"])),
-      remarks:pick(r,["remarks","remark"])
-    });
+      needleType,
+      size,
+      previous,
+      receive,
+      delivery,
+      present,
+      bnr,
+      bnf
+    };
   });
-
-  return out;
 }
 
 async function loadReport(){
-  let from=document.getElementById("fromDate").value;
-  let to=document.getElementById("toDate").value;
+  let month=document.getElementById("monthInput").value;
   let floorFilter=document.getElementById("floorFilter").value;
+
+  if(!month){
+    alert("Month select koro");
+    return;
+  }
 
   let snap=await getDocs(collection(db,"dailyPosting"));
   let all=[];
 
   snap.forEach(d=>{
-    let data=d.data();
-    all.push(...normalizeItemRows(data));
+    all.push(...normalizeRows(d.data()));
   });
 
-  let filtered=all.filter(r=>{
-    if(from && r.date<from) return false;
-    if(to && r.date>to) return false;
+  all=all.filter(r=>{
+    if(!r.date.startsWith(month)) return false;
     if(floorFilter && r.floor!==floorFilter) return false;
-    if(!ALL_FLOORS.includes(r.floor)) return false;
+    if(!FLOORS.includes(r.floor)) return false;
     return true;
   });
 
-  let floors=floorFilter ? [floorFilter] : ALL_FLOORS;
+  let floors=floorFilter ? [floorFilter] : FLOORS;
+
   let html="";
-  let grandReceive=0,grandDelivery=0,grandPresent=0;
-  let usedFloorCount=0;
-  let chartLabels=[],chartReceive=[],chartDelivery=[],chartPresent=[];
+  let grandReceive=0,grandDelivery=0,grandPresent=0,grandBN=0;
 
   floors.forEach(floor=>{
-    let rows=filtered.filter(r=>r.floor===floor);
-
-    if(rows.length===0 && floorFilter) return;
-    if(rows.length===0 && !floorFilter) return;
-
-    usedFloorCount++;
+    let rows=all.filter(r=>r.floor===floor);
+    if(rows.length===0) return;
 
     let itemMap={};
 
     rows.forEach(r=>{
-      let key=r.item || "Needle";
+      let key=(r.needleType||"")+"___"+(r.size||"");
+
       if(!itemMap[key]){
         itemMap[key]={
-          item:key,
+          sl:r.sl,
+          needleType:r.needleType,
+          size:r.size,
           previous:0,
-          received:0,
+          receive:0,
           delivery:0,
           present:0,
-          lastDate:"",
-          remarks:""
+          bnr:0,
+          bnf:0,
+          lastDate:""
         };
       }
 
-      itemMap[key].received+=n(r.received);
-      itemMap[key].delivery+=n(r.delivery);
+      itemMap[key].receive+=r.receive;
+      itemMap[key].delivery+=r.delivery;
+      itemMap[key].bnr+=r.bnr;
+      itemMap[key].bnf+=r.bnf;
 
       if(!itemMap[key].lastDate || r.date>=itemMap[key].lastDate){
-        itemMap[key].previous=n(r.previous);
-        itemMap[key].present=n(r.present);
+        itemMap[key].previous=r.previous;
+        itemMap[key].present=r.present;
         itemMap[key].lastDate=r.date;
-        itemMap[key].remarks=r.remarks||"";
       }
     });
 
-    let items=Object.values(itemMap).sort((a,b)=>a.item.localeCompare(b.item));
+    let items=Object.values(itemMap).sort((a,b)=>Number(a.sl)-Number(b.sl));
 
-    let floorReceive=0,floorDelivery=0,floorPresent=0;
+    let floorReceive=0,floorDelivery=0,floorPresent=0,floorBN=0;
+    let bnTitle=bnFieldByFloor(floor);
 
     html+=`
     <div class="tableWrap">
     <table>
       <thead>
-        <tr><th colspan="8" class="floorTitle">${floor}</th></tr>
+        <tr><th colspan="8" class="floorTitle">${floor} Monthly Report</th></tr>
         <tr>
           <th>SL</th>
-          <th>Needle Item / Size</th>
-          <th>Previous Qty</th>
-          <th>Total Received Qty</th>
-          <th>Total Delivery Qty</th>
+          <th>Needle Type</th>
+          <th>Size</th>
+          <th>Previous</th>
+          <th>Total Receive</th>
+          <th>Total Delivery</th>
           <th>Present Stock</th>
-          <th>Last Date</th>
-          <th>Remarks</th>
+          <th>${bnTitle}</th>
         </tr>
       </thead>
       <tbody>
     `;
 
     items.forEach((r,i)=>{
-      floorReceive+=n(r.received);
-      floorDelivery+=n(r.delivery);
-      floorPresent+=n(r.present);
+      let bnQty=bnTitle==="BNR" ? r.bnr : r.bnf;
+
+      floorReceive+=r.receive;
+      floorDelivery+=r.delivery;
+      floorPresent+=r.present;
+      floorBN+=bnQty;
 
       html+=`
       <tr>
-        <td>${i+1}</td>
-        <td>${r.item}</td>
+        <td>${r.sl || i+1}</td>
+        <td>${r.needleType}</td>
+        <td>${r.size}</td>
         <td>${r.previous}</td>
-        <td>${r.received}</td>
+        <td>${r.receive}</td>
         <td>${r.delivery}</td>
         <td>${r.present}</td>
-        <td>${r.lastDate}</td>
-        <td>${r.remarks}</td>
+        <td>${bnQty}</td>
       </tr>`;
     });
 
@@ -285,11 +268,11 @@ async function loadReport(){
       </tbody>
       <tfoot>
         <tr class="totalRow">
-          <td colspan="3">${floor} Total</td>
+          <td colspan="4">${floor} TOTAL</td>
           <td>${floorReceive}</td>
           <td>${floorDelivery}</td>
           <td>${floorPresent}</td>
-          <td colspan="2"></td>
+          <td>${floorBN}</td>
         </tr>
       </tfoot>
     </table>
@@ -298,69 +281,40 @@ async function loadReport(){
     grandReceive+=floorReceive;
     grandDelivery+=floorDelivery;
     grandPresent+=floorPresent;
-
-    chartLabels.push(floor);
-    chartReceive.push(floorReceive);
-    chartDelivery.push(floorDelivery);
-    chartPresent.push(floorPresent);
+    grandBN+=floorBN;
   });
 
   html+=`
   <div class="tableWrap">
   <table>
-    <tfoot>
-      <tr class="grandRow">
-        <td colspan="3">Grand Total</td>
-        <td>Total Received: ${grandReceive}</td>
-        <td>Total Delivery: ${grandDelivery}</td>
-        <td>Present Stock: ${grandPresent}</td>
-        <td colspan="2"></td>
-      </tr>
-    </tfoot>
+    <tr class="grandRow">
+      <td>MONTHLY GRAND TOTAL</td>
+      <td>Total Receive: ${grandReceive}</td>
+      <td>Total Delivery: ${grandDelivery}</td>
+      <td>Present Stock: ${grandPresent}</td>
+      <td>Total BNR/BNF: ${grandBN}</td>
+    </tr>
   </table>
   </div>`;
 
-  document.getElementById("reportArea").innerHTML = html || `<div style="text-align:center;color:#9fb0c7;padding:25px;font-weight:bold">No Data Found</div>`;
+  document.getElementById("reportArea").innerHTML=html || `<div style="text-align:center;color:#9fb0c7;padding:25px;font-weight:bold">No Data Found</div>`;
 
   document.getElementById("kpiReceive").innerText=grandReceive;
   document.getElementById("kpiDelivery").innerText=grandDelivery;
   document.getElementById("kpiPresent").innerText=grandPresent;
-  document.getElementById("kpiFloor").innerText=usedFloorCount;
-
-  renderChart(chartLabels,chartReceive,chartDelivery,chartPresent);
+  document.getElementById("kpiBN").innerText=grandBN;
 }
+
 window.loadReport=loadReport;
-
-function renderChart(labels,receive,delivery,present){
-  if(chart)chart.destroy();
-
-  chart=new Chart(document.getElementById("monthlyChart"),{
-    type:"bar",
-    data:{
-      labels:labels,
-      datasets:[
-        {label:"Received",data:receive,borderWidth:1,borderRadius:6},
-        {label:"Delivery",data:delivery,borderWidth:1,borderRadius:6},
-        {label:"Present Stock",data:present,borderWidth:1,borderRadius:6}
-      ]
-    },
-    options:{
-      responsive:true,
-      plugins:{title:{display:true,text:"Needle Monthly Received / Delivery / Present Stock"}},
-      scales:{y:{beginAtZero:true}}
-    }
-  });
-}
 
 window.exportExcel=function(){
   let html=document.getElementById("reportArea").innerHTML;
-
   let file=new Blob([`
     <html><head><meta charset="UTF-8"></head>
     <body>
-    <h2>GMS Textiles Ltd</h2>
-    <h3>Needle Monthly Report</h3>
-    ${html}
+      <h2>GMS Textiles Ltd</h2>
+      <h3>Needle Monthly Report</h3>
+      ${html}
     </body></html>
   `],{type:"application/vnd.ms-excel"});
 
