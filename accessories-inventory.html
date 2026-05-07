@@ -41,6 +41,12 @@ td input,td select{width:100%;box-sizing:border-box;border:0;outline:none;text-a
   <button class="home" onclick="location.href='index.html'">🏠 Home</button>
 </div>
 
+<datalist id="buyerList"></datalist>
+<datalist id="styleList"></datalist>
+<datalist id="orderList"></datalist>
+<datalist id="itemList"></datalist>
+<datalist id="challanList"></datalist>
+
 <div class="tableWrap">
 <table>
 <thead>
@@ -69,7 +75,12 @@ td input,td select{width:100%;box-sizing:border-box;border:0;outline:none;text-a
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-app.js";
-import { getFirestore, collection, addDoc } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-firestore.js";
+import {
+  getFirestore,
+  collection,
+  addDoc,
+  getDocs
+} from "https://www.gstatic.com/firebasejs/12.12.1/firebase-firestore.js";
 
 const firebaseConfig={
   apiKey:"AIzaSyD-wBCF5eeWMHobLFOhBzKW7aB2pagz9-w",
@@ -99,6 +110,37 @@ function toast(msg){
   setTimeout(()=>t.style.display="none",1600);
 }
 
+function addOption(listId,value){
+  if(!value) return;
+  let list=document.getElementById(listId);
+  let exists=[...list.children].some(o=>o.value===value);
+  if(!exists){
+    let opt=document.createElement("option");
+    opt.value=value;
+    list.appendChild(opt);
+  }
+}
+
+async function loadSuggestions(){
+  try{
+    let snap=await getDocs(collection(db,"accessoriesInventory"));
+
+    snap.forEach(d=>{
+      let x=d.data();
+
+      (x.rows||[]).forEach(r=>{
+        addOption("buyerList",r.buyerName);
+        addOption("styleList",r.style);
+        addOption("orderList",r.orderNo);
+        addOption("itemList",r.itemName);
+        addOption("challanList",r.challanNo);
+      });
+    });
+  }catch(e){
+    console.log(e);
+  }
+}
+
 function calcRow(tr){
   let challan=Number(tr.querySelector(".challanQty").value)||0;
   let receive=Number(tr.querySelector(".receiveQty").value)||0;
@@ -126,11 +168,11 @@ window.addRow=function(){
 
   tr.innerHTML=`
     <td><input type="date" class="receivedDate" value="${document.getElementById("postingDate").value}"></td>
-    <td><input class="challanNo"></td>
-    <td><input class="buyerName"></td>
-    <td><input class="styleNo"></td>
-    <td><input class="orderNo"></td>
-    <td><input class="itemName"></td>
+    <td><input class="challanNo" list="challanList"></td>
+    <td><input class="buyerName" list="buyerList"></td>
+    <td><input class="styleNo" list="styleList"></td>
+    <td><input class="orderNo" list="orderList"></td>
+    <td><input class="itemName" list="itemList"></td>
     <td>
       <select class="unit">
         <option value="">Select</option>
@@ -222,6 +264,14 @@ window.savePosting=async function(){
       createdAt:new Date().toISOString()
     });
 
+    valid.forEach(r=>{
+      addOption("buyerList",r.buyerName);
+      addOption("styleList",r.style);
+      addOption("orderList",r.orderNo);
+      addOption("itemList",r.itemName);
+      addOption("challanList",r.challanNo);
+    });
+
     document.getElementById("tbody").innerHTML="";
     addRow();
 
@@ -245,6 +295,7 @@ document.addEventListener("keydown",function(e){
   }
 });
 
+loadSuggestions();
 addRow();
 </script>
 
