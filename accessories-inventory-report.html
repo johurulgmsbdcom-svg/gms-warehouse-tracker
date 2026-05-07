@@ -5,33 +5,70 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
 
 <style>
-body{margin:0;background:#07111f;color:white;font-family:Arial,sans-serif}
+:root{
+  --bg:#07111f;--card:#101b2d;--text:#fff;--muted:#9fb0c7;
+  --border:#263855;--blue:#2563eb;--green:#16a34a;--red:#dc2626;
+}
+body.light{
+  --bg:#f1f5f9;--card:#ffffff;--text:#111827;--muted:#64748b;--border:#cbd5e1;
+}
+body{margin:0;background:var(--bg);color:var(--text);font-family:Arial,sans-serif}
 .header{text-align:center;padding:12px}
 .header h2,.header h3,.header h4{margin:3px}
 .controls{text-align:center;margin:10px}
-button{padding:10px 14px;border:0;border-radius:8px;color:white;font-weight:bold;margin:4px}
-.show{background:#2563eb}.excel{background:#059669}.print{background:#7c3aed}.home{background:#0f766e}.del{background:#dc2626}.edit{background:#f59e0b}.save{background:#16a34a}
+button{padding:10px 14px;border:0;border-radius:8px;color:white;font-weight:bold;margin:4px;cursor:pointer}
+.show{background:var(--blue)}.excel{background:#059669}.print{background:#7c3aed}
+.home{background:#0f766e}.del{background:var(--red)}.edit{background:#f59e0b}.save{background:var(--green)}
+.theme{background:#334155}
 input,select{font-size:16px;padding:7px;border-radius:6px;border:1px solid #999}
 .kpi{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin:10px}
-.kpiBox{background:#101b2d;border:1px solid #263855;border-radius:14px;padding:12px;text-align:center}
-.kpiBox span{font-size:12px;color:#9fb0c7;font-weight:bold}
+.kpiBox{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:12px;text-align:center}
+.kpiBox span{font-size:12px;color:var(--muted);font-weight:bold}
 .kpiBox b{display:block;color:#22c55e;font-size:24px;margin-top:5px}
 .tableWrap{overflow-x:auto;width:100%}
-table{min-width:1250px;width:98%;margin:10px auto;border-collapse:collapse;background:white;color:black;font-size:12px}
-th,td{border:1px solid #000;padding:5px;text-align:center}
+table{width:98%;margin:10px auto;border-collapse:collapse;background:white;color:black;font-size:11px}
+th,td{border:1px solid #000;padding:4px;text-align:center;word-break:break-word}
 th{background:#2f6b55;color:white}
-td input,td select{width:100%;box-sizing:border-box;border:0;outline:none;text-align:center;font-size:15px}
+td input,td select{width:100%;box-sizing:border-box;border:0;outline:none;text-align:center;font-size:13px}
 .totalRow{background:#d9ead3;font-weight:bold}
 .toast{position:fixed;right:15px;bottom:15px;background:#22c55e;padding:12px 18px;border-radius:10px;font-weight:bold;display:none}
-@page{size:A4 landscape;margin:8mm}
+
+@page{size:A4 landscape;margin:5mm}
+
 @media print{
-  body{background:white;color:black}
+  body{background:white;color:black;padding:0}
   .controls,.kpi,.noPrint{display:none!important}
-  table{width:100%;font-size:10px}
+  .header{padding:2px}
+  .header h2{font-size:16px}
+  .header h3,.header h4{font-size:11px}
+  .tableWrap{overflow:visible;width:100%}
+  table{
+    width:100%;
+    margin:0;
+    font-size:8px;
+    table-layout:fixed;
+  }
+  th,td{
+    padding:2px;
+    line-height:1.15;
+  }
+  th:nth-child(1),td:nth-child(1){width:8%}
+  th:nth-child(2),td:nth-child(2){width:8%}
+  th:nth-child(3),td:nth-child(3){width:9%}
+  th:nth-child(4),td:nth-child(4){width:8%}
+  th:nth-child(5),td:nth-child(5){width:8%}
+  th:nth-child(6),td:nth-child(6){width:12%}
+  th:nth-child(7),td:nth-child(7){width:5%}
+  th:nth-child(8),td:nth-child(8){width:7%}
+  th:nth-child(9),td:nth-child(9){width:7%}
+  th:nth-child(10),td:nth-child(10){width:6%}
+  th:nth-child(11),td:nth-child(11){width:6%}
+  th:nth-child(12),td:nth-child(12){width:6%}
+  th:nth-child(13),td:nth-child(13){width:10%}
 }
 @media(max-width:700px){
   .kpi{grid-template-columns:1fr 1fr}
-  .header h2{font-size:24px}
+  table{min-width:1200px}
 }
 </style>
 </head>
@@ -54,6 +91,7 @@ td input,td select{width:100%;box-sizing:border-box;border:0;outline:none;text-a
   <button class="show" onclick="loadReport()">🔍 Show Report</button>
   <button class="excel" onclick="exportExcel()">📊 Excel</button>
   <button class="print" onclick="window.print()">🖨 PDF / Print</button>
+  <button class="theme" onclick="toggleTheme()">🌙 / ☀️</button>
   <button class="home" onclick="location.href='accessories-inventory.html'">➕ Posting</button>
   <button class="home" onclick="location.href='index.html'">🏠 Home</button>
 </div>
@@ -135,6 +173,15 @@ function today(){
 document.getElementById("fromDate").value=today();
 document.getElementById("toDate").value=today();
 
+window.toggleTheme=function(){
+  document.body.classList.toggle("light");
+  localStorage.setItem("inventoryReportTheme",document.body.classList.contains("light") ? "light" : "dark");
+};
+
+if(localStorage.getItem("inventoryReportTheme")==="light"){
+  document.body.classList.add("light");
+}
+
 function toast(msg){
   let t=document.getElementById("toast");
   t.innerText=msg;
@@ -152,6 +199,18 @@ function calcDue(r){
   return c>rec ? c-rec : "";
 }
 
+function calcShort(r){
+  let c=n(r.challanQty);
+  let rec=n(r.receiveQty);
+  return c>rec ? c-rec : "";
+}
+
+function calcExcess(r){
+  let c=n(r.challanQty);
+  let rec=n(r.receiveQty);
+  return rec>c ? rec-c : "";
+}
+
 async function loadReport(){
   let from=document.getElementById("fromDate").value;
   let to=document.getElementById("toDate").value;
@@ -161,6 +220,7 @@ async function loadReport(){
 
   snap.forEach(d=>{
     let x=d.data();
+
     if(x.postingDate>=from && x.postingDate<=to){
       (x.rows||[]).forEach((r,idx)=>{
         reportRows.push({
@@ -184,6 +244,8 @@ function render(){
 
   reportRows.forEach((r,i)=>{
     r.dueQty = calcDue(r);
+    r.short = calcShort(r);
+    r.excess = calcExcess(r);
 
     gtChallan+=n(r.challanQty);
     gtReceive+=n(r.receiveQty);
@@ -211,8 +273,8 @@ function render(){
         <td><input type="number" value="${r.challanQty||''}" onchange="reportRows[${i}].challanQty=this.value;render()"></td>
         <td><input type="number" value="${r.receiveQty||''}" onchange="reportRows[${i}].receiveQty=this.value;render()"></td>
         <td>${r.dueQty||""}</td>
-        <td><input type="number" value="${r.short||''}" onchange="reportRows[${i}].short=this.value"></td>
-        <td><input type="number" value="${r.excess||''}" onchange="reportRows[${i}].excess=this.value"></td>
+        <td>${r.short||""}</td>
+        <td>${r.excess||""}</td>
         <td>${r.reportedBy||""}</td>
         <td class="noPrint">
           <button class="save" onclick="saveEdit(${i})">💾 Save</button>
@@ -281,8 +343,8 @@ window.saveEdit=async function(i){
     challanQty:r.challanQty||"",
     receiveQty:r.receiveQty||"",
     dueQty:calcDue(r),
-    short:r.short||"",
-    excess:r.excess||"",
+    short:calcShort(r),
+    excess:calcExcess(r),
     reportedBy:r.reportedBy||""
   };
 
@@ -319,8 +381,21 @@ window.deleteRow=async function(i){
 };
 
 window.exportExcel=function(){
-  let table=document.getElementById("reportTable").outerHTML;
-  let file=new Blob([table],{type:"application/vnd.ms-excel"});
+  let clone=document.getElementById("reportTable").cloneNode(true);
+  clone.querySelectorAll(".noPrint").forEach(x=>x.remove());
+
+  let html=`
+    <html>
+      <head><meta charset="UTF-8"></head>
+      <body>
+        <h2>GMS Textiles Ltd</h2>
+        <h3>Accessories Physically Inventory Report</h3>
+        ${clone.outerHTML}
+      </body>
+    </html>
+  `;
+
+  let file=new Blob([html],{type:"application/vnd.ms-excel"});
   let a=document.createElement("a");
   a.href=URL.createObjectURL(file);
   a.download="accessories-inventory-report.xls";
