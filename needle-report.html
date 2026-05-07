@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Needle Report Entry</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+
+<style>
+body{margin:0;background:#07111f;color:white;font-family:Arial,sans-serif}
+.header{text-align:center;padding:12px}
+.header h2,.header h3,.header h4{margin:3px}
+.controls{text-align:center;margin:10px}
+button{padding:10px 14px;border:0;border-radius:8px;color:white;font-weight:bold;margin:4px;cursor:pointer}
+.save{background:#16a34a}.show{background:#2563eb}.home{background:#0f766e}
+input{font-size:16px;padding:7px;border-radius:6px;border:1px solid #999}
+.tableWrap{overflow-x:auto;width:100%}
+table{min-width:1200px;width:98%;margin:10px auto;border-collapse:collapse;background:white;color:black;font-size:12px}
+th,td{border:1px solid #000;padding:6px;text-align:center}
+th{background:#f3f4f6;font-weight:bold}
+td input{width:100%;box-sizing:border-box;border:0;outline:none;text-align:center;font-size:15px}
+.totalCell{font-weight:bold;background:#e5e7eb}
+.chartBox{width:96%;margin:10px auto;background:white;color:black;border-radius:10px;padding:10px}
+.toast{position:fixed;right:15px;bottom:15px;background:#22c55e;color:white;padding:12px 18px;border-radius:10px;font-weight:bold;display:none}
+</style>
+</head>
+
+<body>
+
+<div class="header">
+  <h2>GMS Textiles Ltd</h2>
+  <h4>Needle MCD</h4>
+  <h3>Needle Daily Report Entry</h3>
+</div>
+
+<div class="controls">
+  Date:
+  <input type="date" id="reportDate">
+
+  <button class="save" onclick="saveReport()">💾 Save</button>
+  <button class="show" onclick="location.href='needle-report-view.html'">📑 Report</button>
+  <button class="home" onclick="location.href='index.html'">🏠 Home</button>
+</div>
+
+<div class="tableWrap">
+<table>
+<thead>
+<tr>
+  <th>Needle Booth</th>
+  <th>Total Sewing Line</th>
+  <th>Machine Plan</th>
+  <th>Sewing Running Machine</th>
+  <th>Broken Needle</th>
+  <th>Missing Needle</th>
+  <th>Change Needle</th>
+  <th>Total Issue</th>
+  <th>Per Machine Avg. Needle Use</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td><input type="number" id="needleBooth" value="6" oninput="calculate()"></td>
+  <td><input type="number" id="totalSewingLine" value="56" oninput="calculate()"></td>
+  <td><input type="number" id="machinePlan" value="3468" oninput="calculate()"></td>
+  <td><input type="number" id="runningMachine" value="2254" oninput="calculate()"></td>
+  <td><input type="number" id="brokenNeedle" value="213" oninput="calculate()"></td>
+  <td><input type="number" id="missingNeedle" value="26" oninput="calculate()"></td>
+  <td><input type="number" id="changeNeedle" value="1310" oninput="calculate()"></td>
+  <td class="totalCell" id="totalIssue">1549</td>
+  <td class="totalCell" id="avgUse">1.46</td>
+</tr>
+</tbody>
+</table>
+</div>
+
+<div class="chartBox">
+  <canvas id="issueChart" height="90"></canvas>
+</div>
+
+<div id="toast" class="toast">Saved ✅</div>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-app.js";
+import {
+  getFirestore,
+  collection,
+  addDoc,
+  getDocs,
+  deleteDoc,
+  doc,
+  query,
+  where
+} from "https://www.gstatic.com/firebasejs/12.12.1/firebase-firestore.js";
+
+const firebaseConfig={
+  apiKey:"AIzaSyD-wBCF5eeWMHobLFOhBzKW7aB2pagz9-w",
+  authDomain:"gms-warehouse-tracker-7f57e.firebaseapp.com",
+  projectId:"gms-warehouse-tracker-7f57e",
+  storageBucket:"gms-warehouse-tracker-7f57e.firebasestorage.app",
+  messagingSenderId:"992250313291",
+  appId:"1:992250313291:web:ee3bceae76d4d53bc26bce"
+};
+
+const app=initializeApp(firebaseConfig);
+const db=getFirestore(app);
+
+const user=JSON.parse(localStorage.getItem("gmsUser")||"null");
+if(!user){window.location.href="login.html"}
+
+let chart;
+
+function today(){
+  return new Date().toISOString().slice(0,10);
+}
+
+document.getElementById("reportDate").value=today();
+
+function n(id){
+  return Number(document.getElementById(id).value)||0;
+}
+
+function toast(msg){
+  let t=document.getElementById("toast");
+  t.innerText=msg;
+  t.style.display="block";
+  setTimeout(()=>t.style.display="none",1500);
+}
+
+window.calculate=function(){
+  let broken=n("brokenNeedle");
+  let missing=n("missingNeedle");
+  let change=n("changeNeedle");
+  let running=n("runningMachine");
+
+  let totalIssue=broken+missing+change;
+  let avg=totalIssue>0 ? running/totalIssue : 0;
+
+  document.getElementById("totalIssue").innerText=totalIssue;
+  document.getElementById("avgUse").innerText=avg.toFixed(2);
+
+  renderChart(broken,missing,change);
+};
+
+function renderChart(broken,missing,change){
+  if(chart)chart.destroy();
+
+  chart=new Chart(document.getElementById("issueChart"),{
+    type:"bar",
+    data:{
+      labels:["Broken","Missing","Change"],
+      datasets:[{
+        label:"Needle Issue",
+        data:[broken,missing,change],
+        borderRadius:8,
+        borderWidth:1
+      }]
+    },
+    options:{
+      responsive:true,
+      plugins:{
+        legend:{display:false},
+        title:{display:true,text:"Broken / Missing / Change Needle Chart"}
+      },
+      scales:{y:{beginAtZero:true}}
+    }
+  });
+}
+
+async function deleteSameDate(date){
+  let q=query(collection(db,"needleDailyReport"),where("date","==",date));
+  let snap=await getDocs(q);
+
+  for(let d of snap.docs){
+    await deleteDoc(doc(db,"needleDailyReport",d.id));
+  }
+}
+
+window.saveReport=async function(){
+  calculate();
+
+  let date=document.getElementById("reportDate").value;
+
+  await deleteSameDate(date);
+
+  await addDoc(collection(db,"needleDailyReport"),{
+    date:date,
+    needleBooth:n("needleBooth"),
+    totalSewingLine:n("totalSewingLine"),
+    machinePlan:n("machinePlan"),
+    runningMachine:n("runningMachine"),
+    brokenNeedle:n("brokenNeedle"),
+    missingNeedle:n("missingNeedle"),
+    changeNeedle:n("changeNeedle"),
+    totalIssue:Number(document.getElementById("totalIssue").innerText)||0,
+    avgUse:Number(document.getElementById("avgUse").innerText)||0,
+    reportedBy:user.name||user.email||"User",
+    userId:user.id||"",
+    createdAt:new Date().toISOString()
+  });
+
+  toast("Needle Report Saved ✅");
+};
+
+calculate();
+</script>
+
+</body>
+</html>
