@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-<title>Needle Report Entry</title>
+<title>All Needle BNR / BNF Report</title>
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
 
@@ -11,17 +11,27 @@ body{margin:0;background:#07111f;color:white;font-family:Arial,sans-serif}
 .header h2,.header h3,.header h4{margin:3px}
 .controls{text-align:center;margin:10px}
 button{padding:10px 14px;border:0;border-radius:8px;color:white;font-weight:bold;margin:4px;cursor:pointer}
-.save{background:#16a34a}.show{background:#2563eb}.home{background:#0f766e}.add{background:#f59e0b}.del{background:#dc2626}
-input{font-size:16px;padding:7px;border-radius:6px;border:1px solid #999}
+.show{background:#2563eb}.excel{background:#059669}.print{background:#7c3aed}.home{background:#0f766e}.del{background:#dc2626}
+input,select{font-size:16px;padding:7px;border-radius:6px;border:1px solid #999}
+.kpi{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin:10px}
+.kpiBox{background:#101b2d;border:1px solid #263855;border-radius:14px;padding:12px;text-align:center}
+.kpiBox span{font-size:12px;color:#9fb0c7;font-weight:bold}
+.kpiBox b{display:block;color:#22c55e;font-size:24px;margin-top:5px}
 .tableWrap{overflow-x:auto;width:100%}
-table{min-width:1450px;width:98%;margin:10px auto;border-collapse:collapse;background:white;color:black;font-size:12px}
+table{min-width:1250px;width:98%;margin:10px auto;border-collapse:collapse;background:white;color:black;font-size:12px}
 th,td{border:1px solid #000;padding:6px;text-align:center}
 th{background:#9fc5e8;font-weight:bold}
-td input{width:100%;box-sizing:border-box;border:0;outline:none;text-align:center;font-size:15px}
-.totalCell{font-weight:bold;background:#e5e7eb}
+.totalRow{background:#d9ead3;font-weight:bold}
 .chartBox{width:96%;margin:10px auto;background:white;color:black;border-radius:10px;padding:10px}
-.toast{position:fixed;right:15px;bottom:15px;background:#22c55e;color:white;padding:12px 18px;border-radius:10px;font-weight:bold;display:none}
-@media(max-width:700px){table{font-size:11px}}
+@page{size:A4 landscape;margin:6mm}
+@media print{
+  body{background:white;color:black}
+  .controls,.kpi,.noPrint{display:none!important}
+  table{width:100%;min-width:0;font-size:9px}
+  th,td{padding:3px}
+  .chartBox{width:100%;margin:4px 0}
+}
+@media(max-width:700px){.kpi{grid-template-columns:1fr 1fr}}
 </style>
 </head>
 
@@ -30,86 +40,80 @@ td input{width:100%;box-sizing:border-box;border:0;outline:none;text-align:cente
 <div class="header">
   <h2>GMS Textiles Ltd</h2>
   <h4>Needle MCD</h4>
-  <h3>Needle Daily Report Entry</h3>
+  <h3>All Needle BNR / BNF Report</h3>
 </div>
 
-<div class="controls">
-  Date:
-  <input type="date" id="reportDate">
+<div class="controls noPrint">
+  From: <input type="date" id="fromDate">
+  To: <input type="date" id="toDate">
 
-  <button class="save" onclick="saveReport()">💾 Save</button>
-  <button class="add" onclick="addFloorRow()">➕ Add Floor Row</button>
-  <button class="show" onclick="location.href='needle-report-view.html'">📑 Report</button>
+  Floor:
+  <select id="floorFilter">
+    <option value="">All Floor</option>
+    <option>SHAPLA</option>
+    <option>PODDO</option>
+    <option>SAMPLE</option>
+    <option>KADOM</option>
+    <option>BELLY</option>
+    <option>Embroidery</option>
+  </select>
+
+  Type:
+  <select id="typeFilter">
+    <option value="">All</option>
+    <option value="BNR">BNR</option>
+    <option value="BNF">BNF</option>
+  </select>
+
+  <button class="show" onclick="loadReport()">🔍 Show</button>
+  <button class="excel" onclick="exportExcel()">📊 Excel</button>
+  <button class="print" onclick="window.print()">🖨 PDF / Print</button>
+  <button class="home" onclick="location.href='needle.html'">🪡 Entry</button>
   <button class="home" onclick="location.href='index.html'">🏠 Home</button>
 </div>
 
-<div class="tableWrap">
-<table>
-<thead>
-<tr>
-  <th>Needle Booth</th>
-  <th>Total Sewing Line</th>
-  <th>Machine Plan</th>
-  <th>Sewing Running Machine</th>
-  <th>Broken Needle</th>
-  <th>Missing Needle</th>
-  <th>Change Needle</th>
-  <th>Total Issue</th>
-  <th>Per Machine Avg. Needle Use</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-  <td><input type="number" id="needleBooth" value="6" oninput="calculate()"></td>
-  <td><input type="number" id="totalSewingLine" value="56" oninput="calculate()"></td>
-  <td><input type="number" id="machinePlan" value="3468" oninput="calculate()"></td>
-  <td><input type="number" id="runningMachine" value="2254" oninput="calculate()"></td>
-  <td><input type="number" id="brokenNeedle" value="213" oninput="calculate()"></td>
-  <td><input type="number" id="missingNeedle" value="26" oninput="calculate()"></td>
-  <td><input type="number" id="changeNeedle" value="1310" oninput="calculate()"></td>
-  <td class="totalCell" id="totalIssue">1549</td>
-  <td class="totalCell" id="avgUse">1.46</td>
-</tr>
-</tbody>
-</table>
+<div class="kpi">
+  <div class="kpiBox"><span>📌 Total BNR</span><b id="kpiBNR">0</b></div>
+  <div class="kpiBox"><span>📌 Total BNF</span><b id="kpiBNF">0</b></div>
+  <div class="kpiBox"><span>📦 Total Qty</span><b id="kpiQty">0</b></div>
+  <div class="kpiBox"><span>📅 Total Report</span><b id="kpiReport">0</b></div>
 </div>
 
 <div class="tableWrap">
-<table>
+<table id="reportTable">
 <thead>
 <tr>
-  <th>Description</th>
-  <th>Floor Name</th>
-  <th>Previous Qty</th>
-  <th>Received Qty</th>
-  <th>Delivery Qty</th>
-  <th>Present Stock</th>
-  <th>Remarks</th>
-  <th>Action</th>
+  <th>Date</th>
+  <th>Floor</th>
+  <th>Type</th>
+  <th>Needle Size / Item</th>
+  <th>Buyer</th>
+  <th>Style</th>
+  <th>Line</th>
+  <th>Machine</th>
+  <th>Qty</th>
+  <th>Reason / Remarks</th>
+  <th>Reported By</th>
 </tr>
 </thead>
-<tbody id="floorBody"></tbody>
+<tbody id="tbody"></tbody>
+<tfoot>
+<tr class="totalRow">
+  <td colspan="8">Grand Total</td>
+  <td id="gtQty">0</td>
+  <td colspan="2"></td>
+</tr>
+</tfoot>
 </table>
 </div>
 
 <div class="chartBox">
-  <canvas id="issueChart" height="90"></canvas>
+  <canvas id="bnChart" height="90"></canvas>
 </div>
-
-<div id="toast" class="toast">Saved ✅</div>
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-app.js";
-import {
-  getFirestore,
-  collection,
-  addDoc,
-  getDocs,
-  deleteDoc,
-  doc,
-  query,
-  where
-} from "https://www.gstatic.com/firebasejs/12.12.1/firebase-firestore.js";
+import { getFirestore, collection, getDocs } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-firestore.js";
 
 const firebaseConfig={
   apiKey:"AIzaSyD-wBCF5eeWMHobLFOhBzKW7aB2pagz9-w",
@@ -123,208 +127,181 @@ const firebaseConfig={
 const app=initializeApp(firebaseConfig);
 const db=getFirestore(app);
 
-const user=JSON.parse(localStorage.getItem("gmsUser")||"null");
-if(!user){window.location.href="login.html"}
-
 let chart;
-let floorRows=[];
 
-const defaultFloorRows=[
-  {description:"Sewing Needle",floorName:"SHAPLA",previousQty:2432,receivedQty:"",deliveryQty:"",presentStock:2432,remarks:""},
-  {description:"Sewing Needle",floorName:"PODDO",previousQty:3679,receivedQty:"",deliveryQty:"",presentStock:3679,remarks:""},
-  {description:"Sewing Needle",floorName:"SAMPLE",previousQty:1740,receivedQty:"",deliveryQty:"",presentStock:1740,remarks:""},
-  {description:"Sewing Needle",floorName:"KADOM",previousQty:2696,receivedQty:"",deliveryQty:"",presentStock:2696,remarks:""},
-  {description:"Sewing Needle",floorName:"BELLY",previousQty:1188,receivedQty:"",deliveryQty:"",presentStock:1188,remarks:""},
-  {description:"Sewing Needle",floorName:"Embroidery",previousQty:1474,receivedQty:"",deliveryQty:"",presentStock:1474,remarks:""},
-  {description:"Needle Technical Stock",floorName:"All",previousQty:184820,receivedQty:"",deliveryQty:"",presentStock:184820,remarks:""}
-];
+function today(){return new Date().toISOString().slice(0,10)}
+document.getElementById("fromDate").value=today();
+document.getElementById("toDate").value=today();
 
-function today(){
-  return new Date().toISOString().slice(0,10);
+function n(v){return Number(v)||0}
+
+function pick(obj,keys){
+  for(let k of keys){
+    if(obj && obj[k]!==undefined && obj[k]!==null && obj[k]!=="") return obj[k];
+  }
+  return "";
 }
 
-document.getElementById("reportDate").value=today();
+function normalizeRows(docData){
+  let rows=[];
 
-function n(v){
-  return Number(v)||0;
+  let date=pick(docData,["date","postingDate","reportDate"]);
+  let floor=pick(docData,["floor","floorName"]);
+  let reportedBy=pick(docData,["reportedBy","userName","name"]);
+
+  let sourceRows=docData.rows || docData.items || docData.bnrRows || docData.needleRows || [];
+
+  if(Array.isArray(sourceRows) && sourceRows.length){
+    sourceRows.forEach(r=>{
+      let type=String(pick(r,["type","reportType","bnType","status"])).toUpperCase();
+
+      let bnr=n(pick(r,["bnr","BNR","broken","brokenQty"]));
+      let bnf=n(pick(r,["bnf","BNF","found","bnfQty"]));
+
+      if(type==="BNR" || bnr>0){
+        rows.push({
+          date,
+          floor:pick(r,["floor","floorName"])||floor,
+          type:"BNR",
+          item:pick(r,["needleSize","item","itemName","description"]),
+          buyer:pick(r,["buyer","buyerName"]),
+          style:pick(r,["style","styleName"]),
+          line:pick(r,["line","lineNo"]),
+          machine:pick(r,["machine","machineNo"]),
+          qty:bnr || n(pick(r,["qty","quantity"])),
+          remarks:pick(r,["remarks","reason"]),
+          reportedBy:pick(r,["reportedBy"])||reportedBy
+        });
+      }
+
+      if(type==="BNF" || bnf>0){
+        rows.push({
+          date,
+          floor:pick(r,["floor","floorName"])||floor,
+          type:"BNF",
+          item:pick(r,["needleSize","item","itemName","description"]),
+          buyer:pick(r,["buyer","buyerName"]),
+          style:pick(r,["style","styleName"]),
+          line:pick(r,["line","lineNo"]),
+          machine:pick(r,["machine","machineNo"]),
+          qty:bnf || n(pick(r,["qty","quantity"])),
+          remarks:pick(r,["remarks","reason"]),
+          reportedBy:pick(r,["reportedBy"])||reportedBy
+        });
+      }
+    });
+  }
+
+  return rows;
 }
 
-function byId(id){
-  return document.getElementById(id);
+async function loadReport(){
+  let from=document.getElementById("fromDate").value;
+  let to=document.getElementById("toDate").value;
+  let floorFilter=document.getElementById("floorFilter").value;
+  let typeFilter=document.getElementById("typeFilter").value;
+
+  let all=[];
+
+  let collections=["needleReports","dailyPosting","needleBNRBNF","allNeedleReports"];
+
+  for(let col of collections){
+    try{
+      let snap=await getDocs(collection(db,col));
+      snap.forEach(d=>{
+        let x=d.data();
+        all.push(...normalizeRows(x));
+      });
+    }catch(e){}
+  }
+
+  let filtered=all.filter(r=>{
+    if(from && r.date<from) return false;
+    if(to && r.date>to) return false;
+    if(floorFilter && r.floor!==floorFilter) return false;
+    if(typeFilter && r.type!==typeFilter) return false;
+    return true;
+  });
+
+  filtered.sort((a,b)=>(a.date||"").localeCompare(b.date||""));
+
+  let html="";
+  let totalBNR=0,totalBNF=0,totalQty=0;
+
+  filtered.forEach(r=>{
+    if(r.type==="BNR") totalBNR+=n(r.qty);
+    if(r.type==="BNF") totalBNF+=n(r.qty);
+    totalQty+=n(r.qty);
+
+    html+=`
+    <tr>
+      <td>${r.date||""}</td>
+      <td>${r.floor||""}</td>
+      <td>${r.type||""}</td>
+      <td>${r.item||""}</td>
+      <td>${r.buyer||""}</td>
+      <td>${r.style||""}</td>
+      <td>${r.line||""}</td>
+      <td>${r.machine||""}</td>
+      <td>${r.qty||""}</td>
+      <td>${r.remarks||""}</td>
+      <td>${r.reportedBy||""}</td>
+    </tr>`;
+  });
+
+  document.getElementById("tbody").innerHTML=html || `<tr><td colspan="11">No BNR/BNF Data Found</td></tr>`;
+  document.getElementById("gtQty").innerText=totalQty;
+
+  document.getElementById("kpiBNR").innerText=totalBNR;
+  document.getElementById("kpiBNF").innerText=totalBNF;
+  document.getElementById("kpiQty").innerText=totalQty;
+  document.getElementById("kpiReport").innerText=filtered.length;
+
+  renderChart(totalBNR,totalBNF);
 }
 
-function toast(msg){
-  let t=byId("toast");
-  t.innerText=msg;
-  t.style.display="block";
-  setTimeout(()=>t.style.display="none",1500);
-}
+window.loadReport=loadReport;
 
-window.calculate=function(){
-  let broken=n(byId("brokenNeedle").value);
-  let missing=n(byId("missingNeedle").value);
-  let change=n(byId("changeNeedle").value);
-  let running=n(byId("runningMachine").value);
+function renderChart(bnr,bnf){
+  if(chart) chart.destroy();
 
-  let totalIssue=broken+missing+change;
-  let avg=totalIssue>0 ? running/totalIssue : 0;
-
-  byId("totalIssue").innerText=totalIssue;
-  byId("avgUse").innerText=avg.toFixed(2);
-
-  renderChart(broken,missing,change);
-};
-
-function renderChart(broken,missing,change){
-  if(chart)chart.destroy();
-
-  chart=new Chart(byId("issueChart"),{
+  chart=new Chart(document.getElementById("bnChart"),{
     type:"bar",
     data:{
-      labels:["Broken","Missing","Change"],
+      labels:["BNR","BNF"],
       datasets:[{
-        label:"Needle Issue",
-        data:[broken,missing,change],
+        label:"Qty",
+        data:[bnr,bnf],
         borderRadius:8,
         borderWidth:1
       }]
     },
     options:{
       responsive:true,
-      plugins:{
-        legend:{display:false},
-        title:{display:true,text:"Broken / Missing / Change Needle Chart"}
-      },
+      plugins:{legend:{display:false},title:{display:true,text:"BNR / BNF Chart"}},
       scales:{y:{beginAtZero:true}}
     }
   });
 }
 
-function calcFloorRow(i){
-  let r=floorRows[i];
-  r.presentStock=n(r.previousQty)+n(r.receivedQty)-n(r.deliveryQty);
+window.exportExcel=function(){
+  let clone=document.getElementById("reportTable").cloneNode(true);
+  let html=`
+    <html><head><meta charset="UTF-8"></head>
+    <body>
+      <h2>GMS Textiles Ltd</h2>
+      <h3>All Needle BNR / BNF Report</h3>
+      ${clone.outerHTML}
+    </body></html>`;
+
+  let file=new Blob([html],{type:"application/vnd.ms-excel"});
+  let a=document.createElement("a");
+  a.href=URL.createObjectURL(file);
+  a.download="all-needle-bnr-bnf-report.xls";
+  a.click();
 }
 
-function renderFloorRows(){
-  let html="";
-
-  floorRows.forEach((r,i)=>{
-    calcFloorRow(i);
-
-    html+=`
-      <tr>
-        <td><input value="${r.description||""}" onchange="floorRows[${i}].description=this.value"></td>
-        <td><input value="${r.floorName||""}" onchange="floorRows[${i}].floorName=this.value"></td>
-        <td><input type="number" value="${r.previousQty||""}" onchange="floorRows[${i}].previousQty=this.value;renderFloorRows()"></td>
-        <td><input type="number" value="${r.receivedQty||""}" onchange="floorRows[${i}].receivedQty=this.value;renderFloorRows()"></td>
-        <td><input type="number" value="${r.deliveryQty||""}" onchange="floorRows[${i}].deliveryQty=this.value;renderFloorRows()"></td>
-        <td class="totalCell">${r.presentStock||0}</td>
-        <td><input value="${r.remarks||""}" onchange="floorRows[${i}].remarks=this.value"></td>
-        <td><button class="del" onclick="deleteFloorRow(${i})">Delete</button></td>
-      </tr>
-    `;
-  });
-
-  byId("floorBody").innerHTML=html;
-}
-
-window.addFloorRow=function(){
-  floorRows.push({
-    description:"",
-    floorName:"",
-    previousQty:"",
-    receivedQty:"",
-    deliveryQty:"",
-    presentStock:"",
-    remarks:""
-  });
-  renderFloorRows();
-};
-
-window.deleteFloorRow=function(i){
-  floorRows.splice(i,1);
-  renderFloorRows();
-};
-
-async function deleteSameDate(date){
-  let q=query(collection(db,"needleDailyReport"),where("date","==",date));
-  let snap=await getDocs(q);
-
-  for(let d of snap.docs){
-    await deleteDoc(doc(db,"needleDailyReport",d.id));
-  }
-}
-
-async function getPreviousData(date){
-  let snap=await getDocs(collection(db,"needleDailyReport"));
-  let all=[];
-
-  snap.forEach(d=>{
-    let x=d.data();
-    if(x.date<date && x.floorRows && x.floorRows.length){
-      all.push(x);
-    }
-  });
-
-  all.sort((a,b)=>b.date.localeCompare(a.date));
-  return all[0]||null;
-}
-
-async function loadInitial(){
-  let date=byId("reportDate").value;
-
-  let prev=await getPreviousData(date);
-
-  if(prev){
-    floorRows=(prev.floorRows||[]).map(r=>({
-      description:r.description,
-      floorName:r.floorName,
-      previousQty:r.presentStock,
-      receivedQty:"",
-      deliveryQty:"",
-      presentStock:r.presentStock,
-      remarks:""
-    }));
-  }else{
-    floorRows=JSON.parse(JSON.stringify(defaultFloorRows));
-  }
-
-  renderFloorRows();
-}
-
-window.saveReport=async function(){
-  calculate();
-
-  floorRows.forEach((r,i)=>calcFloorRow(i));
-
-  let date=byId("reportDate").value;
-
-  await deleteSameDate(date);
-
-  await addDoc(collection(db,"needleDailyReport"),{
-    date:date,
-    needleBooth:n(byId("needleBooth").value),
-    totalSewingLine:n(byId("totalSewingLine").value),
-    machinePlan:n(byId("machinePlan").value),
-    runningMachine:n(byId("runningMachine").value),
-    brokenNeedle:n(byId("brokenNeedle").value),
-    missingNeedle:n(byId("missingNeedle").value),
-    changeNeedle:n(byId("changeNeedle").value),
-    totalIssue:Number(byId("totalIssue").innerText)||0,
-    avgUse:Number(byId("avgUse").innerText)||0,
-    floorRows:floorRows,
-    reportedBy:user.name||user.email||"User",
-    userId:user.id||"",
-    createdAt:new Date().toISOString()
-  });
-
-  toast("Needle Report Saved ✅");
-};
-
-byId("reportDate").addEventListener("change",loadInitial);
-
-calculate();
-loadInitial();
+loadReport();
 </script>
 
 </body>
