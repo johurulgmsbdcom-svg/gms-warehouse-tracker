@@ -3,112 +3,32 @@
 <head>
 <title>Grey Fabric Stock Report</title>
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
 
 <style>
-body{
-  margin:0;
-  background:#07111f;
-  color:white;
-  font-family:Arial,sans-serif;
-}
-.header{
-  text-align:center;
-  padding:14px;
-}
-.header h2,.header h3,.header h4{
-  margin:2px;
-}
-.controls{
-  text-align:center;
-  margin:10px;
-}
-button{
-  padding:10px 18px;
-  border:0;
-  border-radius:8px;
-  color:white;
-  font-weight:bold;
-  cursor:pointer;
-  margin:4px;
-}
-.save{background:#16a34a}
-.del{background:#dc2626}
-.excel{background:#059669}
-.print{background:#7c3aed}
-.home{background:#2563eb}
-.add{background:#f59e0b}
-input,select{
-  padding:7px;
-  border-radius:5px;
-  border:1px solid #999;
-}
-table{
-  width:98%;
-  margin:10px auto;
-  border-collapse:collapse;
-  background:white;
-  color:black;
-  font-size:13px;
-}
-th,td{
-  border:1px solid #000;
-  padding:5px;
-  text-align:center;
-}
-th{
-  background:#e2f0d9;
-}
-.totalRow{
-  background:#d9ead3;
-  font-weight:bold;
-}
-.grandRow{
-  background:#ddd;
-  font-weight:bold;
-  font-size:16px;
-}
-.num{
-  width:90px;
-}
-.fabricInput{
-  width:170px;
-}
-.chartBox{
-  width:98%;
-  margin:10px auto;
-  background:white;
-  padding:10px;
-}
-.toast{
-  position:fixed;
-  right:20px;
-  bottom:20px;
-  background:#22c55e;
-  color:white;
-  padding:12px 20px;
-  border-radius:10px;
-  font-weight:bold;
-  display:none;
-}
-@page{
-  size:A4 landscape;
-  margin:8mm;
-}
+body{margin:0;background:#07111f;color:white;font-family:Arial,sans-serif}
+.header{text-align:center;padding:10px}
+.header h2,.header h3,.header h4{margin:2px}
+.controls{text-align:center;margin:10px}
+button{padding:9px 14px;border:0;border-radius:8px;color:white;font-weight:bold;margin:4px;cursor:pointer}
+.save{background:#16a34a}.add{background:#f59e0b}.del{background:#dc2626}.excel{background:#059669}.print{background:#7c3aed}.home{background:#2563eb}
+input{font-size:15px;padding:6px;border-radius:5px;border:1px solid #999}
+.tableWrap{overflow-x:auto;width:100%}
+table{min-width:1100px;width:96%;margin:8px auto;border-collapse:collapse;background:white;color:black;font-size:13px}
+th,td{border:1px solid #000;padding:5px;text-align:center}
+th{background:#e2f0d9;font-weight:bold}
+td input{width:100%;box-sizing:border-box;border:0;text-align:center;font-size:14px}
+.totalRow{background:#d9ead3;font-weight:bold;font-size:15px}
+.grandRow{background:#ddd;font-weight:bold;font-size:16px}
+.chartBox{width:96%;margin:8px auto;background:white;color:black;padding:10px;border:1px solid #000}
+.toast{position:fixed;right:15px;bottom:15px;background:#22c55e;color:white;padding:12px 18px;border-radius:10px;font-weight:bold;display:none}
+@page{size:A4 landscape;margin:6mm}
 @media print{
-  body{
-    background:white;
-    color:black;
-  }
-  .controls,.noPrint{
-    display:none!important;
-  }
-  table{
-    font-size:11px;
-    width:100%;
-  }
-  .chartBox{
-    width:100%;
-  }
+  body{background:white;color:black}
+  .controls,.noPrint{display:none!important}
+  table{width:100%;min-width:0;font-size:10px;margin:0}
+  th,td{padding:3px}
+  .chartBox{width:100%;margin:4px 0}
 }
 </style>
 </head>
@@ -122,51 +42,65 @@ th{
   <h3>Grey Fabric Stock Report</h3>
 </div>
 
-<div class="controls">
+<div class="controls noPrint">
   Date:
   <input type="date" id="reportDate">
 
-  <button class="save" onclick="saveData()">💾 Save Data</button>
-  <button class="del" onclick="deleteData()">🗑 Delete Date Data</button>
+  <button class="save" onclick="saveData()">💾 Save</button>
   <button class="add" onclick="addRow()">➕ Add Row</button>
-  <button class="excel" onclick="exportExcel()">📊 Export Excel</button>
+  <button class="del" onclick="deleteDateData()">🗑 Delete Date</button>
+  <button class="excel" onclick="exportExcel()">📊 Excel</button>
   <button class="print" onclick="window.print()">🖨 PDF / Print</button>
-  <button class="home" onclick="location.href='index.html'">🏠 Back Home</button>
+  <button class="home" onclick="location.href='index.html'">🏠 Home</button>
 </div>
 
+<div class="tableWrap">
 <table id="reportTable">
-  <thead>
-    <tr>
-      <th>Year</th>
-      <th>Fabric Type</th>
-      <th>Previous Qty</th>
-      <th>Opening Balance (Kgs)</th>
-      <th>Last Delivery Date</th>
-      <th>Delivery Qty (Kgs)</th>
-      <th>Total Delivery (Kgs)</th>
-      <th>Closing Balance (Kgs)</th>
-      <th class="noPrint">Action</th>
-    </tr>
-  </thead>
+<thead>
+<tr>
+  <th>Year</th>
+  <th>Fabric Type</th>
+  <th>Previous Qty</th>
+  <th>Opening Balance (Kgs)</th>
+  <th>Last Delivery Date</th>
+  <th>Delivery Qty (Kgs)</th>
+  <th>Total Delivery (Kgs)</th>
+  <th>Closing Balance (Kgs)</th>
+  <th class="noPrint">Action</th>
+</tr>
+</thead>
 
-  <tbody id="tbody"></tbody>
+<tbody id="tbody"></tbody>
 
-  <tfoot>
-    <tr class="grandRow">
-      <td colspan="2">Grand Total</td>
-      <td id="gtPrev">0.00</td>
-      <td id="gtOpen">0.00</td>
-      <td>0.00</td>
-      <td id="gtDelivery">0.00</td>
-      <td id="gtTotalDelivery">0.00</td>
-      <td id="gtClosing">0.00</td>
-      <td class="noPrint"></td>
-    </tr>
-  </tfoot>
+<tfoot>
+<tr class="totalRow">
+  <td colspan="2">Leftover Total</td>
+  <td id="leftPrev">0.00</td>
+  <td id="leftOpen">0.00</td>
+  <td>0.00</td>
+  <td id="leftDelivery">0.00</td>
+  <td id="leftTotalDelivery">0.00</td>
+  <td id="leftClosing">0.00</td>
+  <td class="noPrint"></td>
+</tr>
+
+<tr class="grandRow">
+  <td colspan="2">Grand Total</td>
+  <td id="gtPrev">0.00</td>
+  <td id="gtOpen">0.00</td>
+  <td>0.00</td>
+  <td id="gtDelivery">0.00</td>
+  <td id="gtTotalDelivery">0.00</td>
+  <td id="gtClosing">0.00</td>
+  <td class="noPrint"></td>
+</tr>
+</tfoot>
 </table>
+</div>
 
 <div class="chartBox">
-  <canvas id="stockChart" height="90"></canvas>
+  <h3 style="text-align:center;margin:0 0 5px">Closing Balance (Kgs)</h3>
+  <canvas id="stockChart" height="80"></canvas>
 </div>
 
 <div id="toast" class="toast">Saved ✅</div>
@@ -184,48 +118,50 @@ import {
   where
 } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-firestore.js";
 
-const firebaseConfig = {
-  apiKey: "AIzaSyD-wBCF5eeWMHobLFOhBzKW7aB2pagz9-w",
-  authDomain: "gms-warehouse-tracker-7f57e.firebaseapp.com",
-  projectId: "gms-warehouse-tracker-7f57e",
-  storageBucket: "gms-warehouse-tracker-7f57e.firebasestorage.app",
-  messagingSenderId: "992250313291",
-  appId: "1:992250313291:web:ee3bceae76d4d53bc26bce"
+const firebaseConfig={
+  apiKey:"AIzaSyD-wBCF5eeWMHobLFOhBzKW7aB2pagz9-w",
+  authDomain:"gms-warehouse-tracker-7f57e.firebaseapp.com",
+  projectId:"gms-warehouse-tracker-7f57e",
+  storageBucket:"gms-warehouse-tracker-7f57e.firebasestorage.app",
+  messagingSenderId:"992250313291",
+  appId:"1:992250313291:web:ee3bceae76d4d53bc26bce"
 };
 
-const app = initializeApp(firebaseConfig);
-const db = getFirestore(app);
+const app=initializeApp(firebaseConfig);
+const db=getFirestore(app);
 
 let chart;
+let rows=[];
 
-let defaultRows = [
-  {year:"2018", fabric:"Leftover Grey Fabric", previous:427},
-  {year:"2019", fabric:"Leftover Grey Fabric", previous:1069},
-  {year:"2020", fabric:"Leftover Grey Fabric", previous:8282},
-  {year:"2021", fabric:"Leftover Grey Fabric", previous:48954},
-  {year:"2022", fabric:"Leftover Grey Fabric", previous:30823},
-  {year:"2023", fabric:"Leftover Grey Fabric", previous:82351},
-  {year:"2024", fabric:"Leftover Grey Fabric", previous:65449},
-  {year:"2025", fabric:"Leftover Grey Fabric", previous:1677},
-  {year:"Without Sticker", fabric:"All Sticker Missing", previous:39312},
-  {year:"Textile-25", fabric:"Textiles Running Fabric-25/26", previous:0},
-  {year:"Composite-25", fabric:"Composite Fab.(Tex Knit)-25/26", previous:0},
-  {year:"For Dyeing-25", fabric:"Composite Fab.(For Dyeing)-25/26", previous:0}
+const defaultRows=[
+  {year:"2018",fabric:"Leftover Grey Fabric",previous:427,opening:"",lastDate:"",delivery:"",totalDelivery:427,closing:0},
+  {year:"2019",fabric:"Leftover Grey Fabric",previous:1069,opening:"",lastDate:"",delivery:"",totalDelivery:1069,closing:0},
+  {year:"2020",fabric:"Leftover Grey Fabric",previous:8282,opening:"",lastDate:"",delivery:"",totalDelivery:8282,closing:0},
+  {year:"2021",fabric:"Leftover Grey Fabric",previous:48954,opening:"",lastDate:"",delivery:"",totalDelivery:48954,closing:0},
+  {year:"2022",fabric:"Leftover Grey Fabric",previous:30823,opening:"",lastDate:"",delivery:"",totalDelivery:30823,closing:0},
+  {year:"2023",fabric:"Leftover Grey Fabric",previous:82351,opening:"",lastDate:"",delivery:"",totalDelivery:64663,closing:17688},
+  {year:"2024",fabric:"Leftover Grey Fabric",previous:65449,opening:"",lastDate:"",delivery:"",totalDelivery:40430,closing:25019},
+  {year:"2025",fabric:"Leftover Grey Fabric",previous:1677,opening:"",lastDate:"",delivery:"",totalDelivery:1322,closing:355},
+  {year:"Without Sticker",fabric:"All Sticker Missing",previous:39312,opening:"",lastDate:"",delivery:"",totalDelivery:445,closing:38867},
+  {year:"Textile-25",fabric:"Textiles Running Fabric-25/26",previous:"",opening:"",lastDate:"",delivery:"",totalDelivery:"",closing:549012},
+  {year:"Composite-25",fabric:"Composite Fab.(Tex Knit)-25/26",previous:"",opening:"",lastDate:"",delivery:"",totalDelivery:"",closing:121112},
+  {year:"For Dyeing-25",fabric:"Composite Fab.(For Dyeing)-25/26",previous:"",opening:"",lastDate:"",delivery:"",totalDelivery:"",closing:76683}
 ];
-
-let rows = [];
 
 function today(){
   return new Date().toISOString().slice(0,10);
 }
 
-document.getElementById("reportDate").value = today();
+document.getElementById("reportDate").value=today();
 
 function format(n){
-  return Number(n || 0).toLocaleString("en-US",{
-    minimumFractionDigits:2,
-    maximumFractionDigits:2
-  });
+  if(n==="" || n===null || n===undefined) return "";
+  return Number(n||0).toLocaleString("en-US",{minimumFractionDigits:2,maximumFractionDigits:2});
+}
+
+function raw(v){
+  if(v==="" || v===null || v===undefined) return "";
+  return Number(String(v).replace(/,/g,""))||0;
 }
 
 function toast(msg){
@@ -235,94 +171,47 @@ function toast(msg){
   setTimeout(()=>t.style.display="none",1600);
 }
 
-function renderRows(){
+function render(){
   let html="";
 
   rows.forEach((r,i)=>{
-    let opening = Number(r.opening || r.previous || 0);
-    let delivery = Number(r.delivery || 0);
-    let totalDelivery = Number(r.totalDelivery || delivery || 0);
-    let closing = opening - delivery;
-
-    r.opening = opening;
-    r.totalDelivery = totalDelivery;
-    r.closing = closing;
-
     html+=`
       <tr>
-        <td><input value="${r.year}" onchange="rows[${i}].year=this.value;calculate()" style="width:80px"></td>
-
-        <td>
-          <input class="fabricInput" value="${r.fabric}"
-          onchange="rows[${i}].fabric=this.value;calculate()">
-        </td>
-
-        <td>${format(r.previous)}</td>
-
-        <td>
-          <input class="num" type="number" value="${opening}"
-          onchange="rows[${i}].opening=Number(this.value);calculate()">
-        </td>
-
-        <td>
-          <input type="date" value="${r.lastDate || ""}"
-          onchange="rows[${i}].lastDate=this.value;calculate()">
-        </td>
-
-        <td>
-          <input class="num" type="number" value="${delivery}"
-          onchange="rows[${i}].delivery=Number(this.value);calculate()">
-        </td>
-
-        <td>${format(totalDelivery)}</td>
-
-        <td><b>${format(closing)}</b></td>
-
-        <td class="noPrint">
-          <button class="del" onclick="removeRow(${i})">Delete</button>
-        </td>
+        <td><input value="${r.year||""}" onchange="rows[${i}].year=this.value;calc()"></td>
+        <td><input value="${r.fabric||""}" onchange="rows[${i}].fabric=this.value;calc()"></td>
+        <td><input value="${r.previous!==undefined?r.previous:""}" onchange="rows[${i}].previous=this.value;calc()"></td>
+        <td><input value="${r.opening!==undefined?r.opening:""}" onchange="rows[${i}].opening=this.value;calc()"></td>
+        <td><input type="date" value="${r.lastDate||""}" onchange="rows[${i}].lastDate=this.value;calc()"></td>
+        <td><input value="${r.delivery!==undefined?r.delivery:""}" onchange="rows[${i}].delivery=this.value;calc()"></td>
+        <td><input value="${r.totalDelivery!==undefined?r.totalDelivery:""}" onchange="rows[${i}].totalDelivery=this.value;calc()"></td>
+        <td><input value="${r.closing!==undefined?r.closing:""}" onchange="rows[${i}].closing=this.value;calc()"></td>
+        <td class="noPrint"><button class="del" onclick="removeRow(${i})">Delete</button></td>
       </tr>
     `;
   });
 
   document.getElementById("tbody").innerHTML=html;
-  calculate();
+  calc();
 }
 
-window.addRow=function(){
-  rows.push({
-    year:"",
-    fabric:"New Fabric",
-    previous:0,
-    opening:0,
-    lastDate:"",
-    delivery:0,
-    totalDelivery:0,
-    closing:0
-  });
-  renderRows();
-};
+function calc(){
+  let leftPrev=0,leftOpen=0,leftDelivery=0,leftTotalDelivery=0,leftClosing=0;
+  let gtPrev=0,gtOpen=0,gtDelivery=0,gtTotalDelivery=0,gtClosing=0;
 
-window.removeRow=function(i){
-  if(confirm("Delete this row?")){
-    rows.splice(i,1);
-    renderRows();
-  }
-};
+  rows.forEach((r,i)=>{
+    let previous=raw(r.previous);
+    let opening=raw(r.opening);
+    let delivery=raw(r.delivery);
+    let totalDelivery=raw(r.totalDelivery);
+    let closing=raw(r.closing);
 
-function calculate(){
-  let gtPrev=0, gtOpen=0, gtDelivery=0, gtTotalDelivery=0, gtClosing=0;
-
-  rows.forEach(r=>{
-    let previous=Number(r.previous || 0);
-    let opening=Number(r.opening || previous || 0);
-    let delivery=Number(r.delivery || 0);
-    let totalDelivery=Number(r.totalDelivery || delivery || 0);
-    let closing=opening-delivery;
-
-    r.opening=opening;
-    r.closing=closing;
-    r.totalDelivery=totalDelivery;
+    if(i<=8){
+      leftPrev+=previous;
+      leftOpen+=opening;
+      leftDelivery+=delivery;
+      leftTotalDelivery+=totalDelivery;
+      leftClosing+=closing;
+    }
 
     gtPrev+=previous;
     gtOpen+=opening;
@@ -331,38 +220,51 @@ function calculate(){
     gtClosing+=closing;
   });
 
+  document.getElementById("leftPrev").innerText=format(leftPrev);
+  document.getElementById("leftOpen").innerText=format(leftOpen);
+  document.getElementById("leftDelivery").innerText=format(leftDelivery);
+  document.getElementById("leftTotalDelivery").innerText=format(leftTotalDelivery);
+  document.getElementById("leftClosing").innerText=format(leftClosing);
+
   document.getElementById("gtPrev").innerText=format(gtPrev);
   document.getElementById("gtOpen").innerText=format(gtOpen);
   document.getElementById("gtDelivery").innerText=format(gtDelivery);
   document.getElementById("gtTotalDelivery").innerText=format(gtTotalDelivery);
   document.getElementById("gtClosing").innerText=format(gtClosing);
 
-  renderChart();
+  renderChart(gtClosing);
 }
 
-function renderChart(){
-  let labels=rows.map(r=>r.year || r.fabric);
-  let data=rows.map(r=>Number(r.closing || 0));
+function renderChart(grandTotal){
+  let labels=rows.map(r=>r.year||r.fabric);
+  let data=rows.map(r=>raw(r.closing));
+
+  labels.push("Grand Total");
+  data.push(grandTotal);
 
   if(chart) chart.destroy();
 
-  chart = new Chart(document.getElementById("stockChart"),{
+  chart=new Chart(document.getElementById("stockChart"),{
     type:"bar",
     data:{
       labels:labels,
       datasets:[{
-        label:"Closing Balance (Kgs)",
+        label:"Closing Balance",
         data:data,
-        borderWidth:1
+        borderWidth:1,
+        borderRadius:4
       }]
     },
     options:{
       responsive:true,
       plugins:{
         legend:{display:false},
-        title:{
-          display:true,
-          text:"Closing Balance (Kgs)"
+        tooltip:{
+          callbacks:{
+            label:function(ctx){
+              return "Closing Balance: "+Number(ctx.raw||0).toLocaleString();
+            }
+          }
         }
       },
       scales:{
@@ -373,66 +275,81 @@ function renderChart(){
   });
 }
 
-async function getPreviousDayData(date){
-  let snap = await getDocs(collection(db,"greyFabricStock"));
+window.addRow=function(){
+  rows.push({
+    year:"",
+    fabric:"",
+    previous:"",
+    opening:"",
+    lastDate:"",
+    delivery:"",
+    totalDelivery:"",
+    closing:""
+  });
+  render();
+};
+
+window.removeRow=function(i){
+  if(confirm("Delete this row?")){
+    rows.splice(i,1);
+    render();
+  }
+};
+
+async function deleteDateOnly(date){
+  let q=query(collection(db,"greyFabricStock"),where("date","==",date));
+  let snap=await getDocs(q);
+
+  for(let d of snap.docs){
+    await deleteDoc(doc(db,"greyFabricStock",d.id));
+  }
+}
+
+async function getPreviousData(date){
+  let snap=await getDocs(collection(db,"greyFabricStock"));
   let all=[];
 
   snap.forEach(d=>{
     let x=d.data();
-    if(x.date < date){
+    if(x.date<date && x.rows && x.rows.length){
       all.push(x);
     }
   });
 
   all.sort((a,b)=>b.date.localeCompare(a.date));
-
-  return all.length ? all[0] : null;
+  return all[0]||null;
 }
 
 async function loadData(){
   let date=document.getElementById("reportDate").value;
 
-  let q=query(
-    collection(db,"greyFabricStock"),
-    where("date","==",date)
-  );
-
+  let q=query(collection(db,"greyFabricStock"),where("date","==",date));
   let snap=await getDocs(q);
 
   if(!snap.empty){
-    let data=snap.docs[0].data();
-    rows=data.rows || [];
-    renderRows();
+    rows=snap.docs[0].data().rows||[];
+    render();
     return;
   }
 
-  let prev=await getPreviousDayData(date);
+  let prev=await getPreviousData(date);
 
-  if(prev && prev.rows){
-    rows=prev.rows.map(r=>({
+  if(prev){
+    rows=(prev.rows||[]).map(r=>({
       year:r.year,
       fabric:r.fabric,
-      previous:Number(r.closing || 0),
-      opening:Number(r.closing || 0),
-      lastDate:"",
-      delivery:0,
-      totalDelivery:Number(r.totalDelivery || 0),
-      closing:Number(r.closing || 0)
+      previous:r.closing,
+      opening:r.closing,
+      lastDate:r.lastDate||"",
+      delivery:r.delivery||"",
+      totalDelivery:r.totalDelivery||"",
+      closing:r.closing
     }));
   }else{
-    rows=defaultRows.map(r=>({
-      year:r.year,
-      fabric:r.fabric,
-      previous:r.previous,
-      opening:r.previous,
-      lastDate:"",
-      delivery:0,
-      totalDelivery:0,
-      closing:r.previous
-    }));
+    rows=JSON.parse(JSON.stringify(defaultRows));
   }
 
-  renderRows();
+  render();
 }
 
 window.saveData=async function(){
@@ -446,38 +363,35 @@ window.saveData=async function(){
     savedAt:new Date().toISOString()
   });
 
-  toast("Saved ✅");
+  toast("Grey Fabric Saved ✅");
 };
 
-async function deleteDateOnly(date){
-  let q=query(
-    collection(db,"greyFabricStock"),
-    where("date","==",date)
-  );
-
-  let snap=await getDocs(q);
-
-  for(let d of snap.docs){
-    await deleteDoc(doc(db,"greyFabricStock",d.id));
-  }
-}
-
-window.deleteData=async function(){
+window.deleteDateData=async function(){
   let date=document.getElementById("reportDate").value;
 
   if(confirm("Delete this date data?")){
     await deleteDateOnly(date);
+    rows=JSON.parse(JSON.stringify(defaultRows));
+    render();
     toast("Deleted ✅");
-    loadData();
   }
 };
 
 window.exportExcel=function(){
-  let table=document.getElementById("reportTable").outerHTML;
-  let file=new Blob([table],{
-    type:"application/vnd.ms-excel"
-  });
+  let clone=document.getElementById("reportTable").cloneNode(true);
+  clone.querySelectorAll(".noPrint").forEach(x=>x.remove());
 
+  let html=`
+  <html>
+  <head><meta charset="UTF-8"></head>
+  <body>
+  <h2>GMS Textiles Ltd</h2>
+  <h3>Grey Fabric Stock Report</h3>
+  ${clone.outerHTML}
+  </body>
+  </html>`;
+
+  let file=new Blob([html],{type:"application/vnd.ms-excel"});
   let a=document.createElement("a");
   a.href=URL.createObjectURL(file);
   a.download="grey-fabric-stock-report.xls";
