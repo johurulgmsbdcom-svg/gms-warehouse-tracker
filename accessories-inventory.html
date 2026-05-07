@@ -9,7 +9,7 @@ body{margin:0;background:#07111f;color:white;font-family:Arial,sans-serif}
 .header{text-align:center;padding:12px}
 .header h2,.header h3,.header h4{margin:3px}
 .controls{text-align:center;margin:10px}
-button{padding:10px 14px;border:0;border-radius:8px;color:white;font-weight:bold;margin:4px}
+button{padding:10px 14px;border:0;border-radius:8px;color:white;font-weight:bold;margin:4px;cursor:pointer}
 .add{background:#f59e0b}.save{background:#16a34a}.home{background:#0f766e}.report{background:#2563eb}.del{background:#dc2626}
 input,select{font-size:16px;padding:7px;border-radius:6px;border:1px solid #999}
 .tableWrap{overflow-x:auto;width:100%}
@@ -18,10 +18,6 @@ th,td{border:1px solid #000;padding:5px;text-align:center}
 th{background:#2f6b55;color:white}
 td input,td select{width:100%;box-sizing:border-box;border:0;outline:none;text-align:center;font-size:16px}
 .toast{position:fixed;right:15px;bottom:15px;background:#22c55e;padding:12px 18px;border-radius:10px;font-weight:bold;display:none}
-@media(max-width:700px){
-  table{font-size:11px}
-  .header h2{font-size:26px}
-}
 </style>
 </head>
 
@@ -90,7 +86,10 @@ if(!user){window.location.href="login.html"}
 
 let rows=[];
 
-function today(){return new Date().toISOString().slice(0,10)}
+function today(){
+  return new Date().toISOString().slice(0,10);
+}
+
 document.getElementById("postingDate").value=today();
 
 function toast(msg){
@@ -121,11 +120,25 @@ function blankRow(){
 function calc(i){
   let c=Number(rows[i].challanQty)||0;
   let r=Number(rows[i].receiveQty)||0;
-  rows[i].dueQty = c>r ? c-r : "";
+
+  if(c>r){
+    rows[i].dueQty=c-r;
+    rows[i].short=c-r;
+    rows[i].excess="";
+  }else if(r>c){
+    rows[i].dueQty="";
+    rows[i].short="";
+    rows[i].excess=r-c;
+  }else{
+    rows[i].dueQty="";
+    rows[i].short="";
+    rows[i].excess="";
+  }
 }
 
 function render(){
   let html="";
+
   rows.forEach((r,i)=>{
     html+=`
     <tr>
@@ -146,12 +159,13 @@ function render(){
       <td><input type="number" value="${r.challanQty||''}" onchange="rows[${i}].challanQty=this.value;calc(${i});render()"></td>
       <td><input type="number" value="${r.receiveQty||''}" onchange="rows[${i}].receiveQty=this.value;calc(${i});render()"></td>
       <td>${r.dueQty||""}</td>
-      <td><input type="number" value="${r.short||''}" onchange="rows[${i}].short=this.value"></td>
-      <td><input type="number" value="${r.excess||''}" onchange="rows[${i}].excess=this.value"></td>
+      <td>${r.short||""}</td>
+      <td>${r.excess||""}</td>
       <td>${r.reportedBy||""}</td>
       <td><button class="del" onclick="deleteRow(${i})">🗑 Delete</button></td>
     </tr>`;
   });
+
   document.getElementById("tbody").innerHTML=html;
 }
 
@@ -166,8 +180,23 @@ window.deleteRow=function(i){
 };
 
 window.savePosting=async function(){
-  let valid=rows.filter(r=>r.challanNo||r.buyerName||r.itemName||r.receiveQty);
-  if(valid.length===0){alert("Data nai");return}
+  rows.forEach((r,i)=>calc(i));
+
+  let valid=rows.filter(r =>
+    String(r.challanNo||"").trim() ||
+    String(r.buyerName||"").trim() ||
+    String(r.style||"").trim() ||
+    String(r.orderNo||"").trim() ||
+    String(r.itemName||"").trim() ||
+    String(r.unit||"").trim() ||
+    String(r.challanQty||"").trim() ||
+    String(r.receiveQty||"").trim()
+  );
+
+  if(valid.length===0){
+    alert("Data nai");
+    return;
+  }
 
   await addDoc(collection(db,"accessoriesInventory"),{
     postingDate:document.getElementById("postingDate").value,
@@ -184,7 +213,7 @@ window.savePosting=async function(){
 };
 
 document.addEventListener("keydown",function(e){
-  if(e.key==="Enter" && e.target.tagName==="INPUT"){
+  if(e.key==="Enter" && (e.target.tagName==="INPUT" || e.target.tagName==="SELECT")){
     e.preventDefault();
     let inputs=[...document.querySelectorAll("td input,td select")];
     let index=inputs.indexOf(e.target);
