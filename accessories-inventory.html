@@ -17,6 +17,8 @@ table{min-width:1250px;width:98%;margin:10px auto;border-collapse:collapse;backg
 th,td{border:1px solid #000;padding:5px;text-align:center}
 th{background:#2f6b55;color:white}
 td input,td select{width:100%;box-sizing:border-box;border:0;outline:none;text-align:center;font-size:16px}
+.autoCell{font-weight:bold;color:#dc2626}
+.excessCell{font-weight:bold;color:#2563eb}
 .toast{position:fixed;right:15px;bottom:15px;background:#22c55e;padding:12px 18px;border-radius:10px;font-weight:bold;display:none}
 </style>
 </head>
@@ -84,8 +86,6 @@ const db=getFirestore(app);
 const user=JSON.parse(localStorage.getItem("gmsUser")||"null");
 if(!user){window.location.href="login.html"}
 
-let rows=[];
-
 function today(){
   return new Date().toISOString().slice(0,10);
 }
@@ -96,128 +96,152 @@ function toast(msg){
   let t=document.getElementById("toast");
   t.innerText=msg;
   t.style.display="block";
-  setTimeout(()=>t.style.display="none",1500);
+  setTimeout(()=>t.style.display="none",1600);
 }
 
-function blankRow(){
-  return {
-    receivedDate:document.getElementById("postingDate").value,
-    challanNo:"",
-    buyerName:"",
-    style:"",
-    orderNo:"",
-    itemName:"",
-    unit:"",
-    challanQty:"",
-    receiveQty:"",
-    dueQty:"",
-    short:"",
-    excess:"",
-    reportedBy:user.name||user.email||"User"
-  };
-}
+function calcRow(tr){
+  let challan=Number(tr.querySelector(".challanQty").value)||0;
+  let receive=Number(tr.querySelector(".receiveQty").value)||0;
 
-function calc(i){
-  let c=Number(rows[i].challanQty)||0;
-  let r=Number(rows[i].receiveQty)||0;
+  let due="";
+  let short="";
+  let excess="";
 
-  if(c>r){
-    rows[i].dueQty=c-r;
-    rows[i].short=c-r;
-    rows[i].excess="";
-  }else if(r>c){
-    rows[i].dueQty="";
-    rows[i].short="";
-    rows[i].excess=r-c;
-  }else{
-    rows[i].dueQty="";
-    rows[i].short="";
-    rows[i].excess="";
+  if(challan>receive){
+    due=challan-receive;
+    short=challan-receive;
+  }else if(receive>challan){
+    excess=receive-challan;
   }
-}
 
-function render(){
-  let html="";
-
-  rows.forEach((r,i)=>{
-    html+=`
-    <tr>
-      <td><input type="date" value="${r.receivedDate||''}" onchange="rows[${i}].receivedDate=this.value"></td>
-      <td><input value="${r.challanNo||''}" onchange="rows[${i}].challanNo=this.value"></td>
-      <td><input value="${r.buyerName||''}" onchange="rows[${i}].buyerName=this.value"></td>
-      <td><input value="${r.style||''}" onchange="rows[${i}].style=this.value"></td>
-      <td><input value="${r.orderNo||''}" onchange="rows[${i}].orderNo=this.value"></td>
-      <td><input value="${r.itemName||''}" onchange="rows[${i}].itemName=this.value"></td>
-      <td>
-        <select onchange="rows[${i}].unit=this.value">
-          <option value="">Select</option>
-          <option ${r.unit==="Pcs"?"selected":""}>Pcs</option>
-          <option ${r.unit==="Cone"?"selected":""}>Cone</option>
-          <option ${r.unit==="Yds"?"selected":""}>Yds</option>
-        </select>
-      </td>
-      <td><input type="number" value="${r.challanQty||''}" onchange="rows[${i}].challanQty=this.value;calc(${i});render()"></td>
-      <td><input type="number" value="${r.receiveQty||''}" onchange="rows[${i}].receiveQty=this.value;calc(${i});render()"></td>
-      <td>${r.dueQty||""}</td>
-      <td>${r.short||""}</td>
-      <td>${r.excess||""}</td>
-      <td>${r.reportedBy||""}</td>
-      <td><button class="del" onclick="deleteRow(${i})">🗑 Delete</button></td>
-    </tr>`;
-  });
-
-  document.getElementById("tbody").innerHTML=html;
+  tr.querySelector(".dueQty").innerText=due;
+  tr.querySelector(".shortQty").innerText=short;
+  tr.querySelector(".excessQty").innerText=excess;
 }
 
 window.addRow=function(){
-  rows.push(blankRow());
-  render();
+  let tbody=document.getElementById("tbody");
+
+  let tr=document.createElement("tr");
+
+  tr.innerHTML=`
+    <td><input type="date" class="receivedDate" value="${document.getElementById("postingDate").value}"></td>
+    <td><input class="challanNo"></td>
+    <td><input class="buyerName"></td>
+    <td><input class="styleNo"></td>
+    <td><input class="orderNo"></td>
+    <td><input class="itemName"></td>
+    <td>
+      <select class="unit">
+        <option value="">Select</option>
+        <option>Pcs</option>
+        <option>Cone</option>
+        <option>Yds</option>
+      </select>
+    </td>
+    <td><input type="number" class="challanQty" oninput="calcThisRow(this)"></td>
+    <td><input type="number" class="receiveQty" oninput="calcThisRow(this)"></td>
+    <td class="dueQty autoCell"></td>
+    <td class="shortQty autoCell"></td>
+    <td class="excessQty excessCell"></td>
+    <td>${user.name||user.email||"User"}</td>
+    <td><button class="del" onclick="deleteThisRow(this)">🗑 Delete</button></td>
+  `;
+
+  tbody.appendChild(tr);
 };
 
-window.deleteRow=function(i){
-  rows.splice(i,1);
-  render();
+window.calcThisRow=function(el){
+  let tr=el.closest("tr");
+  calcRow(tr);
 };
+
+window.deleteThisRow=function(btn){
+  btn.closest("tr").remove();
+
+  if(document.querySelectorAll("#tbody tr").length===0){
+    addRow();
+  }
+};
+
+function readTableRows(){
+  let all=[];
+
+  document.querySelectorAll("#tbody tr").forEach(tr=>{
+    calcRow(tr);
+
+    let row={
+      receivedDate:tr.querySelector(".receivedDate").value || "",
+      challanNo:tr.querySelector(".challanNo").value.trim(),
+      buyerName:tr.querySelector(".buyerName").value.trim(),
+      style:tr.querySelector(".styleNo").value.trim(),
+      orderNo:tr.querySelector(".orderNo").value.trim(),
+      itemName:tr.querySelector(".itemName").value.trim(),
+      unit:tr.querySelector(".unit").value,
+      challanQty:tr.querySelector(".challanQty").value.trim(),
+      receiveQty:tr.querySelector(".receiveQty").value.trim(),
+      dueQty:tr.querySelector(".dueQty").innerText.trim(),
+      short:tr.querySelector(".shortQty").innerText.trim(),
+      excess:tr.querySelector(".excessQty").innerText.trim(),
+      reportedBy:user.name||user.email||"User"
+    };
+
+    let hasData =
+      row.challanNo ||
+      row.buyerName ||
+      row.style ||
+      row.orderNo ||
+      row.itemName ||
+      row.unit ||
+      row.challanQty ||
+      row.receiveQty;
+
+    if(hasData){
+      all.push(row);
+    }
+  });
+
+  return all;
+}
 
 window.savePosting=async function(){
-  rows.forEach((r,i)=>calc(i));
-
-  let valid=rows.filter(r =>
-    String(r.challanNo||"").trim() ||
-    String(r.buyerName||"").trim() ||
-    String(r.style||"").trim() ||
-    String(r.orderNo||"").trim() ||
-    String(r.itemName||"").trim() ||
-    String(r.unit||"").trim() ||
-    String(r.challanQty||"").trim() ||
-    String(r.receiveQty||"").trim()
-  );
+  let valid=readTableRows();
 
   if(valid.length===0){
     alert("Data nai");
     return;
   }
 
-  await addDoc(collection(db,"accessoriesInventory"),{
-    postingDate:document.getElementById("postingDate").value,
-    rows:valid,
-    userId:user.id||"",
-    userName:user.name||"",
-    userEmail:user.email||"",
-    createdAt:new Date().toISOString()
-  });
+  try{
+    await addDoc(collection(db,"accessoriesInventory"),{
+      postingDate:document.getElementById("postingDate").value,
+      rows:valid,
+      userId:user.id||"",
+      userName:user.name||"",
+      userEmail:user.email||"",
+      createdAt:new Date().toISOString()
+    });
 
-  rows=[];
-  addRow();
-  toast("Posting Saved ✅");
+    document.getElementById("tbody").innerHTML="";
+    addRow();
+
+    toast("Posting Saved ✅");
+  }catch(e){
+    console.log(e);
+    alert("Firebase save problem ❌");
+  }
 };
 
 document.addEventListener("keydown",function(e){
   if(e.key==="Enter" && (e.target.tagName==="INPUT" || e.target.tagName==="SELECT")){
     e.preventDefault();
+
     let inputs=[...document.querySelectorAll("td input,td select")];
     let index=inputs.indexOf(e.target);
-    if(inputs[index+1]) inputs[index+1].focus();
+
+    if(inputs[index+1]){
+      inputs[index+1].focus();
+    }
   }
 });
 
