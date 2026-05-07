@@ -12,6 +12,10 @@ body{margin:0;background:#07111f;color:white;font-family:Arial,sans-serif}
 button{padding:10px 14px;border:0;border-radius:8px;color:white;font-weight:bold;margin:4px;cursor:pointer}
 .show{background:#2563eb}.excel{background:#16a34a}.print{background:#7c3aed}.home{background:#0f766e}
 input,select{font-size:16px;padding:8px;border-radius:6px;border:1px solid #999}
+.kpi{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin:10px}
+.kpiBox{background:#101b2d;border:1px solid #263855;border-radius:14px;padding:12px;text-align:center}
+.kpiBox span{font-size:12px;color:#9fb0c7;font-weight:bold}
+.kpiBox b{display:block;color:#22c55e;font-size:24px;margin-top:5px}
 .tableWrap{overflow-x:auto;width:100%}
 table{min-width:1050px;width:98%;margin:10px auto;border-collapse:collapse;background:white;color:black;font-size:12px}
 th,td{border:1px solid #000;padding:5px;text-align:center}
@@ -19,17 +23,10 @@ th{background:#9fc5e8;font-weight:bold}
 .floorTitle{background:#1e293b!important;color:white!important;font-size:15px}
 .totalRow{background:#d9ead3;font-weight:bold}
 .grandRow{background:#ffe599;font-weight:bold;font-size:14px}
-.kpi{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin:10px}
-.kpiBox{background:#101b2d;border:1px solid #263855;border-radius:14px;padding:12px;text-align:center}
-.kpiBox span{font-size:12px;color:#9fb0c7;font-weight:bold}
-.kpiBox b{display:block;color:#22c55e;font-size:24px;margin-top:5px}
-
 @page{size:A4 landscape;margin:5mm}
 @media print{
   body{background:white;color:black}
   .controls,.kpi,.noPrint{display:none!important}
-  .header h2{font-size:16px}
-  .header h3{font-size:11px}
   table{width:100%;min-width:0;font-size:8px;margin:2px 0}
   th,td{padding:2px}
 }
@@ -111,48 +108,12 @@ document.getElementById("monthInput").value=ym();
 
 function n(v){return Number(v)||0}
 
-function pick(row,keys){
-  for(let k of keys){
-    if(row && row[k]!==undefined && row[k]!==null && row[k]!=="") return row[k];
-  }
-  return "";
+function isR(floor){
+  return String(floor||"").trim().toUpperCase().endsWith(" R");
 }
 
-function bnFieldByFloor(floor){
-  return String(floor||"").trim().toUpperCase().endsWith(" R") ? "BNR" : "BNF";
-}
-
-function normalizeRows(data){
-  let date=data.date || data.postingDate || "";
-  let floor=data.floor || data.floorName || "";
-  let rows=data.rows || [];
-
-  if(!date || !floor || !Array.isArray(rows)) return [];
-
-  return rows.map(r=>{
-    let needleType=pick(r,["needleType","item","itemName","description"]) || "";
-    let size=pick(r,["size","needleSize"]) || "";
-    let receive=n(pick(r,["receive","received","receiveQty","receivedQty"]));
-    let delivery=n(pick(r,["delivery","deliveryQty","issue","issued"]));
-    let present=n(pick(r,["present","presentStock","closing","closingStock"]));
-    let previous=n(pick(r,["previous","previousQty","opening","openingStock"]));
-    let bnr=n(pick(r,["bnr","BNR"]));
-    let bnf=n(pick(r,["bnf","BNF"]));
-
-    return {
-      date,
-      floor,
-      sl:pick(r,["sl","SL"]) || "",
-      needleType,
-      size,
-      previous,
-      receive,
-      delivery,
-      present,
-      bnr,
-      bnf
-    };
-  });
+function bnName(floor){
+  return isR(floor) ? "BNR" : "BNF";
 }
 
 async function loadReport(){
@@ -165,17 +126,16 @@ async function loadReport(){
   }
 
   let snap=await getDocs(collection(db,"dailyPosting"));
-  let all=[];
+  let docs=[];
 
   snap.forEach(d=>{
-    all.push(...normalizeRows(d.data()));
-  });
-
-  all=all.filter(r=>{
-    if(!r.date.startsWith(month)) return false;
-    if(floorFilter && r.floor!==floorFilter) return false;
-    if(!FLOORS.includes(r.floor)) return false;
-    return true;
+    let x=d.data();
+    if(!x.month && x.date) x.month=String(x.date).slice(0,7);
+    if(x.month===month && Array.isArray(x.rows)){
+      if(!floorFilter || x.floor===floorFilter){
+        if(FLOORS.includes(x.floor)) docs.push(x);
+      }
+    }
   });
 
   let floors=floorFilter ? [floorFilter] : FLOORS;
@@ -184,45 +144,48 @@ async function loadReport(){
   let grandReceive=0,grandDelivery=0,grandPresent=0,grandBN=0;
 
   floors.forEach(floor=>{
-    let rows=all.filter(r=>r.floor===floor);
-    if(rows.length===0) return;
+    let floorDocs=docs.filter(d=>d.floor===floor);
+    if(floorDocs.length===0) return;
+
+    floorDocs.sort((a,b)=>String(a.date).localeCompare(String(b.date)));
 
     let itemMap={};
 
-    rows.forEach(r=>{
-      let key=(r.needleType||"")+"___"+(r.size||"");
+    floorDocs.forEach(day=>{
+      day.rows.forEach(row=>{
+        let key=(row.needleType||"")+"___"+(row.size||"");
 
-      if(!itemMap[key]){
-        itemMap[key]={
-          sl:r.sl,
-          needleType:r.needleType,
-          size:r.size,
-          previous:0,
-          receive:0,
-          delivery:0,
-          present:0,
-          bnr:0,
-          bnf:0,
-          lastDate:""
-        };
-      }
+        if(!itemMap[key]){
+          itemMap[key]={
+            sl:row.sl||"",
+            needleType:row.needleType||"",
+            size:row.size||"",
+            opening:n(row.opening),
+            previous:n(row.previous),
+            receive:0,
+            delivery:0,
+            present:0,
+            bn:0,
+            lastDate:""
+          };
+        }
 
-      itemMap[key].receive+=r.receive;
-      itemMap[key].delivery+=r.delivery;
-      itemMap[key].bnr+=r.bnr;
-      itemMap[key].bnf+=r.bnf;
+        itemMap[key].receive += n(row.receive);
+        itemMap[key].delivery += n(row.delivery);
+        itemMap[key].bn += n(row.bn);
 
-      if(!itemMap[key].lastDate || r.date>=itemMap[key].lastDate){
-        itemMap[key].previous=r.previous;
-        itemMap[key].present=r.present;
-        itemMap[key].lastDate=r.date;
-      }
+        if(!itemMap[key].lastDate || day.date >= itemMap[key].lastDate){
+          itemMap[key].previous = n(row.previous);
+          itemMap[key].present = n(row.present);
+          itemMap[key].lastDate = day.date;
+        }
+      });
     });
 
     let items=Object.values(itemMap).sort((a,b)=>Number(a.sl)-Number(b.sl));
 
     let floorReceive=0,floorDelivery=0,floorPresent=0,floorBN=0;
-    let bnTitle=bnFieldByFloor(floor);
+    let titleBN=bnName(floor);
 
     html+=`
     <div class="tableWrap">
@@ -237,19 +200,17 @@ async function loadReport(){
           <th>Total Receive</th>
           <th>Total Delivery</th>
           <th>Present Stock</th>
-          <th>${bnTitle}</th>
+          <th>${titleBN}</th>
         </tr>
       </thead>
       <tbody>
     `;
 
     items.forEach((r,i)=>{
-      let bnQty=bnTitle==="BNR" ? r.bnr : r.bnf;
-
-      floorReceive+=r.receive;
-      floorDelivery+=r.delivery;
-      floorPresent+=r.present;
-      floorBN+=bnQty;
+      floorReceive+=n(r.receive);
+      floorDelivery+=n(r.delivery);
+      floorPresent+=n(r.present);
+      floorBN+=n(r.bn);
 
       html+=`
       <tr>
@@ -260,7 +221,7 @@ async function loadReport(){
         <td>${r.receive}</td>
         <td>${r.delivery}</td>
         <td>${r.present}</td>
-        <td>${bnQty}</td>
+        <td>${r.bn}</td>
       </tr>`;
     });
 
@@ -297,7 +258,8 @@ async function loadReport(){
   </table>
   </div>`;
 
-  document.getElementById("reportArea").innerHTML=html || `<div style="text-align:center;color:#9fb0c7;padding:25px;font-weight:bold">No Data Found</div>`;
+  document.getElementById("reportArea").innerHTML =
+    html || `<div style="text-align:center;color:#9fb0c7;padding:25px;font-weight:bold">No Data Found</div>`;
 
   document.getElementById("kpiReceive").innerText=grandReceive;
   document.getElementById("kpiDelivery").innerText=grandDelivery;
