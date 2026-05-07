@@ -244,11 +244,22 @@ async function getNeedleFloorStock(){
 }
 
 async function getGreyData(){
-  let snap=await getDocs(collection(db,"greyFabricStock")),docs=[];
-  snap.forEach(d=>docs.push(d.data()));
+  let snap=await getDocs(collection(db,"greyFabricStock"));
+  let docs=[];
+  snap.forEach(d=>{
+    let x=d.data();
+    if(x.rows&&x.rows.length>0)docs.push(x);
+  });
   docs.sort((a,b)=>(b.date||"").localeCompare(a.date||""));
-  let latest=docs[0]||{rows:[]},labels=[],data=[],total=0;
-  (latest.rows||[]).forEach(r=>{labels.push(r.year||r.fabric);data.push(Number(r.closing)||0);total+=Number(r.closing)||0;});
+  let latest=docs[0]||{rows:[]};
+  let labels=[],data=[],total=0;
+  (latest.rows||[]).forEach(r=>{
+    let name=r.year||r.fabric||"Item";
+    let closing=Number(r.closing||r.closingBalance||0);
+    labels.push(name);
+    data.push(closing);
+    total+=closing;
+  });
   return{labels,data,total};
 }
 
@@ -281,7 +292,11 @@ function renderCharts(sewing,accessories,twill,floorStocks,grey,billing){
   }
   if(isGreyAllowed()){
     if(greyChart)greyChart.destroy();
-    greyChart=new Chart(document.getElementById("greyChart"),{type:"bar",data:{labels:grey.labels,datasets:[{label:"Closing Balance",data:grey.data,borderRadius:8,borderWidth:1}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{y:{beginAtZero:true},x:{ticks:{font:{size:8}},grid:{display:false}}}}});
+    greyChart=new Chart(document.getElementById("greyChart"),{
+      type:"bar",
+      data:{labels:grey.labels.length?grey.labels:["No Data"],datasets:[{label:"Closing Balance",data:grey.data.length?grey.data:[0],borderRadius:8,borderWidth:1}]},
+      options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:function(ctx){return "Closing Balance: "+Number(ctx.raw||0).toLocaleString();}}}},scales:{y:{beginAtZero:true},x:{ticks:{font:{size:8}},grid:{display:false}}}}
+    });
   }
   if(isBillingAllowed()){
     if(billingChart)billingChart.destroy();
