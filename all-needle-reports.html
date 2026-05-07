@@ -3,7 +3,7 @@
 <head>
 <title>All Needle BNR / BNF Report</title>
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<meta name="viewport" content="width=device-width, initial-scale=1">
 
 <style>
 body{margin:0;background:#07111f;color:white;font-family:Arial,sans-serif}
@@ -11,14 +11,14 @@ body{margin:0;background:#07111f;color:white;font-family:Arial,sans-serif}
 .header h2,.header h3,.header h4{margin:3px}
 .controls{text-align:center;margin:10px}
 button{padding:10px 14px;border:0;border-radius:8px;color:white;font-weight:bold;margin:4px;cursor:pointer}
-.show{background:#2563eb}.excel{background:#059669}.print{background:#7c3aed}.home{background:#0f766e}.del{background:#dc2626}
+.show{background:#2563eb}.excel{background:#059669}.print{background:#7c3aed}.home{background:#0f766e}
 input,select{font-size:16px;padding:7px;border-radius:6px;border:1px solid #999}
 .kpi{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin:10px}
 .kpiBox{background:#101b2d;border:1px solid #263855;border-radius:14px;padding:12px;text-align:center}
 .kpiBox span{font-size:12px;color:#9fb0c7;font-weight:bold}
 .kpiBox b{display:block;color:#22c55e;font-size:24px;margin-top:5px}
 .tableWrap{overflow-x:auto;width:100%}
-table{min-width:1250px;width:98%;margin:10px auto;border-collapse:collapse;background:white;color:black;font-size:12px}
+table{min-width:1100px;width:98%;margin:10px auto;border-collapse:collapse;background:white;color:black;font-size:12px}
 th,td{border:1px solid #000;padding:6px;text-align:center}
 th{background:#9fc5e8;font-weight:bold}
 .totalRow{background:#d9ead3;font-weight:bold}
@@ -50,12 +50,12 @@ th{background:#9fc5e8;font-weight:bold}
   Floor:
   <select id="floorFilter">
     <option value="">All Floor</option>
-    <option>SHAPLA</option>
-    <option>PODDO</option>
-    <option>SAMPLE</option>
-    <option>KADOM</option>
-    <option>BELLY</option>
-    <option>Embroidery</option>
+    <option>Kadom</option>
+    <option>Poddo</option>
+    <option>Shapla</option>
+    <option>Sample</option>
+    <option>EMBROIDERY</option>
+    <option>Belly</option>
   </select>
 
   Type:
@@ -84,24 +84,24 @@ th{background:#9fc5e8;font-weight:bold}
 <thead>
 <tr>
   <th>Date</th>
-  <th>Floor</th>
+  <th>Floor Name</th>
   <th>Type</th>
-  <th>Needle Size / Item</th>
-  <th>Buyer</th>
-  <th>Style</th>
-  <th>Line</th>
-  <th>Machine</th>
-  <th>Qty</th>
-  <th>Reason / Remarks</th>
+  <th>Previous Qty</th>
+  <th>Received Qty</th>
+  <th>Delivery Qty</th>
+  <th>Present Stock</th>
   <th>Reported By</th>
 </tr>
 </thead>
 <tbody id="tbody"></tbody>
 <tfoot>
 <tr class="totalRow">
-  <td colspan="8">Grand Total</td>
-  <td id="gtQty">0</td>
-  <td colspan="2"></td>
+  <td colspan="3">Grand Total</td>
+  <td id="gtPrev">0</td>
+  <td id="gtReceive">0</td>
+  <td id="gtDelivery">0</td>
+  <td id="gtPresent">0</td>
+  <td></td>
 </tr>
 </tfoot>
 </table>
@@ -126,7 +126,6 @@ const firebaseConfig={
 
 const app=initializeApp(firebaseConfig);
 const db=getFirestore(app);
-
 let chart;
 
 function today(){return new Date().toISOString().slice(0,10)}
@@ -135,64 +134,59 @@ document.getElementById("toDate").value=today();
 
 function n(v){return Number(v)||0}
 
-function pick(obj,keys){
-  for(let k of keys){
-    if(obj && obj[k]!==undefined && obj[k]!==null && obj[k]!=="") return obj[k];
-  }
+function cleanFloor(f){
+  return String(f||"").replace(/\s+[RN]$/i,"").trim();
+}
+
+function getTypeFromFloor(f){
+  let s=String(f||"").trim().toUpperCase();
+  if(s.endsWith(" R")) return "BNR";
+  if(s.endsWith(" N")) return "BNF";
   return "";
 }
 
-function normalizeRows(docData){
-  let rows=[];
+function getRowsFromDailyPosting(x){
+  let out=[];
+  let date=x.date || x.postingDate || "";
+  let reportedBy=x.reportedBy || x.userName || x.name || "";
 
-  let date=pick(docData,["date","postingDate","reportDate"]);
-  let floor=pick(docData,["floor","floorName"]);
-  let reportedBy=pick(docData,["reportedBy","userName","name"]);
+  if(Array.isArray(x.rows)){
+    x.rows.forEach(r=>{
+      let floor=r.floor || r.floorName || x.floor || "";
+      let type=getTypeFromFloor(floor);
 
-  let sourceRows=docData.rows || docData.items || docData.bnrRows || docData.needleRows || [];
+      if(!type) return;
 
-  if(Array.isArray(sourceRows) && sourceRows.length){
-    sourceRows.forEach(r=>{
-      let type=String(pick(r,["type","reportType","bnType","status"])).toUpperCase();
-
-      let bnr=n(pick(r,["bnr","BNR","broken","brokenQty"]));
-      let bnf=n(pick(r,["bnf","BNF","found","bnfQty"]));
-
-      if(type==="BNR" || bnr>0){
-        rows.push({
-          date,
-          floor:pick(r,["floor","floorName"])||floor,
-          type:"BNR",
-          item:pick(r,["needleSize","item","itemName","description"]),
-          buyer:pick(r,["buyer","buyerName"]),
-          style:pick(r,["style","styleName"]),
-          line:pick(r,["line","lineNo"]),
-          machine:pick(r,["machine","machineNo"]),
-          qty:bnr || n(pick(r,["qty","quantity"])),
-          remarks:pick(r,["remarks","reason"]),
-          reportedBy:pick(r,["reportedBy"])||reportedBy
-        });
-      }
-
-      if(type==="BNF" || bnf>0){
-        rows.push({
-          date,
-          floor:pick(r,["floor","floorName"])||floor,
-          type:"BNF",
-          item:pick(r,["needleSize","item","itemName","description"]),
-          buyer:pick(r,["buyer","buyerName"]),
-          style:pick(r,["style","styleName"]),
-          line:pick(r,["line","lineNo"]),
-          machine:pick(r,["machine","machineNo"]),
-          qty:bnf || n(pick(r,["qty","quantity"])),
-          remarks:pick(r,["remarks","reason"]),
-          reportedBy:pick(r,["reportedBy"])||reportedBy
-        });
-      }
+      out.push({
+        date,
+        floor:cleanFloor(floor),
+        type,
+        previous:n(r.previousQty || r.previous || r.opening || 0),
+        receive:n(r.receiveQty || r.receivedQty || r.receive || 0),
+        delivery:n(r.deliveryQty || r.delivery || r.issue || 0),
+        present:n(r.presentStock || r.present || r.closing || 0),
+        reportedBy:r.reportedBy || reportedBy
+      });
     });
+  }else{
+    let floor=x.floor || x.floorName || "";
+    let type=getTypeFromFloor(floor);
+
+    if(type){
+      out.push({
+        date,
+        floor:cleanFloor(floor),
+        type,
+        previous:n(x.previousQty || x.previous || x.opening || 0),
+        receive:n(x.receiveQty || x.receivedQty || x.receive || 0),
+        delivery:n(x.deliveryQty || x.delivery || x.issue || 0),
+        present:n(x.presentStock || x.present || x.closing || 0),
+        reportedBy
+      });
+    }
   }
 
-  return rows;
+  return out;
 }
 
 async function loadReport(){
@@ -203,22 +197,15 @@ async function loadReport(){
 
   let all=[];
 
-  let collections=["needleReports","dailyPosting","needleBNRBNF","allNeedleReports"];
-
-  for(let col of collections){
-    try{
-      let snap=await getDocs(collection(db,col));
-      snap.forEach(d=>{
-        let x=d.data();
-        all.push(...normalizeRows(x));
-      });
-    }catch(e){}
-  }
+  let snap=await getDocs(collection(db,"dailyPosting"));
+  snap.forEach(d=>{
+    all.push(...getRowsFromDailyPosting(d.data()));
+  });
 
   let filtered=all.filter(r=>{
     if(from && r.date<from) return false;
     if(to && r.date>to) return false;
-    if(floorFilter && r.floor!==floorFilter) return false;
+    if(floorFilter && r.floor.toLowerCase()!==floorFilter.toLowerCase()) return false;
     if(typeFilter && r.type!==typeFilter) return false;
     return true;
   });
@@ -226,35 +213,39 @@ async function loadReport(){
   filtered.sort((a,b)=>(a.date||"").localeCompare(b.date||""));
 
   let html="";
-  let totalBNR=0,totalBNF=0,totalQty=0;
+  let gtPrev=0,gtReceive=0,gtDelivery=0,gtPresent=0,totalBNR=0,totalBNF=0;
 
   filtered.forEach(r=>{
-    if(r.type==="BNR") totalBNR+=n(r.qty);
-    if(r.type==="BNF") totalBNF+=n(r.qty);
-    totalQty+=n(r.qty);
+    gtPrev+=n(r.previous);
+    gtReceive+=n(r.receive);
+    gtDelivery+=n(r.delivery);
+    gtPresent+=n(r.present);
+
+    if(r.type==="BNR") totalBNR+=n(r.present || r.delivery || r.receive);
+    if(r.type==="BNF") totalBNF+=n(r.present || r.delivery || r.receive);
 
     html+=`
     <tr>
       <td>${r.date||""}</td>
       <td>${r.floor||""}</td>
       <td>${r.type||""}</td>
-      <td>${r.item||""}</td>
-      <td>${r.buyer||""}</td>
-      <td>${r.style||""}</td>
-      <td>${r.line||""}</td>
-      <td>${r.machine||""}</td>
-      <td>${r.qty||""}</td>
-      <td>${r.remarks||""}</td>
+      <td>${r.previous}</td>
+      <td>${r.receive}</td>
+      <td>${r.delivery}</td>
+      <td>${r.present}</td>
       <td>${r.reportedBy||""}</td>
     </tr>`;
   });
 
-  document.getElementById("tbody").innerHTML=html || `<tr><td colspan="11">No BNR/BNF Data Found</td></tr>`;
-  document.getElementById("gtQty").innerText=totalQty;
+  document.getElementById("tbody").innerHTML=html || `<tr><td colspan="8">No BNR/BNF Data Found</td></tr>`;
+  document.getElementById("gtPrev").innerText=gtPrev;
+  document.getElementById("gtReceive").innerText=gtReceive;
+  document.getElementById("gtDelivery").innerText=gtDelivery;
+  document.getElementById("gtPresent").innerText=gtPresent;
 
   document.getElementById("kpiBNR").innerText=totalBNR;
   document.getElementById("kpiBNF").innerText=totalBNF;
-  document.getElementById("kpiQty").innerText=totalQty;
+  document.getElementById("kpiQty").innerText=totalBNR+totalBNF;
   document.getElementById("kpiReport").innerText=filtered.length;
 
   renderChart(totalBNR,totalBNF);
@@ -263,7 +254,7 @@ async function loadReport(){
 window.loadReport=loadReport;
 
 function renderChart(bnr,bnf){
-  if(chart) chart.destroy();
+  if(chart)chart.destroy();
 
   chart=new Chart(document.getElementById("bnChart"),{
     type:"bar",
@@ -286,6 +277,7 @@ function renderChart(bnr,bnf){
 
 window.exportExcel=function(){
   let clone=document.getElementById("reportTable").cloneNode(true);
+
   let html=`
     <html><head><meta charset="UTF-8"></head>
     <body>
