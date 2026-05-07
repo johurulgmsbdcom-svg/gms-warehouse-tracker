@@ -2,147 +2,43 @@
 <html>
 <head>
 <title>GMS Login</title>
-<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
-
+<meta name="viewport" content="width=device-width, initial-scale=1">
 <style>
-*{margin:0;padding:0;box-sizing:border-box}
-
-body{
-  font-family:Arial,sans-serif;
-  background:#07111f;
-  color:white;
-  display:flex;
-  justify-content:center;
-  align-items:center;
-  min-height:100vh;
-  padding:15px;
-}
-
-.loginBox{
-  width:100%;
-  max-width:420px;
-  background:#101b2d;
-  border:1px solid #263855;
-  border-radius:18px;
-  padding:25px;
-  box-shadow:0 0 20px rgba(0,0,0,.4);
-}
-
-.logo{
-  text-align:center;
-  margin-bottom:20px;
-}
-
-.logo h1{
-  font-size:28px;
-  margin-bottom:5px;
-}
-
-.logo p{
-  color:#9fb0c7;
-  font-size:14px;
-}
-
-.inputBox{
-  margin-bottom:16px;
-}
-
-.inputBox label{
-  display:block;
-  margin-bottom:6px;
-  font-weight:bold;
-  color:#cbd5e1;
-}
-
-.inputBox input{
-  width:100%;
-  padding:13px;
-  border-radius:10px;
-  border:1px solid #334155;
-  background:#0f172a;
-  color:white;
-  font-size:16px;
-  outline:none;
-}
-
-.inputBox input:focus{
-  border-color:#2563eb;
-}
-
-.loginBtn{
-  width:100%;
-  padding:14px;
-  border:none;
-  border-radius:10px;
-  background:#2563eb;
-  color:white;
-  font-size:17px;
-  font-weight:bold;
-  cursor:pointer;
-  margin-top:10px;
-}
-
-.loginBtn:hover{
-  background:#1d4ed8;
-}
-
-.msg{
-  margin-top:14px;
-  text-align:center;
-  font-weight:bold;
-  color:#ef4444;
-}
-
-.footer{
-  margin-top:18px;
-  text-align:center;
-  color:#94a3b8;
-  font-size:12px;
-}
+body{margin:0;background:#07111f;color:white;font-family:Arial;display:flex;justify-content:center;align-items:center;min-height:100vh}
+.box{width:90%;max-width:420px;background:#101b2d;border:1px solid #263855;border-radius:18px;padding:28px}
+.logo{text-align:center}.logo img{width:80px}.logo h2{margin:8px 0}.logo p{color:#9fb0c7}
+label{font-weight:bold;font-size:14px}
+input{width:100%;padding:14px;margin:8px 0 16px;border-radius:10px;border:1px solid #334155;background:#07111f;color:white;font-size:16px;box-sizing:border-box}
+button{width:100%;padding:15px;border:0;border-radius:12px;background:linear-gradient(135deg,#2563eb,#22c55e);color:white;font-size:18px;font-weight:bold}
+.msg{text-align:center;color:#ef4444;font-weight:bold;margin-top:12px}
+.footer{text-align:center;color:#9fb0c7;font-size:12px;margin-top:25px}
 </style>
 </head>
-
 <body>
 
-<div class="loginBox">
-
+<div class="box">
   <div class="logo">
-    <h1>GMS Dashboard</h1>
-    <p>Warehouse & Inventory Management System</p>
+    <img src="logo.png" onerror="this.style.display='none'">
+    <h2>GMS MCD SYSTEM</h2>
+    <p>Secure Login Portal</p>
   </div>
 
-  <div class="inputBox">
-    <label>User ID / Email</label>
-    <input type="email" id="email" placeholder="Enter Email">
-  </div>
+  <label>Email</label>
+  <input id="email" placeholder="Enter email">
 
-  <div class="inputBox">
-    <label>Password</label>
-    <input type="password" id="password" placeholder="Enter Password">
-  </div>
+  <label>Password</label>
+  <input id="password" type="password" placeholder="Enter password">
 
-  <button class="loginBtn" onclick="login()">🔐 Login</button>
+  <button onclick="login()">🔐 LOGIN</button>
 
-  <div class="msg" id="msg"></div>
+  <div id="msg" class="msg"></div>
 
-  <div class="footer">
-    © GMS Textiles Ltd.
-  </div>
-
+  <div class="footer">Powered by JOHURUL</div>
 </div>
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-app.js";
-import {
-  getAuth,
-  signInWithEmailAndPassword
-} from "https://www.gstatic.com/firebasejs/12.12.1/firebase-auth.js";
-
-import {
-  getFirestore,
-  doc,
-  getDoc
-} from "https://www.gstatic.com/firebasejs/12.12.1/firebase-firestore.js";
+import { getFirestore, collection, getDocs } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-firestore.js";
 
 const firebaseConfig={
   apiKey:"AIzaSyD-wBCF5eeWMHobLFOhBzKW7aB2pagz9-w",
@@ -154,67 +50,46 @@ const firebaseConfig={
 };
 
 const app=initializeApp(firebaseConfig);
-const auth=getAuth(app);
 const db=getFirestore(app);
 
 window.login=async function(){
-
-  const email=document.getElementById("email").value.trim();
-  const password=document.getElementById("password").value.trim();
-  const msg=document.getElementById("msg");
+  let email=document.getElementById("email").value.trim();
+  let password=document.getElementById("password").value.trim();
+  let msg=document.getElementById("msg");
 
   msg.innerText="";
 
   if(!email || !password){
-    msg.innerText="Enter email & password";
+    msg.innerText="Email & Password dao";
     return;
   }
 
   try{
+    let snap=await getDocs(collection(db,"users"));
+    let found=null;
+    let id="";
 
-    const userCredential=await signInWithEmailAndPassword(auth,email,password);
-
-    const uid=userCredential.user.uid;
-
-    let userData={
-      uid:uid,
-      email:email
-    };
-
-    try{
-      const userRef=doc(db,"users",uid);
-      const userSnap=await getDoc(userRef);
-
-      if(userSnap.exists()){
-        userData={
-          uid:uid,
-          ...userSnap.data()
-        };
+    snap.forEach(d=>{
+      let u=d.data();
+      if(String(u.email||"").trim().toLowerCase()===email.toLowerCase()
+         && String(u.password||"").trim()===password){
+        found=u;
+        id=d.id;
       }
-    }catch(e){
-      console.log(e);
+    });
+
+    if(!found){
+      msg.innerText="Login failed";
+      return;
     }
 
-    localStorage.setItem("gmsUser",JSON.stringify(userData));
-
+    found.id=id;
+    localStorage.setItem("gmsUser",JSON.stringify(found));
     location.href="index.html";
 
-  }catch(error){
-
-    console.log(error);
-
-    if(error.code==="auth/user-not-found"){
-      msg.innerText="User not found";
-    }
-    else if(error.code==="auth/wrong-password"){
-      msg.innerText="Wrong password";
-    }
-    else if(error.code==="auth/invalid-email"){
-      msg.innerText="Invalid email";
-    }
-    else{
-      msg.innerText="Login failed";
-    }
+  }catch(e){
+    console.log(e);
+    msg.innerText="Firebase problem";
   }
 }
 </script>
