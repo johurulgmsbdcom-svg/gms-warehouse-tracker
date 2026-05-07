@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-<title>Needle Report Entry</title>
+<title>Needle Issue Entry</title>
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
 
@@ -11,16 +11,24 @@ body{margin:0;background:#07111f;color:white;font-family:Arial,sans-serif}
 .header h2,.header h3,.header h4{margin:3px}
 .controls{text-align:center;margin:10px}
 button{padding:10px 14px;border:0;border-radius:8px;color:white;font-weight:bold;margin:4px;cursor:pointer}
-.save{background:#16a34a}.show{background:#2563eb}.home{background:#0f766e}
-input{font-size:16px;padding:7px;border-radius:6px;border:1px solid #999}
+.save{background:#16a34a}.report{background:#2563eb}.home{background:#0f766e}.print{background:#7c3aed}
+input{font-size:15px;padding:6px;border-radius:6px;border:1px solid #999}
 .tableWrap{overflow-x:auto;width:100%}
-table{min-width:1200px;width:98%;margin:10px auto;border-collapse:collapse;background:white;color:black;font-size:12px}
+.reportTable{min-width:1450px;width:98%;margin:10px auto;border-collapse:collapse;background:white;color:black;font-size:12px}
 th,td{border:1px solid #000;padding:6px;text-align:center}
-th{background:#f3f4f6;font-weight:bold}
-td input{width:100%;box-sizing:border-box;border:0;outline:none;text-align:center;font-size:15px}
+th{background:#9fc5e8;font-weight:bold}
+td input{width:100%;box-sizing:border-box;border:0;outline:none;text-align:center;font-size:14px}
 .totalCell{font-weight:bold;background:#e5e7eb}
-.chartBox{width:96%;margin:10px auto;background:white;color:black;border-radius:10px;padding:10px}
+.chartBox{width:96%;margin:12px auto;background:white;color:black;border-radius:10px;padding:10px}
 .toast{position:fixed;right:15px;bottom:15px;background:#22c55e;color:white;padding:12px 18px;border-radius:10px;font-weight:bold;display:none}
+@page{size:A4 landscape;margin:6mm}
+@media print{
+  body{background:white;color:black}
+  .controls,.noPrint{display:none!important}
+  table{width:100%;min-width:0;font-size:8px}
+  th,td{padding:2px}
+  .chartBox{width:100%;margin:4px 0}
+}
 </style>
 </head>
 
@@ -29,20 +37,21 @@ td input{width:100%;box-sizing:border-box;border:0;outline:none;text-align:cente
 <div class="header">
   <h2>GMS Textiles Ltd</h2>
   <h4>Needle MCD</h4>
-  <h3>Needle Daily Report Entry</h3>
+  <h3>Needle Issue Entry</h3>
 </div>
 
-<div class="controls">
+<div class="controls noPrint">
   Date:
   <input type="date" id="reportDate">
 
   <button class="save" onclick="saveReport()">💾 Save</button>
-  <button class="show" onclick="location.href='needle-report-view.html'">📑 Report</button>
+  <button class="report" onclick="location.href='needle-report-view.html'">📑 Report</button>
+  <button class="print" onclick="window.print()">🖨 PDF / Print</button>
   <button class="home" onclick="location.href='index.html'">🏠 Home</button>
 </div>
 
 <div class="tableWrap">
-<table>
+<table class="reportTable">
 <thead>
 <tr>
   <th>Needle Booth</th>
@@ -54,21 +63,17 @@ td input{width:100%;box-sizing:border-box;border:0;outline:none;text-align:cente
   <th>Change Needle</th>
   <th>Total Issue</th>
   <th>Per Machine Avg. Needle Use</th>
+  <th>Description</th>
+  <th>Floor Name</th>
+  <th>Previous Qty</th>
+  <th>Received Qty</th>
+  <th>Delivery Qty</th>
+  <th>Present Stock</th>
+  <th>Remarks</th>
 </tr>
 </thead>
-<tbody>
-<tr>
-  <td><input type="number" id="needleBooth" value="6" oninput="calculate()"></td>
-  <td><input type="number" id="totalSewingLine" value="56" oninput="calculate()"></td>
-  <td><input type="number" id="machinePlan" value="3468" oninput="calculate()"></td>
-  <td><input type="number" id="runningMachine" value="2254" oninput="calculate()"></td>
-  <td><input type="number" id="brokenNeedle" value="213" oninput="calculate()"></td>
-  <td><input type="number" id="missingNeedle" value="26" oninput="calculate()"></td>
-  <td><input type="number" id="changeNeedle" value="1310" oninput="calculate()"></td>
-  <td class="totalCell" id="totalIssue">1549</td>
-  <td class="totalCell" id="avgUse">1.46</td>
-</tr>
-</tbody>
+
+<tbody id="mainBody"></tbody>
 </table>
 </div>
 
@@ -108,42 +113,126 @@ if(!user){window.location.href="login.html"}
 
 let chart;
 
+const defaultFloorRows=[
+  {description:"Sewing Needle",floorName:"SHAPLA",previousQty:2432,receivedQty:"",deliveryQty:"",presentStock:2432,remarks:""},
+  {description:"Sewing Needle",floorName:"PODDO",previousQty:3679,receivedQty:"",deliveryQty:"",presentStock:3679,remarks:""},
+  {description:"Sewing Needle",floorName:"SAMPLE",previousQty:1740,receivedQty:"",deliveryQty:"",presentStock:1740,remarks:""},
+  {description:"Sewing Needle",floorName:"KADOM",previousQty:2696,receivedQty:"",deliveryQty:"",presentStock:2696,remarks:""},
+  {description:"Sewing Needle",floorName:"BELLY",previousQty:1188,receivedQty:"",deliveryQty:"",presentStock:1188,remarks:""},
+  {description:"Sewing Needle",floorName:"Embroidery",previousQty:1474,receivedQty:"",deliveryQty:"",presentStock:1474,remarks:""},
+  {description:"Needle Technical Stock",floorName:"All",previousQty:184820,receivedQty:"",deliveryQty:"",presentStock:184820,remarks:""}
+];
+
+let floorRows=JSON.parse(JSON.stringify(defaultFloorRows));
+
 function today(){
   return new Date().toISOString().slice(0,10);
 }
 
 document.getElementById("reportDate").value=today();
 
-function n(id){
-  return Number(document.getElementById(id).value)||0;
-}
+function n(v){return Number(v)||0}
+function byId(id){return document.getElementById(id)}
 
 function toast(msg){
-  let t=document.getElementById("toast");
+  let t=byId("toast");
   t.innerText=msg;
   t.style.display="block";
   setTimeout(()=>t.style.display="none",1500);
 }
 
+function totalIssue(){
+  return n(byId("brokenNeedle").value)+n(byId("missingNeedle").value)+n(byId("changeNeedle").value);
+}
+
+function avgUse(){
+  let total=totalIssue();
+  let running=n(byId("runningMachine").value);
+  return total>0 ? running/total : 0;
+}
+
+function calcFloor(i){
+  let r=floorRows[i];
+  r.presentStock=n(r.previousQty)+n(r.receivedQty)-n(r.deliveryQty);
+}
+
+function render(){
+  floorRows.forEach((r,i)=>calcFloor(i));
+
+  let html="";
+
+  floorRows.forEach((r,i)=>{
+    let first=i===0;
+
+    html+=`
+    <tr>
+      ${first ? `
+      <td rowspan="${floorRows.length}"><input type="number" id="needleBooth" value="6" oninput="calculate()"></td>
+      <td rowspan="${floorRows.length}"><input type="number" id="totalSewingLine" value="56" oninput="calculate()"></td>
+      <td rowspan="${floorRows.length}"><input type="number" id="machinePlan" value="3468" oninput="calculate()"></td>
+      <td rowspan="${floorRows.length}"><input type="number" id="runningMachine" value="2254" oninput="calculate()"></td>
+      <td rowspan="${floorRows.length}"><input type="number" id="brokenNeedle" value="213" oninput="calculate()"></td>
+      <td rowspan="${floorRows.length}"><input type="number" id="missingNeedle" value="26" oninput="calculate()"></td>
+      <td rowspan="${floorRows.length}"><input type="number" id="changeNeedle" value="1310" oninput="calculate()"></td>
+      <td rowspan="${floorRows.length}" class="totalCell" id="totalIssue">1549</td>
+      <td rowspan="${floorRows.length}" class="totalCell" id="avgUse">1.46</td>
+      ` : ``}
+
+      <td><input value="${r.description}" onchange="floorRows[${i}].description=this.value"></td>
+      <td><input value="${r.floorName}" onchange="floorRows[${i}].floorName=this.value"></td>
+      <td><input type="number" value="${r.previousQty}" onchange="floorRows[${i}].previousQty=this.value;renderAfterInput()"></td>
+      <td><input type="number" value="${r.receivedQty}" onchange="floorRows[${i}].receivedQty=this.value;renderAfterInput()"></td>
+      <td><input type="number" value="${r.deliveryQty}" onchange="floorRows[${i}].deliveryQty=this.value;renderAfterInput()"></td>
+      <td class="totalCell">${r.presentStock}</td>
+      <td><input value="${r.remarks}" onchange="floorRows[${i}].remarks=this.value"></td>
+    </tr>`;
+  });
+
+  byId("mainBody").innerHTML=html;
+  calculate();
+}
+
+window.renderAfterInput=function(){
+  let booth=byId("needleBooth")?.value||6;
+  let line=byId("totalSewingLine")?.value||56;
+  let plan=byId("machinePlan")?.value||3468;
+  let running=byId("runningMachine")?.value||2254;
+  let broken=byId("brokenNeedle")?.value||213;
+  let missing=byId("missingNeedle")?.value||26;
+  let change=byId("changeNeedle")?.value||1310;
+
+  render();
+
+  byId("needleBooth").value=booth;
+  byId("totalSewingLine").value=line;
+  byId("machinePlan").value=plan;
+  byId("runningMachine").value=running;
+  byId("brokenNeedle").value=broken;
+  byId("missingNeedle").value=missing;
+  byId("changeNeedle").value=change;
+
+  calculate();
+}
+
 window.calculate=function(){
-  let broken=n("brokenNeedle");
-  let missing=n("missingNeedle");
-  let change=n("changeNeedle");
-  let running=n("runningMachine");
+  let broken=n(byId("brokenNeedle")?.value);
+  let missing=n(byId("missingNeedle")?.value);
+  let change=n(byId("changeNeedle")?.value);
+  let running=n(byId("runningMachine")?.value);
 
-  let totalIssue=broken+missing+change;
-  let avg=totalIssue>0 ? running/totalIssue : 0;
+  let issue=broken+missing+change;
+  let avg=issue>0 ? running/issue : 0;
 
-  document.getElementById("totalIssue").innerText=totalIssue;
-  document.getElementById("avgUse").innerText=avg.toFixed(2);
+  if(byId("totalIssue")) byId("totalIssue").innerText=issue;
+  if(byId("avgUse")) byId("avgUse").innerText=avg.toFixed(2);
 
   renderChart(broken,missing,change);
-};
+}
 
 function renderChart(broken,missing,change){
-  if(chart)chart.destroy();
+  if(chart) chart.destroy();
 
-  chart=new Chart(document.getElementById("issueChart"),{
+  chart=new Chart(byId("issueChart"),{
     type:"bar",
     data:{
       labels:["Broken","Missing","Change"],
@@ -174,33 +263,73 @@ async function deleteSameDate(date){
   }
 }
 
+async function getPreviousData(date){
+  let snap=await getDocs(collection(db,"needleDailyReport"));
+  let all=[];
+
+  snap.forEach(d=>{
+    let x=d.data();
+    if(x.date<date && Array.isArray(x.floorRows)){
+      all.push(x);
+    }
+  });
+
+  all.sort((a,b)=>String(b.date).localeCompare(String(a.date)));
+  return all[0]||null;
+}
+
+async function loadInitial(){
+  let date=byId("reportDate").value;
+  let prev=await getPreviousData(date);
+
+  if(prev){
+    floorRows=(prev.floorRows||[]).map(r=>({
+      description:r.description,
+      floorName:r.floorName,
+      previousQty:n(r.presentStock),
+      receivedQty:"",
+      deliveryQty:"",
+      presentStock:n(r.presentStock),
+      remarks:""
+    }));
+  }else{
+    floorRows=JSON.parse(JSON.stringify(defaultFloorRows));
+  }
+
+  render();
+}
+
 window.saveReport=async function(){
   calculate();
 
-  let date=document.getElementById("reportDate").value;
+  let date=byId("reportDate").value;
+  floorRows.forEach((r,i)=>calcFloor(i));
 
   await deleteSameDate(date);
 
   await addDoc(collection(db,"needleDailyReport"),{
     date:date,
-    needleBooth:n("needleBooth"),
-    totalSewingLine:n("totalSewingLine"),
-    machinePlan:n("machinePlan"),
-    runningMachine:n("runningMachine"),
-    brokenNeedle:n("brokenNeedle"),
-    missingNeedle:n("missingNeedle"),
-    changeNeedle:n("changeNeedle"),
-    totalIssue:Number(document.getElementById("totalIssue").innerText)||0,
-    avgUse:Number(document.getElementById("avgUse").innerText)||0,
+    needleBooth:n(byId("needleBooth").value),
+    totalSewingLine:n(byId("totalSewingLine").value),
+    machinePlan:n(byId("machinePlan").value),
+    runningMachine:n(byId("runningMachine").value),
+    brokenNeedle:n(byId("brokenNeedle").value),
+    missingNeedle:n(byId("missingNeedle").value),
+    changeNeedle:n(byId("changeNeedle").value),
+    totalIssue:n(byId("totalIssue").innerText),
+    avgUse:n(byId("avgUse").innerText),
+    floorRows:floorRows,
     reportedBy:user.name||user.email||"User",
     userId:user.id||"",
     createdAt:new Date().toISOString()
   });
 
-  toast("Needle Report Saved ✅");
-};
+  toast("Needle Issue Saved ✅");
+}
 
-calculate();
+byId("reportDate").addEventListener("change",loadInitial);
+
+loadInitial();
 </script>
 
 </body>
