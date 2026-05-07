@@ -1,0 +1,395 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Gate Plan Report</title>
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+
+<style>
+body{margin:0;background:#07111f;color:white;font-family:Arial,sans-serif}
+.header{text-align:center;padding:10px}
+.header h2,.header h3,.header h4{margin:3px}
+.controls{text-align:center;margin:10px}
+button{padding:10px 14px;border:0;border-radius:8px;color:white;font-weight:bold;margin:4px;cursor:pointer}
+.show{background:#2563eb}.excel{background:#059669}.print{background:#7c3aed}.home{background:#0f766e}.del{background:#dc2626}.edit{background:#f59e0b}.save{background:#16a34a}
+input,select{font-size:15px;padding:7px;border-radius:6px;border:1px solid #999}
+.box{width:96%;margin:12px auto;background:white;color:black;border:1px solid #000}
+.topLine{text-align:center;font-weight:bold;border-bottom:1px solid #000;padding:4px;font-size:18px}
+.meta{display:grid;grid-template-columns:repeat(5,1fr);border-bottom:1px solid #000}
+.meta div{border-right:1px solid #000;padding:6px;text-align:center;font-weight:bold}
+.tableWrap{overflow-x:auto;width:100%}
+table{min-width:1350px;width:100%;border-collapse:collapse;background:white;color:black;font-size:12px}
+th,td{border:1px solid #000;padding:5px;text-align:center}
+td input{width:100%;box-sizing:border-box;border:0;outline:none;text-align:center;font-size:14px}
+.totalRow{font-weight:bold;background:#f3f4f6}
+.sign{display:grid;grid-template-columns:repeat(8,1fr);gap:0;margin-top:80px}
+.sign div{text-align:center;font-weight:bold;border-top:1px solid #000;padding:6px;font-size:12px}
+.empty{text-align:center;color:#9fb0c7;padding:30px;font-weight:bold}
+.toast{position:fixed;right:15px;bottom:15px;background:#22c55e;color:white;padding:12px 18px;border-radius:10px;font-weight:bold;display:none}
+@page{size:A4 landscape;margin:6mm}
+@media print{
+  body{background:white;color:black}
+  .controls,.noPrint{display:none!important}
+  .box{width:100%;margin:0}
+  table{min-width:0;font-size:9px}
+  th,td{padding:2px}
+  .meta{grid-template-columns:repeat(5,1fr)}
+}
+</style>
+</head>
+
+<body>
+
+<div class="header">
+  <h2>GMS Textiles Ltd.</h2>
+  <h4>Tansutrapur, Kaliakair, Gazipur.</h4>
+  <h4>Daily Goods Delivery Plan</h4>
+  <h3>Gate Plan Report</h3>
+</div>
+
+<div class="controls noPrint">
+  From: <input type="date" id="fromDate">
+  To: <input type="date" id="toDate">
+  Gate Plan No: <input id="searchNo" placeholder="GP-2026-0001" style="width:150px">
+
+  Company:
+  <select id="companyFilter">
+    <option value="">All</option>
+    <option>GMS Textiles Ltd.</option>
+    <option>GMS Composite Knitting Ind Ltd.</option>
+  </select>
+
+  MCD:
+  <select id="mcdFilter">
+    <option value="">All</option>
+    <option>ACCESSORIES MCD</option>
+    <option>GREY FABRIC MCD</option>
+    <option>BILLING SECTION</option>
+    <option>NEEDLE MCD</option>
+    <option>SHIPMENT MCD</option>
+    <option>OUTER WEAR MCD</option>
+    <option>YARN MCD</option>
+    <option>PRINTING MCD</option>
+    <option>JHUT MCD</option>
+    <option>GENERAL MCD</option>
+    <option>LEFTOVER MCD</option>
+    <option>FINISH FABRIC MCD</option>
+    <option>YARN DYEING MCD</option>
+    <option>CHEMICAL MCD</option>
+  </select>
+
+  <br>
+
+  <button class="show" onclick="loadReport()">🔍 Show Report</button>
+  <button class="excel" onclick="exportExcel()">📊 Excel</button>
+  <button class="print" onclick="window.print()">🖨 PDF / Print</button>
+  <button class="home" onclick="location.href='gate-plan.html'">➕ New Gate Plan</button>
+  <button class="home" onclick="location.href='index.html'">🏠 Home</button>
+</div>
+
+<div id="reportArea"></div>
+
+<div id="toast" class="toast">Saved ✅</div>
+
+<script>
+function today(){
+  return new Date().toISOString().slice(0,10);
+}
+
+document.getElementById("fromDate").value=today();
+document.getElementById("toDate").value=today();
+
+function toast(msg){
+  let t=document.getElementById("toast");
+  t.innerText=msg;
+  t.style.display="block";
+  setTimeout(()=>t.style.display="none",1500);
+}
+
+function n(v){
+  return Number(v)||0;
+}
+
+function getSavedPlans(){
+  return JSON.parse(localStorage.getItem("gatePlans") || "[]");
+}
+
+function setSavedPlans(data){
+  localStorage.setItem("gatePlans",JSON.stringify(data));
+}
+
+function totalDelivery(rows){
+  return rows.reduce((a,r)=>a+n(r.deliveryQty),0);
+}
+
+function totalCtn(rows){
+  return rows.reduce((a,r)=>a+n(r.ctnQty),0);
+}
+
+function rowHtml(r,i,edit,planIndex){
+  if(edit){
+    return `
+      <tr>
+        <td>${i+1}</td>
+        <td><input value="${r.buyerName||''}" onchange="editBuffer.rows[${i}].buyerName=this.value"></td>
+        <td><input value="${r.srGtNo||''}" onchange="editBuffer.rows[${i}].srGtNo=this.value"></td>
+        <td><input value="${r.styleName||''}" onchange="editBuffer.rows[${i}].styleName=this.value"></td>
+        <td><input value="${r.orderNo||''}" onchange="editBuffer.rows[${i}].orderNo=this.value"></td>
+        <td><input value="${r.itemName||''}" onchange="editBuffer.rows[${i}].itemName=this.value"></td>
+        <td><input value="${r.color||''}" onchange="editBuffer.rows[${i}].color=this.value"></td>
+        <td><input value="${r.unit||''}" onchange="editBuffer.rows[${i}].unit=this.value"></td>
+        <td><input type="number" value="${r.deliveryQty||''}" onchange="editBuffer.rows[${i}].deliveryQty=this.value;renderPlans(currentPlans)"></td>
+        <td><input type="number" value="${r.ctnQty||''}" onchange="editBuffer.rows[${i}].ctnQty=this.value;renderPlans(currentPlans)"></td>
+        <td><input value="${r.toParty||''}" onchange="editBuffer.rows[${i}].toParty=this.value"></td>
+        <td><input value="${r.vehicleNo||''}" onchange="editBuffer.rows[${i}].vehicleNo=this.value"></td>
+        <td><input value="${r.remarks||''}" onchange="editBuffer.rows[${i}].remarks=this.value"></td>
+        <td class="noPrint"><button class="del" onclick="deleteEditRow(${i})">Delete</button></td>
+      </tr>
+    `;
+  }
+
+  return `
+    <tr>
+      <td>${i+1}</td>
+      <td>${r.buyerName||""}</td>
+      <td>${r.srGtNo||""}</td>
+      <td>${r.styleName||""}</td>
+      <td>${r.orderNo||""}</td>
+      <td>${r.itemName||""}</td>
+      <td>${r.color||""}</td>
+      <td>${r.unit||""}</td>
+      <td>${r.deliveryQty||""}</td>
+      <td>${r.ctnQty||""}</td>
+      <td>${r.toParty||""}</td>
+      <td>${r.vehicleNo||""}</td>
+      <td>${r.remarks||""}</td>
+      <td class="noPrint"></td>
+    </tr>
+  `;
+}
+
+let currentPlans=[];
+let editIndex=null;
+let editBuffer=null;
+
+function renderPlans(plans){
+  currentPlans=plans;
+  let html="";
+
+  plans.forEach((p,index)=>{
+    let isEdit = editIndex===index;
+    let data = isEdit ? editBuffer : p;
+    let rows = data.rows || [];
+
+    let companyLine=(data.company||"")+" To "+(data.toCompany||"");
+
+    html+=`
+      <div class="box">
+        <div class="topLine">${companyLine}</div>
+
+        <div class="meta">
+          <div>Gate Plan No: ${data.gatePassNo||""}</div>
+          <div>Date: ${data.date||""}</div>
+          <div>Time: ${data.time||""}</div>
+          <div>MCD: ${data.mcd||""}</div>
+          <div>Prepared By: ${data.preparedBy||""}</div>
+        </div>
+
+        <div class="controls noPrint">
+          ${
+            isEdit
+            ? `
+              <button class="save" onclick="saveEdit(${index})">💾 Save Edit</button>
+              <button class="show" onclick="cancelEdit()">Cancel</button>
+              <button class="add" onclick="addEditRow()">➕ Add Row</button>
+            `
+            : `
+              <button class="edit" onclick="editPlan(${index})">✏️ Edit</button>
+              <button class="del" onclick="deletePlan(${index})">🗑 Delete</button>
+            `
+          }
+        </div>
+
+        <div class="tableWrap">
+          <table class="gateTable">
+            <thead>
+              <tr>
+                <th>SL No</th>
+                <th>Buyer Name</th>
+                <th>SR/GT No</th>
+                <th>Style Name</th>
+                <th>Order No/PO No</th>
+                <th>Name of Item</th>
+                <th>Color</th>
+                <th>Unit</th>
+                <th>Delivery Qty</th>
+                <th>CTN/PKG Qty</th>
+                <th>To Party Name</th>
+                <th>Vehicle No</th>
+                <th>Remarks</th>
+                <th class="noPrint">Action</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${rows.map((r,i)=>rowHtml(r,i,isEdit,index)).join("")}
+            </tbody>
+            <tfoot>
+              <tr class="totalRow">
+                <td colspan="8">Grand Total</td>
+                <td>${totalDelivery(rows)}</td>
+                <td>${totalCtn(rows)}</td>
+                <td colspan="3"></td>
+                <td class="noPrint"></td>
+              </tr>
+            </tfoot>
+          </table>
+        </div>
+
+        <div class="sign">
+          <div>Prepared By<br>${data.preparedBy||""}</div>
+          <div>Security Dept.</div>
+          <div>Checked By<br>Sr. Officer ( MCD )</div>
+          <div>Asst. Manager<br>(MCD)</div>
+          <div>AGM (MCD)</div>
+          <div>Verify By<br>Merchant Dept.</div>
+          <div>Verify By<br>HR & Admin Dept.</div>
+          <div>Approved By</div>
+        </div>
+      </div>
+    `;
+  });
+
+  document.getElementById("reportArea").innerHTML =
+    html || `<div class="empty">No Gate Plan Found</div>`;
+}
+
+function loadReport(){
+  let from=document.getElementById("fromDate").value;
+  let to=document.getElementById("toDate").value;
+  let searchNo=document.getElementById("searchNo").value.trim().toLowerCase();
+  let company=document.getElementById("companyFilter").value;
+  let mcd=document.getElementById("mcdFilter").value;
+
+  let plans=getSavedPlans();
+
+  let result=plans.filter(p=>{
+    let ok=true;
+
+    if(from && p.date<from) ok=false;
+    if(to && p.date>to) ok=false;
+    if(searchNo && !String(p.gatePassNo||"").toLowerCase().includes(searchNo)) ok=false;
+    if(company && p.company!==company) ok=false;
+    if(mcd && p.mcd!==mcd) ok=false;
+
+    return ok;
+  });
+
+  result.sort((a,b)=>(b.createdAt||"").localeCompare(a.createdAt||""));
+
+  editIndex=null;
+  editBuffer=null;
+  renderPlans(result);
+}
+
+window.loadReport=loadReport;
+
+window.editPlan=function(index){
+  editIndex=index;
+  editBuffer=JSON.parse(JSON.stringify(currentPlans[index]));
+  renderPlans(currentPlans);
+};
+
+window.cancelEdit=function(){
+  editIndex=null;
+  editBuffer=null;
+  renderPlans(currentPlans);
+};
+
+window.addEditRow=function(){
+  if(!editBuffer.rows) editBuffer.rows=[];
+  editBuffer.rows.push({
+    buyerName:"",
+    srGtNo:"",
+    styleName:"",
+    orderNo:"",
+    itemName:"",
+    color:"",
+    unit:"",
+    deliveryQty:"",
+    ctnQty:"",
+    toParty:editBuffer.toCompany==="Other's Factory" ? "" : editBuffer.toCompany,
+    vehicleNo:"",
+    remarks:""
+  });
+  renderPlans(currentPlans);
+};
+
+window.deleteEditRow=function(i){
+  editBuffer.rows.splice(i,1);
+  renderPlans(currentPlans);
+};
+
+window.saveEdit=function(index){
+  let all=getSavedPlans();
+  let old=currentPlans[index];
+
+  let realIndex=all.findIndex(x=>x.gatePassNo===old.gatePassNo);
+
+  if(realIndex>=0){
+    editBuffer.updatedAt=new Date().toISOString();
+    all[realIndex]=editBuffer;
+    setSavedPlans(all);
+  }
+
+  toast("Updated ✅");
+  loadReport();
+};
+
+window.deletePlan=function(index){
+  if(!confirm("Delete this Gate Plan?")) return;
+
+  let all=getSavedPlans();
+  let old=currentPlans[index];
+
+  all=all.filter(x=>x.gatePassNo!==old.gatePassNo);
+  setSavedPlans(all);
+
+  toast("Deleted ✅");
+  loadReport();
+};
+
+window.exportExcel=function(){
+  let area=document.getElementById("reportArea").cloneNode(true);
+  area.querySelectorAll(".noPrint,.controls").forEach(x=>x.remove());
+
+  let html=`
+    <html>
+      <head><meta charset="UTF-8"></head>
+      <body>
+        <h2>GMS Textiles Ltd.</h2>
+        <h3>Gate Plan Report</h3>
+        ${area.innerHTML}
+      </body>
+    </html>
+  `;
+
+  let file=new Blob([html],{type:"application/vnd.ms-excel"});
+  let a=document.createElement("a");
+  a.href=URL.createObjectURL(file);
+  a.download="gate-plan-report.xls";
+  a.click();
+};
+
+document.addEventListener("keydown",function(e){
+  if(e.key==="Enter" && e.target.tagName==="INPUT"){
+    e.preventDefault();
+    let inputs=[...document.querySelectorAll("td input")];
+    let idx=inputs.indexOf(e.target);
+    if(inputs[idx+1]) inputs[idx+1].focus();
+  }
+});
+
+loadReport();
+</script>
+
+</body>
+</html>
