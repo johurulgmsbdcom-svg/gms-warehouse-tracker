@@ -1,39 +1,154 @@
 <!DOCTYPE html>
 <html>
 <head>
-<title>Month Wise Needle Stock Qty Report</title>
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<title>Month Wise Needle Stock Qty & Value Report</title>
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
 
 <style>
-body{margin:0;background:#07111f;color:white;font-family:Arial,sans-serif}
-.header{text-align:center;padding:12px}
-.header h2,.header h3,.header h4{margin:2px}
-.controls{text-align:center;margin:10px}
-input,select{padding:8px;border-radius:6px;border:1px solid #999;font-weight:bold}
-button{padding:10px 16px;border:0;border-radius:8px;color:white;font-weight:bold;cursor:pointer;margin:4px}
-.show{background:#2563eb}.excel{background:#059669}.print{background:#7c3aed}.home{background:#0f766e}
-.reportBox{width:98%;margin:10px auto;background:white;color:black;padding:8px;border-radius:6px}
-table{width:100%;border-collapse:collapse;background:white;color:black;font-size:12px}
-th,td{border:1px solid #000;padding:5px;text-align:center}
-th{background:#b7c9df;font-weight:bold}
-.monthCell{font-weight:bold;background:#f8fafc}
-.totalRow{background:#eef6df;font-weight:bold;font-size:14px}
-.grandRow{background:#e8f1dd;font-weight:bold;font-size:16px}
-.chartBox{width:98%;height:300px;margin:10px auto;background:white;color:black;padding:10px;border-radius:8px}
-.chartBox canvas{max-height:260px!important}
-@page{size:A4 landscape;margin:6mm}
+body{
+  margin:0;
+  background:#07111f;
+  color:white;
+  font-family:Arial,sans-serif;
+}
+
+.header{
+  text-align:center;
+  padding:10px 5px 4px;
+}
+
+.header h2,.header h3,.header h4{
+  margin:2px;
+}
+
+.controls{
+  text-align:center;
+  margin:10px;
+}
+
+input{
+  padding:8px;
+  border-radius:6px;
+  border:1px solid #999;
+  font-weight:bold;
+}
+
+button{
+  padding:10px 16px;
+  border:0;
+  border-radius:8px;
+  color:white;
+  font-weight:bold;
+  cursor:pointer;
+  margin:4px;
+}
+
+.show{background:#2563eb}
+.excel{background:#059669}
+.print{background:#7c3aed}
+.home{background:#0f766e}
+
+.reportBox{
+  width:1040px;
+  max-width:99%;
+  margin:10px auto;
+  background:white;
+  color:black;
+}
+
+.titleTable{
+  width:100%;
+  border-collapse:collapse;
+  background:white;
+  color:black;
+}
+
+.titleTable td{
+  border:0;
+  text-align:center;
+  font-weight:bold;
+}
+
+.companyTitle{font-size:24px}
+.subTitle{font-size:14px}
+.reportTitle{font-size:15px}
+
+table.reportTable{
+  width:100%;
+  border-collapse:collapse;
+  background:white;
+  color:black;
+  font-size:14px;
+}
+
+.reportTable th,
+.reportTable td{
+  border:1px solid #000;
+  padding:3px 5px;
+  text-align:center;
+}
+
+.reportTable th{
+  background:#b7c9df;
+  font-weight:bold;
+}
+
+.monthCell{
+  font-weight:normal;
+  background:white;
+}
+
+.totalRow{
+  background:#ffffff;
+  font-weight:bold;
+  font-size:18px;
+}
+
+.totalRow td{
+  font-weight:bold;
+}
+
+.grandRow{
+  background:#e8f1dd;
+  font-weight:bold;
+  font-size:20px;
+}
+
+@page{
+  size:A4 landscape;
+  margin:7mm;
+}
+
 @media print{
-  body{background:white;color:black}
-  .controls{display:none!important}
-  .header{padding:4px}
-  .header h2{font-size:16px}
-  .header h3,.header h4{font-size:11px}
-  .reportBox{width:100%;margin:0;padding:0}
-  table{font-size:9px}
-  th,td{padding:2px}
-  .chartBox{height:210px;margin:4px auto;padding:4px}
-  .chartBox canvas{max-height:180px!important}
+  body{
+    background:white;
+    color:black;
+  }
+
+  .controls{
+    display:none!important;
+  }
+
+  .header{
+    display:none!important;
+  }
+
+  .reportBox{
+    width:100%;
+    max-width:100%;
+    margin:0;
+  }
+
+  table.reportTable{
+    font-size:12px;
+  }
+
+  .reportTable th,
+  .reportTable td{
+    padding:2px 4px;
+  }
+
+  .companyTitle{font-size:22px}
 }
 </style>
 </head>
@@ -43,18 +158,18 @@ th{background:#b7c9df;font-weight:bold}
 <div class="header">
   <h2>GMS Textiles Ltd</h2>
   <h4>Tansutrapur, Kaliakoir, Gazipur</h4>
-  <h3>Month Wise Needle Stock Qty Report</h3>
+  <h3>Month Wise Needle Stock Qty & Value Report</h3>
 </div>
 
 <div class="controls">
   Year:
-  <input type="number" id="reportYear" style="width:95px">
+  <input type="number" id="reportYear" style="width:90px">
 
   From Month:
-  <select id="fromMonth"></select>
+  <input type="month" id="fromMonth">
 
   To Month:
-  <select id="toMonth"></select>
+  <input type="month" id="toMonth">
 
   <button class="show" onclick="loadReport()">🔍 Show Report</button>
   <button class="excel" onclick="exportExcel()">📊 Excel</button>
@@ -62,25 +177,40 @@ th{background:#b7c9df;font-weight:bold}
   <button class="home" onclick="location.href='index.html'">🏠 Home</button>
 </div>
 
-<div class="reportBox">
-<table id="reportTable">
+<div class="reportBox" id="reportArea">
+
+<table class="titleTable">
+<tr>
+  <td colspan="9" class="companyTitle">Gms Textiles Ltd</td>
+</tr>
+<tr>
+  <td colspan="9" class="subTitle">Tansutrapur, Kaliakoir, Gazipur</td>
+</tr>
+<tr>
+  <td colspan="9" class="reportTitle" id="reportTitle">Month Wise Needle Stock Qty &amp; Value Report-2026</td>
+</tr>
+</table>
+
+<table class="reportTable" id="reportTable">
 <thead>
 <tr>
-  <th>Sl no</th>
-  <th>Production<br>Floor Name</th>
-  <th>Month</th>
-  <th>Previous Balance</th>
-  <th>Monthly<br>Received</th>
-  <th>Total Qty</th>
-  <th>Monthly Issue</th>
-  <th>Present Stock</th>
+  <th style="width:48px">Sl no</th>
+  <th style="width:98px">Production<br>Floor Name</th>
+  <th style="width:150px">Month</th>
+  <th style="width:120px">Previous Balance</th>
+  <th style="width:120px">Monthly<br>Received</th>
+  <th style="width:120px">Total Qty</th>
+  <th style="width:120px">Monthly Issue</th>
+  <th style="width:120px">Present Stock</th>
   <th>Remarks</th>
 </tr>
 </thead>
+
 <tbody id="tbody"></tbody>
+
 <tfoot>
 <tr class="grandRow">
-  <td colspan="3">Grand Total</td>
+  <td colspan="3">Grand&nbsp; Total</td>
   <td id="gtPrevious">0</td>
   <td id="gtReceived">0</td>
   <td id="gtTotalQty">0</td>
@@ -90,10 +220,7 @@ th{background:#b7c9df;font-weight:bold}
 </tr>
 </tfoot>
 </table>
-</div>
 
-<div class="chartBox">
-  <canvas id="stockChart"></canvas>
 </div>
 
 <script type="module">
@@ -112,13 +239,6 @@ const firebaseConfig={
 const app=initializeApp(firebaseConfig);
 const db=getFirestore(app);
 
-let chart;
-
-const monthNames=[
-  "January","February","March","April","May","June",
-  "July","August","September","October","November","December"
-];
-
 const floorGroups=[
   {name:"Shapla",floors:["Shapla R","Shapla N"]},
   {name:"Poddo",floors:["Poddo R","Poddo N"]},
@@ -128,24 +248,66 @@ const floorGroups=[
   {name:"Kadom",floors:["Kadom R","Kadom N"]}
 ];
 
-function init(){
-  let y=new Date().getFullYear();
-  document.getElementById("reportYear").value=y;
+const monthNames=[
+  "January","February","March","April","May","June",
+  "July","August","September","October","November","December"
+];
 
-  let from=document.getElementById("fromMonth");
-  let to=document.getElementById("toMonth");
+const openingFallback={
+  "2026-01":{Shapla:2727,Poddo:3149,Sample:2675,EMB:2576,Belly:2489,Kadom:3067},
+  "2026-02":{Shapla:2495,Poddo:2379,Sample:2558,EMB:1845,Belly:1960,Kadom:2443},
+  "2026-03":{Shapla:3123,Poddo:4545,Sample:2799,EMB:1916,Belly:2823,Kadom:2300},
+  "2026-04":{Shapla:2541,Poddo:2876,Sample:2261,EMB:1802,Belly:1918,Kadom:1466}
+};
 
-  monthNames.forEach((m,i)=>{
-    from.innerHTML+=`<option value="${i+1}">${m}</option>`;
-    to.innerHTML+=`<option value="${i+1}">${m}</option>`;
-  });
+const receiveFallback={
+  "2026-01":{Shapla:9380,Poddo:9490,Sample:3140,EMB:3200,Belly:4820,Kadom:9000},
+  "2026-02":{Shapla:8490,Poddo:12330,Sample:3080,EMB:2300,Belly:4830,Kadom:7780},
+  "2026-03":{Shapla:7090,Poddo:7620,Sample:2320,EMB:2100,Belly:4000,Kadom:7310},
+  "2026-04":{Shapla:9540,Poddo:11290,Sample:3290,EMB:2540,Belly:3760,Kadom:10340}
+};
 
-  from.value=1;
-  to.value=new Date().getMonth()+1;
+const issueFallback={
+  "2026-01":{Shapla:9612,Poddo:10260,Sample:3257,EMB:3931,Belly:5349,Kadom:9624},
+  "2026-02":{Shapla:7862,Poddo:10164,Sample:2839,EMB:2229,Belly:3967,Kadom:7923},
+  "2026-03":{Shapla:7672,Poddo:9289,Sample:2858,EMB:2214,Belly:4905,Kadom:8144},
+  "2026-04":{Shapla:10337,Poddo:11876,Sample:4162,EMB:3044,Belly:4547,Kadom:10745}
+};
+
+function currentYM(){
+  return new Date().toISOString().slice(0,7);
 }
+
+document.getElementById("reportYear").value=new Date().getFullYear();
+document.getElementById("fromMonth").value="2026-01";
+document.getElementById("toMonth").value="2026-04";
 
 function fmt(n){
   return Number(n||0).toLocaleString("en-US");
+}
+
+function ym(year,month){
+  return year+"-"+String(month).padStart(2,"0");
+}
+
+function monthNo(ymText){
+  return Number(ymText.slice(5,7));
+}
+
+function getMonthList(from,to){
+  let list=[];
+  let [fy,fm]=from.split("-").map(Number);
+  let [ty,tm]=to.split("-").map(Number);
+
+  let d=new Date(fy,fm-1,1);
+  let end=new Date(ty,tm-1,1);
+
+  while(d<=end){
+    list.push(d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0"));
+    d.setMonth(d.getMonth()+1);
+  }
+
+  return list;
 }
 
 function rowSum(rows,field){
@@ -156,17 +318,13 @@ function rowSum(rows,field){
   return total;
 }
 
-function ym(year,month){
-  return year+"-"+String(month).padStart(2,"0");
-}
-
 async function getDailyPosting(){
   let snap=await getDocs(collection(db,"dailyPosting"));
   let data=[];
 
   snap.forEach(d=>{
     let x=d.data();
-    if(x.date && x.floor && Array.isArray(x.rows)){
+    if(x.date && x.month && x.floor && Array.isArray(x.rows)){
       data.push(x);
     }
   });
@@ -174,100 +332,116 @@ async function getDailyPosting(){
   return data;
 }
 
-function calcGroupMonth(allDocs,year,month,group,carryPrevious=null){
-  let monthKey=ym(year,month);
-  let docs=allDocs.filter(x=>x.month===monthKey && group.floors.includes(x.floor));
-
-  let monthlyReceived=0;
-  let monthlyIssue=0;
-  let presentStock=0;
-  let firstDayPrevious=0;
+function getFirebaseGroupMonth(allDocs,monthKey,group){
+  let previous=0,received=0,issue=0,present=0,found=false;
 
   group.floors.forEach(floor=>{
-    let floorDocs=docs.filter(x=>x.floor===floor).sort((a,b)=>a.date.localeCompare(b.date));
+    let docs=allDocs
+      .filter(x=>x.month===monthKey && x.floor===floor)
+      .sort((a,b)=>String(a.date).localeCompare(String(b.date)));
 
-    if(floorDocs.length){
-      let first=floorDocs[0];
-      let last=floorDocs[floorDocs.length-1];
+    if(docs.length){
+      found=true;
+      let first=docs[0];
+      let last=docs[docs.length-1];
 
-      firstDayPrevious+=rowSum(first.rows,"previous");
-      presentStock+=rowSum(last.rows,"present");
+      previous+=rowSum(first.rows,"previous");
+      present+=rowSum(last.rows,"present");
 
-      floorDocs.forEach(day=>{
-        monthlyReceived+=rowSum(day.rows,"receive");
-        monthlyIssue+=rowSum(day.rows,"delivery");
+      docs.forEach(day=>{
+        received+=rowSum(day.rows,"receive");
+        issue+=rowSum(day.rows,"delivery");
       });
     }
   });
 
-  // Important:
-  // January ba first selected month e first day previous nibe.
-  // Porer month gulo te previous = last month present stock.
-  let previousBalance = carryPrevious!==null ? carryPrevious : firstDayPrevious;
+  return{found,previous,received,issue,present};
+}
 
-  // Jodi oi month e kono data na thake, formula diye present carry korbe
-  if(!docs.length){
-    presentStock = previousBalance + monthlyReceived - monthlyIssue;
-  }
+function getFallbackGroupMonth(monthKey,groupName,carryPrevious){
+  let previous =
+    carryPrevious!==null && carryPrevious!==undefined
+    ? carryPrevious
+    : Number(openingFallback[monthKey]?.[groupName]||0);
 
-  let totalQty=previousBalance+monthlyReceived;
+  let received=Number(receiveFallback[monthKey]?.[groupName]||0);
+  let issue=Number(issueFallback[monthKey]?.[groupName]||0);
+  let totalQty=previous+received;
+  let present=totalQty-issue;
 
-  return{
-    previousBalance,
-    monthlyReceived,
-    totalQty,
-    monthlyIssue,
-    presentStock
-  };
+  return{previous,received,totalQty,issue,present};
 }
 
 window.loadReport=async function(){
-  let year=Number(document.getElementById("reportYear").value);
-  let from=Number(document.getElementById("fromMonth").value);
-  let to=Number(document.getElementById("toMonth").value);
+  let from=document.getElementById("fromMonth").value;
+  let to=document.getElementById("toMonth").value;
+
+  if(!from || !to){
+    alert("Month select koro");
+    return;
+  }
 
   if(from>to){
-    alert("From Month To Month er cheye boro hote parbe na");
+    alert("From month To month er cheye boro hote parbe na");
     return;
   }
 
   let allDocs=await getDailyPosting();
+  let months=getMonthList(from,to);
 
+  document.getElementById("reportTitle").innerText =
+    "Month Wise Needle Stock Qty & Value Report-" + to.slice(0,4);
+
+  let carryByGroup={};
   let html="";
   let sl=1;
 
   let gtPrevious=0,gtReceived=0,gtTotalQty=0,gtIssue=0,gtPresent=0;
-  let chartLabels=[],chartPresent=[];
 
-  // Carry stock: ek month er present next month er previous hobe
-  let carryByGroup={};
-
-  for(let m=from;m<=to;m++){
-    let monthTotal={previousBalance:0,monthlyReceived:0,totalQty:0,monthlyIssue:0,presentStock:0};
+  months.forEach(monthKey=>{
+    let monthTotal={previous:0,received:0,totalQty:0,issue:0,present:0};
+    let monthName=monthNames[monthNo(monthKey)-1];
 
     floorGroups.forEach((g,idx)=>{
-      let carryPrevious = carryByGroup[g.name]!==undefined ? carryByGroup[g.name] : null;
-      let r=calcGroupMonth(allDocs,year,m,g,carryPrevious);
+      let fb=getFallbackGroupMonth(
+        monthKey,
+        g.name,
+        carryByGroup[g.name]
+      );
 
-      // Next month er previous hisebe ei month er present save
-      carryByGroup[g.name]=r.presentStock;
+      let firebase=getFirebaseGroupMonth(allDocs,monthKey,g);
 
-      monthTotal.previousBalance+=r.previousBalance;
-      monthTotal.monthlyReceived+=r.monthlyReceived;
+      let r;
+      if(firebase.found){
+        let previous = carryByGroup[g.name]!==undefined ? carryByGroup[g.name] : firebase.previous;
+        let received = firebase.received;
+        let issue = firebase.issue;
+        let totalQty = previous + received;
+        let present = totalQty - issue;
+
+        r={previous,received,totalQty,issue,present};
+      }else{
+        r=fb;
+      }
+
+      carryByGroup[g.name]=r.present;
+
+      monthTotal.previous+=r.previous;
+      monthTotal.received+=r.received;
       monthTotal.totalQty+=r.totalQty;
-      monthTotal.monthlyIssue+=r.monthlyIssue;
-      monthTotal.presentStock+=r.presentStock;
+      monthTotal.issue+=r.issue;
+      monthTotal.present+=r.present;
 
       html+=`
       <tr>
         <td>${idx===0?sl:""}</td>
         <td>${g.name}</td>
-        ${idx===0?`<td rowspan="${floorGroups.length}" class="monthCell">${monthNames[m-1]}</td>`:""}
-        <td>${fmt(r.previousBalance)}</td>
-        <td>${fmt(r.monthlyReceived)}</td>
+        ${idx===0?`<td rowspan="${floorGroups.length}" class="monthCell">${monthName}</td>`:""}
+        <td>${fmt(r.previous)}</td>
+        <td>${fmt(r.received)}</td>
         <td>${fmt(r.totalQty)}</td>
-        <td>${fmt(r.monthlyIssue)}</td>
-        <td>${fmt(r.presentStock)}</td>
+        <td>${fmt(r.issue)}</td>
+        <td>${fmt(r.present)}</td>
         <td></td>
       </tr>`;
       sl++;
@@ -276,98 +450,46 @@ window.loadReport=async function(){
     html+=`
     <tr class="totalRow">
       <td colspan="3">Total Qty</td>
-      <td>${fmt(monthTotal.previousBalance)}</td>
-      <td>${fmt(monthTotal.monthlyReceived)}</td>
+      <td>${fmt(monthTotal.previous)}</td>
+      <td>${fmt(monthTotal.received)}</td>
       <td>${fmt(monthTotal.totalQty)}</td>
-      <td>${fmt(monthTotal.monthlyIssue)}</td>
-      <td>${fmt(monthTotal.presentStock)}</td>
+      <td>${fmt(monthTotal.issue)}</td>
+      <td>${fmt(monthTotal.present)}</td>
       <td></td>
     </tr>`;
 
-    gtPrevious+=monthTotal.previousBalance;
-    gtReceived+=monthTotal.monthlyReceived;
+    gtPrevious+=monthTotal.previous;
+    gtReceived+=monthTotal.received;
     gtTotalQty+=monthTotal.totalQty;
-    gtIssue+=monthTotal.monthlyIssue;
-    gtPresent+=monthTotal.presentStock;
+    gtIssue+=monthTotal.issue;
+    gtPresent+=monthTotal.present;
+  });
 
-    chartLabels.push(monthNames[m-1]);
-    chartPresent.push(monthTotal.presentStock);
-  }
-
-  document.getElementById("tbody").innerHTML=html || `<tr><td colspan="9">No data found</td></tr>`;
+  document.getElementById("tbody").innerHTML=html;
 
   document.getElementById("gtPrevious").innerText=fmt(gtPrevious);
   document.getElementById("gtReceived").innerText=fmt(gtReceived);
   document.getElementById("gtTotalQty").innerText=fmt(gtTotalQty);
   document.getElementById("gtIssue").innerText=fmt(gtIssue);
   document.getElementById("gtPresent").innerText=fmt(gtPresent);
-
-  renderChart(chartLabels,chartPresent);
 };
 
-function renderChart(labels,data){
-  if(chart) chart.destroy();
-
-  const valuePlugin={
-    id:"valuePlugin",
-    afterDatasetsDraw(chart){
-      const {ctx}=chart;
-      ctx.save();
-      ctx.textAlign="center";
-      ctx.fillStyle="#111";
-      ctx.font="bold 11px Arial";
-
-      chart.data.datasets[0].data.forEach((value,index)=>{
-        const bar=chart.getDatasetMeta(0).data[index];
-        if(bar) ctx.fillText(Number(value||0).toLocaleString("en-US"),bar.x,bar.y-8);
-      });
-
-      ctx.restore();
-    }
-  };
-
-  chart=new Chart(document.getElementById("stockChart"),{
-    type:"bar",
-    data:{
-      labels:labels,
-      datasets:[{
-        label:"Month Wise Present Stock",
-        data:data,
-        borderWidth:1,
-        borderRadius:8
-      }]
-    },
-    options:{
-      responsive:true,
-      maintainAspectRatio:false,
-      plugins:{
-        legend:{display:false},
-        title:{display:true,text:"Month Wise Needle Present Stock Chart"}
-      },
-      scales:{
-        y:{beginAtZero:true},
-        x:{grid:{display:false}}
-      }
-    },
-    plugins:[valuePlugin]
-  });
-}
-
 window.exportExcel=function(){
-  let title=`
-  <h2>GMS Textiles Ltd</h2>
-  <h4>Tansutrapur, Kaliakoir, Gazipur</h4>
-  <h3>Month Wise Needle Stock Qty Report</h3>
-  `;
-  let table=document.getElementById("reportTable").outerHTML;
-  let file=new Blob([title+table],{type:"application/vnd.ms-excel"});
+  let html=`
+  <html>
+  <head><meta charset="UTF-8"></head>
+  <body>
+  ${document.getElementById("reportArea").outerHTML}
+  </body>
+  </html>`;
+
+  let file=new Blob([html],{type:"application/vnd.ms-excel"});
   let a=document.createElement("a");
   a.href=URL.createObjectURL(file);
-  a.download="month-wise-needle-stock-report.xls";
+  a.download="month-wise-needle-stock-qty-report.xls";
   a.click();
 };
 
-init();
 loadReport();
 </script>
 
