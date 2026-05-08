@@ -103,7 +103,7 @@ body.light .creditFooter{background:rgba(255,255,255,.96)}.creditItem{display:fl
   <div class="chartGrid">
     <div class="chartBox" id="accessoriesChartBox"><h3>📈 Accessories Stock Chart</h3><canvas id="accessoriesChart"></canvas><div class="stockList" id="accessoriesTextList"></div></div>
     <div class="chartBox" id="needleChartBox"><h3>🏭 Needle Floor Wise Stock</h3><canvas id="needleChart"></canvas><div class="stockList" id="needleTextList"></div></div>
-    <div class="chartBox" id="greyChartBox"><h3>🏭 Grey Fabric Today Closing Balance</h3><canvas id="greyChart"></canvas><div class="stockList" id="greyTextList"></div></div>
+    <div class="chartBox" id="greyChartBox"><h3>🏭 Grey Fabric Present Stock Summary</h3><canvas id="greyChart"></canvas><div class="stockList" id="greyTextList"></div></div>
     <div class="chartBox" id="needleIssueChartBox"><h3>🪡 Needle Broken / Missing / Change</h3><canvas id="needleIssueChart"></canvas><div class="stockList" id="needleIssueTextList"></div></div>
     <div class="chartBox" id="billingChartBox"><h3>👨‍💼 Attendance Manpower Chart</h3><canvas id="billingChart"></canvas></div>
     <div class="statusBox">
@@ -278,17 +278,40 @@ async function getNeedleFloorStock(){
 async function getGreyData(){
   let snap=await getDocs(collection(db,"greyFabricStock"));
   let docs=[];
-  snap.forEach(d=>{let x=d.data();if(x.rows&&x.rows.length>0)docs.push(x);});
-  docs.sort((a,b)=>(b.date||"").localeCompare(a.date||""));
-  let latest=docs[0]||{rows:[]};
-  let labels=[],data=[],total=0;
-  (latest.rows||[]).forEach(r=>{
-    let name=r.year||r.fabric||"Item";
-    let closing=parseNum(r.closing || r.closingBalance || 0);
-    labels.push(name);
-    data.push(closing);
-    total+=closing;
+
+  snap.forEach(d=>{
+    let x=d.data();
+    if(x.date && x.rows && x.rows.length>0) docs.push(x);
   });
+
+  // Same/latest date er latest savedAt data nibe
+  docs.sort((a,b)=>{
+    let dateCompare=(b.date||"").localeCompare(a.date||"");
+    if(dateCompare!==0) return dateCompare;
+    return (b.savedAt||b.createdAt||"").localeCompare(a.savedAt||a.createdAt||"");
+  });
+
+  let latest=docs[0]||{rows:[],date:""};
+  let labels=[],data=[],total=0;
+
+  (latest.rows||[]).forEach(r=>{
+    let name=r.year || r.fabric || "Item";
+    let closing=parseNum(r.closing || r.closingBalance || 0);
+
+    // 0 value chart e show korbo na
+    if(closing>0){
+      labels.push(name);
+      data.push(closing);
+      total+=closing;
+    }
+  });
+
+  // Grand Total bar add
+  if(total>0){
+    labels.push("Grand Total");
+    data.push(total);
+  }
+
   return{labels,data,total,date:latest.date||""};
 }
 
@@ -438,16 +461,68 @@ function renderCharts(sewing,accessories,twill,floorStocks,grey,billing,needleIs
   }
 
   if(isGreyAllowed()){
-
     if(greyChart)greyChart.destroy();
+
+    const greyValuePlugin={
+      id:"greyValuePlugin",
+      afterDatasetsDraw(chart){
+        const {ctx}=chart;
+        ctx.save();
+        ctx.textAlign="center";
+        ctx.fillStyle="#111";
+        ctx.font="bold 11px Arial";
+
+        chart.data.datasets[0].data.forEach((value,index)=>{
+          const bar=chart.getDatasetMeta(0).data[index];
+          if(!bar) return;
+          ctx.fillText(Number(value||0).toLocaleString("en-US"),bar.x,bar.y-8);
+        });
+
+        ctx.restore();
+      }
+    };
+
     greyChart=new Chart(document.getElementById("greyChart"),{
       type:"bar",
-      data:{labels:grey.labels.length?grey.labels:["No Data"],datasets:[{label:"Closing Balance",data:grey.data.length?grey.data:[0],borderRadius:8,borderWidth:1}]},
-      options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:function(ctx){return "Closing Balance: "+fmt(ctx.raw);}}}},scales:{y:{beginAtZero:true},x:{ticks:{font:{size:8}},grid:{display:false}}}},
-      plugins:[valueLabelPlugin]
+      data:{
+        labels:grey.labels.length?grey.labels:["No Data"],
+        datasets:[{
+          label:"Closing Stock",
+          data:grey.data.length?grey.data:[0],
+          borderRadius:8,
+          borderWidth:1
+        }]
+      },
+      options:{
+        responsive:true,
+        maintainAspectRatio:false,
+        plugins:{
+          legend:{display:false},
+          title:{
+            display:true,
+            text:"Grey Fabric Present Stock Summary"
+          },
+          tooltip:{
+            callbacks:{
+              label:function(ctx){
+                return "Closing Stock: "+Number(ctx.raw||0).toLocaleString("en-US")+" Kgs";
+              }
+            }
+          }
+        },
+        scales:{
+          y:{
+            beginAtZero:true,
+            ticks:{
+              callback:function(value){return Number(value).toLocaleString("en-US");}
+            }
+          },
+          x:{ticks:{font:{size:9}},grid:{display:false}}
+        }
+      },
+      plugins:[greyValuePlugin]
     });
   }
-
   if(isBillingAllowed()){
     if(billingChart)billingChart.destroy();
     billingChart=new Chart(document.getElementById("billingChart"),{
