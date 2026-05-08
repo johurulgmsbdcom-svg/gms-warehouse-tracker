@@ -1016,6 +1016,33 @@ window.loadData=loadData;
 window.exportExcel=exportExcel;
 window.exportPDF=exportPDF;
 
+// Enter dile same column er nicher box e jabe, Tab dile samner box e jabe
+document.addEventListener("keydown", function(e){
+  if(e.target.tagName !== "INPUT") return;
+
+  // sudhu table er Receive, Delivery, BN input box er jonno
+  if(!e.target.id.match(/^(r|d|bn)\d+$/)) return;
+
+  // Tab er default kaj: samner box e jawa
+  if(e.key === "Tab"){
+    return;
+  }
+
+  // Enter dile same column er next row te jawa
+  if(e.key === "Enter"){
+    e.preventDefault();
+
+    let col = e.target.id.replace(/[0-9]/g, "");
+    let row = Number(e.target.id.replace(/\D/g, ""));
+    let next = document.getElementById(col + (row + 1));
+
+    if(next){
+      next.focus();
+      next.select();
+    }
+  }
+});
+
 
 loadTable();
 </script>
