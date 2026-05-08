@@ -29,8 +29,8 @@ body{margin:0;background:var(--bg);color:var(--text);font-family:Segoe UI,Arial,
 .topCard{border-radius:18px;padding:15px}.topCard .label{color:var(--muted);font-size:12px;font-weight:900}.topCard .num{font-size:25px;color:var(--green);font-weight:900;margin-top:6px}
 .sumBox{border-radius:14px;padding:12px;text-align:center}.sumBox span{display:block;color:var(--muted);font-size:12px;font-weight:900}.sumBox b{display:block;color:var(--green);font-size:21px;margin-top:5px}
 .needleSmall{border-radius:18px;padding:12px;text-align:center;margin-bottom:14px}.needleSmall span{color:var(--muted);font-weight:900}.needleSmall b{display:block;color:var(--green);font-size:26px;margin-top:4px}
-.chartBox{height:285px;border-radius:18px;padding:12px}.chartBox h3{margin:0 0 6px;font-size:15px}.chartBox canvas{max-height:228px!important}
-.stockList{margin-top:8px;display:grid;gap:6px}.stockLine{display:flex;justify-content:space-between;gap:10px;border-bottom:1px dashed var(--border);padding:6px 0;font-size:12px;font-weight:900}.stockLine b{color:var(--green)}
+.chartBox{height:255px;border-radius:18px;padding:12px}.chartBox h3{margin:0 0 6px;font-size:15px}.chartBox canvas{max-height:198px!important}
+.stockList{display:none}.stockLine{display:none}
 
 .statusBox{border-radius:18px;padding:15px}.statusTitle{font-size:18px;font-weight:900;margin-bottom:8px}.statusLine{display:flex;justify-content:space-between;border-bottom:1px solid var(--border);padding:6px 0;font-weight:800}.statusSignal{font-size:28px;font-weight:900;margin-top:10px}.safe{color:var(--green)}.warn{color:var(--yellow)}.stop{color:var(--red)}
 .progress{height:8px;background:rgba(255,255,255,.12);border-radius:20px;overflow:hidden;margin-top:10px}.progressFill{height:100%;width:5%;background:var(--green)}
@@ -284,8 +284,10 @@ async function getGreyData(){
   let labels=[],data=[],total=0;
   (latest.rows||[]).forEach(r=>{
     let name=r.year||r.fabric||"Item";
-    let closing=Number(r.closing||r.closingBalance||0);
-    labels.push(name);data.push(closing);total+=closing;
+    let closing=parseNum(r.closing || r.closingBalance || 0);
+    labels.push(name);
+    data.push(closing);
+    total+=closing;
   });
   return{labels,data,total,date:latest.date||""};
 }
@@ -297,9 +299,22 @@ async function getBillingToday(){
 }
 
 async function getNeedleIssueToday(){
-  let snap=await getDocs(collection(db,"needleDailyReport")),t=today(),broken=0,missing=0,change=0;
-  snap.forEach(d=>{let x=d.data();if(x.date===t){broken+=Number(x.brokenNeedle)||0;missing+=Number(x.missingNeedle)||0;change+=Number(x.changeNeedle)||0;}});
-  return{broken,missing,change};
+  let snap=await getDocs(collection(db,"needleDailyReport"));
+  let rows=[];
+  snap.forEach(d=>{
+    let x=d.data();
+    if(x.date) rows.push(x);
+  });
+
+  rows.sort((a,b)=>(b.date||"").localeCompare(a.date||""));
+  let latest=rows[0]||{};
+
+  return{
+    broken:parseNum(latest.brokenNeedle),
+    missing:parseNum(latest.missingNeedle),
+    change:parseNum(latest.changeNeedle),
+    date:latest.date||""
+  };
 }
 
 async function getFirebaseCounts(){
@@ -347,8 +362,13 @@ function updateLimitBox(todayCount,totalCount,gate){
 }
 
 
+function parseNum(v){
+  if(v==="" || v===null || v===undefined) return 0;
+  return Number(String(v).replace(/,/g,""))||0;
+}
+
 function fmt(v){
-  return Number(v||0).toLocaleString("en-US");
+  return parseNum(v).toLocaleString("en-US");
 }
 
 function setStockList(id,items){
@@ -380,11 +400,6 @@ const valueLabelPlugin={
 
 function renderCharts(sewing,accessories,twill,floorStocks,grey,billing,needleIssue){
   if(isAccessoriesAllowed()){
-    setStockList("accessoriesTextList",[
-      {name:"🧵 Sewing Thread",value:sewing},
-      {name:"📦 Accessories Sample",value:accessories},
-      {name:"📏 Twill Tape",value:twill}
-    ]);
 
     if(accessoriesChart)accessoriesChart.destroy();
     accessoriesChart=new Chart(document.getElementById("accessoriesChart"),{
@@ -404,13 +419,6 @@ function renderCharts(sewing,accessories,twill,floorStocks,grey,billing,needleIs
   }
 
   if(isNeedleAllowed()){
-    let floorItems=Object.keys(floorStocks).map(k=>({name:k,value:floorStocks[k]}));
-    setStockList("needleTextList",floorItems);
-    setStockList("needleIssueTextList",[
-      {name:"Broken",value:needleIssue.broken},
-      {name:"Missing",value:needleIssue.missing},
-      {name:"Change",value:needleIssue.change}
-    ]);
 
     if(needleChart)needleChart.destroy();
     needleChart=new Chart(document.getElementById("needleChart"),{
@@ -430,9 +438,6 @@ function renderCharts(sewing,accessories,twill,floorStocks,grey,billing,needleIs
   }
 
   if(isGreyAllowed()){
-    let greyItems=grey.labels.map((x,i)=>({name:x,value:grey.data[i]||0}));
-    greyItems.push({name:"Grand Total",value:grey.total});
-    setStockList("greyTextList",greyItems);
 
     if(greyChart)greyChart.destroy();
     greyChart=new Chart(document.getElementById("greyChart"),{
