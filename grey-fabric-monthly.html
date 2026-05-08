@@ -12,12 +12,13 @@ body{margin:0;background:#07111f;color:white;font-family:Arial,sans-serif}
 input{padding:8px;border-radius:6px;border:1px solid #999}
 button{padding:10px 18px;border:0;border-radius:8px;color:white;font-weight:bold;cursor:pointer;margin:4px}
 .show{background:#2563eb}.excel{background:#059669}.print{background:#7c3aed}.home{background:#0f766e}
-table{width:98%;margin:10px auto;border-collapse:collapse;background:white;color:black;font-size:12px}
-th,td{border:1px solid #000;padding:5px;text-align:center}
+table{width:98%;margin:6px auto;border-collapse:collapse;background:white;color:black;font-size:10px}
+th,td{border:1px solid #000;padding:3px;text-align:center}
 th{background:#e2f0d9}
 .totalRow{background:#d9ead3;font-weight:bold}
 .grandRow{background:#ddd;font-weight:bold;font-size:15px}
-.chartBox{width:98%;margin:12px auto;background:white;color:black;padding:14px;border-radius:10px;border:1px solid #cbd5e1}
+.chartBox{width:98%;height:270px;margin:8px auto;background:white;color:black;padding:8px;border-radius:8px;border:1px solid #cbd5e1}
+.chartBox canvas{max-height:235px!important}
 .reportTitle{width:98%;margin:8px auto;background:white;color:black;border-radius:8px;padding:8px;text-align:center;font-weight:bold}
 @media print{
   .chartBox{page-break-inside:avoid}
@@ -27,8 +28,14 @@ th{background:#e2f0d9}
 @media print{
   body{background:white;color:black}
   .controls{display:none!important}
-  table{font-size:10px;width:100%}
-  .chartBox{width:100%}
+  table{font-size:8px;width:100%;margin:3px auto}
+  th,td{padding:2px}
+  .chartBox{width:100%;height:210px;margin:4px auto;padding:4px}
+  .chartBox canvas{max-height:185px!important}
+  .header{padding:4px}
+  .header h2{font-size:16px}
+  .header h3,.header h4{font-size:11px}
+  .reportTitle{font-size:11px;margin:3px auto;padding:4px}
 }
 </style>
 </head>
@@ -84,7 +91,7 @@ th{background:#e2f0d9}
 </table>
 
 <div class="chartBox">
-  <canvas id="monthlyChart" height="90"></canvas>
+  <canvas id="monthlyChart" height="45"></canvas>
 </div>
 
 <script type="module">
@@ -234,7 +241,7 @@ function renderChart(rows){
       ctx.save();
       ctx.textAlign="center";
       ctx.fillStyle="#111";
-      ctx.font="bold 10px Arial";
+      ctx.font="bold 8px Arial";
 
       chart.data.datasets[0].data.forEach((value,index)=>{
         const bar=chart.getDatasetMeta(0).data[index];
@@ -261,6 +268,7 @@ function renderChart(rows){
     },
     options:{
       responsive:true,
+      maintainAspectRatio:false,
       plugins:{
         legend:{display:true,position:"top"},
         title:{
