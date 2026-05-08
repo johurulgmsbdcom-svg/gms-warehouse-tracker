@@ -61,11 +61,11 @@ td input{width:100%;box-sizing:border-box;border:0;text-align:center;font-size:1
   <th>Year</th>
   <th>Fabric Type</th>
   <th>Previous Qty</th>
-  <th>Opening Balance (Kgs)</th>
+  <th>Receive Qty (Kgs)</th>
   <th>Last Delivery Date</th>
   <th>Delivery Qty (Kgs)</th>
   <th>Total Delivery (Kgs)</th>
-  <th>Closing Balance (Kgs)</th>
+  <th>Closing Stock (Kgs)</th>
   <th class="noPrint">Action</th>
 </tr>
 </thead>
@@ -99,7 +99,7 @@ td input{width:100%;box-sizing:border-box;border:0;text-align:center;font-size:1
 </div>
 
 <div class="chartBox">
-  <h3 style="text-align:center;margin:0 0 5px">Closing Balance (Kgs)</h3>
+  <h3 style="text-align:center;margin:0 0 5px">Closing Stock (Kgs)</h3>
   <canvas id="stockChart" height="80"></canvas>
 </div>
 
@@ -143,9 +143,9 @@ const defaultRows=[
   {year:"2024",fabric:"Leftover Grey Fabric",previous:65449,opening:"",lastDate:"",delivery:"",totalDelivery:40430,closing:25019},
   {year:"2025",fabric:"Leftover Grey Fabric",previous:1677,opening:"",lastDate:"",delivery:"",totalDelivery:1322,closing:355},
   {year:"Without Sticker",fabric:"All Sticker Missing",previous:39312,opening:"",lastDate:"",delivery:"",totalDelivery:445,closing:38867},
-  {year:"Textile-25",fabric:"Textiles Running Fabric-25/26",previous:"",opening:"",lastDate:"",delivery:"",totalDelivery:"",closing:549012},
-  {year:"Composite-25",fabric:"Composite Fab.(Tex Knit)-25/26",previous:"",opening:"",lastDate:"",delivery:"",totalDelivery:"",closing:121112},
-  {year:"For Dyeing-25",fabric:"Composite Fab.(For Dyeing)-25/26",previous:"",opening:"",lastDate:"",delivery:"",totalDelivery:"",closing:76683}
+  {year:"Textile-25",fabric:"Textiles Running Fabric-25/26",previous:"",opening:"",lastDate:"",delivery:"",totalDelivery:"",closing:"",manualClosing:true},
+  {year:"Composite-25",fabric:"Composite Fab.(Tex Knit)-25/26",previous:"",opening:"",lastDate:"",delivery:"",totalDelivery:"",closing:"",manualClosing:true},
+  {year:"For Dyeing-25",fabric:"Composite Fab.(For Dyeing)-25/26",previous:"",opening:"",lastDate:"",delivery:"",totalDelivery:"",closing:"",manualClosing:true}
 ];
 
 function today(){
@@ -172,32 +172,29 @@ function toast(msg){
 }
 
 function prepareRows(list){
-  rows=(list||[]).map(r=>({
+  rows=(list||[]).map((r,i)=>({
     ...r,
     baseTotalDelivery:r.baseTotalDelivery!==undefined ? r.baseTotalDelivery : r.totalDelivery,
-    manualClosing:r.manualClosing!==undefined ? r.manualClosing : (
-      (r.closing!=="" && r.closing!==undefined && r.closing!==null) &&
-      (raw(r.previous)===0 && raw(r.opening)===0 && raw(r.totalDelivery)===0)
-    )
+    manualClosing:r.manualClosing!==undefined ? r.manualClosing : (i>=9)
   }));
 }
 
-function calcRow(r){
+function calcRow(r,i){
   let previous=raw(r.previous);
-  let opening=raw(r.opening);
+  let receive=raw(r.opening);
   let delivery=raw(r.delivery);
 
   if(r.baseTotalDelivery===undefined || r.baseTotalDelivery===null || r.baseTotalDelivery===""){
     r.baseTotalDelivery=raw(r.totalDelivery);
   }
 
+  // Total Delivery = old total delivery + today delivery
   let totalDelivery=raw(r.baseTotalDelivery)+delivery;
   r.totalDelivery=totalDelivery;
 
-  // Closing Balance formula only for auto rows.
-  // If Closing Balance box e nijer number likhen, seta manual thakbe.
+  // First 9 rows auto formula. Last 3/manual rows closing stock apni edit korben.
   if(!r.manualClosing){
-    r.closing=previous+opening-totalDelivery;
+    r.closing=previous+receive-totalDelivery;
   }
 }
 
@@ -205,7 +202,7 @@ function render(){
   let html="";
 
   rows.forEach((r,i)=>{
-    calcRow(r);
+    calcRow(r,i);
 
     html+=`
       <tr>
@@ -213,19 +210,19 @@ function render(){
         <td><input value="${r.fabric||""}" oninput="rows[${i}].fabric=this.value"></td>
 
         <td><input type="text" value="${r.previous!==undefined?r.previous:""}"
-          oninput="rows[${i}].previous=this.value; rows[${i}].manualClosing=false; calc();"></td>
+          oninput="rows[${i}].previous=this.value; calc();"></td>
 
         <td><input type="text" value="${r.opening!==undefined?r.opening:""}"
-          oninput="rows[${i}].opening=this.value; rows[${i}].manualClosing=false; calc();"></td>
+          oninput="rows[${i}].opening=this.value; calc();"></td>
 
         <td><input type="date" value="${r.lastDate||""}"
           oninput="rows[${i}].lastDate=this.value"></td>
 
         <td><input type="text" value="${r.delivery!==undefined?r.delivery:""}"
-          oninput="rows[${i}].delivery=this.value; rows[${i}].manualClosing=false; calc();"></td>
+          oninput="rows[${i}].delivery=this.value; calc();"></td>
 
         <td><input type="text" value="${format(r.totalDelivery)}"
-          oninput="rows[${i}].baseTotalDelivery=this.value; rows[${i}].totalDelivery=this.value; rows[${i}].manualClosing=false; calc();"></td>
+          oninput="rows[${i}].baseTotalDelivery=this.value; rows[${i}].totalDelivery=this.value; calc();"></td>
 
         <td><input type="text" value="${format(r.closing)}"
           oninput="rows[${i}].closing=this.value; rows[${i}].manualClosing=true; calcTotalsOnly(); renderChartOnly();"></td>
@@ -241,7 +238,7 @@ function render(){
 }
 
 function calc(){
-  rows.forEach(r=>calcRow(r));
+  rows.forEach((r,i)=>calcRow(r,i));
   calcTotalsOnly();
   renderChartOnly();
 
@@ -249,51 +246,65 @@ function calc(){
     let totalInput=tr.children[6]?.querySelector("input");
     let closingInput=tr.children[7]?.querySelector("input");
     if(totalInput) totalInput.value=format(rows[i].totalDelivery);
-    if(closingInput) closingInput.value=format(rows[i].closing);
+    if(closingInput && !document.activeElement.isSameNode(closingInput)) closingInput.value=format(rows[i].closing);
   });
 }
 
 function calcTotalsOnly(){
-  let leftPrev=0,leftOpen=0,leftDelivery=0,leftTotalDelivery=0,leftClosing=0;
-  let gtPrev=0,gtOpen=0,gtDelivery=0,gtTotalDelivery=0,gtClosing=0;
+  let leftPrev=0,leftReceive=0,leftDelivery=0,leftTotalDelivery=0,leftClosing=0;
+  let extraPrev=0,extraReceive=0,extraDelivery=0,extraTotalDelivery=0,extraClosing=0;
 
   rows.forEach((r,i)=>{
     let previous=raw(r.previous);
-    let opening=raw(r.opening);
+    let receive=raw(r.opening);
     let delivery=raw(r.delivery);
     let totalDelivery=raw(r.totalDelivery);
     let closing=raw(r.closing);
 
-    // Leftover Total = 2018 theke Without Sticker porjonto first 9 rows
+    // Leftover Total = first 9 rows only
     if(i<=8){
       leftPrev+=previous;
-      leftOpen+=opening;
+      leftReceive+=receive;
       leftDelivery+=delivery;
       leftTotalDelivery+=totalDelivery;
       leftClosing+=closing;
     }
 
-    // Grand Total = sob row
-    gtPrev+=previous;
-    gtOpen+=opening;
-    gtDelivery+=delivery;
-    gtTotalDelivery+=totalDelivery;
-    gtClosing+=closing;
+    // Nicher 3 row = Textile-25, Composite-25, For Dyeing-25
+    if(i>=9){
+      extraPrev+=previous;
+      extraReceive+=receive;
+      extraDelivery+=delivery;
+      extraTotalDelivery+=totalDelivery;
+      extraClosing+=closing;
+    }
   });
 
+  // Grand Total = Leftover Total + nicher 3 row
+  let gtPrev=leftPrev+extraPrev;
+  let gtReceive=leftReceive+extraReceive;
+  let gtDelivery=leftDelivery+extraDelivery;
+  let gtTotalDelivery=leftTotalDelivery+extraTotalDelivery;
+  let gtClosing=leftClosing+extraClosing;
+
   document.getElementById("leftPrev").innerText=format(leftPrev);
-  document.getElementById("leftOpen").innerText=format(leftOpen);
+  document.getElementById("leftOpen").innerText=format(leftReceive);
   document.getElementById("leftDelivery").innerText=format(leftDelivery);
   document.getElementById("leftTotalDelivery").innerText=format(leftTotalDelivery);
   document.getElementById("leftClosing").innerText=format(leftClosing);
 
   document.getElementById("gtPrev").innerText=format(gtPrev);
-  document.getElementById("gtOpen").innerText=format(gtOpen);
+  document.getElementById("gtOpen").innerText=format(gtReceive);
   document.getElementById("gtDelivery").innerText=format(gtDelivery);
   document.getElementById("gtTotalDelivery").innerText=format(gtTotalDelivery);
   document.getElementById("gtClosing").innerText=format(gtClosing);
 }
 
+function renderChartOnly(){
+  let gtClosing=0;
+  rows.forEach(r=>gtClosing+=raw(r.closing));
+  renderChart(gtClosing);
+}
 
 function renderChart(grandTotal){
   let labels=rows.map(r=>r.year||r.fabric||"Item");
@@ -304,31 +315,19 @@ function renderChart(grandTotal){
 
   if(chart) chart.destroy();
 
-  const chartTextPlugin={
-    id:"chartTextPlugin",
+  const valuePlugin={
+    id:"valuePlugin",
     afterDatasetsDraw(chart){
       const {ctx}=chart;
       ctx.save();
       ctx.textAlign="center";
-      ctx.fillStyle="#000";
+      ctx.fillStyle="#111";
       ctx.font="bold 10px Arial";
-
       chart.data.datasets[0].data.forEach((value,index)=>{
         const bar=chart.getDatasetMeta(0).data[index];
         if(!bar) return;
-
-        let name=chart.data.labels[index];
-        let amount=Number(value||0).toLocaleString("en-US");
-
-        if(value>0 && bar.y>35){
-          ctx.fillText(name,bar.x,bar.y+14);
-          ctx.fillText(amount,bar.x,bar.y+27);
-        }else{
-          ctx.fillText(name,bar.x,bar.y-22);
-          ctx.fillText(amount,bar.x,bar.y-9);
-        }
+        ctx.fillText(Number(value||0).toLocaleString("en-US"),bar.x,bar.y-7);
       });
-
       ctx.restore();
     }
   };
@@ -338,7 +337,7 @@ function renderChart(grandTotal){
     data:{
       labels:labels,
       datasets:[{
-        label:"Closing Balance",
+        label:"Closing Stock",
         data:data,
         borderWidth:1,
         borderRadius:4
@@ -351,7 +350,7 @@ function renderChart(grandTotal){
         tooltip:{
           callbacks:{
             label:function(ctx){
-              return "Closing Balance: "+Number(ctx.raw||0).toLocaleString("en-US");
+              return "Closing Stock: "+Number(ctx.raw||0).toLocaleString("en-US");
             }
           }
         }
@@ -361,14 +360,8 @@ function renderChart(grandTotal){
         x:{ticks:{font:{size:9}}}
       }
     },
-    plugins:[chartTextPlugin]
+    plugins:[valuePlugin]
   });
-}
-
-function renderChartOnly(){
-  let gtClosing=0;
-  rows.forEach(r=>gtClosing+=raw(r.closing));
-  renderChart(gtClosing);
 }
 
 window.addRow=function(){
@@ -430,7 +423,7 @@ async function loadData(){
     return;
   }
 
-  // New date hole kono previous carry hobe na. Fresh default rows asbe.
+  // New date hole fresh default rows. Previous date carry hobe na.
   prepareRows(JSON.parse(JSON.stringify(defaultRows)));
   render();
 }
@@ -438,7 +431,7 @@ async function loadData(){
 window.saveData=async function(){
   let date=document.getElementById("reportDate").value;
 
-  rows.forEach(r=>calcRow(r));
+  rows.forEach((r,i)=>calcRow(r,i));
   calcTotalsOnly();
 
   await deleteDateOnly(date);
@@ -486,8 +479,7 @@ window.exportExcel=function(){
 
 document.getElementById("reportDate").addEventListener("change",loadData);
 
-// Enter dile same column er nicher box e jabe.
-// Tab browser er normal vabe samner box e jabe.
+// Enter = nicher same column box, Tab = samner box
 document.addEventListener("keydown",function(e){
   if(e.target.tagName!=="INPUT") return;
 
@@ -514,7 +506,6 @@ document.addEventListener("keydown",function(e){
     }
   }
 });
-
 
 loadData();
 </script>
