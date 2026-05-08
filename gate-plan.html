@@ -14,7 +14,7 @@ button{padding:10px 14px;border:0;border-radius:8px;color:white;font-weight:bold
 input,select{font-size:15px;padding:7px;border-radius:6px;border:1px solid #999}
 .box{width:96%;margin:10px auto;background:white;color:black;border:1px solid #000}
 .topLine{text-align:center;font-weight:bold;border-bottom:1px solid #000;padding:4px;font-size:18px}
-.meta{display:grid;grid-template-columns:repeat(5,1fr);border-bottom:1px solid #000}
+.meta{display:grid;grid-template-columns:repeat(3,1fr);border-bottom:1px solid #000}
 .meta div{border-right:1px solid #000;padding:6px;text-align:center;font-weight:bold}
 .tableWrap{overflow-x:auto;width:100%}
 table{min-width:1350px;width:100%;border-collapse:collapse;background:white;color:black;font-size:12px}
@@ -41,7 +41,7 @@ td input{width:100%;box-sizing:border-box;border:0;outline:none;text-align:cente
   <h2>GMS Textiles Ltd.</h2>
   <h4>Tansutrapur, Kaliakair, Gazipur.</h4>
   <h4>Daily Goods Delivery Plan</h4>
-  <h3>Accessories ( MCD )</h3>
+  <h3 id="mcdTitle">ACCESSORIES MCD</h3>
 </div>
 
 <div class="controls noPrint">
@@ -110,8 +110,6 @@ td input{width:100%;box-sizing:border-box;border:0;outline:none;text-align:cente
     <div>Gate Pass No: <span id="showGatePass"></span></div>
     <div>Date: <span id="showDate"></span></div>
     <div>Time: <span id="showTime"></span></div>
-    <div>MCD: <span id="showMcd"></span></div>
-    <div>Prepared By: <span id="preparedBy"></span></div>
   </div>
 
   <div class="tableWrap">
@@ -199,7 +197,6 @@ document.getElementById("planDate").value=today();
 document.getElementById("planTime").value=nowTime();
 document.getElementById("gatePassNo").value=nextGatePassNo();
 
-document.getElementById("preparedBy").innerText=user.name||user.email||"User";
 document.getElementById("signPrepared").innerText=user.name||user.email||"User";
 
 function updateHeader(){
@@ -211,7 +208,7 @@ function updateHeader(){
   document.getElementById("showDate").innerText=document.getElementById("planDate").value;
   document.getElementById("showTime").innerText=document.getElementById("planTime").value;
   document.getElementById("showGatePass").innerText=document.getElementById("gatePassNo").value;
-  document.getElementById("showMcd").innerText=mcd;
+  document.getElementById("mcdTitle").innerText=mcd;
 
   document.querySelectorAll(".toParty").forEach(x=>{
     if(toCompany==="Other's Factory"){
@@ -384,11 +381,29 @@ window.saveGatePlan=function(){
 };
 
 document.addEventListener("keydown",function(e){
-  if(e.key==="Enter" && e.target.tagName==="INPUT"){
+  if(e.target.tagName!=="INPUT") return;
+
+  // Tab default: samner box e jabe
+  if(e.key==="Tab") return;
+
+  // Enter: same column er nicher row e jabe
+  if(e.key==="Enter"){
     e.preventDefault();
-    let inputs=[...document.querySelectorAll("td input")];
-    let index=inputs.indexOf(e.target);
-    if(inputs[index+1]) inputs[index+1].focus();
+
+    let td=e.target.closest("td");
+    let tr=e.target.closest("tr");
+    if(!td || !tr) return;
+
+    let colIndex=[...tr.children].indexOf(td);
+    let nextTr=tr.nextElementSibling;
+
+    if(nextTr){
+      let nextInput=nextTr.children[colIndex]?.querySelector("input");
+      if(nextInput){
+        nextInput.focus();
+        nextInput.select();
+      }
+    }
   }
 });
 
