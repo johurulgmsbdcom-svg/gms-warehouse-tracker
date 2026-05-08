@@ -140,6 +140,32 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
+const user=JSON.parse(localStorage.getItem("gmsUser")||"null");
+if(!user){window.location.href="login.html";}
+
+const userRole=user.role||"user";
+const userMCDs=Array.isArray(user.mcdAccess)?user.mcdAccess:(user.mcd?[user.mcd]:[]);
+const manpowerAccess=user.manpowerAccess||false;
+
+if(!(userRole==="admin" || userRole==="full" || manpowerAccess===true)){
+  alert("Manpower Access nai. Admin theke permission nite hobe.");
+  window.location.href="index.html";
+}
+
+const ALL_MCD=[
+"GREY FABRIC MCD","SHIPMENT MCD","BILLING SECTION","OUTER WEAR MCD","YARN MCD","PRINTING MCD","JHUT MCD","GENERAL MCD","ACCESSORIES MCD","LEFTOVER MCD","FINISH FABRIC MCD","YARN DYEING MCD","CHEMICAL MCD","GENERAL TECHNICAL MCD"
+];
+
+function allowedMCDList(){
+  return (userRole==="admin" || userRole==="full") ? ALL_MCD : userMCDs;
+}
+
+function setupMcdDropdown(){
+  let list=allowedMCDList();
+  let mcdSelect=document.getElementById("mcd");
+  mcdSelect.innerHTML=list.map(m=>`<option>${m}</option>`).join("");
+}
+
 let unsubscribe = null;
 let editMode = false;
 window.currentRows = [];
@@ -366,6 +392,7 @@ window.filterSearch=filterSearch;
 window.exportExcel=exportExcel;
 window.exportPDF=exportPDF;
 
+setupMcdDropdown();
 startRealtime();
 </script>
 
