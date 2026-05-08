@@ -4,25 +4,47 @@
 <title>Needle Daily Posting</title>
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
 <style>
-*{box-sizing:border-box}
+*{
+  box-sizing:border-box;
+}
 
-body{
+html,body{
+  width:100%;
+  max-width:100%;
+  overflow-x:hidden;
+  margin:0;
+  padding:0;
   background:#0f172a;
   color:white;
-  font-family:Arial;
-  margin:0;
-  padding:8px;
+  font-family:Arial, sans-serif;
+  touch-action:manipulation;
+}
+
+body{
+  padding:4px;
+}
+
+h2{
+  text-align:center;
+  font-size:17px;
+  margin:6px 0 8px;
+}
+
+.topControls{
+  text-align:center;
+  margin-bottom:8px!important;
+  font-size:12px;
 }
 
 button{
-  padding:9px 16px;
+  padding:7px 9px;
   border:0;
   border-radius:6px;
   color:white;
   font-weight:bold;
   cursor:pointer;
-  margin:3px;
-  font-size:14px;
+  margin:2px;
+  font-size:11px;
 }
 
 .deleteBtn{background:#dc2626}
@@ -31,24 +53,29 @@ button{
 .homeBtn{background:#2563eb}
 .saveBtn{background:green}
 
-input,select{
-  font-size:16px;
-  padding:6px;
-  border-radius:5px;
-  border:1px solid #999;
+input,select,textarea,button{
+  font-size:16px; /* mobile/app focus zoom off */
 }
 
+select,
+input[type="date"]{
+  padding:5px;
+  border-radius:5px;
+  border:1px solid #999;
+  max-width:150px;
+}
+
+/* full screen fit: no side scroll */
 .tableWrap{
   width:100%;
-  overflow-x:auto;
-  -webkit-overflow-scrolling:touch;
+  max-width:100%;
+  overflow-x:hidden;
 }
 
 #reportTable{
   width:100%;
-  min-width:760px;
-  margin:auto;
-  text-align:center;
+  max-width:100%;
+  margin:0 auto;
   border-collapse:collapse;
   table-layout:fixed;
   background:white;
@@ -58,11 +85,12 @@ input,select{
 #reportTable th,
 #reportTable td{
   border:1px solid #000;
-  padding:2px;
+  padding:1px;
   text-align:center;
-  font-size:11px;
-  line-height:1.15;
-  word-break:break-word;
+  font-size:10px;
+  line-height:1.08;
+  white-space:nowrap;
+  overflow:hidden;
 }
 
 #reportTable thead{
@@ -76,37 +104,43 @@ input,select{
   font-weight:bold;
 }
 
-.col-sl{width:38px}
-.col-type{width:135px}
-.col-size{width:58px}
-.col-prev{width:70px}
-.col-rcvd{width:62px}
-.col-dvld{width:62px}
-.col-present{width:78px}
-.col-bn{width:62px}
+/* column width total 100% */
+.col-sl{width:6%;font-size:9px!important}
+.col-type{width:22%;font-size:10px!important}
+.col-size{width:8%;font-size:10px!important}
+.col-prev{width:12%}
+.col-rcvd{width:11%}
+.col-dvld{width:11%}
+.col-present{width:14%}
+.col-bn{width:10%}
 
 .qtyInput{
   width:100%;
-  max-width:56px;
-  height:28px;
-  padding:2px;
+  height:24px;
+  padding:1px;
   text-align:center;
-  font-size:16px;
+  font-size:16px; /* focus zoom off */
   font-weight:bold;
+  border:1px solid #999;
+  border-radius:3px;
+  background:white;
+  color:black;
+  -webkit-text-size-adjust:100%;
 }
 
 .summaryWrap{
   width:100%;
-  overflow-x:auto;
-  -webkit-overflow-scrolling:touch;
+  max-width:100%;
+  overflow-x:hidden;
 }
 
 #summaryTable{
   width:100%;
-  min-width:560px;
+  max-width:100%;
   margin:auto;
   text-align:center;
   border-collapse:collapse;
+  table-layout:fixed;
   background:white;
   color:black;
 }
@@ -114,63 +148,70 @@ input,select{
 #summaryTable th,
 #summaryTable td{
   border:1px solid #000;
-  padding:4px;
-  font-size:12px;
+  padding:2px;
+  font-size:10px;
 }
 
-@media(max-width:768px){
-  body{padding:5px}
-  h2{font-size:18px;margin:8px 0}
+@media(max-width:480px){
+  body{padding:2px}
+  h2{font-size:15px;margin:4px 0}
+  .topControls{font-size:11px}
 
   button{
-    padding:8px 10px;
-    font-size:12px;
-    margin:2px;
-  }
-
-  .topControls{
-    font-size:13px;
-  }
-
-  #reportTable{
-    min-width:680px;
+    padding:6px 7px;
+    font-size:10px;
   }
 
   #reportTable th,
   #reportTable td{
-    font-size:10px;
-    padding:1px;
+    font-size:9px;
+    padding:1px 0;
   }
 
-  .col-sl{width:32px}
-  .col-type{width:110px}
-  .col-size{width:46px}
-  .col-prev{width:56px}
-  .col-rcvd{width:50px}
-  .col-dvld{width:50px}
-  .col-present{width:62px}
-  .col-bn{width:50px}
+  .col-sl{width:6%;font-size:8px!important}
+  .col-type{width:22%;font-size:9px!important}
+  .col-size{width:8%;font-size:9px!important}
+  .col-prev{width:12%}
+  .col-rcvd{width:11%}
+  .col-dvld{width:11%}
+  .col-present{width:14%}
+  .col-bn{width:10%}
 
   .qtyInput{
-    max-width:46px;
-    height:25px;
+    height:22px;
     font-size:16px;
-    padding:1px;
   }
 }
 
 @media print{
-  body{background:white!important;color:black!important}
-  button,input[type="date"],select{display:none!important}
-  .tableWrap,.summaryWrap{overflow:visible!important}
-  #reportTable,#summaryTable{
+  html,body{
+    background:white!important;
+    color:black!important;
+    overflow:visible!important;
+  }
+
+  button,
+  input[type="date"],
+  select{
+    display:none!important;
+  }
+
+  .tableWrap,
+  .summaryWrap{
+    overflow:visible!important;
+  }
+
+  #reportTable,
+  #summaryTable{
+    width:100%!important;
+    max-width:100%!important;
     color:black!important;
     background:white!important;
-    width:100%!important;
-    min-width:0!important;
   }
-  #reportTable th,#reportTable td{
-    font-size:8px;
+
+  #reportTable th,
+  #reportTable td{
+    font-size:7px;
     padding:1px;
   }
 }
@@ -181,7 +222,7 @@ input,select{
 
 <h2 style="text-align:center;">Needle Daily Posting</h2>
 
-<div class="topControls" style="text-align:center;margin-bottom:12px;">
+<div class="topControls">
 Date: <input type="date" id="postDate">
 
 Floor:
