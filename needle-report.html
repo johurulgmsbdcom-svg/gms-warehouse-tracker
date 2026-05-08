@@ -189,7 +189,18 @@ function toast(msg){
 
 function calcFloorRow(i){
   let r=floorRows[i];
-  r.presentStock=n(r.previousQty)+n(r.receivedQty)-n(r.deliveryQty);
+
+  let previous = n(r.previousQty);
+  let received = n(r.receivedQty);
+  let delivery = n(r.deliveryQty);
+
+  // Formula: Present Stock = Previous Qty + Received Qty - Delivery Qty
+  r.presentStock = previous + received - delivery;
+
+  let cell = byId("present_" + i);
+  if(cell){
+    cell.innerText = r.presentStock;
+  }
 }
 
 function totalIssue(){
@@ -232,9 +243,9 @@ function render(){
 
       <td><input value="${r.description||""}" oninput="floorRows[${i}].description=this.value"></td>
       <td><input value="${r.floorName||""}" oninput="floorRows[${i}].floorName=this.value"></td>
-      <td><input type="number" value="${r.previousQty||""}" oninput="floorRows[${i}].previousQty=this.value;updateFloorPresent(${i})"></td>
-      <td><input type="number" value="${r.receivedQty||""}" oninput="floorRows[${i}].receivedQty=this.value;updateFloorPresent(${i})"></td>
-      <td><input type="number" value="${r.deliveryQty||""}" oninput="floorRows[${i}].deliveryQty=this.value;updateFloorPresent(${i})"></td>
+      <td><input type="number" class="previousQty" value="${r.previousQty||""}" oninput="floorRows[${i}].previousQty=this.value;updateFloorPresent(${i})"></td>
+      <td><input type="number" class="receivedQty" value="${r.receivedQty||""}" oninput="floorRows[${i}].receivedQty=this.value;updateFloorPresent(${i})"></td>
+      <td><input type="number" class="deliveryQty" value="${r.deliveryQty||""}" oninput="floorRows[${i}].deliveryQty=this.value;updateFloorPresent(${i})"></td>
       <td class="totalCell" id="present_${i}">${r.presentStock||0}</td>
       <td><input value="${r.remarks||""}" oninput="floorRows[${i}].remarks=this.value"></td>
     </tr>`;
@@ -246,12 +257,19 @@ function render(){
 
 window.updateFloorPresent=function(i){
   calcFloorRow(i);
-  let cell=byId("present_"+i);
-  if(cell) cell.innerText=floorRows[i].presentStock;
+
+  // Issue chart/total issue also live update, table reload hobena
+  saveIssueInputs();
+  if(byId("totalIssue")) byId("totalIssue").innerText=totalIssue();
+  if(byId("avgUse")) byId("avgUse").innerText=avgUse().toFixed(2);
+  renderChart(issueData.brokenNeedle,issueData.missingNeedle,issueData.changeNeedle);
 };
 
 window.calculate=function(){
   saveIssueInputs();
+
+  floorRows.forEach((r,i)=>calcFloorRow(i));
+
   if(byId("totalIssue")) byId("totalIssue").innerText=totalIssue();
   if(byId("avgUse")) byId("avgUse").innerText=avgUse().toFixed(2);
   renderChart(issueData.brokenNeedle,issueData.missingNeedle,issueData.changeNeedle);
@@ -373,6 +391,20 @@ async function loadInitial(){
 }
 
 window.saveReport=async function(){
+  // Save er age current input value floorRows e niye nilam
+  document.querySelectorAll("#mainBody tr").forEach((tr,i)=>{
+    let p=tr.querySelector(".previousQty");
+    let r=tr.querySelector(".receivedQty");
+    let d=tr.querySelector(".deliveryQty");
+
+    if(floorRows[i]){
+      if(p) floorRows[i].previousQty=p.value;
+      if(r) floorRows[i].receivedQty=r.value;
+      if(d) floorRows[i].deliveryQty=d.value;
+      calcFloorRow(i);
+    }
+  });
+
   calculate();
   let date=byId("reportDate").value;
   if(!date){alert("Date select koro");return}
@@ -412,12 +444,55 @@ window.deleteData=async function(){
 
 byId("reportDate").addEventListener("change",loadInitial);
 
+// Extra safety: Previous / Received / Delivery edit korle live Present Stock update
+document.addEventListener("input",function(e){
+  if(!e.target.closest("#mainBody")) return;
+
+  let tr=e.target.closest("tr");
+  if(!tr) return;
+
+  let trs=[...document.querySelectorAll("#mainBody tr")];
+  let i=trs.indexOf(tr);
+  if(i<0 || !floorRows[i]) return;
+
+  let p=tr.querySelector(".previousQty");
+  let r=tr.querySelector(".receivedQty");
+  let d=tr.querySelector(".deliveryQty");
+
+  if(p) floorRows[i].previousQty=p.value;
+  if(r) floorRows[i].receivedQty=r.value;
+  if(d) floorRows[i].deliveryQty=d.value;
+
+  calcFloorRow(i);
+});
+
+
 document.addEventListener("keydown",function(e){
-  if(e.key==="Enter" && e.target.tagName==="INPUT"){
+  if(e.target.tagName!=="INPUT") return;
+
+  // Tab = normal samner box e jabe
+  if(e.key==="Tab"){
+    return;
+  }
+
+  // Enter = same column er nicher box e jabe
+  if(e.key==="Enter"){
     e.preventDefault();
-    let inputs=[...document.querySelectorAll("td input")];
-    let idx=inputs.indexOf(e.target);
-    if(inputs[idx+1]) inputs[idx+1].focus();
+
+    let td=e.target.closest("td");
+    let tr=e.target.closest("tr");
+    if(!td || !tr) return;
+
+    let colIndex=[...tr.children].indexOf(td);
+    let nextTr=tr.nextElementSibling;
+
+    if(nextTr){
+      let nextInput=nextTr.children[colIndex]?.querySelector("input");
+      if(nextInput){
+        nextInput.focus();
+        nextInput.select();
+      }
+    }
   }
 });
 
