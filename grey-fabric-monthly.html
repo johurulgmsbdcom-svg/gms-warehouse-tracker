@@ -17,7 +17,12 @@ th,td{border:1px solid #000;padding:5px;text-align:center}
 th{background:#e2f0d9}
 .totalRow{background:#d9ead3;font-weight:bold}
 .grandRow{background:#ddd;font-weight:bold;font-size:15px}
-.chartBox{width:98%;margin:10px auto;background:white;padding:10px}
+.chartBox{width:98%;margin:12px auto;background:white;color:black;padding:14px;border-radius:10px;border:1px solid #cbd5e1}
+.reportTitle{width:98%;margin:8px auto;background:white;color:black;border-radius:8px;padding:8px;text-align:center;font-weight:bold}
+@media print{
+  .chartBox{page-break-inside:avoid}
+}
+
 @page{size:A4 landscape;margin:8mm}
 @media print{
   body{background:white;color:black}
@@ -49,6 +54,8 @@ th{background:#e2f0d9}
   <button class="home" onclick="location.href='index.html'">🏠 Home</button>
 </div>
 
+<div class="reportTitle" id="reportTitle">Grey Fabric Report</div>
+
 <table id="reportTable">
   <thead>
     <tr>
@@ -57,10 +64,10 @@ th{background:#e2f0d9}
       <th>Year</th>
       <th>Fabric Type</th>
       <th>Previous Qty</th>
-      <th>Opening Balance</th>
+      <th>Receive Qty</th>
       <th>Delivery Qty</th>
       <th>Total Delivery</th>
-      <th>Closing Balance</th>
+      <th>Closing Stock</th>
     </tr>
   </thead>
   <tbody id="tbody"></tbody>
@@ -110,8 +117,13 @@ function monthStart(){
 document.getElementById("fromDate").value=monthStart();
 document.getElementById("toDate").value=today();
 
+function raw(v){
+  if(v==="" || v===null || v===undefined) return 0;
+  return Number(String(v).replace(/,/g,""))||0;
+}
+
 function format(n){
-  return Number(n||0).toLocaleString("en-US",{
+  return raw(n).toLocaleString("en-US",{
     minimumFractionDigits:2,
     maximumFractionDigits:2
   });
@@ -121,28 +133,48 @@ async function loadReport(){
   let from=document.getElementById("fromDate").value;
   let to=document.getElementById("toDate").value;
 
-  let snap=await getDocs(collection(db,"greyFabricStock"));
-  let rows=[];
+  document.getElementById("reportTitle").innerText =
+    "Grey Fabric Report From " + from + " To " + to;
 
+  let snap=await getDocs(collection(db,"greyFabricStock"));
+  let latestByDate={};
+
+  // Same date e multiple save thakle latest savedAt ta nibe, duplicate show korbe na
   snap.forEach(d=>{
     let x=d.data();
-    if(x.date>=from && x.date<=to){
-      (x.rows||[]).forEach(r=>{
-        rows.push({
-          date:x.date,
-          year:r.year||"",
-          fabric:r.fabric||"",
-          previous:Number(r.previous)||0,
-          opening:Number(r.opening)||0,
-          delivery:Number(r.delivery)||0,
-          totalDelivery:Number(r.totalDelivery)||0,
-          closing:Number(r.closing)||0
-        });
-      });
+    if(!x.date || x.date<from || x.date>to) return;
+
+    let current=latestByDate[x.date];
+    let currentTime=current?.savedAt || current?.createdAt || "";
+    let newTime=x.savedAt || x.createdAt || "";
+
+    if(!current || newTime>=currentTime){
+      latestByDate[x.date]=x;
     }
   });
 
-  rows.sort((a,b)=>a.date.localeCompare(b.date));
+  let rows=[];
+
+  Object.values(latestByDate).forEach(x=>{
+    (x.rows||[]).forEach(r=>{
+      rows.push({
+        date:x.date,
+        year:r.year||"",
+        fabric:r.fabric||"",
+        previous:raw(r.previous),
+        opening:raw(r.opening),
+        delivery:raw(r.delivery),
+        totalDelivery:raw(r.totalDelivery),
+        closing:raw(r.closing)
+      });
+    });
+  });
+
+  rows.sort((a,b)=>{
+    let d=a.date.localeCompare(b.date);
+    if(d!==0) return d;
+    return String(a.year).localeCompare(String(b.year));
+  });
 
   let html="";
   let gtPrev=0,gtOpen=0,gtDelivery=0,gtTotalDelivery=0,gtClosing=0;
@@ -185,10 +217,9 @@ function renderChart(rows){
   let map={};
 
   rows.forEach(r=>{
-    if(!map[r.date]){
-      map[r.date]=0;
-    }
-    map[r.date]+=r.closing;
+    let key = r.year ? (r.year + " - " + r.fabric) : r.fabric;
+    if(!map[key]) map[key]=0;
+    map[key]+=r.closing;
   });
 
   let labels=Object.keys(map);
@@ -196,35 +227,80 @@ function renderChart(rows){
 
   if(chart) chart.destroy();
 
+  const labelPlugin={
+    id:"labelPlugin",
+    afterDatasetsDraw(chart){
+      const {ctx}=chart;
+      ctx.save();
+      ctx.textAlign="center";
+      ctx.fillStyle="#111";
+      ctx.font="bold 10px Arial";
+
+      chart.data.datasets[0].data.forEach((value,index)=>{
+        const bar=chart.getDatasetMeta(0).data[index];
+        if(!bar) return;
+
+        let amount=Number(value||0).toLocaleString("en-US");
+        ctx.fillText(amount,bar.x,bar.y-8);
+      });
+
+      ctx.restore();
+    }
+  };
+
   chart=new Chart(document.getElementById("monthlyChart"),{
     type:"bar",
     data:{
-      labels:labels,
+      labels:labels.length?labels:["No Data"],
       datasets:[{
-        label:"Date Wise Closing Balance",
-        data:data,
-        borderWidth:1
+        label:"Closing Stock",
+        data:data.length?data:[0],
+        borderWidth:1,
+        borderRadius:8
       }]
     },
     options:{
       responsive:true,
       plugins:{
+        legend:{display:true,position:"top"},
         title:{
           display:true,
-          text:"Grey Fabric Closing Balance Chart"
+          text:"Grey Fabric Closing Stock Smart Chart"
+        },
+        tooltip:{
+          callbacks:{
+            label:function(ctx){
+              return "Closing Stock: " + Number(ctx.raw||0).toLocaleString("en-US");
+            }
+          }
         }
       },
       scales:{
-        y:{beginAtZero:true},
-        x:{ticks:{font:{size:10}}}
+        y:{
+          beginAtZero:true,
+          ticks:{
+            callback:function(value){
+              return Number(value).toLocaleString("en-US");
+            }
+          }
+        },
+        x:{
+          ticks:{
+            font:{size:9},
+            maxRotation:35,
+            minRotation:0
+          }
+        }
       }
-    }
+    },
+    plugins:[labelPlugin]
   });
 }
 
 window.exportExcel=function(){
+  let title="<h2>GMS Textiles Ltd</h2><h3>"+document.getElementById("reportTitle").innerText+"</h3>";
   let table=document.getElementById("reportTable").outerHTML;
-  let file=new Blob([table],{type:"application/vnd.ms-excel"});
+  let file=new Blob([title+table],{type:"application/vnd.ms-excel"});
   let a=document.createElement("a");
   a.href=URL.createObjectURL(file);
   a.download="grey-fabric-date-range-report.xls";
