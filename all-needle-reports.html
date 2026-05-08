@@ -1,427 +1,400 @@
 <!DOCTYPE html>
 <html>
 <head>
-<title>Needle Issue Entry</title>
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<title>All Needle BNR / BNF Reports</title>
 
 <style>
-body{margin:0;background:#07111f;color:white;font-family:Arial,sans-serif}
-.header{text-align:center;padding:10px}
-.header h2,.header h3,.header h4{margin:3px}
-.controls{text-align:center;margin:10px}
-button{padding:10px 14px;border:0;border-radius:8px;color:white;font-weight:bold;margin:4px;cursor:pointer}
-.save{background:#16a34a}.report{background:#2563eb}.home{background:#0f766e}.print{background:#7c3aed}.del{background:#dc2626}
-input{font-size:14px;padding:6px;border-radius:5px;border:1px solid #999}
-.tableWrap{overflow-x:auto;width:100%}
+body{
+  margin:0;
+  background:#0f172a;
+  color:white;
+  font-family:Arial;
+}
 
-.reportTable{
-  min-width:1380px;
-  width:98%;
-  margin:10px auto;
-  border-collapse:collapse;
+.box{padding:18px}
+h2,h3{text-align:center;margin:4px}
+
+.top{
+  text-align:center;
+  margin:15px;
+}
+
+select,input,button{
+  padding:9px;
+  margin:4px;
+  border-radius:6px;
+  border:0;
+}
+
+button{
+  background:#2563eb;
+  color:white;
+  font-weight:bold;
+  cursor:pointer;
+}
+
+.excelBtn{background:#16a34a}
+.pdfBtn{background:#7c3aed}
+.homeBtn{background:#2563eb}
+
+.reportPage{
   background:white;
   color:black;
-  font-size:11px;
-  table-layout:fixed;
+  width:210mm;
+  min-height:297mm;
+  margin:15px auto;
+  padding:10mm;
+  box-sizing:border-box;
+}
+
+table{
+  width:100%;
+  border-collapse:collapse;
+  color:black;
+  text-align:center;
+  font-size:12px;
+  margin-top:10px;
 }
 
 th,td{
   border:1px solid #000;
   padding:4px;
-  text-align:center;
-  word-break:break-word;
 }
 
-th{background:#9fc5e8;font-weight:bold}
+th{
+  background:#e5e7eb;
+}
 
-td input{
-  width:100%;
-  min-width:72px;
-  height:30px;
-  box-sizing:border-box;
-  border:1px solid #cbd5e1;
-  outline:none;
-  text-align:center;
-  font-size:14px;
+.total{
+  background:#92d050;
   font-weight:bold;
-  border-radius:5px;
 }
 
-.descCol{width:120px}
-.floorCol{width:95px}
-.qtyCol{width:88px}
-.remarksCol{width:115px}
-.smallCol{width:75px}
-
-.totalCell{font-weight:bold;background:#e5e7eb}
-.chartBox{width:96%;margin:12px auto;background:white;color:black;border-radius:10px;padding:10px}
-
-.toast{
-  position:fixed;
-  left:50%;
-  top:18px;
-  transform:translateX(-50%);
-  background:#22c55e;
+.sectionTitle{
+  background:#1e293b;
   color:white;
-  padding:12px 18px;
-  border-radius:10px;
   font-weight:bold;
-  display:none;
-  z-index:9999;
+  font-size:14px;
 }
 
-@page{size:A4 landscape;margin:5mm}
+.grand{
+  background:#ffff00;
+  font-weight:bold;
+  font-size:15px;
+}
+
+@page{
+  size:A4 portrait;
+  margin:8mm;
+}
+
 @media print{
-  body{background:white;color:black}
-  .controls,.noPrint{display:none!important}
-  .header h2{font-size:16px}
-  .header h3,.header h4{font-size:11px}
-  .reportTable{width:100%;min-width:0;font-size:7px;margin:0}
-  th,td{padding:2px}
-  .chartBox{width:100%;margin:4px 0;padding:4px}
+  body{
+    background:white;
+    color:black;
+  }
+
+  .top,button{
+    display:none!important;
+  }
+
+  .box{
+    padding:0;
+  }
+
+  .reportPage{
+    width:auto;
+    min-height:auto;
+    margin:0;
+    padding:0;
+    box-shadow:none;
+    page-break-after:always;
+  }
+
+  table{
+    font-size:11px;
+  }
+
+  h2,h3{
+    color:black;
+  }
 }
 </style>
 </head>
 
 <body>
+<div class="box">
 
-<div class="header">
-  <h2>GMS Textiles Ltd</h2>
-  <h4>Needle MCD</h4>
-  <h3>Needle Issue Entry</h3>
+<h2>GMS TEXTILES LTD</h2>
+<h3>All Needle BNR / BNF Reports</h3>
+
+<div class="top">
+Report:
+<select id="reportType">
+  <option value="BNR">BNR</option>
+  <option value="BNF">BNF</option>
+</select>
+
+Period:
+<select id="periodType" onchange="changePeriod()">
+  <option value="monthly">Monthly</option>
+  <option value="weekly">Weekly</option>
+</select>
+
+<input type="month" id="monthInput">
+<input type="date" id="weekInput" style="display:none">
+
+<button onclick="loadReport()">Show Report</button>
+<button class="excelBtn" onclick="exportExcel()">Export Excel</button>
+<button class="pdfBtn" onclick="window.print()">PDF / Print</button>
+<button class="homeBtn" onclick="location.href='index.html'">Back Home</button>
 </div>
 
-<div class="controls noPrint">
-  Date:
-  <input type="date" id="reportDate">
-  <button class="save" onclick="saveReport()">💾 Save</button>
-  <button class="del" onclick="deleteData()">🗑 Delete Data</button>
-  <button class="report" onclick="location.href='needle-report-view.html'">📑 Report</button>
-  <button class="print" onclick="window.print()">🖨 PDF / Print</button>
-  <button class="home" onclick="location.href='index.html'">🏠 Home</button>
-</div>
+<div id="reportArea"></div>
 
-<div class="tableWrap">
-<table class="reportTable">
-<thead>
-<tr>
-  <th class="smallCol">Needle Booth</th>
-  <th class="smallCol">Total Sewing Line</th>
-  <th class="smallCol">Machine Plan</th>
-  <th class="smallCol">Sewing Running Machine</th>
-  <th class="smallCol">Broken Needle</th>
-  <th class="smallCol">Missing Needle</th>
-  <th class="smallCol">Change Needle</th>
-  <th class="smallCol">Total Issue</th>
-  <th class="smallCol">Per Machine Avg. Needle Use</th>
-  <th class="descCol">Description</th>
-  <th class="floorCol">Floor Name</th>
-  <th class="qtyCol">Previous Qty</th>
-  <th class="qtyCol">Received Qty</th>
-  <th class="qtyCol">Delivery Qty</th>
-  <th class="qtyCol">Present Stock</th>
-  <th class="remarksCol">Remarks</th>
-</tr>
-</thead>
-<tbody id="mainBody"></tbody>
-</table>
 </div>
-
-<div class="chartBox">
-  <canvas id="issueChart" height="80"></canvas>
-</div>
-
-<div id="toast" class="toast">Saved ✅</div>
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-app.js";
-import {
-  getFirestore, collection, addDoc, getDocs, deleteDoc, doc, query, where
-} from "https://www.gstatic.com/firebasejs/12.12.1/firebase-firestore.js";
+import { getFirestore, collection, getDocs } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-firestore.js";
 
-const firebaseConfig={
-  apiKey:"AIzaSyD-wBCF5eeWMHobLFOhBzKW7aB2pagz9-w",
-  authDomain:"gms-warehouse-tracker-7f57e.firebaseapp.com",
-  projectId:"gms-warehouse-tracker-7f57e",
-  storageBucket:"gms-warehouse-tracker-7f57e.firebasestorage.app",
-  messagingSenderId:"992250313291",
-  appId:"1:992250313291:web:ee3bceae76d4d53bc26bce"
+const firebaseConfig = {
+  apiKey: "YOUR_API_KEY",
+  authDomain: "YOUR_AUTH_DOMAIN",
+  projectId: "gms-warehouse-tracker-7f57e",
+  storageBucket: "YOUR_STORAGE_BUCKET",
+  messagingSenderId: "YOUR_MSG_ID",
+  appId: "YOUR_APP_ID"
 };
 
-const app=initializeApp(firebaseConfig);
-const db=getFirestore(app);
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
 
-const user=JSON.parse(localStorage.getItem("gmsUser")||"null");
-if(!user){window.location.href="login.html"}
-
-let chart;
-
-const defaultFloorRows=[
-  {description:"Sewing Needle",floorName:"SHAPLA",previousQty:2432,receivedQty:"",deliveryQty:"",presentStock:2432,remarks:""},
-  {description:"Sewing Needle",floorName:"PODDO",previousQty:3679,receivedQty:"",deliveryQty:"",presentStock:3679,remarks:""},
-  {description:"Sewing Needle",floorName:"SAMPLE",previousQty:1740,receivedQty:"",deliveryQty:"",presentStock:1740,remarks:""},
-  {description:"Sewing Needle",floorName:"KADOM",previousQty:2696,receivedQty:"",deliveryQty:"",presentStock:2696,remarks:""},
-  {description:"Sewing Needle",floorName:"BELLY",previousQty:1188,receivedQty:"",deliveryQty:"",presentStock:1188,remarks:""},
-  {description:"Sewing Needle",floorName:"Embroidery",previousQty:1474,receivedQty:"",deliveryQty:"",presentStock:1474,remarks:""},
-  {description:"Needle Technical Stock",floorName:"All",previousQty:184820,receivedQty:"",deliveryQty:"",presentStock:184820,remarks:""}
+const R_FLOORS = [
+  "Kadom R",
+  "Shapla R",
+  "Poddo R",
+  "Belly R",
+  "Sample R",
+  "EMBROIDERY R"
 ];
 
-let floorRows=JSON.parse(JSON.stringify(defaultFloorRows));
+const N_FLOORS = [
+  "Kadom N",
+  "Shapla N",
+  "Poddo N",
+  "Belly N",
+  "Sample N",
+  "EMBROIDERY N"
+];
 
-let issueData={
-  needleBooth:6,totalSewingLine:56,machinePlan:3468,runningMachine:2254,
-  brokenNeedle:213,missingNeedle:26,changeNeedle:1310
-};
+function changePeriod(){
+  let p=document.getElementById("periodType").value;
 
-function today(){return new Date().toISOString().slice(0,10)}
-document.getElementById("reportDate").value=today();
+  document.getElementById("monthInput").style.display =
+    p==="monthly" ? "inline-block" : "none";
 
-function n(v){return Number(v)||0}
-function byId(id){return document.getElementById(id)}
-
-function toast(msg){
-  let t=byId("toast");
-  t.innerText=msg;
-  t.style.display="block";
-  setTimeout(()=>t.style.display="none",1800);
+  document.getElementById("weekInput").style.display =
+    p==="weekly" ? "inline-block" : "none";
 }
 
-function calcFloorRow(i){
-  let r=floorRows[i];
-  r.presentStock=n(r.previousQty)+n(r.receivedQty)-n(r.deliveryQty);
-}
+function getWeekRange(dateStr){
+  let d=new Date(dateStr);
+  let day=d.getDay();
 
-function totalIssue(){
-  return n(issueData.brokenNeedle)+n(issueData.missingNeedle)+n(issueData.changeNeedle);
-}
+  let diff=d.getDate()-day+1;
+  let monday=new Date(d.setDate(diff));
 
-function avgUse(){
-  let issue=totalIssue();
-  return issue>0 ? n(issueData.runningMachine)/issue : 0;
-}
+  let sunday=new Date(monday);
+  sunday.setDate(monday.getDate()+6);
 
-function saveIssueInputs(){
-  issueData.needleBooth=n(byId("needleBooth")?.value);
-  issueData.totalSewingLine=n(byId("totalSewingLine")?.value);
-  issueData.machinePlan=n(byId("machinePlan")?.value);
-  issueData.runningMachine=n(byId("runningMachine")?.value);
-  issueData.brokenNeedle=n(byId("brokenNeedle")?.value);
-  issueData.missingNeedle=n(byId("missingNeedle")?.value);
-  issueData.changeNeedle=n(byId("changeNeedle")?.value);
-}
-
-function render(){
-  floorRows.forEach((r,i)=>calcFloorRow(i));
-  let html="";
-
-  floorRows.forEach((r,i)=>{
-    let first=i===0;
-    html+=`
-    <tr>
-      ${first ? `
-      <td rowspan="${floorRows.length}"><input type="number" id="needleBooth" value="${issueData.needleBooth}" oninput="calculate()"></td>
-      <td rowspan="${floorRows.length}"><input type="number" id="totalSewingLine" value="${issueData.totalSewingLine}" oninput="calculate()"></td>
-      <td rowspan="${floorRows.length}"><input type="number" id="machinePlan" value="${issueData.machinePlan}" oninput="calculate()"></td>
-      <td rowspan="${floorRows.length}"><input type="number" id="runningMachine" value="${issueData.runningMachine}" oninput="calculate()"></td>
-      <td rowspan="${floorRows.length}"><input type="number" id="brokenNeedle" value="${issueData.brokenNeedle}" oninput="calculate()"></td>
-      <td rowspan="${floorRows.length}"><input type="number" id="missingNeedle" value="${issueData.missingNeedle}" oninput="calculate()"></td>
-      <td rowspan="${floorRows.length}"><input type="number" id="changeNeedle" value="${issueData.changeNeedle}" oninput="calculate()"></td>
-      <td rowspan="${floorRows.length}" class="totalCell" id="totalIssue">${totalIssue()}</td>
-      <td rowspan="${floorRows.length}" class="totalCell" id="avgUse">${avgUse().toFixed(2)}</td>` : ``}
-
-      <td><input value="${r.description||""}" oninput="floorRows[${i}].description=this.value"></td>
-      <td><input value="${r.floorName||""}" oninput="floorRows[${i}].floorName=this.value"></td>
-      <td><input type="number" value="${r.previousQty||""}" oninput="floorRows[${i}].previousQty=this.value;updateFloorPresent(${i})"></td>
-      <td><input type="number" value="${r.receivedQty||""}" oninput="floorRows[${i}].receivedQty=this.value;updateFloorPresent(${i})"></td>
-      <td><input type="number" value="${r.deliveryQty||""}" oninput="floorRows[${i}].deliveryQty=this.value;updateFloorPresent(${i})"></td>
-      <td class="totalCell" id="present_${i}">${r.presentStock||0}</td>
-      <td><input value="${r.remarks||""}" oninput="floorRows[${i}].remarks=this.value"></td>
-    </tr>`;
-  });
-
-  byId("mainBody").innerHTML=html;
-  calculate();
-}
-
-window.updateFloorPresent=function(i){
-  calcFloorRow(i);
-  let cell=byId("present_"+i);
-  if(cell) cell.innerText=floorRows[i].presentStock;
-};
-
-window.calculate=function(){
-  saveIssueInputs();
-  if(byId("totalIssue")) byId("totalIssue").innerText=totalIssue();
-  if(byId("avgUse")) byId("avgUse").innerText=avgUse().toFixed(2);
-  renderChart(issueData.brokenNeedle,issueData.missingNeedle,issueData.changeNeedle);
-};
-
-function renderChart(broken,missing,change){
-  if(chart) chart.destroy();
-
-  const valueLabelPlugin={
-    id:"valueLabelPlugin",
-    afterDatasetsDraw(chart){
-      const {ctx}=chart;
-      ctx.save();
-      ctx.font="bold 14px Arial";
-      ctx.fillStyle="#111";
-      ctx.textAlign="center";
-
-      chart.data.datasets[0].data.forEach((value,index)=>{
-        const bar=chart.getDatasetMeta(0).data[index];
-        if(bar) ctx.fillText(value,bar.x,bar.y-8);
-      });
-
-      ctx.restore();
-    }
+  return {
+    start:monday.toISOString().slice(0,10),
+    end:sunday.toISOString().slice(0,10)
   };
-
-  chart=new Chart(byId("issueChart"),{
-    type:"bar",
-    data:{
-      labels:["Broken","Missing","Change"],
-      datasets:[{label:"Needle Issue",data:[broken,missing,change],borderRadius:8,borderWidth:1}]
-    },
-    options:{
-      responsive:true,
-      plugins:{
-        legend:{display:false},
-        tooltip:{enabled:false},
-        title:{display:true,text:"Broken / Missing / Change Needle Chart"}
-      },
-      scales:{y:{beginAtZero:true}}
-    },
-    plugins:[valueLabelPlugin]
-  });
 }
 
-async function deleteSameDate(date){
-  let q=query(collection(db,"needleDailyReport"),where("date","==",date));
-  let snap=await getDocs(q);
-  for(let d of snap.docs){await deleteDoc(doc(db,"needleDailyReport",d.id))}
-}
-
-async function getPreviousData(date){
-  let snap=await getDocs(collection(db,"needleDailyReport"));
-  let all=[];
-  snap.forEach(d=>{
-    let x=d.data();
-    if(x.date<date && Array.isArray(x.floorRows)) all.push(x);
-  });
-  all.sort((a,b)=>String(b.date).localeCompare(String(a.date)));
-  return all[0]||null;
-}
-
-async function loadSavedDate(){
-  let date=byId("reportDate").value;
-  let q=query(collection(db,"needleDailyReport"),where("date","==",date));
-  let snap=await getDocs(q);
-
-  if(!snap.empty){
-    let data=snap.docs[0].data();
-
-    issueData={
-      needleBooth:n(data.needleBooth)||6,
-      totalSewingLine:n(data.totalSewingLine)||56,
-      machinePlan:n(data.machinePlan)||3468,
-      runningMachine:n(data.runningMachine)||2254,
-      brokenNeedle:n(data.brokenNeedle)||0,
-      missingNeedle:n(data.missingNeedle)||0,
-      changeNeedle:n(data.changeNeedle)||0
-    };
-
-    floorRows=(data.floorRows||defaultFloorRows).map(r=>({
-      description:r.description||"",
-      floorName:r.floorName||"",
-      previousQty:n(r.previousQty),
-      receivedQty:r.receivedQty||"",
-      deliveryQty:r.deliveryQty||"",
-      presentStock:n(r.presentStock),
-      remarks:r.remarks||""
-    }));
-
-    render();
-    return true;
-  }
-  return false;
-}
-
-async function loadInitial(){
-  let date=byId("reportDate").value;
-  let hasSaved=await loadSavedDate();
-  if(hasSaved) return;
-
-  issueData={needleBooth:6,totalSewingLine:56,machinePlan:3468,runningMachine:2254,brokenNeedle:213,missingNeedle:26,changeNeedle:1310};
-
-  let prev=await getPreviousData(date);
-  if(prev){
-    floorRows=(prev.floorRows||[]).map(r=>({
-      description:r.description||"",
-      floorName:r.floorName||"",
-      previousQty:n(r.presentStock),
-      receivedQty:"",
-      deliveryQty:"",
-      presentStock:n(r.presentStock),
-      remarks:""
-    }));
+function getBNValue(row,type){
+  if(type==="BNR"){
+    return Number(row.bnr || row.BNR || row.bn || row.BN || 0);
   }else{
-    floorRows=JSON.parse(JSON.stringify(defaultFloorRows));
+    return Number(row.bnf || row.BNF || row.bn || row.BN || 0);
   }
-  render();
 }
 
-window.saveReport=async function(){
-  calculate();
-  let date=byId("reportDate").value;
-  if(!date){alert("Date select koro");return}
+window.loadReport=async function(){
 
-  floorRows.forEach((r,i)=>calcFloorRow(i));
-  await deleteSameDate(date);
+  let type=document.getElementById("reportType").value;
+  let period=document.getElementById("periodType").value;
 
-  await addDoc(collection(db,"needleDailyReport"),{
-    date,
-    needleBooth:n(issueData.needleBooth),
-    totalSewingLine:n(issueData.totalSewingLine),
-    machinePlan:n(issueData.machinePlan),
-    runningMachine:n(issueData.runningMachine),
-    brokenNeedle:n(issueData.brokenNeedle),
-    missingNeedle:n(issueData.missingNeedle),
-    changeNeedle:n(issueData.changeNeedle),
-    totalIssue:totalIssue(),
-    avgUse:Number(avgUse().toFixed(2)),
-    floorRows,
-    reportedBy:user.name||user.email||"User",
-    userId:user.id||"",
-    createdAt:new Date().toISOString()
+  let start="";
+  let end="";
+  let titleDate="";
+
+  if(period==="monthly"){
+
+    let m=document.getElementById("monthInput").value;
+
+    if(!m){
+      alert("Month select koro");
+      return;
+    }
+
+    start=m+"-01";
+    end=m+"-31";
+    titleDate=m;
+
+  }else{
+
+    let d=document.getElementById("weekInput").value;
+
+    if(!d){
+      alert("Week date select koro");
+      return;
+    }
+
+    let r=getWeekRange(d);
+
+    start=r.start;
+    end=r.end;
+    titleDate=start+" to "+end;
+  }
+
+  let floors = type==="BNR" ? R_FLOORS : N_FLOORS;
+
+  let snap = await getDocs(collection(db,"dailyPosting"));
+
+  let floorMap={};
+  let grandTotal=0;
+
+  floors.forEach(f=>{
+    floorMap[f]={};
   });
 
-  toast("✅ Firebase Save Complete");
-};
+  snap.forEach(docSnap=>{
 
-window.deleteData=async function(){
-  let date=byId("reportDate").value;
-  if(!date){alert("Date select koro");return}
-  if(!confirm("Ei date er Needle Issue data delete korba?")) return;
+    let data=docSnap.data();
 
-  await deleteSameDate(date);
-  toast("Deleted ✅");
-  await loadInitial();
-};
+    if(!data.date || !data.floor || !data.rows) return;
+    if(!floors.includes(data.floor)) return;
+    if(data.date < start || data.date > end) return;
 
-byId("reportDate").addEventListener("change",loadInitial);
+    data.rows.forEach(row=>{
 
-document.addEventListener("keydown",function(e){
-  if(e.key==="Enter" && e.target.tagName==="INPUT"){
-    e.preventDefault();
-    let inputs=[...document.querySelectorAll("td input")];
-    let idx=inputs.indexOf(e.target);
-    if(inputs[idx+1]) inputs[idx+1].focus();
-  }
-});
+      if(!row.needleType) return;
 
-loadInitial();
+      let key=(row.needleType||"")+"___"+(row.size||"");
+      let val=getBNValue(row,type);
+
+      if(!floorMap[data.floor][key]){
+
+        floorMap[data.floor][key]={
+          sl:row.sl || "",
+          needleType:row.needleType || "",
+          size:row.size || "",
+          qty:0
+        };
+      }
+
+      floorMap[data.floor][key].qty += val;
+      grandTotal += val;
+    });
+  });
+
+  let html=`
+  <div class="reportPage">
+
+    <h2>GMS TEXTILES LTD</h2>
+    <h3>Tansutrapur, Kaliakair, Gazipur.</h3>
+    <h3>All Needle ${type} ${period==="monthly" ? "Monthly" : "Weekly"} Report</h3>
+    <h3>${titleDate}</h3>
+  `;
+
+  floors.forEach(floor=>{
+
+    let rows=Object.values(floorMap[floor])
+      .sort((a,b)=>Number(a.sl)-Number(b.sl));
+
+    let floorTotal=0;
+
+    html+=`
+    <table>
+
+      <tr class="sectionTitle">
+        <td colspan="4">${floor}</td>
+      </tr>
+
+      <tr>
+        <th>SL</th>
+        <th>Needle Type</th>
+        <th>Size</th>
+        <th>${type}</th>
+      </tr>
+    `;
+
+    if(rows.length===0){
+
+      html+=`
+      <tr>
+        <td colspan="4">No Data</td>
+      </tr>`;
+
+    }else{
+
+      rows.forEach(r=>{
+
+        floorTotal += Number(r.qty)||0;
+
+        html+=`
+        <tr>
+          <td>${r.sl}</td>
+          <td>${r.needleType}</td>
+          <td>${r.size}</td>
+          <td>${r.qty}</td>
+        </tr>`;
+      });
+    }
+
+    html+=`
+      <tr class="total">
+        <td colspan="3">${floor} TOTAL</td>
+        <td>${floorTotal}</td>
+      </tr>
+
+    </table>`;
+  });
+
+  html+=`
+    <table>
+      <tr class="grand">
+        <td>ALL ${type} TOTAL</td>
+        <td>${grandTotal}</td>
+      </tr>
+    </table>
+
+  </div>`;
+
+  document.getElementById("reportArea").innerHTML=html;
+}
+
+window.exportExcel=function(){
+
+  let html=document.getElementById("reportArea").innerHTML;
+
+  let file=new Blob([html],{
+    type:"application/vnd.ms-excel"
+  });
+
+  let a=document.createElement("a");
+
+  a.href=URL.createObjectURL(file);
+  a.download="all-needle-bnr-bnf-report.xls";
+  a.click();
+}
+
+window.changePeriod=changePeriod;
+
+changePeriod();
 </script>
 
 </body>
