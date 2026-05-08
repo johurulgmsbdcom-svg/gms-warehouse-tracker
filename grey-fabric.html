@@ -171,30 +171,76 @@ function toast(msg){
   setTimeout(()=>t.style.display="none",1600);
 }
 
+function calcRow(r){
+  let previous=raw(r.previous);
+  let opening=raw(r.opening);
+  let delivery=raw(r.delivery);
+
+  // Old total delivery ke base dhora holo. Delivery Qty dile Total Delivery update hobe.
+  if(r.baseTotalDelivery===undefined || r.baseTotalDelivery===null || r.baseTotalDelivery===""){
+    r.baseTotalDelivery=raw(r.totalDelivery);
+  }
+
+  let totalDelivery=raw(r.baseTotalDelivery)+delivery;
+  r.totalDelivery=totalDelivery;
+
+  // Formula: Closing Balance = Previous Qty + Opening Balance - Total Delivery
+  r.closing=previous+opening-totalDelivery;
+}
+
 function render(){
   let html="";
 
   rows.forEach((r,i)=>{
+    calcRow(r);
+
     html+=`
       <tr>
-        <td><input value="${r.year||""}" onchange="rows[${i}].year=this.value;calc()"></td>
-        <td><input value="${r.fabric||""}" onchange="rows[${i}].fabric=this.value;calc()"></td>
-        <td><input value="${r.previous!==undefined?r.previous:""}" onchange="rows[${i}].previous=this.value;calc()"></td>
-        <td><input value="${r.opening!==undefined?r.opening:""}" onchange="rows[${i}].opening=this.value;calc()"></td>
-        <td><input type="date" value="${r.lastDate||""}" onchange="rows[${i}].lastDate=this.value;calc()"></td>
-        <td><input value="${r.delivery!==undefined?r.delivery:""}" onchange="rows[${i}].delivery=this.value;calc()"></td>
-        <td><input value="${r.totalDelivery!==undefined?r.totalDelivery:""}" onchange="rows[${i}].totalDelivery=this.value;calc()"></td>
-        <td><input value="${r.closing!==undefined?r.closing:""}" onchange="rows[${i}].closing=this.value;calc()"></td>
+        <td><input value="${r.year||""}" oninput="rows[${i}].year=this.value"></td>
+        <td><input value="${r.fabric||""}" oninput="rows[${i}].fabric=this.value"></td>
+
+        <td><input type="text" value="${r.previous!==undefined?r.previous:""}"
+          oninput="rows[${i}].previous=this.value; calc();"></td>
+
+        <td><input type="text" value="${r.opening!==undefined?r.opening:""}"
+          oninput="rows[${i}].opening=this.value; calc();"></td>
+
+        <td><input type="date" value="${r.lastDate||""}"
+          oninput="rows[${i}].lastDate=this.value"></td>
+
+        <td><input type="text" value="${r.delivery!==undefined?r.delivery:""}"
+          oninput="rows[${i}].delivery=this.value; calc();"></td>
+
+        <td><input type="text" value="${format(r.totalDelivery)}"
+          oninput="rows[${i}].baseTotalDelivery=this.value; rows[${i}].totalDelivery=this.value; calc();"></td>
+
+        <td><input type="text" value="${format(r.closing)}"
+          oninput="rows[${i}].closing=this.value; calcTotalsOnly(); renderChartOnly();"></td>
+
         <td class="noPrint"><button class="del" onclick="removeRow(${i})">Delete</button></td>
       </tr>
     `;
   });
 
   document.getElementById("tbody").innerHTML=html;
-  calc();
+  calcTotalsOnly();
+  renderChartOnly();
 }
 
 function calc(){
+  rows.forEach(r=>calcRow(r));
+  calcTotalsOnly();
+  renderChartOnly();
+
+  document.querySelectorAll("#tbody tr").forEach((tr,i)=>{
+    let totalInput=tr.children[6]?.querySelector("input");
+    let closingInput=tr.children[7]?.querySelector("input");
+    if(totalInput) totalInput.value=format(rows[i].totalDelivery);
+    if(closingInput) closingInput.value=format(rows[i].closing);
+  });
+}
+
+function calcTotalsOnly(){
   let leftPrev=0,leftOpen=0,leftDelivery=0,leftTotalDelivery=0,leftClosing=0;
   let gtPrev=0,gtOpen=0,gtDelivery=0,gtTotalDelivery=0,gtClosing=0;
 
@@ -231,48 +277,12 @@ function calc(){
   document.getElementById("gtDelivery").innerText=format(gtDelivery);
   document.getElementById("gtTotalDelivery").innerText=format(gtTotalDelivery);
   document.getElementById("gtClosing").innerText=format(gtClosing);
-
-  renderChart(gtClosing);
 }
 
-function renderChart(grandTotal){
-  let labels=rows.map(r=>r.year||r.fabric);
-  let data=rows.map(r=>raw(r.closing));
-
-  labels.push("Grand Total");
-  data.push(grandTotal);
-
-  if(chart) chart.destroy();
-
-  chart=new Chart(document.getElementById("stockChart"),{
-    type:"bar",
-    data:{
-      labels:labels,
-      datasets:[{
-        label:"Closing Balance",
-        data:data,
-        borderWidth:1,
-        borderRadius:4
-      }]
-    },
-    options:{
-      responsive:true,
-      plugins:{
-        legend:{display:false},
-        tooltip:{
-          callbacks:{
-            label:function(ctx){
-              return "Closing Balance: "+Number(ctx.raw||0).toLocaleString();
-            }
-          }
-        }
-      },
-      scales:{
-        y:{beginAtZero:true},
-        x:{ticks:{font:{size:10}}}
-      }
-    }
-  });
+function renderChartOnly(){
+  let gtClosing=0;
+  rows.forEach(r=>gtClosing+=raw(r.closing));
+  renderChart(gtClosing);
 }
 
 window.addRow=function(){
@@ -284,6 +294,7 @@ window.addRow=function(){
     lastDate:"",
     delivery:"",
     totalDelivery:"",
+    baseTotalDelivery:"",
     closing:""
   });
   render();
@@ -327,7 +338,10 @@ async function loadData(){
   let snap=await getDocs(q);
 
   if(!snap.empty){
-    rows=snap.docs[0].data().rows||[];
+    rows=(snap.docs[0].data().rows||[]).map(r=>({
+      ...r,
+      baseTotalDelivery:r.baseTotalDelivery!==undefined ? r.baseTotalDelivery : r.totalDelivery
+    }));
     render();
     return;
   }
@@ -343,10 +357,14 @@ async function loadData(){
       lastDate:r.lastDate||"",
       delivery:r.delivery||"",
       totalDelivery:r.totalDelivery||"",
+      baseTotalDelivery:r.totalDelivery||"",
       closing:r.closing
     }));
   }else{
-    rows=JSON.parse(JSON.stringify(defaultRows));
+    rows=JSON.parse(JSON.stringify(defaultRows)).map(r=>({
+      ...r,
+      baseTotalDelivery:r.totalDelivery||""
+    }));
   }
 
   render();
@@ -354,6 +372,8 @@ async function loadData(){
 
 window.saveData=async function(){
   let date=document.getElementById("reportDate").value;
+
+  rows.forEach(r=>calcRow(r));
 
   await deleteDateOnly(date);
 
@@ -371,7 +391,10 @@ window.deleteDateData=async function(){
 
   if(confirm("Delete this date data?")){
     await deleteDateOnly(date);
-    rows=JSON.parse(JSON.stringify(defaultRows));
+    rows=JSON.parse(JSON.stringify(defaultRows)).map(r=>({
+      ...r,
+      baseTotalDelivery:r.totalDelivery||""
+    }));
     render();
     toast("Deleted ✅");
   }
