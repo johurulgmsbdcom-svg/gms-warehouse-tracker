@@ -254,12 +254,25 @@ function calcTotalsOnly(){
   let leftPrev=0,leftReceive=0,leftDelivery=0,leftTotalDelivery=0,leftClosing=0;
   let extraPrev=0,extraReceive=0,extraDelivery=0,extraTotalDelivery=0,extraClosing=0;
 
-  rows.forEach((r,i)=>{
-    let previous=raw(r.previous);
-    let receive=raw(r.opening);
-    let delivery=raw(r.delivery);
-    let totalDelivery=raw(r.totalDelivery);
-    let closing=raw(r.closing);
+  document.querySelectorAll("#tbody tr").forEach((tr,i)=>{
+    let inputs=tr.querySelectorAll("input");
+
+    let previous=raw(inputs[2]?.value);
+    let receive=raw(inputs[3]?.value);
+    let delivery=raw(inputs[5]?.value);
+    let totalDelivery=raw(inputs[6]?.value);
+    let closing=raw(inputs[7]?.value);
+
+    // rows array-o update kore rakhi, save ar dashboard er jonno
+    if(rows[i]){
+      rows[i].previous=inputs[2]?.value || "";
+      rows[i].opening=inputs[3]?.value || "";
+      rows[i].lastDate=inputs[4]?.value || "";
+      rows[i].delivery=inputs[5]?.value || "";
+      rows[i].totalDelivery=inputs[6]?.value || "";
+      rows[i].closing=inputs[7]?.value || "";
+      rows[i].manualClosing=i>=9 ? true : rows[i].manualClosing;
+    }
 
     // Leftover Total = first 9 rows only
     if(i<=8){
@@ -302,7 +315,17 @@ function calcTotalsOnly(){
 
 function renderChartOnly(){
   let gtClosing=0;
-  rows.forEach(r=>gtClosing+=raw(r.closing));
+
+  let trs=document.querySelectorAll("#tbody tr");
+  if(trs.length){
+    trs.forEach(tr=>{
+      let inputs=tr.querySelectorAll("input");
+      gtClosing+=raw(inputs[7]?.value);
+    });
+  }else{
+    rows.forEach(r=>gtClosing+=raw(r.closing));
+  }
+
   renderChart(gtClosing);
 }
 
@@ -478,6 +501,14 @@ window.exportExcel=function(){
 };
 
 document.getElementById("reportDate").addEventListener("change",loadData);
+
+
+// Extra safety: table er je kono number edit korlei total update
+document.addEventListener("input",function(e){
+  if(!e.target.closest("#tbody")) return;
+  calcTotalsOnly();
+  renderChartOnly();
+});
 
 // Enter = nicher same column box, Tab = samner box
 document.addEventListener("keydown",function(e){
