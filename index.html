@@ -75,7 +75,7 @@ body.light .creditFooter{background:rgba(255,255,255,.96)}.creditItem{display:fl
   <button onclick="openPage('reports',this)">📑 Reports</button>
   <button id="needleNav" onclick="openPage('needle',this)">🪡 Needle</button>
   <button id="adminNav" onclick="location.href='admin.html'">👑 Admin</button>
-  <button onclick="location.href='manpower.html'">👨‍🏭 Manpower</button>
+  <button id="manpowerNav" onclick="location.href='manpower.html'">👨‍🏭 Manpower</button>
   <button onclick="location.href='notice.html'">📢 Notice</button>
   <button onclick="location.href='online-users.html'">🟢 Online</button>
   <button onclick="location.href='audit-history.html'">📜 Audit</button>
@@ -184,6 +184,7 @@ if(!user){window.location.href="login.html";}
 const userRole=user.role||"user";
 const userMCDs=Array.isArray(user.mcdAccess)?user.mcdAccess:(user.mcd?[user.mcd]:[]);
 const needleAccess=user.needleAccess||false;
+const manpowerAccess=user.manpowerAccess||false;
 
 const ALL_MCD=["GREY FABRIC MCD","SHIPMENT MCD","BILLING SECTION","OUTER WEAR MCD","YARN MCD","PRINTING MCD","JHUT MCD","GENERAL MCD","ACCESSORIES MCD","LEFTOVER MCD","FINISH FABRIC MCD","YARN DYEING MCD","CHEMICAL MCD","GENERAL TECHNICAL MCD"];
 const FLOOR_OPENING={"Kadom R":618,"Kadom N":443,"Poddo R":1889,"Poddo N":401,"Shapla R":1171,"Shapla N":573,"Sample R":1138,"Sample N":251,"EMBROIDERY R":1011,"EMBROIDERY N":287,"Belly R":796,"Belly N":335};
@@ -198,9 +199,11 @@ function isNeedleAllowed(){return userRole==="admin"||userRole==="full"||needleA
 function isAccessoriesAllowed(){return userRole==="admin"||userRole==="full"||userMCDs.includes("ACCESSORIES MCD");}
 function isGreyAllowed(){return userRole==="admin"||userRole==="full"||userMCDs.includes("GREY FABRIC MCD");}
 function isBillingAllowed(){return userRole==="admin"||userRole==="full"||userMCDs.includes("BILLING SECTION");}
+function isManpowerAllowed(){return userRole==="admin"||userRole==="full"||manpowerAccess===true;}
 
 function setupRoleUI(){
   if(userRole!=="admin")document.getElementById("adminNav").style.display="none";
+  if(!isManpowerAllowed())document.getElementById("manpowerNav").style.display="none";
   if(!isNeedleAllowed()){document.getElementById("needleNav").style.display="none";document.getElementById("needleSummary").style.display="none";document.getElementById("needleChartBox").style.display="none";document.getElementById("needleIssueChartBox").style.display="none";}
   if(!isAccessoriesAllowed()){document.getElementById("accessoriesSummary").style.display="none";document.getElementById("accessoriesChartBox").style.display="none";}
   if(!isGreyAllowed())document.getElementById("greyChartBox").style.display="none";
@@ -566,8 +569,10 @@ async function loadDashboardStock(){
     let allowed=allowedMCDList();
 
     let totalManpower=0,totalSalary=0;
-    if(userRole==="admin"||userRole==="full"){totalManpower=manpowerData.totalCount;totalSalary=manpowerData.totalSalary;}
-    else allowed.forEach(m=>{totalManpower+=manpower[m]?.count||0;totalSalary+=manpower[m]?.salary||0;});
+    if(isManpowerAllowed()){
+      if(userRole==="admin"||userRole==="full"){totalManpower=manpowerData.totalCount;totalSalary=manpowerData.totalSalary;}
+      else allowed.forEach(m=>{totalManpower+=manpower[m]?.count||0;totalSalary+=manpower[m]?.salary||0;});
+    }
 
     document.getElementById("kpiManpower").innerText=fmt(totalManpower);
     document.getElementById("kpiSalary").innerText=fmt(totalSalary);
@@ -596,13 +601,13 @@ async function loadDashboardStock(){
       if(!allowed.includes(mcd))return;
       let mp=manpower[mcd]||{count:0,salary:0};
 
-      if(mcd==="ACCESSORIES MCD")html+=`<div class="mcdBox"><h3>📦 ACCESSORIES MCD</h3><div class="miniRow"><span>📦 Accessories With Sample</span><span class="miniValue">${fmt(accessories)}</span></div><div class="miniRow"><span>🧵 Sewing Thread</span><span class="miniValue">${fmt(sewing)}</span></div><div class="miniRow"><span>📏 Twill Tape</span><span class="miniValue">${fmt(twill)}</span></div><div class="miniRow"><span>🧾 Inventory Report</span><span class="miniValue">LIVE</span></div><div class="miniRow"><span>🚚 Gate Plan</span><span class="miniValue">${gate.todayGate}/${gate.totalGate}</span></div><div class="miniRow"><span>👨‍🏭 Manpower</span><span class="miniValue">${fmt(mp.count)}</span></div><div class="miniRow"><span>💰 Salary</span><span class="miniValue">${fmt(mp.salary)}</span></div><div class="miniChart"><div class="miniFill"></div></div></div>`;
+      if(mcd==="ACCESSORIES MCD")html+=`<div class="mcdBox"><h3>📦 ACCESSORIES MCD</h3><div class="miniRow"><span>📦 Accessories With Sample</span><span class="miniValue">${fmt(accessories)}</span></div><div class="miniRow"><span>🧵 Sewing Thread</span><span class="miniValue">${fmt(sewing)}</span></div><div class="miniRow"><span>📏 Twill Tape</span><span class="miniValue">${fmt(twill)}</span></div><div class="miniRow"><span>🧾 Inventory Report</span><span class="miniValue">LIVE</span></div><div class="miniRow"><span>🚚 Gate Plan</span><span class="miniValue">${gate.todayGate}/${gate.totalGate}</span></div>${isManpowerAllowed()?`<div class="miniRow"><span>👨‍🏭 Manpower</span><span class="miniValue">${fmt(mp.count)}</span></div><div class="miniRow"><span>💰 Salary</span><span class="miniValue">${fmt(mp.salary)}</span></div>`:""}<div class="miniChart"><div class="miniFill"></div></div></div>`;
 
-      else if(mcd==="GREY FABRIC MCD")html+=`<div class="mcdBox"><h3>🏭 GREY FABRIC MCD</h3><div class="miniRow"><span>📦 Today Closing Balance</span><span class="miniValue">${fmt(grey.total)}</span></div><div class="miniRow"><span>📊 Closing Chart</span><span class="miniValue">LIVE</span></div><div class="miniRow"><span>📅 Monthly Report</span><span class="miniValue">LIVE</span></div><div class="miniRow"><span>👨‍🏭 Manpower</span><span class="miniValue">${fmt(mp.count)}</span></div><div class="miniRow"><span>💰 Salary</span><span class="miniValue">${fmt(mp.salary)}</span></div><div class="miniChart"><div class="miniFill" style="width:65%"></div></div></div>`;
+      else if(mcd==="GREY FABRIC MCD")html+=`<div class="mcdBox"><h3>🏭 GREY FABRIC MCD</h3><div class="miniRow"><span>📦 Today Closing Balance</span><span class="miniValue">${fmt(grey.total)}</span></div><div class="miniRow"><span>📊 Closing Chart</span><span class="miniValue">LIVE</span></div><div class="miniRow"><span>📅 Monthly Report</span><span class="miniValue">LIVE</span></div>${isManpowerAllowed()?`<div class="miniRow"><span>👨‍🏭 Manpower</span><span class="miniValue">${fmt(mp.count)}</span></div><div class="miniRow"><span>💰 Salary</span><span class="miniValue">${fmt(mp.salary)}</span></div>`:""}<div class="miniChart"><div class="miniFill" style="width:65%"></div></div></div>`;
 
       else if(mcd==="BILLING SECTION")html+=`<div class="mcdBox"><h3>👨‍💼 BILLING SECTION</h3><div class="miniRow"><span>👨‍🏭 Total Manpower</span><span class="miniValue">${fmt(billing.total)}</span></div><div class="miniRow"><span>🏖 Leave</span><span class="miniValue">${fmt(billing.leave)}</span></div><div class="miniRow"><span>❌ Absent</span><span class="miniValue">${fmt(billing.absent)}</span></div><div class="miniRow"><span>✅ Today Present</span><span class="miniValue">${fmt(billing.present)}</span></div><div class="miniChart"><div class="miniFill" style="width:55%"></div></div></div>`;
 
-      else html+=`<div class="mcdBox"><h3>📂 ${mcd}</h3><div class="miniRow"><span>👨‍🏭 Manpower</span><span class="miniValue">${fmt(mp.count)}</span></div><div class="miniRow"><span>💰 Salary</span><span class="miniValue">${fmt(mp.salary)}</span></div><div class="miniRow"><span>📊 Stock / Report</span><span class="miniValue">Pending</span></div><div class="miniChart"><div class="miniFill" style="width:35%"></div></div></div>`;
+      else html+=`<div class="mcdBox"><h3>📂 ${mcd}</h3>${isManpowerAllowed()?`<div class="miniRow"><span>👨‍🏭 Manpower</span><span class="miniValue">${fmt(mp.count)}</span></div><div class="miniRow"><span>💰 Salary</span><span class="miniValue">${fmt(mp.salary)}</span></div>`:""}<div class="miniRow"><span>📊 Stock / Report</span><span class="miniValue">Pending</span></div><div class="miniChart"><div class="miniFill" style="width:35%"></div></div></div>`;
     });
 
     document.getElementById("mcdDashboard").innerHTML=html||"<div class='mcdBox'><h3>❌ No Access</h3></div>";
