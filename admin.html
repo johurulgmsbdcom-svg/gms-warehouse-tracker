@@ -49,7 +49,7 @@ th{background:var(--card2)}
     <img src="logo.png" onerror="this.style.display='none'">
     <div>
       <div class="logo">👑 GMS ADMIN PANEL</div>
-      <div class="sub">Add • Edit • Delete • MCD Permission • Needle Access</div>
+      <div class="sub">Add • Edit • Delete • MCD Permission • Needle Access • Manpower Access</div>
     </div>
   </div>
 
@@ -90,6 +90,11 @@ th{background:var(--card2)}
         <option value="yes">Needle Access: Yes</option>
       </select>
 
+      <select id="manpowerAccess">
+        <option value="no">Manpower Access: No</option>
+        <option value="yes">Manpower Access: Yes</option>
+      </select>
+
       <button class="btn green" onclick="saveUser()">💾 Save User</button>
     </div>
 
@@ -111,6 +116,7 @@ th{background:var(--card2)}
           <th>Role</th>
           <th>MCD Access</th>
           <th>Needle</th>
+          <th>Manpower</th>
           <th>Action</th>
         </tr>
       </thead>
@@ -217,6 +223,7 @@ window.clearForm=function(){
   document.getElementById("password").value="";
   document.getElementById("role").value="user";
   document.getElementById("needleAccess").value="no";
+  document.getElementById("manpowerAccess").value="no";
   renderMcdChecks([]);
 };
 
@@ -228,6 +235,7 @@ window.saveUser=async function(){
   let role=document.getElementById("role").value;
   let mcdAccess=getSelectedMCD();
   let needleAccess=document.getElementById("needleAccess").value==="yes";
+  let manpowerAccess=document.getElementById("manpowerAccess").value==="yes";
 
   if(!name || !email || !password){
     alert("Name, Email, Password lagbe");
@@ -241,6 +249,7 @@ window.saveUser=async function(){
     role:role,
     mcdAccess:mcdAccess,
     needleAccess:needleAccess,
+    manpowerAccess:manpowerAccess,
     updatedAt:new Date().toISOString()
   };
 
@@ -270,6 +279,7 @@ window.editUser=function(id){
   document.getElementById("password").value=u.password || "";
   document.getElementById("role").value=u.role || "user";
   document.getElementById("needleAccess").value=u.needleAccess ? "yes" : "no";
+  document.getElementById("manpowerAccess").value=u.manpowerAccess ? "yes" : "no";
 
   let selected = [];
 
@@ -324,6 +334,7 @@ async function loadUsers(){
         <td class="${roleClass}">${u.role || ""}</td>
         <td>${mcdText}</td>
         <td>${u.needleAccess ? "✅ Yes" : "❌ No"}</td>
+        <td>${u.manpowerAccess ? "✅ Yes" : "❌ No"}</td>
         <td>
           <button class="btn orange" onclick="editUser('${d.id}')">✏️ Edit</button>
           <button class="btn red" onclick="deleteUser('${d.id}')">🗑 Delete</button>
