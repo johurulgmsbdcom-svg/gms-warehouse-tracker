@@ -1,417 +1,197 @@
 <!DOCTYPE html>
 <html>
 <head>
-<title>Gate Plan Entry</title>
-<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<meta charset="UTF-8">
+<title>Grey Fabric Gate Plan</title>
 
 <style>
-body{margin:0;background:#07111f;color:white;font-family:Arial,sans-serif}
-.header{text-align:center;padding:10px}
-.header h2,.header h3,.header h4{margin:3px}
-.controls{text-align:center;margin:10px}
-button{padding:10px 14px;border:0;border-radius:8px;color:white;font-weight:bold;margin:4px;cursor:pointer}
-.add{background:#f59e0b}.save{background:#16a34a}.report{background:#2563eb}.home{background:#0f766e}.del{background:#dc2626}.print{background:#7c3aed}
-input,select{font-size:15px;padding:7px;border-radius:6px;border:1px solid #999}
-.box{width:96%;margin:10px auto;background:white;color:black;border:1px solid #000}
-.topLine{text-align:center;font-weight:bold;border-bottom:1px solid #000;padding:4px;font-size:18px}
-.meta{display:grid;grid-template-columns:repeat(3,1fr);border-bottom:1px solid #000}
-.meta div{border-right:1px solid #000;padding:6px;text-align:center;font-weight:bold}
-.tableWrap{overflow-x:auto;width:100%}
-table{min-width:1350px;width:100%;border-collapse:collapse;background:white;color:black;font-size:12px}
-th,td{border:1px solid #000;padding:5px;text-align:center}
-td input{width:100%;box-sizing:border-box;border:0;outline:none;text-align:center;font-size:14px}
-.totalRow{font-weight:bold;background:#f3f4f6}
-.sign{display:grid;grid-template-columns:repeat(8,1fr);gap:0;margin-top:80px}
-.sign div{text-align:center;font-weight:bold;border-top:1px solid #000;padding:6px;font-size:12px}
-.toast{position:fixed;right:15px;bottom:15px;background:#22c55e;color:white;padding:12px 18px;border-radius:10px;font-weight:bold;display:none}
-@page{size:A4 landscape;margin:6mm}
+body{
+    font-family:Arial,sans-serif;
+    margin:0;
+    padding:0;
+    background:#fff;
+    color:#000;
+}
+
+.wrapper{
+    width:96%;
+    margin:auto;
+    padding-top:10px;
+}
+
+.header{
+    text-align:center;
+    line-height:1.3;
+}
+
+.header h2{
+    margin:0;
+    font-size:32px;
+    font-weight:900;
+}
+
+.header h3{
+    margin:2px 0;
+    font-size:20px;
+    font-weight:700;
+}
+
+.header h1{
+    margin:4px 0;
+    font-size:42px;
+    font-weight:900;
+    letter-spacing:1px;
+}
+
+.reportTitle{
+    text-align:center;
+    margin-top:10px;
+    font-size:28px;
+    font-weight:800;
+}
+
+table{
+    width:100%;
+    border-collapse:collapse;
+    margin-top:15px;
+}
+
+th,td{
+    border:2px solid #000;
+    padding:12px 10px;
+    text-align:center;
+    font-size:18px;
+    font-weight:700;
+}
+
+thead th{
+    background:#f1f1f1;
+}
+
+.totalRow td{
+    font-size:22px;
+    font-weight:900;
+    background:#f5f5f5;
+}
+
+.signArea{
+    margin-top:120px;
+    display:grid;
+    grid-template-columns:repeat(6,1fr);
+    gap:40px;
+}
+
+.signBox{
+    text-align:center;
+    font-size:18px;
+    font-weight:700;
+}
+
+.signLine{
+    border-top:2px solid #000;
+    margin-bottom:8px;
+    height:1px;
+}
+
 @media print{
-  body{background:white;color:black}
-  .controls,.noPrint{display:none!important}
-  .box{width:100%;margin:0}
-  table{min-width:0;font-size:9px}
-  th,td{padding:2px}
+
+    body{
+        zoom:95%;
+    }
+
+    .noPrint{
+        display:none;
+    }
+
+    @page{
+        size:A4 landscape;
+        margin:10mm;
+    }
 }
 </style>
 </head>
 
 <body>
 
-<div class="header">
-  <h2>GMS Textiles Ltd.</h2>
-  <h4>Tansutrapur, Kaliakair, Gazipur.</h4>
-  <h4>Daily Goods Delivery Plan</h4>
-  <h3 id="mcdTitle">ACCESSORIES MCD</h3>
-</div>
+<div class="wrapper">
 
-<div class="controls noPrint">
-  Date: <input type="date" id="planDate">
-  Time: <input type="time" id="planTime">
-  Gate Pass No: <input id="gatePassNo" readonly style="width:145px">
+    <div class="header">
+        <h2>GMS TEXTILES LTD.</h2>
+        <h3>Tansutrapur, Kaliakoir, Gazipur</h3>
+        <h1>Grey Fabric-MCD</h1>
+    </div>
 
-  <br>
+    <div class="reportTitle">
+        Daily GMS Textiles to GMS Composite Delivery Status
+    </div>
 
-  Company:
-  <select id="companyName" onchange="updateHeader()">
-    <option>GMS Textiles Ltd.</option>
-    <option>GMS Composite Knitting Ind Ltd.</option>
-  </select>
-
-  MCD:
-  <select id="mcdName" onchange="updateHeader()">
-    <option>ACCESSORIES MCD</option>
-    <option>GREY FABRIC MCD</option>
-    <option>BILLING SECTION</option>
-    <option>NEEDLE MCD</option>
-    <option>SHIPMENT MCD</option>
-    <option>OUTER WEAR MCD</option>
-    <option>YARN MCD</option>
-    <option>PRINTING MCD</option>
-    <option>JHUT MCD</option>
-    <option>GENERAL MCD</option>
-    <option>LEFTOVER MCD</option>
-    <option>FINISH FABRIC MCD</option>
-    <option>YARN DYEING MCD</option>
-    <option>CHEMICAL MCD</option>
-  </select>
-
-  To Company:
-  <select id="toType" onchange="updateHeader()">
-    <option>GMS Textiles Ltd.</option>
-    <option>GMS Composite Knitting Ind Ltd.</option>
-    <option>Other's Factory</option>
-  </select>
-
-  <br>
-
-  <button class="add" onclick="addRow()">➕ Add Row</button>
-  <button class="save" onclick="saveGatePlan()">💾 Save Local</button>
-  <button class="print" onclick="window.print()">🖨 PDF / Print</button>
-  <button class="report" onclick="location.href='gate-plan-report.html'">📑 Report</button>
-  <button class="home" onclick="location.href='index.html'">🏠 Home</button>
-</div>
-
-<datalist id="buyerList"></datalist>
-<datalist id="srList"></datalist>
-<datalist id="styleList"></datalist>
-<datalist id="orderList"></datalist>
-<datalist id="itemList"></datalist>
-<datalist id="colorList"></datalist>
-<datalist id="unitList"></datalist>
-<datalist id="partyList"></datalist>
-<datalist id="vehicleList"></datalist>
-<datalist id="remarksList"></datalist>
-
-<div class="box">
-
-  <div class="topLine" id="companyLine">GMS Textiles Ltd. To GMS Textiles Ltd.</div>
-
-  <div class="meta">
-    <div>Gate Pass No: <span id="showGatePass"></span></div>
-    <div>Date: <span id="showDate"></span></div>
-    <div>Time: <span id="showTime"></span></div>
-  </div>
-
-  <div class="tableWrap">
     <table>
-      <thead>
-        <tr>
-          <th>SL No</th>
-          <th>Buyer Name</th>
-          <th>SR/GT No</th>
-          <th>Style Name</th>
-          <th>Order No/PO No</th>
-          <th>Name of Item</th>
-          <th>Color</th>
-          <th>Unit</th>
-          <th>Delivery Qty</th>
-          <th>CTN/PKG Qty</th>
-          <th>To Party Name</th>
-          <th>Vehicle No</th>
-          <th>Remarks</th>
-          <th class="noPrint">Action</th>
-        </tr>
-      </thead>
-      <tbody id="gateBody"></tbody>
-      <tfoot>
-        <tr class="totalRow">
-          <td colspan="8">Grand Total</td>
-          <td id="deliveryTotal">0</td>
-          <td id="ctnTotal">0</td>
-          <td colspan="3"></td>
-          <td class="noPrint"></td>
-        </tr>
-      </tfoot>
+
+        <thead>
+            <tr>
+                <th>Date</th>
+                <th>Company Name</th>
+                <th>Delivery Reason</th>
+                <th>Total Qty</th>
+                <th>Remarks</th>
+            </tr>
+        </thead>
+
+        <tbody>
+
+            <tr>
+                <td>09-05-2026</td>
+                <td>GMS Composite Knitting Ind. Ltd.</td>
+                <td>For Dyeing</td>
+                <td>24000.0</td>
+                <td></td>
+            </tr>
+
+            <tr class="totalRow">
+                <td colspan="3">Total</td>
+                <td>24000.0</td>
+                <td></td>
+            </tr>
+
+        </tbody>
+
     </table>
-  </div>
 
-  <div class="sign">
-    <div>Prepared By<br><span id="signPrepared"></span></div>
-    <div>Security Dept.</div>
-    <div>Checked By<br>Sr. Officer ( MCD )</div>
-    <div>Asst. Manager<br>(MCD)</div>
-    <div>AGM (MCD)</div>
-    <div>Verify By<br>Merchant Dept.</div>
-    <div>Verify By<br>HR & Admin Dept.</div>
-    <div>Approved By</div>
-  </div>
+    <div class="signArea">
+
+        <div class="signBox">
+            <div class="signLine"></div>
+            Prepared By
+        </div>
+
+        <div class="signBox">
+            <div class="signLine"></div>
+            Security Dept.
+        </div>
+
+        <div class="signBox">
+            <div class="signLine"></div>
+            Checked By Officer - MCD
+        </div>
+
+        <div class="signBox">
+            <div class="signLine"></div>
+            Asst. Manager - MCD
+        </div>
+
+        <div class="signBox">
+            <div class="signLine"></div>
+            Knitting Manager/DGM
+        </div>
+
+        <div class="signBox">
+            <div class="signLine"></div>
+            Dyeing Manager/DGM
+        </div>
+
+    </div>
+
 </div>
-
-<div id="toast" class="toast">Saved ✅</div>
-
-<script>
-const user = JSON.parse(localStorage.getItem("gmsUser") || "null");
-if(!user){ location.href="login.html"; }
-
-function today(){ return new Date().toISOString().slice(0,10); }
-
-function nowTime(){
-  let d=new Date();
-  return String(d.getHours()).padStart(2,"0")+":"+String(d.getMinutes()).padStart(2,"0");
-}
-
-function toast(msg){
-  let t=document.getElementById("toast");
-  t.innerText=msg;
-  t.style.display="block";
-  setTimeout(()=>t.style.display="none",1600);
-}
-
-function n(v){ return Number(v)||0; }
-
-function getSavedPlans(){
-  return JSON.parse(localStorage.getItem("gatePlans") || "[]");
-}
-
-function setSavedPlans(data){
-  localStorage.setItem("gatePlans",JSON.stringify(data));
-}
-
-function nextGatePassNo(){
-  let plans=getSavedPlans();
-  let year=new Date().getFullYear();
-  return "GP-"+year+"-"+String(plans.length+1).padStart(4,"0");
-}
-
-document.getElementById("planDate").value=today();
-document.getElementById("planTime").value=nowTime();
-document.getElementById("gatePassNo").value=nextGatePassNo();
-
-document.getElementById("signPrepared").innerText=user.name||user.email||"User";
-
-function updateHeader(){
-  let company=document.getElementById("companyName").value;
-  let toCompany=document.getElementById("toType").value;
-  let mcd=document.getElementById("mcdName").value;
-
-  document.getElementById("companyLine").innerText=company+" To "+toCompany;
-  document.getElementById("showDate").innerText=document.getElementById("planDate").value;
-  document.getElementById("showTime").innerText=document.getElementById("planTime").value;
-  document.getElementById("showGatePass").innerText=document.getElementById("gatePassNo").value;
-  document.getElementById("mcdTitle").innerText=mcd;
-
-  document.querySelectorAll(".toParty").forEach(x=>{
-    if(toCompany==="Other's Factory"){
-      if(x.value==="GMS Textiles Ltd." || x.value==="GMS Composite Knitting Ind Ltd."){
-        x.value="";
-      }
-    }else{
-      if(!x.value || x.value==="GMS Textiles Ltd." || x.value==="GMS Composite Knitting Ind Ltd."){
-        x.value=toCompany;
-      }
-    }
-  });
-}
-
-document.getElementById("planDate").addEventListener("change",updateHeader);
-document.getElementById("planTime").addEventListener("change",updateHeader);
-
-function addOption(id,value){
-  if(!value) return;
-  let list=document.getElementById(id);
-  if([...list.children].some(o=>o.value===value)) return;
-  let opt=document.createElement("option");
-  opt.value=value;
-  list.appendChild(opt);
-}
-
-function loadSuggestions(){
-  let plans=getSavedPlans();
-
-  plans.forEach(p=>{
-    (p.rows||[]).forEach(r=>{
-      addOption("buyerList",r.buyerName);
-      addOption("srList",r.srGtNo);
-      addOption("styleList",r.styleName);
-      addOption("orderList",r.orderNo);
-      addOption("itemList",r.itemName);
-      addOption("colorList",r.color);
-      addOption("unitList",r.unit);
-      addOption("partyList",r.toParty);
-      addOption("vehicleList",r.vehicleNo);
-      addOption("remarksList",r.remarks);
-    });
-  });
-}
-
-window.addRow=function(){
-  let tbody=document.getElementById("gateBody");
-  let tr=document.createElement("tr");
-  let sl=tbody.children.length+1;
-  let toCompany=document.getElementById("toType").value;
-  let defaultParty=toCompany==="Other's Factory" ? "" : toCompany;
-
-  tr.innerHTML=`
-    <td>${sl}</td>
-    <td><input class="buyerName" list="buyerList"></td>
-    <td><input class="srGtNo" list="srList"></td>
-    <td><input class="styleName" list="styleList"></td>
-    <td><input class="orderNo" list="orderList"></td>
-    <td><input class="itemName" list="itemList"></td>
-    <td><input class="color" list="colorList"></td>
-    <td><input class="unit" list="unitList"></td>
-    <td><input type="number" class="deliveryQty" oninput="calculateTotals()"></td>
-    <td><input type="number" class="ctnQty" oninput="calculateTotals()"></td>
-    <td><input class="toParty" list="partyList" value="${defaultParty}"></td>
-    <td><input class="vehicleNo" list="vehicleList"></td>
-    <td><input class="remarks" list="remarksList"></td>
-    <td class="noPrint"><button class="del" onclick="deleteRow(this)">Delete</button></td>
-  `;
-
-  tbody.appendChild(tr);
-};
-
-window.deleteRow=function(btn){
-  btn.closest("tr").remove();
-  refreshSl();
-  calculateTotals();
-};
-
-function refreshSl(){
-  [...document.getElementById("gateBody").children].forEach((tr,i)=>{
-    tr.children[0].innerText=i+1;
-  });
-}
-
-function readRows(){
-  let rows=[];
-
-  document.querySelectorAll("#gateBody tr").forEach(tr=>{
-    let row={
-      buyerName:tr.querySelector(".buyerName").value.trim(),
-      srGtNo:tr.querySelector(".srGtNo").value.trim(),
-      styleName:tr.querySelector(".styleName").value.trim(),
-      orderNo:tr.querySelector(".orderNo").value.trim(),
-      itemName:tr.querySelector(".itemName").value.trim(),
-      color:tr.querySelector(".color").value.trim(),
-      unit:tr.querySelector(".unit").value.trim(),
-      deliveryQty:tr.querySelector(".deliveryQty").value.trim(),
-      ctnQty:tr.querySelector(".ctnQty").value.trim(),
-      toParty:tr.querySelector(".toParty").value.trim(),
-      vehicleNo:tr.querySelector(".vehicleNo").value.trim(),
-      remarks:tr.querySelector(".remarks").value.trim()
-    };
-
-    if(Object.values(row).some(v=>String(v).trim())){
-      rows.push(row);
-    }
-  });
-
-  return rows;
-}
-
-window.calculateTotals=function(){
-  let totalDelivery=0,totalCtn=0;
-
-  document.querySelectorAll(".deliveryQty").forEach(x=>totalDelivery+=n(x.value));
-  document.querySelectorAll(".ctnQty").forEach(x=>totalCtn+=n(x.value));
-
-  document.getElementById("deliveryTotal").innerText=totalDelivery;
-  document.getElementById("ctnTotal").innerText=totalCtn;
-};
-
-window.saveGatePlan=function(){
-  let rows=readRows();
-
-  if(rows.length===0){
-    alert("Data nai");
-    return;
-  }
-
-  let plans=getSavedPlans();
-
-  let plan={
-    gatePassNo:document.getElementById("gatePassNo").value,
-    date:document.getElementById("planDate").value,
-    time:document.getElementById("planTime").value,
-    company:document.getElementById("companyName").value,
-    toCompany:document.getElementById("toType").value,
-    mcd:document.getElementById("mcdName").value,
-    preparedBy:user.name||user.email||"User",
-    preparedUserId:user.id||"",
-    rows:rows,
-    status:"Prepared",
-    createdAt:new Date().toISOString()
-  };
-
-  plans.push(plan);
-  setSavedPlans(plans);
-
-  rows.forEach(r=>{
-    addOption("buyerList",r.buyerName);
-    addOption("srList",r.srGtNo);
-    addOption("styleList",r.styleName);
-    addOption("orderList",r.orderNo);
-    addOption("itemList",r.itemName);
-    addOption("colorList",r.color);
-    addOption("unitList",r.unit);
-    addOption("partyList",r.toParty);
-    addOption("vehicleList",r.vehicleNo);
-    addOption("remarksList",r.remarks);
-  });
-
-  document.getElementById("gateBody").innerHTML="";
-  document.getElementById("gatePassNo").value=nextGatePassNo();
-
-  addRow();
-  calculateTotals();
-  updateHeader();
-
-  toast("Gate Plan Saved Local ✅");
-};
-
-document.addEventListener("keydown",function(e){
-  if(e.target.tagName!=="INPUT") return;
-
-  // Tab default: samner box e jabe
-  if(e.key==="Tab") return;
-
-  // Enter: same column er nicher row e jabe
-  if(e.key==="Enter"){
-    e.preventDefault();
-
-    let td=e.target.closest("td");
-    let tr=e.target.closest("tr");
-    if(!td || !tr) return;
-
-    let colIndex=[...tr.children].indexOf(td);
-    let nextTr=tr.nextElementSibling;
-
-    if(nextTr){
-      let nextInput=nextTr.children[colIndex]?.querySelector("input");
-      if(nextInput){
-        nextInput.focus();
-        nextInput.select();
-      }
-    }
-  }
-});
-
-loadSuggestions();
-updateHeader();
-addRow();
-calculateTotals();
-</script>
 
 </body>
 </html>
