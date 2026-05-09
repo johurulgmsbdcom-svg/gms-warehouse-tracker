@@ -277,6 +277,29 @@ body.light .creditFooter{background:rgba(255,255,255,.96)}.creditItem{display:fl
   #backup .backupActionGrid{grid-template-columns:1fr}
 }
 
+
+/* ===== BACKUP PAGE PAGE-SWITCH FIX ===== */
+.page{display:none!important;}
+.page.activePage{display:block!important;}
+#backup .backupOnlyBox,
+#backup .statusBox{
+  max-width:850px;
+  margin:14px auto;
+}
+#backup .backupActionGrid{
+  max-width:850px;
+  margin:14px auto;
+  grid-template-columns:repeat(4,1fr);
+}
+#backup .mcdDashboard,
+#backup .mcdBox,
+#backup .chartBox{
+  display:none!important;
+}
+@media(max-width:900px){
+  #backup .backupActionGrid{grid-template-columns:1fr}
+}
+
 </style>
 </head>
 
@@ -388,6 +411,7 @@ body.light .creditFooter{background:rgba(255,255,255,.96)}.creditItem{display:fl
     <div class="card" onclick="location.href='month_wise_needle_stock_report_carry_fixed.html'">📋 Month Wise Floor Stock Report</div>
   </div>
 </div>
+
 
 
 
@@ -507,36 +531,18 @@ function setupRoleUI(){
 }
 
 window.logout=function(){localStorage.removeItem("gmsUser");window.location.href="login.html";}
-window.openPage=function(id,btn){document.querySelectorAll(".page").forEach(p=>p.classList.remove("activePage"));document.getElementById(id).classList.add("activePage");document.querySelectorAll(".nav button").forEach(b=>b.classList.remove("active"));btn.classList.add("active");if(id==="home")loadDashboardStock();}
-window.toggleTheme=function(){document.body.classList.toggle("light");localStorage.setItem("theme",document.body.classList.contains("light")?"light":"dark");setTimeout(loadDashboardStock,100);}
-if(localStorage.getItem("theme")==="light")document.body.classList.add("light");
-
-window.loadEntry=function(){
-  let mcd=document.getElementById("entryMcd").value,box=document.getElementById("entryBox");
-  if(!canAccess(mcd)){box.innerHTML=`<div class="card">❌ Access Denied</div>`;return;}
-
-  if(mcd==="ACCESSORIES MCD")box.innerHTML=`
-    <div class="card" onclick="location.href='sewing-thread.html'">🧵 Sewing Thread</div>
-    <div class="card" onclick="location.href='twill-tape.html'">📏 Twill Tape</div>
-    <div class="card" onclick="location.href='accessories.html'">📦 Accessories With Sample</div>
-    <div class="card" onclick="location.href='accessories-inventory.html'">🧾 Inventory Posting</div>
-    <div class="card" onclick="location.href='billing-manpower-report.html'">👨‍💼 Billing Manpower Report</div>
-    <div class="card" onclick="location.href='gate-plan.html'">🚚 Gate Plan Entry</div>`;
-
-  else if(mcd==="GREY FABRIC MCD")box.innerHTML=`
-    <div class="card" onclick="location.href='grey-fabric.html'">🏭 Grey Fabric Daily</div>
-    <div class="card" onclick="location.href='grey-fabric-monthly.html'">📅 Grey Fabric Monthly</div>
-    <div class="card" onclick="location.href='billing-manpower-report.html'">👨‍💼 Billing Manpower Report</div>
-    <div class="card" onclick="location.href='gate-plan.html'">🚚 Gate Plan Entry</div>`;
-
-  else if(mcd==="BILLING SECTION")box.innerHTML=`
-    <div class="card" onclick="location.href='billing-manpower-report.html'">👨‍💼 Billing Manpower Report</div>
-    <div class="card" onclick="location.href='gate-plan.html'">🚚 Gate Plan Entry</div>`;
-  else box.innerHTML=`
-    <div class="card">📝 ${mcd} Daily Entry</div>
-    <div class="card" onclick="location.href='billing-manpower-report.html'">👨‍💼 Billing Manpower Report</div>
-    <div class="card" onclick="location.href='gate-plan.html'">🚚 Gate Plan Entry</div>`;
-};
+window.openPage=function(id,btn){
+  document.querySelectorAll(".page").forEach(p=>p.classList.remove("activePage"));
+  let page=document.getElementById(id);
+  if(page) page.classList.add("activePage");
+  document.querySelectorAll(".nav button").forEach(b=>b.classList.remove("active"));
+  if(btn) btn.classList.add("active");
+  if(id==="home") loadDashboardStock();
+  if(id==="backup"){
+    loadDashboardStock();
+    renderBackupLog();
+  }
+}
 
 window.loadReport=function(){
   let mcd=document.getElementById("reportMcd").value,box=document.getElementById("reportBox");
