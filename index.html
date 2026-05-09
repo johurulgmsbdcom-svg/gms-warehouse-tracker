@@ -221,6 +221,34 @@ body.light .creditFooter{background:rgba(255,255,255,.96)}.creditItem{display:fl
   }
 }
 
+
+/* ===== FINAL BACKUP PAGE / WARNING / ACTIVITY LOG ===== */
+.backupWarningBanner{
+  background:linear-gradient(90deg,#ef4444,#f59e0b);
+  color:white;
+  text-align:center;
+  padding:10px;
+  font-size:15px;
+  font-weight:1000;
+  letter-spacing:.3px;
+}
+#backup .statusBox{
+  max-width:860px;
+  margin:14px auto;
+}
+#backup .grid{
+  margin-top:14px;
+}
+.logItem{
+  border-bottom:1px solid var(--border);
+  padding:8px 0;
+  font-size:13px;
+  font-weight:800;
+}
+.logItem b{
+  color:var(--green);
+}
+
 </style>
 </head>
 
@@ -239,6 +267,7 @@ body.light .creditFooter{background:rgba(255,255,255,.96)}.creditItem{display:fl
   </div>
 </div>
 
+<div id="backupWarningBanner" class="backupWarningBanner" style="display:none">🔴 BACKUP NEEDED - Firebase usage high. Please go to Backup page.</div>
 <div class="noticeBar"><div class="noticeMove" id="noticeMove">📢 Loading live notice...</div></div>
 
 <div class="nav">
@@ -333,38 +362,39 @@ body.light .creditFooter{background:rgba(255,255,255,.96)}.creditItem{display:fl
 </div>
 
 
+
 <div id="backup" class="page">
   <h2>☁ Backup & Restore Control</h2>
   <div class="dashSub">Only Admin can use this page</div>
 
+  <div class="statusBox">
+    <div class="statusTitle">📌 Firebase Live Usage</div>
 
-    <div class="statusBox">
-      <div class="statusTitle">📌 Firebase Live Usage</div>
+    <div class="statusLine"><span>📖 Reads Today</span><b id="readsToday">0 / 50,000</b></div>
+    <div class="statusLine"><span>✍️ Writes Today</span><b id="writesToday">0 / 20,000</b></div>
+    <div class="statusLine"><span>🗑 Deletes Today</span><b id="deletesToday">0 / 20,000</b></div>
 
-      <div class="statusLine"><span>📖 Reads Today</span><b id="readsToday">0 / 50,000</b></div>
-      <div class="statusLine"><span>✍️ Writes Today</span><b id="writesToday">0 / 20,000</b></div>
-      <div class="statusLine"><span>🗑 Deletes Today</span><b id="deletesToday">0 / 20,000</b></div>
+    <div class="statusLine"><span>💾 Storage Limit</span><b>1 GiB</b></div>
+    <div class="statusLine"><span>📦 Storage Used</span><b id="storageUsed">0 MB</b></div>
+    <div class="statusLine"><span>📊 Usage Percent</span><b id="storagePercent">0%</b></div>
 
-      <div class="statusLine"><span>💾 Storage Limit</span><b>1 GiB</b></div>
-      <div class="statusLine"><span>📦 Storage Used</span><b id="storageUsed">0 MB</b></div>
-      <div class="statusLine"><span>📊 Usage Percent</span><b id="storagePercent">0%</b></div>
+    <div class="statusLine"><span>🔥 Today Entry</span><b id="firebaseToday">0</b></div>
+    <div class="statusLine"><span>🗃 Total Entry</span><b id="firebaseTotal">0</b></div>
+    <div class="statusLine"><span>🚚 Gate Plan Firebase</span><b id="gateLocal">0</b></div>
 
-      <div class="statusLine"><span>🔥 Today Entry</span><b id="firebaseToday">0</b></div>
-      <div class="statusLine"><span>🗃 Total Entry</span><b id="firebaseTotal">0</b></div>
-      <div class="statusLine"><span>🚚 Gate Plan Firebase</span><b id="gateLocal">0</b></div>
+    <div class="statusLine"><span>📁 Backup Months</span><b id="backupMonths">0</b></div>
+    <div class="statusLine"><span>🗓 Active Months</span><b id="activeMonths">0</b></div>
+    <div class="statusLine"><span>☁ Backup Status</span><b id="backupStatus">READY</b></div>
 
-      <div class="statusLine"><span>📁 Backup Months</span><b id="backupMonths">0</b></div>
-      <div class="statusLine"><span>🗓 Active Months</span><b id="activeMonths">0</b></div>
-      <div class="statusLine"><span>☁ Backup Status</span><b id="backupStatus">READY</b></div>
-
-      <div class="progress"><div id="limitBar" class="progressFill"></div></div>
-      <div id="limitSignal" class="statusSignal safe">🟢 SAFE</div>
-    </div>
+    <div class="progress"><div id="limitBar" class="progressFill"></div></div>
+    <div id="limitSignal" class="statusSignal safe">🟢 SAFE</div>
+  </div>
 
   <div class="grid">
     <div class="card" onclick="backupAllData()">☁ Backup Now</div>
     <div class="card" onclick="document.getElementById('restoreFile').click()">📥 Restore Backup</div>
     <div class="card" onclick="clearOldData()">🧹 Clear Old Data</div>
+    <div class="card" onclick="removeRestoredMonth()">🗑 Remove Restored Month</div>
   </div>
 
   <input type="file" id="restoreFile" accept=".json" style="display:none" onchange="loadRestoreFile(event)">
@@ -394,7 +424,15 @@ body.light .creditFooter{background:rgba(255,255,255,.96)}.creditItem{display:fl
     <div class="statusLine"><span>800 MB</span><b>Backup Warning</b></div>
     <div class="statusLine"><span>900 MB</span><b>Backup Now</b></div>
   </div>
+
+  <br>
+
+  <div class="statusBox">
+    <div class="statusTitle">📜 Backup Activity Log</div>
+    <div id="backupActivityLog">No activity yet</div>
+  </div>
 </div>
+
 
 <div class="creditFooter">
   <div class="creditItem"><img src="https://i.ibb.co/5hzT1VGk/IMG.jpg"><div class="creditText"><b>Powered by JOHURUL</b><span>System Developer & Dashboard Design</span></div></div>
@@ -668,18 +706,23 @@ function updateLimitBox(firebase,gate){
   let signal=document.getElementById("limitSignal");
   bar.style.width=Math.max(1,pct)+"%";
 
+  let warnBanner=document.getElementById("backupWarningBanner");
+
   if(pct<80){
     signal.className="statusSignal safe";
     signal.innerText="🟢 SAFE";
     bar.style.background="var(--green)";
+    if(warnBanner) warnBanner.style.display="none";
   }else if(pct<90){
     signal.className="statusSignal warn";
     signal.innerText="🟡 BACKUP WARNING";
     bar.style.background="var(--yellow)";
+    if(warnBanner){warnBanner.style.display="block";warnBanner.innerText="🟡 Backup Warning - Storage reached 80%";}
   }else{
     signal.className="statusSignal stop";
     signal.innerText="🔴 BACKUP NOW";
     bar.style.background="var(--red)";
+    if(warnBanner){warnBanner.style.display="block";warnBanner.innerText="🔴 Backup Now - Storage reached 90%";}
   }
 }
 
@@ -923,7 +966,48 @@ setInterval(loadNotices,60000);
 
 
 
-// ===== BACKUP / RESTORE / CLEAR SYSTEM =====
+
+// ===== FINAL BACKUP / RESTORE / CLEAR / LOG SYSTEM =====
+let selectedBackupData = null;
+
+function addBackupLog(type, details){
+  let logs = JSON.parse(localStorage.getItem("backupActivityLogs") || "[]");
+  logs.unshift({
+    type:type,
+    details:details,
+    user:user.name || user.email || "Admin",
+    time:new Date().toLocaleString()
+  });
+  logs = logs.slice(0,20);
+  localStorage.setItem("backupActivityLogs", JSON.stringify(logs));
+  renderBackupLog();
+}
+
+function renderBackupLog(){
+  let box=document.getElementById("backupActivityLog");
+  if(!box) return;
+  let logs=JSON.parse(localStorage.getItem("backupActivityLogs") || "[]");
+  if(logs.length===0){
+    box.innerHTML="No activity yet";
+    return;
+  }
+  box.innerHTML=logs.map(x=>`
+    <div class="logItem">
+      <b>${x.type}</b> - ${x.details}<br>
+      <span>${x.time} • ${x.user}</span>
+    </div>
+  `).join("");
+}
+
+function getRowMonth(row){
+  let dt = row.date || row.postingDate || row.entryDate || (row.createdAt||"").slice(0,10) || "";
+  if(dt && dt.length >= 7) return dt.slice(0,7);
+  return "";
+}
+
+function backupDocId(row){
+  return row._docId || row.id || row.gatePlanNo || row.gatePassNo || (row.date || "no-date") + "-" + Date.now() + "-" + Math.floor(Math.random()*999999);
+}
 
 window.backupAllData = async function(){
 
@@ -966,18 +1050,17 @@ window.backupAllData = async function(){
 
         backup.data[c].push(row);
 
-        let dt = row.date || row.postingDate || "";
+        let month = getRowMonth(row);
 
-        if(dt.length >= 7){
-          let month = dt.slice(0,7);
-          if(!backup.backupMonths.includes(month)){
-            backup.backupMonths.push(month);
-          }
+        if(month && !backup.backupMonths.includes(month)){
+          backup.backupMonths.push(month);
         }
 
       });
 
     }
+
+    backup.backupMonths.sort();
 
     let blob = new Blob(
       [JSON.stringify(backup,null,2)],
@@ -991,6 +1074,9 @@ window.backupAllData = async function(){
 
     localStorage.setItem("backupMonths", backup.backupMonths.length);
     localStorage.setItem("backupStatus", "DONE");
+    localStorage.setItem("lastBackupDate", new Date().toISOString());
+
+    addBackupLog("BACKUP", "Backup downloaded. Months: " + backup.backupMonths.length);
 
     alert("Backup Download Complete");
     loadDashboardStock();
@@ -998,41 +1084,11 @@ window.backupAllData = async function(){
   }catch(e){
 
     console.log(e);
-    alert("Backup Failed");
+    alert("Backup Failed: " + e.message);
 
   }
 
 };
-
-
-
-window.clearOldData = function(){
-
-  if(userRole !== "admin"){
-    alert("Admin only");
-    return;
-  }
-
-  let ok = confirm("Current Month + Previous Month thakbe. Tar ager old data clear korben?");
-  if(!ok) return;
-
-  alert("Old Data Clear system next step e add hobe. Ekhon kono data delete hobe na.");
-
-};
-
-
-// ===== RESTORE BACKUP SYSTEM =====
-let selectedBackupData = null;
-
-function getRowMonth(row){
-  let dt = row.date || row.postingDate || row.entryDate || (row.createdAt||"").slice(0,10) || "";
-  if(dt && dt.length >= 7) return dt.slice(0,7);
-  return "";
-}
-
-function backupDocId(row){
-  return row._docId || row.id || row.gatePlanNo || row.gatePassNo || row.date + "-" + Date.now() + "-" + Math.floor(Math.random()*999999);
-}
 
 window.loadRestoreFile = function(event){
 
@@ -1074,6 +1130,8 @@ window.loadRestoreFile = function(event){
       document.getElementById("restoreMonthSelect").innerHTML =
         months.map(m=>`<option value="${m}">${m}</option>`).join("");
 
+      addBackupLog("RESTORE FILE", "Loaded file: " + file.name + ", months: " + months.length);
+
     }catch(err){
       console.log(err);
       alert("Invalid backup JSON file");
@@ -1111,7 +1169,6 @@ window.restoreSelectedMonth = async function(){
     document.getElementById("restoreStatus").innerText = "RESTORING...";
 
     let total = 0;
-
     const data = selectedBackupData.data || {};
 
     for(let col of Object.keys(data)){
@@ -1137,8 +1194,11 @@ window.restoreSelectedMonth = async function(){
     }
 
     localStorage.setItem("backupStatus","RESTORED " + month);
+    localStorage.setItem("lastRestoredMonth",month);
 
     document.getElementById("restoreStatus").innerText = "RESTORED " + total + " DATA";
+
+    addBackupLog("RESTORE", "Month " + month + " restored. Data: " + total);
 
     alert("Restore Complete: " + total + " data restored for " + month);
 
@@ -1153,6 +1213,183 @@ window.restoreSelectedMonth = async function(){
   }
 
 };
+
+window.clearOldData = async function(){
+
+  if(userRole !== "admin"){
+    alert("Admin only");
+    return;
+  }
+
+  let backupStatus = localStorage.getItem("backupStatus") || "";
+
+  if(backupStatus !== "DONE" && !backupStatus.startsWith("RESTORED")){
+    alert("আগে Backup Now করে JSON download নিন। Backup DONE না হলে data clear হবে না।");
+    return;
+  }
+
+  let now = new Date();
+
+  let currentMonth =
+    now.getFullYear() + "-" + String(now.getMonth()+1).padStart(2,"0");
+
+  let prev = new Date(now.getFullYear(), now.getMonth()-1, 1);
+
+  let previousMonth =
+    prev.getFullYear() + "-" + String(prev.getMonth()+1).padStart(2,"0");
+
+  let ok = confirm(
+    "Clear Old Data?\n\n" +
+    "KEEP:\n" +
+    currentMonth + " (Current Month)\n" +
+    previousMonth + " (Previous Month)\n\n" +
+    "DELETE:\n" +
+    "Older months only\n\n" +
+    "Backup Status: " + backupStatus
+  );
+
+  if(!ok) return;
+
+  const cols = [
+    "greyFabricStock",
+    "accessoriesInventory",
+    "billingManpowerReport",
+    "dailyPosting",
+    "sewingThread",
+    "twillTape",
+    "accessoriesSample",
+    "liveNotices",
+    "needleDailyReport",
+    "gatePlans"
+  ];
+
+  let deleted = 0;
+  let kept = 0;
+  let skipped = 0;
+
+  try{
+
+    for(let c of cols){
+
+      let snap = await getDocs(collection(db,c));
+
+      for(let d of snap.docs){
+
+        let row = d.data();
+
+        let month = getRowMonth(row);
+
+        if(!month){
+          skipped++;
+          continue;
+        }
+
+        if(month === currentMonth || month === previousMonth){
+          kept++;
+          continue;
+        }
+
+        await deleteDoc(doc(db,c,d.id));
+        deleted++;
+
+      }
+
+    }
+
+    localStorage.setItem("backupStatus","OLD DATA CLEARED");
+    localStorage.setItem("lastClearDate",new Date().toISOString());
+    localStorage.setItem("lastDeleteCount",deleted);
+
+    addBackupLog("CLEAR", "Deleted: " + deleted + ", Kept: " + kept + ", Skipped: " + skipped);
+
+    alert(
+      "Clear Complete\n\n" +
+      "Deleted Old Data: " + deleted + "\n" +
+      "Kept Current+Previous: " + kept + "\n" +
+      "Skipped No-Date: " + skipped
+    );
+
+    loadDashboardStock();
+
+  }catch(e){
+
+    console.log(e);
+    alert("Clear Failed: " + e.message);
+
+  }
+
+};
+
+window.removeRestoredMonth = async function(){
+
+  if(userRole !== "admin"){
+    alert("Admin only");
+    return;
+  }
+
+  let month = localStorage.getItem("lastRestoredMonth") || "";
+
+  if(!month){
+    alert("No restored month found.");
+    return;
+  }
+
+  let ok = confirm("Remove restored month data: " + month + " ?");
+  if(!ok) return;
+
+  const cols = [
+    "greyFabricStock",
+    "accessoriesInventory",
+    "billingManpowerReport",
+    "dailyPosting",
+    "sewingThread",
+    "twillTape",
+    "accessoriesSample",
+    "liveNotices",
+    "needleDailyReport",
+    "gatePlans"
+  ];
+
+  let deleted=0;
+
+  try{
+
+    for(let c of cols){
+
+      let snap = await getDocs(collection(db,c));
+
+      for(let d of snap.docs){
+
+        let row=d.data();
+
+        if(row.restoredMonth === month){
+          await deleteDoc(doc(db,c,d.id));
+          deleted++;
+        }
+
+      }
+
+    }
+
+    localStorage.removeItem("lastRestoredMonth");
+    localStorage.setItem("backupStatus","RESTORED MONTH REMOVED");
+
+    addBackupLog("REMOVE RESTORED", "Month " + month + " removed. Data: " + deleted);
+
+    alert("Restored Month Removed: " + deleted + " data");
+
+    loadDashboardStock();
+
+  }catch(e){
+
+    console.log(e);
+    alert("Remove Failed: " + e.message);
+
+  }
+
+};
+
+renderBackupLog();
 
 </script>
 </body>
