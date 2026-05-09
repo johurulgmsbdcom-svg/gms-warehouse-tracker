@@ -151,6 +151,76 @@ body.light .creditFooter{background:rgba(255,255,255,.96)}.creditItem{display:fl
   margin-top:14px;
 }
 
+
+/* ===== BEAUTIFUL ATTENDANCE FULL WIDTH FIX ===== */
+.chartBox.attendanceBox{
+  grid-column:1 / -1;
+  height:auto!important;
+  min-height:360px;
+  display:grid;
+  grid-template-columns:1.15fr .85fr;
+  gap:18px;
+  align-items:center;
+}
+.attChartSide{
+  min-height:310px;
+}
+.attChartSide h3{
+  margin-bottom:8px!important;
+}
+.attChartSide canvas{
+  max-height:260px!important;
+}
+.attendanceInside{
+  margin-top:0!important;
+  display:grid!important;
+  grid-template-columns:1fr 1fr;
+  gap:14px;
+}
+.attBox{
+  min-height:92px;
+  display:flex;
+  flex-direction:column;
+  justify-content:center;
+  background:linear-gradient(135deg,rgba(34,197,94,.08),rgba(37,99,235,.08)),var(--card);
+  border:1px solid var(--border);
+  border-radius:18px;
+  padding:16px;
+  box-shadow:var(--shadow);
+}
+.attBox span{
+  color:var(--muted);
+  font-size:13px;
+  font-weight:1000;
+  text-transform:uppercase;
+  letter-spacing:.45px;
+}
+.attBox b{
+  display:block;
+  color:var(--green);
+  font-size:34px;
+  margin-top:8px;
+  font-weight:1000;
+  text-shadow:0 3px 10px rgba(34,197,94,.25);
+}
+.attBox.present b{color:#22c55e}
+.attBox.leave b{color:#f59e0b}
+.attBox.absent b{color:#ef4444}
+@media(max-width:900px){
+  .chartBox.attendanceBox{
+    grid-template-columns:1fr;
+    min-height:auto;
+  }
+  .attendanceInside{
+    grid-template-columns:1fr 1fr!important;
+  }
+}
+@media(max-width:520px){
+  .attendanceInside{
+    grid-template-columns:1fr!important;
+  }
+}
+
 </style>
 </head>
 
@@ -209,15 +279,18 @@ body.light .creditFooter{background:rgba(255,255,255,.96)}.creditItem{display:fl
     <div class="chartBox" id="greyChartBox"><h3>🏭 Grey Fabric Present Stock Summary</h3><canvas id="greyChart"></canvas><div class="stockList" id="greyTextList"></div></div>
     <div class="chartBox" id="needleIssueChartBox"><h3>🪡 Needle Broken / Missing / Change</h3><canvas id="needleIssueChart"></canvas><div class="stockList" id="needleIssueTextList"></div></div>
     <div class="chartBox attendanceBox" id="billingChartBox">
-      <h3>👨‍💼 Attendance Manpower Chart</h3>
-      <canvas id="billingChart"></canvas>
+      <div class="attChartSide">
+        <h3>👨‍💼 Attendance Manpower Chart</h3>
+        <canvas id="billingChart"></canvas>
+      </div>
 
       <div class="attendanceInside">
-        <div class="attBox"><span>👨‍🏭 Attendance Total</span><b id="attTotal">0</b></div>
-        <div class="attBox"><span>✅ Today Present</span><b id="attPresent">0</b></div>
-        <div class="attBox"><span>🏖 Leave</span><b id="attLeave">0</b></div>
-        <div class="attBox"><span>❌ Absent</span><b id="attAbsent">0</b></div>
+        <div class="attBox total"><span>👨‍🏭 Attendance Total</span><b id="attTotal">0</b></div>
+        <div class="attBox present"><span>✅ Today Present</span><b id="attPresent">0</b></div>
+        <div class="attBox leave"><span>🏖 Leave</span><b id="attLeave">0</b></div>
+        <div class="attBox absent"><span>❌ Absent</span><b id="attAbsent">0</b></div>
       </div>
+    </div>
     </div>
 
 </div>
