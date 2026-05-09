@@ -6,9 +6,9 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
 
 <style>
-:root{--bg:#07111f;--card:#101b2d;--card2:#14233a;--text:#fff;--muted:#9fb0c7;--border:#263855;--blue:#2563eb;--green:#22c55e;--red:#ef4444;--yellow:#f59e0b;--chartText:#eef6ff;--chartGrid:rgba(148,163,184,.22);--shadow:0 14px 34px rgba(0,0,0,.28)}
-body.light{--bg:#eef3f9;--card:#fff;--card2:#f8fafc;--text:#0f172a;--muted:#64748b;--border:#cbd5e1;--chartText:#0f172a;--chartGrid:rgba(15,23,42,.13);--shadow:0 12px 26px rgba(15,23,42,.14)}
-body{margin:0;background:radial-gradient(circle at top left,rgba(37,99,235,.13),transparent 35%),var(--bg);color:var(--text);font-family:Segoe UI,Inter,Arial,sans-serif;padding-bottom:82px;font-weight:650;letter-spacing:.1px}
+:root{--bg:#07111f;--card:#101b2d;--card2:#14233a;--text:#fff;--muted:#9fb0c7;--border:#263855;--blue:#2563eb;--green:#22c55e;--red:#ef4444;--yellow:#f59e0b}
+body.light{--bg:#eef3f9;--card:#fff;--card2:#f8fafc;--text:#0f172a;--muted:#64748b;--border:#cbd5e1}
+body{margin:0;background:var(--bg);color:var(--text);font-family:Segoe UI,Arial,sans-serif;padding-bottom:82px}
 .header{min-height:58px;background:var(--card);border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;padding:8px 18px;gap:10px}
 .logoArea{display:flex;align-items:center;gap:10px}.companyLogo{width:42px;height:42px;object-fit:contain;border-radius:8px}
 .logo{font-size:22px;font-weight:900}.sub{font-size:12px;color:var(--muted)}
@@ -25,11 +25,11 @@ body{margin:0;background:radial-gradient(circle at top left,rgba(37,99,235,.13),
 .chartGrid{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px}
 .mcdDashboard{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
 .grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
-.topCard,.sumBox,.needleSmall,.chartBox,.mcdBox,.card,.statusBox{background:linear-gradient(135deg,var(--card),var(--card2));border:1px solid var(--border);box-shadow:var(--shadow);backdrop-filter:blur(10px)}
-.topCard{border-radius:20px;padding:16px}.topCard .label{color:var(--muted);font-size:12px;font-weight:900;letter-spacing:.35px;text-transform:uppercase}.topCard .num{font-size:27px;color:var(--green);font-weight:1000;margin-top:6px;letter-spacing:.4px;text-shadow:0 2px 8px rgba(34,197,94,.25)}
-.sumBox{border-radius:18px;padding:13px;text-align:center}.sumBox span{display:block;color:var(--muted);font-size:12px;font-weight:900;letter-spacing:.25px}.sumBox b{display:block;color:var(--green);font-size:22px;margin-top:5px;font-weight:1000;text-shadow:0 2px 8px rgba(34,197,94,.18)}
-.needleSmall{border-radius:20px;padding:14px;text-align:center;margin-bottom:14px}.needleSmall span{color:var(--muted);font-weight:900;letter-spacing:.3px}.needleSmall b{display:block;color:var(--green);font-size:28px;margin-top:4px;font-weight:1000;text-shadow:0 2px 8px rgba(34,197,94,.22)}
-.chartBox{height:265px;border-radius:22px;padding:14px;position:relative;overflow:hidden}.chartBox:before{content:"";position:absolute;inset:0;background:linear-gradient(135deg,rgba(37,99,235,.07),rgba(124,58,237,.06));pointer-events:none}.chartBox h3{margin:0 0 8px;font-size:16px;font-weight:1000;letter-spacing:.2px;color:var(--text);position:relative;z-index:1}.chartBox canvas{max-height:202px!important;position:relative;z-index:1}
+.topCard,.sumBox,.needleSmall,.chartBox,.mcdBox,.card,.statusBox{background:linear-gradient(135deg,var(--card),var(--card2));border:1px solid var(--border);box-shadow:0 8px 20px rgba(0,0,0,.18)}
+.topCard{border-radius:18px;padding:15px}.topCard .label{color:var(--muted);font-size:12px;font-weight:900}.topCard .num{font-size:25px;color:var(--green);font-weight:900;margin-top:6px}
+.sumBox{border-radius:14px;padding:12px;text-align:center}.sumBox span{display:block;color:var(--muted);font-size:12px;font-weight:900}.sumBox b{display:block;color:var(--green);font-size:21px;margin-top:5px}
+.needleSmall{border-radius:18px;padding:12px;text-align:center;margin-bottom:14px}.needleSmall span{color:var(--muted);font-weight:900}.needleSmall b{display:block;color:var(--green);font-size:26px;margin-top:4px}
+.chartBox{height:255px;border-radius:18px;padding:12px}.chartBox h3{margin:0 0 6px;font-size:15px}.chartBox canvas{max-height:198px!important}
 .stockList{display:none}.stockLine{display:none}
 
 .statusBox{border-radius:18px;padding:15px}.statusTitle{font-size:18px;font-weight:900;margin-bottom:8px}.statusLine{display:flex;justify-content:space-between;border-bottom:1px solid var(--border);padding:6px 0;font-weight:800}.statusSignal{font-size:28px;font-weight:900;margin-top:10px}.safe{color:var(--green)}.warn{color:var(--yellow)}.stop{color:var(--red)}
@@ -215,7 +215,7 @@ function setupRoleUI(){
 
 window.logout=function(){localStorage.removeItem("gmsUser");window.location.href="login.html";}
 window.openPage=function(id,btn){document.querySelectorAll(".page").forEach(p=>p.classList.remove("activePage"));document.getElementById(id).classList.add("activePage");document.querySelectorAll(".nav button").forEach(b=>b.classList.remove("active"));btn.classList.add("active");if(id==="home")loadDashboardStock();}
-window.toggleTheme=function(){document.body.classList.toggle("light");localStorage.setItem("theme",document.body.classList.contains("light")?"light":"dark");setTimeout(loadDashboardStock,100);}
+window.toggleTheme=function(){document.body.classList.toggle("light");localStorage.setItem("theme",document.body.classList.contains("light")?"light":"dark");}
 if(localStorage.getItem("theme")==="light")document.body.classList.add("light");
 
 window.loadEntry=function(){
@@ -231,10 +231,15 @@ window.loadEntry=function(){
 
   else if(mcd==="GREY FABRIC MCD")box.innerHTML=`
     <div class="card" onclick="location.href='grey-fabric.html'">🏭 Grey Fabric Daily</div>
-    <div class="card" onclick="location.href='grey-fabric-monthly.html'">📅 Grey Fabric Monthly</div>`;
+    <div class="card" onclick="location.href='grey-fabric-monthly.html'">📅 Grey Fabric Monthly</div>
+    <div class="card" onclick="location.href='gate-plan.html'">🚚 Gate Plan Entry</div>`;
 
-  else if(mcd==="BILLING SECTION")box.innerHTML=`<div class="card" onclick="location.href='billing-manpower-report.html'">👨‍💼 Billing Manpower Report</div>`;
-  else box.innerHTML=`<div class="card">📝 ${mcd} Daily Entry</div>`;
+  else if(mcd==="BILLING SECTION")box.innerHTML=`
+    <div class="card" onclick="location.href='billing-manpower-report.html'">👨‍💼 Billing Manpower Report</div>
+    <div class="card" onclick="location.href='gate-plan.html'">🚚 Gate Plan Entry</div>`;
+  else box.innerHTML=`
+    <div class="card">📝 ${mcd} Daily Entry</div>
+    <div class="card" onclick="location.href='gate-plan.html'">🚚 Gate Plan Entry</div>`;
 };
 
 window.loadReport=function(){
@@ -250,10 +255,15 @@ window.loadReport=function(){
 
   else if(mcd==="GREY FABRIC MCD")box.innerHTML=`
     <div class="card" onclick="location.href='grey-fabric.html'">🏭 Grey Fabric Daily Report</div>
-    <div class="card" onclick="location.href='grey-fabric-monthly.html'">📅 Grey Fabric Monthly Report</div>`;
+    <div class="card" onclick="location.href='grey-fabric-monthly.html'">📅 Grey Fabric Monthly Report</div>
+    <div class="card" onclick="location.href='gate-plan-report.html'">🚚 Gate Plan Report</div>`;
 
-  else if(mcd==="BILLING SECTION")box.innerHTML=`<div class="card" onclick="location.href='billing-manpower-report.html'">👨‍💼 Billing Manpower Report</div>`;
-  else box.innerHTML=`<div class="card">📑 ${mcd} Report</div>`;
+  else if(mcd==="BILLING SECTION")box.innerHTML=`
+    <div class="card" onclick="location.href='billing-manpower-report.html'">👨‍💼 Billing Manpower Report</div>
+    <div class="card" onclick="location.href='gate-plan-report.html'">🚚 Gate Plan Report</div>`;
+  else box.innerHTML=`
+    <div class="card">📑 ${mcd} Report</div>
+    <div class="card" onclick="location.href='gate-plan-report.html'">🚚 Gate Plan Report</div>`;
 };
 
 function today(){return new Date().toISOString().slice(0,10);}
@@ -405,44 +415,13 @@ function setStockList(id,items){
   box.innerHTML=items.map(x=>`<div class="stockLine"><span>${x.name}</span><b>${fmt(x.value)}</b></div>`).join("");
 }
 
-
-const chartPalette=[
-  "#38bdf8","#22c55e","#f59e0b","#a855f7","#ef4444","#14b8a6",
-  "#eab308","#6366f1","#ec4899","#84cc16","#06b6d4","#f97316"
-];
-
-function chartColors(count){
-  return Array.from({length:count},(_,i)=>chartPalette[i%chartPalette.length]);
-}
-function chartTextColor(){
-  return getComputedStyle(document.body).getPropertyValue("--chartText").trim() || "#111827";
-}
-function chartGridColor(){
-  return getComputedStyle(document.body).getPropertyValue("--chartGrid").trim() || "rgba(148,163,184,.25)";
-}
-function barOptions(titleText){
-  return{
-    responsive:true,
-    maintainAspectRatio:false,
-    plugins:{
-      legend:{display:false},
-      title:{display:!!titleText,text:titleText,color:chartTextColor(),font:{family:"Segoe UI",size:13,weight:"bold"}},
-      tooltip:{backgroundColor:"rgba(15,23,42,.92)",titleColor:"#fff",bodyColor:"#fff",borderColor:"rgba(255,255,255,.18)",borderWidth:1}
-    },
-    scales:{
-      y:{beginAtZero:true,grid:{color:chartGridColor()},ticks:{color:chartTextColor(),font:{family:"Segoe UI",size:11,weight:"bold"}}},
-      x:{grid:{display:false},ticks:{color:chartTextColor(),font:{family:"Segoe UI",size:10,weight:"bold"}}}
-    }
-  };
-}
-
 const valueLabelPlugin={
   id:"valueLabelPlugin",
   afterDatasetsDraw(chart){
     const {ctx}=chart;
     ctx.save();
-    ctx.font="900 11px Segoe UI";
-    ctx.fillStyle=chartTextColor();
+    ctx.font="bold 10px Arial";
+    ctx.fillStyle=getComputedStyle(document.body).getPropertyValue("--text") || "#111";
     ctx.textAlign="center";
     chart.data.datasets.forEach((dataset,di)=>{
       const meta=chart.getDatasetMeta(di);
@@ -465,9 +444,14 @@ function renderCharts(sewing,accessories,twill,floorStocks,grey,billing,needleIs
       type:"bar",
       data:{
         labels:["Sewing Thread","Accessories Sample","Twill Tape"],
-        datasets:[{label:"Stock",data:[sewing,accessories,twill],backgroundColor:chartColors(3),borderColor:chartColors(3),borderRadius:12,borderWidth:1}]
+        datasets:[{label:"Stock",data:[sewing,accessories,twill],borderRadius:10,borderWidth:1}]
       },
-      options:barOptions("Accessories Stock Summary"),
+      options:{
+        responsive:true,
+        maintainAspectRatio:false,
+        plugins:{legend:{display:false}},
+        scales:{y:{beginAtZero:true},x:{grid:{display:false}}}
+      },
       plugins:[valueLabelPlugin]
     });
   }
@@ -477,16 +461,16 @@ function renderCharts(sewing,accessories,twill,floorStocks,grey,billing,needleIs
     if(needleChart)needleChart.destroy();
     needleChart=new Chart(document.getElementById("needleChart"),{
       type:"bar",
-      data:{labels:Object.keys(floorStocks),datasets:[{label:"Stock",data:Object.values(floorStocks),backgroundColor:chartColors(Object.keys(floorStocks).length),borderColor:chartColors(Object.keys(floorStocks).length),borderRadius:10,borderWidth:1}]},
-      options:barOptions("Needle Floor Wise Stock"),
+      data:{labels:Object.keys(floorStocks),datasets:[{label:"Stock",data:Object.values(floorStocks),borderRadius:8,borderWidth:1}]},
+      options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{y:{beginAtZero:true},x:{ticks:{font:{size:8}},grid:{display:false}}}},
       plugins:[valueLabelPlugin]
     });
 
     if(needleIssueChart)needleIssueChart.destroy();
     needleIssueChart=new Chart(document.getElementById("needleIssueChart"),{
       type:"bar",
-      data:{labels:["Broken","Missing","Change"],datasets:[{label:"Issue",data:[needleIssue.broken,needleIssue.missing,needleIssue.change],backgroundColor:["#ef4444","#f59e0b","#22c55e"],borderColor:["#ef4444","#f59e0b","#22c55e"],borderRadius:10,borderWidth:1}]},
-      options:barOptions("Needle Issue Summary"),
+      data:{labels:["Broken","Missing","Change"],datasets:[{label:"Issue",data:[needleIssue.broken,needleIssue.missing,needleIssue.change],borderRadius:8,borderWidth:1}]},
+      options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{y:{beginAtZero:true}}},
       plugins:[valueLabelPlugin]
     });
   }
@@ -500,8 +484,8 @@ function renderCharts(sewing,accessories,twill,floorStocks,grey,billing,needleIs
         const {ctx}=chart;
         ctx.save();
         ctx.textAlign="center";
-        ctx.fillStyle=chartTextColor();
-        ctx.font="900 11px Segoe UI";
+        ctx.fillStyle="#111";
+        ctx.font="bold 11px Arial";
 
         chart.data.datasets[0].data.forEach((value,index)=>{
           const bar=chart.getDatasetMeta(0).data[index];
@@ -520,13 +504,37 @@ function renderCharts(sewing,accessories,twill,floorStocks,grey,billing,needleIs
         datasets:[{
           label:"Closing Stock",
           data:grey.data.length?grey.data:[0],
-          backgroundColor:chartColors((grey.data.length?grey.data:[0]).length),
-          borderColor:chartColors((grey.data.length?grey.data:[0]).length),
-          borderRadius:10,
+          borderRadius:8,
           borderWidth:1
         }]
       },
-      options:(()=>{let o=barOptions("Grey Fabric Present Stock Summary");o.plugins.tooltip.callbacks={label:function(ctx){return "Closing Stock: "+Number(ctx.raw||0).toLocaleString("en-US")+" Kgs";}};o.scales.y.ticks.callback=function(value){return Number(value).toLocaleString("en-US");};return o;})(),
+      options:{
+        responsive:true,
+        maintainAspectRatio:false,
+        plugins:{
+          legend:{display:false},
+          title:{
+            display:true,
+            text:"Grey Fabric Present Stock Summary"
+          },
+          tooltip:{
+            callbacks:{
+              label:function(ctx){
+                return "Closing Stock: "+Number(ctx.raw||0).toLocaleString("en-US")+" Kgs";
+              }
+            }
+          }
+        },
+        scales:{
+          y:{
+            beginAtZero:true,
+            ticks:{
+              callback:function(value){return Number(value).toLocaleString("en-US");}
+            }
+          },
+          x:{ticks:{font:{size:9}},grid:{display:false}}
+        }
+      },
       plugins:[greyValuePlugin]
     });
   }
@@ -534,8 +542,8 @@ function renderCharts(sewing,accessories,twill,floorStocks,grey,billing,needleIs
     if(billingChart)billingChart.destroy();
     billingChart=new Chart(document.getElementById("billingChart"),{
       type:"doughnut",
-      data:{labels:["Present","Leave","Absent"],datasets:[{data:[billing.present,billing.leave,billing.absent],backgroundColor:["#22c55e","#f59e0b","#ef4444"],borderColor:["#22c55e","#f59e0b","#ef4444"],borderWidth:1}]},
-      options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:"bottom",labels:{color:chartTextColor(),font:{family:"Segoe UI",size:12,weight:"bold"}}},tooltip:{backgroundColor:"rgba(15,23,42,.92)",titleColor:"#fff",bodyColor:"#fff"}}}
+      data:{labels:["Present","Leave","Absent"],datasets:[{data:[billing.present,billing.leave,billing.absent],borderWidth:1}]},
+      options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:"bottom"}}}
     });
   }
 }
