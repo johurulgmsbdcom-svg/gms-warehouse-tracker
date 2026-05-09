@@ -659,7 +659,7 @@ th,td{border:1px solid #000;padding:5px;text-align:center;vertical-align:middle}
   <br>
   <button class="show" onclick="showReport()">🔍 Show Report</button>
   <button class="excel" onclick="exportExcel()">📊 Excel</button>
-  <button class="print" onclick="window.print()">🖨 PDF / Print</button>
+  <button class="print" onclick="printSingle(0)">🖨 PDF / Print</button>
   <button class="show" onclick="location.href='gate-plan.html'">➕ New Gate Plan</button>
   <button class="home" onclick="location.href='index.html'">🏠 Home</button>
 </div>
@@ -788,13 +788,229 @@ function renderGrey(p,index){
   </div>`;
 }
 
+
 function printSingle(index){
-  document.querySelectorAll(".planCard,.greyReport").forEach((el,i)=>{
-    el.style.display = (i===index) ? "block" : "none";
-  });
-  window.print();
-  setTimeout(showReport,500);
+  const item=document.getElementById("plan-"+index);
+  if(!item) return;
+
+  const printCss = `
+  <style>
+    @page{
+      size:A4 landscape;
+      margin:4mm;
+    }
+
+    *{box-sizing:border-box}
+
+    html,body{
+      margin:0;
+      padding:0;
+      background:white;
+      color:black;
+      font-family:Arial,sans-serif;
+      width:297mm;
+      height:200mm;
+      overflow:hidden;
+    }
+
+    .noPrint,
+    .actionBar{
+      display:none!important;
+    }
+
+    .planCard{
+      width:100%;
+      height:120mm;
+      margin:0;
+      padding:0;
+      border:1px solid #000;
+      overflow:hidden;
+      page-break-inside:avoid;
+      page-break-after:avoid;
+    }
+
+    .topLine{
+      text-align:center;
+      font-size:16px;
+      font-weight:900;
+      padding:3px;
+      border-bottom:1px solid #000;
+      line-height:1;
+    }
+
+    .meta{
+      display:grid;
+      grid-template-columns:repeat(5,1fr);
+      border-bottom:1px solid #000;
+    }
+
+    .meta div{
+      font-size:13px;
+      font-weight:900;
+      text-align:center;
+      padding:4px;
+      border-right:1px solid #000;
+      line-height:1;
+    }
+
+    .tableWrap{
+      overflow:visible;
+      width:100%;
+    }
+
+    table{
+      width:100%;
+      min-width:0!important;
+      border-collapse:collapse;
+      table-layout:fixed;
+      font-size:10px;
+    }
+
+    th,td{
+      border:1px solid #000;
+      text-align:center;
+      padding:3px 1px;
+      font-size:10px;
+      font-weight:800;
+      line-height:1;
+      overflow:hidden;
+    }
+
+    th{
+      font-weight:900;
+    }
+
+    .totalRow td{
+      font-weight:900;
+    }
+
+    .slCol{width:25px}
+    .buyerCol{width:82px}
+    .srCol{width:85px}
+    .styleCol{width:82px}
+    .orderCol{width:90px}
+    .itemCol{width:85px}
+    .colorCol{width:55px}
+    .unitCol{width:45px}
+    .qtyCol{width:65px}
+    .ctnCol{width:68px}
+    .partyCol{width:145px}
+    .vehicleCol{width:75px}
+    .remarksCol{width:75px}
+
+    .sign{
+      margin-top:22mm;
+      display:grid;
+      grid-template-columns:repeat(8,1fr);
+      border-top:1px solid #000;
+    }
+
+    .sign div{
+      text-align:center;
+      font-size:9.5px;
+      font-weight:900;
+      padding-top:6px;
+      line-height:1;
+      border-top:0!important;
+    }
+
+    .greyReport{
+      width:100%;
+      height:120mm;
+      margin:0;
+      padding:0;
+      border:0;
+      overflow:hidden;
+      page-break-inside:avoid;
+      page-break-after:avoid;
+      position:relative;
+    }
+
+    .greyHeader{
+      text-align:center;
+      line-height:1;
+    }
+
+    .greyHeader h2{
+      font-size:23px;
+      margin:0;
+      font-weight:900;
+    }
+
+    .greyHeader h4{
+      font-size:13px;
+      margin:0;
+    }
+
+    .greyHeader h1{
+      font-size:33px;
+      margin:2px 0;
+      color:#555;
+      font-weight:900;
+    }
+
+    .greyTitle{
+      font-size:18px;
+      font-weight:900;
+      margin:4px 0;
+    }
+
+    .greyTable{
+      width:72%;
+      margin:6mm auto 0;
+      border-collapse:collapse;
+      table-layout:fixed;
+    }
+
+    .greyTable th,
+    .greyTable td{
+      font-size:13px;
+      padding:5px;
+      border:1px solid #000;
+      text-align:center;
+      line-height:1;
+    }
+
+    .greySign{
+      margin-top:35mm;
+      display:grid;
+      grid-template-columns:repeat(6,1fr);
+      gap:16px;
+    }
+
+    .greySign div{
+      text-align:center;
+      border-top:1px solid #000;
+      font-size:11px;
+      font-weight:900;
+      padding-top:5px;
+      line-height:1;
+    }
+  </style>`;
+
+  let win=window.open("", "_blank", "width=1200,height=800");
+  win.document.open();
+  win.document.write(`
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <title>Gate Plan Print</title>
+      ${printCss}
+    </head>
+    <body>
+      ${item.outerHTML}
+    </body>
+    </html>
+  `);
+  win.document.close();
+
+  setTimeout(()=>{
+    win.focus();
+    win.print();
+    setTimeout(()=>win.close(),500);
+  },500);
 }
+
 
 function deletePlan(no){
   if(!confirm("Delete this Gate Plan?")) return;
