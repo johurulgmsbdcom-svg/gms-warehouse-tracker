@@ -94,6 +94,63 @@ body.light .creditFooter{background:rgba(255,255,255,.96)}.creditItem{display:fl
   font-weight:1000;
 }
 
+
+/* ===== ATTENDANCE LIST INSIDE BLANK AREA ===== */
+.attendanceInside{
+  margin-top:12px;
+  display:grid;
+  grid-template-columns:repeat(2,1fr);
+  gap:10px;
+}
+.attBox{
+  background:linear-gradient(135deg,var(--card),var(--card2));
+  border:1px solid var(--border);
+  border-radius:16px;
+  padding:13px;
+  box-shadow:var(--shadow);
+}
+.attBox span{
+  color:var(--muted);
+  font-size:12px;
+  font-weight:1000;
+  text-transform:uppercase;
+  letter-spacing:.3px;
+}
+.attBox b{
+  display:block;
+  color:var(--green);
+  font-size:25px;
+  margin-top:6px;
+  font-weight:1000;
+}
+.chartBox.attendanceBox{
+  height:auto!important;
+  min-height:420px;
+}
+@media(max-width:900px){
+  .attendanceInside{
+    grid-template-columns:1fr;
+  }
+  .chartBox.attendanceBox{
+    min-height:auto;
+  }
+}
+
+
+.chartBox.attendanceBox canvas{
+  max-height:220px!important;
+}
+
+
+/* ===== MOVE FIREBASE STATUS TO BACKUP PAGE ===== */
+#backup .statusBox{
+  max-width:760px;
+  margin:14px auto;
+}
+#backup .grid{
+  margin-top:14px;
+}
+
 </style>
 </head>
 
@@ -151,36 +208,19 @@ body.light .creditFooter{background:rgba(255,255,255,.96)}.creditItem{display:fl
     <div class="chartBox" id="needleChartBox"><h3>🏭 Needle Floor Wise Stock</h3><canvas id="needleChart"></canvas><div class="stockList" id="needleTextList"></div></div>
     <div class="chartBox" id="greyChartBox"><h3>🏭 Grey Fabric Present Stock Summary</h3><canvas id="greyChart"></canvas><div class="stockList" id="greyTextList"></div></div>
     <div class="chartBox" id="needleIssueChartBox"><h3>🪡 Needle Broken / Missing / Change</h3><canvas id="needleIssueChart"></canvas><div class="stockList" id="needleIssueTextList"></div></div>
-    <div class="chartBox" id="billingChartBox"><h3>👨‍💼 Attendance Manpower Chart</h3><canvas id="billingChart"></canvas></div>
-    <div class="statusBox">
-      <div class="statusTitle">📌 Firebase Live Usage</div>
+    <div class="chartBox attendanceBox" id="billingChartBox">
+      <h3>👨‍💼 Attendance Manpower Chart</h3>
+      <canvas id="billingChart"></canvas>
 
-      <div class="statusLine"><span>📖 Reads Today</span><b id="readsToday">0 / 50,000</b></div>
-      <div class="statusLine"><span>✍️ Writes Today</span><b id="writesToday">0 / 20,000</b></div>
-      <div class="statusLine"><span>🗑 Deletes Today</span><b id="deletesToday">0 / 20,000</b></div>
-
-      <div class="statusLine"><span>💾 Storage Limit</span><b>1 GiB</b></div>
-      <div class="statusLine"><span>📦 Storage Used</span><b id="storageUsed">0 MB</b></div>
-      <div class="statusLine"><span>📊 Usage Percent</span><b id="storagePercent">0%</b></div>
-
-      <div class="statusLine"><span>🔥 Today Entry</span><b id="firebaseToday">0</b></div>
-      <div class="statusLine"><span>🗃 Total Entry</span><b id="firebaseTotal">0</b></div>
-      <div class="statusLine"><span>🚚 Gate Plan Firebase</span><b id="gateLocal">0</b></div>
-
-      <div class="statusLine"><span>📁 Backup Months</span><b id="backupMonths">0</b></div>
-      <div class="statusLine"><span>🗓 Active Months</span><b id="activeMonths">0</b></div>
-      <div class="statusLine"><span>☁ Backup Status</span><b id="backupStatus">READY</b></div>
-
-      <div class="progress"><div id="limitBar" class="progressFill"></div></div>
-      <div id="limitSignal" class="statusSignal safe">🟢 SAFE</div>
+      <div class="attendanceInside">
+        <div class="attBox"><span>👨‍🏭 Attendance Total</span><b id="attTotal">0</b></div>
+        <div class="attBox"><span>✅ Today Present</span><b id="attPresent">0</b></div>
+        <div class="attBox"><span>🏖 Leave</span><b id="attLeave">0</b></div>
+        <div class="attBox"><span>❌ Absent</span><b id="attAbsent">0</b></div>
+      </div>
     </div>
-</div>
 
-  <div class="topGrid" id="attendanceTextBox">
-    <div class="topCard"><div class="label">👨‍🏭 Attendance Total</div><div class="num" id="attTotal">0</div></div>
-    <div class="topCard"><div class="label">🏖 Leave / ❌ Absent</div><div class="num"><span id="attLeave">0</span> / <span id="attAbsent">0</span></div></div>
-    <div class="topCard"><div class="label">✅ Today Present</div><div class="num" id="attPresent">0</div></div>
-  </div>
+</div>
 
   <div id="mcdDashboard" class="mcdDashboard">Loading...</div>
 </div>
@@ -224,10 +264,51 @@ body.light .creditFooter{background:rgba(255,255,255,.96)}.creditItem{display:fl
   <h2>☁ Backup & Restore Control</h2>
   <div class="dashSub">Only Admin can use this page</div>
 
+
+    <div class="statusBox">
+      <div class="statusTitle">📌 Firebase Live Usage</div>
+
+      <div class="statusLine"><span>📖 Reads Today</span><b id="readsToday">0 / 50,000</b></div>
+      <div class="statusLine"><span>✍️ Writes Today</span><b id="writesToday">0 / 20,000</b></div>
+      <div class="statusLine"><span>🗑 Deletes Today</span><b id="deletesToday">0 / 20,000</b></div>
+
+      <div class="statusLine"><span>💾 Storage Limit</span><b>1 GiB</b></div>
+      <div class="statusLine"><span>📦 Storage Used</span><b id="storageUsed">0 MB</b></div>
+      <div class="statusLine"><span>📊 Usage Percent</span><b id="storagePercent">0%</b></div>
+
+      <div class="statusLine"><span>🔥 Today Entry</span><b id="firebaseToday">0</b></div>
+      <div class="statusLine"><span>🗃 Total Entry</span><b id="firebaseTotal">0</b></div>
+      <div class="statusLine"><span>🚚 Gate Plan Firebase</span><b id="gateLocal">0</b></div>
+
+      <div class="statusLine"><span>📁 Backup Months</span><b id="backupMonths">0</b></div>
+      <div class="statusLine"><span>🗓 Active Months</span><b id="activeMonths">0</b></div>
+      <div class="statusLine"><span>☁ Backup Status</span><b id="backupStatus">READY</b></div>
+
+      <div class="progress"><div id="limitBar" class="progressFill"></div></div>
+      <div id="limitSignal" class="statusSignal safe">🟢 SAFE</div>
+    </div>
+
   <div class="grid">
     <div class="card" onclick="backupAllData()">☁ Backup Now</div>
-    <div class="card" onclick="restoreBackup()">📥 Restore Backup</div>
+    <div class="card" onclick="document.getElementById('restoreFile').click()">📥 Restore Backup</div>
     <div class="card" onclick="clearOldData()">🧹 Clear Old Data</div>
+  </div>
+
+  <input type="file" id="restoreFile" accept=".json" style="display:none" onchange="loadRestoreFile(event)">
+
+  <br>
+
+  <div class="statusBox" id="restorePanel" style="display:none">
+    <div class="statusTitle">📥 Restore Month Wise Data</div>
+
+    <label>Select Month From Backup</label>
+    <select id="restoreMonthSelect"></select>
+
+    <button class="btn" onclick="restoreSelectedMonth()">Restore Selected Month</button>
+
+    <div class="statusLine"><span>Backup File</span><b id="restoreFileName">-</b></div>
+    <div class="statusLine"><span>Month Found</span><b id="restoreMonthCount">0</b></div>
+    <div class="statusLine"><span>Restore Status</span><b id="restoreStatus">READY</b></div>
   </div>
 
   <br>
@@ -252,7 +333,7 @@ body.light .creditFooter{background:rgba(255,255,255,.96)}.creditItem{display:fl
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-app.js";
-import { getFirestore, collection, getDocs, doc, updateDoc } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-firestore.js";
+import { getFirestore, collection, getDocs, doc, updateDoc, setDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-firestore.js";
 
 const firebaseConfig={apiKey:"AIzaSyD-wBCF5eeWMHobLFOhBzKW7aB2pagz9-w",authDomain:"gms-warehouse-tracker-7f57e.firebaseapp.com",projectId:"gms-warehouse-tracker-7f57e",storageBucket:"gms-warehouse-tracker-7f57e.firebasestorage.app",messagingSenderId:"992250313291",appId:"1:992250313291:web:ee3bceae76d4d53bc26bce"};
 const app=initializeApp(firebaseConfig);
@@ -286,7 +367,7 @@ function setupRoleUI(){
   if(!isNeedleAllowed()){document.getElementById("needleNav").style.display="none";document.getElementById("needleSummary").style.display="none";document.getElementById("needleChartBox").style.display="none";document.getElementById("needleIssueChartBox").style.display="none";}
   if(!isAccessoriesAllowed()){document.getElementById("accessoriesSummary").style.display="none";document.getElementById("accessoriesChartBox").style.display="none";}
   if(!isGreyAllowed())document.getElementById("greyChartBox").style.display="none";
-  if(!isBillingAllowed()){document.getElementById("billingChartBox").style.display="none";document.getElementById("attendanceTextBox").style.display="none";}
+  if(!isBillingAllowed()){document.getElementById("billingChartBox").style.display="none";}
   let list=allowedMCDList();
   document.getElementById("entryMcd").innerHTML=list.map(x=>`<option>${x}</option>`).join("");
   document.getElementById("reportMcd").innerHTML=list.map(x=>`<option>${x}</option>`).join("");
@@ -850,16 +931,7 @@ window.backupAllData = async function(){
 
 };
 
-window.restoreBackup = function(){
 
-  if(userRole !== "admin"){
-    alert("Admin only");
-    return;
-  }
-
-  alert("Restore system next step e add hobe. Backup file select kore month-wise restore kora hobe.");
-
-};
 
 window.clearOldData = function(){
 
@@ -872,6 +944,140 @@ window.clearOldData = function(){
   if(!ok) return;
 
   alert("Old Data Clear system next step e add hobe. Ekhon kono data delete hobe na.");
+
+};
+
+
+// ===== RESTORE BACKUP SYSTEM =====
+let selectedBackupData = null;
+
+function getRowMonth(row){
+  let dt = row.date || row.postingDate || row.entryDate || (row.createdAt||"").slice(0,10) || "";
+  if(dt && dt.length >= 7) return dt.slice(0,7);
+  return "";
+}
+
+function backupDocId(row){
+  return row._docId || row.id || row.gatePlanNo || row.gatePassNo || row.date + "-" + Date.now() + "-" + Math.floor(Math.random()*999999);
+}
+
+window.loadRestoreFile = function(event){
+
+  if(userRole !== "admin"){
+    alert("Admin only");
+    return;
+  }
+
+  let file = event.target.files[0];
+  if(!file) return;
+
+  let reader = new FileReader();
+
+  reader.onload = function(e){
+    try{
+      selectedBackupData = JSON.parse(e.target.result);
+
+      let monthSet = new Set();
+
+      Object.keys(selectedBackupData.data || {}).forEach(col=>{
+        (selectedBackupData.data[col] || []).forEach(row=>{
+          let m = getRowMonth(row);
+          if(m) monthSet.add(m);
+        });
+      });
+
+      let months = Array.from(monthSet).sort();
+
+      if(months.length === 0){
+        alert("No month data found in backup file");
+        return;
+      }
+
+      document.getElementById("restorePanel").style.display = "block";
+      document.getElementById("restoreFileName").innerText = file.name;
+      document.getElementById("restoreMonthCount").innerText = months.length;
+      document.getElementById("restoreStatus").innerText = "FILE LOADED";
+
+      document.getElementById("restoreMonthSelect").innerHTML =
+        months.map(m=>`<option value="${m}">${m}</option>`).join("");
+
+    }catch(err){
+      console.log(err);
+      alert("Invalid backup JSON file");
+    }
+  };
+
+  reader.readAsText(file);
+
+};
+
+window.restoreSelectedMonth = async function(){
+
+  if(userRole !== "admin"){
+    alert("Admin only");
+    return;
+  }
+
+  if(!selectedBackupData){
+    alert("Please select backup JSON file first");
+    return;
+  }
+
+  let month = document.getElementById("restoreMonthSelect").value;
+
+  if(!month){
+    alert("Please select month");
+    return;
+  }
+
+  let ok = confirm("Restore data for month: " + month + " ?");
+  if(!ok) return;
+
+  try{
+
+    document.getElementById("restoreStatus").innerText = "RESTORING...";
+
+    let total = 0;
+
+    const data = selectedBackupData.data || {};
+
+    for(let col of Object.keys(data)){
+
+      for(let row of (data[col] || [])){
+
+        if(getRowMonth(row) !== month) continue;
+
+        let id = String(backupDocId(row)).replaceAll("/","-").replaceAll(" ","-");
+
+        let cleanRow = {...row};
+        delete cleanRow._docId;
+
+        cleanRow.restoredAt = new Date().toISOString();
+        cleanRow.restoredMonth = month;
+
+        await setDoc(doc(db,col,id), cleanRow, {merge:true});
+
+        total++;
+
+      }
+
+    }
+
+    localStorage.setItem("backupStatus","RESTORED " + month);
+
+    document.getElementById("restoreStatus").innerText = "RESTORED " + total + " DATA";
+
+    alert("Restore Complete: " + total + " data restored for " + month);
+
+    loadDashboardStock();
+
+  }catch(e){
+
+    console.log(e);
+    document.getElementById("restoreStatus").innerText = "RESTORE FAILED";
+    alert("Restore Failed: " + e.message);
+
+  }
 
 };
 
