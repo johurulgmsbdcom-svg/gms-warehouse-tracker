@@ -472,6 +472,25 @@ td textarea{
   }
 }
 
+
+.greyTable input{
+  background:#fffef2!important;
+  color:#000!important;
+  border:1px solid #aaa!important;
+  border-radius:3px!important;
+  padding:3px!important;
+  font-size:12px!important;
+}
+@media print{
+  .greyTable input{
+    background:transparent!important;
+    border:0!important;
+    outline:0!important;
+    padding:0!important;
+    font-size:9px!important;
+  }
+}
+
 </style>
 </head>
 
@@ -619,10 +638,10 @@ td textarea{
     <tbody>
       <tr>
         <td id="greyShowDate"></td>
-        <td id="greyShowCompany"></td>
-        <td id="greyShowReason">For Dyeing</td>
-        <td id="greyShowQty">0</td>
-        <td id="greyShowRemarks"></td>
+        <td><input id="greyCompanyInput" value="" oninput="syncGreyInputs()" style="border:0;width:100%;text-align:center;font-weight:bold"></td>
+        <td><input id="greyReasonInput" value="For Dyeing" oninput="syncGreyInputs()" style="border:0;width:100%;text-align:center;font-weight:bold"></td>
+        <td><input id="greyQtyInput" type="number" value="0" oninput="syncGreyInputs()" style="border:0;width:100%;text-align:center;font-weight:bold"></td>
+        <td><input id="greyRemarksInput" oninput="syncGreyInputs()" style="border:0;width:100%;text-align:center"></td>
       </tr>
       <tr class="totalRow">
         <td colspan="3">Total-</td>
@@ -663,6 +682,33 @@ function toast(msg){
 }
 
 function n(v){ return Number(v)||0; }
+window.syncGreyInputs=function(){
+  let company=document.getElementById("greyCompanyInput")?.value || "";
+  let reason=document.getElementById("greyReasonInput")?.value || "For Dyeing";
+  let qty=Number(document.getElementById("greyQtyInput")?.value)||0;
+  let remarks=document.getElementById("greyRemarksInput")?.value || "";
+
+  document.getElementById("greyShowTotal").innerText=qty.toFixed(1);
+
+  let toCompany=document.getElementById("toType");
+  let firstParty=document.querySelector(".toParty");
+  let firstItem=document.querySelector(".itemName");
+  let firstQty=document.querySelector(".deliveryQty");
+  let firstRemarks=document.querySelector(".remarks");
+
+  if(toCompany && company){
+    if(toCompany.value==="Other's Factory"){
+      if(firstParty) firstParty.value=company;
+    }
+  }
+
+  if(firstItem) firstItem.value=reason;
+  if(firstQty) firstQty.value=qty;
+  if(firstRemarks) firstRemarks.value=remarks;
+
+  let deliveryTotal=document.getElementById("deliveryTotal");
+  if(deliveryTotal) deliveryTotal.innerText=qty.toFixed(1);
+};
 
 function getSavedPlans(){
   return JSON.parse(localStorage.getItem("gatePlans") || "[]");
@@ -703,7 +749,16 @@ function updateHeader(){
   document.body.classList.toggle("printNormal",!isGrey);
 
   document.getElementById("greyShowDate").innerText=document.getElementById("planDate").value;
-  document.getElementById("greyShowCompany").innerText=toCompany;
+  let greyCompanyInput=document.getElementById("greyCompanyInput");
+  if(greyCompanyInput && document.activeElement!==greyCompanyInput){
+    if(toCompany==="Other's Factory"){
+      if(!greyCompanyInput.value || greyCompanyInput.value==="GMS Textiles Ltd." || greyCompanyInput.value==="GMS Composite Knitting Ind Ltd."){
+        greyCompanyInput.value="";
+      }
+    }else{
+      greyCompanyInput.value=toCompany;
+    }
+  }
   document.getElementById("greyPrepared").innerText=user.name||user.email||"User";
 
   document.querySelectorAll(".toParty").forEach(x=>{
