@@ -289,6 +289,189 @@ td textarea{
   }
 }
 
+
+/* ===== STRICT PRINT: ONLY SELECTED FORMAT, ONE PAGE ===== */
+@page{
+  size:A4 landscape;
+  margin:4mm;
+}
+
+@media print{
+
+  html,body{
+    width:297mm!important;
+    height:210mm!important;
+    margin:0!important;
+    padding:0!important;
+    background:white!important;
+    overflow:hidden!important;
+  }
+
+  .controls,
+  .noPrint,
+  .toast{
+    display:none!important;
+  }
+
+  body.printGrey .box,
+  body.printGrey #normalGateBox{
+    display:none!important;
+  }
+
+  body.printNormal .greyReport,
+  body.printNormal #greyGateBox{
+    display:none!important;
+  }
+
+  body.printNormal .box,
+  body.printNormal #normalGateBox{
+    display:block!important;
+  }
+
+  body.printGrey .greyReport,
+  body.printGrey #greyGateBox{
+    display:block!important;
+  }
+
+  .header{
+    padding:1mm 0 1mm 0!important;
+  }
+
+  .header h2{font-size:16px!important;margin:0!important}
+  .header h4{font-size:10px!important;margin:0!important}
+  .header h3{font-size:13px!important;margin:0!important}
+
+  .box{
+    width:100%!important;
+    margin:0!important;
+    border:1px solid #000!important;
+    height:178mm!important;
+    page-break-after:avoid!important;
+    page-break-inside:avoid!important;
+  }
+
+  .topLine{
+    font-size:12px!important;
+    padding:2px!important;
+  }
+
+  .meta div{
+    padding:2px!important;
+    font-size:10px!important;
+  }
+
+  .tableWrap{
+    overflow:visible!important;
+  }
+
+  table{
+    width:100%!important;
+    min-width:0!important;
+    table-layout:fixed!important;
+    font-size:7px!important;
+  }
+
+  th,td{
+    padding:1px!important;
+    font-size:7px!important;
+    line-height:1!important;
+    overflow:hidden!important;
+  }
+
+  td input,
+  td textarea{
+    border:0!important;
+    outline:0!important;
+    background:transparent!important;
+    color:#000!important;
+    font-size:7px!important;
+    padding:0!important;
+    resize:none!important;
+  }
+
+  .slCol{width:22px!important}
+  .buyerCol{width:70px!important}
+  .srCol{width:62px!important}
+  .styleCol{width:70px!important}
+  .orderCol{width:78px!important}
+  .itemCol{width:82px!important}
+  .colorCol{width:58px!important}
+  .unitCol{width:40px!important}
+  .qtyCol{width:55px!important}
+  .ctnCol{width:58px!important}
+  .partyCol{width:150px!important}
+  .vehicleCol{width:70px!important}
+  .remarksCol{width:72px!important}
+
+  .toParty{
+    font-size:6.5px!important;
+    text-align:left!important;
+    white-space:normal!important;
+    overflow:visible!important;
+  }
+
+  .sign{
+    margin-top:24mm!important;
+    display:grid!important;
+    grid-template-columns:repeat(8,1fr)!important;
+  }
+
+  .sign div{
+    font-size:7px!important;
+    padding:2px 1px!important;
+    line-height:1!important;
+  }
+
+  /* GREY ONLY PRINT */
+  .greyReport{
+    width:100%!important;
+    margin:0!important;
+    padding:0!important;
+    border:0!important;
+    height:185mm!important;
+    page-break-after:avoid!important;
+    page-break-inside:avoid!important;
+  }
+
+  .greyHeader h2{font-size:18px!important;margin:0!important}
+  .greyHeader h4{font-size:10px!important;margin:0!important}
+  .greyHeader h1{font-size:26px!important;margin:1px 0!important}
+  .greyTitle{font-size:14px!important;margin:3px 0!important}
+
+  .greyTable{
+    width:70%!important;
+    margin:5mm auto 0!important;
+    table-layout:fixed!important;
+  }
+
+  .greyTable th,
+  .greyTable td{
+    font-size:9px!important;
+    padding:3px!important;
+    overflow:visible!important;
+  }
+
+  .greyTable input{
+    font-size:9px!important;
+    border:0!important;
+    outline:0!important;
+    background:transparent!important;
+    text-align:center!important;
+  }
+
+  .greySign{
+    margin-top:36mm!important;
+    display:grid!important;
+    grid-template-columns:repeat(6,1fr)!important;
+    gap:12px!important;
+  }
+
+  .greySign div{
+    font-size:8px!important;
+    padding-top:3px!important;
+  }
+}
+
 </style>
 </head>
 
@@ -516,6 +699,9 @@ function updateHeader(){
   document.getElementById("normalGateBox").style.display=isGrey ? "none" : "block";
   document.getElementById("greyGateBox").style.display=isGrey ? "block" : "none";
 
+  document.body.classList.toggle("printGrey",isGrey);
+  document.body.classList.toggle("printNormal",!isGrey);
+
   document.getElementById("greyShowDate").innerText=document.getElementById("planDate").value;
   document.getElementById("greyShowCompany").innerText=toCompany;
   document.getElementById("greyPrepared").innerText=user.name||user.email||"User";
@@ -732,6 +918,11 @@ document.addEventListener("keydown",function(e){
       }
     }
   }
+});
+
+
+window.addEventListener("beforeprint",function(){
+  updateHeader();
 });
 
 loadSuggestions();
