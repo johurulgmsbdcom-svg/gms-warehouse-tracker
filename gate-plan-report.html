@@ -1,654 +1,141 @@
 <!DOCTYPE html>
 <html>
 <head>
-<title>Gate Plan Report</title>
+<meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<title>Gate Plan Report</title>
+<script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
 
 <style>
-body{margin:0;background:#07111f;color:white;font-family:Arial,sans-serif}
-.header{text-align:center;padding:10px}
-.header h2,.header h3,.header h4{margin:3px}
-.controls{text-align:center;margin:10px}
-button{padding:10px 14px;border:0;border-radius:8px;color:white;font-weight:bold;margin:4px;cursor:pointer}
-.show{background:#2563eb}.excel{background:#16a34a}.print{background:#7c3aed}.home{background:#0f766e}.edit{background:#f59e0b}.del{background:#dc2626}
-input,select{font-size:15px;padding:7px;border-radius:6px;border:1px solid #999}
-.planCard{width:96%;margin:10px auto;background:white;color:black;border:1px solid #000}
-.topLine{text-align:center;font-weight:bold;border-bottom:1px solid #000;padding:4px;font-size:18px}
-.meta{display:grid;grid-template-columns:repeat(5,1fr);border-bottom:1px solid #000}
-.meta div{border-right:1px solid #000;padding:6px;text-align:center;font-weight:bold}
-.actionBar{text-align:center;padding:8px}
-.tableWrap{overflow-x:auto;width:100%}
-table{min-width:1450px;width:100%;border-collapse:collapse;background:white;color:black;font-size:12px;table-layout:fixed}
-th,td{border:1px solid #000;padding:5px;text-align:center;vertical-align:middle}
-.totalRow{font-weight:bold;background:#f3f4f6}
-.sign{display:grid;grid-template-columns:repeat(8,1fr);gap:0;margin-top:80px}
-.sign div{text-align:center;font-weight:bold;border-top:1px solid #000;padding:6px;font-size:12px}
-.noData{text-align:center;padding:25px;font-weight:bold}
-.slCol{width:40px}.buyerCol{width:115px}.srCol{width:105px}.styleCol{width:110px}.orderCol{width:115px}.itemCol{width:125px}.colorCol{width:95px}.unitCol{width:70px}.qtyCol{width:90px}.ctnCol{width:95px}.partyCol{width:240px}.vehicleCol{width:115px}.remarksCol{width:115px}
-.greyReport{width:96%;margin:10px auto;background:white;color:black;border:1px solid #000;padding:8px}
-.greyHeader{text-align:center;line-height:1.25}
-.greyHeader h2{margin:0;font-size:26px;font-weight:900}.greyHeader h4{margin:2px 0;font-size:14px}.greyHeader h1{margin:2px 0;font-size:36px;font-weight:900;color:#555}
-.greyTitle{font-size:20px;font-weight:900;margin:8px 0}.greyTable{min-width:0!important;width:65%;margin:8px auto 0;font-size:14px;table-layout:fixed}.greyTable th,.greyTable td{padding:7px;border:1px solid #000}
-.greySign{display:grid;grid-template-columns:repeat(6,1fr);gap:25px;margin-top:105px}.greySign div{text-align:center;font-weight:bold;border-top:1px solid #000;padding-top:6px;font-size:12px}
+body{
+  margin:0;
+  background:#07111f;
+  color:white;
+  font-family:Arial,sans-serif;
+}
+.header{
+  text-align:center;
+  padding:10px;
+}
+.header h2,.header h3,.header h4{
+  margin:3px;
+}
+.controls{
+  text-align:center;
+  margin:10px;
+}
+button{
+  padding:10px 14px;
+  border:0;
+  border-radius:8px;
+  color:white;
+  font-weight:bold;
+  margin:4px;
+  cursor:pointer;
+}
+.show{background:#2563eb}
+.excel{background:#16a34a}
+.print{background:#7c3aed}
+.home{background:#0f766e}
+.edit{background:#f59e0b}
+.del{background:#dc2626}
 
-@page{size:A4 landscape;margin:4mm}
-@media print{
-  html,body{width:297mm;height:210mm;margin:0!important;padding:0!important;background:white!important;color:black!important;overflow:hidden!important}
-  .controls,.noPrint,.actionBar{display:none!important}
-  .planCard{width:100%!important;margin:0!important;border:1px solid #000!important;height:178mm!important;page-break-after:avoid!important;page-break-inside:avoid!important}
-  .topLine{font-size:12px!important;padding:2px!important}.meta div{padding:2px!important;font-size:10px!important}
-  .tableWrap{overflow:visible!important}table{width:100%!important;min-width:0!important;table-layout:fixed!important;font-size:7px!important}
-  th,td{padding:1px!important;font-size:7px!important;line-height:1!important;overflow:hidden!important}
-  .slCol{width:22px!important}.buyerCol{width:70px!important}.srCol{width:62px!important}.styleCol{width:70px!important}.orderCol{width:78px!important}.itemCol{width:82px!important}.colorCol{width:58px!important}.unitCol{width:40px!important}.qtyCol{width:55px!important}.ctnCol{width:58px!important}.partyCol{width:150px!important}.vehicleCol{width:70px!important}.remarksCol{width:72px!important}
-  .sign{margin-top:24mm!important;display:grid!important;grid-template-columns:repeat(8,1fr)!important}.sign div{font-size:7px!important;padding:2px 1px!important;line-height:1!important}
-  .greyReport{width:100%!important;margin:0!important;padding:0!important;border:0!important;height:185mm!important;page-break-after:avoid!important;page-break-inside:avoid!important}
-  .greyHeader h2{font-size:18px!important;margin:0!important}.greyHeader h4{font-size:10px!important;margin:0!important}.greyHeader h1{font-size:26px!important;margin:1px 0!important}.greyTitle{font-size:14px!important;margin:3px 0!important}
-  .greyTable{width:70%!important;margin:5mm auto 0!important;table-layout:fixed!important}.greyTable th,.greyTable td{font-size:9px!important;padding:3px!important;overflow:visible!important}
-  .greySign{margin-top:36mm!important;display:grid!important;grid-template-columns:repeat(6,1fr)!important;gap:12px!important}.greySign div{font-size:8px!important;padding-top:3px!important}
+input,select{
+  font-size:15px;
+  padding:7px;
+  border-radius:6px;
+  border:1px solid #999;
 }
 
-/* ===== FINAL PRINT FONT BIG + ONE PAGE ===== */
-@page{
-  size:A4 landscape;
-  margin:5mm;
+.planCard{
+  width:96%;
+  margin:10px auto;
+  background:white;
+  color:black;
+  border:1px solid #000;
+}
+.topLine{
+  text-align:center;
+  font-weight:bold;
+  border-bottom:1px solid #000;
+  padding:4px;
+  font-size:18px;
+}
+.meta{
+  display:grid;
+  grid-template-columns:repeat(5,1fr);
+  border-bottom:1px solid #000;
+}
+.meta div{
+  border-right:1px solid #000;
+  padding:6px;
+  text-align:center;
+  font-weight:bold;
+}
+.actionBar{
+  text-align:center;
+  padding:8px;
+}
+.tableWrap{
+  overflow-x:auto;
+  width:100%;
+}
+table{
+  min-width:1450px;
+  width:100%;
+  border-collapse:collapse;
+  background:white;
+  color:black;
+  font-size:12px;
+  table-layout:fixed;
+}
+th,td{
+  border:1px solid #000;
+  padding:5px;
+  text-align:center;
+  vertical-align:middle;
+}
+.totalRow{
+  font-weight:bold;
+  background:#f3f4f6;
+}
+.sign{
+  display:grid;
+  grid-template-columns:repeat(8,1fr);
+  gap:0;
+  margin-top:55px;
+}
+.sign div{
+  text-align:center;
+  font-weight:bold;
+  border-top:1px solid #000;
+  padding:6px;
+  font-size:12px;
 }
 
-@media print{
+.slCol{width:40px}
+.buyerCol{width:115px}
+.srCol{width:105px}
+.styleCol{width:110px}
+.orderCol{width:115px}
+.itemCol{width:125px}
+.colorCol{width:95px}
+.unitCol{width:70px}
+.qtyCol{width:90px}
+.ctnCol{width:95px}
+.partyCol{width:240px}
+.vehicleCol{width:115px}
+.remarksCol{width:115px}
 
-  html,body{
-    width:297mm!important;
-    height:210mm!important;
-    margin:0!important;
-    padding:0!important;
-    background:#fff!important;
-    color:#000!important;
-    overflow:hidden!important;
-  }
-
-  .controls,
-  .noPrint,
-  .actionBar{
-    display:none!important;
-  }
-
-  .planCard{
-    width:100%!important;
-    height:185mm!important;
-    margin:0!important;
-    border:1px solid #000!important;
-    page-break-inside:avoid!important;
-    page-break-after:avoid!important;
-  }
-
-  .topLine{
-    font-size:20px!important;
-    font-weight:900!important;
-    padding:7px!important;
-  }
-
-  .meta{
-    grid-template-columns:repeat(5,1fr)!important;
-  }
-
-  .meta div{
-    font-size:15px!important;
-    font-weight:900!important;
-    padding:7px!important;
-  }
-
-  .tableWrap{
-    overflow:visible!important;
-    width:100%!important;
-  }
-
-  table{
-    width:100%!important;
-    min-width:0!important;
-    table-layout:fixed!important;
-    font-size:13px!important;
-  }
-
-  th{
-    font-size:12px!important;
-    font-weight:900!important;
-    padding:5px!important;
-    line-height:1.05!important;
-  }
-
-  td{
-    font-size:12px!important;
-    font-weight:800!important;
-    padding:5px!important;
-    line-height:1.05!important;
-  }
-
-  .slCol{width:32px!important}
-  .buyerCol{width:90px!important}
-  .srCol{width:92px!important}
-  .styleCol{width:90px!important}
-  .orderCol{width:100px!important}
-  .itemCol{width:90px!important}
-  .colorCol{width:55px!important}
-  .unitCol{width:55px!important}
-  .qtyCol{width:80px!important}
-  .ctnCol{width:80px!important}
-  .partyCol{width:155px!important}
-  .vehicleCol{width:85px!important}
-  .remarksCol{width:85px!important}
-
-  .totalRow td{
-    font-size:12px!important;
-    font-weight:900!important;
-  }
-
-  .sign{
-    margin-top:60px!important;
-    display:grid!important;
-    grid-template-columns:repeat(8,1fr)!important;
-  }
-
-  .sign div{
-    font-size:11px!important;
-    font-weight:900!important;
-    padding-top:8px!important;
-    line-height:1.1!important;
-  }
-
-  /* Grey Fabric print big */
-  .greyReport{
-    width:100%!important;
-    height:185mm!important;
-    margin:0!important;
-    padding:0!important;
-    border:0!important;
-    page-break-inside:avoid!important;
-    page-break-after:avoid!important;
-  }
-
-  .greyHeader h2{
-    font-size:28px!important;
-    margin:0!important;
-  }
-
-  .greyHeader h4{
-    font-size:15px!important;
-    margin:1px!important;
-  }
-
-  .greyHeader h1{
-    font-size:42px!important;
-    margin:3px 0!important;
-  }
-
-  .greyTitle{
-    font-size:22px!important;
-    font-weight:900!important;
-    margin:5px 0!important;
-  }
-
-  .greyTable{
-    width:75%!important;
-    margin:8mm auto 0!important;
-    table-layout:fixed!important;
-  }
-
-  .greyTable th{
-    font-size:16px!important;
-    font-weight:900!important;
-    padding:8px!important;
-  }
-
-  .greyTable td{
-    font-size:16px!important;
-    font-weight:800!important;
-    padding:8px!important;
-  }
-
-  .greySign{
-    margin-top:105px!important;
-    display:grid!important;
-    grid-template-columns:repeat(6,1fr)!important;
-    gap:20px!important;
-  }
-
-  .greySign div{
-    font-size:14px!important;
-    font-weight:900!important;
-    padding-top:8px!important;
-  }
-}
-
-
-/* ===== FINAL FIX: REPORT PRINT ALWAYS ONE PAGE ===== */
-@page{
-  size:A4 landscape;
-  margin:4mm;
-}
-
-@media print{
-
-  html,body{
-    width:297mm!important;
-    height:210mm!important;
-    margin:0!important;
-    padding:0!important;
-    background:white!important;
-    color:black!important;
-    overflow:hidden!important;
-  }
-
-  .controls,
-  .noPrint,
-  .actionBar{
-    display:none!important;
-  }
-
-  .planCard{
-    width:100%!important;
-    height:178mm!important;
-    margin:0!important;
-    border:1px solid #000!important;
-    page-break-inside:avoid!important;
-    page-break-after:avoid!important;
-    overflow:hidden!important;
-  }
-
-  .topLine{
-    font-size:15px!important;
-    font-weight:900!important;
-    padding:3px!important;
-    line-height:1!important;
-  }
-
-  .meta{
-    grid-template-columns:repeat(5,1fr)!important;
-  }
-
-  .meta div{
-    font-size:12px!important;
-    font-weight:900!important;
-    padding:4px!important;
-    line-height:1!important;
-  }
-
-  .tableWrap{
-    overflow:visible!important;
-    width:100%!important;
-  }
-
-  table{
-    width:100%!important;
-    min-width:0!important;
-    table-layout:fixed!important;
-    font-size:9px!important;
-  }
-
-  th{
-    font-size:9px!important;
-    font-weight:900!important;
-    padding:3px 1px!important;
-    line-height:1!important;
-  }
-
-  td{
-    font-size:9px!important;
-    font-weight:800!important;
-    padding:3px 1px!important;
-    line-height:1!important;
-  }
-
-  .slCol{width:25px!important}
-  .buyerCol{width:82px!important}
-  .srCol{width:85px!important}
-  .styleCol{width:82px!important}
-  .orderCol{width:90px!important}
-  .itemCol{width:85px!important}
-  .colorCol{width:55px!important}
-  .unitCol{width:45px!important}
-  .qtyCol{width:65px!important}
-  .ctnCol{width:68px!important}
-  .partyCol{width:145px!important}
-  .vehicleCol{width:75px!important}
-  .remarksCol{width:75px!important}
-
-  .totalRow td{
-    font-size:9px!important;
-    font-weight:900!important;
-    padding:3px 1px!important;
-  }
-
-  .sign{
-    margin-top:38px!important;
-    display:grid!important;
-    grid-template-columns:repeat(8,1fr)!important;
-  }
-
-  .sign div{
-    font-size:8.5px!important;
-    font-weight:900!important;
-    padding-top:5px!important;
-    line-height:1!important;
-  }
-
-  .greyReport{
-    width:100%!important;
-    height:178mm!important;
-    margin:0!important;
-    padding:0!important;
-    border:0!important;
-    page-break-inside:avoid!important;
-    page-break-after:avoid!important;
-    overflow:hidden!important;
-  }
-
-  .greyHeader h2{
-    font-size:22px!important;
-    margin:0!important;
-    line-height:1!important;
-  }
-
-  .greyHeader h4{
-    font-size:12px!important;
-    margin:0!important;
-    line-height:1!important;
-  }
-
-  .greyHeader h1{
-    font-size:32px!important;
-    margin:2px 0!important;
-    line-height:1!important;
-  }
-
-  .greyTitle{
-    font-size:17px!important;
-    font-weight:900!important;
-    margin:4px 0!important;
-    line-height:1!important;
-  }
-
-  .greyTable{
-    width:72%!important;
-    margin:6mm auto 0!important;
-    table-layout:fixed!important;
-  }
-
-  .greyTable th{
-    font-size:12px!important;
-    font-weight:900!important;
-    padding:5px!important;
-    line-height:1!important;
-  }
-
-  .greyTable td{
-    font-size:12px!important;
-    font-weight:800!important;
-    padding:5px!important;
-    line-height:1!important;
-  }
-
-  .greySign{
-    margin-top:65px!important;
-    display:grid!important;
-    grid-template-columns:repeat(6,1fr)!important;
-    gap:16px!important;
-  }
-
-  .greySign div{
-    font-size:10px!important;
-    font-weight:900!important;
-    padding-top:5px!important;
-    line-height:1!important;
-  }
-}
-
-
-/* ===== SIGNATURE DOWN + FONT ONE SIZE BIGGER ===== */
-@media print{
-
-  .topLine{
-    font-size:16px!important;
-  }
-
-  .meta div{
-    font-size:13px!important;
-  }
-
-  th{
-    font-size:10px!important;
-  }
-
-  td{
-    font-size:10px!important;
-  }
-
-  .totalRow td{
-    font-size:10px!important;
-  }
-
-  .sign{
-    margin-top:58px!important;
-  }
-
-  .sign div{
-    font-size:9.5px!important;
-  }
-
-  .greyHeader h2{
-    font-size:23px!important;
-  }
-
-  .greyHeader h4{
-    font-size:13px!important;
-  }
-
-  .greyHeader h1{
-    font-size:33px!important;
-  }
-
-  .greyTitle{
-    font-size:18px!important;
-  }
-
-  .greyTable th{
-    font-size:13px!important;
-  }
-
-  .greyTable td{
-    font-size:13px!important;
-  }
-
-  .greySign{
-    margin-top:82px!important;
-  }
-
-  .greySign div{
-    font-size:11px!important;
-  }
-}
-
-
-/* ===== FINAL: SIGNATURE AT RED MARK + STILL ONE PAGE ===== */
-@page{
-  size:A4 landscape;
-  margin:4mm;
-}
-
-@media print{
-
-  html,body{
-    width:297mm!important;
-    height:210mm!important;
-    margin:0!important;
-    padding:0!important;
-    overflow:hidden!important;
-    background:white!important;
-    color:black!important;
-  }
-
-  .controls,
-  .noPrint,
-  .actionBar{
-    display:none!important;
-  }
-
-  .planCard{
-    width:100%!important;
-    height:176mm!important;
-    margin:0!important;
-    padding:0!important;
-    border:1px solid #000!important;
-    overflow:hidden!important;
-    page-break-inside:avoid!important;
-    page-break-after:avoid!important;
-    position:relative!important;
-  }
-
-  .topLine{
-    font-size:16px!important;
-    font-weight:900!important;
-    padding:3px!important;
-    line-height:1!important;
-  }
-
-  .meta div{
-    font-size:13px!important;
-    font-weight:900!important;
-    padding:4px!important;
-    line-height:1!important;
-  }
-
-  .tableWrap{
-    overflow:visible!important;
-    width:100%!important;
-  }
-
-  table{
-    width:100%!important;
-    min-width:0!important;
-    table-layout:fixed!important;
-    font-size:10px!important;
-  }
-
-  th{
-    font-size:10px!important;
-    font-weight:900!important;
-    padding:3px 1px!important;
-    line-height:1!important;
-  }
-
-  td{
-    font-size:10px!important;
-    font-weight:800!important;
-    padding:3px 1px!important;
-    line-height:1!important;
-  }
-
-  .totalRow td{
-    font-size:10px!important;
-    font-weight:900!important;
-    padding:3px 1px!important;
-  }
-
-  .slCol{width:25px!important}
-  .buyerCol{width:82px!important}
-  .srCol{width:85px!important}
-  .styleCol{width:82px!important}
-  .orderCol{width:90px!important}
-  .itemCol{width:85px!important}
-  .colorCol{width:55px!important}
-  .unitCol{width:45px!important}
-  .qtyCol{width:65px!important}
-  .ctnCol{width:68px!important}
-  .partyCol{width:145px!important}
-  .vehicleCol{width:75px!important}
-  .remarksCol{width:75px!important}
-
-  .sign{
-    position:absolute!important;
-    left:0!important;
-    right:0!important;
-    top:58mm!important;
-    margin-top:0!important;
-    display:grid!important;
-    grid-template-columns:repeat(8,1fr)!important;
-    border-top:1px solid #000!important;
-  }
-
-  .sign div{
-    font-size:9.5px!important;
-    font-weight:900!important;
-    padding:6px 1px 0 1px!important;
-    line-height:1!important;
-    border-top:0!important;
-  }
-
-  /* Grey Fabric 1 page */
-  .greyReport{
-    width:100%!important;
-    height:176mm!important;
-    margin:0!important;
-    padding:0!important;
-    border:0!important;
-    overflow:hidden!important;
-    page-break-inside:avoid!important;
-    page-break-after:avoid!important;
-    position:relative!important;
-  }
-
-  .greyHeader h2{font-size:23px!important;margin:0!important;line-height:1!important}
-  .greyHeader h4{font-size:13px!important;margin:0!important;line-height:1!important}
-  .greyHeader h1{font-size:33px!important;margin:2px 0!important;line-height:1!important}
-  .greyTitle{font-size:18px!important;font-weight:900!important;margin:4px 0!important;line-height:1!important}
-
-  .greyTable{
-    width:72%!important;
-    margin:6mm auto 0!important;
-    table-layout:fixed!important;
-  }
-
-  .greyTable th{
-    font-size:13px!important;
-    padding:5px!important;
-    line-height:1!important;
-  }
-
-  .greyTable td{
-    font-size:13px!important;
-    padding:5px!important;
-    line-height:1!important;
-  }
-
-  .greySign{
-    position:absolute!important;
-    left:0!important;
-    right:0!important;
-    top:82mm!important;
-    margin-top:0!important;
-    display:grid!important;
-    grid-template-columns:repeat(6,1fr)!important;
-    gap:16px!important;
-  }
-
-  .greySign div{
-    font-size:11px!important;
-    font-weight:900!important;
-    padding-top:5px!important;
-    line-height:1!important;
-  }
-}
-
-
-/* ===== QR CODE STYLE ===== */
 .qrBox{
   display:flex;
   justify-content:center;
   align-items:center;
   margin-top:6px;
 }
-.qrBox canvas,
-.qrBox img{
-  width:78px!important;
-  height:78px!important;
+.qrBox canvas,.qrBox img{
+  width:70px!important;
+  height:70px!important;
 }
 .qrLabel{
   text-align:center;
@@ -656,21 +143,103 @@ th,td{border:1px solid #000;padding:5px;text-align:center;vertical-align:middle}
   font-weight:900;
   margin-top:2px;
 }
-@media print{
-  .qrBox canvas,
-  .qrBox img{
-    width:55px!important;
-    height:55px!important;
+
+.greyReport{
+  width:96%;
+  margin:10px auto;
+  background:white;
+  color:black;
+  border:1px solid #000;
+  padding:8px;
+}
+.greyHeader{
+  text-align:center;
+  line-height:1.25;
+}
+.greyHeader h2{
+  margin:0;
+  font-size:26px;
+  font-weight:900;
+}
+.greyHeader h4{
+  margin:2px 0;
+  font-size:14px;
+}
+.greyHeader h1{
+  margin:2px 0;
+  font-size:36px;
+  font-weight:900;
+  color:#555;
+}
+.greyTitle{
+  font-size:20px;
+  font-weight:900;
+  margin:8px 0;
+}
+.greyTable{
+  min-width:0!important;
+  width:65%;
+  margin:8px auto 0;
+  font-size:14px;
+  table-layout:fixed;
+}
+.greyTable th,.greyTable td{
+  padding:7px;
+  border:1px solid #000;
+}
+.greySign{
+  display:grid;
+  grid-template-columns:repeat(6,1fr);
+  gap:25px;
+  margin-top:80px;
+}
+.greySign div{
+  text-align:center;
+  font-weight:bold;
+  border-top:1px solid #000;
+  padding-top:6px;
+  font-size:12px;
+}
+
+.noData{
+  text-align:center;
+  padding:25px;
+  font-weight:bold;
+}
+
+@media(max-width:768px){
+  .controls input,.controls select{
+    width:44%;
+    margin:4px 0;
   }
-  .qrLabel{
-    font-size:8px!important;
-    font-weight:900!important;
+  button{
+    font-size:13px;
+    padding:9px 10px;
   }
 }
 
+@page{
+  size:A4 landscape;
+  margin:4mm;
+}
+
+@media print{
+  html,body{
+    width:297mm;
+    height:210mm;
+    margin:0!important;
+    padding:0!important;
+    background:white!important;
+    color:black!important;
+    overflow:hidden!important;
+  }
+  .controls,.noPrint,.actionBar{
+    display:none!important;
+  }
+}
 </style>
-<script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
 </head>
+
 <body>
 
 <div class="header noPrint">
@@ -683,13 +252,26 @@ th,td{border:1px solid #000;padding:5px;text-align:center;vertical-align:middle}
 <div class="controls noPrint">
   From: <input type="date" id="fromDate">
   To: <input type="date" id="toDate">
-  Gate Plan No: <input id="gateSearch" placeholder="GP-2026-0001" style="width:150px">
+
+  Gate Plan No:
+  <input id="gateSearch" placeholder="GP-2026-0001" style="width:150px">
+
   Company:
-  <select id="companyFilter"><option value="">All</option><option>GMS Textiles Ltd.</option><option>GMS Composite Knitting Ind Ltd.</option><option>Other's Factory</option></select>
+  <select id="companyFilter">
+    <option value="">All</option>
+    <option>GMS Textiles Ltd.</option>
+    <option>GMS Composite Knitting Ind Ltd.</option>
+    <option>Other's Factory</option>
+  </select>
+
   MCD:
-  <select id="mcdFilter"><option value="">All</option></select>
+  <select id="mcdFilter">
+    <option value="">All</option>
+  </select>
+
   <br>
-  <button class="show" onclick="showReport()">ð Show Report</button>
+
+  <button class="show" onclick="showReport()">ð Search</button>
   <button class="excel" onclick="exportExcel()">ð Excel</button>
   <button class="print" onclick="printSingle(0)">ð¨ PDF / Print</button>
   <button class="show" onclick="location.href='gate-plan.html'">â New Gate Plan</button>
@@ -699,37 +281,83 @@ th,td{border:1px solid #000;padding:5px;text-align:center;vertical-align:middle}
 <div id="reportArea"></div>
 
 <script>
-const ALL_MCD=["ACCESSORIES MCD","GREY FABRIC MCD","BILLING SECTION","NEEDLE MCD","SHIPMENT MCD","OUTER WEAR MCD","YARN MCD","PRINTING MCD","JHUT MCD","GENERAL MCD","LEFTOVER MCD","FINISH FABRIC MCD","YARN DYEING MCD","CHEMICAL MCD"];
+var ALL_MCD=[
+  "ACCESSORIES MCD",
+  "GREY FABRIC MCD",
+  "BILLING SECTION",
+  "NEEDLE MCD",
+  "SHIPMENT MCD",
+  "OUTER WEAR MCD",
+  "YARN MCD",
+  "PRINTING MCD",
+  "JHUT MCD",
+  "GENERAL MCD",
+  "LEFTOVER MCD",
+  "FINISH FABRIC MCD",
+  "YARN DYEING MCD",
+  "CHEMICAL MCD"
+];
 
-function today(){return new Date().toISOString().slice(0,10);}
-function fmt(v){return Number(v||0).toLocaleString("en-US");}
-function plans(){return JSON.parse(localStorage.getItem("gatePlans")||"[]");}
-function savePlans(arr){localStorage.setItem("gatePlans",JSON.stringify(arr));}
+function today(){
+  return new Date().toISOString().slice(0,10);
+}
+
+function fmt(v){
+  return Number(v||0).toLocaleString("en-US");
+}
+
+function plans(){
+  return JSON.parse(localStorage.getItem("gatePlans") || "[]");
+}
+
+function savePlans(arr){
+  localStorage.setItem("gatePlans", JSON.stringify(arr));
+}
+
+function planNo(p){
+  return p.gatePlanNo || p.gatePassNo || "";
+}
+
+function totalDelivery(p){
+  var total=0;
+  (p.rows||[]).forEach(function(r){
+    total += Number(r.deliveryQty)||0;
+  });
+  return total;
+}
+
+function totalCtn(p){
+  var total=0;
+  (p.rows||[]).forEach(function(r){
+    total += Number(r.ctnQty)||0;
+  });
+  return total;
+}
 
 document.getElementById("fromDate").value=today();
 document.getElementById("toDate").value=today();
-document.getElementById("mcdFilter").innerHTML='<option value="">All</option>'+ALL_MCD.map(x=>`<option>${x}</option>`).join("");
 
-function planNo(p){return p.gatePlanNo || p.gatePassNo || "";}
-function totalDelivery(p){return (p.rows||[]).reduce((a,r)=>a+(Number(r.deliveryQty)||0),0);}
-function totalCtn(p){return (p.rows||[]).reduce((a,r)=>a+(Number(r.ctnQty)||0),0);}
-
+var mcdHtml='<option value="">All</option>';
+ALL_MCD.forEach(function(x){
+  mcdHtml += '<option>'+x+'</option>';
+});
+document.getElementById("mcdFilter").innerHTML=mcdHtml;
 
 function makeQRText(p){
-  let base=location.origin+location.pathname;
-  return base+"?gate="+encodeURIComponent(planNo(p));
+  var base=location.origin + location.pathname;
+  return base + "?gate=" + encodeURIComponent(planNo(p));
 }
 
 function generateQRs(data){
-  setTimeout(()=>{
-    data.forEach((p,i)=>{
-      let el=document.getElementById("qr-"+i);
+  setTimeout(function(){
+    data.forEach(function(p,i){
+      var el=document.getElementById("qr-"+i);
       if(!el) return;
       el.innerHTML="";
       new QRCode(el,{
         text:makeQRText(p),
-        width:78,
-        height:78,
+        width:70,
+        height:70,
         colorDark:"#000000",
         colorLight:"#ffffff",
         correctLevel:QRCode.CorrectLevel.M
@@ -739,411 +367,269 @@ function generateQRs(data){
 }
 
 function showReport(){
-  let from=document.getElementById("fromDate").value;
-  let to=document.getElementById("toDate").value;
-  let urlGate=new URLSearchParams(location.search).get("gate") || "";
+  var from=document.getElementById("fromDate").value;
+  var to=document.getElementById("toDate").value;
+
+  var urlGate=new URLSearchParams(location.search).get("gate") || "";
   if(urlGate && !document.getElementById("gateSearch").value){
     document.getElementById("gateSearch").value=urlGate;
   }
-  let gate=document.getElementById("gateSearch").value.trim();
-  let company=document.getElementById("companyFilter").value;
-  let mcd=document.getElementById("mcdFilter").value;
 
-  let data=plans().filter(p=>{
-    if(from && p.date<from) return false;
-    if(to && p.date>to) return false;
+  var gate=document.getElementById("gateSearch").value.trim();
+  var company=document.getElementById("companyFilter").value;
+  var mcd=document.getElementById("mcdFilter").value;
+
+  var data=plans().filter(function(p){
+    if(from && p.date < from) return false;
+    if(to && p.date > to) return false;
     if(gate && planNo(p)!==gate) return false;
     if(company && p.toCompany!==company && p.company!==company) return false;
     if(mcd && p.mcd!==mcd) return false;
     return true;
   });
 
-  data.sort((a,b)=>(planNo(a)).localeCompare(planNo(b)));
+  data.sort(function(a,b){
+    return planNo(a).localeCompare(planNo(b));
+  });
 
-  let box=document.getElementById("reportArea");
-  if(data.length===0){box.innerHTML='<div class="planCard noData">No Gate Plan Found</div>';return;}
+  var box=document.getElementById("reportArea");
 
-  box.innerHTML=data.map((p,i)=>renderPlan(p,i)).join("");
+  if(data.length===0){
+    box.innerHTML='<div class="planCard noData">No Gate Plan Found</div>';
+    return;
+  }
+
+  var html="";
+  data.forEach(function(p,i){
+    html += renderPlan(p,i);
+  });
+
+  box.innerHTML=html;
   generateQRs(data);
 }
 
 function renderPlan(p,index){
-  if(p.mcd==="GREY FABRIC MCD") return renderGrey(p,index);
+  if(p.mcd==="GREY FABRIC MCD"){
+    return renderGrey(p,index);
+  }
 
-  let rows=(p.rows||[]).map((r,i)=>`
-    <tr>
-      <td class="slCol">${i+1}</td>
-      <td class="buyerCol">${r.buyerName||""}</td>
-      <td class="srCol">${r.srGtNo||""}</td>
-      <td class="styleCol">${r.styleName||""}</td>
-      <td class="orderCol">${r.orderNo||""}</td>
-      <td class="itemCol">${r.itemName||""}</td>
-      <td class="colorCol">${r.color||""}</td>
-      <td class="unitCol">${r.unit||""}</td>
-      <td class="qtyCol">${r.deliveryQty||""}</td>
-      <td class="ctnCol">${r.ctnQty||""}</td>
-      <td class="partyCol">${r.toParty||""}</td>
-      <td class="vehicleCol">${r.vehicleNo||""}</td>
-      <td class="remarksCol">${r.remarks||""}</td>
-    </tr>
-  `).join("");
+  var rowsHtml="";
+  (p.rows||[]).forEach(function(r,i){
+    rowsHtml += '<tr>';
+    rowsHtml += '<td class="slCol">'+(i+1)+'</td>';
+    rowsHtml += '<td class="buyerCol">'+(r.buyerName||"")+'</td>';
+    rowsHtml += '<td class="srCol">'+(r.srGtNo||"")+'</td>';
+    rowsHtml += '<td class="styleCol">'+(r.styleName||"")+'</td>';
+    rowsHtml += '<td class="orderCol">'+(r.orderNo||"")+'</td>';
+    rowsHtml += '<td class="itemCol">'+(r.itemName||"")+'</td>';
+    rowsHtml += '<td class="colorCol">'+(r.color||"")+'</td>';
+    rowsHtml += '<td class="unitCol">'+(r.unit||"")+'</td>';
+    rowsHtml += '<td class="qtyCol">'+(r.deliveryQty||"")+'</td>';
+    rowsHtml += '<td class="ctnCol">'+(r.ctnQty||"")+'</td>';
+    rowsHtml += '<td class="partyCol">'+(r.toParty||"")+'</td>';
+    rowsHtml += '<td class="vehicleCol">'+(r.vehicleNo||"")+'</td>';
+    rowsHtml += '<td class="remarksCol">'+(r.remarks||"")+'</td>';
+    rowsHtml += '</tr>';
+  });
 
-  return `
-  <div class="planCard" id="plan-${index}">
-    <div class="topLine">${p.company||""} To ${p.toCompany||""}</div>
-    <div class="meta">
-      <div>Gate Plan No: ${planNo(p)}</div>
-      <div>Date: ${p.date||""}</div>
-      <div>Time: ${p.time||""}</div>
-      <div>MCD: ${p.mcd||""}</div>
-      <div>Prepared By: ${p.preparedBy||""}</div>
-    </div>
-    <div class="qrBox" id="qr-${index}"></div>
-    <div class="qrLabel">Scan QR: ${planNo(p)}</div>
+  var h='';
+  h += '<div class="planCard" id="plan-'+index+'">';
+  h += '<div class="topLine">'+(p.company||"")+' To '+(p.toCompany||"")+'</div>';
+  h += '<div class="meta">';
+  h += '<div>Gate Plan No: '+planNo(p)+'</div>';
+  h += '<div>Date: '+(p.date||"")+'</div>';
+  h += '<div>Time: '+(p.time||"")+'</div>';
+  h += '<div>MCD: '+(p.mcd||"")+'</div>';
+  h += '<div>Prepared By: '+(p.preparedBy||"")+'</div>';
+  h += '</div>';
 
-    <div class="actionBar noPrint">
-      <button class="print" onclick="printSingle(${index})">ð¨ Print This</button>
-      <button class="edit" onclick="editPlan('${planNo(p)}')">â Edit</button>
-      <button class="del" onclick="deletePlan('${planNo(p)}')">ð Delete</button>
-    </div>
-    <div class="tableWrap">
-      <table>
-        <thead><tr><th class="slCol">SL No</th><th class="buyerCol">Buyer Name</th><th class="srCol">SR/GT No</th><th class="styleCol">Style Name</th><th class="orderCol">Order No/PO No</th><th class="itemCol">Name of Item</th><th class="colorCol">Color</th><th class="unitCol">Unit</th><th class="qtyCol">Delivery Qty</th><th class="ctnCol">CTN/PKG Qty</th><th class="partyCol">To Party Name</th><th class="vehicleCol">Vehicle No</th><th class="remarksCol">Remarks</th></tr></thead>
-        <tbody>${rows}</tbody>
-        <tfoot><tr class="totalRow"><td colspan="8">Grand Total</td><td>${totalDelivery(p)}</td><td>${totalCtn(p)}</td><td colspan="3"></td></tr></tfoot>
-      </table>
-    </div>
-    <div class="sign">
-      <div>Prepared By<br>${p.preparedBy||""}</div><div>Security Dept.</div><div>Checked By<br>Sr. Officer ( MCD )</div><div>Asst. Manager<br>(MCD)</div><div>AGM (MCD)</div><div>Verify By<br>Merchant Dept.</div><div>Verify By<br>HR & Admin Dept.</div><div>Approved By</div>
-    </div>
-  </div>`;
+  h += '<div class="qrBox" id="qr-'+index+'"></div>';
+  h += '<div class="qrLabel">Scan QR: '+planNo(p)+'</div>';
+
+  h += '<div class="actionBar noPrint">';
+  h += '<button class="print" onclick="printSingle('+index+')">ð¨ Print This</button>';
+  h += '<button class="edit" onclick="editPlan(\''+planNo(p)+'\')">â Edit</button>';
+  h += '<button class="del" onclick="deletePlan(\''+planNo(p)+'\')">ð Delete</button>';
+  h += '</div>';
+
+  h += '<div class="tableWrap"><table>';
+  h += '<thead><tr>';
+  h += '<th class="slCol">SL No</th>';
+  h += '<th class="buyerCol">Buyer Name</th>';
+  h += '<th class="srCol">SR/GT No</th>';
+  h += '<th class="styleCol">Style Name</th>';
+  h += '<th class="orderCol">Order No/PO No</th>';
+  h += '<th class="itemCol">Name of Item</th>';
+  h += '<th class="colorCol">Color</th>';
+  h += '<th class="unitCol">Unit</th>';
+  h += '<th class="qtyCol">Delivery Qty</th>';
+  h += '<th class="ctnCol">CTN/PKG Qty</th>';
+  h += '<th class="partyCol">To Party Name</th>';
+  h += '<th class="vehicleCol">Vehicle No</th>';
+  h += '<th class="remarksCol">Remarks</th>';
+  h += '</tr></thead>';
+  h += '<tbody>'+rowsHtml+'</tbody>';
+  h += '<tfoot><tr class="totalRow">';
+  h += '<td colspan="8">Grand Total</td>';
+  h += '<td>'+totalDelivery(p)+'</td>';
+  h += '<td>'+totalCtn(p)+'</td>';
+  h += '<td colspan="3"></td>';
+  h += '</tr></tfoot>';
+  h += '</table></div>';
+
+  h += '<div class="sign">';
+  h += '<div>Prepared By<br>'+(p.preparedBy||"")+'</div>';
+  h += '<div>Security Dept.</div>';
+  h += '<div>Checked By<br>Sr. Officer ( MCD )</div>';
+  h += '<div>Asst. Manager<br>(MCD)</div>';
+  h += '<div>AGM (MCD)</div>';
+  h += '<div>Verify By<br>Merchant Dept.</div>';
+  h += '<div>Verify By<br>HR & Admin Dept.</div>';
+  h += '<div>Approved By</div>';
+  h += '</div>';
+
+  h += '</div>';
+  return h;
 }
 
 function renderGrey(p,index){
-  let r=(p.rows||[])[0]||{};
-  let reason=r.itemName||"For Dyeing";
-  let qty=totalDelivery(p);
-  let company=r.toParty || p.toCompany || "";
-  let remarks=r.remarks||"";
+  var r=(p.rows||[])[0] || {};
+  var reason=r.itemName || "For Dyeing";
+  var qty=totalDelivery(p);
+  var company=r.toParty || p.toCompany || "";
+  var remarks=r.remarks || "";
 
-  return `
-  <div class="greyReport" id="plan-${index}">
-    <div class="greyHeader">
-      <h2>GMS TEXTILES LTD.</h2>
-      <h4>Tansutrapur, Kaliakoir, Gazipur</h4>
-      <h1>Grey Fabric-MCD</h1>
-      <div class="greyTitle">Daily GMS Textiles to GMS Composite Delivery Status</div>
-    </div>
-    <div class="qrBox" id="qr-${index}"></div>
-    <div class="qrLabel">Scan QR: ${planNo(p)}</div>
+  var h='';
+  h += '<div class="greyReport" id="plan-'+index+'">';
+  h += '<div class="greyHeader">';
+  h += '<h2>GMS TEXTILES LTD.</h2>';
+  h += '<h4>Tansutrapur, Kaliakoir, Gazipur</h4>';
+  h += '<h1>Grey Fabric-MCD</h1>';
+  h += '<div class="greyTitle">Daily GMS Textiles to GMS Composite Delivery Status</div>';
+  h += '</div>';
 
-    <div class="actionBar noPrint">
-      <button class="print" onclick="printSingle(${index})">ð¨ Print This</button>
-      <button class="edit" onclick="editPlan('${planNo(p)}')">â Edit</button>
-      <button class="del" onclick="deletePlan('${planNo(p)}')">ð Delete</button>
-    </div>
-    <table class="greyTable">
-      <thead><tr><th>Date</th><th>Company Name</th><th>Delivery Reason</th><th>Total Qty</th><th>Remarks</th></tr></thead>
-      <tbody>
-        <tr><td>${p.date||""}</td><td>${company}</td><td>${reason}</td><td>${Number(qty).toFixed(1)}</td><td>${remarks}</td></tr>
-        <tr class="totalRow"><td colspan="3">Total-</td><td>${Number(qty).toFixed(1)}</td><td></td></tr>
-      </tbody>
-    </table>
-    <div class="greySign">
-      <div>Prepared By<br>${p.preparedBy||""}</div><div>Security Dept.</div><div>Checked By Officer - MCD</div><div>Asst. Manager - MCD</div><div>Knitting Manager/DGM</div><div>Dyeing Manager/DGM</div>
-    </div>
-  </div>`;
+  h += '<div class="qrBox" id="qr-'+index+'"></div>';
+  h += '<div class="qrLabel">Scan QR: '+planNo(p)+'</div>';
+
+  h += '<div class="actionBar noPrint">';
+  h += '<button class="print" onclick="printSingle('+index+')">ð¨ Print This</button>';
+  h += '<button class="edit" onclick="editPlan(\''+planNo(p)+'\')">â Edit</button>';
+  h += '<button class="del" onclick="deletePlan(\''+planNo(p)+'\')">ð Delete</button>';
+  h += '</div>';
+
+  h += '<table class="greyTable">';
+  h += '<thead><tr>';
+  h += '<th>Date</th>';
+  h += '<th>Company Name</th>';
+  h += '<th>Delivery Reason</th>';
+  h += '<th>Total Qty</th>';
+  h += '<th>Remarks</th>';
+  h += '</tr></thead>';
+  h += '<tbody>';
+  h += '<tr>';
+  h += '<td>'+(p.date||"")+'</td>';
+  h += '<td>'+company+'</td>';
+  h += '<td>'+reason+'</td>';
+  h += '<td>'+Number(qty).toFixed(1)+'</td>';
+  h += '<td>'+remarks+'</td>';
+  h += '</tr>';
+  h += '<tr class="totalRow">';
+  h += '<td colspan="3">Total-</td>';
+  h += '<td>'+Number(qty).toFixed(1)+'</td>';
+  h += '<td></td>';
+  h += '</tr>';
+  h += '</tbody></table>';
+
+  h += '<div class="greySign">';
+  h += '<div>Prepared By<br>'+(p.preparedBy||"")+'</div>';
+  h += '<div>Security Dept.</div>';
+  h += '<div>Checked By Officer - MCD</div>';
+  h += '<div>Asst. Manager - MCD</div>';
+  h += '<div>Knitting Manager/DGM</div>';
+  h += '<div>Dyeing Manager/DGM</div>';
+  h += '</div>';
+
+  h += '</div>';
+  return h;
 }
 
-
 function printSingle(index){
-  const item=document.getElementById("plan-"+index);
+  var item=document.getElementById("plan-"+index);
   if(!item) return;
 
-  const clone=item.cloneNode(true);
-  clone.querySelectorAll("canvas").forEach(canvas=>{
-    const img=document.createElement("img");
+  var clone=item.cloneNode(true);
+
+  clone.querySelectorAll("canvas").forEach(function(canvas){
+    var img=document.createElement("img");
     img.src=canvas.toDataURL("image/png");
     img.style.width="55px";
     img.style.height="55px";
     canvas.replaceWith(img);
   });
 
-  const printCss = `
-  <style>
-    @page{
-      size:A4 landscape;
-      margin:4mm;
-    }
+  var printCss = ''
+  + '<style>'
+  + '@page{size:A4 landscape;margin:4mm;}'
+  + '*{box-sizing:border-box;}'
+  + 'html,body{margin:0;padding:0;background:white;color:black;font-family:Arial,sans-serif;width:297mm;height:200mm;overflow:hidden;}'
+  + '.noPrint,.actionBar{display:none!important;}'
+  + '.planCard{width:100%;height:auto;min-height:115mm;margin:0;padding:0;border:0;overflow:hidden;page-break-inside:avoid;page-break-after:avoid;}'
+  + '.topLine{text-align:center;font-size:16px;font-weight:900;padding:3px;border-bottom:1px solid #000;line-height:1;}'
+  + '.meta{display:grid;grid-template-columns:repeat(5,1fr);border-bottom:1px solid #000;}'
+  + '.meta div{font-size:13px;font-weight:900;text-align:center;padding:4px;border-right:1px solid #000;line-height:1;}'
+  + '.tableWrap{overflow:visible;width:100%;}'
+  + 'table{width:100%;min-width:0!important;border-collapse:collapse;table-layout:fixed;font-size:10px;}'
+  + 'th,td{border:1px solid #000;text-align:center;padding:3px 1px;font-size:10px;font-weight:800;line-height:1;overflow:hidden;}'
+  + 'th{font-weight:900;}'
+  + '.totalRow td{font-weight:900;}'
+  + '.slCol{width:25px}.buyerCol{width:82px}.srCol{width:85px}.styleCol{width:82px}.orderCol{width:90px}.itemCol{width:85px}.colorCol{width:55px}.unitCol{width:45px}.qtyCol{width:65px}.ctnCol{width:68px}.partyCol{width:145px}.vehicleCol{width:75px}.remarksCol{width:75px}'
+  + '.sign{margin-top:22mm;display:grid;grid-template-columns:repeat(8,1fr);border-top:1px solid #000;}'
+  + '.sign div{text-align:center;font-size:9.5px;font-weight:900;padding-top:6px;line-height:1;border-top:0!important;}'
+  + '.qrBox{display:flex;justify-content:center;align-items:center;margin-top:5px}.qrBox img,.qrBox canvas{width:55px!important;height:55px!important}.qrLabel{text-align:center;font-size:8px;font-weight:900}'
+  + '.greyReport{width:100%;height:120mm;margin:0;padding:0;border:0;overflow:hidden;page-break-inside:avoid;page-break-after:avoid;position:relative;}'
+  + '.greyHeader{text-align:center;line-height:1;}'
+  + '.greyHeader h2{font-size:23px;margin:0;font-weight:900;}'
+  + '.greyHeader h4{font-size:13px;margin:0;}'
+  + '.greyHeader h1{font-size:33px;margin:2px 0;color:#555;font-weight:900;}'
+  + '.greyTitle{font-size:18px;font-weight:900;margin:4px 0;}'
+  + '.greyTable{width:72%;margin:6mm auto 0;border-collapse:collapse;table-layout:fixed;}'
+  + '.greyTable th,.greyTable td{font-size:13px;padding:5px;border:1px solid #000;text-align:center;line-height:1;}'
+  + '.greySign{margin-top:35mm;display:grid;grid-template-columns:repeat(6,1fr);gap:16px;}'
+  + '.greySign div{text-align:center;border-top:1px solid #000;font-size:11px;font-weight:900;padding-top:5px;line-height:1;}'
+  + '</style>';
 
-    *{box-sizing:border-box}
-
-    html,body{
-      margin:0;
-      padding:0;
-      background:white;
-      color:black;
-      font-family:Arial,sans-serif;
-      width:297mm;
-      height:200mm;
-      overflow:hidden;
-    }
-
-    .noPrint,
-    .actionBar{
-      display:none!important;
-    }
-
-    .planCard{
-      width:100%;
-      height:auto;
-      min-height:115mm;
-      margin:0;
-      padding:0;
-      border:0;
-      overflow:hidden;
-      page-break-inside:avoid;
-      page-break-after:avoid;
-    }
-
-    .topLine{
-      text-align:center;
-      font-size:16px;
-      font-weight:900;
-      padding:3px;
-      border-bottom:1px solid #000;
-      line-height:1;
-    }
-
-    .meta{
-      display:grid;
-      grid-template-columns:repeat(5,1fr);
-      border-bottom:1px solid #000;
-    }
-
-    .meta div{
-      font-size:13px;
-      font-weight:900;
-      text-align:center;
-      padding:4px;
-      border-right:1px solid #000;
-      line-height:1;
-    }
-
-    .tableWrap{
-      overflow:visible;
-      width:100%;
-    }
-
-    table{
-      width:100%;
-      min-width:0!important;
-      border-collapse:collapse;
-      table-layout:fixed;
-      font-size:10px;
-    }
-
-    th,td{
-      border:1px solid #000;
-      text-align:center;
-      padding:3px 1px;
-      font-size:10px;
-      font-weight:800;
-      line-height:1;
-      overflow:hidden;
-    }
-
-    th{
-      font-weight:900;
-    }
-
-    .totalRow td{
-      font-weight:900;
-    }
-
-    .slCol{width:25px}
-    .buyerCol{width:82px}
-    .srCol{width:85px}
-    .styleCol{width:82px}
-    .orderCol{width:90px}
-    .itemCol{width:85px}
-    .colorCol{width:55px}
-    .unitCol{width:45px}
-    .qtyCol{width:65px}
-    .ctnCol{width:68px}
-    .partyCol{width:145px}
-    .vehicleCol{width:75px}
-    .remarksCol{width:75px}
-
-    .sign{
-      margin-top:22mm;
-      display:grid;
-      grid-template-columns:repeat(8,1fr);
-      border-top:1px solid #000;
-    }
-
-    .sign div{
-      text-align:center;
-      font-size:9.5px;
-      font-weight:900;
-      padding-top:6px;
-      line-height:1;
-      border-top:0!important;
-    }
-
-    .planCard::after,
-    .planCard::before{
-      display:none!important;
-      content:none!important;
-    }
-
-    .greyReport{
-      width:100%;
-      height:120mm;
-      margin:0;
-      padding:0;
-      border:0;
-      overflow:hidden;
-      page-break-inside:avoid;
-      page-break-after:avoid;
-      position:relative;
-    }
-
-    .greyHeader{
-      text-align:center;
-      line-height:1;
-    }
-
-    .greyHeader h2{
-      font-size:23px;
-      margin:0;
-      font-weight:900;
-    }
-
-    .greyHeader h4{
-      font-size:13px;
-      margin:0;
-    }
-
-    .greyHeader h1{
-      font-size:33px;
-      margin:2px 0;
-      color:#555;
-      font-weight:900;
-    }
-
-    .greyTitle{
-      font-size:18px;
-      font-weight:900;
-      margin:4px 0;
-    }
-
-    .greyTable{
-      width:72%;
-      margin:6mm auto 0;
-      border-collapse:collapse;
-      table-layout:fixed;
-    }
-
-    .greyTable th,
-    .greyTable td{
-      font-size:13px;
-      padding:5px;
-      border:1px solid #000;
-      text-align:center;
-      line-height:1;
-    }
-
-    .greySign{
-      margin-top:35mm;
-      display:grid;
-      grid-template-columns:repeat(6,1fr);
-      gap:16px;
-    }
-
-    .greySign div{
-      text-align:center;
-      border-top:1px solid #000;
-      font-size:11px;
-      font-weight:900;
-      padding-top:5px;
-      line-height:1;
-    }
-  
-/* ===== QR CODE STYLE ===== */
-.qrBox{
-  display:flex;
-  justify-content:center;
-  align-items:center;
-  margin-top:6px;
-}
-.qrBox canvas,
-.qrBox img{
-  width:78px!important;
-  height:78px!important;
-}
-.qrLabel{
-  text-align:center;
-  font-size:10px;
-  font-weight:900;
-  margin-top:2px;
-}
-@media print{
-  .qrBox canvas,
-  .qrBox img{
-    width:55px!important;
-    height:55px!important;
-  }
-  .qrLabel{
-    font-size:8px!important;
-    font-weight:900!important;
-  }
-}
-
-</style>`;
-
-  let win=window.open("", "_blank", "width=1200,height=800");
+  var win=window.open("", "_blank", "width=1200,height=800");
   win.document.open();
-  win.document.write(`
-    <!DOCTYPE html>
-    <html>
-    <head>
-      <title>Gate Plan Print</title>
-      ${printCss}
-    <script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
-</head>
-    <body>
-      ${clone.outerHTML}
-    </body>
-    </html>
-  `);
+  win.document.write('<!DOCTYPE html><html><head><title>Gate Plan Print</title>'+printCss+'</head><body>'+clone.outerHTML+'</body></html>');
   win.document.close();
 
-  setTimeout(()=>{
+  setTimeout(function(){
     win.focus();
     win.print();
-    setTimeout(()=>win.close(),500);
+    setTimeout(function(){
+      win.close();
+    },500);
   },500);
 }
 
-
 function deletePlan(no){
   if(!confirm("Delete this Gate Plan?")) return;
-  let arr=plans().filter(p=>planNo(p)!==no);
+  var arr=plans().filter(function(p){
+    return planNo(p)!==no;
+  });
   savePlans(arr);
   showReport();
 }
 
-
 function editPlan(no){
   localStorage.setItem("editGatePlanNo", no);
-  location.href = "gate-plan.html?edit=" + encodeURIComponent(no);
+  location.href="gate-plan.html?edit="+encodeURIComponent(no);
 }
 
 function exportExcel(){
-  let html=document.getElementById("reportArea").innerHTML;
-  let file=new Blob([html],{type:"application/vnd.ms-excel"});
-  let a=document.createElement("a");
+  var html=document.getElementById("reportArea").innerHTML;
+  var file=new Blob([html],{type:"application/vnd.ms-excel"});
+  var a=document.createElement("a");
   a.href=URL.createObjectURL(file);
   a.download="gate-plan-report.xls";
   a.click();
@@ -1151,5 +637,6 @@ function exportExcel(){
 
 showReport();
 </script>
+
 </body>
 </html>
