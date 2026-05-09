@@ -1,88 +1,190 @@
 <!DOCTYPE html>
 <html>
 <head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
 <title>All Needle Summary</title>
-<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
 <style>
-body{margin:0;background:#07111f;color:white;font-family:Arial,sans-serif}
-.header{text-align:center;padding:12px}
-.header h2,.header h3{margin:4px}
-.controls{text-align:center;margin:10px}
-button{padding:10px 14px;border:0;border-radius:8px;color:white;font-weight:bold;margin:4px;cursor:pointer}
-.show{background:#2563eb}.excel{background:#16a34a}.print{background:#7c3aed}.home{background:#0f766e}
-input,select{font-size:16px;padding:8px;border-radius:6px;border:1px solid #999}
-.kpi{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin:10px}
-.kpiBox{background:#101b2d;border:1px solid #263855;border-radius:14px;padding:12px;text-align:center}
-.kpiBox span{font-size:12px;color:#9fb0c7;font-weight:bold}
-.kpiBox b{display:block;color:#22c55e;font-size:24px;margin-top:5px}
-.tableWrap{overflow-x:auto;width:100%}
-table{min-width:900px;width:98%;margin:10px auto;border-collapse:collapse;background:white;color:black;font-size:12px}
-th,td{border:1px solid #000;padding:6px;text-align:center}
-th{background:#9fc5e8;font-weight:bold}
-.totalRow{background:#d9ead3;font-weight:bold}
-.grandRow{background:#ffe599;font-weight:bold;font-size:15px}
-@page{size:A4 landscape;margin:5mm}
-@media print{
-  body{background:white;color:black}
-  .controls,.kpi,.noPrint{display:none!important}
-  .header h2{font-size:16px}
-  .header h3{font-size:12px}
-  table{width:100%;min-width:0;font-size:9px;margin:2px 0}
-  th,td{padding:3px}
+body{
+  margin:0;
+  background:#07111f;
+  color:#fff;
+  font-family:"Segoe UI Emoji","Apple Color Emoji","Segoe UI",Arial,sans-serif;
 }
-@media(max-width:700px){.kpi{grid-template-columns:1fr}}
+.header{
+  text-align:center;
+  padding:14px 8px;
+}
+.header h1,.header h2,.header h3{
+  margin:3px;
+}
+.controls{
+  text-align:center;
+  margin:10px;
+}
+input,select{
+  padding:9px;
+  border-radius:7px;
+  border:1px solid #999;
+  font-weight:bold;
+}
+button{
+  padding:10px 16px;
+  border:0;
+  border-radius:8px;
+  color:#fff;
+  font-weight:bold;
+  cursor:pointer;
+  margin:4px;
+}
+.show{background:#2563eb}
+.excel{background:#16a34a}
+.print{background:#7c3aed}
+.home{background:#0f766e}
+
+.cardGrid{
+  width:96%;
+  margin:10px auto;
+  display:grid;
+  grid-template-columns:repeat(4,1fr);
+  gap:10px;
+}
+.card{
+  background:linear-gradient(135deg,#12213a,#17294a);
+  border:1px solid #30415f;
+  border-radius:16px;
+  padding:14px;
+  box-shadow:0 10px 25px rgba(0,0,0,.25);
+}
+.card .label{
+  color:#9fb0c7;
+  font-weight:900;
+  font-size:13px;
+}
+.card .value{
+  color:#22c55e;
+  font-size:28px;
+  font-weight:1000;
+  margin-top:5px;
+}
+
+.reportBox{
+  width:96%;
+  margin:12px auto;
+  background:#fff;
+  color:#000;
+  border-radius:8px;
+  overflow:hidden;
+}
+.reportTitle{
+  text-align:center;
+  padding:10px;
+  font-weight:900;
+  font-size:20px;
+}
+table{
+  width:100%;
+  border-collapse:collapse;
+  font-size:13px;
+}
+th,td{
+  border:1px solid #000;
+  padding:7px;
+  text-align:center;
+  font-weight:700;
+}
+th{
+  background:#b8cbe0;
+}
+.totalRow{
+  background:#eaf2df;
+  font-weight:900;
+  font-size:15px;
+}
+.chartBox{
+  width:96%;
+  height:330px;
+  margin:12px auto;
+  background:#fff;
+  color:#000;
+  border-radius:12px;
+  padding:12px;
+}
+@media(max-width:800px){
+  .cardGrid{grid-template-columns:1fr}
+  table{font-size:10px}
+  th,td{padding:4px}
+}
+@page{
+  size:A4 landscape;
+  margin:7mm;
+}
+@media print{
+  body{background:#fff;color:#000}
+  .controls,.cardGrid,.chartBox{display:none!important}
+  .reportBox{width:100%;margin:0;border-radius:0}
+  table{font-size:11px}
+}
 </style>
 </head>
 
 <body>
 
 <div class="header">
-  <h2>GMS Textiles Ltd</h2>
-  <h3>All Needle Summary Report</h3>
+  <h1>GMS Textiles Ltd</h1>
+  <h3>Tansutrapur, Kaliakoir, Gazipur</h3>
+  <h2>All Needle Summary</h2>
 </div>
 
-<div class="controls noPrint">
+<div class="controls">
   From: <input type="date" id="fromDate">
   To: <input type="date" id="toDate">
-  Month: <input type="month" id="monthInput">
-
-  <button class="show" onclick="setMonthRange()">📅 Month Load</button>
-  <button class="show" onclick="loadSummary()">🔍 Show</button>
+  <button class="show" onclick="loadSummary()">🔍 Show Report</button>
   <button class="excel" onclick="exportExcel()">📊 Excel</button>
   <button class="print" onclick="window.print()">🖨 PDF / Print</button>
-  <button class="home" onclick="location.href='needle.html'">🪡 Entry</button>
   <button class="home" onclick="location.href='index.html'">🏠 Home</button>
 </div>
 
-<div class="kpi">
-  <div class="kpiBox"><span>📥 Total Receive</span><b id="kpiReceive">0</b></div>
-  <div class="kpiBox"><span>📤 Total Delivery</span><b id="kpiDelivery">0</b></div>
-  <div class="kpiBox"><span>📦 Present Stock</span><b id="kpiPresent">0</b></div>
+<div class="cardGrid">
+  <div class="card"><div class="label">Previous Qty</div><div class="value" id="kPrev">0</div></div>
+  <div class="card"><div class="label">Receive Qty</div><div class="value" id="kReceive">0</div></div>
+  <div class="card"><div class="label">Delivery Qty</div><div class="value" id="kDelivery">0</div></div>
+  <div class="card"><div class="label">Present Stock</div><div class="value" id="kPresent">0</div></div>
 </div>
 
-<div class="tableWrap">
-<table id="summaryTable">
-<thead>
-<tr>
-  <th>SL</th>
-  <th>Needle Type</th>
-  <th>Size</th>
-  <th>Total Receive</th>
-  <th>Total Delivery</th>
-  <th>Present Stock</th>
-</tr>
-</thead>
-<tbody id="tbody"></tbody>
-<tfoot>
-<tr class="grandRow">
-  <td colspan="3">Grand Total</td>
-  <td id="gtReceive">0</td>
-  <td id="gtDelivery">0</td>
-  <td id="gtPresent">0</td>
-</tr>
-</tfoot>
-</table>
+<div class="reportBox" id="reportBox">
+  <div class="reportTitle" id="reportTitle">All Needle Summary</div>
+  <table id="summaryTable">
+    <thead>
+      <tr>
+        <th>SL</th>
+        <th>Floor Name</th>
+        <th>Previous Qty</th>
+        <th>Receive Qty</th>
+        <th>Delivery Qty</th>
+        <th>Present Stock</th>
+        <th>Remarks</th>
+      </tr>
+    </thead>
+    <tbody id="summaryBody"></tbody>
+    <tfoot>
+      <tr class="totalRow">
+        <td colspan="2">Grand Total</td>
+        <td id="tPrev">0</td>
+        <td id="tReceive">0</td>
+        <td id="tDelivery">0</td>
+        <td id="tPresent">0</td>
+        <td></td>
+      </tr>
+    </tfoot>
+  </table>
+</div>
+
+<div class="chartBox">
+  <canvas id="summaryChart"></canvas>
 </div>
 
 <script type="module">
@@ -101,129 +203,176 @@ const firebaseConfig={
 const app=initializeApp(firebaseConfig);
 const db=getFirestore(app);
 
-function today(){return new Date().toISOString().slice(0,10)}
-function ym(){return new Date().toISOString().slice(0,7)}
-function n(v){return Number(v)||0}
+const FLOORS=[
+  "Shapla R","Shapla N",
+  "Poddo R","Poddo N",
+  "Sample R","Sample N",
+  "Kadom R","Kadom N",
+  "Belly R","Belly N",
+  "EMBROIDERY R","EMBROIDERY N"
+];
 
-document.getElementById("fromDate").value=today();
-document.getElementById("toDate").value=today();
-document.getElementById("monthInput").value=ym();
+let chart=null;
 
-window.setMonthRange=function(){
-  let m=document.getElementById("monthInput").value;
-  if(!m){alert("Month select koro");return;}
+function today(){
+  return new Date().toISOString().slice(0,10);
+}
 
-  let first=m+"-01";
-  let d=new Date(first);
-  let last=new Date(d.getFullYear(),d.getMonth()+1,0).toISOString().slice(0,10);
+function fmt(n){
+  return Number(n||0).toLocaleString("en-US");
+}
 
-  document.getElementById("fromDate").value=first;
-  document.getElementById("toDate").value=last;
+function n(v){
+  return Number(v)||0;
+}
 
-  loadSummary();
-};
+function setDefaultDate(){
+  let d=today();
+  if(!document.getElementById("fromDate").value) document.getElementById("fromDate").value=d;
+  if(!document.getElementById("toDate").value) document.getElementById("toDate").value=d;
+}
 
-async function loadSummary(){
+function getFloorName(data){
+  return data.floor || data.floorName || data.productionFloor || data.name || "";
+}
+
+function getDate(data){
+  return data.date || data.postingDate || data.entryDate || (data.createdAt||"").slice(0,10) || "";
+}
+
+function readRows(data){
+  if(Array.isArray(data.rows)) return data.rows;
+  if(Array.isArray(data.items)) return data.items;
+  return [];
+}
+
+window.loadSummary=async function(){
+  setDefaultDate();
+
   let from=document.getElementById("fromDate").value;
   let to=document.getElementById("toDate").value;
 
-  let snap=await getDocs(collection(db,"dailyPosting"));
   let map={};
-
-  snap.forEach(d=>{
-    let data=d.data();
-    if(!data.date || !Array.isArray(data.rows)) return;
-    if(from && data.date<from) return;
-    if(to && data.date>to) return;
-
-    data.rows.forEach(row=>{
-      let needleType=row.needleType || "";
-      let size=row.size || "";
-      let key=needleType+"___"+size;
-
-      if(!map[key]){
-        map[key]={
-          needleType:needleType,
-          size:size,
-          receive:0,
-          delivery:0,
-          presentByFloor:{},
-          lastDateByFloor:{}
-        };
-      }
-
-      map[key].receive += n(row.receive);
-      map[key].delivery += n(row.delivery);
-
-      let floor=data.floor || "";
-      let date=data.date || "";
-
-      if(!map[key].lastDateByFloor[floor] || date>=map[key].lastDateByFloor[floor]){
-        map[key].presentByFloor[floor]=n(row.present);
-        map[key].lastDateByFloor[floor]=date;
-      }
-    });
+  FLOORS.forEach(f=>{
+    map[f]={floor:f,previous:0,receive:0,delivery:0,present:0};
   });
 
-  let rows=Object.values(map).map(r=>{
-    let present=0;
-    Object.values(r.presentByFloor).forEach(v=>present+=n(v));
-    return {...r,present};
-  }).sort((a,b)=>{
-    let x=(a.needleType+a.size).localeCompare(b.needleType+b.size);
-    return x;
+  let snap=await getDocs(collection(db,"dailyPosting"));
+
+  snap.forEach(docSnap=>{
+    let data=docSnap.data();
+    let date=getDate(data);
+    if(from && date<from) return;
+    if(to && date>to) return;
+
+    let floor=getFloorName(data);
+    if(!floor) return;
+
+    if(!map[floor]){
+      map[floor]={floor:floor,previous:0,receive:0,delivery:0,present:0};
+    }
+
+    let rows=readRows(data);
+
+    if(rows.length){
+      rows.forEach(r=>{
+        map[floor].previous += n(r.previous) || n(r.previousQty) || n(r.prev);
+        map[floor].receive += n(r.receive) || n(r.receiveQty) || n(r.received);
+        map[floor].delivery += n(r.delivery) || n(r.deliveryQty) || n(r.issue);
+        map[floor].present += n(r.present) || n(r.presentStock) || n(r.stock);
+      });
+    }else{
+      map[floor].previous += n(data.previous) || n(data.previousQty);
+      map[floor].receive += n(data.receive) || n(data.receiveQty);
+      map[floor].delivery += n(data.delivery) || n(data.deliveryQty);
+      map[floor].present += n(data.present) || n(data.presentStock);
+    }
   });
+
+  let arr=Object.values(map).filter(x=>x.previous||x.receive||x.delivery||x.present||FLOORS.includes(x.floor));
+
+  let totalPrev=0,totalReceive=0,totalDelivery=0,totalPresent=0;
 
   let html="";
-  let gtReceive=0,gtDelivery=0,gtPresent=0;
-
-  rows.forEach((r,i)=>{
-    gtReceive+=n(r.receive);
-    gtDelivery+=n(r.delivery);
-    gtPresent+=n(r.present);
+  arr.forEach((x,i)=>{
+    totalPrev+=x.previous;
+    totalReceive+=x.receive;
+    totalDelivery+=x.delivery;
+    totalPresent+=x.present;
 
     html+=`
-    <tr>
-      <td>${i+1}</td>
-      <td>${r.needleType}</td>
-      <td>${r.size}</td>
-      <td>${r.receive}</td>
-      <td>${r.delivery}</td>
-      <td>${r.present}</td>
-    </tr>`;
+      <tr>
+        <td>${i+1}</td>
+        <td>${x.floor}</td>
+        <td>${fmt(x.previous)}</td>
+        <td>${fmt(x.receive)}</td>
+        <td>${fmt(x.delivery)}</td>
+        <td>${fmt(x.present)}</td>
+        <td></td>
+      </tr>
+    `;
   });
 
-  document.getElementById("tbody").innerHTML=html || `<tr><td colspan="6">No Data Found</td></tr>`;
+  document.getElementById("summaryBody").innerHTML=html;
+  document.getElementById("tPrev").innerText=fmt(totalPrev);
+  document.getElementById("tReceive").innerText=fmt(totalReceive);
+  document.getElementById("tDelivery").innerText=fmt(totalDelivery);
+  document.getElementById("tPresent").innerText=fmt(totalPresent);
 
-  document.getElementById("gtReceive").innerText=gtReceive;
-  document.getElementById("gtDelivery").innerText=gtDelivery;
-  document.getElementById("gtPresent").innerText=gtPresent;
+  document.getElementById("kPrev").innerText=fmt(totalPrev);
+  document.getElementById("kReceive").innerText=fmt(totalReceive);
+  document.getElementById("kDelivery").innerText=fmt(totalDelivery);
+  document.getElementById("kPresent").innerText=fmt(totalPresent);
 
-  document.getElementById("kpiReceive").innerText=gtReceive;
-  document.getElementById("kpiDelivery").innerText=gtDelivery;
-  document.getElementById("kpiPresent").innerText=gtPresent;
+  document.getElementById("reportTitle").innerText=`All Needle Summary From ${from} To ${to}`;
+
+  drawChart(arr);
+};
+
+function drawChart(arr){
+  let labels=arr.map(x=>x.floor);
+  let data=arr.map(x=>x.present);
+
+  if(chart) chart.destroy();
+
+  chart=new Chart(document.getElementById("summaryChart"),{
+    type:"bar",
+    data:{
+      labels:labels,
+      datasets:[{
+        label:"Present Stock",
+        data:data,
+        backgroundColor:[
+          "#38bdf8","#22c55e","#f59e0b","#a855f7","#ef4444","#14b8a6",
+          "#eab308","#6366f1","#ec4899","#84cc16","#06b6d4","#f97316"
+        ],
+        borderRadius:8
+      }]
+    },
+    options:{
+      responsive:true,
+      maintainAspectRatio:false,
+      plugins:{
+        legend:{display:false}
+      },
+      scales:{
+        y:{beginAtZero:true},
+        x:{ticks:{font:{weight:"bold"}}}
+      }
+    }
+  });
 }
 
-window.loadSummary=loadSummary;
-
 window.exportExcel=function(){
-  let table=document.getElementById("summaryTable").outerHTML;
-
-  let file=new Blob([`
-    <html><head><meta charset="UTF-8"></head>
-    <body>
-      <h2>GMS Textiles Ltd</h2>
-      <h3>All Needle Summary Report</h3>
-      ${table}
-    </body></html>
-  `],{type:"application/vnd.ms-excel"});
-
+  let html=document.getElementById("reportBox").innerHTML;
+  let file=new Blob([html],{type:"application/vnd.ms-excel"});
   let a=document.createElement("a");
   a.href=URL.createObjectURL(file);
-  a.download="all-needle-summary-report.xls";
+  a.download="all-needle-summary.xls";
   a.click();
 };
 
+setDefaultDate();
 loadSummary();
 </script>
 
