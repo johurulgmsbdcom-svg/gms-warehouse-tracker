@@ -249,6 +249,34 @@ body.light .creditFooter{background:rgba(255,255,255,.96)}.creditItem{display:fl
   color:var(--green);
 }
 
+
+/* ===== FINAL CLEAN BACKUP PAGE ===== */
+#backup .backupOnlyBox,
+#backup .statusBox{
+  max-width:850px;
+  margin:14px auto;
+}
+#backup .backupActionGrid{
+  max-width:850px;
+  margin:14px auto;
+  grid-template-columns:repeat(4,1fr);
+}
+#backup .mcdDashboard,
+#backup .mcdBox,
+#backup .chartBox{
+  display:none!important;
+}
+.logItem{
+  border-bottom:1px solid var(--border);
+  padding:8px 0;
+  font-size:13px;
+  font-weight:800;
+}
+.logItem b{color:var(--green)}
+@media(max-width:900px){
+  #backup .backupActionGrid{grid-template-columns:1fr}
+}
+
 </style>
 </head>
 
@@ -363,11 +391,12 @@ body.light .creditFooter{background:rgba(255,255,255,.96)}.creditItem{display:fl
 
 
 
+
 <div id="backup" class="page">
   <h2>☁ Backup & Restore Control</h2>
   <div class="dashSub">Only Admin can use this page</div>
 
-  <div class="statusBox">
+  <div class="statusBox backupOnlyBox">
     <div class="statusTitle">📌 Firebase Live Usage</div>
 
     <div class="statusLine"><span>📖 Reads Today</span><b id="readsToday">0 / 50,000</b></div>
@@ -380,7 +409,7 @@ body.light .creditFooter{background:rgba(255,255,255,.96)}.creditItem{display:fl
 
     <div class="statusLine"><span>🔥 Today Entry</span><b id="firebaseToday">0</b></div>
     <div class="statusLine"><span>🗃 Total Entry</span><b id="firebaseTotal">0</b></div>
-    <div class="statusLine"><span>🚚 Gate Plan Firebase</span><b id="gateLocal">0</b></div>
+    <div class="statusLine"><span>🚚 Gate Plan Firebase</span><b id="gateLocal">0 / 0</b></div>
 
     <div class="statusLine"><span>📁 Backup Months</span><b id="backupMonths">0</b></div>
     <div class="statusLine"><span>🗓 Active Months</span><b id="activeMonths">0</b></div>
@@ -390,7 +419,7 @@ body.light .creditFooter{background:rgba(255,255,255,.96)}.creditItem{display:fl
     <div id="limitSignal" class="statusSignal safe">🟢 SAFE</div>
   </div>
 
-  <div class="grid">
+  <div class="grid backupActionGrid">
     <div class="card" onclick="backupAllData()">☁ Backup Now</div>
     <div class="card" onclick="document.getElementById('restoreFile').click()">📥 Restore Backup</div>
     <div class="card" onclick="clearOldData()">🧹 Clear Old Data</div>
@@ -398,8 +427,6 @@ body.light .creditFooter{background:rgba(255,255,255,.96)}.creditItem{display:fl
   </div>
 
   <input type="file" id="restoreFile" accept=".json" style="display:none" onchange="loadRestoreFile(event)">
-
-  <br>
 
   <div class="statusBox" id="restorePanel" style="display:none">
     <div class="statusTitle">📥 Restore Month Wise Data</div>
@@ -414,8 +441,6 @@ body.light .creditFooter{background:rgba(255,255,255,.96)}.creditItem{display:fl
     <div class="statusLine"><span>Restore Status</span><b id="restoreStatus">READY</b></div>
   </div>
 
-  <br>
-
   <div class="statusBox">
     <div class="statusTitle">📌 Backup Rules</div>
     <div class="statusLine"><span>Current Month</span><b>KEEP</b></div>
@@ -425,14 +450,11 @@ body.light .creditFooter{background:rgba(255,255,255,.96)}.creditItem{display:fl
     <div class="statusLine"><span>900 MB</span><b>Backup Now</b></div>
   </div>
 
-  <br>
-
   <div class="statusBox">
     <div class="statusTitle">📜 Backup Activity Log</div>
     <div id="backupActivityLog">No activity yet</div>
   </div>
 </div>
-
 
 <div class="creditFooter">
   <div class="creditItem"><img src="https://i.ibb.co/5hzT1VGk/IMG.jpg"><div class="creditText"><b>Powered by JOHURUL</b><span>System Developer & Dashboard Design</span></div></div>
@@ -967,6 +989,7 @@ setInterval(loadNotices,60000);
 
 
 
+
 // ===== FINAL BACKUP / RESTORE / CLEAR / LOG SYSTEM =====
 let selectedBackupData = null;
 
@@ -1276,7 +1299,6 @@ window.clearOldData = async function(){
       for(let d of snap.docs){
 
         let row = d.data();
-
         let month = getRowMonth(row);
 
         if(!month){
