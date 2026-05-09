@@ -280,7 +280,15 @@ th,td{
 
 <div id="reportArea"></div>
 
-<script>
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-app.js";
+import { getFirestore, collection, getDocs, doc, deleteDoc } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-firestore.js";
+
+const firebaseConfig={apiKey:"AIzaSyD-wBCF5eeWMHobLFOhBzKW7aB2pagz9-w",authDomain:"gms-warehouse-tracker-7f57e.firebaseapp.com",projectId:"gms-warehouse-tracker-7f57e",storageBucket:"gms-warehouse-tracker-7f57e.firebasestorage.app",messagingSenderId:"992250313291",appId:"1:992250313291:web:ee3bceae76d4d53bc26bce"};
+const app=initializeApp(firebaseConfig);
+const db=getFirestore(app);
+let firebasePlans=[];
+
 var ALL_MCD=[
   "ACCESSORIES MCD",
   "GREY FABRIC MCD",
@@ -306,8 +314,12 @@ function fmt(v){
   return Number(v||0).toLocaleString("en-US");
 }
 
-function plans(){
-  return JSON.parse(localStorage.getItem("gatePlans") || "[]");
+function plans(){ return firebasePlans; }
+function makeId(no){return String(no).replaceAll("/","-").replaceAll(" ","-");}
+async function loadFirebasePlans(){
+  let snap=await getDocs(collection(db,"gatePlans"));
+  firebasePlans=[];
+  snap.forEach(d=>firebasePlans.push({...d.data(),_id:d.id}));
 }
 
 function savePlans(arr){
@@ -366,7 +378,8 @@ function generateQRs(data){
   },100);
 }
 
-function showReport(){
+window.showReport=async function(){
+  await loadFirebasePlans();
   var from=document.getElementById("fromDate").value;
   var to=document.getElementById("toDate").value;
 
@@ -553,7 +566,7 @@ function renderGrey(p,index){
   return h;
 }
 
-function printSingle(index){
+window.printSingle=function(index){
   var item=document.getElementById("plan-"+index);
   if(!item) return;
 
@@ -612,21 +625,18 @@ function printSingle(index){
   },500);
 }
 
-function deletePlan(no){
+window.deletePlan=async function(no){
   if(!confirm("Delete this Gate Plan?")) return;
-  var arr=plans().filter(function(p){
-    return planNo(p)!==no;
-  });
-  savePlans(arr);
+  await deleteDoc(doc(db,"gatePlans",makeId(no)));
   showReport();
 }
 
-function editPlan(no){
+window.editPlan=function(no){
   localStorage.setItem("editGatePlanNo", no);
   location.href="gate-plan.html?edit="+encodeURIComponent(no);
 }
 
-function exportExcel(){
+window.exportExcel=function(){
   var html=document.getElementById("reportArea").innerHTML;
   var file=new Blob([html],{type:"application/vnd.ms-excel"});
   var a=document.createElement("a");
