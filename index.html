@@ -173,6 +173,14 @@ body.light .creditFooter{background:rgba(255,255,255,.96)}.creditItem{display:fl
       <div class="progress"><div id="limitBar" class="progressFill"></div></div>
       <div id="limitSignal" class="statusSignal safe">🟢 SAFE</div>
     </div>
+  <div class="card" onclick="backupAllData()">
+    ☁ Backup Now
+  </div>
+
+  <div class="card" onclick="clearOldData()">
+    🧹 Clear Old Data
+  </div>
+
   </div>
 
   <div class="topGrid" id="attendanceTextBox">
@@ -741,6 +749,115 @@ loadNotices();
 updateLastActive();
 setInterval(updateLastActive,60000);
 setInterval(loadNotices,60000);
+
+// ===== BACKUP SYSTEM =====
+
+window.backupAllData = async function(){
+
+  try{
+
+    let backup = {
+      date: new Date().toISOString(),
+      backupMonths: [],
+      data: {}
+    };
+
+    const cols = [
+      "greyFabricStock",
+      "accessoriesInventory",
+      "billingManpowerReport",
+      "dailyPosting",
+      "sewingThread",
+      "twillTape",
+      "accessoriesSample",
+      "liveNotices",
+      "manpower",
+      "needleDailyReport",
+      "gatePlans"
+    ];
+
+    for(let c of cols){
+
+      let snap = await getDocs(collection(db,c));
+
+      backup.data[c] = [];
+
+      snap.forEach(d=>{
+
+        let row = d.data();
+
+        backup.data[c].push(row);
+
+        let dt = row.date || "";
+
+        if(dt.length >= 7){
+
+          let month = dt.slice(0,7);
+
+          if(!backup.backupMonths.includes(month)){
+            backup.backupMonths.push(month);
+          }
+
+        }
+
+      });
+
+    }
+
+    let blob = new Blob(
+      [JSON.stringify(backup,null,2)],
+      {type:"application/json"}
+    );
+
+    let a = document.createElement("a");
+
+    a.href = URL.createObjectURL(blob);
+
+    a.download =
+      "gms-backup-" +
+      new Date().toISOString().slice(0,10) +
+      ".json";
+
+    a.click();
+
+    localStorage.setItem(
+      "backupMonths",
+      backup.backupMonths.length
+    );
+
+    localStorage.setItem(
+      "backupStatus",
+      "DONE"
+    );
+
+    alert("Backup Download Complete");
+
+    loadDashboardStock();
+
+  }catch(e){
+
+    console.log(e);
+
+    alert("Backup Failed");
+
+  }
+
+};
+
+window.clearOldData = function(){
+
+  let ok = confirm(
+    "Current + Previous Month ছাড়া old data clear করবেন?"
+  );
+
+  if(!ok) return;
+
+  alert(
+    "Old Data Clear System Ready"
+  );
+
+};
+
 </script>
 </body>
 </html>
