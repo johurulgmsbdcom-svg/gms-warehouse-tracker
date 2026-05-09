@@ -67,6 +67,21 @@ td input{width:100%;box-sizing:border-box;border:0;outline:none;text-align:cente
   table{min-width:0;font-size:9px}
   th,td{padding:2px}
 }
+
+.greyTable input{
+  background:white;
+  color:black;
+  font-size:14px;
+  font-weight:bold;
+}
+@media print{
+  .greyTable input{
+    border:0!important;
+    outline:0!important;
+    font-size:12px!important;
+  }
+}
+
 </style>
 </head>
 
@@ -215,9 +230,9 @@ td input{width:100%;box-sizing:border-box;border:0;outline:none;text-align:cente
       <tr>
         <td id="greyShowDate"></td>
         <td id="greyShowCompany"></td>
-        <td id="greyShowReason">For Dyeing</td>
-        <td id="greyShowQty">0</td>
-        <td id="greyShowRemarks"></td>
+        <td><input id="greyReasonInput" value="For Dyeing" oninput="syncGreyInputs()" style="border:0;width:100%;text-align:center;font-weight:bold"></td>
+        <td><input id="greyQtyInput" type="number" value="0" oninput="syncGreyInputs()" style="border:0;width:100%;text-align:center;font-weight:bold"></td>
+        <td><input id="greyRemarksInput" oninput="syncGreyInputs()" style="border:0;width:100%;text-align:center"></td>
       </tr>
       <tr class="totalRow">
         <td colspan="3">Total-</td>
@@ -233,7 +248,7 @@ td input{width:100%;box-sizing:border-box;border:0;outline:none;text-align:cente
     <div>Checked By Officer - MCD</div>
     <div>Asst. Manager - MCD</div>
     <div>Knitting Manager/DGM</div>
-    <div>Dyeing DGM/GM</div>
+    <div>Dyeing Manager/DGM</div>
   </div>
 </div>
 
@@ -258,6 +273,26 @@ function toast(msg){
 }
 
 function n(v){ return Number(v)||0; }
+
+window.syncGreyInputs=function(){
+  let reason=document.getElementById("greyReasonInput")?.value || "For Dyeing";
+  let qty=Number(document.getElementById("greyQtyInput")?.value)||0;
+  let remarks=document.getElementById("greyRemarksInput")?.value || "";
+
+  document.getElementById("greyShowTotal").innerText=qty.toFixed(1);
+
+  let firstItem=document.querySelector(".itemName");
+  let firstQty=document.querySelector(".deliveryQty");
+  let firstRemarks=document.querySelector(".remarks");
+
+  if(firstItem) firstItem.value=reason;
+  if(firstQty) firstQty.value=qty;
+  if(firstRemarks) firstRemarks.value=remarks;
+
+  let deliveryTotal=document.getElementById("deliveryTotal");
+  if(deliveryTotal) deliveryTotal.innerText=qty;
+};
+
 
 function getSavedPlans(){
   return JSON.parse(localStorage.getItem("gatePlans") || "[]");
@@ -422,14 +457,21 @@ window.calculateTotals=function(){
 
   let firstReason=document.querySelector(".itemName")?.value.trim() || "For Dyeing";
   let firstRemarks=document.querySelector(".remarks")?.value.trim() || "";
+  let active=document.activeElement?.id || "";
 
-  document.getElementById("greyShowReason").innerText=firstReason;
-  document.getElementById("greyShowQty").innerText=totalDelivery.toFixed(1);
-  document.getElementById("greyShowTotal").innerText=totalDelivery.toFixed(1);
-  document.getElementById("greyShowRemarks").innerText=firstRemarks;
+  if(!["greyReasonInput","greyQtyInput","greyRemarksInput"].includes(active)){
+    if(document.getElementById("greyReasonInput")) document.getElementById("greyReasonInput").value=firstReason;
+    if(document.getElementById("greyQtyInput")) document.getElementById("greyQtyInput").value=totalDelivery;
+    if(document.getElementById("greyRemarksInput")) document.getElementById("greyRemarksInput").value=firstRemarks;
+    if(document.getElementById("greyShowTotal")) document.getElementById("greyShowTotal").innerText=totalDelivery.toFixed(1);
+  }
 };
 
 window.saveGatePlan=function(){
+  if(document.getElementById("mcdName").value==="GREY FABRIC MCD"){
+    syncGreyInputs();
+  }
+
   let rows=readRows();
 
   if(rows.length===0){
