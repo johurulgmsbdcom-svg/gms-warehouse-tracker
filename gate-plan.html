@@ -114,11 +114,11 @@ td textarea{resize:none;text-align:left}
     <option>Other's Factory</option>
   </select>
   <br>
-  <button class="add" onclick="addRow()">➕ Add Row</button>
-  <button class="save" onclick="saveGatePlan()">💾 Save Local</button>
-  <button class="print" onclick="window.print()">🖨 PDF / Print</button>
-  <button class="report" onclick="location.href='gate-plan-report.html'">📑 Report</button>
-  <button class="home" onclick="location.href='index.html'">🏠 Home</button>
+  <button class="add" onclick="addRow()">â Add Row</button>
+  <button class="save" onclick="saveGatePlan()">ð¾ Save Firebase</button>
+  <button class="print" onclick="window.print()">ð¨ PDF / Print</button>
+  <button class="report" onclick="location.href='gate-plan-report.html'">ð Report</button>
+  <button class="home" onclick="location.href='index.html'">ð  Home</button>
 </div>
 
 <datalist id="buyerList"></datalist><datalist id="srList"></datalist><datalist id="styleList"></datalist><datalist id="orderList"></datalist><datalist id="itemList"></datalist><datalist id="colorList"></datalist><datalist id="unitList"></datalist><datalist id="partyList"></datalist><datalist id="vehicleList"></datalist><datalist id="remarksList"></datalist>
@@ -203,9 +203,17 @@ td textarea{resize:none;text-align:left}
   </div>
 </div>
 
-<div id="toast" class="toast">Saved ✅</div>
+<div id="toast" class="toast">Saved â</div>
 
-<script>
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-app.js";
+import { getFirestore, collection, getDocs, doc, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-firestore.js";
+
+const firebaseConfig={apiKey:"AIzaSyD-wBCF5eeWMHobLFOhBzKW7aB2pagz9-w",authDomain:"gms-warehouse-tracker-7f57e.firebaseapp.com",projectId:"gms-warehouse-tracker-7f57e",storageBucket:"gms-warehouse-tracker-7f57e.firebasestorage.app",messagingSenderId:"992250313291",appId:"1:992250313291:web:ee3bceae76d4d53bc26bce"};
+const app=initializeApp(firebaseConfig);
+const db=getFirestore(app);
+function makeId(no){return String(no).replaceAll("/","-").replaceAll(" ","-");}
+
 const user = JSON.parse(localStorage.getItem("gmsUser") || "null");
 if(!user){ location.href="login.html"; }
 
@@ -223,21 +231,24 @@ function n(v){ return Number(v)||0; }
 function getSavedPlans(){ return JSON.parse(localStorage.getItem("gatePlans") || "[]"); }
 function setSavedPlans(data){ localStorage.setItem("gatePlans",JSON.stringify(data)); }
 
-function nextGatePlanNo(){
-  let plans=getSavedPlans();
+async function nextGatePlanNo(){
   let year=new Date().getFullYear();
   let max=0;
-  plans.forEach(p=>{
-    let no=p.gatePlanNo || p.gatePassNo || "";
-    let m=String(no).match(/GP-\d{4}-(\d+)/);
-    if(m) max=Math.max(max,Number(m[1])||0);
-  });
+  try{
+    let snap=await getDocs(collection(db,"gatePlans"));
+    snap.forEach(d=>{
+      let p=d.data();
+      let no=p.gatePlanNo||p.gatePassNo||"";
+      let mm=String(no).match(/GP-\d{4}-(\d+)/);
+      if(mm) max=Math.max(max,Number(mm[1])||0);
+    });
+  }catch(e){console.log(e);}
   return "GP-"+year+"-"+String(max+1).padStart(4,"0");
 }
 
 document.getElementById("planDate").value=today();
 document.getElementById("planTime").value=nowTime();
-document.getElementById("gatePlanNo").value=nextGatePlanNo();
+document.getElementById("gatePlanNo").value=await nextGatePlanNo();
 document.getElementById("signPrepared").innerText=user.name||user.email||"User";
 
 function syncGreyInputs(){
@@ -394,7 +405,7 @@ window.calculateTotals=function(){
   }
 };
 
-window.saveGatePlan=function(){
+window.saveGatePlan=async function(){
   if(document.getElementById("mcdName").value==="GREY FABRIC MCD") syncGreyInputs();
 
   let rows=readRows();
@@ -421,16 +432,23 @@ window.saveGatePlan=function(){
   plans.push(plan);
   setSavedPlans(plans);
 
+  try{
+    await setDoc(doc(db,"gatePlans",makeId(plan.gatePlanNo)),plan,{merge:true});
+  }catch(e){
+    alert("Firebase save error: "+e.message);
+    return;
+  }
+
   rows.forEach(r=>{
     addOption("buyerList",r.buyerName);addOption("srList",r.srGtNo);addOption("styleList",r.styleName);addOption("orderList",r.orderNo);addOption("itemList",r.itemName);addOption("colorList",r.color);addOption("unitList",r.unit);addOption("partyList",r.toParty);addOption("vehicleList",r.vehicleNo);addOption("remarksList",r.remarks);
   });
 
   document.getElementById("gateBody").innerHTML="";
-  document.getElementById("gatePlanNo").value=nextGatePlanNo();
+  document.getElementById("gatePlanNo").value=await nextGatePlanNo();
   addRow();
   calculateTotals();
   updateHeader();
-  toast("Gate Plan Saved ✅ New No Ready");
+  toast("Gate Plan Saved â New No Ready");
 };
 
 document.addEventListener("input",function(e){
@@ -456,9 +474,51 @@ document.addEventListener("keydown",function(e){
 
 window.addEventListener("beforeprint",function(){updateHeader();});
 
+
+async function loadEditPlanIfAny(){
+  let no=new URLSearchParams(location.search).get("edit") || localStorage.getItem("editGatePlanNo") || "";
+  if(!no) return false;
+  try{
+    let snap=await getDoc(doc(db,"gatePlans",makeId(no)));
+    if(!snap.exists()) return false;
+    let p=snap.data();
+    document.getElementById("gatePlanNo").value=p.gatePlanNo||no;
+    document.getElementById("planDate").value=p.date||today();
+    document.getElementById("planTime").value=p.time||nowTime();
+    document.getElementById("companyName").value=p.company||"GMS Textiles Ltd.";
+    document.getElementById("mcdName").value=p.mcd||"ACCESSORIES MCD";
+    document.getElementById("toType").value=p.toCompany||"GMS Textiles Ltd.";
+    document.getElementById("gateBody").innerHTML="";
+    (p.rows||[]).forEach(r=>{
+      addRow();
+      let tr=document.querySelector("#gateBody tr:last-child");
+      if(!tr) return;
+      tr.querySelector(".buyerName").value=r.buyerName||"";
+      tr.querySelector(".srGtNo").value=r.srGtNo||"";
+      tr.querySelector(".styleName").value=r.styleName||"";
+      tr.querySelector(".orderNo").value=r.orderNo||"";
+      tr.querySelector(".itemName").value=r.itemName||"";
+      tr.querySelector(".color").value=r.color||"";
+      tr.querySelector(".unit").value=r.unit||"";
+      tr.querySelector(".deliveryQty").value=r.deliveryQty||"";
+      tr.querySelector(".ctnQty").value=r.ctnQty||"";
+      tr.querySelector(".toParty").value=r.toParty||"";
+      tr.querySelector(".vehicleNo").value=r.vehicleNo||"";
+      tr.querySelector(".remarks").value=r.remarks||"";
+    });
+    if((p.rows||[]).length===0) addRow();
+    localStorage.removeItem("editGatePlanNo");
+    updateHeader();
+    calculateTotals();
+    toast("Edit Mode Loaded â");
+    return true;
+  }catch(e){console.log(e);return false;}
+}
+
 loadSuggestions();
 updateHeader();
-addRow();
+let loadedEdit=await loadEditPlanIfAny();
+if(!loadedEdit) addRow();
 calculateTotals();
 </script>
 
