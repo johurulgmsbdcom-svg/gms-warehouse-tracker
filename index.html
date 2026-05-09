@@ -124,6 +124,7 @@ body.light .creditFooter{background:rgba(255,255,255,.96)}.creditItem{display:fl
   <button onclick="location.href='notice.html'">📢 Notice</button>
   <button onclick="location.href='online-users.html'">🟢 Online</button>
   <button onclick="location.href='audit-history.html'">📜 Audit</button>
+  <button id="backupNav" onclick="openPage('backup',this)">☁ Backup</button>
   <button onclick="location.href='change-password.html'">🔐 Password</button>
 </div>
 
@@ -173,15 +174,7 @@ body.light .creditFooter{background:rgba(255,255,255,.96)}.creditItem{display:fl
       <div class="progress"><div id="limitBar" class="progressFill"></div></div>
       <div id="limitSignal" class="statusSignal safe">🟢 SAFE</div>
     </div>
-  <div class="card" onclick="backupAllData()">
-    ☁ Backup Now
-  </div>
-
-  <div class="card" onclick="clearOldData()">
-    🧹 Clear Old Data
-  </div>
-
-  </div>
+</div>
 
   <div class="topGrid" id="attendanceTextBox">
     <div class="topCard"><div class="label">👨‍🏭 Attendance Total</div><div class="num" id="attTotal">0</div></div>
@@ -226,6 +219,29 @@ body.light .creditFooter{background:rgba(255,255,255,.96)}.creditItem{display:fl
   </div>
 </div>
 
+
+<div id="backup" class="page">
+  <h2>☁ Backup & Restore Control</h2>
+  <div class="dashSub">Only Admin can use this page</div>
+
+  <div class="grid">
+    <div class="card" onclick="backupAllData()">☁ Backup Now</div>
+    <div class="card" onclick="restoreBackup()">📥 Restore Backup</div>
+    <div class="card" onclick="clearOldData()">🧹 Clear Old Data</div>
+  </div>
+
+  <br>
+
+  <div class="statusBox">
+    <div class="statusTitle">📌 Backup Rules</div>
+    <div class="statusLine"><span>Current Month</span><b>KEEP</b></div>
+    <div class="statusLine"><span>Previous Month</span><b>KEEP</b></div>
+    <div class="statusLine"><span>Older Month</span><b>Backup then Manual Clear</b></div>
+    <div class="statusLine"><span>800 MB</span><b>Backup Warning</b></div>
+    <div class="statusLine"><span>900 MB</span><b>Backup Now</b></div>
+  </div>
+</div>
+
 <div class="creditFooter">
   <div class="creditItem"><img src="https://i.ibb.co/5hzT1VGk/IMG.jpg"><div class="creditText"><b>Powered by JOHURUL</b><span>System Developer & Dashboard Design</span></div></div>
   <div class="creditDivider"></div>
@@ -265,7 +281,7 @@ function isBillingAllowed(){return userRole==="admin"||userRole==="full"||userMC
 function isManpowerAllowed(){return userRole==="admin"||userRole==="full"||manpowerAccess===true;}
 
 function setupRoleUI(){
-  if(userRole!=="admin")document.getElementById("adminNav").style.display="none";
+  if(userRole!=="admin"){document.getElementById("adminNav").style.display="none";document.getElementById("backupNav").style.display="none";}
   if(!isManpowerAllowed())document.getElementById("manpowerNav").style.display="none";
   if(!isNeedleAllowed()){document.getElementById("needleNav").style.display="none";document.getElementById("needleSummary").style.display="none";document.getElementById("needleChartBox").style.display="none";document.getElementById("needleIssueChartBox").style.display="none";}
   if(!isAccessoriesAllowed()){document.getElementById("accessoriesSummary").style.display="none";document.getElementById("accessoriesChartBox").style.display="none";}
@@ -750,9 +766,17 @@ updateLastActive();
 setInterval(updateLastActive,60000);
 setInterval(loadNotices,60000);
 
-// ===== BACKUP SYSTEM =====
+
+
+
+// ===== BACKUP / RESTORE / CLEAR SYSTEM =====
 
 window.backupAllData = async function(){
+
+  if(userRole !== "admin"){
+    alert("Admin only");
+    return;
+  }
 
   try{
 
@@ -779,25 +803,22 @@ window.backupAllData = async function(){
     for(let c of cols){
 
       let snap = await getDocs(collection(db,c));
-
       backup.data[c] = [];
 
       snap.forEach(d=>{
 
         let row = d.data();
+        row._docId = d.id;
 
         backup.data[c].push(row);
 
-        let dt = row.date || "";
+        let dt = row.date || row.postingDate || "";
 
         if(dt.length >= 7){
-
           let month = dt.slice(0,7);
-
           if(!backup.backupMonths.includes(month)){
             backup.backupMonths.push(month);
           }
-
         }
 
       });
@@ -810,51 +831,47 @@ window.backupAllData = async function(){
     );
 
     let a = document.createElement("a");
-
     a.href = URL.createObjectURL(blob);
-
-    a.download =
-      "gms-backup-" +
-      new Date().toISOString().slice(0,10) +
-      ".json";
-
+    a.download = "gms-backup-" + new Date().toISOString().slice(0,10) + ".json";
     a.click();
 
-    localStorage.setItem(
-      "backupMonths",
-      backup.backupMonths.length
-    );
-
-    localStorage.setItem(
-      "backupStatus",
-      "DONE"
-    );
+    localStorage.setItem("backupMonths", backup.backupMonths.length);
+    localStorage.setItem("backupStatus", "DONE");
 
     alert("Backup Download Complete");
-
     loadDashboardStock();
 
   }catch(e){
 
     console.log(e);
-
     alert("Backup Failed");
 
   }
 
 };
 
+window.restoreBackup = function(){
+
+  if(userRole !== "admin"){
+    alert("Admin only");
+    return;
+  }
+
+  alert("Restore system next step e add hobe. Backup file select kore month-wise restore kora hobe.");
+
+};
+
 window.clearOldData = function(){
 
-  let ok = confirm(
-    "Current + Previous Month ছাড়া old data clear করবেন?"
-  );
+  if(userRole !== "admin"){
+    alert("Admin only");
+    return;
+  }
 
+  let ok = confirm("Current Month + Previous Month thakbe. Tar ager old data clear korben?");
   if(!ok) return;
 
-  alert(
-    "Old Data Clear System Ready"
-  );
+  alert("Old Data Clear system next step e add hobe. Ekhon kono data delete hobe na.");
 
 };
 
