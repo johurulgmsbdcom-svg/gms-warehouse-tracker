@@ -637,7 +637,39 @@ th,td{border:1px solid #000;padding:5px;text-align:center;vertical-align:middle}
   }
 }
 
+
+/* ===== QR CODE STYLE ===== */
+.qrBox{
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  margin-top:6px;
+}
+.qrBox canvas,
+.qrBox img{
+  width:78px!important;
+  height:78px!important;
+}
+.qrLabel{
+  text-align:center;
+  font-size:10px;
+  font-weight:900;
+  margin-top:2px;
+}
+@media print{
+  .qrBox canvas,
+  .qrBox img{
+    width:55px!important;
+    height:55px!important;
+  }
+  .qrLabel{
+    font-size:8px!important;
+    font-weight:900!important;
+  }
+}
+
 </style>
+<script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
 </head>
 <body>
 
@@ -657,11 +689,11 @@ th,td{border:1px solid #000;padding:5px;text-align:center;vertical-align:middle}
   MCD:
   <select id="mcdFilter"><option value="">All</option></select>
   <br>
-  <button class="show" onclick="showReport()">🔍 Show Report</button>
-  <button class="excel" onclick="exportExcel()">📊 Excel</button>
-  <button class="print" onclick="printSingle(0)">🖨 PDF / Print</button>
-  <button class="show" onclick="location.href='gate-plan.html'">➕ New Gate Plan</button>
-  <button class="home" onclick="location.href='index.html'">🏠 Home</button>
+  <button class="show" onclick="showReport()">ð Show Report</button>
+  <button class="excel" onclick="exportExcel()">ð Excel</button>
+  <button class="print" onclick="printSingle(0)">ð¨ PDF / Print</button>
+  <button class="show" onclick="location.href='gate-plan.html'">â New Gate Plan</button>
+  <button class="home" onclick="location.href='index.html'">ð  Home</button>
 </div>
 
 <div id="reportArea"></div>
@@ -682,9 +714,37 @@ function planNo(p){return p.gatePlanNo || p.gatePassNo || "";}
 function totalDelivery(p){return (p.rows||[]).reduce((a,r)=>a+(Number(r.deliveryQty)||0),0);}
 function totalCtn(p){return (p.rows||[]).reduce((a,r)=>a+(Number(r.ctnQty)||0),0);}
 
+
+function makeQRText(p){
+  let base=location.origin+location.pathname;
+  return base+"?gate="+encodeURIComponent(planNo(p));
+}
+
+function generateQRs(data){
+  setTimeout(()=>{
+    data.forEach((p,i)=>{
+      let el=document.getElementById("qr-"+i);
+      if(!el) return;
+      el.innerHTML="";
+      new QRCode(el,{
+        text:makeQRText(p),
+        width:78,
+        height:78,
+        colorDark:"#000000",
+        colorLight:"#ffffff",
+        correctLevel:QRCode.CorrectLevel.M
+      });
+    });
+  },100);
+}
+
 function showReport(){
   let from=document.getElementById("fromDate").value;
   let to=document.getElementById("toDate").value;
+  let urlGate=new URLSearchParams(location.search).get("gate") || "";
+  if(urlGate && !document.getElementById("gateSearch").value){
+    document.getElementById("gateSearch").value=urlGate;
+  }
   let gate=document.getElementById("gateSearch").value.trim();
   let company=document.getElementById("companyFilter").value;
   let mcd=document.getElementById("mcdFilter").value;
@@ -704,6 +764,7 @@ function showReport(){
   if(data.length===0){box.innerHTML='<div class="planCard noData">No Gate Plan Found</div>';return;}
 
   box.innerHTML=data.map((p,i)=>renderPlan(p,i)).join("");
+  generateQRs(data);
 }
 
 function renderPlan(p,index){
@@ -737,10 +798,13 @@ function renderPlan(p,index){
       <div>MCD: ${p.mcd||""}</div>
       <div>Prepared By: ${p.preparedBy||""}</div>
     </div>
+    <div class="qrBox" id="qr-${index}"></div>
+    <div class="qrLabel">Scan QR: ${planNo(p)}</div>
+
     <div class="actionBar noPrint">
-      <button class="print" onclick="printSingle(${index})">🖨 Print This</button>
-      <button class="edit" onclick="editPlan('${planNo(p)}')">✏ Edit</button>
-      <button class="del" onclick="deletePlan('${planNo(p)}')">🗑 Delete</button>
+      <button class="print" onclick="printSingle(${index})">ð¨ Print This</button>
+      <button class="edit" onclick="editPlan('${planNo(p)}')">â Edit</button>
+      <button class="del" onclick="deletePlan('${planNo(p)}')">ð Delete</button>
     </div>
     <div class="tableWrap">
       <table>
@@ -770,10 +834,13 @@ function renderGrey(p,index){
       <h1>Grey Fabric-MCD</h1>
       <div class="greyTitle">Daily GMS Textiles to GMS Composite Delivery Status</div>
     </div>
+    <div class="qrBox" id="qr-${index}"></div>
+    <div class="qrLabel">Scan QR: ${planNo(p)}</div>
+
     <div class="actionBar noPrint">
-      <button class="print" onclick="printSingle(${index})">🖨 Print This</button>
-      <button class="edit" onclick="editPlan('${planNo(p)}')">✏ Edit</button>
-      <button class="del" onclick="deletePlan('${planNo(p)}')">🗑 Delete</button>
+      <button class="print" onclick="printSingle(${index})">ð¨ Print This</button>
+      <button class="edit" onclick="editPlan('${planNo(p)}')">â Edit</button>
+      <button class="del" onclick="deletePlan('${planNo(p)}')">ð Delete</button>
     </div>
     <table class="greyTable">
       <thead><tr><th>Date</th><th>Company Name</th><th>Delivery Reason</th><th>Total Qty</th><th>Remarks</th></tr></thead>
@@ -792,6 +859,15 @@ function renderGrey(p,index){
 function printSingle(index){
   const item=document.getElementById("plan-"+index);
   if(!item) return;
+
+  const clone=item.cloneNode(true);
+  clone.querySelectorAll("canvas").forEach(canvas=>{
+    const img=document.createElement("img");
+    img.src=canvas.toDataURL("image/png");
+    img.style.width="55px";
+    img.style.height="55px";
+    canvas.replaceWith(img);
+  });
 
   const printCss = `
   <style>
@@ -993,7 +1069,38 @@ function printSingle(index){
       padding-top:5px;
       line-height:1;
     }
-  </style>`;
+  
+/* ===== QR CODE STYLE ===== */
+.qrBox{
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  margin-top:6px;
+}
+.qrBox canvas,
+.qrBox img{
+  width:78px!important;
+  height:78px!important;
+}
+.qrLabel{
+  text-align:center;
+  font-size:10px;
+  font-weight:900;
+  margin-top:2px;
+}
+@media print{
+  .qrBox canvas,
+  .qrBox img{
+    width:55px!important;
+    height:55px!important;
+  }
+  .qrLabel{
+    font-size:8px!important;
+    font-weight:900!important;
+  }
+}
+
+</style>`;
 
   let win=window.open("", "_blank", "width=1200,height=800");
   win.document.open();
@@ -1003,9 +1110,10 @@ function printSingle(index){
     <head>
       <title>Gate Plan Print</title>
       ${printCss}
-    </head>
+    <script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
+</head>
     <body>
-      ${item.outerHTML}
+      ${clone.outerHTML}
     </body>
     </html>
   `);
