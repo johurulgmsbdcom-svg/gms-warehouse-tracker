@@ -1,141 +1,709 @@
-<!-- REPLACE ONLY monthlyChart CODE -->
+<!DOCTYPE html>
+<html>
+<head>
+<title>Needle Floor Wise Dashboard</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
 
-<script>
-monthlyChart=new Chart(document.getElementById("monthlyChart"),{
-  type:"doughnut",
+<style>
+:root{
+  --bg:#07111f;
+  --card:#101b2d;
+  --card2:#14233a;
+  --text:#ffffff;
+  --muted:#9fb0c7;
+  --border:#263855;
+  --blue:#2563eb;
+  --green:#22c55e;
+  --red:#ef4444;
+  --yellow:#f59e0b;
+  --chartText:#eef6ff;
+  --chartGrid:rgba(148,163,184,.22);
+  --shadow:0 14px 34px rgba(0,0,0,.28);
+}
 
-  data:{
-    labels:["Receive","Delivery"],
+body.light{
+  --bg:#eef3f9;
+  --card:#ffffff;
+  --card2:#f8fafc;
+  --text:#0f172a;
+  --muted:#64748b;
+  --border:#cbd5e1;
+  --chartText:#0f172a;
+  --chartGrid:rgba(15,23,42,.13);
+  --shadow:0 12px 26px rgba(15,23,42,.14);
+}
 
-    datasets:[{
-      data:[receiveTotal,deliveryTotal],
+*{box-sizing:border-box}
 
-      backgroundColor:[
-        "#22c55e",
-        "#ef4444"
-      ],
+body{
+  margin:0;
+  background:radial-gradient(circle at top left,rgba(37,99,235,.13),transparent 35%),var(--bg);
+  color:var(--text);
+  font-family:Segoe UI,Inter,Arial,sans-serif;
+  padding:16px;
+  font-weight:650;
+  letter-spacing:.1px;
+}
 
-      borderColor:[
-        "#22c55e",
-        "#ef4444"
-      ],
+.header{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  background:linear-gradient(135deg,var(--card),var(--card2));
+  border:1px solid var(--border);
+  padding:14px 18px;
+  border-radius:20px;
+  margin-bottom:12px;
+  box-shadow:var(--shadow);
+}
 
-      borderWidth:2,
+.header h2{
+  margin:0;
+  font-size:23px;
+  font-weight:1000;
+  letter-spacing:.3px;
+}
 
-      hoverOffset:15
-    }]
-  },
+.sub{
+  color:var(--muted);
+  font-size:12px;
+  font-weight:900;
+  margin-top:4px;
+}
 
-  options:{
-    responsive:true,
+button{
+  padding:10px 15px;
+  border:0;
+  border-radius:12px;
+  background:linear-gradient(135deg,#2563eb,#7c3aed);
+  color:white;
+  font-weight:1000;
+  cursor:pointer;
+  margin:3px;
+  box-shadow:0 8px 18px rgba(37,99,235,.25);
+}
 
-    maintainAspectRatio:false,
+button:hover{transform:translateY(-1px)}
+.themeBtn{background:linear-gradient(135deg,#f59e0b,#2563eb)}
 
-    cutout:"65%",
+.controls{
+  text-align:center;
+  margin:12px 0;
+  font-weight:900;
+}
 
-    plugins:{
-      legend:{
-        position:"bottom",
+input{
+  padding:10px;
+  border-radius:10px;
+  border:1px solid var(--border);
+  background:var(--card);
+  color:var(--text);
+  font-weight:900;
+}
 
-        labels:{
-          color:chartTextColor(),
+.kpi{
+  display:grid;
+  grid-template-columns:repeat(4,1fr);
+  gap:12px;
+  margin:14px 0;
+}
 
-          font:{
-            family:"Segoe UI",
-            size:13,
-            weight:"bold"
-          },
+.kpiCard{
+  background:linear-gradient(135deg,var(--card),var(--card2));
+  border:1px solid var(--border);
+  border-radius:20px;
+  padding:15px;
+  box-shadow:var(--shadow);
+  position:relative;
+  overflow:hidden;
+}
 
-          boxWidth:14
+.kpiCard:before{
+  content:"";
+  position:absolute;
+  inset:0;
+  background:linear-gradient(135deg,rgba(56,189,248,.08),rgba(168,85,247,.08));
+  pointer-events:none;
+}
+
+.label{
+  color:var(--muted);
+  font-size:12px;
+  font-weight:1000;
+  text-transform:uppercase;
+  letter-spacing:.35px;
+  position:relative;
+}
+
+.value{
+  font-size:27px;
+  font-weight:1000;
+  color:var(--green);
+  margin-top:6px;
+  text-shadow:0 2px 8px rgba(34,197,94,.22);
+  position:relative;
+}
+
+.alertBox{
+  background:rgba(239,68,68,.13);
+  border:1px solid var(--red);
+  color:#fecaca;
+  padding:11px 13px;
+  border-radius:14px;
+  margin:8px 0;
+  font-size:13px;
+  font-weight:1000;
+  box-shadow:0 8px 18px rgba(239,68,68,.12);
+}
+
+body.light .alertBox{color:#991b1b}
+
+.chartGrid{
+  display:grid;
+  grid-template-columns:1.4fr .8fr;
+  gap:14px;
+  margin-bottom:14px;
+}
+
+.chartCard{
+  background:linear-gradient(135deg,var(--card),var(--card2));
+  border:1px solid var(--border);
+  border-radius:22px;
+  padding:14px;
+  box-shadow:var(--shadow);
+  height:310px;
+  position:relative;
+  overflow:hidden;
+}
+
+.chartCard:before{
+  content:"";
+  position:absolute;
+  inset:0;
+  background:linear-gradient(135deg,rgba(37,99,235,.07),rgba(124,58,237,.06));
+  pointer-events:none;
+}
+
+.chartCard h3{
+  margin:0 0 8px 0;
+  font-size:16px;
+  font-weight:1000;
+  color:var(--text);
+  position:relative;
+  z-index:1;
+}
+
+.chartCard canvas{
+  max-height:255px!important;
+  position:relative;
+  z-index:1;
+}
+
+.floorGrid{
+  display:grid;
+  grid-template-columns:repeat(4,1fr);
+  gap:12px;
+}
+
+.floorBox{
+  background:linear-gradient(135deg,var(--card),var(--card2));
+  border:1px solid var(--border);
+  border-radius:18px;
+  padding:13px;
+  box-shadow:var(--shadow);
+  position:relative;
+  overflow:hidden;
+}
+
+.floorBox:before{
+  content:"";
+  position:absolute;
+  inset:0;
+  background:linear-gradient(135deg,rgba(34,197,94,.06),rgba(56,189,248,.06));
+  pointer-events:none;
+}
+
+.floorBox h3{
+  margin:0 0 9px 0;
+  font-size:15px;
+  font-weight:1000;
+  position:relative;
+}
+
+.row{
+  display:flex;
+  justify-content:space-between;
+  border-bottom:1px solid var(--border);
+  padding:7px 0;
+  font-size:12px;
+  font-weight:900;
+  position:relative;
+}
+
+.row span:last-child{font-weight:1000}
+.ok{color:var(--green)}
+.low{color:var(--red)}
+
+.stockMini{
+  height:7px;
+  background:rgba(148,163,184,.20);
+  border-radius:30px;
+  overflow:hidden;
+  margin-top:10px;
+  position:relative;
+}
+
+.stockMiniFill{
+  height:100%;
+  border-radius:30px;
+  background:linear-gradient(90deg,#22c55e,#38bdf8,#8b5cf6);
+}
+
+@page{size:A4 portrait;margin:8mm}
+
+@media print{
+  button,.controls,.right{display:none!important}
+  body{background:white;color:black}
+  .header,.kpiCard,.chartCard,.floorBox{background:white;color:black;box-shadow:none}
+}
+
+@media(max-width:900px){
+  body{padding:10px}
+  .header{display:block;text-align:center}
+  .right{margin-top:10px}
+  .kpi,.chartGrid,.floorGrid{grid-template-columns:1fr}
+  .chartCard{height:280px}
+}
+</style>
+</head>
+
+<body>
+
+<div class="header">
+  <div>
+    <h2>🏭 Needle Floor Wise Dashboard</h2>
+    <div class="sub">Firebase Live • Floor Stock • Monthly Summary • Low Stock Alert</div>
+  </div>
+
+  <div class="right">
+    <button onclick="loadDashboard()">🔄 Refresh</button>
+    <button onclick="window.print()">🖨 PDF</button>
+    <button onclick="exportExcel()">📊 Excel</button>
+    <button class="themeBtn" onclick="toggleTheme()">🌙 Dark / ☀️ Light</button>
+    <button onclick="location.href='index.html'">🏠 Home</button>
+  </div>
+</div>
+
+<div class="controls">
+  Month:
+  <input type="month" id="monthInput" onchange="loadDashboard()">
+</div>
+
+<div id="alerts"></div>
+
+<div class="kpi">
+  <div class="kpiCard">
+    <div class="label">🪡 Total Present Stock</div>
+    <div class="value" id="totalStock">0</div>
+  </div>
+
+  <div class="kpiCard">
+    <div class="label">📥 Monthly Receive</div>
+    <div class="value" id="totalReceive">0</div>
+  </div>
+
+  <div class="kpiCard">
+    <div class="label">📤 Monthly Delivery</div>
+    <div class="value" id="totalDelivery">0</div>
+  </div>
+
+  <div class="kpiCard">
+    <div class="label">⚠️ Low Stock Floor</div>
+    <div class="value" id="lowCount">0</div>
+  </div>
+</div>
+
+<div class="chartGrid">
+  <div class="chartCard">
+    <h3>📈 Floor Wise Present Stock</h3>
+    <canvas id="floorChart"></canvas>
+  </div>
+
+  <div class="chartCard">
+    <h3>📊 Monthly Receive / Delivery</h3>
+    <canvas id="monthlyChart"></canvas>
+  </div>
+</div>
+
+<div id="floorArea" class="floorGrid"></div>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-app.js";
+import { getFirestore, collection, getDocs } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-firestore.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyD-wBCF5eeWMHobLFOhBzKW7aB2pagz9-w",
+  authDomain: "gms-warehouse-tracker-7f57e.firebaseapp.com",
+  projectId: "gms-warehouse-tracker-7f57e",
+  storageBucket: "gms-warehouse-tracker-7f57e.firebasestorage.app",
+  messagingSenderId: "992250313291",
+  appId: "1:992250313291:web:ee3bceae76d4d53bc26bce"
+};
+
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+
+const FLOOR_OPENING = {
+  "Kadom R":618,
+  "Kadom N":443,
+  "Poddo R":1889,
+  "Poddo N":401,
+  "Shapla R":1171,
+  "Shapla N":573,
+  "Sample R":1138,
+  "Sample N":251,
+  "EMBROIDERY R":1011,
+  "EMBROIDERY N":287,
+  "Belly R":796,
+  "Belly N":335
+};
+
+const FLOORS = Object.keys(FLOOR_OPENING);
+
+let floorChart=null;
+let monthlyChart=null;
+
+const chartPalette=[
+  "#38bdf8","#22c55e","#f59e0b","#a855f7","#ef4444","#14b8a6",
+  "#eab308","#6366f1","#ec4899","#84cc16","#06b6d4","#f97316"
+];
+
+function chartColors(count){
+  return Array.from({length:count},(_,i)=>chartPalette[i%chartPalette.length]);
+}
+
+function chartTextColor(){
+  return getComputedStyle(document.body).getPropertyValue("--chartText").trim() || "#111827";
+}
+
+function chartGridColor(){
+  return getComputedStyle(document.body).getPropertyValue("--chartGrid").trim() || "rgba(148,163,184,.25)";
+}
+
+function fmt(n){
+  return Number(n||0).toLocaleString("en-US");
+}
+
+const valueLabelPlugin={
+  id:"valueLabelPlugin",
+  afterDatasetsDraw(chart){
+    const {ctx}=chart;
+    ctx.save();
+    ctx.textAlign="center";
+    ctx.fillStyle=chartTextColor();
+    ctx.font="900 11px Segoe UI";
+
+    chart.data.datasets.forEach((dataset,di)=>{
+      const meta=chart.getDatasetMeta(di);
+      meta.data.forEach((bar,i)=>{
+        const value=dataset.data[i];
+        if(value===undefined || value===null) return;
+        if(bar && bar.x && bar.y){
+          ctx.fillText(fmt(value),bar.x,bar.y-7);
         }
-      },
-
-      tooltip:{
-        backgroundColor:"rgba(15,23,42,.95)",
-
-        titleColor:"#fff",
-
-        bodyColor:"#fff",
-
-        borderColor:"#ffffff30",
-
-        borderWidth:1
-      }
-    }
-  },
-
-  plugins:[{
-
-    id:"doughnutText",
-
-    afterDraw(chart){
-
-      const {ctx}=chart;
-
-      const meta=chart.getDatasetMeta(0);
-
-      meta.data.forEach((arc,index)=>{
-
-        const value=chart.data.datasets[0].data[index];
-
-        const label=chart.data.labels[index];
-
-        const angle=(arc.startAngle+arc.endAngle)/2;
-
-        const x=arc.x + Math.cos(angle)*(arc.outerRadius+45);
-
-        const y=arc.y + Math.sin(angle)*(arc.outerRadius+45);
-
-        ctx.save();
-
-        ctx.fillStyle=chartTextColor();
-
-        ctx.textAlign="center";
-
-        ctx.font="900 14px Segoe UI";
-
-        ctx.fillText(label,x,y-10);
-
-        ctx.font="bold 13px Segoe UI";
-
-        ctx.fillText(
-          Number(value).toLocaleString(),
-          x,
-          y+10
-        );
-
-        ctx.restore();
       });
+    });
 
-      const total=
-        Number(receiveTotal)+
-        Number(deliveryTotal);
+    ctx.restore();
+  }
+};
 
-      ctx.save();
+const doughnutCenterPlugin={
+  id:"doughnutCenterPlugin",
+  afterDraw(chart){
+    if(chart.config.type!=="doughnut") return;
+    const {ctx,chartArea:{left,right,top,bottom}}=chart;
+    const data=chart.data.datasets[0].data || [];
+    const total=data.reduce((a,b)=>a+Number(b||0),0);
+    ctx.save();
+    ctx.fillStyle=chartTextColor();
+    ctx.textAlign="center";
+    ctx.font="900 18px Segoe UI";
+    ctx.fillText(fmt(total), (left+right)/2, (top+bottom)/2);
+    ctx.font="800 10px Segoe UI";
+    ctx.fillText("TOTAL", (left+right)/2, (top+bottom)/2+16);
+    ctx.restore();
+  }
+};
 
-      ctx.fillStyle=chartTextColor();
+function barOptions(titleText){
+  return{
+    responsive:true,
+    maintainAspectRatio:false,
+    plugins:{
+      legend:{display:false},
+      title:{display:!!titleText,text:titleText,color:chartTextColor(),font:{family:"Segoe UI",size:13,weight:"bold"}},
+      tooltip:{backgroundColor:"rgba(15,23,42,.92)",titleColor:"#fff",bodyColor:"#fff",borderColor:"rgba(255,255,255,.18)",borderWidth:1}
+    },
+    scales:{
+      y:{beginAtZero:true,grid:{color:chartGridColor()},ticks:{color:chartTextColor(),font:{family:"Segoe UI",size:11,weight:"bold"}}},
+      x:{grid:{display:false},ticks:{color:chartTextColor(),font:{family:"Segoe UI",size:10,weight:"bold"}}}
+    }
+  };
+}
 
-      ctx.textAlign="center";
+function getLowLimit(floor){
+  return floor.includes(" N") ? 300 : 500;
+}
 
-      ctx.font="900 24px Segoe UI";
+function getStatus(floor, stock){
+  return stock <= getLowLimit(floor) ? "⚠️ LOW STOCK" : "✅ OK";
+}
 
-      ctx.fillText(
-        total.toLocaleString(),
-        chart.width/2,
-        chart.height/2
-      );
+function toggleTheme(){
+  document.body.classList.toggle("light");
+  localStorage.setItem(
+    "needleDashTheme",
+    document.body.classList.contains("light") ? "light" : "dark"
+  );
+  setTimeout(loadDashboard,100);
+}
 
-      ctx.font="900 12px Segoe UI";
+if(localStorage.getItem("needleDashTheme")==="light"){
+  document.body.classList.add("light");
+}
 
-      ctx.fillText(
-        "TOTAL",
-        chart.width/2,
-        chart.height/2+22
-      );
+function setDefaultMonth(){
+  let m=document.getElementById("monthInput");
+  if(!m.value){
+    let d=new Date();
+    let y=d.getFullYear();
+    let mo=String(d.getMonth()+1).padStart(2,"0");
+    m.value=`${y}-${mo}`;
+  }
+}
 
-      ctx.restore();
+async function loadDashboard(){
+  setDefaultMonth();
+
+  let month=document.getElementById("monthInput").value;
+  let snap=await getDocs(collection(db,"dailyPosting"));
+
+  let latestByFloor={};
+  let receiveMap={};
+  let deliveryMap={};
+
+  FLOORS.forEach(f=>{
+    receiveMap[f]=0;
+    deliveryMap[f]=0;
+  });
+
+  snap.forEach(docSnap=>{
+    let data=docSnap.data();
+
+    if(!data.floor || !Array.isArray(data.rows)) return;
+    if(!FLOORS.includes(data.floor)) return;
+
+    let docDate=data.date || data.month || "";
+    if(!docDate && docSnap.id) docDate=docSnap.id;
+
+    if(!latestByFloor[data.floor] || String(docDate) > String(latestByFloor[data.floor].sortDate)){
+      latestByFloor[data.floor]={...data,sortDate:docDate};
     }
 
-  }]
-});
+    if(String(docDate).slice(0,7)===month || data.month===month){
+      data.rows.forEach(r=>{
+        receiveMap[data.floor]+=Number(r.receive)||0;
+        deliveryMap[data.floor]+=Number(r.delivery)||0;
+      });
+    }
+  });
+
+  let floorStocks={};
+  let totalStock=0;
+  let totalReceive=0;
+  let totalDelivery=0;
+  let lowFloors=[];
+
+  FLOORS.forEach(floor=>{
+    let stock=FLOOR_OPENING[floor];
+
+    if(latestByFloor[floor] && latestByFloor[floor].rows){
+      stock=0;
+      latestByFloor[floor].rows.forEach(r=>{
+        stock+=Number(r.present)||0;
+      });
+    }
+
+    floorStocks[floor]=stock;
+    totalStock+=stock;
+    totalReceive+=receiveMap[floor];
+    totalDelivery+=deliveryMap[floor];
+
+    if(stock <= getLowLimit(floor)){
+      lowFloors.push({floor,stock,limit:getLowLimit(floor)});
+    }
+  });
+
+  document.getElementById("totalStock").innerText=fmt(totalStock);
+  document.getElementById("totalReceive").innerText=fmt(totalReceive);
+  document.getElementById("totalDelivery").innerText=fmt(totalDelivery);
+  document.getElementById("lowCount").innerText=fmt(lowFloors.length);
+
+  renderAlerts(lowFloors);
+  renderFloors(floorStocks,receiveMap,deliveryMap);
+  renderCharts(floorStocks,receiveMap,deliveryMap);
+}
+
+function renderAlerts(lowFloors){
+  let box=document.getElementById("alerts");
+
+  if(lowFloors.length===0){
+    box.innerHTML=`
+      <div class="alertBox" style="background:rgba(34,197,94,.12);border-color:#22c55e;color:#bbf7d0">
+        ✅ All floor stock OK
+      </div>
+    `;
+    return;
+  }
+
+  let html="";
+  lowFloors.forEach(x=>{
+    html+=`
+      <div class="alertBox">
+        ⚠️ ${x.floor} LOW STOCK — Present: ${fmt(x.stock)}, Limit: ${fmt(x.limit)}
+      </div>
+    `;
+  });
+
+  box.innerHTML=html;
+}
+
+function renderFloors(floorStocks,receiveMap,deliveryMap){
+  let html="";
+
+  FLOORS.forEach(floor=>{
+    let stock=floorStocks[floor];
+    let status=getStatus(floor,stock);
+    let isLow=status.includes("LOW");
+
+    html+=`
+      <div class="floorBox">
+        <h3>🏭 ${floor}</h3>
+
+        <div class="row">
+          <span>Present</span>
+          <span class="${isLow ? 'low' : 'ok'}">${fmt(stock)}</span>
+        </div>
+
+        <div class="row">
+          <span>Receive</span>
+          <span>${fmt(receiveMap[floor])}</span>
+        </div>
+
+        <div class="row">
+          <span>Delivery</span>
+          <span>${fmt(deliveryMap[floor])}</span>
+        </div>
+
+        <div class="row">
+          <span>Limit</span>
+          <span>${fmt(getLowLimit(floor))}</span>
+        </div>
+
+        <div class="stockMini">
+          <div class="stockMiniFill" style="width:${Math.min(100,Math.max(8,stock/20))}%"></div>
+        </div>
+
+        <div class="row">
+          <span>Status</span>
+          <span class="${isLow ? 'low' : 'ok'}">${status}</span>
+        </div>
+      </div>
+    `;
+  });
+
+  document.getElementById("floorArea").innerHTML=html;
+}
+
+function renderCharts(floorStocks,receiveMap,deliveryMap){
+  let labels=FLOORS;
+  let stockData=labels.map(f=>floorStocks[f]);
+
+  let receiveTotal=labels.reduce((a,f)=>a+receiveMap[f],0);
+  let deliveryTotal=labels.reduce((a,f)=>a+deliveryMap[f],0);
+
+  if(floorChart) floorChart.destroy();
+  if(monthlyChart) monthlyChart.destroy();
+
+  floorChart=new Chart(document.getElementById("floorChart"),{
+    type:"bar",
+    data:{
+      labels:labels,
+      datasets:[{
+        label:"Present Stock",
+        data:stockData,
+        backgroundColor:chartColors(labels.length),
+        borderColor:chartColors(labels.length),
+        borderWidth:1,
+        borderRadius:10
+      }]
+    },
+    options:barOptions("Floor Wise Present Stock"),
+    plugins:[valueLabelPlugin]
+  });
+
+  monthlyChart=new Chart(document.getElementById("monthlyChart"),{
+    type:"doughnut",
+    data:{
+      labels:["Receive","Delivery"],
+      datasets:[{
+        data:[receiveTotal,deliveryTotal],
+        backgroundColor:["#22c55e","#ef4444"],
+        borderColor:["#22c55e","#ef4444"],
+        borderWidth:1
+      }]
+    },
+    options:{
+      responsive:true,
+      maintainAspectRatio:false,
+      cutout:"65%",
+      plugins:{
+        legend:{
+          position:"bottom",
+          labels:{
+            color:chartTextColor(),
+            font:{family:"Segoe UI",size:12,weight:"bold"},
+            boxWidth:12
+          }
+        },
+        tooltip:{
+          backgroundColor:"rgba(15,23,42,.92)",
+          titleColor:"#fff",
+          bodyColor:"#fff"
+        }
+      }
+    },
+    plugins:[doughnutCenterPlugin]
+  });
+}
+
+function exportExcel(){
+  let html=document.body.innerHTML;
+  let file=new Blob([html],{type:"application/vnd.ms-excel"});
+  let a=document.createElement("a");
+  a.href=URL.createObjectURL(file);
+  a.download="needle-dashboard.xls";
+  a.click();
+}
+
+window.loadDashboard=loadDashboard;
+window.toggleTheme=toggleTheme;
+window.exportExcel=exportExcel;
+
+loadDashboard();
 </script>
+
+</body>
+</html>
