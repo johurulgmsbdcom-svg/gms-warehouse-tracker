@@ -300,6 +300,30 @@ body.light .creditFooter{background:rgba(255,255,255,.96)}.creditItem{display:fl
   #backup .backupActionGrid{grid-template-columns:1fr}
 }
 
+
+/* ===== STRONG PAGE SWITCH FIX ===== */
+.page{display:none!important;}
+.page.activePage{display:block!important;}
+#backup.activePage ~ .mcdDashboard,
+#backup .mcdDashboard,
+#backup .mcdBox,
+#backup .chartBox{
+  display:none!important;
+}
+#backup .backupOnlyBox,
+#backup .statusBox{
+  max-width:850px;
+  margin:14px auto;
+}
+#backup .backupActionGrid{
+  max-width:850px;
+  margin:14px auto;
+  grid-template-columns:repeat(4,1fr);
+}
+@media(max-width:900px){
+  #backup .backupActionGrid{grid-template-columns:1fr}
+}
+
 </style>
 </head>
 
@@ -416,6 +440,7 @@ body.light .creditFooter{background:rgba(255,255,255,.96)}.creditItem{display:fl
 
 
 
+
 <div id="backup" class="page">
   <h2>☁ Backup & Restore Control</h2>
   <div class="dashSub">Only Admin can use this page</div>
@@ -454,12 +479,9 @@ body.light .creditFooter{background:rgba(255,255,255,.96)}.creditItem{display:fl
 
   <div class="statusBox" id="restorePanel" style="display:none">
     <div class="statusTitle">📥 Restore Month Wise Data</div>
-
     <label>Select Month From Backup</label>
     <select id="restoreMonthSelect"></select>
-
     <button class="btn" onclick="restoreSelectedMonth()">Restore Selected Month</button>
-
     <div class="statusLine"><span>Backup File</span><b id="restoreFileName">-</b></div>
     <div class="statusLine"><span>Month Found</span><b id="restoreMonthCount">0</b></div>
     <div class="statusLine"><span>Restore Status</span><b id="restoreStatus">READY</b></div>
@@ -532,44 +554,29 @@ function setupRoleUI(){
 
 window.logout=function(){localStorage.removeItem("gmsUser");window.location.href="login.html";}
 window.openPage=function(id,btn){
-  document.querySelectorAll(".page").forEach(p=>p.classList.remove("activePage"));
+  document.querySelectorAll(".page").forEach(p=>{
+    p.classList.remove("activePage");
+    p.style.display="none";
+  });
+
   let page=document.getElementById(id);
-  if(page) page.classList.add("activePage");
+  if(page){
+    page.classList.add("activePage");
+    page.style.display="block";
+  }
+
   document.querySelectorAll(".nav button").forEach(b=>b.classList.remove("active"));
   if(btn) btn.classList.add("active");
-  if(id==="home") loadDashboardStock();
-  if(id==="backup"){
+
+  if(id==="home"){
     loadDashboardStock();
+  }
+
+  if(id==="backup"){
     renderBackupLog();
+    loadDashboardStock();
   }
 }
-
-window.loadReport=function(){
-  let mcd=document.getElementById("reportMcd").value,box=document.getElementById("reportBox");
-  if(!canAccess(mcd)){box.innerHTML=`<div class="card">❌ Access Denied</div>`;return;}
-
-  if(mcd==="ACCESSORIES MCD")box.innerHTML=`
-    <div class="card" onclick="location.href='sewing-thread.html'">🧵 Sewing Thread Report</div>
-    <div class="card" onclick="location.href='twill-tape.html'">📏 Twill Tape Report</div>
-    <div class="card" onclick="location.href='accessories.html'">📦 Accessories Report</div>
-    <div class="card" onclick="location.href='accessories-inventory-report.html'">📊 Inventory Report</div>
-    <div class="card" onclick="location.href='billing-manpower-report.html'">👨‍💼 Billing Manpower Report</div>
-    <div class="card" onclick="location.href='gate-plan-report.html'">🚚 Gate Plan Report</div>`;
-
-  else if(mcd==="GREY FABRIC MCD")box.innerHTML=`
-    <div class="card" onclick="location.href='grey-fabric.html'">🏭 Grey Fabric Daily Report</div>
-    <div class="card" onclick="location.href='grey-fabric-monthly.html'">📅 Grey Fabric Monthly Report</div>
-    <div class="card" onclick="location.href='billing-manpower-report.html'">👨‍💼 Billing Manpower Report</div>
-    <div class="card" onclick="location.href='gate-plan-report.html'">🚚 Gate Plan Report</div>`;
-
-  else if(mcd==="BILLING SECTION")box.innerHTML=`
-    <div class="card" onclick="location.href='billing-manpower-report.html'">👨‍💼 Billing Manpower Report</div>
-    <div class="card" onclick="location.href='gate-plan-report.html'">🚚 Gate Plan Report</div>`;
-  else box.innerHTML=`
-    <div class="card">📑 ${mcd} Report</div>
-    <div class="card" onclick="location.href='billing-manpower-report.html'">👨‍💼 Billing Manpower Report</div>
-    <div class="card" onclick="location.href='gate-plan-report.html'">🚚 Gate Plan Report</div>`;
-};
 
 function today(){return new Date().toISOString().slice(0,10);}
 
