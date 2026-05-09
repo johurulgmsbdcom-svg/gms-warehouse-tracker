@@ -1,72 +1,347 @@
 <!DOCTYPE html>
 <html>
 <head>
+<meta charset="UTF-8">
 <title>Gate Plan Entry</title>
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
 
 <style>
-body{margin:0;background:#07111f;color:white;font-family:Arial,sans-serif}
-.header{text-align:center;padding:10px}
-.header h2,.header h3,.header h4{margin:3px}
-.controls{text-align:center;margin:10px}
-button{padding:10px 14px;border:0;border-radius:8px;color:white;font-weight:bold;margin:4px;cursor:pointer}
-.add{background:#f59e0b}.save{background:#16a34a}.report{background:#2563eb}.home{background:#0f766e}.del{background:#dc2626}.print{background:#7c3aed}
-input,select,textarea{font-size:15px;padding:7px;border-radius:6px;border:1px solid #999}
-.box{width:96%;margin:10px auto;background:white;color:black;border:1px solid #000}
-.topLine{text-align:center;font-weight:bold;border-bottom:1px solid #000;padding:4px;font-size:18px}
-.meta{display:grid;grid-template-columns:repeat(3,1fr);border-bottom:1px solid #000}
-.meta div{border-right:1px solid #000;padding:6px;text-align:center;font-weight:bold}
-.tableWrap{overflow-x:auto;width:100%}
-table{min-width:1500px;width:100%;border-collapse:collapse;background:white;color:black;font-size:12px;table-layout:fixed}
-th,td{border:1px solid #000;padding:5px;text-align:center;vertical-align:middle}
-td input,td textarea{width:100%;box-sizing:border-box;border:0;outline:none;text-align:center;font-size:14px;background:white;color:black}
-td textarea{resize:none;text-align:left}
-.totalRow{font-weight:bold;background:#f3f4f6}
-.sign{display:grid;grid-template-columns:repeat(8,1fr);gap:0;margin-top:80px}
-.sign div{text-align:center;font-weight:bold;border-top:1px solid #000;padding:6px;font-size:12px}
-.toast{position:fixed;right:15px;bottom:15px;background:#22c55e;color:white;padding:12px 18px;border-radius:10px;font-weight:bold;display:none}
-.slCol{width:40px}.buyerCol{width:115px}.srCol{width:105px}.styleCol{width:110px}.orderCol{width:115px}.itemCol{width:125px}.colorCol{width:95px}.unitCol{width:70px}.qtyCol{width:90px}.ctnCol{width:95px}.partyCol{width:240px}.vehicleCol{width:115px}.remarksCol{width:115px}.actionCol{width:80px}
-.toParty{font-size:13px!important;text-align:left!important;padding-left:5px!important;white-space:normal!important}
-.greyReport{display:none;width:96%;margin:10px auto;background:white;color:black;border:1px solid #000;padding:8px}
-.greyHeader{text-align:center;line-height:1.25}
-.greyHeader h2{margin:0;font-size:26px;font-weight:900}
-.greyHeader h4{margin:2px 0;font-size:14px}
-.greyHeader h1{margin:2px 0;font-size:36px;font-weight:900;color:#555}
-.greyTitle{font-size:20px;font-weight:900;margin:8px 0}
-.greyTable{min-width:0!important;width:65%;margin:8px auto 0;font-size:14px;table-layout:fixed}
-.greyTable th,.greyTable td{padding:7px;border:1px solid #000}
-.greyTable input{background:#fffef2!important;color:#000!important;border:1px solid #aaa!important;border-radius:3px!important;padding:3px!important;font-size:12px!important}
-.greySign{display:grid;grid-template-columns:repeat(6,1fr);gap:25px;margin-top:105px}
-.greySign div{text-align:center;font-weight:bold;border-top:1px solid #000;padding-top:6px;font-size:12px}
+body{
+  margin:0;
+  background:#07111f;
+  color:white;
+  font-family:"Segoe UI Emoji","Apple Color Emoji","Segoe UI",Arial,sans-serif;
+}
+.header{
+  text-align:center;
+  padding:12px 6px;
+}
+.header h2,.header h3,.header h4{
+  margin:3px;
+}
+.controls{
+  text-align:center;
+  margin:10px;
+}
+button{
+  padding:10px 14px;
+  border:0;
+  border-radius:8px;
+  color:white;
+  font-weight:bold;
+  margin:4px;
+  cursor:pointer;
+}
+.add{background:#f59e0b}
+.save{background:#16a34a}
+.report{background:#2563eb}
+.home{background:#0f766e}
+.del{background:#dc2626}
+.print{background:#7c3aed}
+input,select,textarea{
+  font-size:15px;
+  padding:7px;
+  border-radius:6px;
+  border:1px solid #999;
+}
+.box{
+  width:96%;
+  margin:10px auto;
+  background:white;
+  color:black;
+  border:1px solid #000;
+}
+.topLine{
+  text-align:center;
+  font-weight:bold;
+  border-bottom:1px solid #000;
+  padding:5px;
+  font-size:18px;
+}
+.meta{
+  display:grid;
+  grid-template-columns:repeat(3,1fr);
+  border-bottom:1px solid #000;
+}
+.meta div{
+  border-right:1px solid #000;
+  padding:6px;
+  text-align:center;
+  font-weight:bold;
+}
+.tableWrap{
+  overflow-x:auto;
+  width:100%;
+}
+table{
+  min-width:1500px;
+  width:100%;
+  border-collapse:collapse;
+  background:white;
+  color:black;
+  font-size:12px;
+  table-layout:fixed;
+}
+th,td{
+  border:1px solid #000;
+  padding:5px;
+  text-align:center;
+  vertical-align:middle;
+}
+td input,td textarea{
+  width:100%;
+  box-sizing:border-box;
+  border:0;
+  outline:none;
+  text-align:center;
+  font-size:14px;
+  background:white;
+  color:black;
+}
+td textarea{
+  resize:none;
+  text-align:left;
+}
+.totalRow{
+  font-weight:bold;
+  background:#f3f4f6;
+}
+.sign{
+  display:grid;
+  grid-template-columns:repeat(8,1fr);
+  gap:0;
+  margin-top:80px;
+}
+.sign div{
+  text-align:center;
+  font-weight:bold;
+  border-top:1px solid #000;
+  padding:6px;
+  font-size:12px;
+}
+.slCol{width:40px}
+.buyerCol{width:115px}
+.srCol{width:105px}
+.styleCol{width:110px}
+.orderCol{width:115px}
+.itemCol{width:125px}
+.colorCol{width:95px}
+.unitCol{width:70px}
+.qtyCol{width:90px}
+.ctnCol{width:95px}
+.partyCol{width:240px}
+.vehicleCol{width:115px}
+.remarksCol{width:115px}
+.actionCol{width:80px}
+.toParty{
+  font-size:13px!important;
+  text-align:left!important;
+  padding-left:5px!important;
+  white-space:normal!important;
+}
 
-@page{size:A4 landscape;margin:4mm}
+/* GREY FABRIC FORMAT */
+.greyReport{
+  display:none;
+  width:96%;
+  margin:10px auto;
+  background:white;
+  color:black;
+  border:1px solid #000;
+  padding:8px;
+}
+.greyHeader{
+  text-align:center;
+  line-height:1.25;
+}
+.greyHeader h2{
+  margin:0;
+  font-size:26px;
+  font-weight:900;
+}
+.greyHeader h4{
+  margin:2px 0;
+  font-size:14px;
+}
+.greyHeader h1{
+  margin:2px 0;
+  font-size:36px;
+  font-weight:900;
+  color:#555;
+}
+.greyTitle{
+  font-size:20px;
+  font-weight:900;
+  margin:8px 0;
+}
+.greyTable{
+  min-width:0!important;
+  width:65%;
+  margin:8px auto 0;
+  font-size:14px;
+  table-layout:fixed;
+}
+.greyTable th,.greyTable td{
+  padding:7px;
+  border:1px solid #000;
+}
+.greyTable input{
+  background:#fffef2!important;
+  color:#000!important;
+  border:1px solid #aaa!important;
+  border-radius:3px!important;
+  padding:3px!important;
+  font-size:12px!important;
+}
+.greySign{
+  display:grid;
+  grid-template-columns:repeat(6,1fr);
+  gap:25px;
+  margin-top:105px;
+}
+.greySign div{
+  text-align:center;
+  font-weight:bold;
+  border-top:1px solid #000;
+  padding-top:6px;
+  font-size:12px;
+}
+.toast{
+  position:fixed;
+  right:15px;
+  bottom:15px;
+  background:#22c55e;
+  color:white;
+  padding:12px 18px;
+  border-radius:10px;
+  font-weight:bold;
+  display:none;
+  z-index:9999;
+}
+
+@page{
+  size:A4 landscape;
+  margin:4mm;
+}
 @media print{
-  html,body{width:297mm;height:210mm;margin:0!important;padding:0!important;background:white!important;color:black!important;overflow:hidden!important}
+  html,body{
+    width:297mm;
+    height:210mm;
+    margin:0!important;
+    padding:0!important;
+    background:white!important;
+    color:black!important;
+    overflow:hidden!important;
+  }
   .controls,.noPrint,.toast{display:none!important}
   body.printGrey .box,body.printGrey #normalGateBox{display:none!important}
   body.printNormal .greyReport,body.printNormal #greyGateBox{display:none!important}
   body.printNormal .box,body.printNormal #normalGateBox{display:block!important}
   body.printGrey .greyReport,body.printGrey #greyGateBox{display:block!important}
   .header{padding:1mm 0!important}
-  .header h2{font-size:16px!important;margin:0!important}.header h4{font-size:10px!important;margin:0!important}.header h3{font-size:13px!important;margin:0!important}
-  .box{width:100%!important;margin:0!important;border:1px solid #000!important;height:178mm!important;page-break-after:avoid!important;page-break-inside:avoid!important}
+  .header h2{font-size:16px!important;margin:0!important}
+  .header h4{font-size:10px!important;margin:0!important}
+  .header h3{font-size:13px!important;margin:0!important}
+  .box{
+    width:100%!important;
+    margin:0!important;
+    border:1px solid #000!important;
+    height:178mm!important;
+    page-break-after:avoid!important;
+    page-break-inside:avoid!important;
+  }
   .topLine{font-size:12px!important;padding:2px!important}
   .meta div{padding:2px!important;font-size:10px!important}
   .tableWrap{overflow:visible!important}
-  table{width:100%!important;min-width:0!important;table-layout:fixed!important;font-size:7px!important}
-  th,td{padding:1px!important;font-size:7px!important;line-height:1!important;overflow:hidden!important}
-  td input,td textarea{border:0!important;outline:0!important;background:transparent!important;color:#000!important;font-size:7px!important;padding:0!important;resize:none!important}
-  .slCol{width:22px!important}.buyerCol{width:70px!important}.srCol{width:62px!important}.styleCol{width:70px!important}.orderCol{width:78px!important}.itemCol{width:82px!important}.colorCol{width:58px!important}.unitCol{width:40px!important}.qtyCol{width:55px!important}.ctnCol{width:58px!important}.partyCol{width:150px!important}.vehicleCol{width:70px!important}.remarksCol{width:72px!important}
-  .toParty{font-size:6.5px!important;text-align:left!important;white-space:normal!important}
-  .sign{margin-top:24mm!important;display:grid!important;grid-template-columns:repeat(8,1fr)!important}
-  .sign div{font-size:7px!important;padding:2px 1px!important;line-height:1!important}
-  .greyReport{width:100%!important;margin:0!important;padding:0!important;border:0!important;height:185mm!important;page-break-after:avoid!important;page-break-inside:avoid!important}
-  .greyHeader h2{font-size:18px!important;margin:0!important}.greyHeader h4{font-size:10px!important;margin:0!important}.greyHeader h1{font-size:26px!important;margin:1px 0!important}.greyTitle{font-size:14px!important;margin:3px 0!important}
-  .greyTable{width:70%!important;margin:5mm auto 0!important;table-layout:fixed!important}
-  .greyTable th,.greyTable td{font-size:9px!important;padding:3px!important;overflow:visible!important}
-  .greyTable input{font-size:9px!important;border:0!important;outline:0!important;background:transparent!important;text-align:center!important}
-  .greySign{margin-top:36mm!important;display:grid!important;grid-template-columns:repeat(6,1fr)!important;gap:12px!important}
-  .greySign div{font-size:8px!important;padding-top:3px!important}
+  table{
+    width:100%!important;
+    min-width:0!important;
+    table-layout:fixed!important;
+    font-size:7px!important;
+  }
+  th,td{
+    padding:1px!important;
+    font-size:7px!important;
+    line-height:1!important;
+    overflow:hidden!important;
+  }
+  td input,td textarea{
+    border:0!important;
+    outline:0!important;
+    background:transparent!important;
+    color:#000!important;
+    font-size:7px!important;
+    padding:0!important;
+    resize:none!important;
+  }
+  .slCol{width:22px!important}
+  .buyerCol{width:70px!important}
+  .srCol{width:62px!important}
+  .styleCol{width:70px!important}
+  .orderCol{width:78px!important}
+  .itemCol{width:82px!important}
+  .colorCol{width:58px!important}
+  .unitCol{width:40px!important}
+  .qtyCol{width:55px!important}
+  .ctnCol{width:58px!important}
+  .partyCol{width:150px!important}
+  .vehicleCol{width:70px!important}
+  .remarksCol{width:72px!important}
+  .toParty{
+    font-size:6.5px!important;
+    text-align:left!important;
+    white-space:normal!important;
+  }
+  .sign{
+    margin-top:24mm!important;
+    display:grid!important;
+    grid-template-columns:repeat(8,1fr)!important;
+  }
+  .sign div{
+    font-size:7px!important;
+    padding:2px 1px!important;
+    line-height:1!important;
+  }
+  .greyReport{
+    width:100%!important;
+    margin:0!important;
+    padding:0!important;
+    border:0!important;
+    height:185mm!important;
+    page-break-after:avoid!important;
+    page-break-inside:avoid!important;
+  }
+  .greyHeader h2{font-size:18px!important;margin:0!important}
+  .greyHeader h4{font-size:10px!important;margin:0!important}
+  .greyHeader h1{font-size:26px!important;margin:1px 0!important}
+  .greyTitle{font-size:14px!important;margin:3px 0!important}
+  .greyTable{
+    width:70%!important;
+    margin:5mm auto 0!important;
+    table-layout:fixed!important;
+  }
+  .greyTable th,.greyTable td{
+    font-size:9px!important;
+    padding:3px!important;
+    overflow:visible!important;
+  }
+  .greyTable input{
+    font-size:9px!important;
+    border:0!important;
+    outline:0!important;
+    background:transparent!important;
+    text-align:center!important;
+  }
+  .greySign{
+    margin-top:36mm!important;
+    display:grid!important;
+    grid-template-columns:repeat(6,1fr)!important;
+    gap:12px!important;
+  }
+  .greySign div{
+    font-size:8px!important;
+    padding-top:3px!important;
+  }
 }
 </style>
 </head>
@@ -90,6 +365,7 @@ td textarea{resize:none;text-align:left}
     <option>GMS Textiles Ltd.</option>
     <option>GMS Composite Knitting Ind Ltd.</option>
   </select>
+
   MCD:
   <select id="mcdName" onchange="updateHeader()">
     <option>ACCESSORIES MCD</option>
@@ -106,7 +382,9 @@ td textarea{resize:none;text-align:left}
     <option>FINISH FABRIC MCD</option>
     <option>YARN DYEING MCD</option>
     <option>CHEMICAL MCD</option>
+    <option>GENERAL TECHNICAL MCD</option>
   </select>
+
   To Company:
   <select id="toType" onchange="updateHeader()">
     <option>GMS Textiles Ltd.</option>
@@ -114,6 +392,7 @@ td textarea{resize:none;text-align:left}
     <option>Other's Factory</option>
   </select>
   <br>
+
   <button class="add" onclick="addRow()">➕ Add Row</button>
   <button class="save" onclick="saveGatePlan()">💾 Save Firebase</button>
   <button class="print" onclick="window.print()">🖨 PDF / Print</button>
@@ -121,8 +400,18 @@ td textarea{resize:none;text-align:left}
   <button class="home" onclick="location.href='index.html'">🏠 Home</button>
 </div>
 
-<datalist id="buyerList"></datalist><datalist id="srList"></datalist><datalist id="styleList"></datalist><datalist id="orderList"></datalist><datalist id="itemList"></datalist><datalist id="colorList"></datalist><datalist id="unitList"></datalist><datalist id="partyList"></datalist><datalist id="vehicleList"></datalist><datalist id="remarksList"></datalist>
+<datalist id="buyerList"></datalist>
+<datalist id="srList"></datalist>
+<datalist id="styleList"></datalist>
+<datalist id="orderList"></datalist>
+<datalist id="itemList"></datalist>
+<datalist id="colorList"></datalist>
+<datalist id="unitList"></datalist>
+<datalist id="partyList"></datalist>
+<datalist id="vehicleList"></datalist>
+<datalist id="remarksList"></datalist>
 
+<!-- NORMAL GATE PLAN FORMAT -->
 <div class="box" id="normalGateBox">
   <div class="topLine" id="companyLine">GMS Textiles Ltd. To GMS Textiles Ltd.</div>
   <div class="meta">
@@ -130,11 +419,25 @@ td textarea{resize:none;text-align:left}
     <div>Date: <span id="showDate"></span></div>
     <div>Time: <span id="showTime"></span></div>
   </div>
+
   <div class="tableWrap">
     <table>
       <thead>
         <tr>
-          <th class="slCol">SL No</th><th class="buyerCol">Buyer Name</th><th class="srCol">SR/GT No</th><th class="styleCol">Style Name</th><th class="orderCol">Order No/PO No</th><th class="itemCol">Name of Item</th><th class="colorCol">Color</th><th class="unitCol">Unit</th><th class="qtyCol">Delivery Qty</th><th class="ctnCol">CTN/PKG Qty</th><th class="partyCol">To Party Name</th><th class="vehicleCol">Vehicle No</th><th class="remarksCol">Remarks</th><th class="noPrint actionCol">Action</th>
+          <th class="slCol">SL No</th>
+          <th class="buyerCol">Buyer Name</th>
+          <th class="srCol">SR/GT No</th>
+          <th class="styleCol">Style Name</th>
+          <th class="orderCol">Order No/PO No</th>
+          <th class="itemCol">Name of Item</th>
+          <th class="colorCol">Color</th>
+          <th class="unitCol">Unit</th>
+          <th class="qtyCol">Delivery Qty</th>
+          <th class="ctnCol">CTN/PKG Qty</th>
+          <th class="partyCol">To Party Name</th>
+          <th class="vehicleCol">Vehicle No</th>
+          <th class="remarksCol">Remarks</th>
+          <th class="noPrint actionCol">Action</th>
         </tr>
       </thead>
       <tbody id="gateBody"></tbody>
@@ -149,6 +452,7 @@ td textarea{resize:none;text-align:left}
       </tfoot>
     </table>
   </div>
+
   <div class="sign">
     <div>Prepared By<br><span id="signPrepared"></span></div>
     <div>Security Dept.</div>
@@ -161,6 +465,7 @@ td textarea{resize:none;text-align:left}
   </div>
 </div>
 
+<!-- GREY FABRIC SPECIAL FORMAT -->
 <div class="greyReport" id="greyGateBox">
   <div class="greyHeader">
     <h2>GMS TEXTILES LTD.</h2>
@@ -168,6 +473,7 @@ td textarea{resize:none;text-align:left}
     <h1>Grey Fabric-MCD</h1>
     <div class="greyTitle">Daily GMS Textiles to GMS Composite Delivery Status</div>
   </div>
+
   <table class="greyTable">
     <thead>
       <tr>
@@ -193,6 +499,7 @@ td textarea{resize:none;text-align:left}
       </tr>
     </tbody>
   </table>
+
   <div class="greySign">
     <div>Prepared By<br><span id="greyPrepared"></span></div>
     <div>Security Dept.</div>
@@ -203,154 +510,275 @@ td textarea{resize:none;text-align:left}
   </div>
 </div>
 
-<div id="toast" class="toast">Saved ✅</div>
+<div id="toast" class="toast">Saved</div>
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-app.js";
 import { getFirestore, collection, getDocs, doc, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-firestore.js";
 
-const firebaseConfig={apiKey:"AIzaSyD-wBCF5eeWMHobLFOhBzKW7aB2pagz9-w",authDomain:"gms-warehouse-tracker-7f57e.firebaseapp.com",projectId:"gms-warehouse-tracker-7f57e",storageBucket:"gms-warehouse-tracker-7f57e.firebasestorage.app",messagingSenderId:"992250313291",appId:"1:992250313291:web:ee3bceae76d4d53bc26bce"};
+const firebaseConfig={
+  apiKey:"AIzaSyD-wBCF5eeWMHobLFOhBzKW7aB2pagz9-w",
+  authDomain:"gms-warehouse-tracker-7f57e.firebaseapp.com",
+  projectId:"gms-warehouse-tracker-7f57e",
+  storageBucket:"gms-warehouse-tracker-7f57e.firebasestorage.app",
+  messagingSenderId:"992250313291",
+  appId:"1:992250313291:web:ee3bceae76d4d53bc26bce"
+};
+
 const app=initializeApp(firebaseConfig);
 const db=getFirestore(app);
-function makeId(no){return String(no).replaceAll("/","-").replaceAll(" ","-");}
 
-const user = JSON.parse(localStorage.getItem("gmsUser") || "null");
-if(!user){ location.href="login.html"; }
+const user=JSON.parse(localStorage.getItem("gmsUser")||"null");
+if(!user){location.href="login.html";}
 
-function today(){ return new Date().toISOString().slice(0,10); }
+let editMode=false;
+
+function today(){
+  return new Date().toISOString().slice(0,10);
+}
+
 function nowTime(){
   let d=new Date();
   return String(d.getHours()).padStart(2,"0")+":"+String(d.getMinutes()).padStart(2,"0");
 }
+
+function n(v){
+  return Number(v)||0;
+}
+
 function toast(msg){
   let t=document.getElementById("toast");
-  t.innerText=msg;t.style.display="block";
-  setTimeout(()=>t.style.display="none",1600);
+  t.innerText=msg;
+  t.style.display="block";
+  setTimeout(()=>t.style.display="none",1800);
 }
-function n(v){ return Number(v)||0; }
-function getSavedPlans(){ return JSON.parse(localStorage.getItem("gatePlans") || "[]"); }
-function setSavedPlans(data){ localStorage.setItem("gatePlans",JSON.stringify(data)); }
+
+function makeId(no){
+  return String(no).replaceAll("/","-").replaceAll(" ","-");
+}
 
 async function nextGatePlanNo(){
   let year=new Date().getFullYear();
   let max=0;
+
   try{
     let snap=await getDocs(collection(db,"gatePlans"));
     snap.forEach(d=>{
       let p=d.data();
       let no=p.gatePlanNo||p.gatePassNo||"";
-      let mm=String(no).match(/GP-\d{4}-(\d+)/);
-      if(mm) max=Math.max(max,Number(mm[1])||0);
+      let m=String(no).match(/GP-\d{4}-(\d+)/);
+      if(m) max=Math.max(max,Number(m[1])||0);
     });
-  }catch(e){console.log(e);}
+  }catch(e){
+    console.log(e);
+  }
+
   return "GP-"+year+"-"+String(max+1).padStart(4,"0");
 }
 
-document.getElementById("planDate").value=today();
-document.getElementById("planTime").value=nowTime();
-document.getElementById("gatePlanNo").value=await nextGatePlanNo();
-document.getElementById("signPrepared").innerText=user.name||user.email||"User";
+async function init(){
+  document.getElementById("planDate").value=today();
+  document.getElementById("planTime").value=nowTime();
+  document.getElementById("signPrepared").innerText=user.name||user.email||"User";
+  document.getElementById("greyPrepared").innerText=user.name||user.email||"User";
 
-function syncGreyInputs(){
-  let company=document.getElementById("greyCompanyInput")?.value || "";
-  let reason=document.getElementById("greyReasonInput")?.value || "For Dyeing";
-  let qty=Number(document.getElementById("greyQtyInput")?.value)||0;
-  let remarks=document.getElementById("greyRemarksInput")?.value || "";
+  let url=new URLSearchParams(location.search);
+  let editId=url.get("edit")||localStorage.getItem("editGatePlanNo")||"";
+
+  if(editId){
+    await loadEditPlan(editId);
+  }else{
+    document.getElementById("gatePlanNo").value=await nextGatePlanNo();
+    addRow();
+  }
+
+  updateHeader();
+  calculateTotals();
+  loadSuggestions();
+}
+
+async function loadEditPlan(no){
+  try{
+    let ref=doc(db,"gatePlans",makeId(no));
+    let snap=await getDoc(ref);
+
+    if(!snap.exists()){
+      alert("Edit data not found");
+      document.getElementById("gatePlanNo").value=await nextGatePlanNo();
+      addRow();
+      return;
+    }
+
+    let p=snap.data();
+    editMode=true;
+
+    document.getElementById("gatePlanNo").value=p.gatePlanNo||no;
+    document.getElementById("planDate").value=p.date||today();
+    document.getElementById("planTime").value=p.time||nowTime();
+    document.getElementById("companyName").value=p.company||"GMS Textiles Ltd.";
+    document.getElementById("mcdName").value=p.mcd||"ACCESSORIES MCD";
+    document.getElementById("toType").value=p.toCompany||"GMS Textiles Ltd.";
+
+    document.getElementById("gateBody").innerHTML="";
+
+    (p.rows||[]).forEach(r=>addRow(r));
+
+    if((p.rows||[]).length===0) addRow();
+
+    localStorage.removeItem("editGatePlanNo");
+
+    toast("Edit Mode Loaded");
+
+  }catch(e){
+    console.log(e);
+    alert("Edit load error");
+    addRow();
+  }
+}
+
+window.syncGreyInputs=function(){
+  let company=document.getElementById("greyCompanyInput").value||"";
+  let reason=document.getElementById("greyReasonInput").value||"For Dyeing";
+  let qty=Number(document.getElementById("greyQtyInput").value)||0;
+  let remarks=document.getElementById("greyRemarksInput").value||"";
+
   document.getElementById("greyShowTotal").innerText=qty.toFixed(1);
+
   let firstParty=document.querySelector(".toParty");
   let firstItem=document.querySelector(".itemName");
   let firstQty=document.querySelector(".deliveryQty");
   let firstRemarks=document.querySelector(".remarks");
-  if(document.getElementById("toType").value==="Other's Factory" && firstParty) firstParty.value=company;
+
+  if(document.getElementById("toType").value==="Other's Factory" && firstParty){
+    firstParty.value=company;
+  }
+
   if(firstItem) firstItem.value=reason;
   if(firstQty) firstQty.value=qty;
   if(firstRemarks) firstRemarks.value=remarks;
+
   document.getElementById("deliveryTotal").innerText=qty.toFixed(1);
+};
+
+
+function isCompanyName(v){
+  return v==="GMS Textiles Ltd." || v==="GMS Composite Knitting Ind Ltd.";
 }
 
-function updateHeader(){
+function updateToPartyFields(force=false){
+  let toCompany=document.getElementById("toType").value;
+
+  document.querySelectorAll(".toParty").forEach(x=>{
+    if(toCompany==="Other's Factory"){
+      if(isCompanyName(x.value)){
+        x.value="";
+      }
+    }else{
+      if(force || !x.value || isCompanyName(x.value)){
+        x.value=toCompany;
+      }
+    }
+    x.readOnly=false;
+    x.title=x.value;
+  });
+
+  let greyCompanyInput=document.getElementById("greyCompanyInput");
+  if(greyCompanyInput){
+    if(toCompany==="Other's Factory"){
+      if(isCompanyName(greyCompanyInput.value)){
+        greyCompanyInput.value="";
+      }
+      greyCompanyInput.readOnly=false;
+    }else{
+      greyCompanyInput.value=toCompany;
+      greyCompanyInput.readOnly=false;
+    }
+  }
+}
+
+window.updateHeader=function(){
   let company=document.getElementById("companyName").value;
   let toCompany=document.getElementById("toType").value;
   let mcd=document.getElementById("mcdName").value;
+
   let isGrey=mcd==="GREY FABRIC MCD";
 
   document.getElementById("companyLine").innerText=company+" To "+toCompany;
   document.getElementById("showDate").innerText=document.getElementById("planDate").value;
   document.getElementById("showTime").innerText=document.getElementById("planTime").value;
   document.getElementById("showGatePlan").innerText=document.getElementById("gatePlanNo").value;
-  document.getElementById("mcdTitle").innerText=isGrey ? "GREY FABRIC MCD" : mcd;
+  document.getElementById("mcdTitle").innerText=mcd;
 
-  document.getElementById("normalGateBox").style.display=isGrey ? "none" : "block";
-  document.getElementById("greyGateBox").style.display=isGrey ? "block" : "none";
+  document.getElementById("normalGateBox").style.display=isGrey?"none":"block";
+  document.getElementById("greyGateBox").style.display=isGrey?"block":"none";
+
   document.body.classList.toggle("printGrey",isGrey);
   document.body.classList.toggle("printNormal",!isGrey);
 
   document.getElementById("greyShowDate").innerText=document.getElementById("planDate").value;
-  let greyCompanyInput=document.getElementById("greyCompanyInput");
-  if(greyCompanyInput && document.activeElement!==greyCompanyInput){
-    if(toCompany==="Other's Factory"){
-      if(!greyCompanyInput.value || greyCompanyInput.value==="GMS Textiles Ltd." || greyCompanyInput.value==="GMS Composite Knitting Ind Ltd.") greyCompanyInput.value="";
-    }else{
-      greyCompanyInput.value=toCompany;
-    }
-  }
   document.getElementById("greyPrepared").innerText=user.name||user.email||"User";
 
-  document.querySelectorAll(".toParty").forEach(x=>{
-    if(toCompany==="Other's Factory"){
-      if(x.value==="GMS Textiles Ltd." || x.value==="GMS Composite Knitting Ind Ltd.") x.value="";
-    }else{
-      if(!x.value || x.value==="GMS Textiles Ltd." || x.value==="GMS Composite Knitting Ind Ltd.") x.value=toCompany;
-    }
-    x.title=x.value;
-  });
-  calculateTotals();
-}
+  updateToPartyFields(true);
 
-document.getElementById("planDate").addEventListener("change",updateHeader);
-document.getElementById("planTime").addEventListener("change",updateHeader);
+  calculateTotals();
+};
 
 function addOption(id,value){
-  if(!value) return;
+  if(!value)return;
   let list=document.getElementById(id);
-  if([...list.children].some(o=>o.value===value)) return;
+  if([...list.children].some(o=>o.value===value))return;
   let opt=document.createElement("option");
   opt.value=value;
   list.appendChild(opt);
 }
 
-function loadSuggestions(){
-  let plans=getSavedPlans();
-  plans.forEach(p=>{
-    (p.rows||[]).forEach(r=>{
-      addOption("buyerList",r.buyerName);addOption("srList",r.srGtNo);addOption("styleList",r.styleName);addOption("orderList",r.orderNo);addOption("itemList",r.itemName);addOption("colorList",r.color);addOption("unitList",r.unit);addOption("partyList",r.toParty);addOption("vehicleList",r.vehicleNo);addOption("remarksList",r.remarks);
+async function loadSuggestions(){
+  try{
+    let snap=await getDocs(collection(db,"gatePlans"));
+    snap.forEach(d=>{
+      let p=d.data();
+      (p.rows||[]).forEach(r=>{
+        addOption("buyerList",r.buyerName);
+        addOption("srList",r.srGtNo);
+        addOption("styleList",r.styleName);
+        addOption("orderList",r.orderNo);
+        addOption("itemList",r.itemName);
+        addOption("colorList",r.color);
+        addOption("unitList",r.unit);
+        addOption("partyList",r.toParty);
+        addOption("vehicleList",r.vehicleNo);
+        addOption("remarksList",r.remarks);
+      });
     });
-  });
+  }catch(e){
+    console.log(e);
+  }
 }
 
-window.addRow=function(){
+window.addRow=function(data={}){
   let tbody=document.getElementById("gateBody");
   let tr=document.createElement("tr");
   let sl=tbody.children.length+1;
   let toCompany=document.getElementById("toType").value;
-  let defaultParty=toCompany==="Other's Factory" ? "" : toCompany;
+  let defaultParty=data.toParty ?? (toCompany==="Other's Factory" ? "" : toCompany);
 
   tr.innerHTML=`
     <td class="slCol">${sl}</td>
-    <td class="buyerCol"><input class="buyerName" list="buyerList"></td>
-    <td class="srCol"><input class="srGtNo" list="srList"></td>
-    <td class="styleCol"><input class="styleName" list="styleList"></td>
-    <td class="orderCol"><input class="orderNo" list="orderList"></td>
-    <td class="itemCol"><input class="itemName" list="itemList" placeholder="For Dyeing"></td>
-    <td class="colorCol"><input class="color" list="colorList"></td>
-    <td class="unitCol"><input class="unit" list="unitList"></td>
-    <td class="qtyCol"><input type="number" class="deliveryQty" oninput="calculateTotals()"></td>
-    <td class="ctnCol"><input type="number" class="ctnQty" oninput="calculateTotals()"></td>
+    <td class="buyerCol"><input class="buyerName" list="buyerList" value="${data.buyerName||""}"></td>
+    <td class="srCol"><input class="srGtNo" list="srList" value="${data.srGtNo||""}"></td>
+    <td class="styleCol"><input class="styleName" list="styleList" value="${data.styleName||""}"></td>
+    <td class="orderCol"><input class="orderNo" list="orderList" value="${data.orderNo||""}"></td>
+    <td class="itemCol"><input class="itemName" list="itemList" placeholder="For Dyeing" value="${data.itemName||""}"></td>
+    <td class="colorCol"><input class="color" list="colorList" value="${data.color||""}"></td>
+    <td class="unitCol"><input class="unit" list="unitList" value="${data.unit||""}"></td>
+    <td class="qtyCol"><input type="number" class="deliveryQty" oninput="calculateTotals()" value="${data.deliveryQty||""}"></td>
+    <td class="ctnCol"><input type="number" class="ctnQty" oninput="calculateTotals()" value="${data.ctnQty||""}"></td>
     <td class="partyCol"><textarea class="toParty" title="${defaultParty}" oninput="this.title=this.value">${defaultParty}</textarea></td>
-    <td class="vehicleCol"><input class="vehicleNo" list="vehicleList"></td>
-    <td class="remarksCol"><input class="remarks" list="remarksList"></td>
+    <td class="vehicleCol"><input class="vehicleNo" list="vehicleList" value="${data.vehicleNo||""}"></td>
+    <td class="remarksCol"><input class="remarks" list="remarksList" value="${data.remarks||""}"></td>
     <td class="noPrint actionCol"><button class="del" onclick="deleteRow(this)">Delete</button></td>
   `;
+
   tbody.appendChild(tr);
 };
 
@@ -361,11 +789,14 @@ window.deleteRow=function(btn){
 };
 
 function refreshSl(){
-  [...document.getElementById("gateBody").children].forEach((tr,i)=>{tr.children[0].innerText=i+1;});
+  [...document.getElementById("gateBody").children].forEach((tr,i)=>{
+    tr.children[0].innerText=i+1;
+  });
 }
 
 function readRows(){
   let rows=[];
+
   document.querySelectorAll("#gateBody tr").forEach(tr=>{
     let row={
       buyerName:tr.querySelector(".buyerName").value.trim(),
@@ -381,38 +812,49 @@ function readRows(){
       vehicleNo:tr.querySelector(".vehicleNo").value.trim(),
       remarks:tr.querySelector(".remarks").value.trim()
     };
+
     if(Object.values(row).some(v=>String(v).trim())) rows.push(row);
   });
+
   return rows;
 }
 
 window.calculateTotals=function(){
-  let totalDelivery=0,totalCtn=0;
+  let totalDelivery=0;
+  let totalCtn=0;
+
   document.querySelectorAll(".deliveryQty").forEach(x=>totalDelivery+=n(x.value));
   document.querySelectorAll(".ctnQty").forEach(x=>totalCtn+=n(x.value));
+
   document.getElementById("deliveryTotal").innerText=totalDelivery;
   document.getElementById("ctnTotal").innerText=totalCtn;
 
-  let firstReason=document.querySelector(".itemName")?.value.trim() || "For Dyeing";
-  let firstRemarks=document.querySelector(".remarks")?.value.trim() || "";
-  let active=document.activeElement?.id || "";
+  let firstReason=document.querySelector(".itemName")?.value.trim()||"For Dyeing";
+  let firstRemarks=document.querySelector(".remarks")?.value.trim()||"";
+
+  let active=document.activeElement?.id||"";
 
   if(!["greyCompanyInput","greyReasonInput","greyQtyInput","greyRemarksInput"].includes(active)){
-    if(document.getElementById("greyReasonInput")) document.getElementById("greyReasonInput").value=firstReason;
-    if(document.getElementById("greyQtyInput")) document.getElementById("greyQtyInput").value=totalDelivery;
-    if(document.getElementById("greyRemarksInput")) document.getElementById("greyRemarksInput").value=firstRemarks;
-    if(document.getElementById("greyShowTotal")) document.getElementById("greyShowTotal").innerText=totalDelivery.toFixed(1);
+    document.getElementById("greyReasonInput").value=firstReason;
+    document.getElementById("greyQtyInput").value=totalDelivery;
+    document.getElementById("greyRemarksInput").value=firstRemarks;
+    document.getElementById("greyShowTotal").innerText=totalDelivery.toFixed(1);
   }
 };
 
 window.saveGatePlan=async function(){
-  if(document.getElementById("mcdName").value==="GREY FABRIC MCD") syncGreyInputs();
+  if(document.getElementById("mcdName").value==="GREY FABRIC MCD"){
+    syncGreyInputs();
+  }
 
   let rows=readRows();
-  if(rows.length===0){alert("Data nai");return;}
 
-  let plans=getSavedPlans();
-  let planNo=document.getElementById("gatePlanNo").value || nextGatePlanNo();
+  if(rows.length===0){
+    alert("Data nai");
+    return;
+  }
+
+  let planNo=document.getElementById("gatePlanNo").value || await nextGatePlanNo();
 
   let plan={
     gatePlanNo:planNo,
@@ -426,100 +868,86 @@ window.saveGatePlan=async function(){
     preparedUserId:user.id||"",
     rows:rows,
     status:"Prepared",
-    createdAt:new Date().toISOString()
+    updatedAt:new Date().toISOString(),
+    createdAt:editMode ? undefined : new Date().toISOString()
   };
 
-  plans.push(plan);
-  setSavedPlans(plans);
+  Object.keys(plan).forEach(k=>plan[k]===undefined && delete plan[k]);
 
   try{
-    await setDoc(doc(db,"gatePlans",makeId(plan.gatePlanNo)),plan,{merge:true});
+    await setDoc(doc(db,"gatePlans",makeId(planNo)),plan,{merge:true});
+
+    rows.forEach(r=>{
+      addOption("buyerList",r.buyerName);
+      addOption("srList",r.srGtNo);
+      addOption("styleList",r.styleName);
+      addOption("orderList",r.orderNo);
+      addOption("itemList",r.itemName);
+      addOption("colorList",r.color);
+      addOption("unitList",r.unit);
+      addOption("partyList",r.toParty);
+      addOption("vehicleList",r.vehicleNo);
+      addOption("remarksList",r.remarks);
+    });
+
+    toast(editMode ? "Gate Plan Updated Firebase" : "Gate Plan Saved Firebase");
+
+    editMode=false;
+    localStorage.removeItem("editGatePlanNo");
+    history.replaceState(null,"","gate-plan.html");
+
+    document.getElementById("gateBody").innerHTML="";
+    document.getElementById("gatePlanNo").value=await nextGatePlanNo();
+    addRow();
+    calculateTotals();
+    updateHeader();
+
   }catch(e){
+    console.log(e);
     alert("Firebase save error: "+e.message);
-    return;
   }
-
-  rows.forEach(r=>{
-    addOption("buyerList",r.buyerName);addOption("srList",r.srGtNo);addOption("styleList",r.styleName);addOption("orderList",r.orderNo);addOption("itemList",r.itemName);addOption("colorList",r.color);addOption("unitList",r.unit);addOption("partyList",r.toParty);addOption("vehicleList",r.vehicleNo);addOption("remarksList",r.remarks);
-  });
-
-  document.getElementById("gateBody").innerHTML="";
-  document.getElementById("gatePlanNo").value=await nextGatePlanNo();
-  addRow();
-  calculateTotals();
-  updateHeader();
-  toast("Gate Plan Saved ✅ New No Ready");
 };
 
-document.addEventListener("input",function(e){
-  if(e.target.closest("#gateBody")) calculateTotals();
+
+document.getElementById("toType").addEventListener("change",function(){
+  updateToPartyFields(true);
+  updateHeader();
 });
 
-document.addEventListener("keydown",function(e){
-  if(e.target.tagName!=="INPUT" && e.target.tagName!=="TEXTAREA") return;
-  if(e.key==="Tab") return;
+document.addEventListener("input",e=>{
+  if(e.target.closest("#gateBody")){
+    calculateTotals();
+  }
+});
+
+document.addEventListener("keydown",e=>{
+  if(e.target.tagName!=="INPUT" && e.target.tagName!=="TEXTAREA")return;
+  if(e.key==="Tab")return;
+
   if(e.key==="Enter"){
     e.preventDefault();
+
     let td=e.target.closest("td");
     let tr=e.target.closest("tr");
-    if(!td || !tr) return;
+
+    if(!td||!tr)return;
+
     let colIndex=[...tr.children].indexOf(td);
     let nextTr=tr.nextElementSibling;
+
     if(nextTr){
       let nextInput=nextTr.children[colIndex]?.querySelector("input,textarea");
-      if(nextInput){nextInput.focus();nextInput.select();}
+      if(nextInput){
+        nextInput.focus();
+        nextInput.select();
+      }
     }
   }
 });
 
-window.addEventListener("beforeprint",function(){updateHeader();});
+window.addEventListener("beforeprint",()=>updateHeader());
 
-
-async function loadEditPlanIfAny(){
-  let no=new URLSearchParams(location.search).get("edit") || localStorage.getItem("editGatePlanNo") || "";
-  if(!no) return false;
-  try{
-    let snap=await getDoc(doc(db,"gatePlans",makeId(no)));
-    if(!snap.exists()) return false;
-    let p=snap.data();
-    document.getElementById("gatePlanNo").value=p.gatePlanNo||no;
-    document.getElementById("planDate").value=p.date||today();
-    document.getElementById("planTime").value=p.time||nowTime();
-    document.getElementById("companyName").value=p.company||"GMS Textiles Ltd.";
-    document.getElementById("mcdName").value=p.mcd||"ACCESSORIES MCD";
-    document.getElementById("toType").value=p.toCompany||"GMS Textiles Ltd.";
-    document.getElementById("gateBody").innerHTML="";
-    (p.rows||[]).forEach(r=>{
-      addRow();
-      let tr=document.querySelector("#gateBody tr:last-child");
-      if(!tr) return;
-      tr.querySelector(".buyerName").value=r.buyerName||"";
-      tr.querySelector(".srGtNo").value=r.srGtNo||"";
-      tr.querySelector(".styleName").value=r.styleName||"";
-      tr.querySelector(".orderNo").value=r.orderNo||"";
-      tr.querySelector(".itemName").value=r.itemName||"";
-      tr.querySelector(".color").value=r.color||"";
-      tr.querySelector(".unit").value=r.unit||"";
-      tr.querySelector(".deliveryQty").value=r.deliveryQty||"";
-      tr.querySelector(".ctnQty").value=r.ctnQty||"";
-      tr.querySelector(".toParty").value=r.toParty||"";
-      tr.querySelector(".vehicleNo").value=r.vehicleNo||"";
-      tr.querySelector(".remarks").value=r.remarks||"";
-    });
-    if((p.rows||[]).length===0) addRow();
-    localStorage.removeItem("editGatePlanNo");
-    updateHeader();
-    calculateTotals();
-    toast("Edit Mode Loaded ✅");
-    return true;
-  }catch(e){console.log(e);return false;}
-}
-
-loadSuggestions();
-updateHeader();
-let loadedEdit=await loadEditPlanIfAny();
-if(!loadedEdit) addRow();
-calculateTotals();
+init();
 </script>
 
 </body>
