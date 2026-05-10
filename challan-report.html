@@ -149,6 +149,12 @@ body.singleView .reportSet{
   color:#16a34a!important;
 }
 
+
+/* ===== HIDE LOADED STATUS TEXT FIX ===== */
+#status{
+  display:none!important;
+}
+
 </style></head>
 <body><div class="wrap"><div class="head"><h2 id="reportCompanyTitle">GMS TEXTILES LTD.</h2><h3>Delivery Challan & Gate Pass Report</h3></div>
 <div class="controls"><div class="grid">
@@ -173,7 +179,7 @@ const firebaseConfig={
 };
 const app=initializeApp(firebaseConfig),db=getFirestore(app),$=id=>document.getElementById(id);let all=[],cur=[];
 function esc(v){return String(v??"").replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[m]))} function n(v){return Number(v)||0} function fmt(v){return n(v).toLocaleString("en-US")} function same(a,b){return String(a||"").trim().toUpperCase()===String(b||"").trim().toUpperCase()} function link(no){return location.origin+location.pathname+"?challanNo="+encodeURIComponent(no)}
-async function load(){let s=await getDocs(collection(db,"challanGatePass"));all=[];s.forEach(d=>all.push({...d.data(),_id:d.id}));all.sort(sorter);$("status").innerText="Loaded: "+all.length}
+async function load(){let s=await getDocs(collection(db,"challanGatePass"));all=[];s.forEach(d=>all.push({...d.data(),_id:d.id}));all.sort(sorter);if($("status")) $("status").innerText=""}
 function sorter(a,b){let c=String(b.updatedAt||b.createdAt||"").localeCompare(String(a.updatedAt||a.createdAt||""));if(c)return c;c=String(b.date||"").localeCompare(String(a.date||""));if(c)return c;return String(b.challanNo||"").localeCompare(String(a.challanNo||""))}
 function filter(){let company=$("companyFilter").value,toCompany=$("toCompanyFilter").value,mcd=$("mcdFilter").value,month=$("monthFilter").value,single=$("singleDate").value,from=$("fromDate").value,to=$("toDate").value,ch=$("challanSearch").value.toLowerCase().trim(),gp=$("gateSearch").value.toLowerCase().trim(),txt=$("textSearch").value.toLowerCase().trim();return all.filter(x=>{let d=x.date||"";if(single&&d!==single)return false;if(month&&d.slice(0,7)!==month)return false;if(from&&d<from)return false;if(to&&d>to)return false;if(ch&&!(x.challanNo||"").toLowerCase().includes(ch))return false;if(gp&&!(x.gatePassNo||"").toLowerCase().includes(gp))return false;if(company!=="All"){if(company==="OTHER FACTORY"?(x.companyType!=="OTHER FACTORY"):!same(x.company,company))return false}if(toCompany!=="All"){if(toCompany==="OTHER FACTORY"?(x.toCompanyType!=="OTHER FACTORY"):!same(x.toCompany,toCompany))return false}if(mcd!=="All"&&!same(x.mcd,mcd))return false;if(txt&&!([x.buyer,x.vehicleNo,x.toCompany,x.company,x.driverName,x.transportNo,x.mcd,x.challanNo,x.gatePassNo].join(" ").toLowerCase().includes(txt)))return false;return true}).sort(sorter)}
 function qr(){document.querySelectorAll("[data-qr]").forEach(e=>{let no=e.dataset.qr;e.innerHTML="";new QRCode(e,{text:link(no),width:60,height:60,correctLevel:QRCode.CorrectLevel.M})})}
@@ -334,6 +340,12 @@ body.singleView .reportSet{
 .reportListTable .createdByCell{
   font-weight:900;
   color:#16a34a!important;
+}
+
+
+/* ===== HIDE LOADED STATUS TEXT FIX ===== */
+#status{
+  display:none!important;
 }
 
 </style></head><body><div class="wrap">${card.outerHTML}</div><script>function link(no){return "${location.origin+location.pathname}"+"?challanNo="+encodeURIComponent(no)}document.querySelectorAll(".actionBar").forEach(e=>e.remove());document.querySelectorAll("[data-qr]").forEach(e=>{e.innerHTML="";new QRCode(e,{text:link(e.dataset.qr),width:60,height:60,correctLevel:QRCode.CorrectLevel.M})});setTimeout(()=>print(),600)<\/script></body></html>`);w.document.close()}
