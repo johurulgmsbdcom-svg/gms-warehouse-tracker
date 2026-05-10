@@ -404,6 +404,54 @@ body.light .creditFooter{background:rgba(255,255,255,.96)}
 @media(max-width:520px){
   .attendanceInside{grid-template-columns:1fr}
 }
+
+/* ===== LIVE UPDATE SIGNAL CARD ===== */
+.liveSignalCard{
+  position:relative;
+  overflow:hidden;
+}
+.liveSignalCard:before{
+  content:"";
+  position:absolute;
+  inset:-40%;
+  background:radial-gradient(circle,rgba(34,197,94,.18),transparent 55%);
+  animation:signalGlow 2s infinite;
+}
+.liveSignalWrap{
+  position:relative;
+  display:flex;
+  align-items:center;
+  gap:14px;
+  margin-top:12px;
+}
+.liveDot{
+  width:38px;
+  height:38px;
+  background:#22c55e;
+  border-radius:50%;
+  box-shadow:0 0 0 0 rgba(34,197,94,.8);
+  animation:livePulse 1.4s infinite;
+}
+.liveText{
+  color:#22c55e;
+  font-size:34px;
+  font-weight:1000;
+  letter-spacing:1px;
+}
+@keyframes livePulse{
+  0%{box-shadow:0 0 0 0 rgba(34,197,94,.85);transform:scale(1)}
+  70%{box-shadow:0 0 0 18px rgba(34,197,94,0);transform:scale(1.08)}
+  100%{box-shadow:0 0 0 0 rgba(34,197,94,0);transform:scale(1)}
+}
+@keyframes signalGlow{
+  0%,100%{opacity:.4}
+  50%{opacity:1}
+}
+@media(max-width:700px){
+  .liveText{font-size:30px}
+  .liveDot{width:32px;height:32px}
+}
+
 </style>
 </head>
 
@@ -418,7 +466,7 @@ body.light .creditFooter{background:rgba(255,255,255,.96)}
     </div>
   </div>
   <div class="rightTop">
-    <span class="autoSave">💾 Auto Save</span>
+    <span class="autoSave">🟢 Live</span>
     <button class="themeBtn" onclick="toggleTheme()">🌙 / ☀️</button>
     <button class="themeBtn" onclick="location.href='profile.html'">👤 Profile</button>
     <button class="logoutBtn" onclick="logout()">🚪 Logout</button>
@@ -449,7 +497,13 @@ body.light .creditFooter{background:rgba(255,255,255,.96)}
   <div class="topGrid">
     <div class="topCard"><div class="label">👨‍🏭 Total Manpower</div><div class="num" id="kpiManpower">0</div></div>
     <div class="topCard"><div class="label">💰 Total Salary</div><div class="num" id="kpiSalary">0</div></div>
-    <div class="topCard"><div class="label">💾 Live Update</div><div class="num autoSave">Auto Save</div></div>
+    <div class="topCard liveSignalCard">
+      <div class="label">🟢 Live Update Signal</div>
+      <div class="liveSignalWrap">
+        <span class="liveDot"></span>
+        <span class="liveText">LIVE</span>
+      </div>
+    </div>
   </div>
 
   <div class="summaryLine" id="accessoriesSummary">
