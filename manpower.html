@@ -1,51 +1,75 @@
 <!DOCTYPE html>
 <html>
 <head>
-<meta charset="UTF-8">
 <title>Manpower List</title>
-<meta name="viewport" content="width=device-width, initial-scale=1">
 <style>
-*{box-sizing:border-box}
-body{margin:0;background:#0b0f19;color:white;font-family:Arial,Helvetica,sans-serif}
-.box{padding:16px;max-width:1900px;margin:auto}
-h2,h3{text-align:center;margin:3px;font-weight:900}
+body{margin:0;background:#0b0f19;color:white;font-family:Arial}
+.box{padding:20px}
+h2,h3{text-align:center;margin:4px}
 .top{text-align:center;margin-top:10px}
-input,select{padding:8px;border-radius:6px;border:1px solid #999;font-size:14px}
-button{padding:10px 16px;background:#2563eb;color:white;border:0;border-radius:8px;font-weight:900;cursor:pointer;margin:4px}
-.deleteBtn{background:#dc2626}.editBtn{background:#f59e0b}.excelBtn{background:#16a34a}.pdfBtn{background:#7c3aed}.clearBtn{background:#64748b}
-#searchBox{width:320px}
-.formBox{display:none;grid-template-columns:repeat(6,1fr);gap:8px;margin:14px 0;padding:12px;background:#101827;border:1px solid #263855;border-radius:14px}
-.formBox input,.formBox select{width:100%}
-.formTitle{grid-column:1/-1;font-weight:900;color:#22c55e;font-size:18px}
-.summary{font-size:20px;font-weight:900;text-align:center;margin:10px 0}
-.tableWrap{width:100%;overflow-x:auto;background:white}
-table{width:100%;min-width:2300px;border-collapse:collapse;background:white;color:black;font-size:12px}
-th,td{border:1px solid #000;padding:5px;text-align:center;vertical-align:middle;color:#000}
-th{background:#f3f4f6;font-weight:900}.total{background:#92d050!important;font-weight:900}
-.empImg{width:42px;height:42px;border-radius:50%;object-fit:cover}
-#toast{position:fixed;right:18px;top:18px;background:#16a34a;color:white;padding:14px 22px;border-radius:10px;display:none;font-weight:900;z-index:9999}
-#spinner{position:fixed;inset:0;background:rgba(0,0,0,.45);display:none;align-items:center;justify-content:center;z-index:9998}
+table{width:100%;border-collapse:collapse;margin-top:15px;background:white;color:black}
+th,td{border:1px solid #000;padding:8px;text-align:center}
+input,select{padding:8px;border-radius:6px;border:1px solid #333}
+button{padding:10px 18px;background:#2563eb;color:white;border:0;border-radius:8px;font-weight:bold;cursor:pointer;margin:4px}
+.deleteBtn{background:#dc2626}
+.editBtn{background:#f59e0b}
+.excelBtn{background:#16a34a}
+.pdfBtn{background:#7c3aed}
+.clearBtn{background:#64748b}
+.total{background:#92d050;font-weight:bold}
+.empImg{width:45px;height:45px;border-radius:50%;object-fit:cover}
+.formBox{display:none;grid-template-columns:repeat(4,1fr);gap:10px;margin-top:15px}
+.summary{font-size:20px;font-weight:bold;text-align:center;margin-top:10px}
+#searchBox{width:300px;margin-left:10px}
+#toast{position:fixed;right:20px;top:20px;background:#16a34a;color:white;padding:14px 22px;border-radius:10px;display:none;font-weight:bold;z-index:9999}
+#spinner{position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,.45);display:none;align-items:center;justify-content:center;z-index:9998}
 .loader{width:55px;height:55px;border:6px solid #ddd;border-top:6px solid #2563eb;border-radius:50%;animation:spin 1s linear infinite}
 @keyframes spin{100%{transform:rotate(360deg)}}
-.footerStats{margin-top:16px;display:grid;grid-template-columns:repeat(3,180px);gap:10px;justify-content:center}
-.statBox{background:white;color:black;border:1px solid #000;padding:8px;text-align:center;font-weight:900}
-.statBox div{border-bottom:1px solid #000;padding:3px}.statBox div:last-child{border-bottom:0}
-@media(max-width:900px){.formBox{grid-template-columns:1fr}#searchBox{width:100%;margin-top:8px}.top select,.top input{width:100%;margin:4px 0}.footerStats{grid-template-columns:1fr}}
-@media print{body{background:white;color:black}button,.top,.formBox,#searchBox{display:none!important}.box{padding:0}table{font-size:8px;min-width:0;width:100%}th,td{padding:2px;font-size:8px}h2,h3,.summary{color:#000}}
+@media print{body{background:white;color:black}button,.top,.formBox,#searchBox{display:none!important}}
 </style>
 </head>
+
 <body>
-<div id="toast"></div><div id="spinner"><div class="loader"></div></div>
+
+<div id="toast"></div>
+<div id="spinner"><div class="loader"></div></div>
+
 <div class="box">
-<h2>GMS Textiles Ltd.</h2>
-<h3 id="mcdTitle">Accessories MCD Manpower List</h3>
+
+<h2>GMS TEXTILES LTD</h2>
+<h3>Tansutrapur, Kaliakair, Gazipur.</h3>
+<h3 id="mcdTitle">GREY FABRIC MCD</h3>
+<h3>Manpower List</h3>
+
 <div class="top">
 Company:
-<select id="company"><option>GMS TEXTILES LTD</option><option>GMS COMPOSITE KNITTING</option></select>
+<select id="company">
+<option>GMS TEXTILES LTD</option>
+<option>GMS COMPOSITE KNITTING</option>
+</select>
+
 MCD:
-<select id="mcd" onchange="startRealtime()"></select>
-<input id="searchBox" placeholder="Search Code / Name / Designation..." oninput="filterSearch()">
+<select id="mcd" onchange="startRealtime()">
+<option>GREY FABRIC MCD</option>
+<option>SHIPMENT MCD</option>
+<option>BILLING SECTION</option>
+<option>OUTER WEAR MCD</option>
+<option>YARN MCD</option>
+<option>PRINTING MCD</option>
+<option>JHUT MCD</option>
+<option>GENERAL MCD</option>
+<option>ACCESSORIES MCD</option>
+<option>LEFTOVER MCD</option>
+<option>FINISH FABRIC MCD</option>
+<option>YARN DYEING MCD</option>
+<option>CHEMICAL MCD</option>
+<option>GENERAL TECHNICAL MCD</option>
+</select>
+
+<input id="searchBox" placeholder="Search ID Card / Employee ID / Name..." oninput="filterSearch()">
+
 <br>
+
 <button onclick="showForm()">Add Manpower</button>
 <button class="excelBtn" onclick="exportExcel()">Export Excel</button>
 <button class="pdfBtn" onclick="exportPDF()">PDF / Print</button>
@@ -53,301 +77,324 @@ MCD:
 </div>
 
 <div id="formBox" class="formBox">
-<div class="formTitle">Employee Information</div>
 <input id="image" placeholder="Image Link">
-<input id="code" placeholder="Code / Employee ID">
+<input id="empId" placeholder="Employee ID / ID Card">
 <input id="empName" placeholder="Employee Name">
 <input id="designation" placeholder="Designation">
-<input id="doj" placeholder="DOJ e.g. 1/Feb/07" onchange="updateAges()">
-<input id="sectionInfo" placeholder="Section Info">
-<input id="lastTotalSalary" type="number" placeholder="Last Total Salary" oninput="autoCalculateSalary()">
-<input id="lastInctAmount" type="number" placeholder="Last Inct. Amount" oninput="autoCalculateSalary()">
-<input id="incrementPercent" placeholder="Increment %">
-<input id="totalSalary" type="number" placeholder="Total Salary" oninput="autoCalculateProposedPercent()">
-<input id="proposedAmount" type="number" placeholder="Proposed Amount" oninput="autoCalculateProposedPercent()">
-<input id="proposedPercent" placeholder="Proposed %">
-<input id="district" placeholder="District">
-<input id="lastPromotionDate" placeholder="Last Promotion Date">
-<input id="promotion" placeholder="Promotion">
-<input id="education" placeholder="Educational Qualification">
-<input id="officeHour" type="number" placeholder="Office Hour" value="8">
-<input id="serviceAge" placeholder="Service Age" readonly>
-<input id="dob" placeholder="Date of Birth e.g. 5/Aug/88" onchange="updateAges()">
-<input id="employeeAge" placeholder="Employee Age" readonly>
-<input id="reference" placeholder="Reference">
-<input id="guardianMobile" placeholder="Guardian Mobile No">
-<input id="remarks" placeholder="Remarks">
+<input id="joinDate" type="date" onchange="updateJobAge()">
+<input id="jobAge" placeholder="Job Age" readonly>
+<input id="section" placeholder="Section Name">
+<input id="salary" type="number" placeholder="Salary">
+<input id="jobDesc" placeholder="Job Description">
+
 <button id="saveBtn" onclick="saveData()">Save Employee</button>
 <button class="clearBtn" onclick="clearForm()">Clear</button>
 </div>
 
-<div class="summary">Total Manpower: <span id="totalManpower">0</span> &nbsp; | &nbsp; Total Salary: <span id="totalSalarySummary">0</span></div>
+<div class="summary">
+Total Manpower: <span id="totalManpower">0</span>
+&nbsp;&nbsp; | &nbsp;&nbsp;
+Total Salary: <span id="totalSalary">0</span>
+</div>
 
-<div class="tableWrap">
 <table id="reportTable">
-<thead><tr>
-<th>SL NO</th><th>Image</th><th>Code</th><th>Employee Name</th><th>Designation</th><th>DOJ</th><th>Section Info</th>
-<th>Last Total Salary</th><th>Last Inct. Amount</th><th>Increment %</th><th>Total Salary</th><th>Proposed Amount</th><th>Proposed %</th>
-<th>District</th><th>Last Promotion Date</th><th>Promotion</th><th>Educational Qualification</th><th>Office Hour</th><th>Service Age</th>
-<th>Date of Birth</th><th>Employee Age</th><th>Reference</th><th>Guardian Mobile No</th><th>Remarks</th><th>Action</th>
-</tr></thead>
+<thead>
+<tr>
+<th>Image</th>
+<th>Employee ID</th>
+<th>Employee Name</th>
+<th>Designation</th>
+<th>Join Date</th>
+<th>Job Age</th>
+<th>Section Name</th>
+<th>Selery</th>
+<th>Job Description</th>
+<th>Action</th>
+</tr>
+</thead>
+
 <tbody id="tableBody"></tbody>
+
 <tfoot>
 <tr class="total">
-<td colspan="7">Total Salary</td><td id="sumLastTotalSalary">0</td><td id="sumLastInctAmount">0</td><td id="avgIncrementPercent">0</td>
-<td id="sumTotalSalary">0</td><td id="sumProposedAmount">0</td><td id="avgProposedPercent">0</td><td colspan="12"></td>
+<td colspan="10" id="mcdTotal">Total: 0 | Salary: 0</td>
 </tr>
-<tr class="total"><td colspan="25" id="mcdTotal">Total: 0 | Salary: 0</td></tr>
 </tfoot>
 </table>
-</div>
 
-<div class="footerStats">
-<div class="statBox"><div>Year</div><div>2024</div><div>Maximum % <span id="maxPercent">0</span></div><div>Minimum % <span id="minPercent">0</span></div><div>Average % <span id="avgPercent">0</span></div></div>
-<div class="statBox"><div>Year</div><div>2025</div><div>Maximum % <span id="maxProposedPercent">0</span></div><div>Minimum % <span id="minProposedPercent">0</span></div><div>Average % <span id="avgProposedBox">0</span></div></div>
-<div class="statBox"><div>Increase This Year Avg %</div><div id="increaseAvg">0</div></div>
-</div>
 </div>
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-app.js";
 import { getFirestore, doc, setDoc, deleteDoc, collection, onSnapshot } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-firestore.js";
-const firebaseConfig={apiKey:"AIzaSyD-wBCF5eeWMHobLFOhBzKW7aB2pagz9-w",authDomain:"gms-warehouse-tracker-7f57e.firebaseapp.com",projectId:"gms-warehouse-tracker-7f57e",storageBucket:"gms-warehouse-tracker-7f57e.firebasestorage.app",messagingSenderId:"992250313291",appId:"1:992250313291:web:ee3bceae76d4d53bc26bce"};
-const app=initializeApp(firebaseConfig); const db=getFirestore(app);
-const user=JSON.parse(localStorage.getItem("gmsUser")||"null"); if(!user){location.href="login.html";}
+
+const firebaseConfig = {
+  apiKey: "AIzaSyD-wBCF5eeWMHobLFOhBzKW7aB2pagz9-w",
+  authDomain: "gms-warehouse-tracker-7f57e.firebaseapp.com",
+  projectId: "gms-warehouse-tracker-7f57e",
+  storageBucket: "gms-warehouse-tracker-7f57e.firebasestorage.app",
+  messagingSenderId: "992250313291",
+  appId: "1:992250313291:web:ee3bceae76d4d53bc26bce"
+};
+
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+
+const user=JSON.parse(localStorage.getItem("gmsUser")||"null");
+if(!user){window.location.href="login.html";}
+
 const userRole=user.role||"user";
-const ALL_MCD=["GREY FABRIC MCD","SHIPMENT MCD","BILLING SECTION","OUTER WEAR MCD","YARN MCD","PRINTING MCD","JHUT MCD","GENERAL MCD","ACCESSORIES MCD","LEFTOVER MCD","FINISH FABRIC MCD","YARN DYEING MCD","CHEMICAL MCD","GENERAL TECHNICAL MCD"];
-function getManpowerAccessList(){
- if(userRole==="admin"||userRole==="full")return ALL_MCD;
- if(user.manpowerMcdAccess==="none"||user.manpowerAccess===false)return [];
- if(user.manpowerMcdAccess==="all"||user.manpowerAccess==="all")return ALL_MCD;
- if(Array.isArray(user.manpowerMcdAccess))return user.manpowerMcdAccess;
- if(user.manpowerAccess===true){if(Array.isArray(user.mcdAccess))return user.mcdAccess;if(user.mcd)return [user.mcd];}
- return [];
+const userMCDs=Array.isArray(user.mcdAccess)?user.mcdAccess:(user.mcd?[user.mcd]:[]);
+const manpowerAccess=user.manpowerAccess||false;
+
+if(!(userRole==="admin" || userRole==="full" || manpowerAccess===true)){
+  alert("Manpower Access nai. Admin theke permission nite hobe.");
+  window.location.href="index.html";
 }
-const allowedMCDs=getManpowerAccessList();
-if(allowedMCDs.length===0){alert("Manpower Access nai. Admin theke permission nite hobe.");location.href="index.html";}
-function setupMcdDropdown(){document.getElementById("mcd").innerHTML=allowedMCDs.map(m=>`<option>${m}</option>`).join("");}
-let unsubscribe=null,editMode=false; window.currentRows=[];
-const $=id=>document.getElementById(id);
-function toast(msg,color="#16a34a"){let t=document.getElementById("toast");t.innerText=msg;t.style.background=color;t.style.display="block";setTimeout(()=>t.style.display="none",2500);}
-function spinner(show){document.getElementById("spinner").style.display=show?"flex":"none";}
-function showForm(){document.getElementById("formBox").style.display="grid";}
-function cleanNum(v){return Number(String(v||0).replace(/,/g,""))||0;}
-function fmt(v){return cleanNum(v).toLocaleString("en-US");}
-function percent(amount,base){base=cleanNum(base);amount=cleanNum(amount);if(!base)return "";return ((amount/base)*100).toFixed(2);}
-function parseCustomDate(str){
- if(!str)return null; str=String(str).trim();
- if(/^\d{4}-\d{2}-\d{2}$/.test(str)){let d=new Date(str+"T00:00:00");return isNaN(d)?null:d;}
- let m=str.match(/^(\d{1,2})\/([A-Za-z]{3,})\/(\d{2,4})$/);
- if(m){let day=Number(m[1]), mon=m[2].slice(0,3).toLowerCase(), year=Number(m[3]); if(year<100)year+=year>40?1900:2000; let mons={jan:0,feb:1,mar:2,apr:3,may:4,jun:5,jul:6,aug:7,sep:8,oct:9,nov:10,dec:11}; let d=new Date(year,mons[mon],day); return isNaN(d)?null:d;}
- let d=new Date(str); return isNaN(d)?null:d;
+
+const ALL_MCD=[
+"GREY FABRIC MCD","SHIPMENT MCD","BILLING SECTION","OUTER WEAR MCD","YARN MCD","PRINTING MCD","JHUT MCD","GENERAL MCD","ACCESSORIES MCD","LEFTOVER MCD","FINISH FABRIC MCD","YARN DYEING MCD","CHEMICAL MCD","GENERAL TECHNICAL MCD"
+];
+
+function allowedMCDList(){
+  return (userRole==="admin" || userRole==="full") ? ALL_MCD : userMCDs;
 }
-function ageText(fromDate){
- let start=parseCustomDate(fromDate); if(!start)return "";
- let end=new Date(); let y=end.getFullYear()-start.getFullYear(), m=end.getMonth()-start.getMonth(), d=end.getDate()-start.getDate();
- if(d<0){m--;d+=new Date(end.getFullYear(),end.getMonth(),0).getDate();}
- if(m<0){y--;m+=12;} if(y<0)return "";
- return y+" Years "+m+" Months "+d+" Day";
+
+function setupMcdDropdown(){
+  let list=allowedMCDList();
+  let mcdSelect=document.getElementById("mcd");
+  mcdSelect.innerHTML=list.map(m=>`<option>${m}</option>`).join("");
 }
-function updateAges(){document.getElementById("serviceAge").value=ageText(document.getElementById("doj").value);document.getElementById("employeeAge").value=ageText(document.getElementById("dob").value);}
-function autoCalculateSalary(){let last=cleanNum(document.getElementById("lastTotalSalary").value),inc=cleanNum(document.getElementById("lastInctAmount").value); if(last||inc){document.getElementById("totalSalary").value=last+inc;document.getElementById("incrementPercent").value=percent(inc,last);} autoCalculateProposedPercent();}
-function autoCalculateProposedPercent(){let total=cleanNum(document.getElementById("totalSalary").value),prop=cleanNum(document.getElementById("proposedAmount").value); if(total||prop)document.getElementById("proposedPercent").value=percent(prop,total);}
+
+let unsubscribe = null;
+let editMode = false;
+window.currentRows = [];
+
+function toast(msg,color="#16a34a"){
+  let t=document.getElementById("toast");
+  t.innerText=msg;
+  t.style.background=color;
+  t.style.display="block";
+  setTimeout(()=>t.style.display="none",2500);
+}
+
+function spinner(show){
+  document.getElementById("spinner").style.display=show?"flex":"none";
+}
+
+function showForm(){
+  document.getElementById("formBox").style.display="grid";
+}
+
+function getJobAge(joinDate){
+  if(!joinDate) return "";
+  let start=new Date(joinDate);
+  let today=new Date();
+  let y=today.getFullYear()-start.getFullYear();
+  let m=today.getMonth()-start.getMonth();
+  if(today.getDate()<start.getDate()) m--;
+  if(m<0){y--;m+=12;}
+  if(y<0) return "";
+  return y+" Year "+m+" Month";
+}
+
+function updateJobAge(){
+  document.getElementById("jobAge").value=getJobAge(document.getElementById("joinDate").value);
+}
+
 function getFormData(){
- let x={
-  company:$("company").value,
-  mcd:$("mcd").value,
-  image:$("image").value.trim(),
-  code:$("code").value.trim(),
-  empId:$("code").value.trim(),
-  empName:$("empName").value.trim(),
-  designation:$("designation").value.trim(),
-  doj:$("doj").value.trim(),
-  sectionInfo:$("sectionInfo").value.trim(),
-  lastTotalSalary:cleanNum($("lastTotalSalary").value),
-  lastInctAmount:cleanNum($("lastInctAmount").value),
-  incrementPercent:$("incrementPercent").value.trim(),
-  totalSalary:cleanNum($("totalSalary").value),
-  proposedAmount:cleanNum($("proposedAmount").value),
-  proposedPercent:$("proposedPercent").value.trim(),
-  district:$("district").value.trim(),
-  lastPromotionDate:$("lastPromotionDate").value.trim(),
-  promotion:$("promotion").value.trim(),
-  education:$("education").value.trim(),
-  officeHour:cleanNum($("officeHour").value),
-  dob:$("dob").value.trim(),
-  reference:$("reference").value.trim(),
-  guardianMobile:$("guardianMobile").value.trim(),
-  remarks:$("remarks").value.trim(),
-  updatedAt:new Date().toISOString()
- };
- x.serviceAge=ageText(x.doj);
- x.employeeAge=ageText(x.dob);
- return x;
-}
-async function saveData(){let x=getFormData(); if(!x.code){toast("Code / Employee ID dao","#dc2626");return;} spinner(true); try{await setDoc(doc(db,"manpower",x.mcd+"_"+x.code),x,{merge:true});clearForm();toast(editMode?"Updated Successfully ✅":"Saved Successfully ✅");editMode=false;$("saveBtn").innerText="Save Employee";}catch(e){console.log(e);toast("Save failed ❌","#dc2626");} spinner(false);}
-function editEmployee(codeValue){
- let row=window.currentRows.find(x=>(x.code||x.empId)===codeValue);
- if(!row)return;
- showForm();
-
- $("image").value=row.image||"";
- $("code").value=row.code||row.empId||"";
- $("empName").value=row.empName||"";
- $("designation").value=row.designation||"";
- $("doj").value=row.doj||row.joinDate||"";
- $("sectionInfo").value=row.sectionInfo||row.section||"";
- $("lastTotalSalary").value=row.lastTotalSalary||"";
- $("lastInctAmount").value=row.lastInctAmount||"";
- $("incrementPercent").value=row.incrementPercent||"";
- $("totalSalary").value=row.totalSalary||row.salary||"";
- $("proposedAmount").value=row.proposedAmount||"";
- $("proposedPercent").value=row.proposedPercent||"";
- $("district").value=row.district||"";
- $("lastPromotionDate").value=row.lastPromotionDate||"";
- $("promotion").value=row.promotion||"";
- $("education").value=row.education||"";
- $("officeHour").value=row.officeHour||8;
- $("serviceAge").value=ageText(row.doj||row.joinDate)||"";
- $("dob").value=row.dob||"";
- $("employeeAge").value=ageText(row.dob)||"";
- $("reference").value=row.reference||"";
- $("guardianMobile").value=row.guardianMobile||"";
- $("remarks").value=row.remarks||"";
-
- editMode=true;
- $("saveBtn").innerText="Update Employee";
+  return {
+    company:document.getElementById("company").value,
+    mcd:document.getElementById("mcd").value,
+    image:document.getElementById("image").value.trim(),
+    empId:document.getElementById("empId").value.trim(),
+    empName:document.getElementById("empName").value.trim(),
+    designation:document.getElementById("designation").value.trim(),
+    joinDate:document.getElementById("joinDate").value,
+    section:document.getElementById("section").value.trim(),
+    salary:Number(document.getElementById("salary").value)||0,
+    jobDesc:document.getElementById("jobDesc").value.trim()
+  };
 }
 
-async function deleteEmployee(codeValue){let mcdValue=$("mcd").value;if(!confirm("Ei employee delete korba?"))return;spinner(true);try{await deleteDoc(doc(db,"manpower",mcdValue+"_"+codeValue));toast("Deleted Successfully ✅");}catch(e){console.log(e);toast("Delete failed ❌","#dc2626");}spinner(false);}
-function calcPercentStats(values){let nums=values.map(cleanNum).filter(v=>v>0);if(!nums.length)return{max:0,min:0,avg:0};let max=Math.max(...nums),min=Math.min(...nums),avg=nums.reduce((a,b)=>a+b,0)/nums.length;return{max:max.toFixed(2),min:min.toFixed(2),avg:avg.toFixed(2)};}
+async function saveData(){
+  let x=getFormData();
+  if(!x.empId){
+    toast("Employee ID dao","#dc2626");
+    return;
+  }
+
+  spinner(true);
+
+  try{
+    await setDoc(doc(db,"manpower",x.mcd+"_"+x.empId),x);
+    clearForm();
+    toast(editMode ? "Updated Successfully ✅" : "Saved Successfully ✅");
+    editMode=false;
+    document.getElementById("saveBtn").innerText="Save Employee";
+  }catch(e){
+    toast("Save failed ❌","#dc2626");
+  }
+
+  spinner(false);
+}
+
+function editEmployee(empId){
+  let row = window.currentRows.find(x=>x.empId===empId);
+  if(!row) return;
+
+  showForm();
+
+  document.getElementById("image").value=row.image||"";
+  document.getElementById("empId").value=row.empId||"";
+  document.getElementById("empName").value=row.empName||"";
+  document.getElementById("designation").value=row.designation||"";
+  document.getElementById("joinDate").value=row.joinDate||"";
+  document.getElementById("jobAge").value=getJobAge(row.joinDate)||"";
+  document.getElementById("section").value=row.section||"";
+  document.getElementById("salary").value=row.salary||"";
+  document.getElementById("jobDesc").value=row.jobDesc||"";
+
+  editMode=true;
+  document.getElementById("saveBtn").innerText="Update Employee";
+}
+
+async function deleteEmployee(empId){
+  let mcd=document.getElementById("mcd").value;
+  if(!confirm("Ei employee delete korba?")) return;
+
+  spinner(true);
+
+  try{
+    await deleteDoc(doc(db,"manpower",mcd+"_"+empId));
+    toast("Deleted Successfully ✅");
+  }catch(e){
+    toast("Delete failed ❌","#dc2626");
+  }
+
+  spinner(false);
+}
+
 function render(rows){
- let mcdValue=$("mcd").value;
- $("mcdTitle").innerText=mcdValue+" Manpower List";
- let html="",sumLastTotal=0,sumLastInct=0,sumTotalSalary=0,sumProposed=0;
+  let mcd=document.getElementById("mcd").value;
+  document.getElementById("mcdTitle").innerText=mcd;
 
- rows.forEach((x,idx)=>{
-  let codeValue=x.code||x.empId||"";
-  let dojValue=x.doj||x.joinDate||"";
-  let service=ageText(dojValue);
-  let empAge=ageText(x.dob);
-  let lastTotal=cleanNum(x.lastTotalSalary);
-  let lastInct=cleanNum(x.lastInctAmount);
-  let total=cleanNum(x.totalSalary||x.salary);
-  let proposed=cleanNum(x.proposedAmount);
+  let html="";
+  let totalSalary=0;
 
-  sumLastTotal+=lastTotal;
-  sumLastInct+=lastInct;
-  sumTotalSalary+=total;
-  sumProposed+=proposed;
+  rows.forEach(x=>{
+    totalSalary+=Number(x.salary)||0;
+    html+=`
+    <tr>
+      <td>${x.image ? `<img class="empImg" src="${x.image}">` : ""}</td>
+      <td>${x.empId||""}</td>
+      <td>${x.empName||""}</td>
+      <td>${x.designation||""}</td>
+      <td>${x.joinDate||""}</td>
+      <td>${getJobAge(x.joinDate)||""}</td>
+      <td>${x.section||""}</td>
+      <td>${Number(x.salary)||0}</td>
+      <td>${x.jobDesc||""}</td>
+      <td>
+        <button class="editBtn" onclick="editEmployee('${x.empId}')">Edit</button>
+        <button class="deleteBtn" onclick="deleteEmployee('${x.empId}')">Delete</button>
+      </td>
+    </tr>`;
+  });
 
-  html+=`<tr>
-   <td>${idx+1}</td>
-   <td>${x.image?`<img class="empImg" src="${x.image}">`:""}</td>
-   <td>${codeValue}</td>
-   <td>${x.empName||""}</td>
-   <td>${x.designation||""}</td>
-   <td>${dojValue}</td>
-   <td>${x.sectionInfo||x.section||""}</td>
-   <td>${fmt(lastTotal)}</td>
-   <td>${fmt(lastInct)}</td>
-   <td>${x.incrementPercent||percent(lastInct,lastTotal)||""}</td>
-   <td>${fmt(total)}</td>
-   <td>${fmt(proposed)}</td>
-   <td>${x.proposedPercent||percent(proposed,total)||""}</td>
-   <td>${x.district||""}</td>
-   <td>${x.lastPromotionDate||""}</td>
-   <td>${x.promotion||""}</td>
-   <td>${x.education||""}</td>
-   <td>${x.officeHour||""}</td>
-   <td>${service}</td>
-   <td>${x.dob||""}</td>
-   <td>${empAge}</td>
-   <td>${x.reference||""}</td>
-   <td>${x.guardianMobile||""}</td>
-   <td>${x.remarks||""}</td>
-   <td>
-    <button class="editBtn" onclick="editEmployee('${codeValue}')">Edit</button>
-    <button class="deleteBtn" onclick="deleteEmployee('${codeValue}')">Delete</button>
-   </td>
-  </tr>`;
- });
-
- let incStats=calcPercentStats(rows.map(x=>x.incrementPercent||percent(x.lastInctAmount,x.lastTotalSalary)));
- let propStats=calcPercentStats(rows.map(x=>x.proposedPercent||percent(x.proposedAmount,x.totalSalary||x.salary)));
-
- $("tableBody").innerHTML=html;
- $("totalManpower").innerText=rows.length;
- $("totalSalarySummary").innerText=fmt(sumTotalSalary);
- $("sumLastTotalSalary").innerText=fmt(sumLastTotal);
- $("sumLastInctAmount").innerText=fmt(sumLastInct);
- $("avgIncrementPercent").innerText=incStats.avg;
- $("sumTotalSalary").innerText=fmt(sumTotalSalary);
- $("sumProposedAmount").innerText=fmt(sumProposed);
- $("avgProposedPercent").innerText=propStats.avg;
- $("mcdTotal").innerText=mcdValue+" Total: "+rows.length+" | Salary: "+fmt(sumTotalSalary);
-
- $("maxPercent").innerText=incStats.max;
- $("minPercent").innerText=incStats.min;
- $("avgPercent").innerText=incStats.avg;
- $("maxProposedPercent").innerText=propStats.max;
- $("minProposedPercent").innerText=propStats.min;
- $("avgProposedBox").innerText=propStats.avg;
- $("increaseAvg").innerText=(cleanNum(propStats.avg)-cleanNum(incStats.avg)).toFixed(2);
+  document.getElementById("tableBody").innerHTML=html;
+  document.getElementById("totalManpower").innerText=rows.length;
+  document.getElementById("totalSalary").innerText=totalSalary;
+  document.getElementById("mcdTotal").innerText=mcd+" Total: "+rows.length+" | Salary: "+totalSalary;
 }
 
 function filterSearch(){
- let q=$("searchBox").value.toLowerCase().trim();
- if(!q){
-  render(window.currentRows);
-  return;
- }
- render(window.currentRows.filter(x=>
-  (x.code||x.empId||"").toLowerCase().includes(q)||
-  (x.empName||"").toLowerCase().includes(q)||
-  (x.designation||"").toLowerCase().includes(q)||
-  (x.sectionInfo||x.section||"").toLowerCase().includes(q)||
-  (x.district||"").toLowerCase().includes(q)||
-  (x.reference||"").toLowerCase().includes(q)
- ));
+  let q=document.getElementById("searchBox").value.toLowerCase().trim();
+
+  if(q===""){
+    render(window.currentRows);
+    return;
+  }
+
+  let filtered=window.currentRows.filter(x =>
+    (x.empId || "").toLowerCase().includes(q) ||
+    (x.empName || "").toLowerCase().includes(q) ||
+    (x.designation || "").toLowerCase().includes(q) ||
+    (x.section || "").toLowerCase().includes(q) ||
+    (x.jobDesc || "").toLowerCase().includes(q)
+  );
+
+  render(filtered);
 }
 
 function startRealtime(){
- let mcdValue=$("mcd").value;
- $("mcdTitle").innerText=mcdValue+" Manpower List";
- $("searchBox").value="";
- if(unsubscribe)unsubscribe();
- spinner(true);
+  let mcd=document.getElementById("mcd").value;
+  document.getElementById("mcdTitle").innerText=mcd;
+  document.getElementById("searchBox").value="";
 
- unsubscribe=onSnapshot(
-  collection(db,"manpower"),
-  snap=>{
-   let rows=[];
-   snap.forEach(ds=>{
-    let x=ds.data();
-    if(x.mcd===mcdValue)rows.push(x);
-   });
-   rows.sort((a,b)=>String(a.code||a.empId||"").localeCompare(String(b.code||b.empId||"")));
-   window.currentRows=rows;
-   render(rows);
-   spinner(false);
-  },
-  error=>{
-   console.log("Firebase manpower load error:", error);
-   spinner(false);
-   toast("Firebase Load Error ❌","#dc2626");
-   render([]);
-  }
- );
- setTimeout(()=>spinner(false),6000);
+  if(unsubscribe) unsubscribe();
+
+  spinner(true);
+
+  unsubscribe = onSnapshot(collection(db,"manpower"), snap=>{
+    let rows=[];
+
+    snap.forEach(docSnap=>{
+      let x=docSnap.data();
+      if(x.mcd===mcd){
+        rows.push(x);
+      }
+    });
+
+    rows.sort((a,b)=>(a.empId||"").localeCompare(b.empId||""));
+    window.currentRows=rows;
+    render(rows);
+    spinner(false);
+  });
 }
 
-function clearForm(){["image","code","empName","designation","doj","sectionInfo","lastTotalSalary","lastInctAmount","incrementPercent","totalSalary","proposedAmount","proposedPercent","district","lastPromotionDate","promotion","education","officeHour","serviceAge","dob","employeeAge","reference","guardianMobile","remarks"].forEach(id=>document.getElementById(id).value="");$("officeHour").value=8;editMode=false;$("saveBtn").innerText="Save Employee";}
-function exportExcel(){let title=`<h2>GMS Textiles Ltd.</h2><h3>${$("mcd").value} Manpower List</h3><h3>Total Manpower: ${$("totalManpower").innerText}</h3><h3>Total Salary: ${$("totalSalarySummary").innerText}</h3>`;let file=new Blob([title+$("reportTable").outerHTML],{type:"application/vnd.ms-excel"});let a=document.createElement("a");a.href=URL.createObjectURL(file);a.download="manpower-report.xls";a.click();}
-function exportPDF(){window.print();}
-window.addEventListener("error",e=>{console.log(e.error||e.message);spinner(false);toast("Code Error ❌","#dc2626");});
-Object.assign(window,{showForm,saveData,deleteEmployee,editEmployee,clearForm,updateAges,autoCalculateSalary,autoCalculateProposedPercent,startRealtime,filterSearch,exportExcel,exportPDF});
-setupMcdDropdown(); startRealtime();
+function clearForm(){
+  ["image","empId","empName","designation","joinDate","jobAge","section","salary","jobDesc"].forEach(id=>{
+    document.getElementById(id).value="";
+  });
+  editMode=false;
+  document.getElementById("saveBtn").innerText="Save Employee";
+}
+
+function exportExcel(){
+  let title=`
+  <h2>GMS TEXTILES LTD</h2>
+  <h3>${document.getElementById("mcd").value}</h3>
+  <h3>Manpower List</h3>
+  <h3>Total Manpower: ${document.getElementById("totalManpower").innerText}</h3>
+  <h3>Total Salary: ${document.getElementById("totalSalary").innerText}</h3>
+  `;
+  let table=document.getElementById("reportTable").outerHTML;
+  let file=new Blob([title+table],{type:"application/vnd.ms-excel"});
+  let a=document.createElement("a");
+  a.href=URL.createObjectURL(file);
+  a.download="manpower-report.xls";
+  a.click();
+}
+
+function exportPDF(){
+  window.print();
+}
+
+window.showForm=showForm;
+window.saveData=saveData;
+window.deleteEmployee=deleteEmployee;
+window.editEmployee=editEmployee;
+window.clearForm=clearForm;
+window.updateJobAge=updateJobAge;
+window.startRealtime=startRealtime;
+window.filterSearch=filterSearch;
+window.exportExcel=exportExcel;
+window.exportPDF=exportPDF;
+
+setupMcdDropdown();
+startRealtime();
 </script>
+
 </body>
 </html>
