@@ -1453,5 +1453,217 @@ setInterval(updateLastActive,60000);
 setInterval(loadNotices,60000);
 </script>
 
+
+<script>
+/* ===== FINAL HARD FIX: GATE PLAN + CHALLAN BUTTONS ===== */
+(function(){
+  function enc(v){ return encodeURIComponent(v || ""); }
+
+  function fixedCompany(company){
+    if(company === "GMS COMPOSITE KNITTING") return "GMS COMPOSITE KNITTING IND LTD.";
+    if(company === "GMS TEXTILES LTD") return "GMS TEXTILES LTD.";
+    return company || "GMS TEXTILES LTD.";
+  }
+
+  window.openGatePlanEntry = function(company,mcd){
+    location.href = "gate-plan.html?company=" + enc(fixedCompany(company)) + "&mcd=" + enc(mcd || "");
+  };
+
+  window.openChallanEntry = function(company,mcd){
+    location.href = "challan-entry.html?company=" + enc(fixedCompany(company)) + "&mcd=" + enc(mcd || "");
+  };
+
+  window.openGatePlanReport = function(company,mcd){
+    location.href = "gate-plan-report.html?company=" + enc(fixedCompany(company)) + "&mcd=" + enc(mcd || "");
+  };
+
+  window.openChallanReport = function(company,mcd){
+    location.href = "challan-report.html?company=" + enc(fixedCompany(company)) + "&mcd=" + enc(mcd || "");
+  };
+
+  function card(html){ return html; }
+
+  function commonEntryCards(company,mcd){
+    return `
+      <div class="card" onclick="openGatePlanEntry('${company}','${mcd}')">🚚 Gate Plan Entry</div>
+      <div class="card" onclick="openChallanEntry('${company}','${mcd}')">📄 Challan / Gate Pass</div>
+    `;
+  }
+
+  function commonReportCards(company,mcd){
+    return `
+      <div class="card" onclick="openGatePlanReport('${company}','${mcd}')">🚚 Gate Plan Report</div>
+      <div class="card" onclick="openChallanReport('${company}','${mcd}')">📄 Challan / Gate Pass Report</div>
+    `;
+  }
+
+  function getEntryCompany(){
+    const el = document.getElementById("entryCompany");
+    return el ? el.value : "GMS TEXTILES LTD";
+  }
+
+  function getReportCompany(){
+    const el = document.getElementById("reportCompany");
+    if(el) return el.value;
+    const e = document.getElementById("entryCompany");
+    return e ? e.value : "GMS TEXTILES LTD";
+  }
+
+  window.loadEntry = function(){
+    const company = getEntryCompany();
+    const mcdEl = document.getElementById("entryMcd");
+    const mcd = mcdEl ? mcdEl.value : "ACCESSORIES MCD";
+    const box = document.getElementById("entryBox");
+    if(!box) return;
+
+    const common = commonEntryCards(company,mcd);
+
+    if(company === "GMS COMPOSITE KNITTING"){
+      box.innerHTML = `
+        ${common}
+        <div class="card">🏭 Composite Own Entry Module Later</div>
+      `;
+      return;
+    }
+
+    if(mcd === "ACCESSORIES MCD"){
+      box.innerHTML = `
+        <div class="card" onclick="location.href='sewing-thread.html'">🧵 Sewing Thread</div>
+        <div class="card" onclick="location.href='twill-tape.html'">📏 Twill Tape</div>
+        <div class="card" onclick="location.href='accessories.html'">📦 Accessories With Sample</div>
+        <div class="card" onclick="location.href='accessories-inventory.html'">🧾 Inventory Posting</div>
+        <div class="card" onclick="location.href='billing-manpower-report.html'">👨‍💼 Billing Manpower Report</div>
+        ${common}
+      `;
+      return;
+    }
+
+    if(mcd === "GREY FABRIC MCD"){
+      box.innerHTML = `
+        <div class="card" onclick="location.href='grey-fabric.html'">🏭 Grey Fabric Daily</div>
+        <div class="card" onclick="location.href='grey-fabric-monthly.html'">📅 Grey Fabric Monthly</div>
+        <div class="card" onclick="location.href='billing-manpower-report.html'">👨‍💼 Billing Manpower Report</div>
+        ${common}
+      `;
+      return;
+    }
+
+    if(mcd === "BILLING SECTION"){
+      box.innerHTML = `
+        <div class="card" onclick="location.href='billing-manpower-report.html'">👨‍💼 Billing Manpower Report</div>
+        ${common}
+      `;
+      return;
+    }
+
+    box.innerHTML = `
+      <div class="card">📝 ${mcd} Daily Entry</div>
+      <div class="card" onclick="location.href='billing-manpower-report.html'">👨‍💼 Billing Manpower Report</div>
+      ${common}
+    `;
+  };
+
+  window.loadReport = function(){
+    const company = getReportCompany();
+    const mcdEl = document.getElementById("reportMcd");
+    const mcd = mcdEl ? mcdEl.value : "ACCESSORIES MCD";
+    const box = document.getElementById("reportBox");
+    if(!box) return;
+
+    const common = commonReportCards(company,mcd);
+
+    if(company === "GMS COMPOSITE KNITTING"){
+      box.innerHTML = `
+        ${common}
+        <div class="card">🏭 Composite Own Report Module Later</div>
+      `;
+      return;
+    }
+
+    if(mcd === "ACCESSORIES MCD"){
+      box.innerHTML = `
+        <div class="card" onclick="location.href='sewing-thread.html'">🧵 Sewing Thread Report</div>
+        <div class="card" onclick="location.href='twill-tape.html'">📏 Twill Tape Report</div>
+        <div class="card" onclick="location.href='accessories.html'">📦 Accessories Report</div>
+        <div class="card" onclick="location.href='accessories-inventory-report.html'">📊 Inventory Report</div>
+        <div class="card" onclick="location.href='billing-manpower-report.html'">👨‍💼 Billing Manpower Report</div>
+        ${common}
+      `;
+      return;
+    }
+
+    if(mcd === "GREY FABRIC MCD"){
+      box.innerHTML = `
+        <div class="card" onclick="location.href='grey-fabric.html'">🏭 Grey Fabric Daily Report</div>
+        <div class="card" onclick="location.href='grey-fabric-monthly.html'">📅 Grey Fabric Monthly Report</div>
+        <div class="card" onclick="location.href='billing-manpower-report.html'">👨‍💼 Billing Manpower Report</div>
+        ${common}
+      `;
+      return;
+    }
+
+    if(mcd === "BILLING SECTION"){
+      box.innerHTML = `
+        <div class="card" onclick="location.href='billing-manpower-report.html'">👨‍💼 Billing Manpower Report</div>
+        ${common}
+      `;
+      return;
+    }
+
+    box.innerHTML = `
+      <div class="card">📑 ${mcd} Report</div>
+      <div class="card" onclick="location.href='billing-manpower-report.html'">👨‍💼 Billing Manpower Report</div>
+      ${common}
+    `;
+  };
+
+  function ensureReportCompanySelect(){
+    const reports = document.getElementById("reports");
+    if(!reports) return;
+    if(document.getElementById("reportCompany")) return;
+
+    const label = document.createElement("label");
+    label.innerHTML = "🏢 Company";
+    const sel = document.createElement("select");
+    sel.id = "reportCompany";
+    sel.innerHTML = `
+      <option>GMS TEXTILES LTD</option>
+      <option>GMS COMPOSITE KNITTING</option>
+    `;
+    const h2 = reports.querySelector("h2");
+    if(h2){
+      h2.insertAdjacentElement("afterend", document.createElement("br"));
+      h2.insertAdjacentElement("afterend", sel);
+      h2.insertAdjacentElement("afterend", label);
+    }
+  }
+
+  function fixExistingDeadCards(){
+    document.querySelectorAll(".card").forEach(c=>{
+      const t=(c.innerText||"").trim();
+      if(t.includes("Challan / Gate Pass") && !t.includes("Report")){
+        c.onclick=function(){
+          openChallanEntry(getEntryCompany(), document.getElementById("entryMcd") ? document.getElementById("entryMcd").value : "");
+        };
+      }
+      if(t.includes("Challan / Gate Pass Report")){
+        c.onclick=function(){
+          openChallanReport(getReportCompany(), document.getElementById("reportMcd") ? document.getElementById("reportMcd").value : "");
+        };
+      }
+    });
+  }
+
+  document.addEventListener("DOMContentLoaded",function(){
+    ensureReportCompanySelect();
+    const entryBtn = document.querySelector("button[onclick*='loadEntry']");
+    if(entryBtn) entryBtn.addEventListener("click",()=>setTimeout(fixExistingDeadCards,100));
+    const reportBtn = document.querySelector("button[onclick*='loadReport']");
+    if(reportBtn) reportBtn.addEventListener("click",()=>setTimeout(fixExistingDeadCards,100));
+    setTimeout(fixExistingDeadCards,500);
+  });
+})();
+</script>
+
 </body>
 </html>
