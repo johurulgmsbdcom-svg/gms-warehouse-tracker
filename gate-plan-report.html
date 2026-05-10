@@ -213,6 +213,99 @@ th,td{
   .greySign{margin-top:34mm!important;gap:12px!important}
   .greySign div{font-size:8px!important;padding-top:3px!important}
 }
+
+/* ===== QR CENTER + MOBILE FULL VIEW FIX ===== */
+.reportQrCenter{
+  text-align:center;
+  font-size:8px;
+  font-weight:900;
+  margin:3px 0 6px;
+}
+.reportQrCenter .qrMini{
+  width:65px;
+  height:65px;
+  margin:0 auto;
+}
+@media(max-width:700px){
+  body{
+    background:#fff!important;
+    color:#000!important;
+  }
+  .header,.controls,#loadStatus{
+    display:none!important;
+  }
+  #reportArea{
+    width:100%!important;
+    margin:0!important;
+  }
+  .reportCard,.greyCard{
+    width:100%!important;
+    margin:0!important;
+    border:0!important;
+    overflow-x:auto!important;
+  }
+  .reportPrintHeader h2{font-size:18px!important}
+  .reportPrintHeader h4{font-size:10px!important}
+  .reportPrintHeader h3{font-size:14px!important}
+  .companyLine{font-size:12px!important}
+  .meta{
+    grid-template-columns:1fr!important;
+  }
+  .meta div{
+    font-size:11px!important;
+    border-right:0!important;
+  }
+  table{
+    min-width:1000px!important;
+    font-size:10px!important;
+  }
+  th,td{
+    font-size:10px!important;
+    padding:3px!important;
+  }
+  .sign{
+    grid-template-columns:repeat(4,1fr)!important;
+    margin-top:35px!important;
+  }
+  .sign div{
+    font-size:9px!important;
+  }
+  .greyTable{
+    width:96%!important;
+    min-width:0!important;
+  }
+  .greySign{
+    grid-template-columns:repeat(3,1fr)!important;
+    gap:10px!important;
+    margin-top:45px!important;
+  }
+}
+@media print{
+  .reportQrCenter{
+    font-size:6px!important;
+    margin:1mm 0 1mm!important;
+  }
+  .reportQrCenter .qrMini{
+    width:48px!important;
+    height:48px!important;
+  }
+}
+
+
+.singleQrMode .header,
+.singleQrMode .controls,
+.singleQrMode #loadStatus{
+  display:none!important;
+}
+.singleQrMode{
+  background:#fff!important;
+  color:#000!important;
+}
+.singleQrMode #reportArea{
+  width:100%!important;
+  margin:0!important;
+}
+
 </style>
 </head>
 
@@ -344,18 +437,12 @@ async function loadPlans(){
 }
 
 function normalHeader(p){
-  let no=planNo(p);
   return `
     <div class="reportPrintHeader">
       <h2>GMS Textiles Ltd.</h2>
       <h4>Tansutrapur, Kaliakair, Gazipur.</h4>
       <h4>Daily Goods Delivery Plan</h4>
       <h3>${esc(p.mcd || "ACCESSORIES MCD")}</h3>
-      <div class="qrBox">
-        <div>QR Scan</div>
-        <div class="qrMini" data-qr-no="${esc(no)}"></div>
-        <div>${esc(no)}</div>
-      </div>
     </div>
   `;
 }
@@ -391,6 +478,7 @@ function renderNormal(p,index){
   return `
     <div class="reportCard" data-plan-no="${esc(planNo(p))}">
       ${normalHeader(p)}
+      <div class="reportQrCenter"><div class="qrMini" data-qr-no="${esc(planNo(p))}"></div><div>Scan QR: ${esc(planNo(p))}</div></div>
       <div class="companyLine">${esc(p.company || "GMS Textiles Ltd.")} To ${esc(p.toCompany || "")}</div>
       <div class="meta">
         <div>Gate Plan No: ${esc(planNo(p))}</div>
@@ -549,7 +637,100 @@ window.printSingle=function(index){
       <meta charset="UTF-8">
       <title>Gate Plan Print</title>
       <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"><\/script>
-      <style>${document.querySelector("style").innerHTML}</style>
+      <style>${document.querySelector("style").innerHTML}
+/* ===== QR CENTER + MOBILE FULL VIEW FIX ===== */
+.reportQrCenter{
+  text-align:center;
+  font-size:8px;
+  font-weight:900;
+  margin:3px 0 6px;
+}
+.reportQrCenter .qrMini{
+  width:65px;
+  height:65px;
+  margin:0 auto;
+}
+@media(max-width:700px){
+  body{
+    background:#fff!important;
+    color:#000!important;
+  }
+  .header,.controls,#loadStatus{
+    display:none!important;
+  }
+  #reportArea{
+    width:100%!important;
+    margin:0!important;
+  }
+  .reportCard,.greyCard{
+    width:100%!important;
+    margin:0!important;
+    border:0!important;
+    overflow-x:auto!important;
+  }
+  .reportPrintHeader h2{font-size:18px!important}
+  .reportPrintHeader h4{font-size:10px!important}
+  .reportPrintHeader h3{font-size:14px!important}
+  .companyLine{font-size:12px!important}
+  .meta{
+    grid-template-columns:1fr!important;
+  }
+  .meta div{
+    font-size:11px!important;
+    border-right:0!important;
+  }
+  table{
+    min-width:1000px!important;
+    font-size:10px!important;
+  }
+  th,td{
+    font-size:10px!important;
+    padding:3px!important;
+  }
+  .sign{
+    grid-template-columns:repeat(4,1fr)!important;
+    margin-top:35px!important;
+  }
+  .sign div{
+    font-size:9px!important;
+  }
+  .greyTable{
+    width:96%!important;
+    min-width:0!important;
+  }
+  .greySign{
+    grid-template-columns:repeat(3,1fr)!important;
+    gap:10px!important;
+    margin-top:45px!important;
+  }
+}
+@media print{
+  .reportQrCenter{
+    font-size:6px!important;
+    margin:1mm 0 1mm!important;
+  }
+  .reportQrCenter .qrMini{
+    width:48px!important;
+    height:48px!important;
+  }
+}
+
+
+.singleQrMode .header,
+.singleQrMode .controls,
+.singleQrMode #loadStatus{
+  display:none!important;
+}
+.singleQrMode{
+  background:#fff!important;
+  color:#000!important;
+}
+.singleQrMode #reportArea{
+  width:100%!important;
+  margin:0!important;
+}
+
+</style>
     </head>
     <body>
       <div id="reportArea">${card.outerHTML}</div>
@@ -599,6 +780,7 @@ window.exportExcel=function(){
 let gatePlanNoParam=new URLSearchParams(location.search).get("gatePlanNo")||"";
 
 if(gatePlanNoParam){
+  document.body.classList.add("singleQrMode");
   document.getElementById("gateNoSearch").value=gatePlanNoParam;
   document.getElementById("fromDate").value="";
   document.getElementById("toDate").value="";
