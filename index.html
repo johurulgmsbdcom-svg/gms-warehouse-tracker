@@ -452,10 +452,81 @@ body.light .creditFooter{background:rgba(255,255,255,.96)}
   .liveDot{width:32px;height:32px}
 }
 
+
+/* ===== CHALLAN BUTTON + CLEAN DASHBOARD FIX ===== */
+.navBtn{
+  border:0;
+  border-radius:14px;
+  padding:13px 22px;
+  margin:7px;
+  background:linear-gradient(135deg,#2563eb,#1d4ed8);
+  color:white;
+  font-weight:900;
+  font-size:16px;
+  cursor:pointer;
+  box-shadow:0 8px 18px rgba(37,99,235,.25);
+}
+.dashboardBeautyGrid{
+  display:grid;
+  grid-template-columns:repeat(3,1fr);
+  gap:16px;
+  margin:18px 0;
+}
+.beautyCard{
+  background:linear-gradient(135deg,rgba(15,23,42,.94),rgba(30,41,59,.92));
+  border:1px solid #263855;
+  border-radius:22px;
+  padding:22px;
+  min-height:125px;
+  display:flex;
+  align-items:center;
+  gap:18px;
+  cursor:pointer;
+  box-shadow:0 12px 26px rgba(0,0,0,.22);
+}
+.beautyIcon{
+  font-size:42px;
+}
+.beautyTitle{
+  color:#b7c5da;
+  font-size:16px;
+  font-weight:900;
+  margin-bottom:8px;
+}
+.beautyValue{
+  color:#22c55e;
+  font-size:25px;
+  font-weight:1000;
+}
+.liveDotSmall{
+  display:inline-block;
+  width:16px;
+  height:16px;
+  background:#22c55e;
+  border-radius:50%;
+  margin-right:8px;
+  box-shadow:0 0 0 0 rgba(34,197,94,.8);
+  animation:livePulseSmall 1.4s infinite;
+}
+@keyframes livePulseSmall{
+  0%{box-shadow:0 0 0 0 rgba(34,197,94,.8)}
+  70%{box-shadow:0 0 0 15px rgba(34,197,94,0)}
+  100%{box-shadow:0 0 0 0 rgba(34,197,94,0)}
+}
+@media(max-width:800px){
+  .dashboardBeautyGrid{
+    grid-template-columns:1fr;
+  }
+  .beautyCard{
+    min-height:110px;
+  }
+}
+
 </style>
 </head>
 
 <body>
+<div class="navArea"><button class="navBtn" onclick="location.href='challan-entry.html'">🚚 Challan / Gate Pass</button></div>
 
 <div class="header">
   <div class="logoArea">
@@ -492,11 +563,39 @@ body.light .creditFooter{background:rgba(255,255,255,.96)}
 
 <div id="home" class="page activePage">
   <div class="dashTitle">📊 Dashboard Overview</div>
+
+<!-- ===== DASHBOARD BEAUTY CARDS: CHALLAN / LIVE / STOCK ===== -->
+<div class="dashboardBeautyGrid" id="dashboardBeautyGrid">
+  <div class="beautyCard" onclick="location.href='challan-entry.html'">
+    <div class="beautyIcon">🚚</div>
+    <div>
+      <div class="beautyTitle">Challan / Gate Pass</div>
+      <div class="beautyValue">Entry + Report</div>
+    </div>
+  </div>
+
+  <div class="beautyCard" onclick="location.href='challan-report.html'">
+    <div class="beautyIcon">📄</div>
+    <div>
+      <div class="beautyTitle">Challan Report</div>
+      <div class="beautyValue">PDF / QR / Excel</div>
+    </div>
+  </div>
+
+  <div class="beautyCard liveSignalCard">
+    <div class="beautyIcon">🟢</div>
+    <div>
+      <div class="beautyTitle">Live Update Signal</div>
+      <div class="beautyValue"><span class="liveDotSmall"></span> LIVE</div>
+    </div>
+  </div>
+</div>
+
   <div class="dashSub">Role Based Dashboard • Firebase Live Summary</div>
 
   <div class="topGrid">
-    <div class="topCard"><div class="label">👨‍🏭 Total Manpower</div><div class="num" id="kpiManpower">0</div></div>
-    <div class="topCard"><div class="label">💰 Total Salary</div><div class="num" id="kpiSalary">0</div></div>
+    
+    
     <div class="topCard liveSignalCard">
       <div class="label">🟢 Live Update Signal</div>
       <div class="liveSignalWrap">
@@ -1135,8 +1234,7 @@ async function loadDashboardStock(){
       }else if(mcd==="GREY FABRIC MCD"){
         html+=`<div class="mcdBox"><h3>🏭 GREY FABRIC MCD</h3><div class="miniRow"><span>📦 Today Closing Balance</span><span class="miniValue">${fmt(grey.total)}</span></div><div class="miniRow"><span>📊 Closing Chart</span><span class="miniValue">LIVE</span></div><div class="miniRow"><span>📅 Monthly Report</span><span class="miniValue">LIVE</span></div>${isManpowerAllowed()?`<div class="miniRow"><span>👨‍🏭 Manpower</span><span class="miniValue">${fmt(mp.count)}</span></div><div class="miniRow"><span>💰 Salary</span><span class="miniValue">${fmt(mp.salary)}</span></div>`:""}<div class="miniChart"><div class="miniFill" style="width:65%"></div></div></div>`;
       }else if(mcd==="BILLING SECTION"){
-        html+=`<div class="mcdBox"><h3>👨‍💼 BILLING SECTION</h3><div class="miniRow"><span>👨‍🏭 Total Manpower</span><span class="miniValue">${fmt(billing.total)}</span></div><div class="miniRow"><span>🏖 Leave</span><span class="miniValue">${fmt(billing.leave)}</span></div><div class="miniRow"><span>❌ Absent</span><span class="miniValue">${fmt(billing.absent)}</span></div><div class="miniRow"><span>✅ Today Present</span><span class="miniValue">${fmt(billing.present)}</span></div><div class="miniChart"><div class="miniFill" style="width:55%"></div></div></div>`;
-      }else{
+        html+=`<div class="mcdBox"><h3>👨‍💼 BILLING SECTION</h3><div class="miniRow"><span>👨‍🏭      }else{
         html+=`<div class="mcdBox"><h3>📂 ${mcd}</h3>${isManpowerAllowed()?`<div class="miniRow"><span>👨‍🏭 Manpower</span><span class="miniValue">${fmt(mp.count)}</span></div><div class="miniRow"><span>💰 Salary</span><span class="miniValue">${fmt(mp.salary)}</span></div>`:""}<div class="miniRow"><span>📊 Stock / Report</span><span class="miniValue">Pending</span></div><div class="miniChart"><div class="miniFill" style="width:35%"></div></div></div>`;
       }
     });
@@ -1349,6 +1447,22 @@ updateLastActive();
 renderBackupLog();
 setInterval(updateLastActive,60000);
 setInterval(loadNotices,60000);
+</script>
+
+
+<script>
+(function(){
+  function cleanDashboardCards(){
+    document.querySelectorAll("div,section,article").forEach(el=>{
+      const t=(el.innerText||"").toUpperCase().trim();
+      if((t==="TOTAL MANPOWER\n0" || t==="TOTAL SALARY\n0" || t.includes("TOTAL MANPOWER\n0") || t.includes("TOTAL SALARY\n0")) && el.children.length<=3){
+        el.style.display="none";
+      }
+    });
+  }
+  document.addEventListener("DOMContentLoaded",cleanDashboardCards);
+  setTimeout(cleanDashboardCards,1000);
+})();
 </script>
 
 </body>
