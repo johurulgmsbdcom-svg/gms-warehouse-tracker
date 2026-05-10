@@ -129,6 +129,7 @@ const allowedMCDs=getManpowerAccessList();
 if(allowedMCDs.length===0){alert("Manpower Access nai. Admin theke permission nite hobe.");location.href="index.html";}
 function setupMcdDropdown(){document.getElementById("mcd").innerHTML=allowedMCDs.map(m=>`<option>${m}</option>`).join("");}
 let unsubscribe=null,editMode=false; window.currentRows=[];
+const $=id=>document.getElementById(id);
 function toast(msg,color="#16a34a"){let t=document.getElementById("toast");t.innerText=msg;t.style.background=color;t.style.display="block";setTimeout(()=>t.style.display="none",2500);}
 function spinner(show){document.getElementById("spinner").style.display=show?"flex":"none";}
 function showForm(){document.getElementById("formBox").style.display="grid";}
@@ -153,27 +154,198 @@ function updateAges(){document.getElementById("serviceAge").value=ageText(docume
 function autoCalculateSalary(){let last=cleanNum(document.getElementById("lastTotalSalary").value),inc=cleanNum(document.getElementById("lastInctAmount").value); if(last||inc){document.getElementById("totalSalary").value=last+inc;document.getElementById("incrementPercent").value=percent(inc,last);} autoCalculateProposedPercent();}
 function autoCalculateProposedPercent(){let total=cleanNum(document.getElementById("totalSalary").value),prop=cleanNum(document.getElementById("proposedAmount").value); if(total||prop)document.getElementById("proposedPercent").value=percent(prop,total);}
 function getFormData(){
- let x={company:company.value,mcd:mcd.value,image:image.value.trim(),code:code.value.trim(),empId:code.value.trim(),empName:empName.value.trim(),designation:designation.value.trim(),doj:doj.value.trim(),sectionInfo:sectionInfo.value.trim(),lastTotalSalary:cleanNum(lastTotalSalary.value),lastInctAmount:cleanNum(lastInctAmount.value),incrementPercent:incrementPercent.value.trim(),totalSalary:cleanNum(totalSalary.value),proposedAmount:cleanNum(proposedAmount.value),proposedPercent:proposedPercent.value.trim(),district:district.value.trim(),lastPromotionDate:lastPromotionDate.value.trim(),promotion:promotion.value.trim(),education:education.value.trim(),officeHour:cleanNum(officeHour.value),dob:dob.value.trim(),reference:reference.value.trim(),guardianMobile:guardianMobile.value.trim(),remarks:remarks.value.trim(),updatedAt:new Date().toISOString()};
- x.serviceAge=ageText(x.doj); x.employeeAge=ageText(x.dob); return x;
+ let x={
+  company:$("company").value,
+  mcd:$("mcd").value,
+  image:$("image").value.trim(),
+  code:$("code").value.trim(),
+  empId:$("code").value.trim(),
+  empName:$("empName").value.trim(),
+  designation:$("designation").value.trim(),
+  doj:$("doj").value.trim(),
+  sectionInfo:$("sectionInfo").value.trim(),
+  lastTotalSalary:cleanNum($("lastTotalSalary").value),
+  lastInctAmount:cleanNum($("lastInctAmount").value),
+  incrementPercent:$("incrementPercent").value.trim(),
+  totalSalary:cleanNum($("totalSalary").value),
+  proposedAmount:cleanNum($("proposedAmount").value),
+  proposedPercent:$("proposedPercent").value.trim(),
+  district:$("district").value.trim(),
+  lastPromotionDate:$("lastPromotionDate").value.trim(),
+  promotion:$("promotion").value.trim(),
+  education:$("education").value.trim(),
+  officeHour:cleanNum($("officeHour").value),
+  dob:$("dob").value.trim(),
+  reference:$("reference").value.trim(),
+  guardianMobile:$("guardianMobile").value.trim(),
+  remarks:$("remarks").value.trim(),
+  updatedAt:new Date().toISOString()
+ };
+ x.serviceAge=ageText(x.doj);
+ x.employeeAge=ageText(x.dob);
+ return x;
 }
-async function saveData(){let x=getFormData(); if(!x.code){toast("Code / Employee ID dao","#dc2626");return;} spinner(true); try{await setDoc(doc(db,"manpower",x.mcd+"_"+x.code),x,{merge:true});clearForm();toast(editMode?"Updated Successfully ✅":"Saved Successfully ✅");editMode=false;saveBtn.innerText="Save Employee";}catch(e){console.log(e);toast("Save failed ❌","#dc2626");} spinner(false);}
-function editEmployee(codeValue){let row=window.currentRows.find(x=>(x.code||x.empId)===codeValue); if(!row)return; showForm(); image.value=row.image||""; code.value=row.code||row.empId||""; empName.value=row.empName||""; designation.value=row.designation||""; doj.value=row.doj||row.joinDate||""; sectionInfo.value=row.sectionInfo||row.section||""; lastTotalSalary.value=row.lastTotalSalary||""; lastInctAmount.value=row.lastInctAmount||""; incrementPercent.value=row.incrementPercent||""; totalSalary.value=row.totalSalary||row.salary||""; proposedAmount.value=row.proposedAmount||""; proposedPercent.value=row.proposedPercent||""; district.value=row.district||""; lastPromotionDate.value=row.lastPromotionDate||""; promotion.value=row.promotion||""; education.value=row.education||""; officeHour.value=row.officeHour||8; serviceAge.value=ageText(row.doj||row.joinDate)||""; dob.value=row.dob||""; employeeAge.value=ageText(row.dob)||""; reference.value=row.reference||""; guardianMobile.value=row.guardianMobile||""; remarks.value=row.remarks||""; editMode=true; saveBtn.innerText="Update Employee";}
-async function deleteEmployee(codeValue){let mcdValue=mcd.value;if(!confirm("Ei employee delete korba?"))return;spinner(true);try{await deleteDoc(doc(db,"manpower",mcdValue+"_"+codeValue));toast("Deleted Successfully ✅");}catch(e){console.log(e);toast("Delete failed ❌","#dc2626");}spinner(false);}
+async function saveData(){let x=getFormData(); if(!x.code){toast("Code / Employee ID dao","#dc2626");return;} spinner(true); try{await setDoc(doc(db,"manpower",x.mcd+"_"+x.code),x,{merge:true});clearForm();toast(editMode?"Updated Successfully ✅":"Saved Successfully ✅");editMode=false;$("saveBtn").innerText="Save Employee";}catch(e){console.log(e);toast("Save failed ❌","#dc2626");} spinner(false);}
+function editEmployee(codeValue){
+ let row=window.currentRows.find(x=>(x.code||x.empId)===codeValue);
+ if(!row)return;
+ showForm();
+
+ $("image").value=row.image||"";
+ $("code").value=row.code||row.empId||"";
+ $("empName").value=row.empName||"";
+ $("designation").value=row.designation||"";
+ $("doj").value=row.doj||row.joinDate||"";
+ $("sectionInfo").value=row.sectionInfo||row.section||"";
+ $("lastTotalSalary").value=row.lastTotalSalary||"";
+ $("lastInctAmount").value=row.lastInctAmount||"";
+ $("incrementPercent").value=row.incrementPercent||"";
+ $("totalSalary").value=row.totalSalary||row.salary||"";
+ $("proposedAmount").value=row.proposedAmount||"";
+ $("proposedPercent").value=row.proposedPercent||"";
+ $("district").value=row.district||"";
+ $("lastPromotionDate").value=row.lastPromotionDate||"";
+ $("promotion").value=row.promotion||"";
+ $("education").value=row.education||"";
+ $("officeHour").value=row.officeHour||8;
+ $("serviceAge").value=ageText(row.doj||row.joinDate)||"";
+ $("dob").value=row.dob||"";
+ $("employeeAge").value=ageText(row.dob)||"";
+ $("reference").value=row.reference||"";
+ $("guardianMobile").value=row.guardianMobile||"";
+ $("remarks").value=row.remarks||"";
+
+ editMode=true;
+ $("saveBtn").innerText="Update Employee";
+}
+
+async function deleteEmployee(codeValue){let mcdValue=$("mcd").value;if(!confirm("Ei employee delete korba?"))return;spinner(true);try{await deleteDoc(doc(db,"manpower",mcdValue+"_"+codeValue));toast("Deleted Successfully ✅");}catch(e){console.log(e);toast("Delete failed ❌","#dc2626");}spinner(false);}
 function calcPercentStats(values){let nums=values.map(cleanNum).filter(v=>v>0);if(!nums.length)return{max:0,min:0,avg:0};let max=Math.max(...nums),min=Math.min(...nums),avg=nums.reduce((a,b)=>a+b,0)/nums.length;return{max:max.toFixed(2),min:min.toFixed(2),avg:avg.toFixed(2)};}
 function render(rows){
- let mcdValue=mcd.value; mcdTitle.innerText=mcdValue+" Manpower List";
+ let mcdValue=$("mcd").value;
+ $("mcdTitle").innerText=mcdValue+" Manpower List";
  let html="",sumLastTotal=0,sumLastInct=0,sumTotalSalary=0,sumProposed=0;
- rows.forEach((x,idx)=>{let codeValue=x.code||x.empId||"", dojValue=x.doj||x.joinDate||"", service=ageText(dojValue), empAge=ageText(x.dob); let lastTotal=cleanNum(x.lastTotalSalary), lastInct=cleanNum(x.lastInctAmount), total=cleanNum(x.totalSalary||x.salary), proposed=cleanNum(x.proposedAmount); sumLastTotal+=lastTotal;sumLastInct+=lastInct;sumTotalSalary+=total;sumProposed+=proposed;
- html+=`<tr><td>${idx+1}</td><td>${x.image?`<img class="empImg" src="${x.image}">`:""}</td><td>${codeValue}</td><td>${x.empName||""}</td><td>${x.designation||""}</td><td>${dojValue}</td><td>${x.sectionInfo||x.section||""}</td><td>${fmt(lastTotal)}</td><td>${fmt(lastInct)}</td><td>${x.incrementPercent||percent(lastInct,lastTotal)||""}</td><td>${fmt(total)}</td><td>${fmt(proposed)}</td><td>${x.proposedPercent||percent(proposed,total)||""}</td><td>${x.district||""}</td><td>${x.lastPromotionDate||""}</td><td>${x.promotion||""}</td><td>${x.education||""}</td><td>${x.officeHour||""}</td><td>${service}</td><td>${x.dob||""}</td><td>${empAge}</td><td>${x.reference||""}</td><td>${x.guardianMobile||""}</td><td>${x.remarks||""}</td><td><button class="editBtn" onclick="editEmployee('${codeValue}')">Edit</button><button class="deleteBtn" onclick="deleteEmployee('${codeValue}')">Delete</button></td></tr>`;});
- let incStats=calcPercentStats(rows.map(x=>x.incrementPercent||percent(x.lastInctAmount,x.lastTotalSalary))); let propStats=calcPercentStats(rows.map(x=>x.proposedPercent||percent(x.proposedAmount,x.totalSalary||x.salary)));
- tableBody.innerHTML=html; totalManpower.innerText=rows.length; totalSalarySummary.innerText=fmt(sumTotalSalary); sumLastTotalSalary.innerText=fmt(sumLastTotal); sumLastInctAmount.innerText=fmt(sumLastInct); avgIncrementPercent.innerText=incStats.avg; sumTotalSalary.innerText=fmt(sumTotalSalary); sumProposedAmount.innerText=fmt(sumProposed); avgProposedPercent.innerText=propStats.avg; mcdTotal.innerText=mcdValue+" Total: "+rows.length+" | Salary: "+fmt(sumTotalSalary);
- maxPercent.innerText=incStats.max; minPercent.innerText=incStats.min; avgPercent.innerText=incStats.avg; maxProposedPercent.innerText=propStats.max; minProposedPercent.innerText=propStats.min; avgProposedBox.innerText=propStats.avg; increaseAvg.innerText=(cleanNum(propStats.avg)-cleanNum(incStats.avg)).toFixed(2);
+
+ rows.forEach((x,idx)=>{
+  let codeValue=x.code||x.empId||"";
+  let dojValue=x.doj||x.joinDate||"";
+  let service=ageText(dojValue);
+  let empAge=ageText(x.dob);
+  let lastTotal=cleanNum(x.lastTotalSalary);
+  let lastInct=cleanNum(x.lastInctAmount);
+  let total=cleanNum(x.totalSalary||x.salary);
+  let proposed=cleanNum(x.proposedAmount);
+
+  sumLastTotal+=lastTotal;
+  sumLastInct+=lastInct;
+  sumTotalSalary+=total;
+  sumProposed+=proposed;
+
+  html+=`<tr>
+   <td>${idx+1}</td>
+   <td>${x.image?`<img class="empImg" src="${x.image}">`:""}</td>
+   <td>${codeValue}</td>
+   <td>${x.empName||""}</td>
+   <td>${x.designation||""}</td>
+   <td>${dojValue}</td>
+   <td>${x.sectionInfo||x.section||""}</td>
+   <td>${fmt(lastTotal)}</td>
+   <td>${fmt(lastInct)}</td>
+   <td>${x.incrementPercent||percent(lastInct,lastTotal)||""}</td>
+   <td>${fmt(total)}</td>
+   <td>${fmt(proposed)}</td>
+   <td>${x.proposedPercent||percent(proposed,total)||""}</td>
+   <td>${x.district||""}</td>
+   <td>${x.lastPromotionDate||""}</td>
+   <td>${x.promotion||""}</td>
+   <td>${x.education||""}</td>
+   <td>${x.officeHour||""}</td>
+   <td>${service}</td>
+   <td>${x.dob||""}</td>
+   <td>${empAge}</td>
+   <td>${x.reference||""}</td>
+   <td>${x.guardianMobile||""}</td>
+   <td>${x.remarks||""}</td>
+   <td>
+    <button class="editBtn" onclick="editEmployee('${codeValue}')">Edit</button>
+    <button class="deleteBtn" onclick="deleteEmployee('${codeValue}')">Delete</button>
+   </td>
+  </tr>`;
+ });
+
+ let incStats=calcPercentStats(rows.map(x=>x.incrementPercent||percent(x.lastInctAmount,x.lastTotalSalary)));
+ let propStats=calcPercentStats(rows.map(x=>x.proposedPercent||percent(x.proposedAmount,x.totalSalary||x.salary)));
+
+ $("tableBody").innerHTML=html;
+ $("totalManpower").innerText=rows.length;
+ $("totalSalarySummary").innerText=fmt(sumTotalSalary);
+ $("sumLastTotalSalary").innerText=fmt(sumLastTotal);
+ $("sumLastInctAmount").innerText=fmt(sumLastInct);
+ $("avgIncrementPercent").innerText=incStats.avg;
+ $("sumTotalSalary").innerText=fmt(sumTotalSalary);
+ $("sumProposedAmount").innerText=fmt(sumProposed);
+ $("avgProposedPercent").innerText=propStats.avg;
+ $("mcdTotal").innerText=mcdValue+" Total: "+rows.length+" | Salary: "+fmt(sumTotalSalary);
+
+ $("maxPercent").innerText=incStats.max;
+ $("minPercent").innerText=incStats.min;
+ $("avgPercent").innerText=incStats.avg;
+ $("maxProposedPercent").innerText=propStats.max;
+ $("minProposedPercent").innerText=propStats.min;
+ $("avgProposedBox").innerText=propStats.avg;
+ $("increaseAvg").innerText=(cleanNum(propStats.avg)-cleanNum(incStats.avg)).toFixed(2);
 }
-function filterSearch(){let q=searchBox.value.toLowerCase().trim(); if(!q){render(window.currentRows);return;} render(window.currentRows.filter(x=>(x.code||x.empId||"").toLowerCase().includes(q)||(x.empName||"").toLowerCase().includes(q)||(x.designation||"").toLowerCase().includes(q)||(x.sectionInfo||x.section||"").toLowerCase().includes(q)||(x.district||"").toLowerCase().includes(q)||(x.reference||"").toLowerCase().includes(q)));}
-function startRealtime(){let mcdValue=mcd.value;mcdTitle.innerText=mcdValue+" Manpower List";searchBox.value="";if(unsubscribe)unsubscribe();spinner(true);unsubscribe=onSnapshot(collection(db,"manpower"),snap=>{let rows=[];snap.forEach(ds=>{let x=ds.data();if(x.mcd===mcdValue)rows.push(x);});rows.sort((a,b)=>String(a.code||a.empId||"").localeCompare(String(b.code||b.empId||"")));window.currentRows=rows;render(rows);spinner(false);});}
-function clearForm(){["image","code","empName","designation","doj","sectionInfo","lastTotalSalary","lastInctAmount","incrementPercent","totalSalary","proposedAmount","proposedPercent","district","lastPromotionDate","promotion","education","officeHour","serviceAge","dob","employeeAge","reference","guardianMobile","remarks"].forEach(id=>document.getElementById(id).value="");officeHour.value=8;editMode=false;saveBtn.innerText="Save Employee";}
-function exportExcel(){let title=`<h2>GMS Textiles Ltd.</h2><h3>${mcd.value} Manpower List</h3><h3>Total Manpower: ${totalManpower.innerText}</h3><h3>Total Salary: ${totalSalarySummary.innerText}</h3>`;let file=new Blob([title+reportTable.outerHTML],{type:"application/vnd.ms-excel"});let a=document.createElement("a");a.href=URL.createObjectURL(file);a.download="manpower-report.xls";a.click();}
+
+function filterSearch(){
+ let q=$("searchBox").value.toLowerCase().trim();
+ if(!q){
+  render(window.currentRows);
+  return;
+ }
+ render(window.currentRows.filter(x=>
+  (x.code||x.empId||"").toLowerCase().includes(q)||
+  (x.empName||"").toLowerCase().includes(q)||
+  (x.designation||"").toLowerCase().includes(q)||
+  (x.sectionInfo||x.section||"").toLowerCase().includes(q)||
+  (x.district||"").toLowerCase().includes(q)||
+  (x.reference||"").toLowerCase().includes(q)
+ ));
+}
+
+function startRealtime(){
+ let mcdValue=$("mcd").value;
+ $("mcdTitle").innerText=mcdValue+" Manpower List";
+ $("searchBox").value="";
+ if(unsubscribe)unsubscribe();
+ spinner(true);
+
+ unsubscribe=onSnapshot(
+  collection(db,"manpower"),
+  snap=>{
+   let rows=[];
+   snap.forEach(ds=>{
+    let x=ds.data();
+    if(x.mcd===mcdValue)rows.push(x);
+   });
+   rows.sort((a,b)=>String(a.code||a.empId||"").localeCompare(String(b.code||b.empId||"")));
+   window.currentRows=rows;
+   render(rows);
+   spinner(false);
+  },
+  error=>{
+   console.log("Firebase manpower load error:", error);
+   spinner(false);
+   toast("Firebase Load Error ❌","#dc2626");
+   render([]);
+  }
+ );
+ setTimeout(()=>spinner(false),6000);
+}
+
+function clearForm(){["image","code","empName","designation","doj","sectionInfo","lastTotalSalary","lastInctAmount","incrementPercent","totalSalary","proposedAmount","proposedPercent","district","lastPromotionDate","promotion","education","officeHour","serviceAge","dob","employeeAge","reference","guardianMobile","remarks"].forEach(id=>document.getElementById(id).value="");$("officeHour").value=8;editMode=false;$("saveBtn").innerText="Save Employee";}
+function exportExcel(){let title=`<h2>GMS Textiles Ltd.</h2><h3>${$("mcd").value} Manpower List</h3><h3>Total Manpower: ${$("totalManpower").innerText}</h3><h3>Total Salary: ${$("totalSalarySummary").innerText}</h3>`;let file=new Blob([title+$("reportTable").outerHTML],{type:"application/vnd.ms-excel"});let a=document.createElement("a");a.href=URL.createObjectURL(file);a.download="manpower-report.xls";a.click();}
 function exportPDF(){window.print();}
+window.addEventListener("error",e=>{console.log(e.error||e.message);spinner(false);toast("Code Error ❌","#dc2626");});
 Object.assign(window,{showForm,saveData,deleteEmployee,editEmployee,clearForm,updateAges,autoCalculateSalary,autoCalculateProposedPercent,startRealtime,filterSearch,exportExcel,exportPDF});
 setupMcdDropdown(); startRealtime();
 </script>
