@@ -4,6 +4,7 @@
 <meta charset="UTF-8">
 <title>Gate Plan Report</title>
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 
 <style>
 body{
@@ -12,17 +13,9 @@ body{
   color:#fff;
   font-family:"Segoe UI Emoji","Apple Color Emoji","Segoe UI",Arial,sans-serif;
 }
-.header{
-  text-align:center;
-  padding:14px 8px;
-}
-.header h2,.header h3,.header h4{
-  margin:3px;
-}
-.controls{
-  text-align:center;
-  padding:10px;
-}
+.header{text-align:center;padding:14px 8px}
+.header h2,.header h3,.header h4{margin:3px}
+.controls{text-align:center;padding:10px}
 input,select{
   padding:8px;
   border-radius:7px;
@@ -45,11 +38,14 @@ button{
 .home{background:#0f766e}
 .delete{background:#dc2626}
 .edit{background:#f59e0b}
-
-#reportArea{
-  width:98%;
-  margin:10px auto 40px;
+.clear{background:#64748b}
+#loadStatus{
+  text-align:center;
+  font-weight:900;
+  color:#22c55e;
+  padding:4px;
 }
+#reportArea{width:98%;margin:10px auto 40px}
 .reportCard{
   background:#fff;
   color:#000;
@@ -62,22 +58,20 @@ button{
   line-height:1.15;
   padding:7px 0 5px;
   border-bottom:1px solid #000;
+  position:relative;
 }
-.reportPrintHeader h2{
-  margin:0;
-  font-size:22px;
+.reportPrintHeader h2{margin:0;font-size:22px;font-weight:900}
+.reportPrintHeader h4{margin:1px 0;font-size:12px;font-weight:800}
+.reportPrintHeader h3{margin:2px 0 0;font-size:16px;font-weight:900}
+.qrBox{
+  position:absolute;
+  right:10px;
+  top:6px;
+  text-align:center;
+  font-size:8px;
   font-weight:900;
 }
-.reportPrintHeader h4{
-  margin:1px 0;
-  font-size:12px;
-  font-weight:800;
-}
-.reportPrintHeader h3{
-  margin:2px 0 0;
-  font-size:16px;
-  font-weight:900;
-}
+.qrMini{width:65px;height:65px;margin:auto}
 .companyLine{
   text-align:center;
   font-weight:900;
@@ -101,9 +95,7 @@ button{
   padding:10px;
   border-bottom:1px solid #000;
 }
-.tableWrap{
-  overflow-x:auto;
-}
+.tableWrap{overflow-x:auto}
 table{
   width:100%;
   min-width:1450px;
@@ -118,10 +110,7 @@ th,td{
   vertical-align:middle;
   word-break:break-word;
 }
-.totalRow{
-  font-weight:900;
-  background:#f3f4f6;
-}
+.totalRow{font-weight:900;background:#f3f4f6}
 .sign{
   display:grid;
   grid-template-columns:repeat(8,1fr);
@@ -151,6 +140,13 @@ th,td{
 .greyHeader h4{margin:1px 0;font-size:12px}
 .greyHeader h1{margin:2px 0;font-size:32px;font-weight:900;color:#555}
 .greyTitle{font-size:18px;font-weight:900;margin:7px 0;text-align:center}
+.greyQrCenter{
+  text-align:center;
+  font-size:8px;
+  font-weight:900;
+  margin:3px 0 5px;
+}
+.greyQrCenter .qrMini{width:65px;height:65px}
 .greyTable{
   width:65%;
   margin:8px auto 0;
@@ -182,94 +178,41 @@ th,td{
   font-weight:900;
   padding:30px;
 }
-@page{
-  size:A4 landscape;
-  margin:4mm;
-}
+@page{size:A4 landscape;margin:4mm}
 @media print{
-  html,body{
-    background:#fff!important;
-    color:#000!important;
-    margin:0!important;
-    padding:0!important;
-  }
-  .header,.controls,.actionBar,.noPrint{
-    display:none!important;
-  }
-  #reportArea{
-    width:100%!important;
-    margin:0!important;
-  }
+  html,body{background:#fff!important;color:#000!important;margin:0!important;padding:0!important}
+  .header,.controls,.actionBar,.noPrint,#loadStatus{display:none!important}
+  #reportArea{width:100%!important;margin:0!important}
   .reportCard,.greyCard{
     width:100%!important;
     margin:0!important;
     border:1px solid #000!important;
-    page-break-after:always;
+    page-break-after:avoid!important;
     page-break-inside:avoid!important;
   }
-  .reportCard:last-child,.greyCard:last-child{
-    page-break-after:avoid!important;
-  }
-  .reportPrintHeader{
-    padding:1mm 0!important;
-  }
+  .reportPrintHeader{padding:1mm 0!important}
   .reportPrintHeader h2{font-size:16px!important}
   .reportPrintHeader h4{font-size:8px!important}
   .reportPrintHeader h3{font-size:11px!important}
+  .qrBox{right:3mm!important;top:1mm!important;font-size:6px!important}
+  .qrMini{width:45px!important;height:45px!important}
+  .greyQrCenter .qrMini{width:48px!important;height:48px!important}
   .companyLine{font-size:10px!important;padding:2px!important}
   .meta div{font-size:8px!important;padding:2px!important}
   .tableWrap{overflow:visible!important}
-  table{
-    min-width:0!important;
-    width:100%!important;
-    font-size:7px!important;
-  }
-  th,td{
-    padding:1px!important;
-    font-size:7px!important;
-    line-height:1.05!important;
-  }
-  .sign{
-    margin-top:22mm!important;
-  }
-  .sign div{
-    font-size:7px!important;
-    padding:2px!important;
-    line-height:1!important;
-  }
+  table{min-width:0!important;width:100%!important;font-size:7px!important}
+  th,td{padding:1px!important;font-size:7px!important;line-height:1.05!important}
+  .sign{margin-top:22mm!important}
+  .sign div{font-size:7px!important;padding:2px!important;line-height:1!important}
   .greyHeader h2{font-size:18px!important}
   .greyHeader h4{font-size:9px!important}
   .greyHeader h1{font-size:26px!important}
   .greyTitle{font-size:13px!important}
-  .greyTable{
-    width:70%!important;
-    font-size:9px!important;
-  }
-  .greyTable th,.greyTable td{
-    font-size:9px!important;
-    padding:3px!important;
-  }
-  .greySign{
-    margin-top:34mm!important;
-    gap:12px!important;
-  }
-  .greySign div{
-    font-size:8px!important;
-    padding-top:3px!important;
-  }
+  .greyTable{width:70%!important;font-size:9px!important}
+  .greyTable th,.greyTable td{font-size:9px!important;padding:3px!important}
+  .greySign{margin-top:34mm!important;gap:12px!important}
+  .greySign div{font-size:8px!important;padding-top:3px!important}
 }
-
-.qrBox{position:absolute;right:10px;top:6px;text-align:center;font-size:8px;font-weight:900}
-.qrMini{width:65px;height:65px;margin:auto}
-.reportPrintHeader{position:relative}
-.greyQrCenter{text-align:center;font-size:8px;font-weight:900;margin:3px 0 5px}
-.greyQrCenter .qrMini{width:65px;height:65px}
-@media print{
-  .qrBox{right:3mm!important;top:1mm!important;font-size:6px!important}
-  .qrMini{width:45px!important;height:45px!important}
-  .greyQrCenter .qrMini{width:48px!important;height:48px!important}
-}
-
 </style>
 </head>
 
@@ -313,15 +256,16 @@ th,td{
   </select>
   <br>
   <button class="search" onclick="showReport()">🔍 Search</button>
+  <button class="clear" onclick="clearFilters()">♻ Clear Filter</button>
   <button class="excel" onclick="exportExcel()">📊 Excel</button>
   <button class="print" onclick="window.print()">🖨 PDF / Print</button>
   <button class="new" onclick="location.href='gate-plan.html'">➕ New Gate Plan</button>
   <button class="home" onclick="location.href='index.html'">🏠 Home</button>
 </div>
 
+<div id="loadStatus">Loading saved Gate Plans...</div>
 <div id="reportArea"></div>
 
-<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-app.js";
 import { getFirestore, collection, getDocs, doc, deleteDoc } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-firestore.js";
@@ -339,66 +283,79 @@ const app=initializeApp(firebaseConfig);
 const db=getFirestore(app);
 
 let allPlans=[];
+let currentFilteredPlans=[];
 
+function today(){return new Date().toISOString().slice(0,10)}
+function fmt(n){return Number(n||0).toLocaleString("en-US")}
+function num(v){return Number(v)||0}
+function esc(v){
+  return String(v??"").replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[m]));
+}
+function planNo(p){return p.gatePlanNo || p.gatePassNo || p.no || ""}
+function makeId(no){return String(no).replaceAll("/","-").replaceAll(" ","-")}
 
 function reportLink(no){
-  let base = location.origin + location.pathname;
+  let base=location.origin + location.pathname;
   return base + "?gatePlanNo=" + encodeURIComponent(no || "");
 }
+
 function renderQRCodes(){
   document.querySelectorAll("[data-qr-no]").forEach(el=>{
-    let no = el.getAttribute("data-qr-no") || "";
-    el.innerHTML = "";
+    let no=el.getAttribute("data-qr-no")||"";
+    el.innerHTML="";
     new QRCode(el,{text:reportLink(no),width:65,height:65,correctLevel:QRCode.CorrectLevel.M});
   });
 }
 
-function today(){
-  return new Date().toISOString().slice(0,10);
-}
-
-function fmt(n){
-  return Number(n||0).toLocaleString("en-US");
-}
-
-function num(v){
-  return Number(v)||0;
-}
-
-function esc(v){
-  return String(v??"").replace(/[&<>"']/g,m=>({
-    "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"
-  }[m]));
-}
-
-function planNo(p){
-  return p.gatePlanNo || p.gatePassNo || "";
-}
-
-function makeId(no){
-  return String(no).replaceAll("/","-").replaceAll(" ","-");
-}
-
 async function loadPlans(){
-  let snap=await getDocs(collection(db,"gatePlans"));
-  allPlans=[];
-  snap.forEach(d=>{
-    allPlans.push({...d.data(),_id:d.id});
-  });
+  let map={};
+
+  try{
+    let snap=await getDocs(collection(db,"gatePlans"));
+    snap.forEach(d=>{
+      let p={...d.data(),_id:d.id,_source:"Firebase"};
+      let no=planNo(p)||d.id;
+      map[no]=p;
+    });
+  }catch(e){
+    console.log("Firebase load error",e);
+  }
+
+  // fallback localStorage old data, jodi kono old page local save kore thake
+  try{
+    let local=JSON.parse(localStorage.getItem("gatePlans")||"[]");
+    local.forEach(p=>{
+      let no=planNo(p);
+      if(no && !map[no]) map[no]={...p,_source:"Local"};
+    });
+  }catch(e){}
+
+  allPlans=Object.values(map);
+
   allPlans.sort((a,b)=>{
     let da=(b.date||"").localeCompare(a.date||"");
-    if(da!==0) return da;
-    return (b.time||"").localeCompare(a.time||"");
+    if(da!==0)return da;
+    let ta=(b.time||"").localeCompare(a.time||"");
+    if(ta!==0)return ta;
+    return planNo(b).localeCompare(planNo(a));
   });
+
+  document.getElementById("loadStatus").innerText="Loaded: "+allPlans.length+" Gate Plan";
 }
 
 function normalHeader(p){
+  let no=planNo(p);
   return `
     <div class="reportPrintHeader">
       <h2>GMS Textiles Ltd.</h2>
       <h4>Tansutrapur, Kaliakair, Gazipur.</h4>
       <h4>Daily Goods Delivery Plan</h4>
       <h3>${esc(p.mcd || "ACCESSORIES MCD")}</h3>
+      <div class="qrBox">
+        <div>QR Scan</div>
+        <div class="qrMini" data-qr-no="${esc(no)}"></div>
+        <div>${esc(no)}</div>
+      </div>
     </div>
   `;
 }
@@ -432,7 +389,7 @@ function renderNormal(p,index){
   `).join("");
 
   return `
-    <div class="reportCard">
+    <div class="reportCard" data-plan-no="${esc(planNo(p))}">
       ${normalHeader(p)}
       <div class="companyLine">${esc(p.company || "GMS Textiles Ltd.")} To ${esc(p.toCompany || "")}</div>
       <div class="meta">
@@ -451,19 +408,10 @@ function renderNormal(p,index){
         <table>
           <thead>
             <tr>
-              <th>SL No</th>
-              <th>Buyer Name</th>
-              <th>SR/GT No</th>
-              <th>Style Name</th>
-              <th>Order No/PO No</th>
-              <th>Name of Item</th>
-              <th>Color</th>
-              <th>Unit</th>
-              <th>Delivery Qty</th>
-              <th>CTN/PKG Qty</th>
-              <th>To Party Name</th>
-              <th>Vehicle No</th>
-              <th>Remarks</th>
+              <th>SL No</th><th>Buyer Name</th><th>SR/GT No</th><th>Style Name</th>
+              <th>Order No/PO No</th><th>Name of Item</th><th>Color</th><th>Unit</th>
+              <th>Delivery Qty</th><th>CTN/PKG Qty</th><th>To Party Name</th>
+              <th>Vehicle No</th><th>Remarks</th>
             </tr>
           </thead>
           <tbody>${body}</tbody>
@@ -496,9 +444,10 @@ function renderGrey(p,index){
   let r=rows[0]||{};
   let qty=0;
   rows.forEach(x=>qty+=num(x.deliveryQty));
+  let no=planNo(p);
 
   return `
-    <div class="greyCard">
+    <div class="greyCard" data-plan-no="${esc(no)}">
       <div class="greyHeader">
         <h2>GMS TEXTILES LTD.</h2>
         <h4>Tansutrapur, Kaliakoir, Gazipur</h4>
@@ -506,21 +455,20 @@ function renderGrey(p,index){
         <div class="greyTitle">Daily GMS Textiles to GMS Composite Delivery Status</div>
       </div>
 
+      <div class="greyQrCenter">
+        <div class="qrMini" data-qr-no="${esc(no)}"></div>
+        <div>Scan QR: ${esc(no)}</div>
+      </div>
+
       <div class="actionBar noPrint">
         <button class="print" onclick="printSingle(${index})">🖨 Print This</button>
-        <button class="edit" onclick="editPlan('${esc(planNo(p))}')">✏ Edit</button>
-        <button class="delete" onclick="deletePlan('${esc(planNo(p))}')">🗑 Delete</button>
+        <button class="edit" onclick="editPlan('${esc(no)}')">✏ Edit</button>
+        <button class="delete" onclick="deletePlan('${esc(no)}')">🗑 Delete</button>
       </div>
 
       <table class="greyTable">
         <thead>
-          <tr>
-            <th>Date</th>
-            <th>Company Name</th>
-            <th>Delivery Reason</th>
-            <th>Total Qty</th>
-            <th>Remarks</th>
-          </tr>
+          <tr><th>Date</th><th>Company Name</th><th>Delivery Reason</th><th>Total Qty</th><th>Remarks</th></tr>
         </thead>
         <tbody>
           <tr>
@@ -530,11 +478,7 @@ function renderGrey(p,index){
             <td>${fmt(qty)}</td>
             <td>${esc(r.remarks)}</td>
           </tr>
-          <tr class="totalRow">
-            <td colspan="3">Total-</td>
-            <td>${fmt(qty)}</td>
-            <td></td>
-          </tr>
+          <tr class="totalRow"><td colspan="3">Total-</td><td>${fmt(qty)}</td><td></td></tr>
         </tbody>
       </table>
 
@@ -558,11 +502,12 @@ function filterPlans(){
   let mcd=document.getElementById("mcdFilter").value;
 
   return allPlans.filter(p=>{
-    if(from && (p.date||"")<from) return false;
-    if(to && (p.date||"")>to) return false;
-    if(no && planNo(p).toLowerCase()!==no.toLowerCase()) return false;
-    if(company!=="All" && p.company!==company) return false;
-    if(mcd!=="All" && p.mcd!==mcd) return false;
+    let pn=planNo(p);
+    if(from && (p.date||"")<from)return false;
+    if(to && (p.date||"")>to)return false;
+    if(no && pn.toLowerCase()!==no.toLowerCase())return false;
+    if(company!=="All" && p.company!==company)return false;
+    if(mcd!=="All" && p.mcd!==mcd)return false;
     return true;
   });
 }
@@ -574,22 +519,28 @@ window.showReport=async function(){
   let area=document.getElementById("reportArea");
 
   if(list.length===0){
-    area.innerHTML=`<div class="noData">No saved Gate Plan found</div>`;
+    area.innerHTML=`<div class="noData">No saved Gate Plan found<br><small>Filter clear kore Search korun</small></div>`;
     return;
   }
 
-  area.innerHTML=list.map((p,i)=>{
-    return (p.mcd==="GREY FABRIC MCD") ? renderGrey(p,i) : renderNormal(p,i);
-  }).join("");
-
-  window.currentFilteredPlans=list;
+  currentFilteredPlans=list;
+  area.innerHTML=list.map((p,i)=>(p.mcd==="GREY FABRIC MCD") ? renderGrey(p,i) : renderNormal(p,i)).join("");
   setTimeout(renderQRCodes,100);
+};
+
+window.clearFilters=function(){
+  document.getElementById("fromDate").value="";
+  document.getElementById("toDate").value="";
+  document.getElementById("gateNoSearch").value="";
+  document.getElementById("companyFilter").value="All";
+  document.getElementById("mcdFilter").value="All";
+  showReport();
 };
 
 window.printSingle=function(index){
   let cards=document.querySelectorAll(".reportCard,.greyCard");
   let card=cards[index];
-  if(!card) return;
+  if(!card)return;
 
   let win=window.open("","_blank");
   win.document.write(`
@@ -597,25 +548,14 @@ window.printSingle=function(index){
     <head>
       <meta charset="UTF-8">
       <title>Gate Plan Print</title>
-      <style>${document.querySelector("style").innerHTML}
-.qrBox{position:absolute;right:10px;top:6px;text-align:center;font-size:8px;font-weight:900}
-.qrMini{width:65px;height:65px;margin:auto}
-.reportPrintHeader{position:relative}
-.greyQrCenter{text-align:center;font-size:8px;font-weight:900;margin:3px 0 5px}
-.greyQrCenter .qrMini{width:65px;height:65px}
-@media print{
-  .qrBox{right:3mm!important;top:1mm!important;font-size:6px!important}
-  .qrMini{width:45px!important;height:45px!important}
-  .greyQrCenter .qrMini{width:48px!important;height:48px!important}
-}
-
-</style>
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"><\/script>
+      <style>${document.querySelector("style").innerHTML}</style>
     </head>
     <body>
       <div id="reportArea">${card.outerHTML}</div>
       <script>
-        document.querySelectorAll(".noPrint,.actionBar").forEach(x=>x.remove());
         function reportLink(no){ return "${location.origin + location.pathname}" + "?gatePlanNo=" + encodeURIComponent(no || ""); }
+        document.querySelectorAll(".noPrint,.actionBar").forEach(x=>x.remove());
         document.querySelectorAll("[data-qr-no]").forEach(el=>{
           let no=el.getAttribute("data-qr-no")||"";
           el.innerHTML="";
@@ -635,8 +575,15 @@ window.editPlan=function(no){
 };
 
 window.deletePlan=async function(no){
-  if(!confirm("Delete this Gate Plan?")) return;
-  await deleteDoc(doc(db,"gatePlans",makeId(no)));
+  if(!confirm("Delete this Gate Plan?"))return;
+  try{
+    await deleteDoc(doc(db,"gatePlans",makeId(no)));
+  }catch(e){console.log(e)}
+  try{
+    let local=JSON.parse(localStorage.getItem("gatePlans")||"[]");
+    local=local.filter(p=>planNo(p)!==no);
+    localStorage.setItem("gatePlans",JSON.stringify(local));
+  }catch(e){}
   await showReport();
 };
 
@@ -649,7 +596,19 @@ window.exportExcel=function(){
   a.click();
 };
 
-let gatePlanNoParam=new URLSearchParams(location.search).get("gatePlanNo")||"";\nif(gatePlanNoParam){\n  document.getElementById("gateNoSearch").value=gatePlanNoParam;\n  document.getElementById("fromDate").value="";\n  document.getElementById("toDate").value="";\n}else{\n  document.getElementById("fromDate").value=today();\n  document.getElementById("toDate").value=today();\n}\n\nshowReport();
+let gatePlanNoParam=new URLSearchParams(location.search).get("gatePlanNo")||"";
+
+if(gatePlanNoParam){
+  document.getElementById("gateNoSearch").value=gatePlanNoParam;
+  document.getElementById("fromDate").value="";
+  document.getElementById("toDate").value="";
+}else{
+  // IMPORTANT: default date blank, jate saved sob report show kore
+  document.getElementById("fromDate").value="";
+  document.getElementById("toDate").value="";
+}
+
+showReport();
 </script>
 
 </body>
