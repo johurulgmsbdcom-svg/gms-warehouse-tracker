@@ -4,7 +4,26 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
 <title>Gate Plan Report</title>
-<script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js">
+function addReportHeaders(){
+  document.querySelectorAll(".reportCard,.printArea,.singleReport").forEach(card=>{
+    if(card.querySelector(".reportPrintHeader")) return;
+    let mcd = "ACCESSORIES MCD";
+    let txt = card.innerText || "";
+    let m = txt.match(/MCD:\s*([A-Z &]+MCD|BILLING SECTION)/);
+    if(m) mcd = m[1];
+    card.insertAdjacentHTML("afterbegin", `
+      <div class="reportPrintHeader">
+        <h2>GMS Textiles Ltd.</h2>
+        <h4>Tansutrapur, Kaliakair, Gazipur.</h4>
+        <h4>Daily Goods Delivery Plan</h4>
+        <h3>${mcd}</h3>
+      </div>
+    `);
+  });
+}
+
+</script>
 
 <style>
 body{
@@ -237,6 +256,51 @@ th,td{
     display:none!important;
   }
 }
+
+.reportPrintHeader{
+  text-align:center;
+  line-height:1.15;
+  padding:6px 0 4px;
+  background:#fff;
+  color:#000;
+  border-bottom:1px solid #000;
+}
+.reportPrintHeader h2{
+  margin:0;
+  font-size:22px;
+  font-weight:900;
+}
+.reportPrintHeader h4{
+  margin:1px 0;
+  font-size:12px;
+  font-weight:800;
+}
+.reportPrintHeader h3{
+  margin:2px 0 0;
+  font-size:16px;
+  font-weight:900;
+}
+@media print{
+  .reportPrintHeader{
+    display:block!important;
+    padding:1mm 0!important;
+    background:#fff!important;
+    color:#000!important;
+  }
+  .reportPrintHeader h2{
+    font-size:16px!important;
+    margin:0!important;
+  }
+  .reportPrintHeader h4{
+    font-size:8px!important;
+    margin:0!important;
+  }
+  .reportPrintHeader h3{
+    font-size:11px!important;
+    margin:0!important;
+  }
+}
+
 </style>
 </head>
 
@@ -609,7 +673,52 @@ window.printSingle=function(index){
   + '.greyTable th,.greyTable td{font-size:13px;padding:5px;border:1px solid #000;text-align:center;line-height:1;}'
   + '.greySign{margin-top:35mm;display:grid;grid-template-columns:repeat(6,1fr);gap:16px;}'
   + '.greySign div{text-align:center;border-top:1px solid #000;font-size:11px;font-weight:900;padding-top:5px;line-height:1;}'
-  + '</style>';
+  + '
+.reportPrintHeader{
+  text-align:center;
+  line-height:1.15;
+  padding:6px 0 4px;
+  background:#fff;
+  color:#000;
+  border-bottom:1px solid #000;
+}
+.reportPrintHeader h2{
+  margin:0;
+  font-size:22px;
+  font-weight:900;
+}
+.reportPrintHeader h4{
+  margin:1px 0;
+  font-size:12px;
+  font-weight:800;
+}
+.reportPrintHeader h3{
+  margin:2px 0 0;
+  font-size:16px;
+  font-weight:900;
+}
+@media print{
+  .reportPrintHeader{
+    display:block!important;
+    padding:1mm 0!important;
+    background:#fff!important;
+    color:#000!important;
+  }
+  .reportPrintHeader h2{
+    font-size:16px!important;
+    margin:0!important;
+  }
+  .reportPrintHeader h4{
+    font-size:8px!important;
+    margin:0!important;
+  }
+  .reportPrintHeader h3{
+    font-size:11px!important;
+    margin:0!important;
+  }
+}
+
+</style>';
 
   var win=window.open("", "_blank", "width=1200,height=800");
   win.document.open();
@@ -628,7 +737,7 @@ window.printSingle=function(index){
 window.deletePlan=async function(no){
   if(!confirm("Delete this Gate Plan?")) return;
   await deleteDoc(doc(db,"gatePlans",makeId(no)));
-  showReport();
+  showReport(); setTimeout(addReportHeaders,300);
 }
 
 window.editPlan=function(no){
@@ -645,7 +754,7 @@ window.exportExcel=function(){
   a.click();
 }
 
-showReport();
+showReport(); setTimeout(addReportHeaders,300);
 </script>
 
 </body>
