@@ -456,6 +456,12 @@ body.light .creditFooter{background:rgba(255,255,255,.96)}
 .topGridSingle{grid-template-columns:1fr!important}
 .topGridSingle .topCard{min-height:120px}
 
+
+/* ===== COMPANY-WISE ENTRY/REPORT FIX ===== */
+#entryCompany,#reportCompany,#entryMcd,#reportMcd{
+  max-width:100%;
+}
+
 </style>
 </head>
 
@@ -552,6 +558,9 @@ body.light .creditFooter{background:rgba(255,255,255,.96)}
 
 <div id="reports" class="page">
   <h2>📑 Reports</h2>
+  <label>🏢 Company</label>
+  <select id="reportCompany"><option>GMS TEXTILES LTD</option><option>GMS COMPOSITE KNITTING</option></select>
+  <br><br>
   <label>📂 Department / MCD</label>
   <select id="reportMcd"></select>
   <button class="btn" onclick="loadReport()">📊 Show Report</button>
@@ -738,12 +747,69 @@ window.openPage=function(id,btn){
   if(id==="backup"){loadDashboardStock();renderBackupLog();}
 };
 
+
+function openGatePlanEntry(company,mcd){
+  let c=encodeURIComponent(company||"GMS TEXTILES LTD");
+  let m=encodeURIComponent(mcd||"");
+  location.href=`gate-plan.html?company=${c}&mcd=${m}`;
+}
+
+function openChallanEntry(company,mcd){
+  let c=encodeURIComponent(company||"GMS TEXTILES LTD");
+  let m=encodeURIComponent(mcd||"");
+  location.href=`challan-entry.html?company=${c}&mcd=${m}`;
+}
+
+function openGatePlanReport(company,mcd){
+  let c=encodeURIComponent(company||"GMS TEXTILES LTD");
+  let m=encodeURIComponent(mcd||"");
+  location.href=`gate-plan-report.html?company=${c}&mcd=${m}`;
+}
+
+function openChallanReport(company,mcd){
+  let c=encodeURIComponent(company||"GMS TEXTILES LTD");
+  let m=encodeURIComponent(mcd||"");
+  location.href=`challan-report.html?company=${c}&mcd=${m}`;
+}
+
+function commonEntryCards(company,mcd){
+  return `
+    <div class="card" onclick="openGatePlanEntry('${company}','${mcd}')">🚚 Gate Plan Entry</div>
+    <div class="card" onclick="openChallanEntry('${company}','${mcd}')">📄 Challan / Gate Pass</div>
+  `;
+}
+
+function commonReportCards(company,mcd){
+  return `
+    <div class="card" onclick="openGatePlanReport('${company}','${mcd}')">🚚 Gate Plan Report</div>
+    <div class="card" onclick="openChallanReport('${company}','${mcd}')">📄 Challan / Gate Pass Report</div>
+  `;
+}
+
 window.loadEntry=function(){
+  let company=document.getElementById("entryCompany").value;
   let mcd=document.getElementById("entryMcd").value;
   let box=document.getElementById("entryBox");
-  if(!canAccess(mcd)){box.innerHTML=`<div class="card">❌ Access Denied</div>
-      <div class="card" onclick="location.href='challan-entry.html'">🚚 Challan / Gate Pass</div>`;return;}
 
+  // Gate Plan + Challan/Gate Pass sob company/MCD te thakbe
+  let common=commonEntryCards(company,mcd);
+
+  if(!canAccess(mcd)){
+    box.innerHTML=`<div class="card">❌ Access Denied</div>${common}`;
+    return;
+  }
+
+  // GMS Composite er alada textile report/entry ekhono dibo na.
+  // Composite select korle sudhu common Gate/Challan buttons show korbe.
+  if(company==="GMS COMPOSITE KNITTING"){
+    box.innerHTML=`
+      <div class="card">🏭 GMS Composite Entry Module Coming Soon</div>
+      ${common}
+    `;
+    return;
+  }
+
+  // GMS Textiles er MCD-wise old entry + common buttons
   if(mcd==="ACCESSORIES MCD"){
     box.innerHTML=`
       <div class="card" onclick="location.href='sewing-thread.html'">🧵 Sewing Thread</div>
@@ -751,38 +817,50 @@ window.loadEntry=function(){
       <div class="card" onclick="location.href='accessories.html'">📦 Accessories With Sample</div>
       <div class="card" onclick="location.href='accessories-inventory.html'">🧾 Inventory Posting</div>
       <div class="card" onclick="location.href='billing-manpower-report.html'">👨‍💼 Billing Manpower Report</div>
-      <div class="card" onclick="location.href='gate-plan.html'">🚚 Gate Plan Entry</div>
-      <div class="card" onclick="location.href='challan-entry.html'">📄 Challan / Gate Pass</div>
-      <div class="card" onclick="location.href='challan-entry.html'">🚚 Challan / Gate Pass</div>`;
+      ${common}
+    `;
   }else if(mcd==="GREY FABRIC MCD"){
     box.innerHTML=`
       <div class="card" onclick="location.href='grey-fabric.html'">🏭 Grey Fabric Daily</div>
       <div class="card" onclick="location.href='grey-fabric-monthly.html'">📅 Grey Fabric Monthly</div>
       <div class="card" onclick="location.href='billing-manpower-report.html'">👨‍💼 Billing Manpower Report</div>
-      <div class="card" onclick="location.href='gate-plan.html'">🚚 Gate Plan Entry</div>
-      <div class="card" onclick="location.href='challan-entry.html'">📄 Challan / Gate Pass</div>
-      <div class="card" onclick="location.href='challan-entry.html'">🚚 Challan / Gate Pass</div>`;
+      ${common}
+    `;
   }else if(mcd==="BILLING SECTION"){
     box.innerHTML=`
       <div class="card" onclick="location.href='billing-manpower-report.html'">👨‍💼 Billing Manpower Report</div>
-      <div class="card" onclick="location.href='gate-plan.html'">🚚 Gate Plan Entry</div>
-      <div class="card" onclick="location.href='challan-entry.html'">📄 Challan / Gate Pass</div>
-      <div class="card" onclick="location.href='challan-entry.html'">🚚 Challan / Gate Pass</div>`;
+      ${common}
+    `;
   }else{
     box.innerHTML=`
       <div class="card">📝 ${mcd} Daily Entry</div>
       <div class="card" onclick="location.href='billing-manpower-report.html'">👨‍💼 Billing Manpower Report</div>
-      <div class="card" onclick="location.href='gate-plan.html'">🚚 Gate Plan Entry</div>
-      <div class="card" onclick="location.href='challan-entry.html'">📄 Challan / Gate Pass</div>
-      <div class="card" onclick="location.href='challan-entry.html'">🚚 Challan / Gate Pass</div>`;
+      ${common}
+    `;
   }
 };
 
 window.loadReport=function(){
+  let company=document.getElementById("reportCompany") ? document.getElementById("reportCompany").value : "GMS TEXTILES LTD";
   let mcd=document.getElementById("reportMcd").value;
   let box=document.getElementById("reportBox");
-  if(!canAccess(mcd)){box.innerHTML=`<div class="card">❌ Access Denied</div>
-      <div class="card" onclick="location.href='challan-report.html'">📄 Challan / Gate Pass Report</div>`;return;}
+
+  // Gate Plan + Challan/Gate Pass report sob company/MCD te thakbe
+  let common=commonReportCards(company,mcd);
+
+  if(!canAccess(mcd)){
+    box.innerHTML=`<div class="card">❌ Access Denied</div>${common}`;
+    return;
+  }
+
+  // GMS Composite er alada textile report ekhono show korbo na.
+  if(company==="GMS COMPOSITE KNITTING"){
+    box.innerHTML=`
+      <div class="card">🏭 GMS Composite Report Module Coming Soon</div>
+      ${common}
+    `;
+    return;
+  }
 
   if(mcd==="ACCESSORIES MCD"){
     box.innerHTML=`
@@ -791,28 +869,29 @@ window.loadReport=function(){
       <div class="card" onclick="location.href='accessories.html'">📦 Accessories Report</div>
       <div class="card" onclick="location.href='accessories-inventory-report.html'">📊 Inventory Report</div>
       <div class="card" onclick="location.href='billing-manpower-report.html'">👨‍💼 Billing Manpower Report</div>
-      <div class="card" onclick="location.href='gate-plan-report.html'">🚚 Gate Plan Report</div>
-      <div class="card" onclick="location.href='challan-report.html'">📄 Challan / Gate Pass Report</div>`;
+      ${common}
+    `;
   }else if(mcd==="GREY FABRIC MCD"){
     box.innerHTML=`
       <div class="card" onclick="location.href='grey-fabric.html'">🏭 Grey Fabric Daily Report</div>
       <div class="card" onclick="location.href='grey-fabric-monthly.html'">📅 Grey Fabric Monthly Report</div>
       <div class="card" onclick="location.href='billing-manpower-report.html'">👨‍💼 Billing Manpower Report</div>
-      <div class="card" onclick="location.href='gate-plan-report.html'">🚚 Gate Plan Report</div>
-      <div class="card" onclick="location.href='challan-report.html'">📄 Challan / Gate Pass Report</div>`;
+      ${common}
+    `;
   }else if(mcd==="BILLING SECTION"){
     box.innerHTML=`
       <div class="card" onclick="location.href='billing-manpower-report.html'">👨‍💼 Billing Manpower Report</div>
-      <div class="card" onclick="location.href='gate-plan-report.html'">🚚 Gate Plan Report</div>
-      <div class="card" onclick="location.href='challan-report.html'">📄 Challan / Gate Pass Report</div>`;
+      ${common}
+    `;
   }else{
     box.innerHTML=`
       <div class="card">📑 ${mcd} Report</div>
       <div class="card" onclick="location.href='billing-manpower-report.html'">👨‍💼 Billing Manpower Report</div>
-      <div class="card" onclick="location.href='gate-plan-report.html'">🚚 Gate Plan Report</div>
-      <div class="card" onclick="location.href='challan-report.html'">📄 Challan / Gate Pass Report</div>`;
+      ${common}
+    `;
   }
 };
+
 
 async function getLatestPresent(collectionName,openingStock){
   let snap=await getDocs(collection(db,collectionName));
