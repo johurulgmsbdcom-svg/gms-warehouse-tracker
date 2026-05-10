@@ -87,7 +87,7 @@ button{
 }
 .meta{
   display:grid;
-  grid-template-columns:repeat(5,1fr);
+  grid-template-columns:repeat(6,1fr);
   border-bottom:1px solid #000;
 }
 .meta div{
@@ -258,6 +258,32 @@ th,td{
     padding-top:3px!important;
   }
 }
+
+.qrBox{
+  text-align:center;
+  padding:4px;
+  border-left:1px solid #000;
+}
+.qrBox .qrTitle{
+  font-size:9px;
+  font-weight:900;
+  margin-bottom:2px;
+}
+.qrMini{
+  width:70px;
+  height:70px;
+  margin:auto;
+}
+@media print{
+  .qrMini{
+    width:48px!important;
+    height:48px!important;
+  }
+  .qrBox .qrTitle{
+    font-size:6px!important;
+  }
+}
+
 </style>
 </head>
 
@@ -309,6 +335,7 @@ th,td{
 
 <div id="reportArea"></div>
 
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-app.js";
 import { getFirestore, collection, getDocs, doc, deleteDoc } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-firestore.js";
@@ -326,6 +353,31 @@ const app=initializeApp(firebaseConfig);
 const db=getFirestore(app);
 
 let allPlans=[];
+
+
+function safeQrId(no){
+  return "qr_" + String(no || "").replace(/[^a-zA-Z0-9]/g,"_");
+}
+
+function qrUrlForPlan(no){
+  let base = location.href.split("?")[0];
+  return base + "?gatePlanNo=" + encodeURIComponent(no || "");
+}
+
+function renderAllQRCodes(){
+  document.querySelectorAll("[data-qr]").forEach(el=>{
+    if(el.dataset.done==="1") return;
+    let no = el.getAttribute("data-qr") || "";
+    el.innerHTML = "";
+    new QRCode(el,{
+      text: qrUrlForPlan(no),
+      width: 70,
+      height: 70,
+      correctLevel: QRCode.CorrectLevel.M
+    });
+    el.dataset.done="1";
+  });
+}
 
 function today(){
   return new Date().toISOString().slice(0,10);
@@ -415,6 +467,7 @@ function renderNormal(p,index){
         <div>Time: ${esc(p.time)}</div>
         <div>MCD: ${esc(p.mcd)}</div>
         <div>Prepared By: ${esc(p.preparedBy)}</div>
+        <div class="qrBox"><div class="qrTitle">QR Scan</div><div class="qrMini" data-qr="${esc(planNo(p))}"></div></div>
       </div>
       <div class="actionBar noPrint">
         <button class="print" onclick="printSingle(${index})">🖨 Print This</button>
@@ -484,6 +537,11 @@ function renderGrey(p,index){
         <button class="print" onclick="printSingle(${index})">🖨 Print This</button>
         <button class="edit" onclick="editPlan('${esc(planNo(p))}')">✏ Edit</button>
         <button class="delete" onclick="deletePlan('${esc(planNo(p))}')">🗑 Delete</button>
+      </div>
+
+      <div class="qrBox noPrint" style="border:0;text-align:right;padding-right:35px">
+        <div class="qrTitle">QR Scan</div>
+        <div class="qrMini" data-qr="${esc(planNo(p))}"></div>
       </div>
 
       <table class="greyTable">
@@ -557,6 +615,7 @@ window.showReport=async function(){
   }).join("");
 
   window.currentFilteredPlans=list;
+  setTimeout(renderAllQRCodes,100);
 };
 
 window.printSingle=function(index){
@@ -570,13 +629,45 @@ window.printSingle=function(index){
     <head>
       <meta charset="UTF-8">
       <title>Gate Plan Print</title>
-      <style>${document.querySelector("style").innerHTML}</style>
+      <style>${document.querySelector("style").innerHTML}
+.qrBox{
+  text-align:center;
+  padding:4px;
+  border-left:1px solid #000;
+}
+.qrBox .qrTitle{
+  font-size:9px;
+  font-weight:900;
+  margin-bottom:2px;
+}
+.qrMini{
+  width:70px;
+  height:70px;
+  margin:auto;
+}
+@media print{
+  .qrMini{
+    width:48px!important;
+    height:48px!important;
+  }
+  .qrBox .qrTitle{
+    font-size:6px!important;
+  }
+}
+
+</style>
     </head>
     <body>
       <div id="reportArea">${card.outerHTML}</div>
       <script>
         document.querySelectorAll(".noPrint,.actionBar").forEach(x=>x.remove());
-        setTimeout(()=>{window.print();},300);
+        function qrUrlForPlan(no){ return location.origin + location.pathname.replace(/[^\/]+$/,"gate-plan-report.html") + "?gatePlanNo=" + encodeURIComponent(no||""); }
+        document.querySelectorAll("[data-qr]").forEach(el=>{
+          let no=el.getAttribute("data-qr")||"";
+          el.innerHTML="";
+          new QRCode(el,{text:qrUrlForPlan(no),width:70,height:70,correctLevel:QRCode.CorrectLevel.M});
+        });
+        setTimeout(()=>{window.print();},500);
       <\/script>
     </body>
     </html>
@@ -604,8 +695,15 @@ window.exportExcel=function(){
   a.click();
 };
 
-document.getElementById("fromDate").value=today();
-document.getElementById("toDate").value=today();
+let gatePlanNoParam = new URLSearchParams(location.search).get("gatePlanNo") || "";
+if(gatePlanNoParam){
+  document.getElementById("gateNoSearch").value = gatePlanNoParam;
+  document.getElementById("fromDate").value = "";
+  document.getElementById("toDate").value = "";
+}else{
+  document.getElementById("fromDate").value=today();
+  document.getElementById("toDate").value=today();
+}
 
 showReport();
 </script>
