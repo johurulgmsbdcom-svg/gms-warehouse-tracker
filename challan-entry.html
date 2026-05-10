@@ -193,27 +193,28 @@ td input{
   </div>
 
   <div class="panel">
+    <h3 style="margin-top:0;text-align:center">Company Selection</h3>
     <div class="grid">
       <div>
-        <label>From Company / Headline Company</label>
+        <label>From Company</label>
         <select id="company" onchange="companyChange()">
-          <option>GMS TEXTILES LTD.</option>
-          <option>GMS COMPOSITE KNITTING IND LTD.</option>
-          <option>OTHER FACTORY</option>
+          <option value="GMS TEXTILES LTD.">GMS TEXTILES LTD.</option>
+          <option value="GMS COMPOSITE KNITTING IND LTD.">GMS COMPOSITE KNITTING IND LTD.</option>
+          <option value="OTHER FACTORY">OTHER FACTORY</option>
         </select>
       </div>
 
       <div>
         <label>Manual From Company</label>
-        <input id="companyManual" placeholder="Other factory/company name" disabled>
+        <input id="companyManual" placeholder="Other factory/company name" disabled oninput="syncGatePassText()">
       </div>
 
       <div>
         <label>To Company</label>
         <select id="toCompany" onchange="toCompanyChange()">
-          <option>GMS TEXTILES LTD.</option>
-          <option>GMS COMPOSITE KNITTING IND LTD.</option>
-          <option>OTHER FACTORY</option>
+          <option value="GMS TEXTILES LTD.">GMS TEXTILES LTD.</option>
+          <option value="GMS COMPOSITE KNITTING IND LTD." selected>GMS COMPOSITE KNITTING IND LTD.</option>
+          <option value="OTHER FACTORY">OTHER FACTORY</option>
         </select>
       </div>
 
@@ -390,17 +391,16 @@ function toCompanyName(){
 }
 
 window.companyChange=function(){
-  $("companyManual").disabled = $("company").value!=="OTHER FACTORY";
-  if($("company").value!=="OTHER FACTORY"){
-    $("companyManual").value="";
-  }
+  const isOther=$("company").value==="OTHER FACTORY";
+  $("companyManual").disabled = !isOther;
+  if(!isOther) $("companyManual").value="";
+  syncGatePassText();
 };
 
 window.toCompanyChange=function(){
-  $("toCompanyManual").disabled = $("toCompany").value!=="OTHER FACTORY";
-  if($("toCompany").value!=="OTHER FACTORY"){
-    $("toCompanyManual").value="";
-  }
+  const isOther=$("toCompany").value==="OTHER FACTORY";
+  $("toCompanyManual").disabled = !isOther;
+  if(!isOther) $("toCompanyManual").value="";
   syncGatePassText();
 };
 
@@ -562,6 +562,7 @@ window.saveData=async function(){
 
   try{
     await setDoc(doc(db,"challanGatePass",data.challanNo),data,{merge:true});
+    localStorage.setItem("challanGatePassLastSave",JSON.stringify(data));
     toast("Saved Successfully ✅");
   }catch(e){
     console.log(e);
