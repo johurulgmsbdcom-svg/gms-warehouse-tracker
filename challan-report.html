@@ -643,6 +643,58 @@ button{
   .filterGrid,.quickFilters{display:none!important}
 }
 
+
+/* ===== FINAL CHALLAN REPORT FILTER + LATEST SERIAL ===== */
+.controls{
+  position:sticky;
+  top:0;
+  z-index:50;
+}
+.filterGrid{
+  display:grid!important;
+  grid-template-columns:repeat(5,1fr)!important;
+  gap:9px!important;
+  text-align:left!important;
+}
+.filterGrid label{
+  display:block!important;
+  color:#b7c5da!important;
+  font-size:12px!important;
+  font-weight:900!important;
+  margin-bottom:4px!important;
+}
+.filterGrid input,.filterGrid select{
+  width:100%!important;
+  margin:0!important;
+  height:38px!important;
+}
+.reportSummary{
+  margin-top:12px!important;
+}
+.reportSummaryTitle{
+  color:#22c55e!important;
+  font-size:20px!important;
+}
+.reportListTable th{
+  position:sticky;
+  top:0;
+  background:#dbeafe!important;
+}
+.reportListTable tr:nth-child(even) td{
+  background:#f8fafc!important;
+}
+.reportListTable td,.reportListTable th{
+  white-space:nowrap;
+}
+@media(max-width:900px){
+  .filterGrid{
+    grid-template-columns:1fr!important;
+  }
+  .controls{
+    position:static!important;
+  }
+}
+
 </style>
 </head>
 
@@ -660,20 +712,20 @@ button{
       <div>
         <label>Company</label>
         <select id="companyFilter">
-          <option>All</option>
-          <option>GMS TEXTILES LTD.</option>
-          <option>GMS COMPOSITE KNITTING IND LTD.</option>
-          <option>OTHER FACTORY</option>
+          <option value="All">All Company</option>
+          <option value="GMS TEXTILES LTD.">GMS TEXTILES LTD.</option>
+          <option value="GMS COMPOSITE KNITTING IND LTD.">GMS COMPOSITE KNITTING IND LTD.</option>
+          <option value="OTHER FACTORY">OTHER FACTORY</option>
         </select>
       </div>
 
       <div>
         <label>To Company</label>
         <select id="toCompanyFilter">
-          <option>All</option>
-          <option>GMS TEXTILES LTD.</option>
-          <option>GMS COMPOSITE KNITTING IND LTD.</option>
-          <option>OTHER FACTORY</option>
+          <option value="All">All To Company</option>
+          <option value="GMS TEXTILES LTD.">GMS TEXTILES LTD.</option>
+          <option value="GMS COMPOSITE KNITTING IND LTD.">GMS COMPOSITE KNITTING IND LTD.</option>
+          <option value="OTHER FACTORY">OTHER FACTORY</option>
         </select>
       </div>
 
@@ -700,7 +752,7 @@ button{
       </div>
 
       <div>
-        <label>Month Wise</label>
+        <label>Month</label>
         <input type="month" id="monthFilter">
       </div>
 
@@ -728,11 +780,16 @@ button{
         <label>Gate Pass No</label>
         <input id="gateSearch" placeholder="GP-2026-0001">
       </div>
+
+      <div>
+        <label>Buyer / Vehicle</label>
+        <input id="textSearch" placeholder="Buyer / Vehicle / To Company">
+      </div>
     </div>
 
     <div class="quickFilters">
       <button class="gray" onclick="setTodayFilter()">Today</button>
-      <button class="gray" onclick="setLast7DaysFilter()">Last 7 Days</button>
+      <button class="gray" onclick="setLast7DaysFilter()">1-7 / Last 7 Days</button>
       <button class="gray" onclick="setCurrentMonthFilter()">This Month</button>
     </div>
 
@@ -794,11 +851,20 @@ async function loadData(){
   let snap=await getDocs(collection(db,"challanGatePass"));
   allData=[];
   snap.forEach(d=>allData.push({...d.data(),_id:d.id}));
+
+  // Latest saved/updated challan always top
   allData.sort((a,b)=>{
-    let d=(b.date||"").localeCompare(a.date||"");
-    if(d!==0) return d;
-    return (b.challanNo||"").localeCompare(a.challanNo||"");
+    let ta = a.updatedAt || a.createdAt || a.savedAt || "";
+    let tb = b.updatedAt || b.createdAt || b.savedAt || "";
+    let c = String(tb).localeCompare(String(ta));
+    if(c!==0) return c;
+
+    c = String(b.date||"").localeCompare(String(a.date||""));
+    if(c!==0) return c;
+
+    return String(b.challanNo||"").localeCompare(String(a.challanNo||""));
   });
+
   $("status").innerText="Loaded: "+allData.length+" Challan / Gate Pass";
 }
 
@@ -812,44 +878,69 @@ function filterData(){
   let mcd=$("mcdFilter").value;
   let company=$("companyFilter") ? $("companyFilter").value : "All";
   let toCompany=$("toCompanyFilter") ? $("toCompanyFilter").value : "All";
+  let txt=$("textSearch") ? $("textSearch").value.toLowerCase().trim() : "";
 
-  return allData.filter(x=>{
+  let list = allData.filter(x=>{
     let date=x.date||"";
 
-    // Single date filter priority
+    // one date
     if(single && date!==single) return false;
 
-    // Month wise filter
+    // month wise
     if(month && date.slice(0,7)!==month) return false;
 
-    // Date range filter, like 1-7 date
+    // 1-7 or any range
     if(from && date<from) return false;
     if(to && date>to) return false;
 
-    // Number search full/partial
+    // challan/gate search
     if(ch && !(x.challanNo||"").toLowerCase().includes(ch.toLowerCase())) return false;
     if(gp && !(x.gatePassNo||"").toLowerCase().includes(gp.toLowerCase())) return false;
 
-    if(mcd!=="All" && x.mcd!==mcd) return false;
-
+    // company filter
     if(company!=="All"){
       if(company==="OTHER FACTORY"){
-        if(x.companyType!=="OTHER FACTORY") return false;
-      }else{
-        if((x.company||"").toUpperCase()!==company.toUpperCase()) return false;
+        if((x.companyType||"")!=="OTHER FACTORY") return false;
+      }else if((x.company||"").toUpperCase()!==company.toUpperCase()){
+        return false;
       }
     }
 
+    // to company filter
     if(toCompany!=="All"){
       if(toCompany==="OTHER FACTORY"){
-        if(x.toCompanyType!=="OTHER FACTORY") return false;
-      }else{
-        if((x.toCompany||"").toUpperCase()!==toCompany.toUpperCase()) return false;
+        if((x.toCompanyType||"")!=="OTHER FACTORY") return false;
+      }else if((x.toCompany||"").toUpperCase()!==toCompany.toUpperCase()){
+        return false;
       }
+    }
+
+    // mcd filter
+    if(mcd!=="All" && x.mcd!==mcd) return false;
+
+    // text search
+    if(txt){
+      let hay=[
+        x.buyer,x.vehicleNo,x.toCompany,x.company,x.driverName,x.transportNo,x.mcd,x.challanNo,x.gatePassNo
+      ].join(" ").toLowerCase();
+      if(!hay.includes(txt)) return false;
     }
 
     return true;
   });
+
+  // keep latest top after every search
+  list.sort((a,b)=>{
+    let ta = a.updatedAt || a.createdAt || a.savedAt || "";
+    let tb = b.updatedAt || b.createdAt || b.savedAt || "";
+    let c = String(tb).localeCompare(String(ta));
+    if(c!==0) return c;
+    c = String(b.date||"").localeCompare(String(a.date||""));
+    if(c!==0) return c;
+    return String(b.challanNo||"").localeCompare(String(a.challanNo||""));
+  });
+
+  return list;
 }
 
 function blankRows(rows,count){
@@ -1074,6 +1165,8 @@ function renderSummaryList(list){
       <td>${esc(x.company||"")}</td>
       <td>${esc(x.mcd||"")}</td>
       <td>${esc(x.toCompany||"")}</td>
+      <td>${esc(x.buyer||"")}</td>
+      <td>${esc(x.vehicleNo||"")}</td>
       <td>${fmt(x.grandTotalQty||0)}</td>
       <td>
         <button class="purple" onclick="printOne(${i})">Print</button>
@@ -1083,10 +1176,10 @@ function renderSummaryList(list){
     </tr>
   `).join("");
 
-  document.getElementById("reportSummary").innerHTML=`
+  $("reportSummary").innerHTML=`
     <div class="reportSummary">
       <div class="reportSummaryTitle">Total Found: ${list.length} Challan / Gate Pass</div>
-      <div class="searchHint">Search by full/partial number: CH-2026-0001 or GP-2026-0001</div>
+      <div class="searchHint">Latest save/challan সবসময় উপরে থাকবে • Company + MCD + Date + Month + 1-7 date filter করা যাবে</div>
       <div style="overflow-x:auto;margin-top:8px">
         <table class="reportListTable">
           <thead>
@@ -1098,6 +1191,8 @@ function renderSummaryList(list){
               <th>Company</th>
               <th>MCD</th>
               <th>To Company</th>
+              <th>Buyer</th>
+              <th>Vehicle</th>
               <th>Total Qty</th>
               <th>Action</th>
             </tr>
@@ -1144,6 +1239,7 @@ window.clearFilter=function(){
   if($("monthFilter")) $("monthFilter").value="";
   $("challanSearch").value="";
   $("gateSearch").value="";
+  if($("textSearch")) $("textSearch").value="";
   $("mcdFilter").value="All";
   if($("companyFilter")) $("companyFilter").value="All";
   if($("toCompanyFilter")) $("toCompanyFilter").value="All";
@@ -1411,6 +1507,58 @@ window.printOne=function(i){
 }
 @media print{
   .filterGrid,.quickFilters{display:none!important}
+}
+
+
+/* ===== FINAL CHALLAN REPORT FILTER + LATEST SERIAL ===== */
+.controls{
+  position:sticky;
+  top:0;
+  z-index:50;
+}
+.filterGrid{
+  display:grid!important;
+  grid-template-columns:repeat(5,1fr)!important;
+  gap:9px!important;
+  text-align:left!important;
+}
+.filterGrid label{
+  display:block!important;
+  color:#b7c5da!important;
+  font-size:12px!important;
+  font-weight:900!important;
+  margin-bottom:4px!important;
+}
+.filterGrid input,.filterGrid select{
+  width:100%!important;
+  margin:0!important;
+  height:38px!important;
+}
+.reportSummary{
+  margin-top:12px!important;
+}
+.reportSummaryTitle{
+  color:#22c55e!important;
+  font-size:20px!important;
+}
+.reportListTable th{
+  position:sticky;
+  top:0;
+  background:#dbeafe!important;
+}
+.reportListTable tr:nth-child(even) td{
+  background:#f8fafc!important;
+}
+.reportListTable td,.reportListTable th{
+  white-space:nowrap;
+}
+@media(max-width:900px){
+  .filterGrid{
+    grid-template-columns:1fr!important;
+  }
+  .controls{
+    position:static!important;
+  }
 }
 
 </style>
