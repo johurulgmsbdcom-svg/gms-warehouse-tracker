@@ -1,1 +1,859 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Challan & Gate Pass Report</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 
+<style>
+*{box-sizing:border-box;letter-spacing:0!important;word-spacing:normal!important}
+body{
+  margin:0;
+  background:#0b0f19;
+  color:#fff;
+  font-family:Arial, Helvetica, sans-serif;
+}
+.wrap{max-width:1500px;margin:auto;padding:14px}
+.header{text-align:center;padding:12px 6px}
+.header h2,.header h3,.header h4{margin:3px}
+.controls{
+  text-align:center;
+  padding:12px;
+  background:#101827;
+  border:1px solid #263855;
+  border-radius:14px;
+  margin-bottom:12px;
+}
+input,select{
+  padding:8px;
+  border-radius:7px;
+  border:1px solid #94a3b8;
+  font-size:14px;
+}
+button{
+  border:0;
+  padding:10px 15px;
+  border-radius:8px;
+  color:white;
+  font-weight:900;
+  cursor:pointer;
+  margin:4px;
+}
+.blue{background:#2563eb}.green{background:#16a34a}.purple{background:#7c3aed}.red{background:#dc2626}.orange{background:#f59e0b}.gray{background:#64748b}
+#status{text-align:center;color:#22c55e;font-weight:900;margin:8px}
+.reportSet{
+  background:white;
+  color:black;
+  margin:14px 0;
+  padding:0;
+}
+.actionBar{
+  text-align:center;
+  padding:10px;
+  background:#0f172a;
+}
+.page{
+  width:100%;
+  background:white;
+  color:black;
+  padding:18px 22px;
+  page-break-inside:avoid;
+}
+.challanPage{
+  min-height:900px;
+}
+.gatePage{
+  min-height:780px;
+  page-break-before:always;
+}
+.qrMini{
+  width:64px;
+  height:64px;
+  margin:5px auto;
+}
+.qrOnly{
+  text-align:center;
+  font-size:8px;
+  font-weight:900;
+}
+
+/* ===== Delivery Challan Format ===== */
+.challanBox{
+  width:100%;
+  border:0;
+  color:#000;
+}
+.challanTop{
+  text-align:center;
+  position:relative;
+}
+.challanTitle{
+  display:inline-block;
+  border:3px double #000;
+  padding:5px 22px;
+  font-size:26px;
+  font-weight:900;
+  margin-bottom:8px;
+}
+.logoLine{
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap:12px;
+}
+.logoMark{
+  width:54px;height:54px;border:3px solid #000;
+  display:flex;align-items:center;justify-content:center;
+  font-weight:900;font-size:24px;
+}
+.companyBig{
+  font-size:34px;
+  font-weight:900;
+}
+.serialRight{
+  position:absolute;
+  right:80px;
+  top:52px;
+  font-size:24px;
+  font-weight:900;
+  letter-spacing:3px!important;
+}
+.challanInfo{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:35px;
+  margin-top:22px;
+}
+.lineField{
+  display:grid;
+  grid-template-columns:90px 1fr;
+  align-items:end;
+  gap:6px;
+  margin:12px 0;
+  font-size:16px;
+}
+.lineField span:last-child{
+  border-bottom:2px solid #000;
+  min-height:22px;
+  font-weight:700;
+}
+.descBox{
+  border:2px solid #000;
+  margin-top:22px;
+}
+.descTitle{
+  padding:8px;
+  font-size:16px;
+  font-weight:700;
+}
+.specGrid{
+  display:grid;
+  grid-template-columns:110px 1fr 80px 1fr 130px 1fr;
+  gap:8px;
+  padding:4px 8px 10px;
+  align-items:end;
+}
+.specGrid div:nth-child(even){
+  border-bottom:2px solid #000;
+  min-height:22px;
+  font-weight:700;
+}
+.challanTable{
+  width:100%;
+  border-collapse:collapse;
+  table-layout:fixed;
+  font-size:14px;
+}
+.challanTable th,.challanTable td{
+  border:2px solid #000;
+  padding:5px;
+  text-align:center;
+  height:42px;
+  vertical-align:middle;
+  color:#000;
+}
+.challanTable th{font-weight:900}
+.challanTable .sl{width:45px}
+.challanTable .item{width:280px}
+.totalRow td{font-weight:900;height:38px}
+.goodText{
+  border:2px solid #000;
+  border-top:0;
+  padding:6px;
+  font-size:15px;
+}
+.challanSign{
+  display:grid;
+  grid-template-columns:1fr 1fr 1fr;
+  border:2px solid #000;
+  border-top:0;
+  height:105px;
+}
+.challanSign div{
+  display:flex;
+  align-items:end;
+  justify-content:center;
+  padding-bottom:12px;
+  border-right:2px solid #000;
+  font-weight:800;
+}
+.challanSign div:last-child{border-right:0}
+.footerAddr{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  margin-top:18px;
+  font-size:14px;
+}
+.footerAddr b{font-size:15px}
+
+/* ===== Gate Pass Format ===== */
+.gateHeader{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:25px;
+}
+.gateCompany{
+  display:flex;
+  gap:10px;
+}
+.gateCompany h2{
+  margin:0;
+  font-size:32px;
+  font-weight:900;
+}
+.addrBlock{
+  margin-top:10px;
+  font-size:16px;
+  line-height:1.3;
+}
+.gateRight{
+  display:grid;
+  grid-template-columns:1fr 160px;
+  border:2px solid #000;
+  min-height:170px;
+}
+.gateRightLeft{
+  padding:20px;
+  font-size:21px;
+}
+.gateRightLeft .blank{
+  display:inline-block;
+  border-bottom:2px solid #000;
+  min-width:230px;
+  font-weight:700;
+}
+.gateRightSide{
+  border-left:2px solid #000;
+}
+.gatePassTitle{
+  font-size:36px;
+  font-weight:900;
+  text-align:center;
+  padding:10px 0;
+  border-bottom:2px solid #000;
+}
+.goodsOnly{
+  text-align:center;
+  font-size:15px;
+  font-weight:900;
+  border-bottom:2px solid #000;
+  padding-bottom:6px;
+}
+.gateSl{
+  padding:10px;
+  font-size:18px;
+  border-bottom:2px solid #000;
+}
+.gateSlNo{
+  text-align:center;
+  font-size:34px;
+  font-weight:900;
+  padding:8px;
+  border-bottom:2px solid #000;
+}
+.gateDate{
+  padding:10px;
+  font-size:18px;
+}
+.vehicleBox{
+  border:2px solid #000;
+  margin-top:28px;
+  padding:12px;
+  font-size:40px;
+  font-weight:900;
+}
+.gateTable{
+  width:100%;
+  border-collapse:collapse;
+  table-layout:fixed;
+  margin-top:16px;
+  font-size:18px;
+}
+.gateTable th,.gateTable td{
+  border:2px solid #000;
+  height:70px;
+  text-align:center;
+  padding:5px;
+  color:#000;
+}
+.gateTable th{font-weight:900}
+.gateTable .sl{width:70px}
+.gateBottom{
+  display:grid;
+  grid-template-columns:1fr 1.35fr;
+  border:2px solid #000;
+  margin-top:55px;
+  min-height:115px;
+}
+.gateBottomLeft{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  align-items:end;
+  text-align:center;
+  font-weight:900;
+  padding-bottom:18px;
+}
+.gateBottomRight{
+  border-left:2px solid #000;
+  text-align:center;
+  font-size:19px;
+  padding-top:12px;
+}
+.gateBottomRightInner{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  align-items:end;
+  height:78px;
+  font-weight:900;
+}
+.noData{
+  text-align:center;
+  font-size:20px;
+  font-weight:900;
+  padding:30px;
+}
+
+/* Mobile QR open */
+.singleMode{
+  background:#fff!important;
+  color:#000!important;
+}
+.singleMode .header,.singleMode .controls,#status.singleHide{
+  display:none!important;
+}
+@media(max-width:760px){
+  body.singleMode .wrap{padding:0}
+  body.singleMode .reportSet{margin:0}
+  body.singleMode .actionBar{display:none}
+  body.singleMode .page{
+    width:100%;
+    padding:10px;
+    min-height:auto;
+    overflow-x:auto;
+  }
+  body.singleMode .challanTitle{font-size:18px}
+  body.singleMode .companyBig{font-size:22px}
+  body.singleMode .logoMark{width:38px;height:38px;font-size:18px}
+  body.singleMode .serialRight{position:static;text-align:center;font-size:18px;margin-top:5px}
+  body.singleMode .challanInfo{grid-template-columns:1fr;gap:5px}
+  body.singleMode .lineField{grid-template-columns:85px 1fr;font-size:13px}
+  body.singleMode .specGrid{grid-template-columns:1fr 1fr;font-size:12px}
+  body.singleMode .challanTable{font-size:10px;min-width:900px}
+  body.singleMode .footerAddr{grid-template-columns:1fr;font-size:12px}
+  body.singleMode .gateHeader{grid-template-columns:1fr}
+  body.singleMode .gateRight{grid-template-columns:1fr 130px}
+  body.singleMode .gateCompany h2{font-size:22px}
+  body.singleMode .addrBlock{font-size:12px}
+  body.singleMode .vehicleBox{font-size:24px}
+  body.singleMode .gateTable{font-size:12px;min-width:750px}
+  body.singleMode .gateBottom{grid-template-columns:1fr}
+  body.singleMode .gateBottomRight{border-left:0;border-top:2px solid #000}
+}
+
+/* Print */
+@page{size:A4 portrait;margin:7mm}
+@media print{
+  html,body{
+    background:white!important;
+    color:black!important;
+    margin:0!important;
+    padding:0!important;
+  }
+  *{
+    color:#000!important;
+    -webkit-print-color-adjust:exact!important;
+    print-color-adjust:exact!important;
+  }
+  .header,.controls,.actionBar,#status{
+    display:none!important;
+  }
+  .wrap{
+    max-width:none!important;
+    padding:0!important;
+  }
+  .reportSet{
+    margin:0!important;
+  }
+  .page{
+    width:100%!important;
+    padding:0!important;
+    page-break-inside:avoid!important;
+  }
+  .challanPage{
+    min-height:275mm!important;
+    page-break-after:always!important;
+  }
+  .gatePage{
+    min-height:190mm!important;
+    page-break-before:always!important;
+  }
+  .challanTitle{font-size:21px!important}
+  .companyBig{font-size:28px!important}
+  .serialRight{font-size:20px!important;right:50px!important}
+  .lineField{font-size:13px!important;margin:8px 0!important}
+  .descBox{margin-top:12px!important}
+  .challanTable{font-size:10px!important}
+  .challanTable th,.challanTable td{height:32px!important;padding:2px!important}
+  .challanSign{height:80px!important}
+  .footerAddr{font-size:11px!important}
+  .qrMini{width:46px!important;height:46px!important}
+
+  .gateCompany h2{font-size:26px!important}
+  .addrBlock{font-size:12px!important}
+  .gateRight{min-height:130px!important}
+  .gateRightLeft{font-size:15px!important;padding:14px!important}
+  .gatePassTitle{font-size:28px!important}
+  .gateSlNo{font-size:26px!important}
+  .vehicleBox{font-size:30px!important;margin-top:18px!important}
+  .gateTable{font-size:13px!important}
+  .gateTable th,.gateTable td{height:48px!important}
+  .gateBottom{margin-top:35px!important;min-height:85px!important}
+}
+</style>
+</head>
+
+<body>
+
+<div class="wrap">
+
+  <div class="header">
+    <h2>GMS TEXTILES LTD.</h2>
+    <h3>Delivery Challan & Gate Pass Report</h3>
+  </div>
+
+  <div class="controls">
+    From: <input type="date" id="fromDate">
+    To: <input type="date" id="toDate">
+    Challan No: <input id="challanSearch" placeholder="CH-2026-0001" style="width:150px">
+    Gate Pass No: <input id="gateSearch" placeholder="GP-2026-0001" style="width:150px">
+    MCD:
+    <select id="mcdFilter">
+      <option>All</option>
+      <option>ACCESSORIES MCD</option>
+      <option>GREY FABRIC MCD</option>
+      <option>SHIPMENT MCD</option>
+      <option>BILLING SECTION</option>
+      <option>NEEDLE MCD</option>
+      <option>OUTER WEAR MCD</option>
+      <option>YARN MCD</option>
+      <option>PRINTING MCD</option>
+      <option>JHUT MCD</option>
+      <option>GENERAL MCD</option>
+      <option>LEFTOVER MCD</option>
+      <option>FINISH FABRIC MCD</option>
+      <option>YARN DYEING MCD</option>
+      <option>CHEMICAL MCD</option>
+      <option>GENERAL TECHNICAL MCD</option>
+    </select>
+    <br>
+    <button class="blue" onclick="showReport()">🔍 Search</button>
+    <button class="gray" onclick="clearFilter()">♻ Clear</button>
+    <button class="green" onclick="exportExcel()">📊 Excel</button>
+    <button class="purple" onclick="window.print()">🖨 PDF / Print</button>
+    <button class="orange" onclick="location.href='challan-entry.html'">➕ New Entry</button>
+    <button class="blue" onclick="location.href='index.html'">🏠 Home</button>
+  </div>
+
+  <div id="status">Loading...</div>
+  <div id="reportArea"></div>
+
+</div>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-app.js";
+import { getFirestore, collection, getDocs, doc, deleteDoc } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-firestore.js";
+
+const firebaseConfig={
+  apiKey:"AIzaSyD-wBCF5eeWMHobLFOhBzKW7aB2pagz9-w",
+  authDomain:"gms-warehouse-tracker-7f57e.firebaseapp.com",
+  projectId:"gms-warehouse-tracker-7f57e",
+  storageBucket:"gms-warehouse-tracker-7f57e.firebasestorage.app",
+  messagingSenderId:"992250313291",
+  appId:"1:992250313291:web:ee3bceae76d4d53bc26bce"
+};
+
+const app=initializeApp(firebaseConfig);
+const db=getFirestore(app);
+const $=id=>document.getElementById(id);
+
+let allData=[];
+let currentList=[];
+
+function esc(v){
+  return String(v??"").replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[m]));
+}
+function num(v){return Number(v)||0}
+function fmt(v){return num(v).toLocaleString("en-US")}
+function reportLink(challanNo){
+  return location.origin+location.pathname+"?challanNo="+encodeURIComponent(challanNo||"");
+}
+function renderQr(){
+  document.querySelectorAll("[data-qr]").forEach(el=>{
+    let no=el.getAttribute("data-qr")||"";
+    el.innerHTML="";
+    new QRCode(el,{text:reportLink(no),width:64,height:64,correctLevel:QRCode.CorrectLevel.M});
+  });
+}
+function shortNo(no){
+  let m=String(no||"").match(/(\d+)$/);
+  return m ? m[1] : no;
+}
+
+async function loadData(){
+  let snap=await getDocs(collection(db,"challanGatePass"));
+  allData=[];
+  snap.forEach(d=>allData.push({...d.data(),_id:d.id}));
+  allData.sort((a,b)=>{
+    let d=(b.date||"").localeCompare(a.date||"");
+    if(d!==0) return d;
+    return (b.challanNo||"").localeCompare(a.challanNo||"");
+  });
+  $("status").innerText="Loaded: "+allData.length+" Challan / Gate Pass";
+}
+
+function filterData(){
+  let from=$("fromDate").value;
+  let to=$("toDate").value;
+  let ch=$("challanSearch").value.trim();
+  let gp=$("gateSearch").value.trim();
+  let mcd=$("mcdFilter").value;
+
+  return allData.filter(x=>{
+    if(from && (x.date||"")<from) return false;
+    if(to && (x.date||"")>to) return false;
+    if(ch && (x.challanNo||"").toLowerCase()!==ch.toLowerCase()) return false;
+    if(gp && (x.gatePassNo||"").toLowerCase()!==gp.toLowerCase()) return false;
+    if(mcd!=="All" && x.mcd!==mcd) return false;
+    return true;
+  });
+}
+
+function blankRows(rows,count){
+  let arr=[...rows];
+  while(arr.length<count) arr.push({});
+  return arr;
+}
+
+function challanPage(x){
+  let rows=blankRows(x.rows||[],10);
+  let totalQty=(x.rows||[]).reduce((a,b)=>a+num(b.qty),0);
+  let totalPkg=(x.rows||[]).reduce((a,b)=>a+num(b.pkg),0);
+
+  let rowHtml=rows.map((r,i)=>`
+    <tr>
+      <td>${r.item || r.qty || r.pkg ? i+1 : ""}</td>
+      <td>${esc(r.item || "")}</td>
+      <td>${esc(r.color || "")}</td>
+      <td>${esc(r.mcDia || "")}</td>
+      <td>${esc(r.finDia || "")}</td>
+      <td>${esc(r.unit || "")}</td>
+      <td>${r.qty ? fmt(r.qty) : ""}</td>
+      <td>${r.pkg ? fmt(r.pkg) : ""}</td>
+      <td>${esc(r.remarks || "")}</td>
+    </tr>
+  `).join("");
+
+  return `
+  <div class="page challanPage">
+    <div class="challanBox">
+
+      <div class="challanTop">
+        <div class="challanTitle">DELIVERY CHALLAN</div>
+        <div class="logoLine">
+          <div class="logoMark">M</div>
+          <div class="companyBig">${esc(x.company || "GMS TEXTILES LTD.")}</div>
+        </div>
+        <div class="serialRight">${esc(shortNo(x.challanNo))}</div>
+        <div class="qrOnly"><div class="qrMini" data-qr="${esc(x.challanNo)}"></div></div>
+      </div>
+
+      <div class="challanInfo">
+        <div>
+          <div class="lineField"><span>To</span><span>${esc(x.toCompany || "")}</span></div>
+          <div class="lineField"><span>Address:</span><span>${esc(x.toAddress || "")}</span></div>
+          <div class="lineField"><span></span><span></span></div>
+          <div class="lineField"><span>Buyer:</span><span>${esc(x.buyer || "")}</span></div>
+          <div class="lineField"><span>Ord/No:</span><span>${esc(x.orderNo || "")}</span></div>
+        </div>
+        <div>
+          <div class="lineField"><span>Date:</span><span>${esc(x.date || "")}</span></div>
+          <div class="lineField"><span>Gate Pass No.:</span><span>${esc(x.gatePassNo || "")}</span></div>
+          <div class="lineField"><span>Transport No.:</span><span>${esc(x.transportNo || "")}</span></div>
+          <div class="lineField"><span>Driver's Name</span><span>${esc(x.driverName || "")}</span></div>
+        </div>
+      </div>
+
+      <div class="descBox">
+        <div class="descTitle">Description / Specification / Identification :</div>
+        <div class="specGrid">
+          <div>Yarn Count</div><div>${esc(x.yarnCount || "")}</div>
+          <div>Brand</div><div>${esc(x.brand || "")}</div>
+          <div>Card / Combed</div><div>${esc(x.cardCombed || "")}</div>
+          <div>Lot No.</div><div>${esc(x.lotNo || "")}</div>
+          <div></div><div></div>
+          <div></div><div></div>
+        </div>
+
+        <table class="challanTable">
+          <thead>
+            <tr>
+              <th class="sl">Sl.<br>No.</th>
+              <th class="item">Item Name/Description/Fabric Type</th>
+              <th>Colour</th>
+              <th>M/c<br>Dia</th>
+              <th>Fin<br>Dia</th>
+              <th>Unit</th>
+              <th>G/Quantity</th>
+              <th>No. Of Pkgs./<br>Rolls</th>
+              <th>Remarks<br>F/Quantity</th>
+            </tr>
+          </thead>
+          <tbody>${rowHtml}</tbody>
+          <tfoot>
+            <tr class="totalRow">
+              <td></td>
+              <td style="text-align:left;padding-left:15px">Loose yarn (Return)</td>
+              <td></td><td></td><td></td><td></td><td></td><td></td><td></td>
+            </tr>
+            <tr class="totalRow">
+              <td></td>
+              <td style="text-align:left;padding-left:15px">Total:</td>
+              <td></td><td></td><td></td><td></td>
+              <td>${fmt(totalQty)}</td>
+              <td>${fmt(totalPkg)}</td>
+              <td></td>
+            </tr>
+          </tfoot>
+        </table>
+      </div>
+
+      <div class="goodText">(Received The Above Quantity Of Goods In Good Condition For Handling & Delivery.)</div>
+
+      <div class="challanSign">
+        <div>Delivery Approved by</div>
+        <div>Counted & Delivery by</div>
+        <div>Counted & Received by</div>
+      </div>
+
+      <div class="footerAddr">
+        <div><b>HEAD OFFICE :</b><br>${esc((x.companyAddress||"").split("FACTORY")[0]||"HOUSE # 498, Road # 33, New D.O.H.S. Mohakhali, Dhaka-1206, Bangladesh.")}</div>
+        <div style="text-align:right"><b>FACTORY:</b><br>Tansutrapur, Kaliakoir, Gazipur.<br>TEL : +88-02-...........................<br>FAX : +88-02-...........................</div>
+      </div>
+    </div>
+  </div>`;
+}
+
+function gatePage(x){
+  let rows=blankRows(x.rows||[],5);
+  let totalQty=(x.rows||[]).reduce((a,b)=>a+num(b.qty),0);
+  let rowHtml=rows.map((r,i)=>`
+    <tr>
+      <td>${r.item || r.qty ? i+1 : ""}</td>
+      <td>${esc(r.item || "")}</td>
+      <td>${esc(r.unit || "")}</td>
+      <td>${r.qty ? fmt(r.qty) : ""}</td>
+      <td>${esc(x.challanNo || "")}</td>
+      <td>${esc(r.purpose || r.remarks || "")}</td>
+    </tr>
+  `).join("");
+
+  let addr=x.companyAddress || `HEAD OFFICE : HOUSE # 498, ROAD # 33
+NEW D.O.H.S. MOHAKHALI
+DHAKA-1206, BANGLADESH.
+TEL : +88-02-8837217-18
+FAX : +88-02-8711095
+
+FACTORY : Tansutrapur, Kaliakoir, Gazipur.
+TEL : +88-02-...........................
+FAX : +88-02-...........................`;
+
+  return `
+  <div class="page gatePage">
+    <div class="gateHeader">
+      <div>
+        <div class="gateCompany">
+          <div class="logoMark">M</div>
+          <div>
+            <h2>${esc(x.company || "GMS TEXTILES LTD.")}</h2>
+            <div class="addrBlock">${esc(addr).replace(/\n/g,"<br>")}</div>
+          </div>
+        </div>
+        <div class="qrOnly"><div class="qrMini" data-qr="${esc(x.challanNo)}"></div></div>
+      </div>
+
+      <div class="gateRight">
+        <div class="gateRightLeft">
+          M/s. <span class="blank">${esc(x.gateMs || x.toCompany || "")}</span><br><br>
+          Is hereby permitted to carry the following<br><br>
+          goods by <span class="blank">${esc(x.goodsBy || x.vehicleNo || "")}</span><br><br>
+          from the mill site to <span class="blank">${esc(x.fromMillTo || x.toCompany || "")}</span>
+        </div>
+        <div class="gateRightSide">
+          <div class="gatePassTitle">GATE<br>PASS</div>
+          <div class="goodsOnly">(FOR GOODS ONLY)</div>
+          <div class="gateSl">Sl. No.</div>
+          <div class="gateSlNo">${esc(shortNo(x.gatePassNo))}</div>
+          <div class="gateDate"><b>Date :</b><br>${esc(x.date || "")}</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="vehicleBox">Vehicle No : ${esc(x.vehicleNo || "")}</div>
+
+    <table class="gateTable">
+      <thead>
+        <tr>
+          <th class="sl">SL #</th>
+          <th>ITEM</th>
+          <th>UNIT</th>
+          <th>QUANTITY</th>
+          <th>CHALLAN<br>NUMBER</th>
+          <th>PURPOSE</th>
+        </tr>
+      </thead>
+      <tbody>${rowHtml}</tbody>
+      <tfoot>
+        <tr>
+          <td colspan="3" style="font-weight:900">Grand Total</td>
+          <td style="font-weight:900">${fmt(totalQty)}</td>
+          <td colspan="2"></td>
+        </tr>
+      </tfoot>
+    </table>
+
+    <div class="gateBottom">
+      <div class="gateBottomLeft">
+        <div>ISSUED BY</div>
+        <div>AUTHORISED BY</div>
+      </div>
+      <div class="gateBottomRight">
+        RECEIVED THE ABOVE QUANTITY OF GOODS IN GOOD CONDITION
+        <div class="gateBottomRightInner">
+          <div>RECEIVED BY</div>
+          <div>SECURITY DEPARTMENT</div>
+        </div>
+      </div>
+    </div>
+  </div>`;
+}
+
+function renderSet(x,i){
+  return `
+    <div class="reportSet">
+      <div class="actionBar noPrint">
+        <button class="purple" onclick="printOne(${i})">🖨 Print This</button>
+        <button class="orange" onclick="editOne('${esc(x.challanNo)}')">✏ Edit</button>
+        <button class="red" onclick="deleteOne('${esc(x.challanNo)}')">🗑 Delete</button>
+      </div>
+      ${challanPage(x)}
+      ${gatePage(x)}
+    </div>
+  `;
+}
+
+window.showReport=async function(){
+  await loadData();
+  currentList=filterData();
+
+  if(currentList.length===0){
+    $("reportArea").innerHTML=`<div class="noData">No Challan / Gate Pass Found</div>`;
+    return;
+  }
+
+  $("reportArea").innerHTML=currentList.map((x,i)=>renderSet(x,i)).join("");
+  setTimeout(renderQr,150);
+};
+
+window.clearFilter=function(){
+  $("fromDate").value="";
+  $("toDate").value="";
+  $("challanSearch").value="";
+  $("gateSearch").value="";
+  $("mcdFilter").value="All";
+  showReport();
+};
+
+window.editOne=function(challanNo){
+  location.href="challan-entry.html?challanNo="+encodeURIComponent(challanNo);
+};
+
+window.deleteOne=async function(challanNo){
+  if(!confirm("Delete this Challan & Gate Pass?")) return;
+  await deleteDoc(doc(db,"challanGatePass",challanNo));
+  showReport();
+};
+
+window.printOne=function(i){
+  let card=document.querySelectorAll(".reportSet")[i];
+  if(!card) return;
+
+  let win=window.open("","_blank");
+  win.document.write(`
+    <html>
+    <head>
+      <meta charset="UTF-8">
+      <title>Challan Gate Pass Print</title>
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"><\/script>
+      <style>${document.querySelector("style").innerHTML}</style>
+    </head>
+    <body>
+      <div class="wrap">${card.outerHTML}</div>
+      <script>
+        function reportLink(no){
+          return "${location.origin+location.pathname}"+"?challanNo="+encodeURIComponent(no||"");
+        }
+        document.querySelectorAll(".actionBar,.noPrint").forEach(x=>x.remove());
+        document.querySelectorAll("[data-qr]").forEach(el=>{
+          let no=el.getAttribute("data-qr")||"";
+          el.innerHTML="";
+          new QRCode(el,{text:reportLink(no),width:64,height:64,correctLevel:QRCode.CorrectLevel.M});
+        });
+        setTimeout(()=>window.print(),600);
+      <\/script>
+    </body>
+    </html>
+  `);
+  win.document.close();
+};
+
+window.exportExcel=function(){
+  let file=new Blob([$("reportArea").innerHTML],{type:"application/vnd.ms-excel"});
+  let a=document.createElement("a");
+  a.href=URL.createObjectURL(file);
+  a.download="challan-gate-pass-report.xls";
+  a.click();
+};
+
+let param=new URLSearchParams(location.search).get("challanNo") || "";
+if(param){
+  document.body.classList.add("singleMode");
+  $("challanSearch").value=param;
+  $("status").classList.add("singleHide");
+}
+
+showReport();
+</script>
+
+</body>
+</html>
