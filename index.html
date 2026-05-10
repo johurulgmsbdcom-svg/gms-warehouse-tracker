@@ -1934,5 +1934,48 @@ setInterval(loadNotices,60000);
 })();
 </script>
 
+
+<script>
+/* ===== FINAL FILE NAME LINK FIX ===== */
+(function(){
+  function enc(v){return encodeURIComponent(v||"");}
+  function companyFix(c){
+    if(c==="GMS COMPOSITE KNITTING") return "GMS COMPOSITE KNITTING IND LTD.";
+    if(c==="GMS TEXTILES LTD") return "GMS TEXTILES LTD.";
+    return c || "GMS TEXTILES LTD.";
+  }
+  function entryCompany(){return document.getElementById("entryCompany")?.value || "GMS TEXTILES LTD";}
+  function entryMcd(){return document.getElementById("entryMcd")?.value || "ACCESSORIES MCD";}
+  function reportCompany(){return document.getElementById("reportCompany")?.value || entryCompany();}
+  function reportMcd(){return document.getElementById("reportMcd")?.value || entryMcd();}
+
+  window.openChallanEntry=function(c,m){
+    location.href="challan-entry.html?company="+enc(companyFix(c))+"&mcd="+enc(m||"");
+  };
+  window.openChallanReport=function(c,m){
+    location.href="challan-report.html?company="+enc(companyFix(c))+"&mcd="+enc(m||"");
+  };
+
+  function fixCards(){
+    document.querySelectorAll(".card").forEach(card=>{
+      const t=(card.innerText||"").trim();
+      if(t.includes("Challan / Gate Pass") && !t.includes("Report")){
+        card.onclick=function(){openChallanEntry(entryCompany(),entryMcd());};
+      }
+      if(t.includes("Challan / Gate Pass Report")){
+        card.onclick=function(){openChallanReport(reportCompany(),reportMcd());};
+      }
+    });
+  }
+
+  document.addEventListener("DOMContentLoaded",function(){
+    setInterval(fixCards,800);
+  });
+  document.addEventListener("click",function(){
+    setTimeout(fixCards,100);
+  });
+})();
+</script>
+
 </body>
 </html>
