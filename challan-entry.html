@@ -147,7 +147,7 @@ td input{
 <div class="wrap">
 
   <div class="topTitle">
-    <h2>GMS TEXTILES LTD.</h2>
+    <h2 id="topCompanyTitle">GMS TEXTILES LTD.</h2>
     <h3>Delivery Challan & Gate Pass Entry</h3>
     <div class="note">Save করলে Delivery Challan + Gate Pass দুইটাই report page-এ তৈরি হবে</div>
   </div>
@@ -390,10 +390,16 @@ function toCompanyName(){
   return $("toCompany").value==="OTHER FACTORY" ? $("toCompanyManual").value.trim() : $("toCompany").value;
 }
 
+function updateHeadlineCompany(){
+  let name=companyName() || "GMS TEXTILES LTD.";
+  if($("topCompanyTitle")) $("topCompanyTitle").innerText=name;
+}
+
 window.companyChange=function(){
   const isOther=$("company").value==="OTHER FACTORY";
   $("companyManual").disabled = !isOther;
   if(!isOther) $("companyManual").value="";
+  updateHeadlineCompany();
   syncGatePassText();
 };
 
@@ -406,6 +412,8 @@ window.toCompanyChange=function(){
 
 window.syncGatePassText=function(){
   let toName=toCompanyName();
+
+  // Gate Pass M/s and From mill site to auto from To Company
   $("fromMillTo").value=toName;
   if(!$("gateMs").value || $("gateMs").dataset.auto==="1"){
     $("gateMs").value=toName || $("buyer").value;
@@ -413,7 +421,10 @@ window.syncGatePassText=function(){
   }
 };
 
+
 $("gateMs").addEventListener("input",()=>{$("gateMs").dataset.auto="0";});
+$("companyManual").addEventListener("input",updateHeadlineCompany);
+$("company").addEventListener("change",updateHeadlineCompany);
 
 async function nextSerial(prefix){
   let y=year();
@@ -544,7 +555,8 @@ function getData(){
     grandTotalQty:qty,
     totalBag:bag,
 
-    updatedAt:new Date().toISOString()
+    updatedAt:new Date().toISOString(),
+    createdAt: new Date().toISOString()
   };
 }
 
@@ -624,6 +636,7 @@ async function loadEdit(){
   (d.rows||[]).forEach(r=>addRow(r));
   if((d.rows||[]).length===0) addBlankRows();
   calcTotals();
+  updateHeadlineCompany();
 
   return true;
 }
@@ -634,6 +647,7 @@ async function init(){
     await initNumbers();
     addBlankRows();
     toCompanyChange();
+    updateHeadlineCompany();
   }
 }
 
