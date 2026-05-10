@@ -383,6 +383,25 @@ td textarea{
   }
 }
 
+
+.qrPrintBox{
+  position:absolute;
+  right:8px;
+  top:8px;
+  text-align:center;
+  font-size:9px;
+  font-weight:900;
+}
+.qrPrintBox .qrMini{
+  width:70px;
+  height:70px;
+}
+.box,.greyReport{position:relative}
+@media print{
+  .qrPrintBox{right:2mm!important;top:2mm!important;font-size:6px!important}
+  .qrPrintBox .qrMini{width:45px!important;height:45px!important}
+}
+
 </style>
 </head>
 
@@ -453,6 +472,7 @@ td textarea{
 
 <!-- NORMAL GATE PLAN FORMAT -->
 <div class="box" id="normalGateBox">
+  <div class="qrPrintBox"><div>QR Scan</div><div class="qrMini" id="entryQrNormal"></div></div>
   <div class="normalPrintHeader">
     <h2>GMS Textiles Ltd.</h2>
     <h4>Tansutrapur, Kaliakair, Gazipur.</h4>
@@ -513,6 +533,7 @@ td textarea{
 
 <!-- GREY FABRIC SPECIAL FORMAT -->
 <div class="greyReport" id="greyGateBox">
+  <div class="qrPrintBox"><div>QR Scan</div><div class="qrMini" id="entryQrGrey"></div></div>
   <div class="greyHeader">
     <h2>GMS TEXTILES LTD.</h2>
     <h4>Tansutrapur, Kaliakoir, Gazipur</h4>
@@ -558,6 +579,7 @@ td textarea{
 
 <div id="toast" class="toast">Saved</div>
 
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-app.js";
 import { getFirestore, collection, getDocs, doc, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-firestore.js";
@@ -578,6 +600,26 @@ const user=JSON.parse(localStorage.getItem("gmsUser")||"null");
 if(!user){location.href="login.html";}
 
 let editMode=false;
+
+
+function qrUrlForPlan(no){
+  return location.href.replace(/gate-plan\.html.*/,"gate-plan-report.html") + "?gatePlanNo=" + encodeURIComponent(no || "");
+}
+
+function renderEntryQR(){
+  let no = document.getElementById("gatePlanNo").value || "";
+  ["entryQrNormal","entryQrGrey"].forEach(id=>{
+    let el=document.getElementById(id);
+    if(!el) return;
+    el.innerHTML="";
+    new QRCode(el,{
+      text: qrUrlForPlan(no),
+      width:70,
+      height:70,
+      correctLevel:QRCode.CorrectLevel.M
+    });
+  });
+}
 
 function today(){
   return new Date().toISOString().slice(0,10);
@@ -768,6 +810,7 @@ window.updateHeader=function(){
   updateToPartyFields(true);
 
   calculateTotals();
+  renderEntryQR();
 };
 
 function addOption(id,value){
@@ -992,7 +1035,7 @@ document.addEventListener("keydown",e=>{
   }
 });
 
-window.addEventListener("beforeprint",()=>updateHeader());
+window.addEventListener("beforeprint",()=>{updateHeader();renderEntryQR();});
 
 init();
 </script>
