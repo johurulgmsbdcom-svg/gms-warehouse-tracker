@@ -87,7 +87,7 @@ button{
 }
 .meta{
   display:grid;
-  grid-template-columns:repeat(6,1fr);
+  grid-template-columns:repeat(5,1fr);
   border-bottom:1px solid #000;
 }
 .meta div{
@@ -259,29 +259,15 @@ th,td{
   }
 }
 
-.qrBox{
-  text-align:center;
-  padding:4px;
-  border-left:1px solid #000;
-}
-.qrBox .qrTitle{
-  font-size:9px;
-  font-weight:900;
-  margin-bottom:2px;
-}
-.qrMini{
-  width:70px;
-  height:70px;
-  margin:auto;
-}
+.qrBox{position:absolute;right:10px;top:6px;text-align:center;font-size:8px;font-weight:900}
+.qrMini{width:65px;height:65px;margin:auto}
+.reportPrintHeader{position:relative}
+.greyQrCenter{text-align:center;font-size:8px;font-weight:900;margin:3px 0 5px}
+.greyQrCenter .qrMini{width:65px;height:65px}
 @media print{
-  .qrMini{
-    width:48px!important;
-    height:48px!important;
-  }
-  .qrBox .qrTitle{
-    font-size:6px!important;
-  }
+  .qrBox{right:3mm!important;top:1mm!important;font-size:6px!important}
+  .qrMini{width:45px!important;height:45px!important}
+  .greyQrCenter .qrMini{width:48px!important;height:48px!important}
 }
 
 </style>
@@ -355,27 +341,15 @@ const db=getFirestore(app);
 let allPlans=[];
 
 
-function safeQrId(no){
-  return "qr_" + String(no || "").replace(/[^a-zA-Z0-9]/g,"_");
-}
-
-function qrUrlForPlan(no){
-  let base = location.href.split("?")[0];
+function reportLink(no){
+  let base = location.origin + location.pathname;
   return base + "?gatePlanNo=" + encodeURIComponent(no || "");
 }
-
-function renderAllQRCodes(){
-  document.querySelectorAll("[data-qr]").forEach(el=>{
-    if(el.dataset.done==="1") return;
-    let no = el.getAttribute("data-qr") || "";
+function renderQRCodes(){
+  document.querySelectorAll("[data-qr-no]").forEach(el=>{
+    let no = el.getAttribute("data-qr-no") || "";
     el.innerHTML = "";
-    new QRCode(el,{
-      text: qrUrlForPlan(no),
-      width: 70,
-      height: 70,
-      correctLevel: QRCode.CorrectLevel.M
-    });
-    el.dataset.done="1";
+    new QRCode(el,{text:reportLink(no),width:65,height:65,correctLevel:QRCode.CorrectLevel.M});
   });
 }
 
@@ -467,7 +441,6 @@ function renderNormal(p,index){
         <div>Time: ${esc(p.time)}</div>
         <div>MCD: ${esc(p.mcd)}</div>
         <div>Prepared By: ${esc(p.preparedBy)}</div>
-        <div class="qrBox"><div class="qrTitle">QR Scan</div><div class="qrMini" data-qr="${esc(planNo(p))}"></div></div>
       </div>
       <div class="actionBar noPrint">
         <button class="print" onclick="printSingle(${index})">🖨 Print This</button>
@@ -539,11 +512,6 @@ function renderGrey(p,index){
         <button class="delete" onclick="deletePlan('${esc(planNo(p))}')">🗑 Delete</button>
       </div>
 
-      <div class="qrBox noPrint" style="border:0;text-align:right;padding-right:35px">
-        <div class="qrTitle">QR Scan</div>
-        <div class="qrMini" data-qr="${esc(planNo(p))}"></div>
-      </div>
-
       <table class="greyTable">
         <thead>
           <tr>
@@ -592,7 +560,7 @@ function filterPlans(){
   return allPlans.filter(p=>{
     if(from && (p.date||"")<from) return false;
     if(to && (p.date||"")>to) return false;
-    if(no && !planNo(p).toLowerCase().includes(no.toLowerCase())) return false;
+    if(no && planNo(p).toLowerCase()!==no.toLowerCase()) return false;
     if(company!=="All" && p.company!==company) return false;
     if(mcd!=="All" && p.mcd!==mcd) return false;
     return true;
@@ -615,7 +583,7 @@ window.showReport=async function(){
   }).join("");
 
   window.currentFilteredPlans=list;
-  setTimeout(renderAllQRCodes,100);
+  setTimeout(renderQRCodes,100);
 };
 
 window.printSingle=function(index){
@@ -630,29 +598,15 @@ window.printSingle=function(index){
       <meta charset="UTF-8">
       <title>Gate Plan Print</title>
       <style>${document.querySelector("style").innerHTML}
-.qrBox{
-  text-align:center;
-  padding:4px;
-  border-left:1px solid #000;
-}
-.qrBox .qrTitle{
-  font-size:9px;
-  font-weight:900;
-  margin-bottom:2px;
-}
-.qrMini{
-  width:70px;
-  height:70px;
-  margin:auto;
-}
+.qrBox{position:absolute;right:10px;top:6px;text-align:center;font-size:8px;font-weight:900}
+.qrMini{width:65px;height:65px;margin:auto}
+.reportPrintHeader{position:relative}
+.greyQrCenter{text-align:center;font-size:8px;font-weight:900;margin:3px 0 5px}
+.greyQrCenter .qrMini{width:65px;height:65px}
 @media print{
-  .qrMini{
-    width:48px!important;
-    height:48px!important;
-  }
-  .qrBox .qrTitle{
-    font-size:6px!important;
-  }
+  .qrBox{right:3mm!important;top:1mm!important;font-size:6px!important}
+  .qrMini{width:45px!important;height:45px!important}
+  .greyQrCenter .qrMini{width:48px!important;height:48px!important}
 }
 
 </style>
@@ -661,13 +615,13 @@ window.printSingle=function(index){
       <div id="reportArea">${card.outerHTML}</div>
       <script>
         document.querySelectorAll(".noPrint,.actionBar").forEach(x=>x.remove());
-        function qrUrlForPlan(no){ return location.origin + location.pathname.replace(/[^\/]+$/,"gate-plan-report.html") + "?gatePlanNo=" + encodeURIComponent(no||""); }
-        document.querySelectorAll("[data-qr]").forEach(el=>{
-          let no=el.getAttribute("data-qr")||"";
+        function reportLink(no){ return "${location.origin + location.pathname}" + "?gatePlanNo=" + encodeURIComponent(no || ""); }
+        document.querySelectorAll("[data-qr-no]").forEach(el=>{
+          let no=el.getAttribute("data-qr-no")||"";
           el.innerHTML="";
-          new QRCode(el,{text:qrUrlForPlan(no),width:70,height:70,correctLevel:QRCode.CorrectLevel.M});
+          new QRCode(el,{text:reportLink(no),width:65,height:65,correctLevel:QRCode.CorrectLevel.M});
         });
-        setTimeout(()=>{window.print();},500);
+        setTimeout(()=>{window.print();},600);
       <\/script>
     </body>
     </html>
@@ -695,17 +649,7 @@ window.exportExcel=function(){
   a.click();
 };
 
-let gatePlanNoParam = new URLSearchParams(location.search).get("gatePlanNo") || "";
-if(gatePlanNoParam){
-  document.getElementById("gateNoSearch").value = gatePlanNoParam;
-  document.getElementById("fromDate").value = "";
-  document.getElementById("toDate").value = "";
-}else{
-  document.getElementById("fromDate").value=today();
-  document.getElementById("toDate").value=today();
-}
-
-showReport();
+let gatePlanNoParam=new URLSearchParams(location.search).get("gatePlanNo")||"";\nif(gatePlanNoParam){\n  document.getElementById("gateNoSearch").value=gatePlanNoParam;\n  document.getElementById("fromDate").value="";\n  document.getElementById("toDate").value="";\n}else{\n  document.getElementById("fromDate").value=today();\n  document.getElementById("toDate").value=today();\n}\n\nshowReport();
 </script>
 
 </body>
