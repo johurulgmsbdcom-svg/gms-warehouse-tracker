@@ -343,6 +343,46 @@ td textarea{
     padding-top:3px!important;
   }
 }
+
+.normalPrintHeader{
+  text-align:center;
+  line-height:1.15;
+  padding:6px 0 4px;
+  border-bottom:1px solid #000;
+}
+.normalPrintHeader h2{
+  margin:0;
+  font-size:22px;
+  font-weight:900;
+}
+.normalPrintHeader h4{
+  margin:1px 0;
+  font-size:12px;
+  font-weight:800;
+}
+.normalPrintHeader h3{
+  margin:2px 0 0;
+  font-size:16px;
+  font-weight:900;
+}
+@media print{
+  .normalPrintHeader{
+    padding:1mm 0!important;
+  }
+  .normalPrintHeader h2{
+    font-size:16px!important;
+    margin:0!important;
+  }
+  .normalPrintHeader h4{
+    font-size:8px!important;
+    margin:0!important;
+  }
+  .normalPrintHeader h3{
+    font-size:11px!important;
+    margin:0!important;
+  }
+}
+
 </style>
 </head>
 
@@ -413,6 +453,12 @@ td textarea{
 
 <!-- NORMAL GATE PLAN FORMAT -->
 <div class="box" id="normalGateBox">
+  <div class="normalPrintHeader">
+    <h2>GMS Textiles Ltd.</h2>
+    <h4>Tansutrapur, Kaliakair, Gazipur.</h4>
+    <h4>Daily Goods Delivery Plan</h4>
+    <h3 id="normalMcdTitle">ACCESSORIES MCD</h3>
+  </div>
   <div class="topLine" id="companyLine">GMS Textiles Ltd. To GMS Textiles Ltd.</div>
   <div class="meta">
     <div>Gate Plan No: <span id="showGatePlan"></span></div>
@@ -708,6 +754,7 @@ window.updateHeader=function(){
   document.getElementById("showTime").innerText=document.getElementById("planTime").value;
   document.getElementById("showGatePlan").innerText=document.getElementById("gatePlanNo").value;
   document.getElementById("mcdTitle").innerText=mcd;
+  if(document.getElementById("normalMcdTitle")) document.getElementById("normalMcdTitle").innerText=mcd;
 
   document.getElementById("normalGateBox").style.display=isGrey?"none":"block";
   document.getElementById("greyGateBox").style.display=isGrey?"block":"none";
