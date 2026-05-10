@@ -695,6 +695,85 @@ button{
   }
 }
 
+
+/* ===== FINAL FIX: FILTER, SUMMARY, COMPANY/MCD ===== */
+.controls{
+  position:sticky;
+  top:0;
+  z-index:50;
+}
+.filterGrid{
+  display:grid!important;
+  grid-template-columns:repeat(5,1fr)!important;
+  gap:9px!important;
+  text-align:left!important;
+}
+.filterGrid label{
+  display:block!important;
+  color:#b7c5da!important;
+  font-size:12px!important;
+  font-weight:900!important;
+  margin-bottom:4px!important;
+}
+.filterGrid input,.filterGrid select{
+  width:100%!important;
+  margin:0!important;
+  height:38px!important;
+}
+.quickFilters{
+  text-align:center!important;
+  margin:8px 0!important;
+}
+.reportSummary{
+  background:#101827!important;
+  border:1px solid #263855!important;
+  border-radius:14px!important;
+  padding:12px!important;
+  margin:12px 0!important;
+  color:#fff!important;
+}
+.reportSummaryTitle{
+  color:#22c55e!important;
+  font-size:20px!important;
+  font-weight:1000!important;
+  text-align:center!important;
+}
+.searchHint{
+  color:#facc15!important;
+  font-size:12px!important;
+  font-weight:900!important;
+  text-align:center!important;
+  margin-top:6px!important;
+}
+.reportListTable{
+  width:100%!important;
+  border-collapse:collapse!important;
+  background:#fff!important;
+  color:#000!important;
+  font-size:12px!important;
+}
+.reportListTable th,.reportListTable td{
+  border:1px solid #000!important;
+  padding:6px!important;
+  text-align:center!important;
+  color:#000!important;
+  white-space:nowrap!important;
+}
+.reportListTable th{
+  background:#dbeafe!important;
+  font-weight:900!important;
+}
+.reportListTable tr:nth-child(even) td{
+  background:#f8fafc!important;
+}
+@media(max-width:900px){
+  .filterGrid{grid-template-columns:1fr!important}
+  .controls{position:static!important}
+}
+@media print{
+  .controls,.reportSummary{display:none!important}
+}
+
 </style>
 </head>
 
@@ -850,16 +929,19 @@ function shortNo(no){
 async function loadData(){
   let snap=await getDocs(collection(db,"challanGatePass"));
   allData=[];
-  snap.forEach(d=>allData.push({...d.data(),_id:d.id}));
+  snap.forEach(d=>{
+    let x=d.data();
+    allData.push({...x,_id:d.id});
+  });
 
-  // Latest saved/updated challan always top
+  // latest save first, then latest date, then latest number
   allData.sort((a,b)=>{
-    let ta = a.updatedAt || a.createdAt || a.savedAt || "";
-    let tb = b.updatedAt || b.createdAt || b.savedAt || "";
-    let c = String(tb).localeCompare(String(ta));
+    let ta=a.updatedAt || a.createdAt || a.savedAt || "";
+    let tb=b.updatedAt || b.createdAt || b.savedAt || "";
+    let c=String(tb).localeCompare(String(ta));
     if(c!==0) return c;
 
-    c = String(b.date||"").localeCompare(String(a.date||""));
+    c=String(b.date||"").localeCompare(String(a.date||""));
     if(c!==0) return c;
 
     return String(b.challanNo||"").localeCompare(String(a.challanNo||""));
@@ -868,40 +950,44 @@ async function loadData(){
   $("status").innerText="Loaded: "+allData.length+" Challan / Gate Pass";
 }
 
+function sameText(a,b){
+  return String(a||"").trim().toUpperCase()===String(b||"").trim().toUpperCase();
+}
+
 function filterData(){
-  let from=$("fromDate").value;
-  let to=$("toDate").value;
+  let from=$("fromDate") ? $("fromDate").value : "";
+  let to=$("toDate") ? $("toDate").value : "";
   let single=$("singleDate") ? $("singleDate").value : "";
   let month=$("monthFilter") ? $("monthFilter").value : "";
-  let ch=$("challanSearch").value.trim();
-  let gp=$("gateSearch").value.trim();
-  let mcd=$("mcdFilter").value;
+  let ch=$("challanSearch") ? $("challanSearch").value.trim() : "";
+  let gp=$("gateSearch") ? $("gateSearch").value.trim() : "";
+  let mcd=$("mcdFilter") ? $("mcdFilter").value : "All";
   let company=$("companyFilter") ? $("companyFilter").value : "All";
   let toCompany=$("toCompanyFilter") ? $("toCompanyFilter").value : "All";
   let txt=$("textSearch") ? $("textSearch").value.toLowerCase().trim() : "";
 
-  let list = allData.filter(x=>{
+  let list=allData.filter(x=>{
     let date=x.date||"";
 
-    // one date
+    // exact single date
     if(single && date!==single) return false;
 
-    // month wise
+    // month filter yyyy-mm
     if(month && date.slice(0,7)!==month) return false;
 
-    // 1-7 or any range
+    // range filter 1-7 or any date range
     if(from && date<from) return false;
     if(to && date>to) return false;
 
-    // challan/gate search
+    // number search full/partial
     if(ch && !(x.challanNo||"").toLowerCase().includes(ch.toLowerCase())) return false;
     if(gp && !(x.gatePassNo||"").toLowerCase().includes(gp.toLowerCase())) return false;
 
-    // company filter
+    // from company filter
     if(company!=="All"){
       if(company==="OTHER FACTORY"){
         if((x.companyType||"")!=="OTHER FACTORY") return false;
-      }else if((x.company||"").toUpperCase()!==company.toUpperCase()){
+      }else if(!sameText(x.company,company)){
         return false;
       }
     }
@@ -910,13 +996,13 @@ function filterData(){
     if(toCompany!=="All"){
       if(toCompany==="OTHER FACTORY"){
         if((x.toCompanyType||"")!=="OTHER FACTORY") return false;
-      }else if((x.toCompany||"").toUpperCase()!==toCompany.toUpperCase()){
+      }else if(!sameText(x.toCompany,toCompany)){
         return false;
       }
     }
 
     // mcd filter
-    if(mcd!=="All" && x.mcd!==mcd) return false;
+    if(mcd!=="All" && !sameText(x.mcd,mcd)) return false;
 
     // text search
     if(txt){
@@ -929,13 +1015,12 @@ function filterData(){
     return true;
   });
 
-  // keep latest top after every search
   list.sort((a,b)=>{
-    let ta = a.updatedAt || a.createdAt || a.savedAt || "";
-    let tb = b.updatedAt || b.createdAt || b.savedAt || "";
-    let c = String(tb).localeCompare(String(ta));
+    let ta=a.updatedAt || a.createdAt || a.savedAt || "";
+    let tb=b.updatedAt || b.createdAt || b.savedAt || "";
+    let c=String(tb).localeCompare(String(ta));
     if(c!==0) return c;
-    c = String(b.date||"").localeCompare(String(a.date||""));
+    c=String(b.date||"").localeCompare(String(a.date||""));
     if(c!==0) return c;
     return String(b.challanNo||"").localeCompare(String(a.challanNo||""));
   });
@@ -1179,7 +1264,7 @@ function renderSummaryList(list){
   $("reportSummary").innerHTML=`
     <div class="reportSummary">
       <div class="reportSummaryTitle">Total Found: ${list.length} Challan / Gate Pass</div>
-      <div class="searchHint">Latest save/challan সবসময় উপরে থাকবে • Company + MCD + Date + Month + 1-7 date filter করা যাবে</div>
+      <div class="searchHint">Latest save/challan উপরে থাকবে • Company + MCD + Date + Month + 1-7 date filter করা যাবে</div>
       <div style="overflow-x:auto;margin-top:8px">
         <table class="reportListTable">
           <thead>
@@ -1233,14 +1318,14 @@ window.showReport=async function(){
 };
 
 window.clearFilter=function(){
-  $("fromDate").value="";
-  $("toDate").value="";
+  if($("fromDate")) $("fromDate").value="";
+  if($("toDate")) $("toDate").value="";
   if($("singleDate")) $("singleDate").value="";
   if($("monthFilter")) $("monthFilter").value="";
-  $("challanSearch").value="";
-  $("gateSearch").value="";
+  if($("challanSearch")) $("challanSearch").value="";
+  if($("gateSearch")) $("gateSearch").value="";
   if($("textSearch")) $("textSearch").value="";
-  $("mcdFilter").value="All";
+  if($("mcdFilter")) $("mcdFilter").value="All";
   if($("companyFilter")) $("companyFilter").value="All";
   if($("toCompanyFilter")) $("toCompanyFilter").value="All";
   showReport();
@@ -1248,10 +1333,10 @@ window.clearFilter=function(){
 
 window.setTodayFilter=function(){
   let t=new Date().toISOString().slice(0,10);
-  $("singleDate").value=t;
-  $("fromDate").value="";
-  $("toDate").value="";
-  $("monthFilter").value="";
+  if($("singleDate")) $("singleDate").value=t;
+  if($("fromDate")) $("fromDate").value="";
+  if($("toDate")) $("toDate").value="";
+  if($("monthFilter")) $("monthFilter").value="";
   showReport();
 };
 
@@ -1259,19 +1344,19 @@ window.setLast7DaysFilter=function(){
   let end=new Date();
   let start=new Date();
   start.setDate(end.getDate()-6);
-  $("singleDate").value="";
-  $("monthFilter").value="";
-  $("fromDate").value=start.toISOString().slice(0,10);
-  $("toDate").value=end.toISOString().slice(0,10);
+  if($("singleDate")) $("singleDate").value="";
+  if($("monthFilter")) $("monthFilter").value="";
+  if($("fromDate")) $("fromDate").value=start.toISOString().slice(0,10);
+  if($("toDate")) $("toDate").value=end.toISOString().slice(0,10);
   showReport();
 };
 
 window.setCurrentMonthFilter=function(){
   let d=new Date();
-  $("singleDate").value="";
-  $("fromDate").value="";
-  $("toDate").value="";
-  $("monthFilter").value=d.toISOString().slice(0,7);
+  if($("singleDate")) $("singleDate").value="";
+  if($("fromDate")) $("fromDate").value="";
+  if($("toDate")) $("toDate").value="";
+  if($("monthFilter")) $("monthFilter").value=d.toISOString().slice(0,7);
   showReport();
 };
 
@@ -1559,6 +1644,85 @@ window.printOne=function(i){
   .controls{
     position:static!important;
   }
+}
+
+
+/* ===== FINAL FIX: FILTER, SUMMARY, COMPANY/MCD ===== */
+.controls{
+  position:sticky;
+  top:0;
+  z-index:50;
+}
+.filterGrid{
+  display:grid!important;
+  grid-template-columns:repeat(5,1fr)!important;
+  gap:9px!important;
+  text-align:left!important;
+}
+.filterGrid label{
+  display:block!important;
+  color:#b7c5da!important;
+  font-size:12px!important;
+  font-weight:900!important;
+  margin-bottom:4px!important;
+}
+.filterGrid input,.filterGrid select{
+  width:100%!important;
+  margin:0!important;
+  height:38px!important;
+}
+.quickFilters{
+  text-align:center!important;
+  margin:8px 0!important;
+}
+.reportSummary{
+  background:#101827!important;
+  border:1px solid #263855!important;
+  border-radius:14px!important;
+  padding:12px!important;
+  margin:12px 0!important;
+  color:#fff!important;
+}
+.reportSummaryTitle{
+  color:#22c55e!important;
+  font-size:20px!important;
+  font-weight:1000!important;
+  text-align:center!important;
+}
+.searchHint{
+  color:#facc15!important;
+  font-size:12px!important;
+  font-weight:900!important;
+  text-align:center!important;
+  margin-top:6px!important;
+}
+.reportListTable{
+  width:100%!important;
+  border-collapse:collapse!important;
+  background:#fff!important;
+  color:#000!important;
+  font-size:12px!important;
+}
+.reportListTable th,.reportListTable td{
+  border:1px solid #000!important;
+  padding:6px!important;
+  text-align:center!important;
+  color:#000!important;
+  white-space:nowrap!important;
+}
+.reportListTable th{
+  background:#dbeafe!important;
+  font-weight:900!important;
+}
+.reportListTable tr:nth-child(even) td{
+  background:#f8fafc!important;
+}
+@media(max-width:900px){
+  .filterGrid{grid-template-columns:1fr!important}
+  .controls{position:static!important}
+}
+@media print{
+  .controls,.reportSummary{display:none!important}
 }
 
 </style>
