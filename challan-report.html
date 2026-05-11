@@ -64,6 +64,50 @@ body.singleView .noDataBox{
   display:block!important;
 }
 
+
+.filterWarning{
+  background:#fef3c7!important;
+  color:#92400e!important;
+  border:2px solid #f59e0b!important;
+  border-radius:12px!important;
+  padding:12px!important;
+  margin:12px 0!important;
+  text-align:center!important;
+  font-weight:900!important;
+}
+
+
+/* ===== STYLE/ORD NO HEADER FIX - REMOVE M BOX FROM CHALLAN ===== */
+.styleOrdBox{
+  border:2px solid #000;
+  min-width:150px;
+  min-height:45px;
+  padding:6px 10px;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  font-size:14px;
+  font-weight:900;
+  line-height:1.2;
+  text-align:center;
+}
+.styleOrdBox b{
+  font-size:16px;
+}
+@media print{
+  .styleOrdBox{
+    min-width:115px!important;
+    min-height:34px!important;
+    padding:3px 6px!important;
+    font-size:9px!important;
+    border:1px solid #000!important;
+  }
+  .styleOrdBox b{
+    font-size:10px!important;
+  }
+}
+
 </style>
 </head>
 <body>
@@ -134,11 +178,38 @@ function qr(){document.querySelectorAll("[data-qr]").forEach(e=>{e.innerHTML="";
 function blank(a,c){a=[...(a||[])];while(a.length<c)a.push({});return a}
 
 function summary(list){let rows=list.map((x,i)=>`<tr><td>${i+1}</td><td>${esc(x.date)}</td><td>${esc(x.challanNo)}</td><td>${esc(x.gatePassNo)}</td><td>${esc(x.company)}</td><td>${esc(x.mcd)}</td><td>${esc(x.toCompany)}</td><td>${fmt(x.grandTotalQty)}</td><td>${fmt(x.totalPkg)}</td><td>${esc(x.preparedBy||x.createdBy||"")}</td><td><button class="purple" onclick="printOne(${i})">Print</button><button class="orange" onclick="editOne('${esc(x.challanNo)}')">Edit</button><button class="red" onclick="delOne('${esc(x.challanNo)}')">Delete</button></td></tr>`).join("");$("summary").innerHTML=`<div class="summary"><div class="sumTitle">Total Found: ${list.length} Challan / Gate Pass</div><div style="overflow-x:auto"><table><thead><tr><th>SL</th><th>Date</th><th>Challan No</th><th>Gate Pass No</th><th>Company</th><th>MCD</th><th>To Company</th><th>Total Qty</th><th>Total Pkgs/Rolls</th><th>Created By</th><th>Action</th></tr></thead><tbody>${rows}</tbody></table></div></div>`}
-function challan(x){let rows=blank(x.rows,10),tq=(x.rows||[]).reduce((a,b)=>a+n(b.qty),0),tp=(x.rows||[]).reduce((a,b)=>a+n(b.pkg),0);let rowHtml=rows.map((r,i)=>`<tr><td>${r.item||r.qty||r.pkg?i+1:""}</td><td>${esc(r.item)}</td><td>${esc(r.color)}</td><td>${esc(r.mcDia)}</td><td>${esc(r.finDia)}</td><td>${esc(r.unit)}</td><td>${r.qty?fmt(r.qty):""}</td><td>${r.pkg?fmt(r.pkg):""}</td><td>${esc(r.remarks)}</td></tr>`).join("");return `<div class="page challanPage"><div class="ctop"><div class="challanTitle">DELIVERY CHALLAN</div><div class="logoLine"><div class="logo">M</div><div class="companyBig">${esc(x.company||"GMS TEXTILES LTD.")}</div></div><div class="cno">Challan No<br><b>${esc(x.challanNo)}</b></div><div class="qr" data-qr="${esc(x.challanNo)}"></div></div><div class="info"><div><div class="line"><span>To</span><span>${esc(x.toCompany)}</span></div><div class="line"><span>Address:</span><span>${esc(x.toAddress)}</span></div><div class="line"><span></span><span></span></div><div class="line"><span>Buyer:</span><span>${esc(x.buyer)}</span></div><div class="line"><span>Ord/No:</span><span>${esc(x.orderNo)}</span></div></div><div><div class="line"><span>Date:</span><span>${esc(x.date)}</span></div><div class="line"><span>Gate Pass No.:</span><span>${esc(x.gatePassNo)}</span></div><div class="line"><span>Transport No.:</span><span>${esc(x.transportNo)}</span></div><div class="line"><span>Driver's Name</span><span>${esc(x.driverName)}</span></div></div></div><div class="desc"><div style="padding:6px;font-weight:900">Description / Specification / Identification :</div><div class="spec"><div>Yarn Count</div><div>${esc(x.yarnCount)}</div><div>Brand</div><div>${esc(x.brand)}</div><div>Card / Combed</div><div>${esc(x.cardCombed)}</div><div>Lot No.</div><div>${esc(x.lotNo)}</div><div></div><div></div><div></div><div></div></div><table class="challanTable"><thead><tr><th>Sl.<br>No.</th><th>Item Name/Description/Fabric Type</th><th>Colour</th><th>M/c<br>Dia</th><th>Fin<br>Dia</th><th>Unit</th><th>G/Quantity</th><th>No. Of Pkgs./<br>Rolls</th><th>Remarks<br>F/Quantity</th></tr></thead><tbody>${rowHtml}</tbody><tfoot><tr><td></td><td style="text-align:left;font-weight:900">Loose yarn (Return)</td><td colspan="7"></td></tr><tr><td></td><td style="text-align:left;font-weight:900">Total:</td><td colspan="4"></td><td>${fmt(tq)}</td><td>${fmt(tp)}</td><td></td></tr></tfoot></table></div><div class="good">(Received The Above Quantity Of Goods In Good Condition For Handling & Delivery.)</div><div class="sign"><div>Delivery Approved by</div><div>Counted & Delivery by</div><div>Counted & Received by</div></div><div class="addr"><div><b>HEAD OFFICE :</b><br>${esc(x.companyAddress||"").replace(/\n/g,"<br>")}</div><div style="text-align:right"><b>FACTORY:</b><br>Tansutrapur, Kaliakoir, Gazipur.<br>TEL : +88-02-...........................<br>FAX : +88-02-...........................</div></div></div>`}
+function challan(x){let rows=blank(x.rows,10),tq=(x.rows||[]).reduce((a,b)=>a+n(b.qty),0),tp=(x.rows||[]).reduce((a,b)=>a+n(b.pkg),0);let rowHtml=rows.map((r,i)=>`<tr><td>${r.item||r.qty||r.pkg?i+1:""}</td><td>${esc(r.item)}</td><td>${esc(r.color)}</td><td>${esc(r.mcDia)}</td><td>${esc(r.finDia)}</td><td>${esc(r.unit)}</td><td>${r.qty?fmt(r.qty):""}</td><td>${r.pkg?fmt(r.pkg):""}</td><td>${esc(r.remarks)}</td></tr>`).join("");return `<div class="page challanPage"><div class="ctop"><div class="challanTitle">DELIVERY CHALLAN</div><div class="logoLine"><div class="styleOrdBox">Style/Ord No:<br><b>${esc(x.orderNo||"")}</b></div><div class="companyBig">${esc(x.company||"GMS TEXTILES LTD.")}</div></div><div class="cno">Challan No<br><b>${esc(x.challanNo)}</b></div><div class="qr" data-qr="${esc(x.challanNo)}"></div></div><div class="info"><div><div class="line"><span>To</span><span>${esc(x.toCompany)}</span></div><div class="line"><span>Address:</span><span>${esc(x.toAddress)}</span></div><div class="line"><span></span><span></span></div><div class="line"><span>Buyer:</span><span>${esc(x.buyer)}</span></div><div class="line"><span>Ord/No:</span><span>${esc(x.orderNo)}</span></div></div><div><div class="line"><span>Date:</span><span>${esc(x.date)}</span></div><div class="line"><span>Gate Pass No.:</span><span>${esc(x.gatePassNo)}</span></div><div class="line"><span>Transport No.:</span><span>${esc(x.transportNo)}</span></div><div class="line"><span>Driver's Name</span><span>${esc(x.driverName)}</span></div></div></div><div class="desc"><div style="padding:6px;font-weight:900">Description / Specification / Identification :</div><div class="spec"><div>Yarn Count</div><div>${esc(x.yarnCount)}</div><div>Brand</div><div>${esc(x.brand)}</div><div>Card / Combed</div><div>${esc(x.cardCombed)}</div><div>Lot No.</div><div>${esc(x.lotNo)}</div><div></div><div></div><div></div><div></div></div><table class="challanTable"><thead><tr><th>Sl.<br>No.</th><th>Item Name/Description/Fabric Type</th><th>Colour</th><th>M/c<br>Dia</th><th>Fin<br>Dia</th><th>Unit</th><th>G/Quantity</th><th>No. Of Pkgs./<br>Rolls</th><th>Remarks<br>F/Quantity</th></tr></thead><tbody>${rowHtml}</tbody><tfoot><tr><td></td><td style="text-align:left;font-weight:900">Loose yarn (Return)</td><td colspan="7"></td></tr><tr><td></td><td style="text-align:left;font-weight:900">Total:</td><td colspan="4"></td><td>${fmt(tq)}</td><td>${fmt(tp)}</td><td></td></tr></tfoot></table></div><div class="good">(Received The Above Quantity Of Goods In Good Condition For Handling & Delivery.)</div><div class="sign"><div>Delivery Approved by</div><div>Counted & Delivery by</div><div>Counted & Received by</div></div><div class="addr"><div><b>HEAD OFFICE :</b><br>${esc(x.companyAddress||"").replace(/\n/g,"<br>")}</div><div style="text-align:right"><b>FACTORY:</b><br>Tansutrapur, Kaliakoir, Gazipur.<br>TEL : +88-02-...........................<br>FAX : +88-02-...........................</div></div></div>`}
 function gate(x){let rows=blank(x.rows,5),tq=(x.rows||[]).reduce((a,b)=>a+n(b.qty),0);let rowHtml=rows.map((r,i)=>{let h=!!(r.item||r.unit||r.qty||r.purpose||r.remarks);return `<tr><td>${h?i+1:""}</td><td>${esc(r.item)}</td><td>${esc(r.unit)}</td><td>${r.qty?fmt(r.qty):""}</td><td>${h?esc(x.challanNo):""}</td><td>${esc(r.purpose||r.remarks)}</td></tr>`}).join("");return `<div class="page gatePage"><div class="gateHeader"><div><div class="gateCompany"><div class="logo">M</div><div><h2>${esc(x.company||"GMS TEXTILES LTD.")}</h2><div class="addrBlock">${esc(x.companyAddress||"").replace(/\n/g,"<br>")}</div></div></div><div class="qr" data-qr="${esc(x.challanNo)}"></div></div><div class="gateRight"><div class="gateText">M/s. <span class="blank">${esc(x.gateMs||x.toCompany)}</span><br><br>Is hereby permitted to carry the following<br><br>goods by <span class="blank">${esc(x.goodsBy||x.vehicleNo)}</span><br><br>from the mill site to <span class="blank">${esc(x.fromMillTo||x.toCompany)}</span></div><div class="gateSide"><div class="gtitle">GATE<br>PASS</div><div class="only">(FOR GOODS ONLY)</div><div class="gno">Gate Pass No.</div><div class="gnum">${esc(x.gatePassNo)}</div><div class="gdate"><b>Date :</b><br>${esc(x.date)}</div></div></div></div><div class="vehicle">Vehicle No : ${esc(x.vehicleNo)}</div><table class="gateTable"><thead><tr><th>SL #</th><th>ITEM</th><th>UNIT</th><th>QUANTITY</th><th>CHALLAN<br>NUMBER</th><th>PURPOSE</th></tr></thead><tbody>${rowHtml}</tbody><tfoot><tr><td colspan="3" style="font-weight:900">Grand Total</td><td style="font-weight:900">${fmt(tq)}</td><td colspan="2"></td></tr></tfoot></table><div class="bottom"><div class="bleft"><div>ISSUED BY</div><div>AUTHORISED BY</div></div><div class="bright">RECEIVED THE ABOVE QUANTITY OF GOODS IN GOOD CONDITION<div class="bright2"><div>RECEIVED BY</div><div>SECURITY DEPARTMENT</div></div></div></div></div>`}
 function setHtml(x,i){return `<div class="reportSet"><div class="actionBar"><button class="purple" onclick="printOne(${i})">Print This</button><button class="orange" onclick="editOne('${esc(x.challanNo)}')">Edit</button><button class="red" onclick="delOne('${esc(x.challanNo)}')">Delete</button><span class="createdByBadge">Created By: ${esc(x.preparedBy||x.createdBy||"")}</span></div>${challan(x)}${gate(x)}</div>`}
 
-window.showReport=async()=>{try{updateReportHeader();await load();cur=filter();summary(cur);$("area").innerHTML=cur.length?cur.map(setHtml).join(""):`<div class="noDataBox">No Challan Found. Please check Challan No or Firebase save.</div>`;setTimeout(qr,100)}catch(e){console.error(e);$("errorBox").style.display="block";$("errorBox").innerText="Report error: "+e.message}}
+window.showReport=async()=>{
+  try{
+    updateReportHeader();
+    await load();
+    cur=filter();
+
+    const params=new URLSearchParams(location.search);
+    const hasSpecific=params.get("challanNo");
+
+    if(cur.length===0 && all.length>0 && !hasSpecific){
+      // URL company/mcd filter mismatch hole all report show korbe
+      $("summary").innerHTML=`<div class="filterWarning">Selected Company/MCD filter-e data paowa jai nai. Tai all saved Challan/Gate Pass show kora holo.</div>`;
+      cur=[...all].sort(sorter);
+      summary(cur);
+      $("area").innerHTML=cur.map(setHtml).join("");
+      setTimeout(qr,100);
+      return;
+    }
+
+    summary(cur);
+    $("area").innerHTML=cur.length?cur.map(setHtml).join(""):`<div class="noDataBox">No Challan Found. Please check Challan No or Firebase save.</div>`;
+    setTimeout(qr,100);
+  }catch(e){
+    console.error(e);
+    $("errorBox").style.display="block";
+    $("errorBox").innerText="Report error: "+e.message;
+  }
+}
 window.clearF=()=>{["companyFilter","toCompanyFilter","mcdFilter"].forEach(id=>$(id).value="All");["monthFilter","singleDate","fromDate","toDate","challanSearch","gateSearch","textSearch"].forEach(id=>$(id).value="");updateReportHeader();showReport()}
 window.todayF=()=>{clearF();$("singleDate").value=new Date().toISOString().slice(0,10);showReport()}
 window.last7=()=>{let e=new Date(),s=new Date();s.setDate(e.getDate()-6);clearF();$("fromDate").value=s.toISOString().slice(0,10);$("toDate").value=e.toISOString().slice(0,10);showReport()}
@@ -161,9 +232,53 @@ body.singleView .noDataBox{
   display:block!important;
 }
 
+
+.filterWarning{
+  background:#fef3c7!important;
+  color:#92400e!important;
+  border:2px solid #f59e0b!important;
+  border-radius:12px!important;
+  padding:12px!important;
+  margin:12px 0!important;
+  text-align:center!important;
+  font-weight:900!important;
+}
+
+
+/* ===== STYLE/ORD NO HEADER FIX - REMOVE M BOX FROM CHALLAN ===== */
+.styleOrdBox{
+  border:2px solid #000;
+  min-width:150px;
+  min-height:45px;
+  padding:6px 10px;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  font-size:14px;
+  font-weight:900;
+  line-height:1.2;
+  text-align:center;
+}
+.styleOrdBox b{
+  font-size:16px;
+}
+@media print{
+  .styleOrdBox{
+    min-width:115px!important;
+    min-height:34px!important;
+    padding:3px 6px!important;
+    font-size:9px!important;
+    border:1px solid #000!important;
+  }
+  .styleOrdBox b{
+    font-size:10px!important;
+  }
+}
+
 </style></head><body><div class="wrap">${card.outerHTML}</div><script>function link(no){return "${location.origin+location.pathname}"+"?challanNo="+encodeURIComponent(no||"")}document.querySelectorAll(".actionBar").forEach(e=>e.remove());document.querySelectorAll("[data-qr]").forEach(e=>{e.innerHTML="";new QRCode(e,{text:link(e.dataset.qr),width:60,height:60,correctLevel:QRCode.CorrectLevel.M})});setTimeout(()=>print(),700)<\/script></body></html>`);w.document.close()}
 window.excel=()=>{let b=new Blob([$("summary").innerHTML],{type:"application/vnd.ms-excel"}),a=document.createElement("a");a.href=URL.createObjectURL(b);a.download="challan-gate-pass.xls";a.click()}
-applyUrlFilters();let p=new URLSearchParams(location.search).get("challanNo");if(p){document.body.classList.add("singleView");$("challanSearch").value=p}showReport()
+applyUrlFilters();applyUrlFilters();let p=new URLSearchParams(location.search).get("challanNo");if(p){document.body.classList.add("singleView");$("challanSearch").value=p}showReport()
 </script>
 </body>
 </html>
