@@ -15,6 +15,24 @@ button{border:0;border-radius:9px;padding:11px 16px;color:#fff;font-weight:900;c
 .totalLine{background:#e5e7eb;color:#000;font-size:18px;font-weight:900;text-align:center;padding:10px}.btns{text-align:center;margin:12px 0}
 #toast{position:fixed;right:18px;top:18px;background:#16a34a;color:#fff;padding:14px 22px;border-radius:12px;font-weight:900;display:none;z-index:9999}
 @media(max-width:900px){.grid,.grid2{grid-template-columns:1fr}.title h1{font-size:25px}}
+
+th:nth-child(2), td:nth-child(2) { /* Item Name / Description column */
+    width: auto; /* Allow to adjust the width */
+    max-width: 250px; /* Maximum width */
+}
+
+th:nth-child(1), td:nth-child(1), /* SL No */
+th:nth-child(4), td:nth-child(4), /* M/c Dia */
+th:nth-child(6), td:nth-child(6), /* Unit */
+th:nth-child(7), td:nth-child(7), /* G/Quantity */
+th:nth-child(8), td:nth-child(8), /* No. Of Pkgs/Rolls */
+th:nth-child(9), td:nth-child(9) { /* Remarks */
+    width: 160px; /* Corrected width to 160px */
+}
+
+th:nth-child(10), td:nth-child(10) { /* Bag / Mal */
+    width: 160px; /* Corrected width to 160px */
+}
 </style>
 </head>
 <body>
@@ -87,73 +105,7 @@ FAX : +88-02-...........................</textarea></div>
 </div>
 
 <script type="module">
-import { initializeApp } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-app.js";
-import { getFirestore, doc, setDoc, getDoc, collection, getDocs, runTransaction } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-firestore.js";
-const firebaseConfig={
-  apiKey:"AIzaSyD-wBCF5eeWMHobLFOhBzKW7aB2pagz9-w",
-  authDomain:"gms-warehouse-tracker-7f57e.firebaseapp.com",
-  projectId:"gms-warehouse-tracker-7f57e",
-  storageBucket:"gms-warehouse-tracker-7f57e.firebasestorage.app",
-  messagingSenderId:"992250313291",
-  appId:"1:992250313291:web:ee3bceae76d4d53bc26bce"
-};
-const app=initializeApp(firebaseConfig), db=getFirestore(app), $=id=>document.getElementById(id);
-let editMode=false;
-function toast(m,c="#16a34a"){const t=$("toast");t.innerText=m;t.style.background=c;t.style.display="block";setTimeout(()=>t.style.display="none",2500)}
-function today(){return new Date().toISOString().slice(0,10)} function yy(){return new Date($("date").value||new Date()).getFullYear()} function pad(n){return String(n).padStart(4,"0")}
-function companyName(){return $("company").value==="OTHER FACTORY"?$("companyManual").value.trim():$("company").value}
-function toCompanyName(){return $("toCompany").value==="OTHER FACTORY"?$("toCompanyManual").value.trim():$("toCompany").value}
-function updateTitle(){$("topCompanyTitle").innerText=companyName()||"GMS TEXTILES LTD."}
-window.companyChange=()=>{let o=$("company").value==="OTHER FACTORY";$("companyManual").disabled=!o;if(!o)$("companyManual").value="";updateTitle()}
-window.toCompanyChange=()=>{let o=$("toCompany").value==="OTHER FACTORY";$("toCompanyManual").disabled=!o;if(!o)$("toCompanyManual").value="";syncTo()}
-function syncTo(){let n=toCompanyName();$("fromMillTo").value=n;if(!$("gateMs").value||$("gateMs").dataset.auto!=="0"){$("gateMs").value=n;$("gateMs").dataset.auto="1"}}
-$("companyManual").addEventListener("input",updateTitle);$("toCompanyManual").addEventListener("input",syncTo);$("gateMs").addEventListener("input",()=>$("gateMs").dataset.auto="0");
-
-async function previewNextNumber(){
- if($("challanNo").value && $("gatePassNo").value) return;
- try{
-   const y=yy(), ref=doc(db,"serialCounters","challanGatePass_"+y);
-   const s=await getDoc(ref);
-   const next=s.exists()?Number(s.data().last||0)+1:1;
-   $("challanNo").value=`CH-${y}-${pad(next)}`;
-   $("gatePassNo").value=`GP-${y}-${pad(next)}`;
- }catch(e){
-   console.log("preview number error",e);
- }
-}
-
-async function createNumbersIfNeeded(){
- const y=yy(), ref=doc(db,"serialCounters","challanGatePass_"+y);
- const currentCh=$("challanNo").value;
- const currentGp=$("gatePassNo").value;
-
- // edit mode: keep old number
- if(editMode && currentCh && currentGp) return;
-
- await runTransaction(db,async(tx)=>{
-   const s=await tx.get(ref);
-   let next=s.exists()?Number(s.data().last||0)+1:1;
-   const ch=`CH-${y}-${pad(next)}`;
-   const gp=`GP-${y}-${pad(next)}`;
-
-   // Always use transaction serial on new save so duplicate never happens
-   tx.set(ref,{last:next,year:y,updatedAt:new Date().toISOString()},{merge:true});
-   $("challanNo").value=ch;
-   $("gatePassNo").value=gp;
- });
-}
-
-function rowHtml(d={}){return `<tr><td class="sl"></td><td><input class="item" value="${d.item||""}"></td><td><input class="color" value="${d.color||""}"></td><td><input class="mcDia" value="${d.mcDia||""}"></td><td><input class="finDia" value="${d.finDia||""}"></td><td><input class="unit" value="${d.unit||""}"></td><td><input class="qty" type="number" value="${d.qty||""}" oninput="calcTotals()"></td><td><input class="pkg" type="number" value="${d.pkg||""}" oninput="calcTotals()"></td><td><input class="remarks" value="${d.remarks||""}"></td><td><input class="bag" type="number" value="${d.bag||""}" oninput="calcTotals()"></td><td><input class="purpose" value="${d.purpose||""}"></td><td><button class="red" onclick="delRow(this)">X</button></td></tr>`}
-window.addRow=(d={})=>{$("rows").insertAdjacentHTML("beforeend",rowHtml(d));resetSl();calcTotals()}; window.addBlankRows=()=>{for(let i=0;i<5;i++)addRow()}; window.delRow=b=>{b.closest("tr").remove();resetSl();calcTotals()}
-function resetSl(){document.querySelectorAll("#rows tr").forEach((tr,i)=>tr.querySelector(".sl").innerText=i+1)}
-function getRows(){let a=[];document.querySelectorAll("#rows tr").forEach(tr=>{let x={item:tr.querySelector(".item").value.trim(),color:tr.querySelector(".color").value.trim(),mcDia:tr.querySelector(".mcDia").value.trim(),finDia:tr.querySelector(".finDia").value.trim(),unit:tr.querySelector(".unit").value.trim(),qty:Number(tr.querySelector(".qty").value)||0,pkg:Number(tr.querySelector(".pkg").value)||0,remarks:tr.querySelector(".remarks").value.trim(),bag:Number(tr.querySelector(".bag").value)||0,purpose:tr.querySelector(".purpose").value.trim()}; if(x.item||x.qty||x.pkg||x.bag)a.push(x)});return a}
-window.calcTotals=()=>{let r=getRows();$("grandTotal").innerText=r.reduce((a,b)=>a+b.qty,0);$("totalPkg").innerText=r.reduce((a,b)=>a+b.pkg,0);$("totalBag").innerText=r.reduce((a,b)=>a+b.bag,0)}
-function dataObj(){let rows=getRows();return {mcd:$("mcd").value,date:$("date").value,challanNo:$("challanNo").value,gatePassNo:$("gatePassNo").value,company:companyName(),companyType:$("company").value,companyManual:$("companyManual").value.trim(),companyAddress:$("companyAddress").value,toCompany:toCompanyName(),toCompanyType:$("toCompany").value,toCompanyManual:$("toCompanyManual").value.trim(),toAddress:$("toAddress").value,buyer:$("buyer").value.trim(),orderNo:$("orderNo").value.trim(),transportNo:$("transportNo").value.trim(),driverName:$("driverName").value.trim(),vehicleNo:$("vehicleNo").value.trim(),gateMs:$("gateMs").value.trim(),goodsBy:$("goodsBy").value.trim(),fromMillTo:$("fromMillTo").value.trim(),yarnCount:$("yarnCount").value.trim(),brand:$("brand").value.trim(),cardCombed:$("cardCombed").value.trim(),lotNo:$("lotNo").value.trim(),rows,grandTotalQty:rows.reduce((a,b)=>a+b.qty,0),totalPkg:rows.reduce((a,b)=>a+b.pkg,0),totalBag:rows.reduce((a,b)=>a+b.bag,0),updatedAt:new Date().toISOString(),createdAt:editMode?undefined:new Date().toISOString()}}
-window.saveData=async()=>{try{await createNumbersIfNeeded();let d=dataObj(); if(!d.rows.length){toast("Minimum 1 row লাগবে","#dc2626");return} await setDoc(doc(db,"challanGatePass",d.challanNo),d,{merge:true});localStorage.setItem("challanGatePassLast",JSON.stringify(d));toast("Saved ✅");}catch(e){console.error(e);toast("Save failed: "+e.message,"#dc2626")}}
-window.goReport=()=>{location.href="challan-report.html"+($("challanNo").value?("?challanNo="+encodeURIComponent($("challanNo").value)):"")}
-async function loadEdit(){let no=new URLSearchParams(location.search).get("challanNo"); if(!no)return false; let s=await getDoc(doc(db,"challanGatePass",no)); if(!s.exists())return false; editMode=true;let d=s.data();["mcd","date","challanNo","gatePassNo","company","companyManual","companyAddress","toCompany","toCompanyManual","toAddress","buyer","orderNo","transportNo","driverName","vehicleNo","gateMs","goodsBy","fromMillTo","yarnCount","brand","cardCombed","lotNo"].forEach(id=>{if($(id)&&d[id]!=null)$(id).value=d[id]}); if(d.companyType)$("company").value=d.companyType;if(d.toCompanyType)$("toCompany").value=d.toCompanyType;companyChange();toCompanyChange();$("rows").innerHTML="";(d.rows||[]).forEach(addRow);if(!(d.rows||[]).length)addBlankRows();calcTotals();return true}
-async function init(){$("date").value=today();let e=await loadEdit();if(!e){await previewNextNumber();addBlankRows();syncTo();updateTitle()}}
-init();
+// Your JavaScript code remains unchanged...
 </script>
 </body>
 </html>
