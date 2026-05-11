@@ -77,14 +77,41 @@ body.singleView .noDataBox{
   <div class="head"><h2 id="reportCompanyTitle">GMS TEXTILES LTD.</h2><h3>Delivery Challan & Gate Pass Report</h3></div>
   <div class="controls">
     <div class="grid">
-      <!-- Your existing filter form goes here -->
+      <div><label>Company</label><select id="companyFilter" onchange="updateReportHeader();showReport()"><option>All</option><option>GMS TEXTILES LTD.</option><option>GMS COMPOSITE KNITTING IND LTD.</option><option>OTHER FACTORY</option></select></div>
+      <div><label>To Company</label><select id="toCompanyFilter" onchange="showReport()"><option>All</option><option>GMS TEXTILES LTD.</option><option>GMS COMPOSITE KNITTING IND LTD.</option><option>OTHER FACTORY</option></select></div>
+      <div><label>MCD</label><select id="mcdFilter" onchange="showReport()"><option>All</option><option>ACCESSORIES MCD</option><option>GREY FABRIC MCD</option><option>SHIPMENT MCD</option></select></div>
+      <div><label>Month</label><input type="month" id="monthFilter"></div>
+      <div><label>Single Date</label><input type="date" id="singleDate"></div>
     </div>
   </div>
+
   <div id="errorBox"></div><div id="summary"></div><div id="area"></div>
 </div>
 
 <script type="module">
-  // Your existing JavaScript logic goes here
+  // JavaScript logic for report handling
+  async function showReport() {
+    // Load and display filtered data
+    const data = await loadReportData();
+    // Process and show summary
+    document.getElementById("area").innerHTML = generateReportHtml(data);
+  }
+  function updateReportHeader() {
+    const company = document.getElementById("companyFilter").value;
+    document.getElementById("reportCompanyTitle").innerText = company !== "All" ? company : "GMS TEXTILES LTD.";
+  }
+  async function loadReportData() {
+    // Here you would fetch data from the server or database
+    return [
+      { challanNo: 'CH-2026-0001', date: '2026-05-01', company: 'GMS TEXTILES LTD.' },
+      // Add more data objects as needed
+    ];
+  }
+  function generateReportHtml(data) {
+    return data.map(item => {
+      return `<div><strong>Challan No:</strong> ${item.challanNo}, <strong>Date:</strong> ${item.date}, <strong>Company:</strong> ${item.company}</div>`;
+    }).join('');
+  }
 </script>
 </body>
 </html>
