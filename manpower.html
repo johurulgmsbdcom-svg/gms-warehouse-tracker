@@ -2,58 +2,63 @@
 <html>
 <head>
 <title>Manpower List</title>
+
 <style>
 body{margin:0;background:#0b0f19;color:white;font-family:Arial}
 .box{padding:20px}
-h2,h3{text-align:center;margin:4px}
-.top{text-align:center;margin-top:10px}
-table{width:100%;border-collapse:collapse;margin-top:15px;background:white;color:black}
+h2{text-align:center}
+input{padding:8px;margin:5px;border-radius:6px;border:none}
+button{padding:8px 12px;margin:5px;border:none;border-radius:6px;cursor:pointer}
+.editBtn{background:#f59e0b;color:white}
+.deleteBtn{background:#dc2626;color:white}
+.addBtn{background:#2563eb;color:white}
+table{width:100%;margin-top:15px;border-collapse:collapse;background:white;color:black}
 th,td{border:1px solid #000;padding:8px;text-align:center}
-input,select{padding:8px;border-radius:6px;border:1px solid #333}
-button{padding:10px 18px;background:#2563eb;color:white;border:0;border-radius:8px;font-weight:bold;cursor:pointer;margin:4px}
-.deleteBtn{background:#dc2626}
-.editBtn{background:#f59e0b}
-.summary{font-size:20px;font-weight:bold;text-align:center;margin-top:10px}
 </style>
+
 </head>
 
 <body>
 
 <div class="box">
-<h2>Manpower List</h2>
 
-<button onclick="showForm()">Add Manpower</button>
+<h2>Manpower System</h2>
 
-<div id="formBox" style="display:none">
 <input id="empId" placeholder="Employee ID">
 <input id="empName" placeholder="Employee Name">
 <input id="designation" placeholder="Designation">
 <input id="salary" type="number" placeholder="Salary">
-<button onclick="saveData()">Save</button>
-</div>
 
-<div class="summary">
-Total: <span id="total">0</span>
-</div>
+<button class="addBtn" onclick="saveData()">Save</button>
 
 <table>
 <thead>
 <tr>
-<th>ID</th><th>Name</th><th>Designation</th><th>Salary</th><th>Action</th>
+<th>ID</th>
+<th>Name</th>
+<th>Designation</th>
+<th>Salary</th>
+<th>Action</th>
 </tr>
 </thead>
+
 <tbody id="tableBody"></tbody>
 </table>
+
 </div>
 
 <script type="module">
+
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-app.js";
 import { getFirestore, doc, setDoc, deleteDoc, collection, onSnapshot, addDoc } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-firestore.js";
 
 const firebaseConfig = {
-  apiKey: "AIzaSyD...",
+  apiKey: "AIzaSyD-wBCF5eeWMHobLFOhBzKW7aB2pagz9-w",
   authDomain: "gms-warehouse-tracker-7f57e.firebaseapp.com",
-  projectId: "gms-warehouse-tracker-7f57e"
+  projectId: "gms-warehouse-tracker-7f57e",
+  storageBucket: "gms-warehouse-tracker-7f57e.firebasestorage.app",
+  messagingSenderId: "992250313291",
+  appId: "1:992250313291:web:ee3bceae76d4d53bc26bce"
 };
 
 const app = initializeApp(firebaseConfig);
@@ -62,8 +67,11 @@ const db = getFirestore(app);
 const user=JSON.parse(localStorage.getItem("gmsUser")||"{}");
 
 let editMode=false;
+let currentId=null;
+window.allData=[];
 
-// 🔥 LOG FUNCTION
+
+// 🔥 Activity Log Function
 async function saveLog(action,item){
   await addDoc(collection(db,"activityLogs"),{
     user: user.name || "Unknown",
@@ -74,16 +82,13 @@ async function saveLog(action,item){
   });
 }
 
-// SHOW FORM
-function showForm(){
-  document.getElementById("formBox").style.display="block";
-}
 
-// SAVE (ADD + EDIT)
+// ➕ Save (Add + Edit)
 async function saveData(){
-  let empId=document.getElementById("empId").value;
-  let empName=document.getElementById("empName").value;
-  let designation=document.getElementById("designation").value;
+
+  let empId=document.getElementById("empId").value.trim();
+  let empName=document.getElementById("empName").value.trim();
+  let designation=document.getElementById("designation").value.trim();
   let salary=Number(document.getElementById("salary").value)||0;
 
   if(!empId){
@@ -95,13 +100,17 @@ async function saveData(){
 
   await setDoc(doc(db,"manpower",empId),data);
 
-  await saveLog(editMode?"EDIT":"ADD",empId);
+  await saveLog(editMode?"EDIT":"ADD",empId+" ("+empName+")");
 
   clearForm();
 }
 
-// DELETE
+
+// ❌ Delete
 async function deleteEmployee(empId){
+
+  let row = window.allData.find(x=>x.empId===empId);
+  let name = row?.empName || "";
 
   if(!confirm("⚠️ আপনি কি নিশ্চিত delete করতে চান?\nএই কাজটি লগ হবে।")){
     return;
@@ -109,11 +118,16 @@ async function deleteEmployee(empId){
 
   await deleteDoc(doc(db,"manpower",empId));
 
-  await saveLog("DELETE",empId);
+  await saveLog("DELETE",empId+" ("+name+")");
 }
 
-// EDIT
-function editEmployee(x){
+
+// ✏️ Edit
+function editEmployee(empId){
+
+  let x = window.allData.find(d=>d.empId===empId);
+  if(!x) return;
+
   document.getElementById("empId").value=x.empId;
   document.getElementById("empName").value=x.empName;
   document.getElementById("designation").value=x.designation;
@@ -122,22 +136,16 @@ function editEmployee(x){
   editMode=true;
 }
 
-// CLEAR
-function clearForm(){
-  ["empId","empName","designation","salary"].forEach(id=>{
-    document.getElementById(id).value="";
-  });
-  editMode=false;
-}
 
-// REALTIME LOAD
+// 🔄 Realtime Load
 onSnapshot(collection(db,"manpower"), snap=>{
+
   let html="";
-  let total=0;
+  window.allData=[];
 
   snap.forEach(d=>{
     let x=d.data();
-    total++;
+    window.allData.push(x);
 
     html+=`
     <tr>
@@ -146,17 +154,27 @@ onSnapshot(collection(db,"manpower"), snap=>{
       <td>${x.designation}</td>
       <td>${x.salary}</td>
       <td>
-        <button class="editBtn" onclick='editEmployee(${JSON.stringify(x)})'>Edit</button>
+        <button class="editBtn" onclick="editEmployee('${x.empId}')">Edit</button>
         <button class="deleteBtn" onclick="deleteEmployee('${x.empId}')">Delete</button>
       </td>
     </tr>`;
   });
 
   document.getElementById("tableBody").innerHTML=html;
-  document.getElementById("total").innerText=total;
+
 });
 
-window.showForm=showForm;
+
+// 🔹 Clear Form
+function clearForm(){
+  ["empId","empName","designation","salary"].forEach(id=>{
+    document.getElementById(id).value="";
+  });
+  editMode=false;
+}
+
+
+// global access
 window.saveData=saveData;
 window.deleteEmployee=deleteEmployee;
 window.editEmployee=editEmployee;
