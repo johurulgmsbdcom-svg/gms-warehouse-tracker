@@ -13,7 +13,6 @@
   --border:#263855;
   --blue:#2563eb;
   --green:#22c55e;
-  --red:#ef4444;
 }
 
 body{
@@ -80,7 +79,7 @@ body{
 
 .user{
   font-weight:900;
-  color:#22c55e;
+  color:var(--green);
 }
 
 .date{
@@ -110,12 +109,9 @@ body{
     <div class="sub">Live User Activity Tracking</div>
   </div>
 
-  <div>
-    <button class="btn"
-      onclick="location.href='index.html'">
-      🏠 Dashboard
-    </button>
-  </div>
+  <button class="btn" onclick="location.href='index.html'">
+    🏠 Dashboard
+  </button>
 
 </div>
 
@@ -135,14 +131,14 @@ body{
 
 <script type="module">
 
-import { initializeApp }
+import { initializeApp } 
 from "https://www.gstatic.com/firebasejs/12.12.1/firebase-app.js";
 
-import {
-  getFirestore,
-  collection,
-  getDocs
-}
+import { 
+  getFirestore, 
+  collection, 
+  onSnapshot 
+} 
 from "https://www.gstatic.com/firebasejs/12.12.1/firebase-firestore.js";
 
 const firebaseConfig = {
@@ -155,62 +151,42 @@ const firebaseConfig = {
 };
 
 const app = initializeApp(firebaseConfig);
-
 const db = getFirestore(app);
 
-async function loadAudit(){
+function loadAudit(){
 
-  let snap =
-    await getDocs(collection(db,"auditHistory"));
+  onSnapshot(collection(db,"activityLogs"), snap=>{
 
-  let rows=[];
+    let html="";
 
-  snap.forEach(d=>{
+    snap.forEach(d=>{
 
-    rows.push({
-      id:d.id,
-      ...d.data()
+      let x = d.data();
+
+      html += `
+        <div class="auditItem">
+
+          <div class="top">
+            <div class="user">
+              👤 ${x.user || "Unknown"}
+            </div>
+            <div class="date">
+              ${x.time || ""}
+            </div>
+          </div>
+
+          <div class="action">
+            ${x.action} → ${x.module} → ${x.item}
+          </div>
+
+        </div>
+      `;
     });
 
-  });
-
-  rows.sort((a,b)=>
-    (b.createdAt || "").localeCompare(a.createdAt || "")
-  );
-
-  let html="";
-
-  rows.forEach(r=>{
-
-    let date =
-      new Date(r.createdAt).toLocaleString();
-
-    html += `
-      <div class="auditItem">
-
-        <div class="top">
-
-          <div class="user">
-            👤 ${r.user || "Unknown"}
-          </div>
-
-          <div class="date">
-            ${date}
-          </div>
-
-        </div>
-
-        <div class="action">
-          ${r.action || ""}
-        </div>
-
-      </div>
-    `;
+    document.getElementById("auditList").innerHTML =
+      html || '<div class="empty">No activity found</div>';
 
   });
-
-  document.getElementById("auditList").innerHTML =
-    html || '<div class="empty">No activity found</div>';
 
 }
 
