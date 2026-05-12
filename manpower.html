@@ -1,3 +1,104 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Manpower List</title>
+
+<style>
+body{margin:0;background:#0b0f19;color:white;font-family:Arial}
+.box{padding:20px}
+h2,h3{text-align:center;margin:4px}
+.top{text-align:center;margin-top:10px}
+
+table{
+  width:100%;
+  border-collapse:collapse;
+  margin-top:15px;
+  background:white;
+  color:black
+}
+
+th,td{
+  border:1px solid #000;
+  padding:8px;
+  text-align:center
+}
+
+input,select{
+  padding:8px;
+  border-radius:6px;
+  border:1px solid #333;
+  margin:3px
+}
+
+button{
+  padding:10px 18px;
+  background:#2563eb;
+  color:white;
+  border:0;
+  border-radius:8px;
+  font-weight:bold;
+  cursor:pointer;
+  margin:4px
+}
+
+.deleteBtn{background:#dc2626}
+.editBtn{background:#f59e0b}
+
+.summary{
+  font-size:20px;
+  font-weight:bold;
+  text-align:center;
+  margin-top:10px
+}
+
+</style>
+</head>
+
+<body>
+
+<div class="box">
+
+<h2>Manpower List</h2>
+
+<div class="top">
+
+<select id="mcd" onchange="startRealtime()">
+<option>GREY FABRIC MCD</option>
+<option>SHIPMENT MCD</option>
+<option>BILLING SECTION</option>
+</select>
+
+<br>
+
+<input id="empId" placeholder="Employee ID">
+<input id="empName" placeholder="Employee Name">
+<input id="designation" placeholder="Designation">
+<input id="salary" type="number" placeholder="Salary">
+
+<button onclick="saveData()">Save</button>
+
+</div>
+
+<div class="summary">
+Total: <span id="total">0</span>
+</div>
+
+<table>
+<thead>
+<tr>
+<th>ID</th>
+<th>Name</th>
+<th>Designation</th>
+<th>Salary</th>
+<th>Action</th>
+</tr>
+</thead>
+
+<tbody id="tableBody"></tbody>
+</table>
+
+</div>
+
 <script type="module">
 
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-app.js";
@@ -7,7 +108,7 @@ const firebaseConfig = {
   apiKey: "AIzaSyD-wBCF5eeWMHobLFOhBzKW7aB2pagz9-w",
   authDomain: "gms-warehouse-tracker-7f57e.firebaseapp.com",
   projectId: "gms-warehouse-tracker-7f57e",
-  storageBucket: "gms-warehouse-tracker-7f57e.firebasestorage.app",
+  storageBucket: "gms-warehouse-tracker-7f57e.appspot.com",
   messagingSenderId: "992250313291",
   appId: "1:992250313291:web:ee3bceae76d4d53bc26bce"
 };
@@ -15,151 +116,141 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
-const user=JSON.parse(localStorage.getItem("gmsUser")||"null");
-if(!user){window.location.href="login.html";}
+const user = JSON.parse(localStorage.getItem("gmsUser") || "{}");
 
-let editMode=false;
-window.currentRows=[];
+let editMode = false;
+window.currentRows = [];
 
-// 🔥 Activity Log Function
+
+// 🔥 LOG FUNCTION
 async function saveLog(action,module,item){
   await addDoc(collection(db,"activityLogs"),{
     user: user.name || "Unknown",
-    action: action,
-    module: module,
-    item: item,
+    action,
+    module,
+    item,
     time: new Date().toLocaleString()
   });
 }
 
 
-// ================= SAVE (ADD + EDIT) =================
+// SAVE
 async function saveData(){
 
-  let x=getFormData();
+  let mcd=document.getElementById("mcd").value;
+  let empId=document.getElementById("empId").value.trim();
+  let empName=document.getElementById("empName").value.trim();
+  let designation=document.getElementById("designation").value.trim();
+  let salary=Number(document.getElementById("salary").value)||0;
 
-  if(!x.empId){
-    toast("Employee ID dao","#dc2626");
+  if(!empId){
+    alert("Employee ID dao");
     return;
   }
 
-  spinner(true);
+  let data={mcd,empId,empName,designation,salary};
 
-  try{
-    await setDoc(doc(db,"manpower",x.mcd+"_"+x.empId),x);
+  await setDoc(doc(db,"manpower",mcd+"_"+empId),data);
 
-    // 🔥 LOG ADD / EDIT
-    await saveLog(
-      editMode ? "EDIT" : "ADD",
-      x.mcd,
-      x.empId + " (" + x.empName + ")"
-    );
+  await saveLog(
+    editMode ? "EDIT":"ADD",
+    mcd,
+    empId+" ("+empName+")"
+  );
 
-    clearForm();
-    toast(editMode ? "Updated Successfully ✅" : "Saved Successfully ✅");
-
-    editMode=false;
-    document.getElementById("saveBtn").innerText="Save Employee";
-
-  }catch(e){
-    toast("Save failed ❌","#dc2626");
-  }
-
-  spinner(false);
+  clearForm();
+  editMode=false;
 }
 
 
-// ================= DELETE =================
+// DELETE
 async function deleteEmployee(empId){
 
   let mcd=document.getElementById("mcd").value;
 
-  let row = window.currentRows.find(x => x.empId === empId);
-  let empName = row?.empName || "";
+  let row = window.currentRows.find(x=>x.empId===empId);
+  let name=row?.empName || "";
 
-  if(!confirm("⚠️ আপনি কি নিশ্চিত এই employee delete করতে চান?\nএই কাজটি লগ হবে।")){
+  if(!confirm("⚠️ Delete korte chan?\nEi kaj log hobe")){
     return;
   }
 
-  spinner(true);
+  await deleteDoc(doc(db,"manpower",mcd+"_"+empId));
 
-  try{
-    await deleteDoc(doc(db,"manpower",mcd+"_"+empId));
-
-    // 🔥 LOG DELETE
-    await saveLog(
-      "DELETE",
-      mcd,
-      empId + " (" + empName + ")"
-    );
-
-    toast("Deleted Successfully ✅");
-
-  }catch(e){
-    toast("Delete failed ❌","#dc2626");
-  }
-
-  spinner(false);
+  await saveLog("DELETE",mcd,empId+" ("+name+")");
 }
 
 
-// ================= EDIT =================
+// EDIT
 function editEmployee(empId){
 
-  let row = window.currentRows.find(x => x.empId === empId);
+  let row = window.currentRows.find(x=>x.empId===empId);
   if(!row) return;
 
-  showForm();
-
-  document.getElementById("image").value=row.image||"";
-  document.getElementById("empId").value=row.empId||"";
-  document.getElementById("empName").value=row.empName||"";
-  document.getElementById("designation").value=row.designation||"";
-  document.getElementById("joinDate").value=row.joinDate||"";
-  document.getElementById("jobAge").value=getJobAge(row.joinDate)||"";
-  document.getElementById("section").value=row.section||"";
-  document.getElementById("salary").value=row.salary||"";
-  document.getElementById("jobDesc").value=row.jobDesc||"";
+  document.getElementById("empId").value=row.empId;
+  document.getElementById("empName").value=row.empName;
+  document.getElementById("designation").value=row.designation;
+  document.getElementById("salary").value=row.salary;
 
   editMode=true;
-  document.getElementById("saveBtn").innerText="Update Employee";
 }
 
 
-// ================= REALTIME =================
+// REALTIME
 function startRealtime(){
 
   let mcd=document.getElementById("mcd").value;
 
-  if(unsubscribe) unsubscribe();
-
-  spinner(true);
-
-  unsubscribe = onSnapshot(collection(db,"manpower"), snap=>{
+  onSnapshot(collection(db,"manpower"), snap=>{
 
     let rows=[];
+    let html="";
+    let total=0;
 
-    snap.forEach(docSnap=>{
-      let x=docSnap.data();
+    snap.forEach(d=>{
+      let x=d.data();
+
       if(x.mcd===mcd){
         rows.push(x);
+        total++;
+
+        html+=`
+        <tr>
+          <td>${x.empId}</td>
+          <td>${x.empName}</td>
+          <td>${x.designation}</td>
+          <td>${x.salary}</td>
+          <td>
+            <button class="editBtn" onclick="editEmployee('${x.empId}')">Edit</button>
+            <button class="deleteBtn" onclick="deleteEmployee('${x.empId}')">Delete</button>
+          </td>
+        </tr>`;
       }
     });
 
-    rows.sort((a,b)=>(a.empId||"").localeCompare(b.empId||""));
-
     window.currentRows=rows;
-    render(rows);
+    document.getElementById("tableBody").innerHTML=html;
+    document.getElementById("total").innerText=total;
 
-    spinner(false);
   });
 }
 
 
-// global
+// CLEAR
+function clearForm(){
+  ["empId","empName","designation","salary"].forEach(id=>{
+    document.getElementById(id).value="";
+  });
+}
+
 window.saveData=saveData;
 window.deleteEmployee=deleteEmployee;
 window.editEmployee=editEmployee;
 window.startRealtime=startRealtime;
 
+startRealtime();
+
 </script>
+
+</body>
+</html>
