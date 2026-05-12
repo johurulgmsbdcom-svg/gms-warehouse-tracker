@@ -2,253 +2,177 @@
 <html>
 <head>
 <title>Manpower List</title>
-
 <style>
 body{margin:0;background:#0b0f19;color:white;font-family:Arial}
 .box{padding:20px}
 h2,h3{text-align:center;margin:4px}
 .top{text-align:center;margin-top:10px}
-
-table{
-  width:100%;
-  border-collapse:collapse;
-  margin-top:15px;
-  background:white;
-  color:black
-}
-
-th,td{
-  border:1px solid #000;
-  padding:8px;
-  text-align:center
-}
-
-input,select{
-  padding:8px;
-  border-radius:6px;
-  border:1px solid #333;
-  margin:3px
-}
-
-button{
-  padding:10px 18px;
-  background:#2563eb;
-  color:white;
-  border:0;
-  border-radius:8px;
-  font-weight:bold;
-  cursor:pointer;
-  margin:4px
-}
-
+table{width:100%;border-collapse:collapse;margin-top:15px;background:white;color:black}
+th,td{border:1px solid #000;padding:8px;text-align:center}
+input,select{padding:8px;border-radius:6px;border:1px solid #333}
+button{padding:10px 18px;background:#2563eb;color:white;border:0;border-radius:8px;font-weight:bold;cursor:pointer;margin:4px}
 .deleteBtn{background:#dc2626}
 .editBtn{background:#f59e0b}
-
-.summary{
-  font-size:20px;
-  font-weight:bold;
-  text-align:center;
-  margin-top:10px
-}
-
+.excelBtn{background:#16a34a}
+.pdfBtn{background:#7c3aed}
+.clearBtn{background:#64748b}
+.total{background:#92d050;font-weight:bold}
+.empImg{width:45px;height:45px;border-radius:50%;object-fit:cover}
+.formBox{display:none;grid-template-columns:repeat(4,1fr);gap:10px;margin-top:15px}
+.summary{font-size:20px;font-weight:bold;text-align:center;margin-top:10px}
+#searchBox{width:300px;margin-left:10px}
+#toast{position:fixed;right:20px;top:20px;background:#16a34a;color:white;padding:14px 22px;border-radius:10px;display:none;font-weight:bold;z-index:9999}
+#spinner{position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,.45);display:none;align-items:center;justify-content:center;z-index:9998}
+.loader{width:55px;height:55px;border:6px solid #ddd;border-top:6px solid #2563eb;border-radius:50%;animation:spin 1s linear infinite}
+@keyframes spin{100%{transform:rotate(360deg)}}
+@media print{body{background:white;color:black}button,.top,.formBox,#searchBox{display:none!important}}
 </style>
 </head>
 
 <body>
 
+<div id="toast"></div>
+<div id="spinner"><div class="loader"></div></div>
+
 <div class="box">
 
-<h2>Manpower List</h2>
+<h2>GMS TEXTILES LTD</h2>
+<h3>Tansutrapur, Kaliakair, Gazipur.</h3>
+<h3 id="mcdTitle">GREY FABRIC MCD</h3>
+<h3>Manpower List</h3>
 
 <div class="top">
+Company:
+<select id="company">
+<option>GMS TEXTILES LTD</option>
+<option>GMS COMPOSITE KNITTING</option>
+</select>
 
+MCD:
 <select id="mcd" onchange="startRealtime()">
 <option>GREY FABRIC MCD</option>
 <option>SHIPMENT MCD</option>
 <option>BILLING SECTION</option>
+<option>OUTER WEAR MCD</option>
+<option>YARN MCD</option>
+<option>PRINTING MCD</option>
+<option>JHUT MCD</option>
+<option>GENERAL MCD</option>
+<option>ACCESSORIES MCD</option>
+<option>LEFTOVER MCD</option>
+<option>FINISH FABRIC MCD</option>
+<option>YARN DYEING MCD</option>
+<option>CHEMICAL MCD</option>
+<option>GENERAL TECHNICAL MCD</option>
 </select>
+
+<input id="searchBox" placeholder="Search..." oninput="filterSearch()">
 
 <br>
 
+<button onclick="showForm()">Add Manpower</button>
+<button class="excelBtn" onclick="exportExcel()">Export Excel</button>
+<button class="pdfBtn" onclick="exportPDF()">PDF / Print</button>
+<button onclick="location.href='index.html'">Back Home</button>
+</div>
+
+<div id="formBox" class="formBox">
+<input id="image" placeholder="Image Link">
 <input id="empId" placeholder="Employee ID">
 <input id="empName" placeholder="Employee Name">
 <input id="designation" placeholder="Designation">
+<input id="joinDate" type="date" onchange="updateJobAge()">
+<input id="jobAge" readonly>
+<input id="section" placeholder="Section">
 <input id="salary" type="number" placeholder="Salary">
+<input id="jobDesc" placeholder="Description">
 
-<button onclick="saveData()">Save</button>
-
+<button id="saveBtn" onclick="saveData()">Save Employee</button>
+<button class="clearBtn" onclick="clearForm()">Clear</button>
 </div>
 
 <div class="summary">
-Total: <span id="total">0</span>
+Total: <span id="totalManpower">0</span> | Salary: <span id="totalSalary">0</span>
 </div>
 
-<table>
+<table id="reportTable">
 <thead>
 <tr>
-<th>ID</th>
-<th>Name</th>
-<th>Designation</th>
-<th>Salary</th>
-<th>Action</th>
+<th>Image</th><th>ID</th><th>Name</th><th>Designation</th><th>Join</th><th>Age</th><th>Section</th><th>Salary</th><th>Desc</th><th>Action</th>
 </tr>
 </thead>
-
 <tbody id="tableBody"></tbody>
+<tfoot>
+<tr class="total">
+<td colspan="10" id="mcdTotal"></td>
+</tr>
+</tfoot>
 </table>
 
 </div>
 
 <script type="module">
-
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-app.js";
 import { getFirestore, doc, setDoc, deleteDoc, collection, onSnapshot, addDoc } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-firestore.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyD-wBCF5eeWMHobLFOhBzKW7aB2pagz9-w",
   authDomain: "gms-warehouse-tracker-7f57e.firebaseapp.com",
-  projectId: "gms-warehouse-tracker-7f57e",
-  storageBucket: "gms-warehouse-tracker-7f57e.appspot.com",
-  messagingSenderId: "992250313291",
-  appId: "1:992250313291:web:ee3bceae76d4d53bc26bce"
+  projectId: "gms-warehouse-tracker-7f57e"
 };
 
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
-const user = JSON.parse(localStorage.getItem("gmsUser") || "{}");
+const user=JSON.parse(localStorage.getItem("gmsUser")||"null");
 
-let editMode = false;
-window.currentRows = [];
-
-
-// 🔥 LOG FUNCTION
 async function saveLog(action,module,item){
   await addDoc(collection(db,"activityLogs"),{
-    user: user.name || "Unknown",
-    action,
-    module,
-    item,
-    time: new Date().toLocaleString()
+    user:user?.name||"Unknown",
+    action,module,item,
+    time:new Date().toLocaleString()
   });
 }
 
+let editMode=false;
+window.currentRows=[];
 
-// SAVE
 async function saveData(){
-
-  let mcd=document.getElementById("mcd").value;
-  let empId=document.getElementById("empId").value.trim();
-  let empName=document.getElementById("empName").value.trim();
-  let designation=document.getElementById("designation").value.trim();
-  let salary=Number(document.getElementById("salary").value)||0;
-
-  if(!empId){
-    alert("Employee ID dao");
-    return;
-  }
-
-  let data={mcd,empId,empName,designation,salary};
-
-  await setDoc(doc(db,"manpower",mcd+"_"+empId),data);
-
-  await saveLog(
-    editMode ? "EDIT":"ADD",
-    mcd,
-    empId+" ("+empName+")"
-  );
-
+  let x=getFormData();
+  await setDoc(doc(db,"manpower",x.mcd+"_"+x.empId),x);
+  await saveLog(editMode?"EDIT":"ADD",x.mcd,x.empId+" ("+x.empName+")");
   clearForm();
-  editMode=false;
 }
 
-
-// DELETE
 async function deleteEmployee(empId){
-
   let mcd=document.getElementById("mcd").value;
-
-  let row = window.currentRows.find(x=>x.empId===empId);
-  let name=row?.empName || "";
-
-  if(!confirm("⚠️ Delete korte chan?\nEi kaj log hobe")){
-    return;
-  }
+  let row=window.currentRows.find(x=>x.empId===empId);
+  let name=row?.empName||"";
+  if(!confirm("Delete korba?"))return;
 
   await deleteDoc(doc(db,"manpower",mcd+"_"+empId));
-
   await saveLog("DELETE",mcd,empId+" ("+name+")");
 }
 
-
-// EDIT
-function editEmployee(empId){
-
-  let row = window.currentRows.find(x=>x.empId===empId);
-  if(!row) return;
-
-  document.getElementById("empId").value=row.empId;
-  document.getElementById("empName").value=row.empName;
-  document.getElementById("designation").value=row.designation;
-  document.getElementById("salary").value=row.salary;
-
-  editMode=true;
-}
-
-
-// REALTIME
-function startRealtime(){
-
-  let mcd=document.getElementById("mcd").value;
-
-  onSnapshot(collection(db,"manpower"), snap=>{
-
-    let rows=[];
-    let html="";
-    let total=0;
-
-    snap.forEach(d=>{
-      let x=d.data();
-
-      if(x.mcd===mcd){
-        rows.push(x);
-        total++;
-
-        html+=`
-        <tr>
-          <td>${x.empId}</td>
-          <td>${x.empName}</td>
-          <td>${x.designation}</td>
-          <td>${x.salary}</td>
-          <td>
-            <button class="editBtn" onclick="editEmployee('${x.empId}')">Edit</button>
-            <button class="deleteBtn" onclick="deleteEmployee('${x.empId}')">Delete</button>
-          </td>
-        </tr>`;
-      }
-    });
-
-    window.currentRows=rows;
-    document.getElementById("tableBody").innerHTML=html;
-    document.getElementById("total").innerText=total;
-
+onSnapshot(collection(db,"manpower"),snap=>{
+  let html="";
+  let rows=[];
+  snap.forEach(d=>{
+    let x=d.data();
+    rows.push(x);
+    html+=`<tr>
+<td>${x.empId}</td>
+<td>${x.empName}</td>
+<td>${x.designation}</td>
+<td>${x.salary}</td>
+<td>
+<button onclick="editEmployee('${x.empId}')">Edit</button>
+<button onclick="deleteEmployee('${x.empId}')">Delete</button>
+</td></tr>`;
   });
-}
-
-
-// CLEAR
-function clearForm(){
-  ["empId","empName","designation","salary"].forEach(id=>{
-    document.getElementById(id).value="";
-  });
-}
-
-window.saveData=saveData;
-window.deleteEmployee=deleteEmployee;
-window.editEmployee=editEmployee;
-window.startRealtime=startRealtime;
-
-startRealtime();
+  window.currentRows=rows;
+  document.getElementById("tableBody").innerHTML=html;
+});
 
 </script>
 
