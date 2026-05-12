@@ -13,6 +13,7 @@
   --border:#263855;
   --blue:#2563eb;
   --green:#22c55e;
+  --red:#ef4444;
 }
 
 body{
@@ -29,6 +30,8 @@ body{
   padding:16px 22px;
   background:var(--card);
   border-bottom:1px solid var(--border);
+  gap:10px;
+  flex-wrap:wrap;
 }
 
 .logo{
@@ -62,6 +65,26 @@ body{
   padding:18px;
 }
 
+.topBar{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  gap:10px;
+  flex-wrap:wrap;
+  margin-bottom:16px;
+}
+
+.search{
+  padding:12px;
+  border-radius:12px;
+  border:1px solid var(--border);
+  background:#0b1728;
+  color:white;
+  width:320px;
+  max-width:100%;
+  outline:none;
+}
+
 .auditItem{
   border:1px solid var(--border);
   border-radius:14px;
@@ -75,6 +98,8 @@ body{
   justify-content:space-between;
   align-items:center;
   margin-bottom:8px;
+  gap:10px;
+  flex-wrap:wrap;
 }
 
 .user{
@@ -89,13 +114,61 @@ body{
 
 .action{
   font-size:15px;
-  line-height:1.6;
+  line-height:1.7;
+}
+
+.badge{
+  display:inline-block;
+  padding:5px 10px;
+  border-radius:999px;
+  font-size:12px;
+  font-weight:900;
+  margin-right:6px;
+}
+
+.add{
+  background:#14532d;
+  color:#86efac;
+}
+
+.delete{
+  background:#450a0a;
+  color:#fca5a5;
+}
+
+.update{
+  background:#1e3a8a;
+  color:#93c5fd;
 }
 
 .empty{
   text-align:center;
   color:var(--muted);
   padding:40px;
+}
+
+.count{
+  color:var(--muted);
+  font-size:14px;
+}
+
+@media(max-width:700px){
+
+  .header{
+    padding:14px;
+  }
+
+  .logo{
+    font-size:20px;
+  }
+
+  .search{
+    width:100%;
+  }
+
+  .btn{
+    width:100%;
+  }
 }
 </style>
 </head>
@@ -119,7 +192,23 @@ body{
 
   <div class="card">
 
-    <h2>🕒 System Activity</h2>
+    <div class="topBar">
+
+      <div>
+        <h2 style="margin:0">🕒 System Activity</h2>
+        <div class="count" id="totalLogs">
+          Total Logs: 0
+        </div>
+      </div>
+
+      <input
+      id="searchBox"
+      class="search"
+      placeholder="Search user / action / module / item..."
+      oninput="filterLogs()"
+      >
+
+    </div>
 
     <div id="auditList" class="empty">
       Loading...
@@ -131,14 +220,16 @@ body{
 
 <script type="module">
 
-import { initializeApp } 
+import { initializeApp }
 from "https://www.gstatic.com/firebasejs/12.12.1/firebase-app.js";
 
-import { 
-  getFirestore, 
-  collection, 
-  onSnapshot 
-} 
+import {
+  getFirestore,
+  collection,
+  onSnapshot,
+  query,
+  orderBy
+}
 from "https://www.gstatic.com/firebasejs/12.12.1/firebase-firestore.js";
 
 const firebaseConfig = {
@@ -153,42 +244,116 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
-function loadAudit(){
+window.auditRows = [];
 
-  onSnapshot(collection(db,"activityLogs"), snap=>{
+function getBadge(action){
 
-    let html="";
+  let a = (action || "").toUpperCase();
 
-    snap.forEach(d=>{
+  if(a.includes("DELETE")){
+    return `<span class="badge delete">DELETE</span>`;
+  }
 
-      let x = d.data();
+  if(a.includes("UPDATE")){
+    return `<span class="badge update">UPDATE</span>`;
+  }
 
-      html += `
-        <div class="auditItem">
+  return `<span class="badge add">ADD</span>`;
+}
 
-          <div class="top">
-            <div class="user">
-              👤 ${x.user || "Unknown"}
-            </div>
-            <div class="date">
-              ${x.time || ""}
-            </div>
+function renderLogs(rows){
+
+  let html = "";
+
+  rows.reverse().forEach(x=>{
+
+    html += `
+      <div class="auditItem">
+
+        <div class="top">
+
+          <div class="user">
+            👤 ${x.user || "Unknown"}
           </div>
 
-          <div class="action">
-            ${x.action} → ${x.module} → ${x.item}
+          <div class="date">
+            ${x.time || ""}
           </div>
 
         </div>
-      `;
-    });
 
-    document.getElementById("auditList").innerHTML =
-      html || '<div class="empty">No activity found</div>';
+        <div class="action">
 
+          ${getBadge(x.action)}
+
+          <b>${x.action || ""}</b>
+
+          → ${x.module || ""}
+
+          → ${x.item || ""}
+
+        </div>
+
+      </div>
+    `;
   });
 
+  document.getElementById("auditList").innerHTML =
+    html || '<div class="empty">No activity found</div>';
+
+  document.getElementById("totalLogs").innerText =
+    "Total Logs: " + rows.length;
 }
+
+function filterLogs(){
+
+  let q = document
+  .getElementById("searchBox")
+  .value
+  .toLowerCase()
+  .trim();
+
+  if(q===""){
+    renderLogs(window.auditRows);
+    return;
+  }
+
+  let filtered = window.auditRows.filter(x =>
+
+    (x.user || "").toLowerCase().includes(q) ||
+
+    (x.action || "").toLowerCase().includes(q) ||
+
+    (x.module || "").toLowerCase().includes(q) ||
+
+    (x.item || "").toLowerCase().includes(q)
+  );
+
+  renderLogs(filtered);
+}
+
+function loadAudit(){
+
+  const q = query(
+    collection(db,"activityLogs")
+  );
+
+  onSnapshot(q, snap=>{
+
+    let rows = [];
+
+    snap.forEach(d=>{
+
+      rows.push(d.data());
+    });
+
+    window.auditRows = rows;
+
+    renderLogs(rows);
+  });
+}
+
+window.filterLogs = filterLogs;
 
 loadAudit();
 
