@@ -6,6 +6,7 @@
 <title>Needle Ageing Report</title>
 
 <style>
+
 *{
   margin:0;
   padding:0;
@@ -13,9 +14,9 @@
 }
 
 body{
+  background:#071229;
+  color:white;
   font-family:Arial,sans-serif;
-  background:#0f172a;
-  color:#fff;
   padding:10px;
 }
 
@@ -25,150 +26,144 @@ body{
 }
 
 .header h1{
-  font-size:24px;
-  color:#38bdf8;
+  font-size:28px;
 }
 
 .header h2{
   font-size:18px;
-  margin-top:4px;
+  margin-top:5px;
+  color:#cbd5e1;
 }
 
 .topbar{
-  background:#1e293b;
-  padding:12px;
-  border-radius:10px;
-  margin-bottom:15px;
   display:flex;
-  flex-wrap:wrap;
-  gap:10px;
-  align-items:center;
   justify-content:center;
+  gap:10px;
+  flex-wrap:wrap;
+  margin-bottom:15px;
 }
 
 select,button{
   padding:10px;
-  border-radius:8px;
   border:none;
-  font-size:14px;
+  border-radius:8px;
+  font-weight:bold;
+  font-size:15px;
 }
 
 button{
   background:#2563eb;
-  color:#fff;
-  font-weight:bold;
+  color:white;
   cursor:pointer;
 }
 
-.summary{
+.dashboard{
   display:grid;
-  grid-template-columns:repeat(auto-fit,minmax(200px,1fr));
+  grid-template-columns:repeat(auto-fit,minmax(180px,1fr));
   gap:12px;
-  margin-bottom:18px;
+  margin-bottom:15px;
 }
 
 .card{
-  background:#1e293b;
-  padding:15px;
-  border-radius:12px;
-  text-align:center;
+  background:#0f172a;
   border:1px solid #334155;
+  border-radius:12px;
+  padding:15px;
+  text-align:center;
 }
 
 .card h3{
-  font-size:15px;
-  margin-bottom:8px;
-  color:#cbd5e1;
+  color:#94a3b8;
+  margin-bottom:10px;
 }
 
 .card p{
-  font-size:24px;
+  font-size:28px;
   font-weight:bold;
-  color:#38bdf8;
 }
 
 .tableWrap{
   overflow:auto;
-  background:#fff;
-  border-radius:12px;
 }
 
 table{
   width:100%;
   border-collapse:collapse;
-  min-width:1300px;
-  color:#000;
-}
-
-th,td{
-  border:1px solid #cbd5e1;
-  padding:6px;
-  text-align:center;
-  font-size:12px;
+  background:#08112c;
 }
 
 th{
   background:#0f172a;
-  color:#fff;
-  position:sticky;
-  top:0;
+  color:white;
+  border:2px solid #d1d5db;
+  padding:12px 6px;
+  font-size:14px;
 }
 
-.green{
-  background:#dcfce7;
-  color:#166534;
+td{
+  border:2px solid #d1d5db;
+  padding:10px 5px;
+  text-align:center;
+  font-size:13px;
   font-weight:bold;
 }
 
-.yellow{
-  background:#fef9c3;
-  color:#854d0e;
-  font-weight:bold;
+.stock-green{
+  background:green;
+  color:white;
 }
 
-.red{
-  background:#fee2e2;
-  color:#b91c1c;
-  font-weight:bold;
+.stock-yellow{
+  background:#facc15;
+  color:black;
 }
 
-.whiteStock{
-  background:#fff !important;
-  color:#000 !important;
+.stock-red{
+  background:red;
+  color:white;
 }
 
-.lowStock{
-  background:#f97316;
-  color:#fff;
-  font-weight:bold;
+.stock-white{
+  background:white;
+  color:black;
 }
 
-tfoot td{
-  background:#0f172a;
-  color:#fff;
-  font-weight:bold;
+.age-green{
+  color:#22c55e;
 }
 
-@media(max-width:768px){
+.age-yellow{
+  color:#facc15;
+}
 
-  body{
-    padding:5px;
+.age-red{
+  color:#ff4d4d;
+}
+
+.totalRow{
+  background:#1e293b;
+  color:#22c55e;
+  font-size:15px;
+}
+
+@media(max-width:700px){
+
+  th{
+    font-size:10px;
+    padding:7px 3px;
+  }
+
+  td{
+    font-size:9px;
+    padding:6px 3px;
   }
 
   .header h1{
-    font-size:18px;
-  }
-
-  .header h2{
-    font-size:14px;
-  }
-
-  th,td{
-    font-size:10px;
-    padding:4px;
+    font-size:22px;
   }
 
 }
+
 </style>
 </head>
 
@@ -182,45 +177,58 @@ tfoot td{
 <div class="topbar">
 
 <select id="floorSelect">
-  <option value="ALL">All Floor</option>
-  <option>Kadom R</option>
-  <option>Kadom N</option>
-  <option>Shapla R</option>
-  <option>Shapla N</option>
-  <option>Poddo R</option>
-  <option>Poddo N</option>
-  <option>Belly R</option>
-  <option>Belly N</option>
-  <option>Sample R</option>
-  <option>Sample N</option>
-  <option>EMBROIDERY R</option>
-  <option>EMBROIDERY N</option>
+
+<option value="ALL">ALL FLOOR</option>
+
+<option value="Kadom R">Kadom R</option>
+<option value="Kadom N">Kadom N</option>
+
+<option value="Shapla R">Shapla R</option>
+<option value="Shapla N">Shapla N</option>
+
+<option value="Poddo R">Poddo R</option>
+<option value="Poddo N">Poddo N</option>
+
+<option value="Belly R">Belly R</option>
+<option value="Belly N">Belly N</option>
+
+<option value="Sample R">Sample R</option>
+<option value="Sample N">Sample N</option>
+
+<option value="EMBROIDERY R">EMBROIDERY R</option>
+<option value="EMBROIDERY N">EMBROIDERY N</option>
+
 </select>
 
-<button onclick="loadAgeingReport()">Refresh Report</button>
+<button onclick="window.print()">Print</button>
 
 </div>
 
-<div class="summary">
+<div class="dashboard">
 
 <div class="card">
-<h3>Total Stock</h3>
-<p id="totalStock">0</p>
+<h3>Total Item</h3>
+<p id="totalItem">0</p>
+</div>
+
+<div class="card">
+<h3>Running</h3>
+<p id="runningItem">0</p>
 </div>
 
 <div class="card">
 <h3>Slow Moving</h3>
-<p id="slowCount">0</p>
-</div>
-
-<div class="card">
-<h3>Low Stock</h3>
-<p id="lowCount">0</p>
+<p id="slowItem">0</p>
 </div>
 
 <div class="card">
 <h3>No Delivery</h3>
-<p id="noDelivery">0</p>
+<p id="notMoving">0</p>
+</div>
+
+<div class="card">
+<h3>Grand Total Stock</h3>
+<p id="grandTotal">0</p>
 </div>
 
 </div>
@@ -232,33 +240,19 @@ tfoot td{
 <thead>
 
 <tr>
-<th>SL</th>
 <th>Floor</th>
+<th>SL</th>
 <th>Needle Type</th>
 <th>Size</th>
-<th>Present Stock</th>
-<th>Total Delivery</th>
-<th>Avg Daily Use</th>
-<th>Stock Days</th>
+<th>Stock</th>
+<th>Avg Use</th>
+<th>How Long Run</th>
 <th>Status</th>
 </tr>
 
 </thead>
 
 <tbody id="reportBody"></tbody>
-
-<tfoot>
-
-<tr>
-<td colspan="4">GRAND TOTAL</td>
-<td id="grandStock">0</td>
-<td id="grandDelivery">0</td>
-<td>-</td>
-<td>-</td>
-<td>-</td>
-</tr>
-
-</tfoot>
 
 </table>
 
@@ -274,23 +268,37 @@ import {
   getDocs
 } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-firestore.js";
 
+
 const firebaseConfig = {
+
   apiKey: "AIzaSyD-wBCF5eeWMHobLFOhBzKW7aB2pagz9-w",
+
   authDomain: "gms-warehouse-tracker-7f57e.firebaseapp.com",
+
   projectId: "gms-warehouse-tracker-7f57e",
+
   storageBucket: "gms-warehouse-tracker-7f57e.firebasestorage.app",
+
   messagingSenderId: "992250313291",
+
   appId: "1:992250313291:web:ee3bceae76d4d53bc26bce"
 };
 
 const app = initializeApp(firebaseConfig);
+
 const db = getFirestore(app);
 
-async function loadAgeingReport(){
+document.getElementById("floorSelect").addEventListener("change",loadReport);
 
-  const selectedFloor=document.getElementById("floorSelect").value;
+async function loadReport(){
 
-  const snap=await getDocs(collection(db,"dailyPosting"));
+  let selectedFloor=document.getElementById("floorSelect").value;
+
+  let body=document.getElementById("reportBody");
+
+  body.innerHTML="<tr><td colspan='8'>Loading...</td></tr>";
+
+  let snap=await getDocs(collection(db,"dailyPosting"));
 
   let allData=[];
 
@@ -298,161 +306,204 @@ async function loadAgeingReport(){
     allData.push(doc.data());
   });
 
-  let latestMap={};
+  allData.sort((a,b)=>a.date.localeCompare(b.date));
 
-  allData.forEach(data=>{
+  let itemMap={};
 
-    if(selectedFloor!=="ALL" && data.floor!==selectedFloor){
+  allData.forEach(day=>{
+
+    if(selectedFloor!=="ALL" && day.floor!==selectedFloor){
       return;
     }
 
-    if(
-      !latestMap[data.floor] ||
-      latestMap[data.floor].date < data.date
-    ){
-      latestMap[data.floor]=data;
-    }
+    if(!day.rows) return;
 
-  });
+    day.rows.forEach(row=>{
 
-  let html="";
+      let key=day.floor+"_"+row.needleType+"_"+row.size;
 
-  let totalStock=0;
-  let totalDelivery=0;
+      if(!itemMap[key]){
 
-  let slowCount=0;
-  let lowCount=0;
-  let noDeliveryCount=0;
+        itemMap[key]={
 
-  Object.values(latestMap).forEach(floorData=>{
+          floor:day.floor,
+          sl:row.sl,
+          type:row.needleType,
+          size:row.size,
 
-    const daysRunning=getDaysFromStart(floorData.date);
+          stock:0,
 
-    floorData.rows.forEach((row,index)=>{
+          totalDelivery:0,
 
-      let stock=Number(row.present)||0;
+          totalDays:0,
 
-      let delivery=Number(row.delivery)||0;
+          noDeliveryDays:0,
 
-      let avgUse=0;
-      let stockDays=0;
+          lastDeliveryDate:null
 
-      if(daysRunning>0){
-        avgUse=(delivery/daysRunning);
+        };
+
       }
 
-      if(avgUse>0){
-        stockDays=(stock/avgUse);
-      }
+      itemMap[key].stock = Number(row.present)||0;
 
-      let status="";
-      let cls="";
+      itemMap[key].totalDelivery += Number(row.delivery)||0;
 
-      if(stock===0){
+      itemMap[key].totalDays +=1;
 
-        cls="whiteStock";
-        status="";
+      if(Number(row.delivery)>0){
+
+        itemMap[key].lastDeliveryDate=day.date;
+
+        itemMap[key].noDeliveryDays=0;
 
       }else{
 
-        if(delivery===0){
-
-          if(daysRunning>=30){
-
-            status="Slow Moving";
-            cls="red";
-            slowCount++;
-
-          }else{
-
-            status=daysRunning+" Days No Delivery";
-            cls="yellow";
-            noDeliveryCount++;
-
-          }
-
-        }else{
-
-          if(stock<=20){
-
-            status="Low Stock";
-            cls="lowStock";
-            lowCount++;
-
-          }
-          else if(stockDays<=2){
-
-            status="Cholse Na";
-            cls="red";
-
-          }
-          else if(stockDays<=10){
-
-            status=Math.round(stockDays)+" Days";
-            cls="yellow";
-
-          }
-          else{
-
-            status=Math.round(stockDays)+" Days";
-            cls="green";
-
-          }
-
-        }
+        itemMap[key].noDeliveryDays +=1;
 
       }
-
-      totalStock+=stock;
-      totalDelivery+=delivery;
-
-      html+=`
-      <tr class="${cls}">
-        <td>${index+1}</td>
-        <td>${floorData.floor}</td>
-        <td>${row.needleType}</td>
-        <td>${row.size}</td>
-        <td>${stock}</td>
-        <td>${delivery}</td>
-        <td>${avgUse.toFixed(1)}</td>
-        <td>${avgUse>0 ? Math.round(stockDays) : "-"}</td>
-        <td>${status}</td>
-      </tr>
-      `;
 
     });
 
   });
 
-  document.getElementById("reportBody").innerHTML=html;
+  let html="";
 
-  document.getElementById("grandStock").innerText=totalStock;
-  document.getElementById("grandDelivery").innerText=totalDelivery;
+  let total=0;
+  let running=0;
+  let slow=0;
+  let notMoving=0;
+  let grandTotal=0;
 
-  document.getElementById("totalStock").innerText=totalStock;
-  document.getElementById("slowCount").innerText=slowCount;
-  document.getElementById("lowCount").innerText=lowCount;
-  document.getElementById("noDelivery").innerText=noDeliveryCount;
+  let today=new Date();
+
+  Object.values(itemMap).forEach(item=>{
+
+    total++;
+
+    grandTotal += Number(item.stock)||0;
+
+    let avgUse=0;
+
+    if(item.totalDays>0){
+      avgUse=item.totalDelivery/item.totalDays;
+    }
+
+    let avgShow=avgUse.toFixed(1);
+
+    let runningDays="-";
+
+    if(item.stock>0 && avgUse>0){
+
+      let days=Math.floor(item.stock/avgUse);
+
+      runningDays=days+" Days";
+
+    }
+
+    let stockClass="stock-green";
+
+    if(item.stock===0){
+      stockClass="stock-white";
+    }
+    else if(item.stock<=20 && avgUse>0){
+      stockClass="stock-red";
+    }
+    else if(item.stock<=50 && avgUse>0){
+      stockClass="stock-yellow";
+    }
+
+    let status="";
+    let ageClass="age-green";
+
+    if(item.stock===0){
+
+      status="Stock Empty";
+      ageClass="age-red";
+
+    }else{
+
+      let noDays=item.noDeliveryDays;
+
+      if(noDays>=30){
+
+        status=noDays+" Days Slow Moving";
+        ageClass="age-red";
+        slow++;
+
+      }
+      else if(noDays>=5){
+
+        status=noDays+" Days No Delivery";
+        ageClass="age-yellow";
+        notMoving++;
+
+      }
+      else{
+
+        status="Running";
+        ageClass="age-green";
+        running++;
+
+      }
+
+    }
+
+    html+=`
+
+    <tr>
+
+    <td>${item.floor}</td>
+
+    <td>${item.sl||""}</td>
+
+    <td>${item.type||""}</td>
+
+    <td>${item.size||""}</td>
+
+    <td class="${stockClass}">${item.stock}</td>
+
+    <td>${avgShow}</td>
+
+    <td>${runningDays}</td>
+
+    <td class="${ageClass}">${status}</td>
+
+    </tr>
+
+    `;
+
+  });
+
+  html+=`
+
+  <tr class="totalRow">
+
+  <td colspan="4">GRAND TOTAL STOCK</td>
+
+  <td>${grandTotal}</td>
+
+  <td colspan="3">ALL FLOOR TOTAL</td>
+
+  </tr>
+
+  `;
+
+  body.innerHTML=html;
+
+  document.getElementById("totalItem").innerText=total;
+
+  document.getElementById("runningItem").innerText=running;
+
+  document.getElementById("slowItem").innerText=slow;
+
+  document.getElementById("notMoving").innerText=notMoving;
+
+  document.getElementById("grandTotal").innerText=grandTotal;
 
 }
 
-function getDaysFromStart(lastDate){
-
-  const startDate=new Date("2026-05-01");
-
-  const today=new Date(lastDate);
-
-  const diff=today-startDate;
-
-  const days=Math.floor(diff/(1000*60*60*24))+1;
-
-  return days>0 ? days : 1;
-
-}
-
-window.loadAgeingReport=loadAgeingReport;
-
-loadAgeingReport();
+loadReport();
 
 </script>
 
