@@ -6,6 +6,7 @@
 <title>Needle Ageing Report</title>
 
 <style>
+
 *{
   margin:0;
   padding:0;
@@ -13,9 +14,9 @@
 }
 
 body{
-  font-family:Arial, sans-serif;
-  background:#07122b;
-  color:#fff;
+  background:#071229;
+  color:white;
+  font-family:Arial,sans-serif;
   padding:10px;
 }
 
@@ -25,48 +26,41 @@ body{
 }
 
 .header h1{
-  font-size:26px;
-  font-weight:bold;
+  font-size:28px;
 }
 
 .header h2{
   font-size:18px;
-  margin-top:4px;
+  margin-top:5px;
   color:#cbd5e1;
 }
 
-.topBar{
+.topbar{
   display:flex;
-  flex-wrap:wrap;
-  gap:10px;
   justify-content:center;
-  align-items:center;
+  gap:10px;
+  flex-wrap:wrap;
   margin-bottom:15px;
 }
 
-select{
+select,button{
   padding:10px;
-  border-radius:8px;
   border:none;
-  font-size:15px;
+  border-radius:8px;
   font-weight:bold;
+  font-size:15px;
 }
 
 button{
-  padding:10px 14px;
-  border:none;
-  border-radius:8px;
   background:#2563eb;
-  color:#fff;
-  font-weight:bold;
-  cursor:pointer;
+  color:white;
 }
 
 .dashboard{
   display:grid;
   grid-template-columns:repeat(auto-fit,minmax(180px,1fr));
   gap:12px;
-  margin-bottom:18px;
+  margin-bottom:15px;
 }
 
 .card{
@@ -78,19 +72,17 @@ button{
 }
 
 .card h3{
-  font-size:15px;
   color:#94a3b8;
-  margin-bottom:8px;
+  margin-bottom:10px;
 }
 
 .card p{
-  font-size:24px;
+  font-size:28px;
   font-weight:bold;
 }
 
 .tableWrap{
   overflow:auto;
-  border-radius:12px;
 }
 
 table{
@@ -101,38 +93,38 @@ table{
 
 th{
   background:#0f172a;
-  color:#fff;
-  padding:14px 8px;
+  color:white;
   border:2px solid #d1d5db;
-  font-size:15px;
+  padding:12px 6px;
+  font-size:14px;
 }
 
 td{
   border:2px solid #d1d5db;
-  padding:10px 6px;
+  padding:10px 5px;
   text-align:center;
-  font-size:14px;
+  font-size:13px;
   font-weight:bold;
 }
 
 .stock-green{
-  background:#008000;
-  color:#fff;
+  background:green;
+  color:white;
 }
 
 .stock-yellow{
   background:#facc15;
-  color:#000;
+  color:black;
 }
 
 .stock-red{
-  background:#ff0000;
-  color:#fff;
+  background:red;
+  color:white;
 }
 
 .stock-white{
-  background:#fff;
-  color:#000;
+  background:white;
+  color:black;
 }
 
 .age-green{
@@ -147,35 +139,24 @@ td{
   color:#ff4d4d;
 }
 
-.lowStock{
-  background:#ff9800;
-  color:#000;
-  padding:3px 6px;
-  border-radius:6px;
-  font-size:12px;
-  margin-left:5px;
-}
-
 @media(max-width:700px){
 
   th{
-    font-size:11px;
-    padding:8px 4px;
+    font-size:10px;
+    padding:7px 3px;
   }
 
   td{
-    font-size:10px;
-    padding:7px 4px;
+    font-size:9px;
+    padding:6px 3px;
   }
 
   .header h1{
-    font-size:20px;
+    font-size:22px;
   }
 
-  .header h2{
-    font-size:14px;
-  }
 }
+
 </style>
 </head>
 
@@ -186,32 +167,33 @@ td{
   <h2>Needle Ageing Report</h2>
 </div>
 
-<div class="topBar">
+<div class="topbar">
 
-<select id="floorSelect" onchange="loadReport()">
-<option value="ALL">All Floor</option>
+<select id="floorSelect">
 
-<option>Kadom R</option>
-<option>Kadom N</option>
+<option value="ALL">ALL FLOOR</option>
 
-<option>Shapla R</option>
-<option>Shapla N</option>
+<option value="Kadom R">Kadom R</option>
+<option value="Kadom N">Kadom N</option>
 
-<option>Poddo R</option>
-<option>Poddo N</option>
+<option value="Shapla R">Shapla R</option>
+<option value="Shapla N">Shapla N</option>
 
-<option>Belly R</option>
-<option>Belly N</option>
+<option value="Poddo R">Poddo R</option>
+<option value="Poddo N">Poddo N</option>
 
-<option>Sample R</option>
-<option>Sample N</option>
+<option value="Belly R">Belly R</option>
+<option value="Belly N">Belly N</option>
 
-<option>EMBROIDERY R</option>
-<option>EMBROIDERY N</option>
+<option value="Sample R">Sample R</option>
+<option value="Sample N">Sample N</option>
+
+<option value="EMBROIDERY R">EMBROIDERY R</option>
+<option value="EMBROIDERY N">EMBROIDERY N</option>
 
 </select>
 
-<button onclick="window.print()">Print Report</button>
+<button onclick="window.print()">Print</button>
 
 </div>
 
@@ -223,7 +205,7 @@ td{
 </div>
 
 <div class="card">
-<h3>Running Item</h3>
+<h3>Running</h3>
 <p id="runningItem">0</p>
 </div>
 
@@ -247,12 +229,12 @@ td{
 
 <tr>
 <th>Floor</th>
-<th>Serial</th>
+<th>SL</th>
 <th>Needle Type</th>
 <th>Size</th>
 <th>Stock</th>
-<th>Avg Delivery</th>
-<th>Running</th>
+<th>Avg Use</th>
+<th>Running Days</th>
 <th>Status</th>
 </tr>
 
@@ -296,35 +278,45 @@ const db = getFirestore(app);
 
 
 
+document.getElementById("floorSelect").addEventListener("change",loadReport);
+
+
+
 async function loadReport(){
 
-  let floorFilter=document.getElementById("floorSelect").value;
+  let selectedFloor=document.getElementById("floorSelect").value;
 
   let body=document.getElementById("reportBody");
 
   body.innerHTML="<tr><td colspan='8'>Loading...</td></tr>";
 
+
+
   let snap=await getDocs(collection(db,"dailyPosting"));
 
-  let reports=[];
+  let allData=[];
 
   snap.forEach(doc=>{
 
-    reports.push(doc.data());
+    allData.push(doc.data());
 
   });
 
-  reports.sort((a,b)=>a.date.localeCompare(b.date));
+
+
+  allData.sort((a,b)=>a.date.localeCompare(b.date));
 
 
 
-  let map={};
+  let itemMap={};
 
 
 
-  reports.forEach(day=>{
+  allData.forEach(day=>{
 
-    if(floorFilter!=="ALL" && day.floor!==floorFilter) return;
+    if(selectedFloor!=="ALL" && day.floor!==selectedFloor){
+      return;
+    }
 
     if(!day.rows) return;
 
@@ -334,23 +326,22 @@ async function loadReport(){
 
       let key=day.floor+"_"+row.needleType+"_"+row.size;
 
-      if(!map[key]){
 
-        map[key]={
+
+      if(!itemMap[key]){
+
+        itemMap[key]={
 
           floor:day.floor,
-
           sl:row.sl,
-
           type:row.needleType,
-
           size:row.size,
 
           stock:0,
 
           totalDelivery:0,
 
-          days:0,
+          totalDays:0,
 
           lastDeliveryDate:null
 
@@ -360,17 +351,17 @@ async function loadReport(){
 
 
 
-      map[key].stock=row.present || 0;
+      itemMap[key].stock = Number(row.present)||0;
 
-      map[key].totalDelivery += Number(row.delivery)||0;
+      itemMap[key].totalDelivery += Number(row.delivery)||0;
 
-      map[key].days +=1;
+      itemMap[key].totalDays +=1;
 
 
 
       if(Number(row.delivery)>0){
 
-        map[key].lastDeliveryDate=day.date;
+        itemMap[key].lastDeliveryDate=day.date;
 
       }
 
@@ -382,32 +373,52 @@ async function loadReport(){
 
   let html="";
 
+
+
   let total=0;
   let running=0;
   let slow=0;
   let notMoving=0;
 
+
+
   let today=new Date();
 
 
 
-  Object.values(map).forEach(item=>{
+  Object.values(itemMap).forEach(item=>{
 
     total++;
 
 
 
-    let avg=item.days>0 ? (item.totalDelivery/item.days) : 0;
+    let avgUse=0;
 
-    avg=avg.toFixed(1);
+    if(item.totalDays>0){
+
+      avgUse=item.totalDelivery/item.totalDays;
+    }
 
 
 
-    let runDays=0;
+    let avgShow=avgUse.toFixed(1);
 
-    if(avg>0){
 
-      runDays=(item.stock/avg).toFixed(0);
+
+    let runningDays="-";
+
+
+
+    if(item.stock>0 && avgUse>0){
+
+      runningDays=Math.floor(item.stock/avgUse)+" Days";
+
+
+
+      if(item.stock<=20){
+
+        runningDays+=" Low Stock";
+      }
 
     }
 
@@ -415,14 +426,18 @@ async function loadReport(){
 
     let stockClass="stock-green";
 
-    if(item.stock<=0){
+
+
+    if(item.stock===0){
 
       stockClass="stock-white";
     }
+
     else if(item.stock<=20){
 
       stockClass="stock-red";
     }
+
     else if(item.stock<=50){
 
       stockClass="stock-yellow";
@@ -430,32 +445,28 @@ async function loadReport(){
 
 
 
-    let statusText="";
-
+    let status="";
     let ageClass="age-green";
 
 
 
-    if(!item.lastDeliveryDate){
+    if(item.stock===0){
 
-      statusText="No Delivery";
-
-      ageClass="age-red";
-
-      notMoving++;
+      status="";
+      ageClass="";
     }
 
-    else{
+    else if(item.lastDeliveryDate){
 
-      let last=new Date(item.lastDeliveryDate);
+      let lastDate=new Date(item.lastDeliveryDate);
 
-      let diff=Math.floor((today-last)/(1000*60*60*24));
+      let diff=Math.floor((today-lastDate)/(1000*60*60*24));
 
 
 
       if(diff>=30){
 
-        statusText=diff+" Days Not Moving";
+        status=diff+" Days Not Moving";
 
         ageClass="age-red";
 
@@ -465,7 +476,7 @@ async function loadReport(){
 
       else if(diff>=5){
 
-        statusText=diff+" Days Slow Moving";
+        status=diff+" Days Slow Moving";
 
         ageClass="age-yellow";
 
@@ -475,35 +486,12 @@ async function loadReport(){
 
       else{
 
-        statusText=diff+" Days Running";
+        status=diff+" Days Running";
 
         ageClass="age-green";
 
         running++;
 
-      }
-
-    }
-
-
-
-    let runningText="";
-
-    if(item.stock<=0){
-
-      runningText="-";
-    }
-    else if(avg<=0){
-
-      runningText="No Use";
-    }
-    else{
-
-      runningText=runDays+" Days";
-
-      if(item.stock<=20){
-
-        runningText += " 🔥 Low Stock";
       }
 
     }
@@ -524,11 +512,11 @@ async function loadReport(){
 
     <td class="${stockClass}">${item.stock}</td>
 
-    <td>${avg}</td>
+    <td>${avgShow}</td>
 
-    <td>${runningText}</td>
+    <td>${runningDays}</td>
 
-    <td class="${ageClass}">${statusText}</td>
+    <td class="${ageClass}">${status}</td>
 
     </tr>
 
