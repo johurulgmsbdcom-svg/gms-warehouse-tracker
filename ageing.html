@@ -1,208 +1,525 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-    <title>GMS Textiles Ltd - Needle Ageing Report</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
-    <style>
-        /* Basic styling for the page */
-        body {
-            background-color: #0f172a;
-            color: white;
-            font-family: Arial, sans-serif;
-            margin: 0;
-            padding: 20px;
-        }
 
-        h2 {
-            text-align: center;
-            font-size: 24px;
-        }
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-        h3 {
-            text-align: center;
-            font-size: 18px;
-        }
+<title>Needle Ageing Report</title>
 
-        .dropdown {
-            width: 200px;
-            margin: 10px;
-            padding: 8px;
-            border-radius: 5px;
-            border: 1px solid #999;
-        }
+<style>
 
-        .btn {
-            padding: 8px 12px;
-            margin: 10px;
-            background-color: #2563eb;
-            border: none;
-            border-radius: 5px;
-            color: white;
-            font-weight: bold;
-            cursor: pointer;
-        }
+*{
+  margin:0;
+  padding:0;
+  box-sizing:border-box;
+}
 
-        .tableWrap {
-            overflow-x: auto;
-        }
+body{
+  background:#061136;
+  font-family:Arial,sans-serif;
+  color:white;
+  padding:10px;
+}
 
-        #reportTable {
-            width: 100%;
-            border-collapse: collapse;
-            margin-top: 20px;
-        }
+.header{
+  text-align:center;
+  margin-bottom:15px;
+}
 
-        #reportTable th, #reportTable td {
-            border: 1px solid #ddd;
-            padding: 8px;
-            text-align: center;
-        }
+.header h1{
+  font-size:28px;
+  color:#ffffff;
+  margin-bottom:5px;
+}
 
-        .lowStock {
-            background-color: red;
-            color: white;
-        }
+.header h2{
+  font-size:20px;
+  color:#facc15;
+}
 
-        .normalStock {
-            background-color: green;
-            color: white;
-        }
+.topBar{
+  display:flex;
+  flex-wrap:wrap;
+  justify-content:center;
+  align-items:center;
+  gap:10px;
+  margin-bottom:15px;
+}
 
-        .warningStock {
-            background-color: yellow;
-            color: black;
-        }
+select,button{
+  padding:10px;
+  border:none;
+  border-radius:8px;
+  font-size:14px;
+  font-weight:bold;
+}
 
-        .serialNo {
-            font-weight: bold;
-        }
+select{
+  background:white;
+}
 
-        /* Responsive Design */
-        @media(max-width: 768px) {
-            .dropdown {
-                width: 150px;
-            }
+button{
+  background:#2563eb;
+  color:white;
+  cursor:pointer;
+}
 
-            #reportTable th, #reportTable td {
-                font-size: 12px;
-                padding: 6px;
-            }
-        }
-    </style>
+.dashboard{
+  display:grid;
+  grid-template-columns:repeat(auto-fit,minmax(250px,1fr));
+  gap:10px;
+  margin-bottom:15px;
+}
+
+.card{
+  background:white;
+  color:black;
+  border-radius:12px;
+  padding:12px;
+  box-shadow:0 0 10px rgba(0,0,0,0.3);
+}
+
+.card h3{
+  margin-bottom:8px;
+  color:#dc2626;
+  font-size:16px;
+}
+
+.card p{
+  margin:4px 0;
+  font-size:13px;
+}
+
+.tableWrap{
+  overflow:auto;
+  border-radius:10px;
+}
+
+table{
+  width:100%;
+  border-collapse:collapse;
+  background:#09163f;
+  color:white;
+}
+
+th{
+  background:#08102f;
+  color:white;
+  padding:12px;
+  border:2px solid #d1d5db;
+  font-size:15px;
+}
+
+td{
+  border:2px solid #d1d5db;
+  padding:10px;
+  text-align:center;
+  font-size:14px;
+  font-weight:bold;
+}
+
+.stockGreen{
+  background:#008000;
+  color:white;
+}
+
+.stockYellow{
+  background:#facc15;
+  color:black;
+}
+
+.stockRed{
+  background:#ff0000;
+  color:white;
+}
+
+.stockWhite{
+  background:white;
+  color:black;
+}
+
+.ageGreen{
+  color:#22c55e;
+  font-weight:bold;
+}
+
+.ageYellow{
+  color:#facc15;
+  font-weight:bold;
+}
+
+.ageRed{
+  color:#ff4d4d;
+  font-weight:bold;
+}
+
+.floorTitle{
+  background:#1d4ed8;
+  color:white;
+  font-size:18px;
+  text-align:left;
+  padding:10px;
+}
+
+.badge{
+  padding:4px 8px;
+  border-radius:20px;
+  font-size:12px;
+  font-weight:bold;
+}
+
+.slow{
+  background:#dc2626;
+  color:white;
+}
+
+.normal{
+  background:#16a34a;
+  color:white;
+}
+
+@media(max-width:700px){
+
+  th{
+    font-size:11px;
+    padding:8px;
+  }
+
+  td{
+    font-size:10px;
+    padding:6px;
+  }
+
+  .header h1{
+    font-size:22px;
+  }
+
+  .header h2{
+    font-size:16px;
+  }
+
+}
+
+@media print{
+
+  body{
+    background:white;
+    color:black;
+  }
+
+  button,select{
+    display:none;
+  }
+
+  table{
+    color:black;
+  }
+
+}
+
+</style>
+
 </head>
+
 <body>
 
-<h2>GMS Textiles Ltd</h2>
-<h3>Needle Ageing Report</h3>
+<div class="header">
 
-<!-- Dropdown for selecting floor -->
-<select id="floor" class="dropdown" onchange="loadTable();">
-    <option value="Kadom R">Kadom R</option>
-    <option value="Kadom N">Kadom N</option>
-    <option value="Shapla R">Shapla R</option>
-    <option value="Shapla N">Shapla N</option>
-    <option value="Poddo R">Poddo R</option>
-    <option value="Poddo N">Poddo N</option>
-    <option value="Belly R">Belly R</option>
-    <option value="Belly N">Belly N</option>
-    <option value="Sample R">Sample R</option>
-    <option value="Sample N">Sample N</option>
-    <option value="EMBROIDERY R">EMBROIDERY R</option>
-    <option value="EMBROIDERY N">EMBROIDERY N</option>
-</select>
+<h1>GMS Textiles Ltd</h1>
 
-<!-- Button for generating report -->
-<button class="btn" onclick="generateReport()">Generate Report</button>
+<h2>Needle Ageing Report</h2>
 
-<!-- Table to display the data -->
-<div class="tableWrap">
-    <table id="reportTable">
-        <thead>
-            <tr>
-                <th>Serial No</th>
-                <th>Needle Type</th>
-                <th>Size</th>
-                <th>Stock</th>
-                <th>Ageing</th>
-            </tr>
-        </thead>
-        <tbody id="tableBody">
-            <!-- Data will be populated here -->
-        </tbody>
-    </table>
 </div>
 
-<script>
-// Sample data for testing
-const floorData = {
-    "Kadom R": [
-        { serialNo: 1, needleType: "DBX1", size: "7", stock: 50, lastMovement: 5 },
-        { serialNo: 2, needleType: "DBX1", size: "8", stock: 10, lastMovement: 3 },
-        { serialNo: 3, needleType: "DBX1-KN", size: "9", stock: 0, lastMovement: 1 },
-        // Add more data...
-    ],
-    "Kadom N": [
-        { serialNo: 1, needleType: "DBX1", size: "7", stock: 30, lastMovement: 8 },
-        { serialNo: 2, needleType: "DBX1", size: "8", stock: 0, lastMovement: 0 },
-        { serialNo: 3, needleType: "DBX1-KN", size: "9", stock: 15, lastMovement: 4 },
-        // Add more data...
-    ],
-    // Other floors' data...
+<div class="topBar">
+
+<select id="floorFilter" onchange="loadReport()">
+
+<option value="ALL">All Floor</option>
+
+<option>Kadom R</option>
+<option>Kadom N</option>
+
+<option>Shapla R</option>
+<option>Shapla N</option>
+
+<option>Poddo R</option>
+<option>Poddo N</option>
+
+<option>Belly R</option>
+<option>Belly N</option>
+
+<option>Sample R</option>
+<option>Sample N</option>
+
+<option>EMBROIDERY R</option>
+<option>EMBROIDERY N</option>
+
+</select>
+
+<button onclick="window.print()">🖨 Print</button>
+
+<button onclick="location.href='index.html'">🏠 Back Home</button>
+
+</div>
+
+<div class="dashboard" id="dashboard"></div>
+
+<div class="tableWrap">
+
+<table>
+
+<thead>
+
+<tr>
+
+<th>Serial No</th>
+<th>Floor</th>
+<th>Needle Type</th>
+<th>Size</th>
+<th>Stock</th>
+<th>Ageing</th>
+<th>Status</th>
+
+</tr>
+
+</thead>
+
+<tbody id="reportBody"></tbody>
+
+</table>
+
+</div>
+
+<script type="module">
+
+import { initializeApp } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-app.js";
+
+import {
+  getFirestore,
+  collection,
+  getDocs
+} from "https://www.gstatic.com/firebasejs/12.12.1/firebase-firestore.js";
+
+const firebaseConfig = {
+
+  apiKey: "AIzaSyD-wBCF5eeWMHobLFOhBzKW7aB2pagz9-w",
+
+  authDomain: "gms-warehouse-tracker-7f57e.firebaseapp.com",
+
+  projectId: "gms-warehouse-tracker-7f57e",
+
+  storageBucket: "gms-warehouse-tracker-7f57e.firebasestorage.app",
+
+  messagingSenderId: "992250313291",
+
+  appId: "1:992250313291:web:ee3bceae76d4d53bc26bce"
+
 };
 
-// Function to calculate the ageing of the needles
-function getAgeing(lastMovement) {
-    if (lastMovement <= 1) {
-        return "🔴 0-7 Days";
-    } else if (lastMovement <= 3) {
-        return "🟡 8-15 Days";
-    } else if (lastMovement <= 7) {
-        return "🟢 16-30 Days";
-    } else {
-        return "🟢 30+ Days";
+const app = initializeApp(firebaseConfig);
+
+const db = getFirestore(app);
+
+async function loadReport(){
+
+  let body=document.getElementById("reportBody");
+
+  let dashboard=document.getElementById("dashboard");
+
+  body.innerHTML="";
+
+  dashboard.innerHTML="";
+
+  let filter=document.getElementById("floorFilter").value;
+
+  let snap=await getDocs(collection(db,"dailyPosting"));
+
+  let data=[];
+
+  snap.forEach(doc=>{
+
+    let d=doc.data();
+
+    if(filter==="ALL" || d.floor===filter){
+
+      data.push(d);
     }
-}
 
-// Function to load the table based on selected floor
-function loadTable() {
-    const floor = document.getElementById("floor").value;
-    const items = floorData[floor];
+  });
 
-    let tableBodyHTML = "";
-    items.forEach(item => {
-        const ageing = getAgeing(item.lastMovement);
-        let stockClass = "";
+  data.sort((a,b)=>a.date.localeCompare(b.date));
 
-        // Set stock color based on stock count
-        if (item.stock === 0) {
-            stockClass = "lowStock"; // Red color for low stock
-        } else if (item.stock <= 5) {
-            stockClass = "warningStock"; // Yellow for warning stock
-        } else {
-            stockClass = "normalStock"; // Green for normal stock
-        }
+  let latest={};
 
-        tableBodyHTML += `
-            <tr>
-                <td class="serialNo">${item.serialNo}</td>
-                <td>${item.needleType}</td>
-                <td>${item.size}</td>
-                <td class="${stockClass}">${item.stock}</td>
-                <td>${ageing}</td>
-            </tr>
-        `;
+  data.forEach(day=>{
+
+    latest[day.floor]=day;
+
+  });
+
+  let sl=1;
+
+  let slowItems=[];
+
+  Object.keys(latest).forEach(floor=>{
+
+    let rows=latest[floor].rows || [];
+
+    rows.forEach(row=>{
+
+      let stock=Number(row.present)||0;
+
+      let stockClass="";
+      let ageingClass="";
+      let ageingText="";
+      let status="";
+
+      if(stock===0){
+
+        stockClass="stockWhite";
+
+        ageingClass="ageRed";
+
+        ageingText="🔴 30+ Days";
+
+        status="Slow Moving";
+
+      }
+
+      else if(stock<=2){
+
+        stockClass="stockRed";
+
+        ageingClass="ageRed";
+
+        ageingText="🔴 0-7 Days";
+
+        status="Cholse Na";
+
+      }
+
+      else if(stock<=10){
+
+        stockClass="stockYellow";
+
+        ageingClass="ageYellow";
+
+        ageingText="🟡 8-15 Days";
+
+        status="Warning";
+
+      }
+
+      else{
+
+        stockClass="stockGreen";
+
+        ageingClass="ageGreen";
+
+        ageingText="🟢 16-30 Days";
+
+        status="Running";
+
+      }
+
+      if(stock===0 || stock<=2){
+
+        slowItems.push({
+          floor:floor,
+          item:row.needleType,
+          size:row.size,
+          stock:stock,
+          status:status
+        });
+
+      }
+
+      body.innerHTML+=`
+
+      <tr>
+
+      <td>${sl++}</td>
+
+      <td>${floor}</td>
+
+      <td>${row.needleType}</td>
+
+      <td>${row.size}</td>
+
+      <td class="${stockClass}">
+      ${stock}
+      </td>
+
+      <td class="${ageingClass}">
+      ${ageingText}
+      </td>
+
+      <td>
+
+      <span class="badge ${status==="Running" ? "normal":"slow"}">
+
+      ${status}
+
+      </span>
+
+      </td>
+
+      </tr>
+
+      `;
+
     });
 
-    document.getElementById("tableBody").innerHTML = tableBodyHTML;
+  });
+
+  if(slowItems.length===0){
+
+    dashboard.innerHTML=`
+
+    <div class="card">
+
+    <h3>All Item Running</h3>
+
+    <p>No slow moving item found.</p>
+
+    </div>
+
+    `;
+
+  }
+
+  else{
+
+    slowItems.forEach(item=>{
+
+      dashboard.innerHTML+=`
+
+      <div class="card">
+
+      <h3>${item.floor}</h3>
+
+      <p><b>Needle:</b> ${item.item}</p>
+
+      <p><b>Size:</b> ${item.size}</p>
+
+      <p><b>Stock:</b> ${item.stock}</p>
+
+      <p><b>Status:</b> ${item.status}</p>
+
+      </div>
+
+      `;
+
+    });
+
+  }
+
 }
 
-// Function to generate the full report (or do additional actions)
-function generateReport() {
-    alert("Report generated for floor: " + document.getElementById("floor").value);
-}
+loadReport();
 
-// Load table when the page is loaded
-loadTable();
 </script>
 
 </body>
