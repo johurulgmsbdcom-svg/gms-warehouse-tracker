@@ -246,7 +246,7 @@ td{
 <th>Size</th>
 <th>Stock</th>
 <th>Avg Use</th>
-<th>How Long Run</th>
+<th>Running Days</th>
 <th>Status</th>
 </tr>
 
@@ -268,7 +268,6 @@ import {
   getDocs
 } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-firestore.js";
 
-
 const firebaseConfig = {
 
   apiKey: "AIzaSyD-wBCF5eeWMHobLFOhBzKW7aB2pagz9-w",
@@ -288,7 +287,7 @@ const app = initializeApp(firebaseConfig);
 
 const db = getFirestore(app);
 
-document.getElementById("floorSelect").addEventListener("change",loadReport);
+document.getElementById("floorSelect").addEventListener("change", loadReport);
 
 async function loadReport(){
 
@@ -303,10 +302,18 @@ async function loadReport(){
   let allData=[];
 
   snap.forEach(doc=>{
-    allData.push(doc.data());
+
+    let data=doc.data();
+
+    if(data.date){
+
+      allData.push(data);
+
+    }
+
   });
 
-  allData.sort((a,b)=>a.date.localeCompare(b.date));
+  allData.sort((a,b)=>new Date(a.date)-new Date(b.date));
 
   let itemMap={};
 
@@ -327,9 +334,9 @@ async function loadReport(){
         itemMap[key]={
 
           floor:day.floor,
-          sl:row.sl,
-          type:row.needleType,
-          size:row.size,
+          sl:row.sl || "",
+          type:row.needleType || "",
+          size:row.size || "",
 
           stock:0,
 
@@ -339,29 +346,26 @@ async function loadReport(){
 
           noDeliveryDays:0,
 
-          lastDeliveryDate:null
+          deliveryHistory:[]
 
         };
 
       }
 
-      itemMap[key].stock = Number(row.present)||0;
+      let currentStock=Number(row.present)||0;
+
+      itemMap[key].stock=currentStock;
 
       itemMap[key].totalDelivery += Number(row.delivery)||0;
 
       itemMap[key].totalDays +=1;
 
-      if(Number(row.delivery)>0){
+      itemMap[key].deliveryHistory.push({
 
-        itemMap[key].lastDeliveryDate=day.date;
+        date:day.date,
+        delivery:Number(row.delivery)||0
 
-        itemMap[key].noDeliveryDays=0;
-
-      }else{
-
-        itemMap[key].noDeliveryDays +=1;
-
-      }
+      });
 
     });
 
@@ -375,8 +379,6 @@ async function loadReport(){
   let notMoving=0;
   let grandTotal=0;
 
-  let today=new Date();
-
   Object.values(itemMap).forEach(item=>{
 
     total++;
@@ -386,7 +388,9 @@ async function loadReport(){
     let avgUse=0;
 
     if(item.totalDays>0){
+
       avgUse=item.totalDelivery/item.totalDays;
+
     }
 
     let avgShow=avgUse.toFixed(1);
@@ -401,16 +405,36 @@ async function loadReport(){
 
     }
 
+    let noDelivery=0;
+
+    for(let i=item.deliveryHistory.length-1; i>=0; i--){
+
+      if(item.deliveryHistory[i].delivery>0){
+
+        break;
+
+      }
+
+      noDelivery++;
+
+    }
+
     let stockClass="stock-green";
 
     if(item.stock===0){
+
       stockClass="stock-white";
+
     }
     else if(item.stock<=20 && avgUse>0){
+
       stockClass="stock-red";
+
     }
     else if(item.stock<=50 && avgUse>0){
+
       stockClass="stock-yellow";
+
     }
 
     let status="";
@@ -419,55 +443,61 @@ async function loadReport(){
     if(item.stock===0){
 
       status="Stock Empty";
+
       ageClass="age-red";
 
-    }else{
+    }
+    else{
 
-      let noDays=item.noDeliveryDays;
+      if(noDelivery>=30){
 
-      if(noDays>=30){
+        status=noDelivery+" Days Slow Moving";
 
-        status=noDays+" Days Slow Moving";
         ageClass="age-red";
+
         slow++;
 
       }
-      else if(noDays>=5){
+      else if(noDelivery>=12){
 
-        status=noDays+" Days No Delivery";
+        status=noDelivery+" Days No Delivery";
+
         ageClass="age-yellow";
+
         notMoving++;
 
       }
       else{
 
         status="Running";
+
         ageClass="age-green";
+
         running++;
 
       }
 
     }
 
-    html+=`
+    html += `
 
     <tr>
 
-    <td>${item.floor}</td>
+      <td>${item.floor}</td>
 
-    <td>${item.sl||""}</td>
+      <td>${item.sl}</td>
 
-    <td>${item.type||""}</td>
+      <td>${item.type}</td>
 
-    <td>${item.size||""}</td>
+      <td>${item.size}</td>
 
-    <td class="${stockClass}">${item.stock}</td>
+      <td class="${stockClass}">${item.stock}</td>
 
-    <td>${avgShow}</td>
+      <td>${avgShow}</td>
 
-    <td>${runningDays}</td>
+      <td>${runningDays}</td>
 
-    <td class="${ageClass}">${status}</td>
+      <td class="${ageClass}">${status}</td>
 
     </tr>
 
@@ -475,15 +505,15 @@ async function loadReport(){
 
   });
 
-  html+=`
+  html += `
 
   <tr class="totalRow">
 
-  <td colspan="4">GRAND TOTAL STOCK</td>
+    <td colspan="4">GRAND TOTAL STOCK</td>
 
-  <td>${grandTotal}</td>
+    <td>${grandTotal}</td>
 
-  <td colspan="3">ALL FLOOR TOTAL</td>
+    <td colspan="3">MATCH DAILY ENTRY REPORT</td>
 
   </tr>
 
