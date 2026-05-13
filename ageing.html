@@ -1,14 +1,11 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
 <title>Needle Ageing Report</title>
 
 <style>
-
 *{
   margin:0;
   padding:0;
@@ -16,9 +13,9 @@
 }
 
 body{
-  background:#061136;
-  font-family:Arial,sans-serif;
-  color:white;
+  font-family:Arial, sans-serif;
+  background:#07122b;
+  color:#fff;
   padding:10px;
 }
 
@@ -28,214 +25,170 @@ body{
 }
 
 .header h1{
-  font-size:28px;
-  color:#ffffff;
-  margin-bottom:5px;
+  font-size:26px;
+  font-weight:bold;
 }
 
 .header h2{
-  font-size:20px;
-  color:#facc15;
+  font-size:18px;
+  margin-top:4px;
+  color:#cbd5e1;
 }
 
 .topBar{
   display:flex;
   flex-wrap:wrap;
+  gap:10px;
   justify-content:center;
   align-items:center;
-  gap:10px;
   margin-bottom:15px;
 }
 
-select,button{
+select{
   padding:10px;
-  border:none;
   border-radius:8px;
-  font-size:14px;
+  border:none;
+  font-size:15px;
   font-weight:bold;
 }
 
-select{
-  background:white;
-}
-
 button{
+  padding:10px 14px;
+  border:none;
+  border-radius:8px;
   background:#2563eb;
-  color:white;
+  color:#fff;
+  font-weight:bold;
   cursor:pointer;
 }
 
 .dashboard{
   display:grid;
-  grid-template-columns:repeat(auto-fit,minmax(250px,1fr));
-  gap:10px;
-  margin-bottom:15px;
+  grid-template-columns:repeat(auto-fit,minmax(180px,1fr));
+  gap:12px;
+  margin-bottom:18px;
 }
 
 .card{
-  background:white;
-  color:black;
+  background:#0f172a;
+  border:1px solid #334155;
   border-radius:12px;
-  padding:12px;
-  box-shadow:0 0 10px rgba(0,0,0,0.3);
+  padding:15px;
+  text-align:center;
 }
 
 .card h3{
+  font-size:15px;
+  color:#94a3b8;
   margin-bottom:8px;
-  color:#dc2626;
-  font-size:16px;
 }
 
 .card p{
-  margin:4px 0;
-  font-size:13px;
+  font-size:24px;
+  font-weight:bold;
 }
 
 .tableWrap{
   overflow:auto;
-  border-radius:10px;
+  border-radius:12px;
 }
 
 table{
   width:100%;
   border-collapse:collapse;
-  background:#09163f;
-  color:white;
+  background:#08112c;
 }
 
 th{
-  background:#08102f;
-  color:white;
-  padding:12px;
+  background:#0f172a;
+  color:#fff;
+  padding:14px 8px;
   border:2px solid #d1d5db;
   font-size:15px;
 }
 
 td{
   border:2px solid #d1d5db;
-  padding:10px;
+  padding:10px 6px;
   text-align:center;
   font-size:14px;
   font-weight:bold;
 }
 
-.stockGreen{
+.stock-green{
   background:#008000;
-  color:white;
+  color:#fff;
 }
 
-.stockYellow{
+.stock-yellow{
   background:#facc15;
-  color:black;
+  color:#000;
 }
 
-.stockRed{
+.stock-red{
   background:#ff0000;
-  color:white;
+  color:#fff;
 }
 
-.stockWhite{
-  background:white;
-  color:black;
+.stock-white{
+  background:#fff;
+  color:#000;
 }
 
-.ageGreen{
+.age-green{
   color:#22c55e;
-  font-weight:bold;
 }
 
-.ageYellow{
+.age-yellow{
   color:#facc15;
-  font-weight:bold;
 }
 
-.ageRed{
+.age-red{
   color:#ff4d4d;
-  font-weight:bold;
 }
 
-.floorTitle{
-  background:#1d4ed8;
-  color:white;
-  font-size:18px;
-  text-align:left;
-  padding:10px;
-}
-
-.badge{
-  padding:4px 8px;
-  border-radius:20px;
+.lowStock{
+  background:#ff9800;
+  color:#000;
+  padding:3px 6px;
+  border-radius:6px;
   font-size:12px;
-  font-weight:bold;
-}
-
-.slow{
-  background:#dc2626;
-  color:white;
-}
-
-.normal{
-  background:#16a34a;
-  color:white;
+  margin-left:5px;
 }
 
 @media(max-width:700px){
 
   th{
     font-size:11px;
-    padding:8px;
+    padding:8px 4px;
   }
 
   td{
     font-size:10px;
-    padding:6px;
+    padding:7px 4px;
   }
 
   .header h1{
-    font-size:22px;
+    font-size:20px;
   }
 
   .header h2{
-    font-size:16px;
+    font-size:14px;
   }
-
 }
-
-@media print{
-
-  body{
-    background:white;
-    color:black;
-  }
-
-  button,select{
-    display:none;
-  }
-
-  table{
-    color:black;
-  }
-
-}
-
 </style>
-
 </head>
 
 <body>
 
 <div class="header">
-
-<h1>GMS Textiles Ltd</h1>
-
-<h2>Needle Ageing Report</h2>
-
+  <h1>GMS TEXTILES LTD</h1>
+  <h2>Needle Ageing Report</h2>
 </div>
 
 <div class="topBar">
 
-<select id="floorFilter" onchange="loadReport()">
-
+<select id="floorSelect" onchange="loadReport()">
 <option value="ALL">All Floor</option>
 
 <option>Kadom R</option>
@@ -258,13 +211,33 @@ td{
 
 </select>
 
-<button onclick="window.print()">🖨 Print</button>
-
-<button onclick="location.href='index.html'">🏠 Back Home</button>
+<button onclick="window.print()">Print Report</button>
 
 </div>
 
-<div class="dashboard" id="dashboard"></div>
+<div class="dashboard">
+
+<div class="card">
+<h3>Total Item</h3>
+<p id="totalItem">0</p>
+</div>
+
+<div class="card">
+<h3>Running Item</h3>
+<p id="runningItem">0</p>
+</div>
+
+<div class="card">
+<h3>Slow Moving</h3>
+<p id="slowItem">0</p>
+</div>
+
+<div class="card">
+<h3>Not Moving</h3>
+<p id="notMoving">0</p>
+</div>
+
+</div>
 
 <div class="tableWrap">
 
@@ -273,15 +246,14 @@ td{
 <thead>
 
 <tr>
-
-<th>Serial No</th>
 <th>Floor</th>
+<th>Serial</th>
 <th>Needle Type</th>
 <th>Size</th>
 <th>Stock</th>
-<th>Ageing</th>
+<th>Avg Delivery</th>
+<th>Running</th>
 <th>Status</th>
-
 </tr>
 
 </thead>
@@ -302,6 +274,7 @@ import {
   getDocs
 } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-firestore.js";
 
+
 const firebaseConfig = {
 
   apiKey: "AIzaSyD-wBCF5eeWMHobLFOhBzKW7aB2pagz9-w",
@@ -315,208 +288,271 @@ const firebaseConfig = {
   messagingSenderId: "992250313291",
 
   appId: "1:992250313291:web:ee3bceae76d4d53bc26bce"
-
 };
 
 const app = initializeApp(firebaseConfig);
 
 const db = getFirestore(app);
 
+
+
 async function loadReport(){
+
+  let floorFilter=document.getElementById("floorSelect").value;
 
   let body=document.getElementById("reportBody");
 
-  let dashboard=document.getElementById("dashboard");
-
-  body.innerHTML="";
-
-  dashboard.innerHTML="";
-
-  let filter=document.getElementById("floorFilter").value;
+  body.innerHTML="<tr><td colspan='8'>Loading...</td></tr>";
 
   let snap=await getDocs(collection(db,"dailyPosting"));
 
-  let data=[];
+  let reports=[];
 
   snap.forEach(doc=>{
 
-    let d=doc.data();
+    reports.push(doc.data());
 
-    if(filter==="ALL" || d.floor===filter){
+  });
 
-      data.push(d);
+  reports.sort((a,b)=>a.date.localeCompare(b.date));
+
+
+
+  let map={};
+
+
+
+  reports.forEach(day=>{
+
+    if(floorFilter!=="ALL" && day.floor!==floorFilter) return;
+
+    if(!day.rows) return;
+
+
+
+    day.rows.forEach(row=>{
+
+      let key=day.floor+"_"+row.needleType+"_"+row.size;
+
+      if(!map[key]){
+
+        map[key]={
+
+          floor:day.floor,
+
+          sl:row.sl,
+
+          type:row.needleType,
+
+          size:row.size,
+
+          stock:0,
+
+          totalDelivery:0,
+
+          days:0,
+
+          lastDeliveryDate:null
+
+        };
+
+      }
+
+
+
+      map[key].stock=row.present || 0;
+
+      map[key].totalDelivery += Number(row.delivery)||0;
+
+      map[key].days +=1;
+
+
+
+      if(Number(row.delivery)>0){
+
+        map[key].lastDeliveryDate=day.date;
+
+      }
+
+    });
+
+  });
+
+
+
+  let html="";
+
+  let total=0;
+  let running=0;
+  let slow=0;
+  let notMoving=0;
+
+  let today=new Date();
+
+
+
+  Object.values(map).forEach(item=>{
+
+    total++;
+
+
+
+    let avg=item.days>0 ? (item.totalDelivery/item.days) : 0;
+
+    avg=avg.toFixed(1);
+
+
+
+    let runDays=0;
+
+    if(avg>0){
+
+      runDays=(item.stock/avg).toFixed(0);
+
     }
 
-  });
 
-  data.sort((a,b)=>a.date.localeCompare(b.date));
 
-  let latest={};
+    let stockClass="stock-green";
 
-  data.forEach(day=>{
+    if(item.stock<=0){
 
-    latest[day.floor]=day;
+      stockClass="stock-white";
+    }
+    else if(item.stock<=20){
 
-  });
+      stockClass="stock-red";
+    }
+    else if(item.stock<=50){
 
-  let sl=1;
+      stockClass="stock-yellow";
+    }
 
-  let slowItems=[];
 
-  Object.keys(latest).forEach(floor=>{
 
-    let rows=latest[floor].rows || [];
+    let statusText="";
 
-    rows.forEach(row=>{
+    let ageClass="age-green";
 
-      let stock=Number(row.present)||0;
 
-      let stockClass="";
-      let ageingClass="";
-      let ageingText="";
-      let status="";
 
-      if(stock===0){
+    if(!item.lastDeliveryDate){
 
-        stockClass="stockWhite";
+      statusText="No Delivery";
 
-        ageingClass="ageRed";
+      ageClass="age-red";
 
-        ageingText="🔴 30+ Days";
+      notMoving++;
+    }
 
-        status="Slow Moving";
+    else{
+
+      let last=new Date(item.lastDeliveryDate);
+
+      let diff=Math.floor((today-last)/(1000*60*60*24));
+
+
+
+      if(diff>=30){
+
+        statusText=diff+" Days Not Moving";
+
+        ageClass="age-red";
+
+        notMoving++;
 
       }
 
-      else if(stock<=2){
+      else if(diff>=5){
 
-        stockClass="stockRed";
+        statusText=diff+" Days Slow Moving";
 
-        ageingClass="ageRed";
+        ageClass="age-yellow";
 
-        ageingText="🔴 0-7 Days";
-
-        status="Cholse Na";
-
-      }
-
-      else if(stock<=10){
-
-        stockClass="stockYellow";
-
-        ageingClass="ageYellow";
-
-        ageingText="🟡 8-15 Days";
-
-        status="Warning";
+        slow++;
 
       }
 
       else{
 
-        stockClass="stockGreen";
+        statusText=diff+" Days Running";
 
-        ageingClass="ageGreen";
+        ageClass="age-green";
 
-        ageingText="🟢 16-30 Days";
-
-        status="Running";
+        running++;
 
       }
 
-      if(stock===0 || stock<=2){
+    }
 
-        slowItems.push({
-          floor:floor,
-          item:row.needleType,
-          size:row.size,
-          stock:stock,
-          status:status
-        });
 
+
+    let runningText="";
+
+    if(item.stock<=0){
+
+      runningText="-";
+    }
+    else if(avg<=0){
+
+      runningText="No Use";
+    }
+    else{
+
+      runningText=runDays+" Days";
+
+      if(item.stock<=20){
+
+        runningText += " 🔥 Low Stock";
       }
 
-      body.innerHTML+=`
+    }
 
-      <tr>
 
-      <td>${sl++}</td>
 
-      <td>${floor}</td>
+    html+=`
 
-      <td>${row.needleType}</td>
+    <tr>
 
-      <td>${row.size}</td>
+    <td>${item.floor}</td>
 
-      <td class="${stockClass}">
-      ${stock}
-      </td>
+    <td>${item.sl}</td>
 
-      <td class="${ageingClass}">
-      ${ageingText}
-      </td>
+    <td>${item.type}</td>
 
-      <td>
+    <td>${item.size}</td>
 
-      <span class="badge ${status==="Running" ? "normal":"slow"}">
+    <td class="${stockClass}">${item.stock}</td>
 
-      ${status}
+    <td>${avg}</td>
 
-      </span>
+    <td>${runningText}</td>
 
-      </td>
+    <td class="${ageClass}">${statusText}</td>
 
-      </tr>
-
-      `;
-
-    });
-
-  });
-
-  if(slowItems.length===0){
-
-    dashboard.innerHTML=`
-
-    <div class="card">
-
-    <h3>All Item Running</h3>
-
-    <p>No slow moving item found.</p>
-
-    </div>
+    </tr>
 
     `;
 
-  }
+  });
 
-  else{
 
-    slowItems.forEach(item=>{
 
-      dashboard.innerHTML+=`
+  body.innerHTML=html;
 
-      <div class="card">
 
-      <h3>${item.floor}</h3>
 
-      <p><b>Needle:</b> ${item.item}</p>
+  document.getElementById("totalItem").innerText=total;
 
-      <p><b>Size:</b> ${item.size}</p>
+  document.getElementById("runningItem").innerText=running;
 
-      <p><b>Stock:</b> ${item.stock}</p>
+  document.getElementById("slowItem").innerText=slow;
 
-      <p><b>Status:</b> ${item.status}</p>
-
-      </div>
-
-      `;
-
-    });
-
-  }
+  document.getElementById("notMoving").innerText=notMoving;
 
 }
+
+
 
 loadReport();
 
