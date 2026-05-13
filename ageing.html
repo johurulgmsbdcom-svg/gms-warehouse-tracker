@@ -3,7 +3,14 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
 <title>Needle Ageing Report</title>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 
 <style>
 
@@ -48,7 +55,7 @@ select,button{
   border:none;
   border-radius:8px;
   font-weight:bold;
-  font-size:15px;
+  font-size:14px;
 }
 
 button{
@@ -59,7 +66,7 @@ button{
 
 .dashboard{
   display:grid;
-  grid-template-columns:repeat(auto-fit,minmax(180px,1fr));
+  grid-template-columns:repeat(auto-fit,minmax(170px,1fr));
   gap:12px;
   margin-bottom:15px;
 }
@@ -84,6 +91,7 @@ button{
 
 .tableWrap{
   overflow:auto;
+  margin-top:15px;
 }
 
 table{
@@ -96,15 +104,15 @@ th{
   background:#0f172a;
   color:white;
   border:2px solid #d1d5db;
-  padding:12px 6px;
-  font-size:14px;
+  padding:10px 5px;
+  font-size:13px;
 }
 
 td{
   border:2px solid #d1d5db;
-  padding:10px 5px;
+  padding:8px 4px;
   text-align:center;
-  font-size:13px;
+  font-size:12px;
   font-weight:bold;
 }
 
@@ -143,23 +151,46 @@ td{
 .totalRow{
   background:#1e293b;
   color:#22c55e;
-  font-size:15px;
+}
+
+canvas{
+  background:white;
+  border-radius:12px;
+  padding:10px;
+  margin-top:20px;
 }
 
 @media(max-width:700px){
 
   th{
     font-size:10px;
-    padding:7px 3px;
+    padding:6px 2px;
   }
 
   td{
     font-size:9px;
-    padding:6px 3px;
+    padding:5px 2px;
   }
 
   .header h1{
     font-size:22px;
+  }
+
+}
+
+@media print{
+
+  body{
+    background:white;
+    color:black;
+  }
+
+  .topbar{
+    display:none;
+  }
+
+  canvas{
+    display:none;
   }
 
 }
@@ -170,8 +201,11 @@ td{
 <body>
 
 <div class="header">
-  <h1>GMS TEXTILES LTD</h1>
-  <h2>Needle Ageing Report</h2>
+
+<h1>GMS TEXTILES LTD</h1>
+
+<h2>Needle Ageing Report</h2>
+
 </div>
 
 <div class="topbar">
@@ -202,6 +236,10 @@ td{
 
 <button onclick="window.print()">Print</button>
 
+<button onclick="exportExcel()">Excel</button>
+
+<button onclick="downloadPDF()">PDF</button>
+
 </div>
 
 <div class="dashboard">
@@ -222,16 +260,23 @@ td{
 </div>
 
 <div class="card">
-<h3>No Delivery</h3>
+<h3>No Movement</h3>
 <p id="notMoving">0</p>
 </div>
 
 <div class="card">
-<h3>Grand Total Stock</h3>
+<h3>Critical Stock</h3>
+<p id="criticalItem">0</p>
+</div>
+
+<div class="card">
+<h3>Grand Total</h3>
 <p id="grandTotal">0</p>
 </div>
 
 </div>
+
+<h2 style="margin-top:20px;">Critical Stock Alert</h2>
 
 <div class="tableWrap">
 
@@ -240,6 +285,31 @@ td{
 <thead>
 
 <tr>
+
+<th>Floor</th>
+<th>Needle</th>
+<th>Size</th>
+<th>Stock</th>
+<th>Running Days</th>
+
+</tr>
+
+</thead>
+
+<tbody id="criticalBody"></tbody>
+
+</table>
+
+</div>
+
+<div class="tableWrap">
+
+<table id="mainTable">
+
+<thead>
+
+<tr>
+
 <th>Floor</th>
 <th>SL</th>
 <th>Needle Type</th>
@@ -247,7 +317,9 @@ td{
 <th>Stock</th>
 <th>Avg Use</th>
 <th>Running Days</th>
+<th>Last Delivery</th>
 <th>Status</th>
+
 </tr>
 
 </thead>
@@ -257,6 +329,10 @@ td{
 </table>
 
 </div>
+
+<canvas id="stockChart"></canvas>
+
+<canvas id="trendChart"></canvas>
 
 <script type="module">
 
@@ -287,7 +363,8 @@ const app = initializeApp(firebaseConfig);
 
 const db = getFirestore(app);
 
-document.getElementById("floorSelect").addEventListener("change", loadReport);
+document.getElementById("floorSelect")
+.addEventListener("change",loadReport);
 
 async function loadReport(){
 
@@ -295,9 +372,11 @@ async function loadReport(){
 
   let body=document.getElementById("reportBody");
 
-  body.innerHTML="<tr><td colspan='8'>Loading...</td></tr>";
+  let criticalBody=document.getElementById("criticalBody");
 
-  let snap=await getDocs(collection(db,"dailyPosting"));
+  body.innerHTML="<tr><td colspan='9'>Loading...</td></tr>";
+
+  const snap=await getDocs(collection(db,"dailyPosting"));
 
   let allData=[];
 
@@ -327,6 +406,10 @@ async function loadReport(){
 
     day.rows.forEach(row=>{
 
+      if(!row.needleType || !row.size){
+        return;
+      }
+
       let key=day.floor+"_"+row.needleType+"_"+row.size;
 
       if(!itemMap[key]){
@@ -344,26 +427,30 @@ async function loadReport(){
 
           totalDays:0,
 
-          noDeliveryDays:0,
-
           deliveryHistory:[]
 
         };
 
       }
 
-      let currentStock=Number(row.present)||0;
+      let opening=Number(row.opening)||0;
 
-      itemMap[key].stock=currentStock;
+      let receive=Number(row.receive)||0;
 
-      itemMap[key].totalDelivery += Number(row.delivery)||0;
+      let delivery=Number(row.delivery)||0;
+
+      let present=opening+receive-delivery;
+
+      itemMap[key].stock=present;
+
+      itemMap[key].totalDelivery += delivery;
 
       itemMap[key].totalDays +=1;
 
       itemMap[key].deliveryHistory.push({
 
         date:day.date,
-        delivery:Number(row.delivery)||0
+        delivery:delivery
 
       });
 
@@ -373,11 +460,27 @@ async function loadReport(){
 
   let html="";
 
+  let criticalHTML="";
+
   let total=0;
+
   let running=0;
+
   let slow=0;
+
   let notMoving=0;
+
+  let critical=0;
+
   let grandTotal=0;
+
+  let labels=[];
+
+  let stockData=[];
+
+  let trendLabels=[];
+
+  let trendData=[];
 
   Object.values(itemMap).forEach(item=>{
 
@@ -397,19 +500,25 @@ async function loadReport(){
 
     let runningDays="-";
 
+    let stockDays=999;
+
     if(item.stock>0 && avgUse>0){
 
-      let days=Math.floor(item.stock/avgUse);
+      stockDays=item.stock/avgUse;
 
-      runningDays=days+" Days";
+      runningDays=Math.floor(stockDays)+" Days";
 
     }
 
     let noDelivery=0;
 
-    for(let i=item.deliveryHistory.length-1; i>=0; i--){
+    let lastDelivery="-";
+
+    for(let i=item.deliveryHistory.length-1;i>=0;i--){
 
       if(item.deliveryHistory[i].delivery>0){
+
+        lastDelivery=item.deliveryHistory[i].date;
 
         break;
 
@@ -426,18 +535,19 @@ async function loadReport(){
       stockClass="stock-white";
 
     }
-    else if(item.stock<=20 && avgUse>0){
+    else if(stockDays<=7){
 
       stockClass="stock-red";
 
     }
-    else if(item.stock<=50 && avgUse>0){
+    else if(stockDays<=20){
 
       stockClass="stock-yellow";
 
     }
 
     let status="";
+
     let ageClass="age-green";
 
     if(item.stock===0){
@@ -447,35 +557,55 @@ async function loadReport(){
       ageClass="age-red";
 
     }
+    else if(noDelivery>=30){
+
+      status=noDelivery+" Days No Movement";
+
+      ageClass="age-red";
+
+      notMoving++;
+
+    }
+    else if(noDelivery>=12){
+
+      status=noDelivery+" Days Slow Moving";
+
+      ageClass="age-yellow";
+
+      slow++;
+
+    }
     else{
 
-      if(noDelivery>=30){
+      status="Running";
 
-        status=noDelivery+" Days Slow Moving";
+      ageClass="age-green";
 
-        ageClass="age-red";
+      running++;
 
-        slow++;
+    }
 
-      }
-      else if(noDelivery>=12){
+    if(stockDays<=5){
 
-        status=noDelivery+" Days No Delivery";
+      critical++;
 
-        ageClass="age-yellow";
+      criticalHTML += `
 
-        notMoving++;
+      <tr>
 
-      }
-      else{
+      <td>${item.floor}</td>
 
-        status="Running";
+      <td>${item.type}</td>
 
-        ageClass="age-green";
+      <td>${item.size}</td>
 
-        running++;
+      <td>${item.stock}</td>
 
-      }
+      <td>${runningDays}</td>
+
+      </tr>
+
+      `;
 
     }
 
@@ -483,25 +613,35 @@ async function loadReport(){
 
     <tr>
 
-      <td>${item.floor}</td>
+    <td>${item.floor}</td>
 
-      <td>${item.sl}</td>
+    <td>${item.sl}</td>
 
-      <td>${item.type}</td>
+    <td>${item.type}</td>
 
-      <td>${item.size}</td>
+    <td>${item.size}</td>
 
-      <td class="${stockClass}">${item.stock}</td>
+    <td class="${stockClass}">${item.stock}</td>
 
-      <td>${avgShow}</td>
+    <td>${avgShow}</td>
 
-      <td>${runningDays}</td>
+    <td>${runningDays}</td>
 
-      <td class="${ageClass}">${status}</td>
+    <td>${lastDelivery}</td>
+
+    <td class="${ageClass}">${status}</td>
 
     </tr>
 
     `;
+
+    labels.push(item.type+"-"+item.size);
+
+    stockData.push(item.stock);
+
+    trendLabels.push(item.type);
+
+    trendData.push(item.totalDelivery);
 
   });
 
@@ -509,17 +649,19 @@ async function loadReport(){
 
   <tr class="totalRow">
 
-    <td colspan="4">GRAND TOTAL STOCK</td>
+  <td colspan="4">GRAND TOTAL STOCK</td>
 
-    <td>${grandTotal}</td>
+  <td>${grandTotal}</td>
 
-    <td colspan="3">MATCH DAILY ENTRY REPORT</td>
+  <td colspan="4">MATCH DAILY ENTRY REPORT</td>
 
   </tr>
 
   `;
 
   body.innerHTML=html;
+
+  criticalBody.innerHTML=criticalHTML;
 
   document.getElementById("totalItem").innerText=total;
 
@@ -529,7 +671,81 @@ async function loadReport(){
 
   document.getElementById("notMoving").innerText=notMoving;
 
+  document.getElementById("criticalItem").innerText=critical;
+
   document.getElementById("grandTotal").innerText=grandTotal;
+
+  drawStockChart(labels,stockData);
+
+  drawTrendChart(trendLabels,trendData);
+
+}
+
+function drawStockChart(labels,data){
+
+  const ctx=document.getElementById("stockChart");
+
+  new Chart(ctx,{
+
+    type:"bar",
+
+    data:{
+
+      labels:labels,
+
+      datasets:[{
+
+        label:"Current Stock",
+
+        data:data
+
+      }]
+
+    }
+
+  });
+
+}
+
+function drawTrendChart(labels,data){
+
+  const ctx=document.getElementById("trendChart");
+
+  new Chart(ctx,{
+
+    type:"line",
+
+    data:{
+
+      labels:labels,
+
+      datasets:[{
+
+        label:"Needle Consumption",
+
+        data:data
+
+      }]
+
+    }
+
+  });
+
+}
+
+window.exportExcel=function(){
+
+  let table=document.getElementById("mainTable");
+
+  let wb=XLSX.utils.table_to_book(table,{sheet:"Report"});
+
+  XLSX.writeFile(wb,"Needle_Ageing_Report.xlsx");
+
+}
+
+window.downloadPDF=function(){
+
+  html2pdf().from(document.body).save("Needle_Report.pdf");
 
 }
 
