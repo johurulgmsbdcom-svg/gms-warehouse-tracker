@@ -1,343 +1,3 @@
-<!DOCTYPE html>
-<html lang="en">
-
-<head>
-
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-
-<title>Needle Ageing Report</title>
-
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-
-<script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
-
-<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
-
-<style>
-
-*{
-margin:0;
-padding:0;
-box-sizing:border-box;
-}
-
-body{
-background:#071229;
-color:white;
-font-family:Arial;
-padding:10px;
-}
-
-.header{
-text-align:center;
-margin-bottom:15px;
-}
-
-.header h1{
-font-size:28px;
-}
-
-.header h2{
-font-size:18px;
-margin-top:5px;
-color:#cbd5e1;
-}
-
-.topbar{
-display:flex;
-gap:10px;
-justify-content:center;
-flex-wrap:wrap;
-margin-bottom:15px;
-}
-
-select,button{
-padding:10px;
-border:none;
-border-radius:8px;
-font-weight:bold;
-font-size:14px;
-}
-
-button{
-background:#2563eb;
-color:white;
-cursor:pointer;
-}
-
-.dashboard{
-display:grid;
-grid-template-columns:repeat(auto-fit,minmax(170px,1fr));
-gap:12px;
-margin-bottom:15px;
-}
-
-.card{
-background:#0f172a;
-border:1px solid #334155;
-border-radius:12px;
-padding:15px;
-text-align:center;
-}
-
-.card h3{
-color:#94a3b8;
-margin-bottom:10px;
-font-size:15px;
-}
-
-.card p{
-font-size:28px;
-font-weight:bold;
-}
-
-.tableWrap{
-overflow:auto;
-margin-top:15px;
-}
-
-table{
-width:100%;
-border-collapse:collapse;
-background:#08112c;
-}
-
-th{
-background:#0f172a;
-border:2px solid #d1d5db;
-padding:10px 5px;
-font-size:13px;
-}
-
-td{
-border:2px solid #d1d5db;
-padding:8px 4px;
-text-align:center;
-font-size:12px;
-font-weight:bold;
-}
-
-.stock-green{
-background:green;
-color:white;
-}
-
-.stock-yellow{
-background:#facc15;
-color:black;
-}
-
-.stock-red{
-background:red;
-color:white;
-}
-
-.stock-white{
-background:white;
-color:black;
-}
-
-.status-running{
-color:#22c55e;
-}
-
-.status-slow{
-color:#facc15;
-}
-
-.status-stop{
-color:#ff4d4d;
-}
-
-.totalRow{
-background:#1e293b;
-color:#22c55e;
-font-size:15px;
-}
-
-canvas{
-background:white;
-padding:10px;
-border-radius:12px;
-margin-top:20px;
-}
-
-@media(max-width:700px){
-
-th{
-font-size:10px;
-padding:6px 2px;
-}
-
-td{
-font-size:9px;
-padding:5px 2px;
-}
-
-.header h1{
-font-size:22px;
-}
-
-}
-
-@media print{
-
-body{
-background:white;
-color:black;
-}
-
-.topbar{
-display:none;
-}
-
-canvas{
-display:none;
-}
-
-}
-
-</style>
-
-</head>
-
-<body>
-
-<div class="header">
-
-<h1>GMS TEXTILES LTD</h1>
-
-<h2>Needle Ageing Report</h2>
-
-</div>
-
-<div class="topbar">
-
-<select id="floorSelect">
-
-<option value="ALL">ALL FLOOR</option>
-
-<option value="Kadom R">Kadom R</option>
-<option value="Kadom N">Kadom N</option>
-
-<option value="Shapla R">Shapla R</option>
-<option value="Shapla N">Shapla N</option>
-
-<option value="Poddo R">Poddo R</option>
-<option value="Poddo N">Poddo N</option>
-
-<option value="Belly R">Belly R</option>
-<option value="Belly N">Belly N</option>
-
-<option value="Sample R">Sample R</option>
-<option value="Sample N">Sample N</option>
-
-<option value="EMBROIDERY R">EMBROIDERY R</option>
-<option value="EMBROIDERY N">EMBROIDERY N</option>
-
-</select>
-
-<button onclick="window.print()">Print</button>
-
-<button onclick="exportExcel()">Excel</button>
-
-<button onclick="downloadPDF()">PDF</button>
-
-</div>
-
-<div class="dashboard">
-
-<div class="card">
-<h3>Total Item</h3>
-<p id="totalItem">0</p>
-</div>
-
-<div class="card">
-<h3>Running</h3>
-<p id="runningItem">0</p>
-</div>
-
-<div class="card">
-<h3>Slow Moving</h3>
-<p id="slowItem">0</p>
-</div>
-
-<div class="card">
-<h3>No Delivery</h3>
-<p id="noDeliveryItem">0</p>
-</div>
-
-<div class="card">
-<h3>Critical Stock</h3>
-<p id="criticalItem">0</p>
-</div>
-
-<div class="card">
-<h3>Total Stock</h3>
-<p id="grandTotal">0</p>
-</div>
-
-</div>
-
-<h2 style="margin-top:20px;">Critical Stock Alert</h2>
-
-<div class="tableWrap">
-
-<table>
-
-<thead>
-
-<tr>
-
-<th>Floor</th>
-<th>Needle</th>
-<th>Size</th>
-<th>Stock</th>
-<th>Running Days</th>
-
-</tr>
-
-</thead>
-
-<tbody id="criticalBody"></tbody>
-
-</table>
-
-</div>
-
-<div class="tableWrap">
-
-<table id="mainTable">
-
-<thead>
-
-<tr>
-
-<th>Floor</th>
-<th>SL</th>
-<th>Needle Type</th>
-<th>Size</th>
-<th>Stock</th>
-<th>Avg Delivery</th>
-<th>Running Days</th>
-<th>No Delivery</th>
-<th>Status</th>
-
-</tr>
-
-</thead>
-
-<tbody id="reportBody"></tbody>
-
-</table>
-
-</div>
-
-<canvas id="stockChart"></canvas>
-
-<canvas id="trendChart"></canvas>
-
 <script type="module">
 
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-app.js";
@@ -415,7 +75,10 @@ if(!row.needleType || !row.size){
 return;
 }
 
-let key=day.floor+"_"+row.needleType+"_"+row.size;
+let key=
+day.floor.trim()+"_"+
+row.needleType.trim()+"_"+
+row.size.trim();
 
 if(!itemMap[key]){
 
@@ -435,7 +98,9 @@ deliveryTotal:0,
 
 deliveryDays:0,
 
-history:[]
+history:[],
+
+lastDate:""
 
 };
 
@@ -446,6 +111,8 @@ let present=Number(row.present)||0;
 let delivery=Number(row.delivery)||0;
 
 itemMap[key].stock=present;
+
+itemMap[key].lastDate=day.date;
 
 if(delivery>0){
 
@@ -467,6 +134,36 @@ delivery:delivery
 
 });
 
+let latestItems={};
+
+Object.values(itemMap).forEach(item=>{
+
+let latestKey=
+item.floor.trim()+"_"+
+item.type.trim()+"_"+
+item.size.trim();
+
+if(!latestItems[latestKey]){
+
+latestItems[latestKey]=item;
+
+}
+else{
+
+let oldDate=new Date(latestItems[latestKey].lastDate);
+
+let newDate=new Date(item.lastDate);
+
+if(newDate>oldDate){
+
+latestItems[latestKey]=item;
+
+}
+
+}
+
+});
+
 let html="";
 
 let criticalHTML="";
@@ -477,7 +174,7 @@ let running=0;
 
 let slow=0;
 
-let noDelivery=0;
+let noDeliveryCount=0;
 
 let critical=0;
 
@@ -491,7 +188,7 @@ let trendLabels=[];
 
 let trendData=[];
 
-Object.values(itemMap).forEach(item=>{
+Object.values(latestItems).forEach(item=>{
 
 totalItem++;
 
@@ -542,12 +239,12 @@ stockClass="stock-white";
 }
 else if(stockDays<=7){
 
-stockClass="stock-red";
+stockClass="stock-yellow";
 
 }
 else if(stockDays<=20){
 
-stockClass="stock-yellow";
+stockClass="stock-green";
 
 }
 
@@ -568,7 +265,9 @@ status=noDeliveryDays+" Days No Delivery";
 
 statusClass="status-stop";
 
-noDelivery++;
+stockClass="stock-red";
+
+noDeliveryCount++;
 
 }
 else if(noDeliveryDays>=13){
@@ -600,7 +299,9 @@ criticalHTML += `
 
 <td>${item.size}</td>
 
-<td class="stock-red">${item.stock}</td>
+<td style="background:#fb923c;color:white;">
+${item.stock}
+</td>
 
 <td>${runningDays}</td>
 
@@ -654,7 +355,11 @@ html += `
 
 <td>${grandTotal}</td>
 
-<td colspan="4">MATCH DAILY ENTRY REPORT</td>
+<td colspan="4">
+
+DAILY ENTRY MATCHED
+
+</td>
 
 </tr>
 
@@ -670,7 +375,7 @@ document.getElementById("runningItem").innerText=running;
 
 document.getElementById("slowItem").innerText=slow;
 
-document.getElementById("noDeliveryItem").innerText=noDelivery;
+document.getElementById("noDeliveryItem").innerText=noDeliveryCount;
 
 document.getElementById("criticalItem").innerText=critical;
 
@@ -680,9 +385,19 @@ drawStockChart(chartLabels,chartStock);
 
 drawTrendChart(trendLabels,trendData);
 
+console.log("FINAL TOTAL STOCK =",grandTotal);
+
 }
 
 function drawStockChart(labels,data){
+
+const oldChart=Chart.getChart("stockChart");
+
+if(oldChart){
+
+oldChart.destroy();
+
+}
 
 const ctx=document.getElementById("stockChart");
 
@@ -698,7 +413,9 @@ datasets:[{
 
 label:"Current Stock",
 
-data:data
+data:data,
+
+backgroundColor:"#2563eb"
 
 }]
 
@@ -709,6 +426,14 @@ data:data
 }
 
 function drawTrendChart(labels,data){
+
+const oldChart=Chart.getChart("trendChart");
+
+if(oldChart){
+
+oldChart.destroy();
+
+}
 
 const ctx=document.getElementById("trendChart");
 
@@ -722,9 +447,11 @@ labels:labels,
 
 datasets:[{
 
-label:"Needle Consumption Trend",
+label:"Needle Consumption",
 
-data:data
+data:data,
+
+borderColor:"#22c55e"
 
 }]
 
@@ -738,7 +465,11 @@ window.exportExcel=function(){
 
 let table=document.getElementById("mainTable");
 
-let wb=XLSX.utils.table_to_book(table,{sheet:"Needle Report"});
+let wb=XLSX.utils.table_to_book(table,{
+
+sheet:"Needle Report"
+
+});
 
 XLSX.writeFile(wb,"Needle_Ageing_Report.xlsx");
 
@@ -746,14 +477,11 @@ XLSX.writeFile(wb,"Needle_Ageing_Report.xlsx");
 
 window.downloadPDF=function(){
 
-html2pdf().from(document.body).save("Needle_Ageing_Report.pdf");
+html2pdf().from(document.body)
+.save("Needle_Ageing_Report.pdf");
 
 }
 
 loadReport();
 
 </script>
-
-</body>
-
-</html>
