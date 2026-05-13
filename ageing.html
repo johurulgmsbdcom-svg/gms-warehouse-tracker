@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Needle Ageing Report</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+
+<style>
+body{
+  background:#0f172a;
+  color:white;
+  font-family:Arial;
+  padding:10px;
+}
+
+h2,h3{
+  text-align:center;
+}
+
+select{
+  padding:6px;
+  border-radius:5px;
+}
+
+table{
+  width:100%;
+  border-collapse:collapse;
+  background:white;
+  color:black;
+}
+
+th,td{
+  border:1px solid #000;
+  padding:5px;
+  font-size:12px;
+  text-align:center;
+}
+
+.red{
+  background:#dc2626;
+  color:white;
+}
+
+.warn{
+  background:#facc15;
+}
+
+.good{
+  background:#22c55e;
+}
+
+.dashboard{
+  background:#1e293b;
+  padding:10px;
+  margin-bottom:10px;
+}
+</style>
+</head>
+
+<body>
+
+<h2>GMS Textiles Ltd</h2>
+<h3>Needle Ageing Report</h3>
+
+<div style="text-align:center;margin-bottom:10px;">
+Floor:
+<select id="floor" onchange="loadReport()">
+<option>Kadom R</option>
+<option>Kadom N</option>
+<option>Shapla R</option>
+<option>Shapla N</option>
+<option>Poddo R</option>
+<option>Poddo N</option>
+<option>Belly R</option>
+<option>Belly N</option>
+<option>Sample R</option>
+<option>Sample N</option>
+<option>EMBROIDERY R</option>
+<option>EMBROIDERY N</option>
+</select>
+</div>
+
+<div class="dashboard" id="dashboard"></div>
+
+<table>
+<thead>
+<tr>
+<th>Needle</th>
+<th>Size</th>
+<th>Stock</th>
+<th>Avg Delivery</th>
+<th>Days Cover</th>
+<th>Status</th>
+</tr>
+</thead>
+
+<tbody id="reportBody"></tbody>
+</table>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-app.js";
+import { getFirestore, collection, getDocs } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-firestore.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyD-wBCF5eeWMHobLFOhBzKW7aB2pagz9-w",
+  authDomain: "gms-warehouse-tracker-7f57e.firebaseapp.com",
+  projectId: "gms-warehouse-tracker-7f57e",
+};
+
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+
+async function loadReport(){
+
+  let floor = document.getElementById("floor").value;
+
+  let snap = await getDocs(collection(db,"dailyPosting"));
+
+  let map = {};
+
+  let totalDays = 0;
+
+  snap.forEach(doc=>{
+    let d = doc.data();
+
+    if(d.floor !== floor) return;
+
+    totalDays++;
+
+    d.rows.forEach(row=>{
+      let key = row.needleType + "_" + row.size;
+
+      if(!map[key]){
+        map[key] = {
+          needle:row.needleType,
+          size:row.size,
+          delivery:0,
+          present:0
+        };
+      }
+
+      map[key].delivery += Number(row.delivery)||0;
+      map[key].present = Number(row.present)||0;
+    });
+  });
+
+  let html="";
+  let dashboard="";
+
+  Object.values(map).forEach(item=>{
+
+    let avg = item.delivery / totalDays || 0;
+    let days = avg>0 ? (item.present / avg) : 0;
+
+    let status="";
+    let cls="";
+
+    if(avg===0){
+      status="Cholse na";
+      cls="red";
+      dashboard += `🔴 ${item.needle} ${item.size} (No movement)<br>`;
+    }
+    else if(days < 30){
+      status=Math.round(days)+" din cholbe";
+      cls="warn";
+
+      dashboard += `🟡 ${item.needle} ${item.size} (${Math.round(days)} days)<br>`;
+    }
+    else{
+      return;
+    }
+
+    html+=`
+    <tr class="${cls}">
+      <td>${item.needle}</td>
+      <td>${item.size}</td>
+      <td>${item.present}</td>
+      <td>${avg.toFixed(2)}</td>
+      <td>${Math.round(days)}</td>
+      <td>${status}</td>
+    </tr>`;
+  });
+
+  document.getElementById("reportBody").innerHTML = html;
+  document.getElementById("dashboard").innerHTML = dashboard || "✅ All good";
+}
+
+loadReport();
+
+</script>
+
+</body>
+</html>
