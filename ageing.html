@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
-<title>Needle Ageing Report</title>
+<title>Needle Ageing RED ALERT Report</title>
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
@@ -16,17 +16,39 @@ padding:0;
 box-sizing:border-box;
 }
 
+:root{
+--bg:#031433;
+--card:#0b1a3c;
+--card2:#0f172a;
+--text:#ffffff;
+--border:#334155;
+--blue:#2563eb;
+--green:#22c55e;
+--yellow:#facc15;
+--red:#dc2626;
+--white:#ffffff;
+}
+
+body.light{
+--bg:#f1f5f9;
+--card:#ffffff;
+--card2:#e2e8f0;
+--text:#111827;
+--border:#cbd5e1;
+}
+
 body{
 font-family:Arial,Helvetica,sans-serif;
-background:#031433;
-color:#fff;
+background:var(--bg);
+color:var(--text);
 padding:12px;
+transition:.3s;
 }
 
 /* HEADER */
 .header{
 text-align:center;
-margin-bottom:15px;
+margin-bottom:14px;
 }
 
 .header h1{
@@ -36,15 +58,32 @@ font-weight:900;
 
 .header h2{
 font-size:22px;
-margin-top:5px;
-color:#dbeafe;
+margin-top:6px;
 }
 
 .live{
 margin-top:10px;
 font-size:22px;
 font-weight:bold;
-color:#22c55e;
+color:var(--green);
+}
+
+/* ALERT */
+.alertBox{
+display:none;
+background:var(--red);
+color:#fff;
+padding:14px;
+border-radius:12px;
+font-size:22px;
+font-weight:900;
+text-align:center;
+margin-bottom:14px;
+animation:blink .8s infinite;
+}
+
+@keyframes blink{
+50%{opacity:.3}
 }
 
 /* TOPBAR */
@@ -53,11 +92,11 @@ display:flex;
 justify-content:center;
 gap:10px;
 flex-wrap:wrap;
-margin:18px 0;
+margin-bottom:14px;
 }
 
 select,button{
-padding:11px 18px;
+padding:10px 16px;
 border:none;
 border-radius:10px;
 font-weight:bold;
@@ -66,7 +105,7 @@ cursor:pointer;
 }
 
 button{
-background:#2563eb;
+background:var(--blue);
 color:#fff;
 }
 
@@ -75,91 +114,96 @@ color:#fff;
 display:grid;
 grid-template-columns:repeat(auto-fit,minmax(220px,1fr));
 gap:12px;
-margin-top:10px;
+margin-bottom:15px;
 }
 
 .card{
-background:#0b1a3c;
-border:1px solid #334155;
+background:var(--card);
+border:1px solid var(--border);
 border-radius:14px;
 padding:18px;
 text-align:center;
-box-shadow:0 8px 18px rgba(0,0,0,.25);
 }
 
 .card h3{
-color:#93c5fd;
-font-size:17px;
-margin-bottom:12px;
+font-size:16px;
+margin-bottom:10px;
 }
 
 .card p{
-font-size:38px;
+font-size:36px;
 font-weight:900;
 }
 
 /* TABLE */
-h2.section{
-margin-top:18px;
-margin-bottom:10px;
+.section{
 font-size:28px;
+margin:16px 0 10px;
 }
 
 .tableWrap{
 overflow:auto;
-margin-bottom:16px;
+margin-bottom:14px;
 border-radius:14px;
 }
 
 table{
 width:100%;
 border-collapse:collapse;
-background:#08112c;
+background:var(--card);
 }
 
 th{
-background:#0f172a;
-padding:12px 8px;
-font-size:14px;
-border:1px solid #334155;
+background:var(--card2);
+padding:11px 8px;
+font-size:13px;
+border:1px solid var(--border);
 }
 
 td{
 padding:10px 8px;
-font-size:13px;
+font-size:12px;
 text-align:center;
 font-weight:bold;
-border:1px solid #334155;
+border:1px solid var(--border);
 }
 
 .totalRow{
 background:#1e293b;
 color:#22c55e;
-font-size:16px;
+font-size:15px;
 }
 
-/* COLORS */
-.stock-normal{background:#2563eb}
-.stock-warning{background:#fb923c}
-.stock-danger{background:#dc2626}
-.stock-empty{background:#fff;color:#000}
+/* STOCK COLORS */
+.stock-normal{background:#2563eb;color:#fff;}
+.stock-warning{background:#fb923c;color:#fff;}
+.stock-danger{background:#dc2626;color:#fff;}
+.stock-empty{background:#fff;color:#000;}
 
-.status-running{color:#22c55e}
-.status-slow{color:#facc15}
-.status-stop{color:#ff4d4d}
+/* STATUS */
+.status-running{color:#22c55e;}
+.status-slow{color:#facc15;}
+.status-stop{color:#ff4d4d;font-weight:900;}
+
+/* RED ALERT ROW */
+.redAlert{
+background:#7f1d1d !important;
+color:#fff !important;
+animation:blink 1s infinite;
+}
 
 /* CHART */
 .chartGrid{
 display:grid;
 grid-template-columns:1fr 1fr;
-gap:15px;
+gap:14px;
 margin-top:18px;
 }
 
 .chartBox{
 background:#fff;
-padding:14px;
 border-radius:14px;
+padding:14px;
 height:380px;
 }
 
@@ -168,28 +212,24 @@ width:100% !important;
 height:100% !important;
 }
 
-/* MOBILE */
 @media(max-width:900px){
-.chartGrid{
-grid-template-columns:1fr;
-}
+.chartGrid{grid-template-columns:1fr;}
 }
 
 @media(max-width:700px){
-
 .header h1{font-size:24px}
 .header h2{font-size:16px}
 .live{font-size:16px}
+.section{font-size:22px}
 
-th{font-size:10px;padding:7px 4px}
-td{font-size:10px;padding:7px 4px}
+th{font-size:10px}
+td{font-size:10px}
 
-.card h3{font-size:14px}
 .card p{font-size:28px}
 }
 
 @media print{
-.topbar,.live,.chartGrid{display:none}
+.topbar,.chartGrid,.live{display:none}
 body{background:#fff;color:#000}
 }
 </style>
@@ -199,9 +239,11 @@ body{background:#fff;color:#000}
 
 <div class="header">
 <h1>GMS TEXTILES LTD</h1>
-<h2>Needle Ageing Live Report</h2>
+<h2>Needle Ageing RED ALERT Report</h2>
 <div class="live">🟢 LIVE DATA CONNECTED</div>
 </div>
+
+<div class="alertBox" id="alertBox">🚨 30 DAYS NO DELIVERY ALERT 🚨</div>
 
 <div class="topbar">
 <select id="floorSelect">
@@ -223,40 +265,16 @@ body{background:#fff;color:#000}
 <button onclick="window.print()">Print</button>
 <button onclick="exportExcel()">Excel</button>
 <button onclick="downloadPDF()">PDF</button>
+<button onclick="toggleMode()">🌙 / ☀️</button>
 </div>
 
 <div class="dashboard">
-
-<div class="card">
-<h3>Total Item</h3>
-<p id="totalItem">0</p>
-</div>
-
-<div class="card">
-<h3>Running</h3>
-<p id="runningItem">0</p>
-</div>
-
-<div class="card">
-<h3>Slow Moving</h3>
-<p id="slowItem">0</p>
-</div>
-
-<div class="card">
-<h3>No Delivery</h3>
-<p id="noDeliveryItem">0</p>
-</div>
-
-<div class="card">
-<h3>Critical Stock</h3>
-<p id="criticalItem">0</p>
-</div>
-
-<div class="card">
-<h3>Total Stock</h3>
-<p id="grandTotal">0</p>
-</div>
-
+<div class="card"><h3>Total Item</h3><p id="totalItem">0</p></div>
+<div class="card"><h3>Running</h3><p id="runningItem">0</p></div>
+<div class="card"><h3>Slow Moving</h3><p id="slowItem">0</p></div>
+<div class="card"><h3>No Delivery</h3><p id="noDeliveryItem">0</p></div>
+<div class="card"><h3>Critical Stock</h3><p id="criticalItem">0</p></div>
+<div class="card"><h3>Total Stock</h3><p id="grandTotal">0</p></div>
 </div>
 
 <h2 class="section">Critical Stock Alert</h2>
@@ -296,26 +314,16 @@ body{background:#fff;color:#000}
 </div>
 
 <div class="chartGrid">
-<div class="chartBox">
-<canvas id="stockChart"></canvas>
-</div>
-
-<div class="chartBox">
-<canvas id="trendChart"></canvas>
-</div>
+<div class="chartBox"><canvas id="stockChart"></canvas></div>
+<div class="chartBox"><canvas id="trendChart"></canvas></div>
 </div>
 
 <script type="module">
 
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-app.js";
+import { getFirestore, collection, onSnapshot } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-firestore.js";
 
-import {
-getFirestore,
-collection,
-onSnapshot
-} from "https://www.gstatic.com/firebasejs/12.12.1/firebase-firestore.js";
-
-/* YOUR FIREBASE */
+/* FIREBASE */
 const firebaseConfig = {
 apiKey: "AIzaSyD-wBCF5eeWMHobLFOhBzKW7aB2pagz9-w",
 authDomain: "gms-warehouse-tracker-7f57e.firebaseapp.com",
@@ -332,7 +340,7 @@ document.getElementById("floorSelect").addEventListener("change",loadReport);
 
 function loadReport(){
 
-const floor = document.getElementById("floorSelect").value;
+const floor=document.getElementById("floorSelect").value;
 
 onSnapshot(collection(db,"dailyPosting"),(snap)=>{
 
@@ -364,13 +372,12 @@ day.rows.forEach(row=>{
 
 if(!row.needleType || !row.size) return;
 
-let key = day.floor+"_"+row.needleType+"_"+row.size;
+let key=day.floor+"_"+row.needleType+"_"+row.size;
 
-let present = Number(row.present)||0;
-let delivery = Number(row.delivery)||0;
+let present=Number(row.present)||0;
+let delivery=Number(row.delivery)||0;
 
 if(!latestMap[key]){
-
 latestMap[key]={
 floor:day.floor,
 sl:row.sl||"",
@@ -381,13 +388,12 @@ deliveryTotal:0,
 deliveryDays:0,
 history:[]
 };
-
 }
 
-latestMap[key].stock = present;
+latestMap[key].stock=present;
 
 if(delivery>0){
-latestMap[key].deliveryTotal += delivery;
+latestMap[key].deliveryTotal+=delivery;
 latestMap[key].deliveryDays++;
 }
 
@@ -400,28 +406,19 @@ latestMap[key].history.push(delivery);
 let html="";
 let criticalHTML="";
 
-let total=0;
-let running=0;
-let slow=0;
-let stop=0;
-let critical=0;
-let grand=0;
+let total=0,running=0,slow=0,stop=0,critical=0,grand=0;
+let redAlertCount=0;
 
-let labels=[];
-let stockData=[];
-let trendLabels=[];
-let trendData=[];
+let labels=[],stockData=[],trendLabels=[],trendData=[];
 
 Object.values(latestMap).forEach(item=>{
 
 total++;
-grand += item.stock;
+grand+=item.stock;
 
-let avg = item.deliveryDays ? item.deliveryTotal/item.deliveryDays : 0;
-
-let stockDays = avg>0 ? item.stock/avg : 999;
-
-let runningDays = avg>0 ? Math.floor(stockDays)+" Days" : "-";
+let avg=item.deliveryDays ? item.deliveryTotal/item.deliveryDays : 0;
+let stockDays=avg>0 ? item.stock/avg : 999;
+let runningDays=avg>0 ? Math.floor(stockDays)+" Days":"-";
 
 let noDelivery=0;
 
@@ -438,6 +435,7 @@ else if(noDelivery>=30) stockClass="stock-danger";
 
 let status="Running";
 let statusClass="status-running";
+let rowClass="";
 
 if(item.stock===0){
 status="No Stock";
@@ -445,9 +443,11 @@ statusClass="status-stop";
 stop++;
 }
 else if(noDelivery>=30){
-status="No Delivery";
+status="🚨 30 Days No Delivery";
 statusClass="status-stop";
+rowClass="redAlert";
 stop++;
+redAlertCount++;
 }
 else if(noDelivery>=13){
 status="Slow Moving";
@@ -459,7 +459,6 @@ running++;
 }
 
 if(stockDays<=5 && item.stock>0){
-
 critical++;
 
 criticalHTML += `
@@ -469,13 +468,11 @@ criticalHTML += `
 <td>${item.size}</td>
 <td class="stock-warning">${item.stock}</td>
 <td>${runningDays}</td>
-</tr>
-`;
-
+</tr>`;
 }
 
 html += `
-<tr>
+<tr class="${rowClass}">
 <td>${item.floor}</td>
 <td>${item.sl}</td>
 <td>${item.type}</td>
@@ -485,12 +482,10 @@ html += `
 <td>${runningDays}</td>
 <td>${noDelivery} Days</td>
 <td class="${statusClass}">${status}</td>
-</tr>
-`;
+</tr>`;
 
 labels.push(item.type+"-"+item.size);
 stockData.push(item.stock);
-
 trendLabels.push(item.type);
 trendData.push(item.deliveryTotal);
 
@@ -501,28 +496,33 @@ html += `
 <td colspan="4">GRAND TOTAL STOCK</td>
 <td>${grand}</td>
 <td colspan="4">LIVE UPDATE</td>
-</tr>
-`;
+</tr>`;
 
-document.getElementById("reportBody").innerHTML = html;
-document.getElementById("criticalBody").innerHTML = criticalHTML;
+document.getElementById("reportBody").innerHTML=html;
+document.getElementById("criticalBody").innerHTML=criticalHTML;
 
-document.getElementById("totalItem").innerText = total;
-document.getElementById("runningItem").innerText = running;
-document.getElementById("slowItem").innerText = slow;
-document.getElementById("noDeliveryItem").innerText = stop;
-document.getElementById("criticalItem").innerText = critical;
-document.getElementById("grandTotal").innerText = grand;
+document.getElementById("totalItem").innerText=total;
+document.getElementById("runningItem").innerText=running;
+document.getElementById("slowItem").innerText=slow;
+document.getElementById("noDeliveryItem").innerText=stop;
+document.getElementById("criticalItem").innerText=critical;
+document.getElementById("grandTotal").innerText=grand;
+
+/* ALERT BOX */
+if(redAlertCount>0){
+document.getElementById("alertBox").style.display="block";
+}else{
+document.getElementById("alertBox").style.display="none";
+}
 
 drawStockChart(labels,stockData);
 drawTrendChart(trendLabels,trendData);
 
 }
 
-/* CHART 1 */
 function drawStockChart(labels,data){
 
-let old = Chart.getChart("stockChart");
+let old=Chart.getChart("stockChart");
 if(old) old.destroy();
 
 new Chart(document.getElementById("stockChart"),{
@@ -535,18 +535,14 @@ data:data,
 backgroundColor:"#2563eb"
 }]
 },
-options:{
-responsive:true,
-maintainAspectRatio:false
-}
+options:{responsive:true,maintainAspectRatio:false}
 });
 
 }
 
-/* CHART 2 */
 function drawTrendChart(labels,data){
 
-let old = Chart.getChart("trendChart");
+let old=Chart.getChart("trendChart");
 if(old) old.destroy();
 
 new Chart(document.getElementById("trendChart"),{
@@ -561,28 +557,24 @@ fill:false,
 tension:.3
 }]
 },
-options:{
-responsive:true,
-maintainAspectRatio:false
-}
+options:{responsive:true,maintainAspectRatio:false}
 });
 
 }
 
-/* EXCEL */
 window.exportExcel=function(){
-
 let table=document.getElementById("mainTable");
 let wb=XLSX.utils.table_to_book(table,{sheet:"Needle Report"});
 XLSX.writeFile(wb,"Needle_Ageing_Report.xlsx");
-
 }
 
-/* PDF */
 window.downloadPDF=function(){
-
 html2pdf().from(document.body).save("Needle_Ageing_Report.pdf");
+}
 
+/* DARK WHITE MODE */
+window.toggleMode=function(){
+document.body.classList.toggle("light");
 }
 
 loadReport();
