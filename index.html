@@ -38,31 +38,162 @@ body{
   padding-bottom:78px;
   font-weight:650;
 }
-.header{
+
+/* ===== SIDEBAR STYLES ===== */
+.sidebar{
+  position:fixed;
+  left:0;
+  top:0;
+  bottom:0;
+  width:260px;
   background:var(--card);
+  border-right:1px solid var(--border);
+  display:flex;
+  flex-direction:column;
+  z-index:1000;
+  transition:transform .3s ease;
+  overflow-y:auto;
+  overflow-x:hidden;
+}
+.sidebar.hidden{
+  transform:translateX(-100%);
+}
+.sidebarHeader{
+  padding:20px 16px;
   border-bottom:1px solid var(--border);
   display:flex;
   align-items:center;
-  justify-content:space-between;
-  padding:10px 18px;
   gap:12px;
 }
-.logoArea{display:flex;align-items:center;gap:10px}
-.companyLogo{width:42px;height:42px;object-fit:contain;border-radius:8px}
-.logo{font-size:23px;font-weight:1000}
-.sub{font-size:12px;color:var(--muted);font-weight:900}
-.rightTop{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
-.autoSave{color:var(--green);font-weight:1000}
-.themeBtn,.logoutBtn{
-  background:var(--blue);
+.sidebarHeader .companyLogo{
+  width:45px;
+  height:45px;
+  border-radius:10px;
+  object-fit:contain;
+}
+.sidebarHeader .logo{
+  font-size:20px;
+  font-weight:1000;
+  color:var(--text);
+}
+.sidebarHeader .sub{
+  font-size:11px;
+  color:var(--muted);
+  font-weight:900;
+  margin-top:2px;
+}
+.sidebarNav{
+  flex:1;
+  padding:16px 12px;
+  display:flex;
+  flex-direction:column;
+  gap:6px;
+}
+.sidebarNav button{
+  background:transparent;
+  color:var(--text);
+  border:1px solid transparent;
+  padding:12px 16px;
+  border-radius:10px;
+  font-size:14px;
+  font-weight:900;
+  cursor:pointer;
+  text-align:left;
+  transition:all .3s;
+  display:flex;
+  align-items:center;
+  gap:10px;
+  white-space:nowrap;
+}
+.sidebarNav button:hover{
+  background:rgba(37,99,235,.1);
+  border-color:var(--blue);
+}
+.sidebarNav button.active{
+  background:linear-gradient(135deg,#2563eb,#7c3aed);
   color:#fff;
-  border:0;
-  padding:9px 14px;
-  border-radius:24px;
+  box-shadow:0 4px 12px rgba(37,99,235,.3);
+}
+.sidebarFooter{
+  padding:16px;
+  border-top:1px solid var(--border);
+  display:flex;
+  flex-direction:column;
+  gap:8px;
+}
+.sidebarFooter .themeBtn,.sidebarFooter .logoutBtn{
+  width:100%;
+  padding:11px 16px;
+  border-radius:10px;
   font-weight:1000;
   cursor:pointer;
+  border:none;
+  font-size:14px;
+  background:var(--blue);
+  color:#fff;
 }
-.logoutBtn{background:var(--red)}
+.sidebarFooter .logoutBtn{
+  background:var(--red);
+}
+
+/* ===== MAIN CONTENT ===== */
+.mainContent{
+  margin-left:260px;
+  min-height:100vh;
+  background:radial-gradient(circle at top left,rgba(37,99,235,.13),transparent 35%),var(--bg);
+  transition:margin-left .3s ease;
+}
+.mainContent.expanded{
+  margin-left:0;
+}
+
+/* ===== TOP BAR ===== */
+.topBar{
+  background:var(--card);
+  border-bottom:1px solid var(--border);
+  padding:12px 24px;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  position:sticky;
+  top:0;
+  z-index:100;
+}
+.menuToggle{
+  background:var(--blue);
+  color:#fff;
+  border:none;
+  padding:10px 16px;
+  border-radius:8px;
+  font-size:20px;
+  cursor:pointer;
+  font-weight:1000;
+  display:flex;
+  align-items:center;
+  gap:8px;
+}
+.topBarRight{
+  display:flex;
+  align-items:center;
+  gap:12px;
+}
+.topBarRight .autoSave{
+  color:var(--green);
+  font-weight:1000;
+  font-size:14px;
+}
+.topBarRight .themeBtn{
+  background:var(--blue);
+  color:#fff;
+  border:none;
+  padding:9px 16px;
+  border-radius:8px;
+  font-weight:1000;
+  cursor:pointer;
+  font-size:13px;
+}
+
+/* ===== NOTICE BAR ===== */
 .noticeBar{
   background:linear-gradient(90deg,#f59e0b,#2563eb);
   color:#fff;
@@ -80,28 +211,8 @@ body{
   0%{transform:translateX(0)}
   100%{transform:translateX(-100%)}
 }
-.nav{
-  display:flex;
-  gap:12px;
-  padding:14px 18px;
-  background:rgba(255,255,255,.03);
-  border-bottom:1px solid var(--border);
-  flex-wrap:wrap;
-}
-.nav button{
-  background:var(--card);
-  color:var(--text);
-  border:1px solid var(--border);
-  padding:13px 22px;
-  border-radius:12px;
-  font-size:15px;
-  font-weight:1000;
-  cursor:pointer;
-}
-.nav button.active{
-  background:linear-gradient(135deg,#2563eb,#7c3aed);
-  color:white;
-}
+
+/* ===== PAGE CONTENT ===== */
 .page{
   display:none;
   padding:18px;
@@ -252,7 +363,7 @@ select,input,textarea{
 .btn{
   padding:13px 24px;
   background:var(--blue);
-  color:white;
+  color:#fff;
   border:0;
   border-radius:10px;
   font-weight:1000;
@@ -347,7 +458,7 @@ select,input,textarea{
 .logItem b{color:var(--green)}
 .backupWarningBanner{
   background:linear-gradient(90deg,#ef4444,#f59e0b);
-  color:white;
+  color:#fff;
   text-align:center;
   padding:10px;
   font-size:15px;
@@ -390,20 +501,6 @@ body.light .creditFooter{background:rgba(255,255,255,.96)}
 .creditText b{font-size:10px}
 .creditText span{display:block;color:var(--muted);font-size:8px}
 .creditDivider{width:1px;height:24px;background:var(--border)}
-@media(max-width:900px){
-  .header{display:block;text-align:center}
-  .logoArea{justify-content:center}
-  .rightTop{justify-content:center;margin-top:8px}
-  .nav button{flex:1 1 42%;padding:10px 12px;font-size:14px}
-  .topGrid,.summaryLine,.chartGrid,.mcdDashboard,.grid,.backupActionGrid{grid-template-columns:1fr}
-  .attendanceBox{grid-template-columns:1fr}
-  .attendanceInside{grid-template-columns:1fr 1fr}
-  .page{padding:12px}
-  .creditFooter{width:95%;max-width:95%}
-}
-@media(max-width:520px){
-  .attendanceInside{grid-template-columns:1fr}
-}
 
 /* ===== LIVE UPDATE SIGNAL CARD ===== */
 .liveSignalCard{
@@ -447,216 +544,259 @@ body.light .creditFooter{background:rgba(255,255,255,.96)}
   0%,100%{opacity:.4}
   50%{opacity:1}
 }
-@media(max-width:700px){
-  .liveText{font-size:30px}
-  .liveDot{width:32px;height:32px}
-}
 
+/* ===== RESPONSIVE ===== */
+@media(max-width:900px){
+  .sidebar{
+    transform:translateX(-100%);
+  }
+  .sidebar.show{
+    transform:translateX(0);
+  }
+  .mainContent{
+    margin-left:0;
+  }
+  .mainContent.expanded{
+    margin-left:0;
+  }
+  .topGrid,.summaryLine,.chartGrid,.mcdDashboard,.grid,.backupActionGrid{
+    grid-template-columns:1fr;
+  }
+  .attendanceBox{
+    grid-template-columns:1fr;
+  }
+  .attendanceInside{
+    grid-template-columns:1fr 1fr;
+  }
+  .page{
+    padding:12px;
+  }
+  .creditFooter{
+    width:95%;
+    max-width:95%;
+  }
+}
+@media(max-width:520px){
+  .attendanceInside{
+    grid-template-columns:1fr;
+  }
+  .liveText{
+    font-size:30px;
+  }
+  .liveDot{
+    width:32px;
+    height:32px;
+  }
+}
 
 .topGridSingle{grid-template-columns:1fr!important}
 .topGridSingle .topCard{min-height:120px}
-
-
-/* ===== COMPANY-WISE ENTRY/REPORT FIX ===== */
-#entryCompany,#reportCompany,#entryMcd,#reportMcd{
-  max-width:100%;
-}
-
-
-/* ===== FINAL INDEX CHALLAN/GATE BUTTON FIX ===== */
-.card[onclick*="challan-entry"],
-.card[onclick*="challan-report"],
-.card[onclick*="gate-plan"]{
-  cursor:pointer;
-}
-
+#entryCompany,#reportCompany,#entryMcd,#reportMcd{max-width:100%}
+.card[onclick*="challan-entry"],.card[onclick*="challan-report"],.card[onclick*="gate-plan"]{cursor:pointer}
 </style>
 </head>
 
 <body>
 
-<div class="header">
-  <div class="logoArea">
+<!-- Sidebar -->
+<div class="sidebar" id="sidebar">
+  <div class="sidebarHeader">
     <img src="logo.png" class="companyLogo" onerror="this.style.display='none'">
     <div>
-      <div class="logo">GMS MCD SYSTEM</div>
+      <div class="logo">GMS MCD</div>
       <div class="sub" id="loginInfo">Loading...</div>
     </div>
   </div>
-  <div class="rightTop">
-    <span class="autoSave">🟢 Live</span>
-    <button class="themeBtn" onclick="toggleTheme()">🌙 / ☀️</button>
-    <button class="themeBtn" onclick="location.href='profile.html'">👤 Profile</button>
+  
+  <div class="sidebarNav">
+    <button class="active" onclick="openPage('home',this)">🏠 Dashboard</button>
+    <button onclick="openPage('entry',this)">➕ New Entry</button>
+    <button onclick="openPage('reports',this)">📑 Reports</button>
+    <button id="needleNav" onclick="openPage('needle',this)">🪡 Needle</button>
+    <button id="adminNav" onclick="location.href='admin.html'">👑 Admin</button>
+    <button id="manpowerNav" onclick="location.href='manpower.html'">👨‍🏭 Manpower</button>
+    <button onclick="location.href='notice.html'">📢 Notice</button>
+    <button onclick="location.href='online-users.html'">🟢 Online</button>
+    <button onclick="location.href='audit-history.html'">📜 Audit</button>
+    <button id="backupNav" onclick="openPage('backup',this)">☁ Backup</button>
+    <button onclick="location.href='change-password.html'">🔐 Password</button>
+  </div>
+  
+  <div class="sidebarFooter">
+    <button class="themeBtn" onclick="toggleTheme()">🌙 / ️ Theme</button>
     <button class="logoutBtn" onclick="logout()">🚪 Logout</button>
   </div>
 </div>
 
-<div id="backupWarningBanner" class="backupWarningBanner" style="display:none">🔴 BACKUP NEEDED</div>
-<div class="noticeBar"><div class="noticeMove" id="noticeMove">📢 Loading live notice...</div></div>
-
-<div class="nav">
-  <button class="active" onclick="openPage('home',this)">🏠 Dashboard</button>
-  <button onclick="openPage('entry',this)">➕ New Entry</button>
-  <button onclick="openPage('reports',this)">📑 Reports</button>
-  <button id="needleNav" onclick="openPage('needle',this)">🪡 Needle</button>
-  <button id="adminNav" onclick="location.href='admin.html'">👑 Admin</button>
-  <button id="manpowerNav" onclick="location.href='manpower.html'">👨‍🏭 Manpower</button>
-  <button onclick="location.href='notice.html'">📢 Notice</button>
-  <button onclick="location.href='online-users.html'">🟢 Online</button>
-  <button onclick="location.href='audit-history.html'">📜 Audit</button>
-  <button id="backupNav" onclick="openPage('backup',this)">☁ Backup</button>
-  <button onclick="location.href='change-password.html'">🔐 Password</button>
-</div>
-
-<div id="home" class="page activePage">
-  <div class="dashTitle">📊 Dashboard Overview</div>
-  <div class="dashSub">Role Based Dashboard • Firebase Live Summary</div>
-
-  <div class="topGrid topGridSingle">
-    <div class="topCard liveSignalCard">
-      <div class="label">🟢 Live Update Signal</div>
-      <div class="liveSignalWrap">
-        <span class="liveDot"></span>
-        <span class="liveText">LIVE</span>
-      </div>
+<!-- Main Content -->
+<div class="mainContent" id="mainContent">
+  <!-- Top Bar -->
+  <div class="topBar">
+    <button class="menuToggle" onclick="toggleSidebar()">☰ Menu</button>
+    <div class="topBarRight">
+      <span class="autoSave">🟢 Live</span>
+      <button class="themeBtn" onclick="location.href='profile.html'">👤 Profile</button>
     </div>
   </div>
 
-  <div class="summaryLine" id="accessoriesSummary">
-    <div class="sumBox"><span>📦 Accessories With Sample Stock</span><b id="sumAccessories">0</b></div>
-    <div class="sumBox"><span>🧵 Sewing Thread Stock</span><b id="sumSewing">0</b></div>
-    <div class="sumBox"><span>📏 Twill Tape Stock</span><b id="sumTwill">0</b></div>
+  <!-- Notice Bar -->
+  <div id="backupWarningBanner" class="backupWarningBanner" style="display:none">🔴 BACKUP NEEDED</div>
+  <div class="noticeBar"><div class="noticeMove" id="noticeMove">📢 Loading live notice...</div></div>
+
+  <!-- Home Page -->
+  <div id="home" class="page activePage">
+    <div class="dashTitle">📊 Dashboard Overview</div>
+    <div class="dashSub">Role Based Dashboard • Firebase Live Summary</div>
+
+    <div class="topGrid topGridSingle">
+      <div class="topCard liveSignalCard">
+        <div class="label">🟢 Live Update Signal</div>
+        <div class="liveSignalWrap">
+          <span class="liveDot"></span>
+          <span class="liveText">LIVE</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="summaryLine" id="accessoriesSummary">
+      <div class="sumBox"><span>📦 Accessories With Sample Stock</span><b id="sumAccessories">0</b></div>
+      <div class="sumBox"><span>🧵 Sewing Thread Stock</span><b id="sumSewing">0</b></div>
+      <div class="sumBox"><span>📏 Twill Tape Stock</span><b id="sumTwill">0</b></div>
+    </div>
+
+    <div class="needleSmall" id="needleSummary"><span>🪡 Needle Today Stock</span><b id="needleToday">0</b></div>
+
+    <div class="chartGrid">
+      <div class="chartBox" id="accessoriesChartBox"><h3>📈 Accessories Stock Chart</h3><canvas id="accessoriesChart"></canvas></div>
+      <div class="chartBox" id="needleChartBox"><h3>🏭 Needle Floor Wise Stock</h3><canvas id="needleChart"></canvas></div>
+      <div class="chartBox" id="greyChartBox"><h3>🏭 Grey Fabric Present Stock Summary</h3><canvas id="greyChart"></canvas></div>
+      <div class="chartBox" id="needleIssueChartBox"><h3>🪡 Needle Broken / Missing / Change</h3><canvas id="needleIssueChart"></canvas></div>
+      <div class="chartBox attendanceBox" id="billingChartBox">
+        <div class="attChartSide">
+          <h3>👨‍💼 Attendance Manpower Chart</h3>
+          <canvas id="billingChart"></canvas>
+        </div>
+        <div class="attendanceInside">
+          <div class="attBox total"><span>👨‍🏭 Attendance Total</span><b id="attTotal">0</b></div>
+          <div class="attBox present"><span>✅ Today Present</span><b id="attPresent">0</b></div>
+          <div class="attBox leave"><span>🏖 Leave</span><b id="attLeave">0</b></div>
+          <div class="attBox absent"><span>❌ Absent</span><b id="attAbsent">0</b></div>
+        </div>
+      </div>
+    </div>
+
+    <div id="mcdDashboard" class="mcdDashboard">Loading...</div>
   </div>
 
-  <div class="needleSmall" id="needleSummary"><span>🪡 Needle Today Stock</span><b id="needleToday">0</b></div>
+  <!-- Entry Page -->
+  <div id="entry" class="page">
+    <h2>➕ New Entry</h2>
+    <label>🏢 Company</label>
+    <select id="entryCompany"><option>GMS TEXTILES LTD</option><option>GMS COMPOSITE KNITTING</option></select>
+    <br><br>
+    <label>📂 Department / MCD</label>
+    <select id="entryMcd"></select>
+    <button class="btn" onclick="loadEntry()">🚀 Open Entry</button>
+    <br><br>
+    <div id="entryBox" class="grid"></div>
+  </div>
 
-  <div class="chartGrid">
-    <div class="chartBox" id="accessoriesChartBox"><h3>📈 Accessories Stock Chart</h3><canvas id="accessoriesChart"></canvas></div>
-    <div class="chartBox" id="needleChartBox"><h3>🏭 Needle Floor Wise Stock</h3><canvas id="needleChart"></canvas></div>
-    <div class="chartBox" id="greyChartBox"><h3>🏭 Grey Fabric Present Stock Summary</h3><canvas id="greyChart"></canvas></div>
-    <div class="chartBox" id="needleIssueChartBox"><h3>🪡 Needle Broken / Missing / Change</h3><canvas id="needleIssueChart"></canvas></div>
-    <div class="chartBox attendanceBox" id="billingChartBox">
-      <div class="attChartSide">
-        <h3>👨‍💼 Attendance Manpower Chart</h3>
-        <canvas id="billingChart"></canvas>
-      </div>
-      <div class="attendanceInside">
-        <div class="attBox total"><span>👨‍🏭 Attendance Total</span><b id="attTotal">0</b></div>
-        <div class="attBox present"><span>✅ Today Present</span><b id="attPresent">0</b></div>
-        <div class="attBox leave"><span>🏖 Leave</span><b id="attLeave">0</b></div>
-        <div class="attBox absent"><span>❌ Absent</span><b id="attAbsent">0</b></div>
-      </div>
+  <!-- Reports Page -->
+  <div id="reports" class="page">
+    <h2>📑 Reports</h2>
+    <label>🏢 Company</label>
+    <select id="reportCompany"><option>GMS TEXTILES LTD</option><option>GMS COMPOSITE KNITTING</option></select>
+    <br><br>
+    <label>📂 Department / MCD</label>
+    <select id="reportMcd"></select>
+    <button class="btn" onclick="loadReport()">📊 Show Report</button>
+    <br><br>
+    <div id="reportBox" class="grid"></div>
+  </div>
+
+  <!-- Needle Page -->
+  <div id="needle" class="page">
+    <h2>🪡 Needle Section</h2>
+    <div class="grid">
+      <div class="card" onclick="location.href='needle.html'">🪡 Needle Daily Entry</div>
+      <div class="card" onclick="location.href='needle-dashboard.html'">🏭 Floor Wise Dashboard</div>
+      <div class="card" onclick="location.href='ageing.html'">📑 Ageing Report</div>
+      <div class="card" onclick="location.href='needle-monthly.html'">📅 Needle Monthly Report</div>
+      <div class="card" onclick="location.href='all-needle-reports.html'">📦 All Needle BNR/BNF</div>
+      <div class="card" onclick="location.href='all-needle-summary.html'">📊 All Needle Summary</div>
+      <div class="card" onclick="location.href='needle-report.html'">📝 Needle Issue Entry</div>
+      <div class="card" onclick="location.href='needle-report-view.html'">📊 Needle Issue Report</div>
+      <div class="card" onclick="location.href='month_wise_needle_stock_summary.html'">📅 Month Wise Needle Stock Summary</div>
+      <div class="card" onclick="location.href='month_wise_needle_stock_report_carry_fixed.html'">📋 Month Wise Floor Stock Report</div>
     </div>
   </div>
 
-  <div id="mcdDashboard" class="mcdDashboard">Loading...</div>
-</div>
+  <!-- Backup Page -->
+  <div id="backup" class="page">
+    <h2>☁ Backup & Restore Control</h2>
+    <div class="dashSub">Only Admin can use this page</div>
 
-<div id="entry" class="page">
-  <h2>➕ New Entry</h2>
-  <label>🏢 Company</label>
-  <select id="entryCompany"><option>GMS TEXTILES LTD</option><option>GMS COMPOSITE KNITTING</option></select>
-  <br><br>
-  <label>📂 Department / MCD</label>
-  <select id="entryMcd"></select>
-  <button class="btn" onclick="loadEntry()">🚀 Open Entry</button>
-  <br><br>
-  <div id="entryBox" class="grid"></div>
-</div>
+    <div class="statusBox">
+      <div class="statusTitle">📌 Firebase Live Usage</div>
+      <div class="statusLine"><span>📖 Reads Today</span><b id="readsToday">0 / 50,000</b></div>
+      <div class="statusLine"><span>✍️ Writes Today</span><b id="writesToday">0 / 20,000</b></div>
+      <div class="statusLine"><span>🗑 Deletes Today</span><b id="deletesToday">0 / 20,000</b></div>
+      <div class="statusLine"><span>💾 Storage Limit</span><b>1 GiB</b></div>
+      <div class="statusLine"><span>📦 Storage Used</span><b id="storageUsed">0 MB</b></div>
+      <div class="statusLine"><span>📊 Usage Percent</span><b id="storagePercent">0%</b></div>
+      <div class="statusLine"><span>🔥 Today Entry</span><b id="firebaseToday">0</b></div>
+      <div class="statusLine"><span>🗃 Total Entry</span><b id="firebaseTotal">0</b></div>
+      <div class="statusLine"><span>🚚 Gate Plan Firebase</span><b id="gateLocal">0 / 0</b></div>
+      <div class="statusLine"><span>📄 Challan/Gate Pass Firebase</span><b id="challanLocal">0 / 0</b></div>
+      <div class="statusLine"><span>📁 Backup Months</span><b id="backupMonths">0</b></div>
+      <div class="statusLine"><span>🗓 Active Months</span><b id="activeMonths">0</b></div>
+      <div class="statusLine"><span>☁ Backup Status</span><b id="backupStatus">READY</b></div>
+      <div class="progress"><div id="limitBar" class="progressFill"></div></div>
+      <div id="limitSignal" class="statusSignal safe">🟢 SAFE</div>
+    </div>
 
-<div id="reports" class="page">
-  <h2>📑 Reports</h2>
-  <label>🏢 Company</label>
-  <select id="reportCompany"><option>GMS TEXTILES LTD</option><option>GMS COMPOSITE KNITTING</option></select>
-  <br><br>
-  <label>📂 Department / MCD</label>
-  <select id="reportMcd"></select>
-  <button class="btn" onclick="loadReport()">📊 Show Report</button>
-  <br><br>
-  <div id="reportBox" class="grid"></div>
-</div>
+    <div class="grid backupActionGrid">
+      <div class="card" onclick="backupAllData()">☁ Backup Now</div>
+      <div class="card" onclick="document.getElementById('restoreFile').click()">📥 Restore Backup</div>
+      <div class="card" onclick="clearOldData()">🧹 Clear Old Data</div>
+      <div class="card" onclick="removeRestoredMonth()">🗑 Remove Restored Month</div>
+    </div>
 
-<div id="needle" class="page">
-  <h2>🪡 Needle Section</h2>
-  <div class="grid">
-    <div class="card" onclick="location.href='needle.html'">🪡 Needle Daily Entry</div>
-    <div class="card" onclick="location.href='needle-dashboard.html'">🏭 Floor Wise Dashboard</div>
-    <div class="card" onclick="location.href='ageing.html'">
-📑 Ageing Report
-</div>
-    <div class="card" onclick="location.href='needle-monthly.html'">📅 Needle Monthly Report</div>
-    <div class="card" onclick="location.href='all-needle-reports.html'">📦 All Needle BNR/BNF</div>
-    <div class="card" onclick="location.href='all-needle-summary.html'">📊 All Needle Summary</div>
-    <div class="card" onclick="location.href='needle-report.html'">📝 Needle Issue Entry</div>
-    <div class="card" onclick="location.href='needle-report-view.html'">📊 Needle Issue Report</div>
-    <div class="card" onclick="location.href='month_wise_needle_stock_summary.html'">📅 Month Wise Needle Stock Summary</div>
-    <div class="card" onclick="location.href='month_wise_needle_stock_report_carry_fixed.html'">📋 Month Wise Floor Stock Report</div>
-  </div>
-</div>
+    <input type="file" id="restoreFile" accept=".json" style="display:none" onchange="loadRestoreFile(event)">
 
-<div id="backup" class="page">
-  <h2>☁ Backup & Restore Control</h2>
-  <div class="dashSub">Only Admin can use this page</div>
+    <div class="statusBox" id="restorePanel" style="display:none">
+      <div class="statusTitle">📥 Restore Month Wise Data</div>
+      <label>Select Month From Backup</label>
+      <select id="restoreMonthSelect"></select>
+      <button class="btn" onclick="restoreSelectedMonth()">Restore Selected Month</button>
+      <div class="statusLine"><span>Backup File</span><b id="restoreFileName">-</b></div>
+      <div class="statusLine"><span>Month Found</span><b id="restoreMonthCount">0</b></div>
+      <div class="statusLine"><span>Restore Status</span><b id="restoreStatus">READY</b></div>
+    </div>
 
-  <div class="statusBox">
-    <div class="statusTitle">📌 Firebase Live Usage</div>
-    <div class="statusLine"><span>📖 Reads Today</span><b id="readsToday">0 / 50,000</b></div>
-    <div class="statusLine"><span>✍️ Writes Today</span><b id="writesToday">0 / 20,000</b></div>
-    <div class="statusLine"><span>🗑 Deletes Today</span><b id="deletesToday">0 / 20,000</b></div>
-    <div class="statusLine"><span>💾 Storage Limit</span><b>1 GiB</b></div>
-    <div class="statusLine"><span>📦 Storage Used</span><b id="storageUsed">0 MB</b></div>
-    <div class="statusLine"><span>📊 Usage Percent</span><b id="storagePercent">0%</b></div>
-    <div class="statusLine"><span>🔥 Today Entry</span><b id="firebaseToday">0</b></div>
-    <div class="statusLine"><span>🗃 Total Entry</span><b id="firebaseTotal">0</b></div>
-    <div class="statusLine"><span>🚚 Gate Plan Firebase</span><b id="gateLocal">0 / 0</b></div>
-    <div class="statusLine"><span>📄 Challan/Gate Pass Firebase</span><b id="challanLocal">0 / 0</b></div>
-    <div class="statusLine"><span>📁 Backup Months</span><b id="backupMonths">0</b></div>
-    <div class="statusLine"><span>🗓 Active Months</span><b id="activeMonths">0</b></div>
-    <div class="statusLine"><span>☁ Backup Status</span><b id="backupStatus">READY</b></div>
-    <div class="progress"><div id="limitBar" class="progressFill"></div></div>
-    <div id="limitSignal" class="statusSignal safe">🟢 SAFE</div>
+    <div class="statusBox">
+      <div class="statusTitle">📌 Backup Rules</div>
+      <div class="statusLine"><span>Current Month</span><b>KEEP</b></div>
+      <div class="statusLine"><span>Previous Month</span><b>KEEP</b></div>
+      <div class="statusLine"><span>Older Month</span><b>Backup then Manual Clear</b></div>
+      <div class="statusLine"><span>800 MB</span><b>Backup Warning</b></div>
+      <div class="statusLine"><span>900 MB</span><b>Backup Now</b></div>
+    </div>
+
+    <div class="statusBox">
+      <div class="statusTitle">📜 Backup Activity Log</div>
+      <div id="backupActivityLog">No activity yet</div>
+    </div>
   </div>
 
-  <div class="grid backupActionGrid">
-    <div class="card" onclick="backupAllData()">☁ Backup Now</div>
-    <div class="card" onclick="document.getElementById('restoreFile').click()">📥 Restore Backup</div>
-    <div class="card" onclick="clearOldData()">🧹 Clear Old Data</div>
-    <div class="card" onclick="removeRestoredMonth()">🗑 Remove Restored Month</div>
+  <!-- Credit Footer -->
+  <div class="creditFooter">
+    <div class="creditItem"><img src="https://i.ibb.co/5hzT1VGk/IMG.jpg"><div class="creditText"><b>Powered by JOHURUL</b><span>System Developer & Dashboard Design</span></div></div>
+    <div class="creditDivider"></div>
+    <div class="creditItem"><img src="https://i.ibb.co/DDqvG3pD/nazir.jpg"><div class="creditText"><b>Md. Nazir Hossain</b><span>System Planning & Report Guideline</span></div></div>
+    <div class="creditDivider"></div>
+    <div class="creditItem"><img src="https://i.ibb.co/k6WC4fBm/asad.jpg"><div class="creditText"><b>Md. Asaduzzaman</b><span>Operational Support & Report Management</span></div></div>
   </div>
-
-  <input type="file" id="restoreFile" accept=".json" style="display:none" onchange="loadRestoreFile(event)">
-
-  <div class="statusBox" id="restorePanel" style="display:none">
-    <div class="statusTitle">📥 Restore Month Wise Data</div>
-    <label>Select Month From Backup</label>
-    <select id="restoreMonthSelect"></select>
-    <button class="btn" onclick="restoreSelectedMonth()">Restore Selected Month</button>
-    <div class="statusLine"><span>Backup File</span><b id="restoreFileName">-</b></div>
-    <div class="statusLine"><span>Month Found</span><b id="restoreMonthCount">0</b></div>
-    <div class="statusLine"><span>Restore Status</span><b id="restoreStatus">READY</b></div>
-  </div>
-
-  <div class="statusBox">
-    <div class="statusTitle">📌 Backup Rules</div>
-    <div class="statusLine"><span>Current Month</span><b>KEEP</b></div>
-    <div class="statusLine"><span>Previous Month</span><b>KEEP</b></div>
-    <div class="statusLine"><span>Older Month</span><b>Backup then Manual Clear</b></div>
-    <div class="statusLine"><span>800 MB</span><b>Backup Warning</b></div>
-    <div class="statusLine"><span>900 MB</span><b>Backup Now</b></div>
-  </div>
-
-  <div class="statusBox">
-    <div class="statusTitle">📜 Backup Activity Log</div>
-    <div id="backupActivityLog">No activity yet</div>
-  </div>
-</div>
-
-<div class="creditFooter">
-  <div class="creditItem"><img src="https://i.ibb.co/5hzT1VGk/IMG.jpg"><div class="creditText"><b>Powered by JOHURUL</b><span>System Developer & Dashboard Design</span></div></div>
-  <div class="creditDivider"></div>
-  <div class="creditItem"><img src="https://i.ibb.co/DDqvG3pD/nazir.jpg"><div class="creditText"><b>Md. Nazir Hossain</b><span>System Planning & Report Guideline</span></div></div>
-  <div class="creditDivider"></div>
-  <div class="creditItem"><img src="https://i.ibb.co/k6WC4fBm/asad.jpg"><div class="creditText"><b>Md. Asaduzzaman</b><span>Operational Support & Report Management</span></div></div>
 </div>
 
 <script type="module">
@@ -749,19 +889,31 @@ window.toggleTheme=function(){
 };
 if(localStorage.getItem("theme")==="light")document.body.classList.add("light");
 
+// Sidebar toggle
+window.toggleSidebar=function(){
+  const sidebar=document.getElementById("sidebar");
+  const mainContent=document.getElementById("mainContent");
+  sidebar.classList.toggle("show");
+  mainContent.classList.toggle("expanded");
+};
+
 window.openPage=function(id,btn){
   document.querySelectorAll(".page").forEach(p=>p.classList.remove("activePage"));
   document.getElementById(id).classList.add("activePage");
-  document.querySelectorAll(".nav button").forEach(b=>b.classList.remove("active"));
+  document.querySelectorAll(".sidebarNav button").forEach(b=>b.classList.remove("active"));
   if(btn)btn.classList.add("active");
   if(id==="home")loadDashboardStock();
   if(id==="backup"){loadDashboardStock();renderBackupLog();}
+  
+  // Close sidebar on mobile
+  if(window.innerWidth<=900){
+    const sidebar=document.getElementById("sidebar");
+    const mainContent=document.getElementById("mainContent");
+    sidebar.classList.remove("show");
+    mainContent.classList.remove("expanded");
+  }
 };
 
-
-
-
-/* ===== FINAL GATE PLAN + CHALLAN BUTTON LINK FIX ===== */
 function urlCompanyName(company){
   if(company==="GMS COMPOSITE KNITTING") return "GMS COMPOSITE KNITTING IND LTD.";
   if(company==="GMS TEXTILES LTD") return "GMS TEXTILES LTD.";
@@ -794,14 +946,12 @@ function commonReportCards(company,mcd){
   `;
 }
 
-
 window.loadEntry=function(){
   const company=document.getElementById("entryCompany").value;
   const mcd=document.getElementById("entryMcd").value;
   const box=document.getElementById("entryBox");
   const common=commonEntryCards(company,mcd);
 
-  // Gate Plan + Challan button sob company/MCD te thakbe
   if(!canAccess(mcd)){
     box.innerHTML=`<div class="card">❌ Access Denied</div>${common}`;
     return;
@@ -821,7 +971,7 @@ window.loadEntry=function(){
       <div class="card" onclick="location.href='twill-tape.html'">📏 Twill Tape</div>
       <div class="card" onclick="location.href='accessories.html'">📦 Accessories With Sample</div>
       <div class="card" onclick="location.href='accessories-inventory.html'">🧾 Inventory Posting</div>
-      <div class="card" onclick="location.href='billing-manpower-report.html'">👨‍💼 Billing Manpower Report</div>
+      <div class="card" onclick="location.href='billing-manpower-report.html'">👨‍ Billing Manpower Report</div>
       ${common}
     `;
   }else if(mcd==="GREY FABRIC MCD"){
@@ -833,7 +983,7 @@ window.loadEntry=function(){
     `;
   }else if(mcd==="BILLING SECTION"){
     box.innerHTML=`
-      <div class="card" onclick="location.href='billing-manpower-report.html'">👨‍💼 Billing Manpower Report</div>
+      <div class="card" onclick="location.href='billing-manpower-report.html'">👨‍ Billing Manpower Report</div>
       ${common}
     `;
   }else{
@@ -851,7 +1001,6 @@ window.loadReport=function(){
   const box=document.getElementById("reportBox");
   const common=commonReportCards(company,mcd);
 
-  // Gate Plan Report + Challan Report sob company/MCD te thakbe
   if(!canAccess(mcd)){
     box.innerHTML=`<div class="card">❌ Access Denied</div>${common}`;
     return;
@@ -871,7 +1020,7 @@ window.loadReport=function(){
       <div class="card" onclick="location.href='twill-tape.html'">📏 Twill Tape Report</div>
       <div class="card" onclick="location.href='accessories.html'">📦 Accessories Report</div>
       <div class="card" onclick="location.href='accessories-inventory-report.html'">📊 Inventory Report</div>
-      <div class="card" onclick="location.href='billing-manpower-report.html'">👨‍💼 Billing Manpower Report</div>
+      <div class="card" onclick="location.href='billing-manpower-report.html'">👨‍ Billing Manpower Report</div>
       ${common}
     `;
   }else if(mcd==="GREY FABRIC MCD"){
@@ -894,7 +1043,6 @@ window.loadReport=function(){
     `;
   }
 };
-
 
 async function getLatestPresent(collectionName,openingStock){
   let snap=await getDocs(collection(db,collectionName));
@@ -1457,44 +1605,53 @@ setInterval(updateLastActive,60000);
 setInterval(loadNotices,60000);
 </script>
 
-
 <script>
-/* ===== FINAL HARD FIX: GATE PLAN + CHALLAN BUTTONS ===== */
 (function(){
   function enc(v){ return encodeURIComponent(v || ""); }
-
   function fixedCompany(company){
     if(company === "GMS COMPOSITE KNITTING") return "GMS COMPOSITE KNITTING IND LTD.";
     if(company === "GMS TEXTILES LTD") return "GMS TEXTILES LTD.";
     return company || "GMS TEXTILES LTD.";
   }
+  function getEntryCompany(){
+    const el = document.getElementById("entryCompany");
+    return el ? el.value : "GMS TEXTILES LTD";
+  }
+  function getReportCompany(){
+    const el = document.getElementById("reportCompany");
+    if(el) return el.value;
+    const e = document.getElementById("entryCompany");
+    return e ? e.value : "GMS TEXTILES LTD";
+  }
+  function getEntryMcd(){
+    const el = document.getElementById("entryMcd");
+    return el ? el.value : "ACCESSORIES MCD";
+  }
+  function getReportMcd(){
+    const el = document.getElementById("reportMcd");
+    return el ? el.value : getEntryMcd();
+  }
 
   window.openGatePlanEntry = function(company,mcd){
     location.href = "gate-plan.html?company=" + enc(fixedCompany(company)) + "&mcd=" + enc(mcd || "");
   };
-
   window.openChallanEntry = function(company,mcd){
     location.href = "challan-entry.html?company=" + enc(fixedCompany(company)) + "&mcd=" + enc(mcd || "");
   };
-
   window.openGatePlanReport = function(company,mcd){
     location.href = "gate-plan-report.html?company=" + enc(fixedCompany(company)) + "&mcd=" + enc(mcd || "");
   };
-
   window.openChallanReport = function(company,mcd){
     location.href = "challan-report.html?company=" + enc(fixedCompany(company)) + "&mcd=" + enc(mcd || "");
   };
 
-  function card(html){ return html; }
-
   function commonEntryCards(company,mcd){
-  return `
-    <div class="card" onclick="openGatePlanEntry('${company}','${mcd}')">🚚 Gate Plan Entry</div>
-    <div class="card" onclick="openChallanEntry('${company}','${mcd}')">📄 Challan / Gate Pass</div>
-    <div class="card" onclick="openChallanReport('${company}','${mcd}')">📑 Challan / Gate Pass Report</div>
-  `;
-}
-
+    return `
+      <div class="card" onclick="openGatePlanEntry('${company}','${mcd}')">🚚 Gate Plan Entry</div>
+      <div class="card" onclick="openChallanEntry('${company}','${mcd}')">📄 Challan / Gate Pass</div>
+      <div class="card" onclick="openChallanReport('${company}','${mcd}')">📑 Challan / Gate Pass Report</div>
+    `;
+  }
   function commonReportCards(company,mcd){
     return `
       <div class="card" onclick="openGatePlanReport('${company}','${mcd}')">🚚 Gate Plan Report</div>
@@ -1502,57 +1659,37 @@ setInterval(loadNotices,60000);
     `;
   }
 
-  function getEntryCompany(){
-    const el = document.getElementById("entryCompany");
-    return el ? el.value : "GMS TEXTILES LTD";
-  }
-
-  function getReportCompany(){
-    const el = document.getElementById("reportCompany");
-    if(el) return el.value;
-    const e = document.getElementById("entryCompany");
-    return e ? e.value : "GMS TEXTILES LTD";
-  }
-
   window.loadEntry = function(){
     const company = getEntryCompany();
-    const mcdEl = document.getElementById("entryMcd");
-    const mcd = mcdEl ? mcdEl.value : "ACCESSORIES MCD";
+    const mcd = getEntryMcd();
     const box = document.getElementById("entryBox");
     if(!box) return;
-
     const common = commonEntryCards(company,mcd);
 
     if(company === "GMS COMPOSITE KNITTING"){
-      box.innerHTML = `
-        ${common}
-        <div class="card">🏭 Composite Own Entry Module Later</div>
-      `;
+      box.innerHTML = `${common}<div class="card">🏭 Composite Own Entry Module Later</div>`;
       return;
     }
-
     if(mcd === "ACCESSORIES MCD"){
       box.innerHTML = `
         <div class="card" onclick="location.href='sewing-thread.html'">🧵 Sewing Thread</div>
         <div class="card" onclick="location.href='twill-tape.html'">📏 Twill Tape</div>
         <div class="card" onclick="location.href='accessories.html'">📦 Accessories With Sample</div>
         <div class="card" onclick="location.href='accessories-inventory.html'">🧾 Inventory Posting</div>
-        <div class="card" onclick="location.href='billing-manpower-report.html'">👨‍💼 Billing Manpower Report</div>
+        <div class="card" onclick="location.href='billing-manpower-report.html'">👨‍ Billing Manpower Report</div>
         ${common}
       `;
       return;
     }
-
     if(mcd === "GREY FABRIC MCD"){
       box.innerHTML = `
         <div class="card" onclick="location.href='grey-fabric.html'">🏭 Grey Fabric Daily</div>
         <div class="card" onclick="location.href='grey-fabric-monthly.html'">📅 Grey Fabric Monthly</div>
-        <div class="card" onclick="location.href='billing-manpower-report.html'">👨‍💼 Billing Manpower Report</div>
+        <div class="card" onclick="location.href='billing-manpower-report.html'">👨‍ Billing Manpower Report</div>
         ${common}
       `;
       return;
     }
-
     if(mcd === "BILLING SECTION"){
       box.innerHTML = `
         <div class="card" onclick="location.href='billing-manpower-report.html'">👨‍💼 Billing Manpower Report</div>
@@ -1560,7 +1697,6 @@ setInterval(loadNotices,60000);
       `;
       return;
     }
-
     box.innerHTML = `
       <div class="card">📝 ${mcd} Daily Entry</div>
       <div class="card" onclick="location.href='billing-manpower-report.html'">👨‍💼 Billing Manpower Report</div>
@@ -1570,21 +1706,15 @@ setInterval(loadNotices,60000);
 
   window.loadReport = function(){
     const company = getReportCompany();
-    const mcdEl = document.getElementById("reportMcd");
-    const mcd = mcdEl ? mcdEl.value : "ACCESSORIES MCD";
+    const mcd = getReportMcd();
     const box = document.getElementById("reportBox");
     if(!box) return;
-
     const common = commonReportCards(company,mcd);
 
     if(company === "GMS COMPOSITE KNITTING"){
-      box.innerHTML = `
-        ${common}
-        <div class="card">🏭 Composite Own Report Module Later</div>
-      `;
+      box.innerHTML = `${common}<div class="card">🏭 Composite Own Report Module Later</div>`;
       return;
     }
-
     if(mcd === "ACCESSORIES MCD"){
       box.innerHTML = `
         <div class="card" onclick="location.href='sewing-thread.html'">🧵 Sewing Thread Report</div>
@@ -1596,7 +1726,6 @@ setInterval(loadNotices,60000);
       `;
       return;
     }
-
     if(mcd === "GREY FABRIC MCD"){
       box.innerHTML = `
         <div class="card" onclick="location.href='grey-fabric.html'">🏭 Grey Fabric Daily Report</div>
@@ -1606,382 +1735,38 @@ setInterval(loadNotices,60000);
       `;
       return;
     }
-
     if(mcd === "BILLING SECTION"){
       box.innerHTML = `
-        <div class="card" onclick="location.href='billing-manpower-report.html'">👨‍💼 Billing Manpower Report</div>
+        <div class="card" onclick="location.href='billing-manpower-report.html'">👨‍ Billing Manpower Report</div>
         ${common}
       `;
       return;
     }
-
     box.innerHTML = `
       <div class="card">📑 ${mcd} Report</div>
-      <div class="card" onclick="location.href='billing-manpower-report.html'">👨‍💼 Billing Manpower Report</div>
+      <div class="card" onclick="location.href='billing-manpower-report.html'">👨‍ Billing Manpower Report</div>
       ${common}
     `;
   };
 
-  function ensureReportCompanySelect(){
-    const reports = document.getElementById("reports");
-    if(!reports) return;
-    if(document.getElementById("reportCompany")) return;
-
-    const label = document.createElement("label");
-    label.innerHTML = "🏢 Company";
-    const sel = document.createElement("select");
-    sel.id = "reportCompany";
-    sel.innerHTML = `
-      <option>GMS TEXTILES LTD</option>
-      <option>GMS COMPOSITE KNITTING</option>
-    `;
-    const h2 = reports.querySelector("h2");
-    if(h2){
-      h2.insertAdjacentElement("afterend", document.createElement("br"));
-      h2.insertAdjacentElement("afterend", sel);
-      h2.insertAdjacentElement("afterend", label);
-    }
-  }
-
-  function fixExistingDeadCards(){
-    document.querySelectorAll(".card").forEach(c=>{
-      const t=(c.innerText||"").trim();
-      if(t.includes("Challan / Gate Pass") && !t.includes("Report")){
-        c.onclick=function(){
-          openChallanEntry(getEntryCompany(), document.getElementById("entryMcd") ? document.getElementById("entryMcd").value : "");
-        };
-      }
-      if(t.includes("Challan / Gate Pass Report")){
-        c.onclick=function(){
-          openChallanReport(getReportCompany(), document.getElementById("reportMcd") ? document.getElementById("reportMcd").value : "");
-        };
-      }
-    });
-  }
-
   document.addEventListener("DOMContentLoaded",function(){
-    ensureReportCompanySelect();
-    const entryBtn = document.querySelector("button[onclick*='loadEntry']");
-    if(entryBtn) entryBtn.addEventListener("click",()=>setTimeout(fixExistingDeadCards,100));
-    const reportBtn = document.querySelector("button[onclick*='loadReport']");
-    if(reportBtn) reportBtn.addEventListener("click",()=>setTimeout(fixExistingDeadCards,100));
-    setTimeout(fixExistingDeadCards,500);
+    setTimeout(function(){
+      document.querySelectorAll(".card").forEach(card=>{
+        const t=(card.innerText||"").trim();
+        if(t.includes("Challan / Gate Pass") && !t.includes("Report")){
+          card.onclick=function(){ openChallanEntry(getEntryCompany(),getEntryMcd()); };
+        }
+        if(t.includes("Challan / Gate Pass Report")){
+          card.onclick=function(){ openChallanReport(getReportCompany(),getReportMcd()); };
+        }
+        if(t.includes("Gate Plan Entry")){
+          card.onclick=function(){ openGatePlanEntry(getEntryCompany(),getEntryMcd()); };
+        }
+      });
+    },300);
   });
 })();
 </script>
 
-
-<script>
-/* ===== ABSOLUTE FINAL BUTTON FIX ===== */
-(function(){
-  function enc(v){ return encodeURIComponent(v || ""); }
-  function fixCompany(c){
-    if(c==="GMS COMPOSITE KNITTING") return "GMS COMPOSITE KNITTING IND LTD.";
-    if(c==="GMS TEXTILES LTD") return "GMS TEXTILES LTD.";
-    return c || "GMS TEXTILES LTD.";
-  }
-  function getEntryCompany(){
-    const e=document.getElementById("entryCompany");
-    return e ? e.value : "GMS TEXTILES LTD";
-  }
-  function getEntryMcd(){
-    const e=document.getElementById("entryMcd");
-    return e ? e.value : "ACCESSORIES MCD";
-  }
-  function getReportCompany(){
-    const e=document.getElementById("reportCompany");
-    if(e) return e.value;
-    return getEntryCompany();
-  }
-  function getReportMcd(){
-    const e=document.getElementById("reportMcd");
-    return e ? e.value : getEntryMcd();
-  }
-
-  window.openGatePlanEntry=function(c,m){
-    location.href="gate-plan.html?company="+enc(fixCompany(c))+"&mcd="+enc(m||"");
-  };
-  window.openChallanEntry=function(c,m){
-    location.href="challan-entry.html?company="+enc(fixCompany(c))+"&mcd="+enc(m||"");
-  };
-  window.openGatePlanReport=function(c,m){
-    location.href="gate-plan-report.html?company="+enc(fixCompany(c))+"&mcd="+enc(m||"");
-  };
-  window.openChallanReport=function(c,m){
-    location.href="challan-report.html?company="+enc(fixCompany(c))+"&mcd="+enc(m||"");
-  };
-
-  function entryCommon(c,m){
-  return `
-    <div class="card" onclick="openGatePlanEntry('${c}','${m}')">🚚 Gate Plan Entry</div>
-    <div class="card" onclick="openChallanEntry('${c}','${m}')">📄 Challan / Gate Pass</div>
-    <div class="card" onclick="openChallanReport('${c}','${m}')">📑 Challan / Gate Pass Report</div>
-  `;
-}
-  function reportCommon(c,m){
-    return `
-      <div class="card" onclick="openGatePlanReport('${c}','${m}')">🚚 Gate Plan Report</div>
-      <div class="card" onclick="openChallanReport('${c}','${m}')">📑 Challan / Gate Pass Report</div>
-    `;
-  }
-
-  window.loadEntry=function(){
-    const c=getEntryCompany();
-    const m=getEntryMcd();
-    const box=document.getElementById("entryBox");
-    if(!box) return;
-
-    const common=entryCommon(c,m);
-
-    if(c==="GMS COMPOSITE KNITTING"){
-      box.innerHTML=common + `<div class="card">🏭 Composite module later</div>`;
-      return;
-    }
-
-    if(m==="ACCESSORIES MCD"){
-      box.innerHTML=`
-        <div class="card" onclick="location.href='sewing-thread.html'">🧵 Sewing Thread</div>
-        <div class="card" onclick="location.href='twill-tape.html'">📏 Twill Tape</div>
-        <div class="card" onclick="location.href='accessories.html'">📦 Accessories With Sample</div>
-        <div class="card" onclick="location.href='accessories-inventory.html'">🧾 Inventory Posting</div>
-        <div class="card" onclick="location.href='billing-manpower-report.html'">👨‍💼 Billing Manpower Report</div>
-        ${common}
-      `;
-      return;
-    }
-
-    if(m==="GREY FABRIC MCD"){
-      box.innerHTML=`
-        <div class="card" onclick="location.href='grey-fabric.html'">🏭 Grey Fabric Daily</div>
-        <div class="card" onclick="location.href='grey-fabric-monthly.html'">📅 Grey Fabric Monthly</div>
-        <div class="card" onclick="location.href='billing-manpower-report.html'">👨‍💼 Billing Manpower Report</div>
-        ${common}
-      `;
-      return;
-    }
-
-    box.innerHTML=`
-      <div class="card">📝 ${m} Daily Entry</div>
-      <div class="card" onclick="location.href='billing-manpower-report.html'">👨‍💼 Billing Manpower Report</div>
-      ${common}
-    `;
-  };
-
-  window.loadReport=function(){
-    const c=getReportCompany();
-    const m=getReportMcd();
-    const box=document.getElementById("reportBox");
-    if(!box) return;
-    const common=reportCommon(c,m);
-
-    if(c==="GMS COMPOSITE KNITTING"){
-      box.innerHTML=common + `<div class="card">🏭 Composite report later</div>`;
-      return;
-    }
-
-    if(m==="ACCESSORIES MCD"){
-      box.innerHTML=`
-        <div class="card" onclick="location.href='sewing-thread.html'">🧵 Sewing Thread Report</div>
-        <div class="card" onclick="location.href='twill-tape.html'">📏 Twill Tape Report</div>
-        <div class="card" onclick="location.href='accessories.html'">📦 Accessories Report</div>
-        <div class="card" onclick="location.href='accessories-inventory-report.html'">📊 Inventory Report</div>
-        <div class="card" onclick="location.href='billing-manpower-report.html'">👨‍💼 Billing Manpower Report</div>
-        ${common}
-      `;
-      return;
-    }
-
-    if(m==="GREY FABRIC MCD"){
-      box.innerHTML=`
-        <div class="card" onclick="location.href='grey-fabric.html'">🏭 Grey Fabric Daily Report</div>
-        <div class="card" onclick="location.href='grey-fabric-monthly.html'">📅 Grey Fabric Monthly Report</div>
-        <div class="card" onclick="location.href='billing-manpower-report.html'">👨‍💼 Billing Manpower Report</div>
-        ${common}
-      `;
-      return;
-    }
-
-    box.innerHTML=`
-      <div class="card">📑 ${m} Report</div>
-      <div class="card" onclick="location.href='billing-manpower-report.html'">👨‍💼 Billing Manpower Report</div>
-      ${common}
-    `;
-  };
-
-  function ensureReportCompany(){
-    const reports=document.getElementById("reports");
-    if(!reports || document.getElementById("reportCompany")) return;
-    const h2=reports.querySelector("h2");
-    if(!h2) return;
-    h2.insertAdjacentHTML("afterend",`
-      <label>🏢 Company</label>
-      <select id="reportCompany">
-        <option>GMS TEXTILES LTD</option>
-        <option>GMS COMPOSITE KNITTING</option>
-      </select><br><br>
-    `);
-  }
-
-  function fixDeadCards(){
-    document.querySelectorAll(".card").forEach(card=>{
-      const t=(card.innerText||"").trim();
-      if(t==="📄 Challan / Gate Pass" || t==="Challan / Gate Pass"){
-        card.onclick=function(){ openChallanEntry(getEntryCompany(),getEntryMcd()); };
-      }
-      if(t.includes("Challan / Gate Pass Report")){
-        card.onclick=function(){ openChallanReport(getReportCompany(),getReportMcd()); };
-      }
-      if(t.includes("Gate Plan Entry")){
-        card.onclick=function(){ openGatePlanEntry(getEntryCompany(),getEntryMcd()); };
-      }
-    });
-  }
-
-  document.addEventListener("DOMContentLoaded",function(){
-    ensureReportCompany();
-    setTimeout(fixDeadCards,300);
-    document.addEventListener("click",function(){
-      setTimeout(fixDeadCards,100);
-    });
-  });
-})();
-</script>
-
-
-<script>
-/* ===== TRUE FINAL FALLBACK: ADD MISSING CHALLAN REPORT BUTTON ===== */
-(function(){
-  function enc(v){return encodeURIComponent(v||"");}
-  function fixCompany(c){
-    if(c==="GMS COMPOSITE KNITTING") return "GMS COMPOSITE KNITTING IND LTD.";
-    if(c==="GMS TEXTILES LTD") return "GMS TEXTILES LTD.";
-    return c || "GMS TEXTILES LTD.";
-  }
-  function getEntryCompany(){return document.getElementById("entryCompany")?.value || "GMS TEXTILES LTD";}
-  function getEntryMcd(){return document.getElementById("entryMcd")?.value || "ACCESSORIES MCD";}
-  function getReportCompany(){return document.getElementById("reportCompany")?.value || getEntryCompany();}
-  function getReportMcd(){return document.getElementById("reportMcd")?.value || getEntryMcd();}
-
-  window.openChallanEntry=function(c,m){
-    location.href="challan-entry.html?company="+enc(fixCompany(c))+"&mcd="+enc(m||"");
-  };
-  window.openChallanReport=function(c,m){
-    location.href="challan-report.html?company="+enc(fixCompany(c))+"&mcd="+enc(m||"");
-  };
-  window.openGatePlanEntry=window.openGatePlanEntry||function(c,m){
-    location.href="gate-plan.html?company="+enc(fixCompany(c))+"&mcd="+enc(m||"");
-  };
-  window.openGatePlanReport=window.openGatePlanReport||function(c,m){
-    location.href="gate-plan-report.html?company="+enc(fixCompany(c))+"&mcd="+enc(m||"");
-  };
-
-  function addEntryReportButton(){
-    const box=document.getElementById("entryBox");
-    if(!box) return;
-    const text=box.innerText||"";
-    const c=getEntryCompany(), m=getEntryMcd();
-
-    // fix challan entry button
-    [...box.querySelectorAll(".card")].forEach(card=>{
-      const t=(card.innerText||"").trim();
-      if(t.includes("Challan / Gate Pass") && !t.includes("Report")){
-        card.onclick=function(){openChallanEntry(c,m);};
-      }
-      if(t.includes("Gate Plan Entry")){
-        card.onclick=function(){openGatePlanEntry(c,m);};
-      }
-    });
-
-    // add report button if missing
-    if(!text.includes("Challan / Gate Pass Report")){
-      const d=document.createElement("div");
-      d.className="card";
-      d.innerHTML="📑 Challan / Gate Pass Report";
-      d.onclick=function(){openChallanReport(c,m);};
-      box.appendChild(d);
-    }
-  }
-
-  function addReportButton(){
-    const box=document.getElementById("reportBox");
-    if(!box) return;
-    const text=box.innerText||"";
-    const c=getReportCompany(), m=getReportMcd();
-
-    [...box.querySelectorAll(".card")].forEach(card=>{
-      const t=(card.innerText||"").trim();
-      if(t.includes("Challan / Gate Pass Report")){
-        card.onclick=function(){openChallanReport(c,m);};
-      }
-    });
-
-    if(!text.includes("Challan / Gate Pass Report")){
-      const d=document.createElement("div");
-      d.className="card";
-      d.innerHTML="📑 Challan / Gate Pass Report";
-      d.onclick=function(){openChallanReport(c,m);};
-      box.appendChild(d);
-    }
-  }
-
-  document.addEventListener("click",function(){
-    setTimeout(addEntryReportButton,150);
-    setTimeout(addReportButton,150);
-  });
-  document.addEventListener("DOMContentLoaded",function(){
-    setInterval(function(){
-      addEntryReportButton();
-      addReportButton();
-    },1000);
-  });
-})();
-</script>
-
-
-<script>
-/* ===== FINAL FILE NAME LINK FIX ===== */
-(function(){
-  function enc(v){return encodeURIComponent(v||"");}
-  function companyFix(c){
-    if(c==="GMS COMPOSITE KNITTING") return "GMS COMPOSITE KNITTING IND LTD.";
-    if(c==="GMS TEXTILES LTD") return "GMS TEXTILES LTD.";
-    return c || "GMS TEXTILES LTD.";
-  }
-  function entryCompany(){return document.getElementById("entryCompany")?.value || "GMS TEXTILES LTD";}
-  function entryMcd(){return document.getElementById("entryMcd")?.value || "ACCESSORIES MCD";}
-  function reportCompany(){return document.getElementById("reportCompany")?.value || entryCompany();}
-  function reportMcd(){return document.getElementById("reportMcd")?.value || entryMcd();}
-
-  window.openChallanEntry=function(c,m){
-    location.href="challan-entry.html?company="+enc(companyFix(c))+"&mcd="+enc(m||"");
-  };
-  window.openChallanReport=function(c,m){
-    location.href="challan-report.html?company="+enc(companyFix(c))+"&mcd="+enc(m||"");
-  };
-
-  function fixCards(){
-    document.querySelectorAll(".card").forEach(card=>{
-      const t=(card.innerText||"").trim();
-      if(t.includes("Challan / Gate Pass") && !t.includes("Report")){
-        card.onclick=function(){openChallanEntry(entryCompany(),entryMcd());};
-      }
-      if(t.includes("Challan / Gate Pass Report")){
-        card.onclick=function(){openChallanReport(reportCompany(),reportMcd());};
-      }
-    });
-  }
-
-  document.addEventListener("DOMContentLoaded",function(){
-    setInterval(fixCards,800);
-  });
-  document.addEventListener("click",function(){
-    setTimeout(fixCards,100);
-  });
-})();
-</script>
-</script>
-
-
-</body>
 </body>
 </html>
