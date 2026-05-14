@@ -2,21 +2,22 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1.0">
-<title>Needle Ageing RED ALERT Report</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Needle Ageing Report</title>
 
+<!-- CDN -->
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 
 <style>
-*{margin:0;padding:0;box-sizing:border-box;}
+*{margin:0;padding:0;box-sizing:border-box}
 
 :root{
---bg:#031433;
---card:#0b1a3c;
---card2:#0f172a;
---text:#fff;
+--bg:#071229;
+--card:#0f172a;
+--card2:#111827;
+--text:#ffffff;
 --border:#334155;
 --blue:#2563eb;
 --green:#22c55e;
@@ -40,26 +41,26 @@ padding:12px;
 transition:.3s;
 }
 
-.header{text-align:center;margin-bottom:15px;}
-.header h1{font-size:34px;font-weight:900;}
-.header h2{font-size:22px;margin-top:5px;}
-.live{margin-top:8px;font-size:20px;font-weight:bold;color:var(--green);}
+.header{text-align:center;margin-bottom:15px}
+.header h1{font-size:32px;font-weight:900}
+.header h2{font-size:22px;margin-top:5px}
+.live{color:var(--green);font-weight:bold;margin-top:8px}
 
 .alertBox{
 display:none;
 background:var(--red);
 color:#fff;
-padding:14px;
-border-radius:12px;
-font-size:22px;
+padding:12px;
+font-size:20px;
 font-weight:900;
 text-align:center;
+border-radius:12px;
 margin-bottom:15px;
-animation:blink .8s infinite;
+animation:blink 1s infinite;
 }
 
 @keyframes blink{
-50%{opacity:.35;}
+50%{opacity:.35}
 }
 
 .topbar{
@@ -71,7 +72,7 @@ margin-bottom:15px;
 }
 
 select,button{
-padding:10px 16px;
+padding:10px 15px;
 border:none;
 border-radius:10px;
 font-weight:bold;
@@ -85,7 +86,7 @@ color:#fff;
 
 .dashboard{
 display:grid;
-grid-template-columns:repeat(auto-fit,minmax(220px,1fr));
+grid-template-columns:repeat(auto-fit,minmax(180px,1fr));
 gap:12px;
 margin-bottom:15px;
 }
@@ -99,18 +100,18 @@ text-align:center;
 }
 
 .card h3{
-font-size:16px;
+font-size:15px;
 margin-bottom:10px;
 }
 
 .card p{
-font-size:34px;
+font-size:32px;
 font-weight:900;
 }
 
 .section{
-font-size:28px;
-margin:16px 0 10px;
+font-size:26px;
+margin:18px 0 10px;
 }
 
 .tableWrap{
@@ -127,16 +128,16 @@ background:var(--card);
 th{
 background:var(--card2);
 padding:10px 6px;
-font-size:13px;
 border:1px solid var(--border);
+font-size:13px;
 }
 
 td{
 padding:9px 6px;
+border:1px solid var(--border);
 font-size:12px;
 font-weight:bold;
 text-align:center;
-border:1px solid var(--border);
 }
 
 .totalRow{
@@ -144,16 +145,16 @@ background:#1e293b;
 color:#22c55e;
 }
 
-.stock-normal{background:#2563eb;color:#fff;}
-.stock-warning{background:#fb923c;color:#fff;}
-.stock-danger{background:#dc2626;color:#fff;}
-.stock-empty{background:#fff;color:#000;}
+.stock-normal{background:#2563eb;color:#fff}
+.stock-warning{background:#fb923c;color:#fff}
+.stock-danger{background:#dc2626;color:#fff}
+.stock-empty{background:#fff;color:#000}
 
-.status-running{color:#22c55e;}
-.status-slow{color:#facc15;}
-.status-stop{color:#ff4d4d;}
+.status-running{color:#22c55e}
+.status-slow{color:#facc15}
+.status-stop{color:#ff4d4d;font-weight:900}
 
-.redAlert{
+.redRow{
 background:#7f1d1d !important;
 color:#fff !important;
 animation:blink 1s infinite;
@@ -179,21 +180,21 @@ height:100% !important;
 }
 
 @media(max-width:900px){
-.chartGrid{grid-template-columns:1fr;}
+.chartGrid{grid-template-columns:1fr}
 }
 
 @media(max-width:700px){
-.header h1{font-size:24px;}
-.header h2{font-size:16px;}
-.section{font-size:22px;}
-th{font-size:10px;}
-td{font-size:10px;}
-.card p{font-size:28px;}
+.header h1{font-size:24px}
+.header h2{font-size:16px}
+.section{font-size:22px}
+th{font-size:10px}
+td{font-size:10px}
+.card p{font-size:26px}
 }
 
 @media print{
-.topbar,.chartGrid,.live{display:none;}
-body{background:#fff;color:#000;}
+.topbar,.chartGrid,.live{display:none}
+body{background:#fff;color:#000}
 }
 </style>
 </head>
@@ -281,51 +282,53 @@ body{background:#fff;color:#000;}
 <div class="chartBox"><canvas id="trendChart"></canvas></div>
 </div>
 
-<script type="module">
+<!-- NORMAL SCRIPT (NO MODULE = BLANK PAGE FIX) -->
+<script>
 
-import { initializeApp } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-app.js";
-import { getFirestore, collection, onSnapshot } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-firestore.js";
-
-/* FIREBASE CONFIG */
+/* FIREBASE CDN OLD VERSION */
 const firebaseConfig = {
 apiKey: "AIzaSyD-wBCF5eeWMHobLFOhBzKW7aB2pagz9-w",
 authDomain: "gms-warehouse-tracker-7f57e.firebaseapp.com",
 projectId: "gms-warehouse-tracker-7f57e",
-storageBucket: "gms-warehouse-tracker-7f57e.firebasestorage.app",
+storageBucket: "gms-warehouse-tracker-7f57e.appspot.com",
 messagingSenderId: "992250313291",
 appId: "1:992250313291:web:ee3bceae76d4d53bc26bce"
 };
 
-const app = initializeApp(firebaseConfig);
-const db = getFirestore(app);
+</script>
 
-let stockChart=null;
-let trendChart=null;
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
 
-document.getElementById("floorSelect").addEventListener("change",startLive);
+<script>
+firebase.initializeApp(firebaseConfig);
+const db = firebase.firestore();
 
-function startLive(){
+let stockChart = null;
+let trendChart = null;
 
-const floor=document.getElementById("floorSelect").value;
+document.getElementById("floorSelect").addEventListener("change",loadData);
 
-onSnapshot(collection(db,"dailyPosting"),(snap)=>{
+function loadData(){
+
+let floor = document.getElementById("floorSelect").value;
+
+db.collection("dailyPosting").onSnapshot(function(snapshot){
 
 let allData=[];
 
-snap.forEach(doc=>{
-const d=doc.data();
+snapshot.forEach(function(doc){
+let d=doc.data();
 if(d.date) allData.push(d);
 });
 
-renderReport(allData,floor);
+renderData(allData,floor);
 
-},(error)=>{
-console.error(error);
 });
 
 }
 
-function renderReport(allData,selectedFloor){
+function renderData(allData,floor){
 
 allData.sort((a,b)=>new Date(a.date)-new Date(b.date));
 
@@ -333,7 +336,7 @@ let map={};
 
 allData.forEach(day=>{
 
-if(selectedFloor!=="ALL" && day.floor!==selectedFloor) return;
+if(floor!=="ALL" && day.floor!==floor) return;
 if(!day.rows) return;
 
 day.rows.forEach(row=>{
@@ -376,10 +379,7 @@ let criticalHTML="";
 
 let total=0,running=0,slow=0,stop=0,critical=0,grand=0,redCount=0;
 
-let labels=[];
-let stockData=[];
-let trendLabels=[];
-let trendData=[];
+let labels=[],stocks=[],trendLabels=[],trendData=[];
 
 Object.values(map).forEach(item=>{
 
@@ -413,7 +413,7 @@ stop++;
 else if(noDelivery>=30){
 status="🚨 30 Days No Delivery";
 statusClass="status-stop";
-rowClass="redAlert";
+rowClass="redRow";
 stop++;
 redCount++;
 }
@@ -453,7 +453,7 @@ html+=`
 </tr>`;
 
 labels.push(item.type+"-"+item.size);
-stockData.push(item.stock);
+stocks.push(item.stock);
 trendLabels.push(item.type);
 trendData.push(item.deliveryTotal);
 
@@ -478,11 +478,11 @@ document.getElementById("grandTotal").innerText=grand;
 
 document.getElementById("alertBox").style.display=redCount>0?"block":"none";
 
-drawCharts(labels,stockData,trendLabels,trendData);
+drawCharts(labels,stocks,trendLabels,trendData);
 
 }
 
-function drawCharts(labels,stockData,trendLabels,trendData){
+function drawCharts(labels,stocks,trendLabels,trendData){
 
 if(stockChart) stockChart.destroy();
 if(trendChart) trendChart.destroy();
@@ -493,14 +493,11 @@ data:{
 labels:labels,
 datasets:[{
 label:"Current Stock",
-data:stockData,
+data:stocks,
 backgroundColor:"#2563eb"
 }]
 },
-options:{
-responsive:true,
-maintainAspectRatio:false
-}
+options:{responsive:true,maintainAspectRatio:false}
 });
 
 trendChart=new Chart(document.getElementById("trendChart"),{
@@ -508,36 +505,33 @@ type:"line",
 data:{
 labels:trendLabels,
 datasets:[{
-label:"Needle Consumption",
+label:"Consumption",
 data:trendData,
 borderColor:"#22c55e",
 fill:false,
 tension:.3
 }]
 },
-options:{
-responsive:true,
-maintainAspectRatio:false
-}
+options:{responsive:true,maintainAspectRatio:false}
 });
 
 }
 
-window.exportExcel=function(){
+function exportExcel(){
 let table=document.getElementById("mainTable");
 let wb=XLSX.utils.table_to_book(table,{sheet:"Needle Report"});
 XLSX.writeFile(wb,"Needle_Ageing_Report.xlsx");
-};
+}
 
-window.downloadPDF=function(){
+function downloadPDF(){
 html2pdf().from(document.body).save("Needle_Ageing_Report.pdf");
-};
+}
 
-window.toggleMode=function(){
+function toggleMode(){
 document.body.classList.toggle("light");
-};
+}
 
-startLive();
+loadData();
 
 </script>
 
