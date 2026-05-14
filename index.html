@@ -54,10 +54,20 @@ body{
   transition:transform .3s ease;
   overflow-y:auto;
   overflow-x:hidden;
+  /* PC-তে sidebar সবসময় visible */
+  transform:translateX(0);
 }
-.sidebar.hidden{
-  transform:translateX(-100%);
+
+/* Mobile-এ sidebar hide থাকবে */
+@media(max-width:900px){
+  .sidebar{
+    transform:translateX(-100%);
+  }
+  .sidebar.show{
+    transform:translateX(0);
+  }
 }
+
 .sidebarHeader{
   padding:20px 16px;
   border-bottom:1px solid var(--border);
@@ -143,8 +153,15 @@ body{
   background:radial-gradient(circle at top left,rgba(37,99,235,.13),transparent 35%),var(--bg);
   transition:margin-left .3s ease;
 }
-.mainContent.expanded{
-  margin-left:0;
+
+/* Mobile-এ mainContent full width */
+@media(max-width:900px){
+  .mainContent{
+    margin-left:0;
+  }
+  .mainContent.expanded{
+    margin-left:0;
+  }
 }
 
 /* ===== TOP BAR ===== */
@@ -168,10 +185,16 @@ body{
   font-size:20px;
   cursor:pointer;
   font-weight:1000;
-  display:flex;
-  align-items:center;
-  gap:8px;
+  display:none; /* PC-তে hide */
 }
+
+/* Mobile-এ menu button show */
+@media(max-width:900px){
+  .menuToggle{
+    display:block;
+  }
+}
+
 .topBarRight{
   display:flex;
   align-items:center;
@@ -547,18 +570,6 @@ body.light .creditFooter{background:rgba(255,255,255,.96)}
 
 /* ===== RESPONSIVE ===== */
 @media(max-width:900px){
-  .sidebar{
-    transform:translateX(-100%);
-  }
-  .sidebar.show{
-    transform:translateX(0);
-  }
-  .mainContent{
-    margin-left:0;
-  }
-  .mainContent.expanded{
-    margin-left:0;
-  }
   .topGrid,.summaryLine,.chartGrid,.mcdDashboard,.grid,.backupActionGrid{
     grid-template-columns:1fr;
   }
@@ -593,6 +604,18 @@ body.light .creditFooter{background:rgba(255,255,255,.96)}
 .topGridSingle .topCard{min-height:120px}
 #entryCompany,#reportCompany,#entryMcd,#reportMcd{max-width:100%}
 .card[onclick*="challan-entry"],.card[onclick*="challan-report"],.card[onclick*="gate-plan"]{cursor:pointer}
+
+/* Overlay for mobile sidebar */
+.sidebarOverlay{
+  display:none;
+  position:fixed;
+  inset:0;
+  background:rgba(0,0,0,.5);
+  z-index:999;
+}
+.sidebarOverlay.show{
+  display:block;
+}
 </style>
 </head>
 
@@ -614,7 +637,7 @@ body.light .creditFooter{background:rgba(255,255,255,.96)}
     <button onclick="openPage('reports',this)">📑 Reports</button>
     <button id="needleNav" onclick="openPage('needle',this)">🪡 Needle</button>
     <button id="adminNav" onclick="location.href='admin.html'">👑 Admin</button>
-    <button id="manpowerNav" onclick="location.href='manpower.html'">👨‍🏭 Manpower</button>
+    <button id="manpowerNav" onclick="location.href='manpower.html'">👨‍ Manpower</button>
     <button onclick="location.href='notice.html'">📢 Notice</button>
     <button onclick="location.href='online-users.html'">🟢 Online</button>
     <button onclick="location.href='audit-history.html'">📜 Audit</button>
@@ -623,10 +646,13 @@ body.light .creditFooter{background:rgba(255,255,255,.96)}
   </div>
   
   <div class="sidebarFooter">
-    <button class="themeBtn" onclick="toggleTheme()">🌙 / ️ Theme</button>
+    <button class="themeBtn" onclick="toggleTheme()">🌙 / ☀️ Theme</button>
     <button class="logoutBtn" onclick="logout()">🚪 Logout</button>
   </div>
 </div>
+
+<!-- Overlay for mobile -->
+<div class="sidebarOverlay" id="sidebarOverlay" onclick="toggleSidebar()"></div>
 
 <!-- Main Content -->
 <div class="mainContent" id="mainContent">
@@ -673,7 +699,7 @@ body.light .creditFooter{background:rgba(255,255,255,.96)}
       <div class="chartBox" id="needleIssueChartBox"><h3>🪡 Needle Broken / Missing / Change</h3><canvas id="needleIssueChart"></canvas></div>
       <div class="chartBox attendanceBox" id="billingChartBox">
         <div class="attChartSide">
-          <h3>👨‍💼 Attendance Manpower Chart</h3>
+          <h3>👨‍ Attendance Manpower Chart</h3>
           <canvas id="billingChart"></canvas>
         </div>
         <div class="attendanceInside">
@@ -889,12 +915,12 @@ window.toggleTheme=function(){
 };
 if(localStorage.getItem("theme")==="light")document.body.classList.add("light");
 
-// Sidebar toggle
+// Sidebar toggle - mobile only
 window.toggleSidebar=function(){
   const sidebar=document.getElementById("sidebar");
-  const mainContent=document.getElementById("mainContent");
+  const overlay=document.getElementById("sidebarOverlay");
   sidebar.classList.toggle("show");
-  mainContent.classList.toggle("expanded");
+  overlay.classList.toggle("show");
 };
 
 window.openPage=function(id,btn){
@@ -905,12 +931,12 @@ window.openPage=function(id,btn){
   if(id==="home")loadDashboardStock();
   if(id==="backup"){loadDashboardStock();renderBackupLog();}
   
-  // Close sidebar on mobile
+  // Close sidebar on mobile only
   if(window.innerWidth<=900){
     const sidebar=document.getElementById("sidebar");
-    const mainContent=document.getElementById("mainContent");
+    const overlay=document.getElementById("sidebarOverlay");
     sidebar.classList.remove("show");
-    mainContent.classList.remove("expanded");
+    overlay.classList.remove("show");
   }
 };
 
@@ -1389,7 +1415,7 @@ async function loadDashboardStock(){
       }else if(mcd==="GREY FABRIC MCD"){
         html+=`<div class="mcdBox"><h3>🏭 GREY FABRIC MCD</h3><div class="miniRow"><span>📦 Today Closing Balance</span><span class="miniValue">${fmt(grey.total)}</span></div><div class="miniRow"><span>📊 Closing Chart</span><span class="miniValue">LIVE</span></div><div class="miniRow"><span>📅 Monthly Report</span><span class="miniValue">LIVE</span></div>${isManpowerAllowed()?`<div class="miniRow"><span>👨‍🏭 Manpower</span><span class="miniValue">${fmt(mp.count)}</span></div><div class="miniRow"><span>💰 Salary</span><span class="miniValue">${fmt(mp.salary)}</span></div>`:""}<div class="miniChart"><div class="miniFill" style="width:65%"></div></div></div>`;
       }else if(mcd==="BILLING SECTION"){
-        html+=`<div class="mcdBox"><h3>👨‍💼 BILLING SECTION</h3><div class="miniRow"><span>👨‍🏭 Total Manpower</span><span class="miniValue">${fmt(billing.total)}</span></div><div class="miniRow"><span>🏖 Leave</span><span class="miniValue">${fmt(billing.leave)}</span></div><div class="miniRow"><span>❌ Absent</span><span class="miniValue">${fmt(billing.absent)}</span></div><div class="miniRow"><span>✅ Today Present</span><span class="miniValue">${fmt(billing.present)}</span></div><div class="miniChart"><div class="miniFill" style="width:55%"></div></div></div>`;
+        html+=`<div class="mcdBox"><h3>👨‍💼 BILLING SECTION</h3><div class="miniRow"><span>👨‍ Total Manpower</span><span class="miniValue">${fmt(billing.total)}</span></div><div class="miniRow"><span>🏖 Leave</span><span class="miniValue">${fmt(billing.leave)}</span></div><div class="miniRow"><span>❌ Absent</span><span class="miniValue">${fmt(billing.absent)}</span></div><div class="miniRow"><span>✅ Today Present</span><span class="miniValue">${fmt(billing.present)}</span></div><div class="miniChart"><div class="miniFill" style="width:55%"></div></div></div>`;
       }else{
         html+=`<div class="mcdBox"><h3>📂 ${mcd}</h3>${isManpowerAllowed()?`<div class="miniRow"><span>👨‍🏭 Manpower</span><span class="miniValue">${fmt(mp.count)}</span></div><div class="miniRow"><span>💰 Salary</span><span class="miniValue">${fmt(mp.salary)}</span></div>`:""}<div class="miniRow"><span>📊 Stock / Report</span><span class="miniValue">Pending</span></div><div class="miniChart"><div class="miniFill" style="width:35%"></div></div></div>`;
       }
@@ -1676,7 +1702,7 @@ setInterval(loadNotices,60000);
         <div class="card" onclick="location.href='twill-tape.html'">📏 Twill Tape</div>
         <div class="card" onclick="location.href='accessories.html'">📦 Accessories With Sample</div>
         <div class="card" onclick="location.href='accessories-inventory.html'">🧾 Inventory Posting</div>
-        <div class="card" onclick="location.href='billing-manpower-report.html'">👨‍ Billing Manpower Report</div>
+        <div class="card" onclick="location.href='billing-manpower-report.html'">👨‍💼 Billing Manpower Report</div>
         ${common}
       `;
       return;
@@ -1699,7 +1725,7 @@ setInterval(loadNotices,60000);
     }
     box.innerHTML = `
       <div class="card">📝 ${mcd} Daily Entry</div>
-      <div class="card" onclick="location.href='billing-manpower-report.html'">👨‍💼 Billing Manpower Report</div>
+      <div class="card" onclick="location.href='billing-manpower-report.html'">👨‍ Billing Manpower Report</div>
       ${common}
     `;
   };
@@ -1730,21 +1756,21 @@ setInterval(loadNotices,60000);
       box.innerHTML = `
         <div class="card" onclick="location.href='grey-fabric.html'">🏭 Grey Fabric Daily Report</div>
         <div class="card" onclick="location.href='grey-fabric-monthly.html'">📅 Grey Fabric Monthly Report</div>
-        <div class="card" onclick="location.href='billing-manpower-report.html'">👨‍💼 Billing Manpower Report</div>
+        <div class="card" onclick="location.href='billing-manpower-report.html'">👨‍ Billing Manpower Report</div>
         ${common}
       `;
       return;
     }
     if(mcd === "BILLING SECTION"){
       box.innerHTML = `
-        <div class="card" onclick="location.href='billing-manpower-report.html'">👨‍ Billing Manpower Report</div>
+        <div class="card" onclick="location.href='billing-manpower-report.html'">👨‍💼 Billing Manpower Report</div>
         ${common}
       `;
       return;
     }
     box.innerHTML = `
       <div class="card">📑 ${mcd} Report</div>
-      <div class="card" onclick="location.href='billing-manpower-report.html'">👨‍ Billing Manpower Report</div>
+      <div class="card" onclick="location.href='billing-manpower-report.html'">👨‍💼 Billing Manpower Report</div>
       ${common}
     `;
   };
