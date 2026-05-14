@@ -1,30 +1,22 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
-
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-
-<title>Needle Ageing Report</title>
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Needle Ageing Live Report</title>
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 
 <style>
-
-*{
-margin:0;
-padding:0;
-box-sizing:border-box;
-}
+*{margin:0;padding:0;box-sizing:border-box}
 
 body{
+font-family:Arial,Helvetica,sans-serif;
 background:#071229;
-color:white;
-font-family:Arial,sans-serif;
-padding:10px;
+color:#fff;
+padding:12px;
 }
 
 .header{
@@ -34,39 +26,39 @@ margin-bottom:15px;
 
 .header h1{
 font-size:28px;
+letter-spacing:1px;
 }
 
 .header h2{
 font-size:18px;
-margin-top:5px;
 color:#cbd5e1;
+margin-top:5px;
 }
 
 .topbar{
 display:flex;
-justify-content:center;
 gap:10px;
+justify-content:center;
 flex-wrap:wrap;
 margin-bottom:15px;
 }
 
 select,button{
-padding:10px;
+padding:10px 14px;
 border:none;
-border-radius:8px;
-font-weight:bold;
-font-size:14px;
+border-radius:10px;
+font-weight:700;
+cursor:pointer;
 }
 
 button{
 background:#2563eb;
-color:white;
-cursor:pointer;
+color:#fff;
 }
 
 .dashboard{
 display:grid;
-grid-template-columns:repeat(auto-fit,minmax(170px,1fr));
+grid-template-columns:repeat(auto-fit,minmax(180px,1fr));
 gap:12px;
 margin-bottom:15px;
 }
@@ -74,15 +66,16 @@ margin-bottom:15px;
 .card{
 background:#0f172a;
 border:1px solid #334155;
-border-radius:12px;
-padding:15px;
+border-radius:14px;
+padding:16px;
 text-align:center;
+box-shadow:0 10px 20px rgba(0,0,0,.25);
 }
 
 .card h3{
+font-size:14px;
 color:#94a3b8;
-margin-bottom:10px;
-font-size:15px;
+margin-bottom:8px;
 }
 
 .card p{
@@ -93,6 +86,7 @@ font-weight:bold;
 .tableWrap{
 overflow:auto;
 margin-top:15px;
+border-radius:12px;
 }
 
 table{
@@ -103,50 +97,27 @@ background:#08112c;
 
 th{
 background:#0f172a;
-border:2px solid #d1d5db;
 padding:10px 5px;
+border:1px solid #334155;
 font-size:13px;
 }
 
 td{
-border:2px solid #d1d5db;
-padding:8px 4px;
+padding:8px 5px;
 text-align:center;
+border:1px solid #334155;
 font-size:12px;
-font-weight:bold;
+font-weight:700;
 }
 
-.stock-normal{
-background:#2563eb;
-color:white;
-}
+.stock-normal{background:#2563eb}
+.stock-warning{background:#fb923c}
+.stock-danger{background:#dc2626}
+.stock-empty{background:#fff;color:#000}
 
-.stock-warning{
-background:#fb923c;
-color:white;
-}
-
-.stock-danger{
-background:#dc2626;
-color:white;
-}
-
-.stock-empty{
-background:white;
-color:black;
-}
-
-.status-running{
-color:#22c55e;
-}
-
-.status-slow{
-color:#facc15;
-}
-
-.status-stop{
-color:#ff4d4d;
-}
+.status-running{color:#22c55e}
+.status-slow{color:#facc15}
+.status-stop{color:#ff4d4d}
 
 .totalRow{
 background:#1e293b;
@@ -155,163 +126,96 @@ font-size:15px;
 }
 
 canvas{
-background:white;
-border-radius:12px;
-padding:10px;
-margin-top:20px;
+background:#fff;
+padding:12px;
+border-radius:14px;
+margin-top:18px;
+}
+
+.live{
+text-align:center;
+color:#22c55e;
+font-weight:bold;
+margin-bottom:10px;
 }
 
 @media(max-width:700px){
-
-th{
-font-size:10px;
-padding:6px 2px;
-}
-
-td{
-font-size:9px;
-padding:5px 2px;
-}
-
-.header h1{
-font-size:22px;
-}
-
+th{font-size:10px}
+td{font-size:9px}
+.header h1{font-size:22px}
 }
 
 @media print{
-
-body{
-background:white;
-color:black;
+.topbar,.live{display:none}
+canvas{display:none}
+body{background:#fff;color:#000}
 }
-
-.topbar{
-display:none;
-}
-
-canvas{
-display:none;
-}
-
-}
-
 </style>
-
 </head>
 
 <body>
 
 <div class="header">
-
 <h1>GMS TEXTILES LTD</h1>
-
-<h2>Needle Ageing Report</h2>
-
+<h2>Needle Ageing Live Report</h2>
 </div>
 
+<div class="live">🟢 LIVE DATA CONNECTED</div>
+
 <div class="topbar">
-
 <select id="floorSelect">
-
 <option value="ALL">ALL FLOOR</option>
-
-<option value="Kadom R">Kadom R</option>
-<option value="Kadom N">Kadom N</option>
-
-<option value="Shapla R">Shapla R</option>
-<option value="Shapla N">Shapla N</option>
-
-<option value="Poddo R">Poddo R</option>
-<option value="Poddo N">Poddo N</option>
-
-<option value="Belly R">Belly R</option>
-<option value="Belly N">Belly N</option>
-
-<option value="Sample R">Sample R</option>
-<option value="Sample N">Sample N</option>
-
-<option value="EMBROIDERY R">EMBROIDERY R</option>
-<option value="EMBROIDERY N">EMBROIDERY N</option>
-
+<option>Kadom R</option>
+<option>Kadom N</option>
+<option>Shapla R</option>
+<option>Shapla N</option>
+<option>Poddo R</option>
+<option>Poddo N</option>
+<option>Belly R</option>
+<option>Belly N</option>
+<option>Sample R</option>
+<option>Sample N</option>
+<option>EMBROIDERY R</option>
+<option>EMBROIDERY N</option>
 </select>
 
 <button onclick="window.print()">Print</button>
-
 <button onclick="exportExcel()">Excel</button>
-
 <button onclick="downloadPDF()">PDF</button>
-
 </div>
 
 <div class="dashboard">
 
-<div class="card">
-<h3>Total Item</h3>
-<p id="totalItem">0</p>
-</div>
-
-<div class="card">
-<h3>Running</h3>
-<p id="runningItem">0</p>
-</div>
-
-<div class="card">
-<h3>Slow Moving</h3>
-<p id="slowItem">0</p>
-</div>
-
-<div class="card">
-<h3>No Delivery</h3>
-<p id="noDeliveryItem">0</p>
-</div>
-
-<div class="card">
-<h3>Critical Stock</h3>
-<p id="criticalItem">0</p>
-</div>
-
-<div class="card">
-<h3>Total Stock</h3>
-<p id="grandTotal">0</p>
-</div>
+<div class="card"><h3>Total Item</h3><p id="totalItem">0</p></div>
+<div class="card"><h3>Running</h3><p id="runningItem">0</p></div>
+<div class="card"><h3>Slow Moving</h3><p id="slowItem">0</p></div>
+<div class="card"><h3>No Delivery</h3><p id="noDeliveryItem">0</p></div>
+<div class="card"><h3>Critical Stock</h3><p id="criticalItem">0</p></div>
+<div class="card"><h3>Total Stock</h3><p id="grandTotal">0</p></div>
 
 </div>
 
-<h2 style="margin-top:20px;">Critical Stock Alert</h2>
+<h2>Critical Stock Alert</h2>
 
 <div class="tableWrap">
-
 <table>
-
 <thead>
-
 <tr>
-
 <th>Floor</th>
 <th>Needle</th>
 <th>Size</th>
 <th>Stock</th>
 <th>Running Days</th>
-
 </tr>
-
 </thead>
-
 <tbody id="criticalBody"></tbody>
-
 </table>
-
 </div>
 
 <div class="tableWrap">
-
 <table id="mainTable">
-
 <thead>
-
 <tr>
-
 <th>Floor</th>
 <th>SL</th>
 <th>Needle Type</th>
@@ -321,19 +225,13 @@ display:none;
 <th>Running Days</th>
 <th>No Delivery</th>
 <th>Status</th>
-
 </tr>
-
 </thead>
-
 <tbody id="reportBody"></tbody>
-
 </table>
-
 </div>
 
 <canvas id="stockChart"></canvas>
-
 <canvas id="trendChart"></canvas>
 
 <script type="module">
@@ -343,370 +241,209 @@ import { initializeApp } from "https://www.gstatic.com/firebasejs/12.12.1/fireba
 import {
 getFirestore,
 collection,
-getDocs
+onSnapshot
 } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-firestore.js";
 
 const firebaseConfig = {
-
-apiKey: "AIzaSyD-wBCF5eeWMHobLFOhBzKW7aB2pagz9-w",
-
-authDomain: "gms-warehouse-tracker-7f57e.firebaseapp.com",
-
-projectId: "gms-warehouse-tracker-7f57e",
-
-storageBucket: "gms-warehouse-tracker-7f57e.firebasestorage.app",
-
-messagingSenderId: "992250313291",
-
-appId: "1:992250313291:web:ee3bceae76d4d53bc26bce"
-
+apiKey: "YOUR_API_KEY",
+authDomain: "YOUR_DOMAIN",
+projectId: "YOUR_PROJECT_ID",
+storageBucket: "YOUR_BUCKET",
+messagingSenderId: "YOUR_MSG_ID",
+appId: "YOUR_APP_ID"
 };
 
 const app = initializeApp(firebaseConfig);
-
 const db = getFirestore(app);
 
-document.getElementById("floorSelect")
-.addEventListener("change",loadReport);
+document.getElementById("floorSelect").addEventListener("change", startLive);
 
-async function loadReport(){
+let unsubscribe = null;
 
-let selectedFloor=document.getElementById("floorSelect").value;
+function startLive(){
 
-let body=document.getElementById("reportBody");
+if(unsubscribe) unsubscribe();
 
-let criticalBody=document.getElementById("criticalBody");
+const selectedFloor = document.getElementById("floorSelect").value;
 
-body.innerHTML="<tr><td colspan='9'>Loading...</td></tr>";
+unsubscribe = onSnapshot(collection(db,"dailyPosting"),(snap)=>{
 
-let snap=await getDocs(collection(db,"dailyPosting"));
-
-let allData=[];
+let allData = [];
 
 snap.forEach(doc=>{
+let d = doc.data();
+if(d.date) allData.push(d);
+});
 
-let data=doc.data();
-
-if(data.date){
-
-allData.push(data);
-
-}
+renderReport(allData,selectedFloor);
 
 });
 
+}
+
+function renderReport(allData,selectedFloor){
+
 allData.sort((a,b)=>new Date(a.date)-new Date(b.date));
 
-let latestMap={};
+let map={};
 
 allData.forEach(day=>{
 
-if(selectedFloor!=="ALL" && day.floor!==selectedFloor){
-return;
-}
-
+if(selectedFloor!=="ALL" && day.floor!==selectedFloor) return;
 if(!day.rows) return;
 
 day.rows.forEach(row=>{
 
-if(!row.needleType || !row.size){
-return;
-}
+if(!row.needleType || !row.size) return;
 
-let key=
-day.floor.trim()+"_"+
-row.needleType.trim()+"_"+
-row.size.trim();
+let key = day.floor+"_"+row.needleType+"_"+row.size;
 
-let present=Number(row.present)||0;
+let present = Number(row.present)||0;
+let delivery = Number(row.delivery)||0;
 
-let delivery=Number(row.delivery)||0;
-
-if(!latestMap[key]){
-
-latestMap[key]={
-
+if(!map[key]){
+map[key]={
 floor:day.floor,
-
-sl:row.sl || "",
-
-type:row.needleType || "",
-
-size:row.size || "",
-
-stock:present,
-
+sl:row.sl||"",
+type:row.needleType,
+size:row.size,
+stock:0,
 deliveryTotal:0,
-
 deliveryDays:0,
-
-history:[],
-
-lastDate:day.date
-
+history:[]
 };
-
 }
 
-latestMap[key].stock=present;
-
-latestMap[key].lastDate=day.date;
+map[key].stock = present;
 
 if(delivery>0){
-
-latestMap[key].deliveryTotal += delivery;
-
-latestMap[key].deliveryDays +=1;
-
+map[key].deliveryTotal += delivery;
+map[key].deliveryDays +=1;
 }
 
-latestMap[key].history.push({
-
-date:day.date,
-
-delivery:delivery
-
-});
+map[key].history.push(delivery);
 
 });
 
 });
 
 let html="";
-
 let criticalHTML="";
 
-let totalItem=0;
+let total=0,running=0,slow=0,stop=0,critical=0,grand=0;
 
-let running=0;
-
-let slow=0;
-
-let noDeliveryCount=0;
-
-let critical=0;
-
-let grandTotal=0;
-
-let chartLabels=[];
-
-let chartStock=[];
-
+let labels=[];
+let stocks=[];
 let trendLabels=[];
-
 let trendData=[];
 
-Object.values(latestMap).forEach(item=>{
+Object.values(map).forEach(item=>{
 
-totalItem++;
+total++;
+grand += item.stock;
 
-grandTotal += Number(item.stock)||0;
+let avg = item.deliveryDays ? item.deliveryTotal/item.deliveryDays : 0;
 
-let avgUse=0;
+let stockDays = avg>0 ? item.stock/avg : 999;
+let runningDays = avg>0 ? Math.floor(stockDays)+" Days" : "-";
 
-if(item.deliveryDays>0){
-
-avgUse=item.deliveryTotal/item.deliveryDays;
-
-}
-
-let avgShow=avgUse.toFixed(1);
-
-let runningDays="-";
-
-let stockDays=999;
-
-if(avgUse>0){
-
-stockDays=item.stock/avgUse;
-
-runningDays=Math.floor(stockDays)+" Days";
-
-}
-
-let noDeliveryDays=0;
+let noDelivery=0;
 
 for(let i=item.history.length-1;i>=0;i--){
-
-if(item.history[i].delivery>0){
-break;
-}
-
-noDeliveryDays++;
-
+if(item.history[i]>0) break;
+noDelivery++;
 }
 
 let stockClass="stock-normal";
 
-if(item.stock===0){
-
-stockClass="stock-empty";
-
-}
-else if(noDeliveryDays>=30){
-
-stockClass="stock-danger";
-
-}
-else if(stockDays<=7){
-
-stockClass="stock-warning";
-
-}
+if(item.stock===0) stockClass="stock-empty";
+else if(stockDays<=5) stockClass="stock-warning";
+else if(noDelivery>=30) stockClass="stock-danger";
 
 let status="Running";
-
 let statusClass="status-running";
 
 if(item.stock===0){
-
 status="No Stock";
-
 statusClass="status-stop";
-
+stop++;
 }
-else if(noDeliveryDays>=30){
-
-status=noDeliveryDays+" Days No Delivery";
-
+else if(noDelivery>=30){
+status="No Delivery";
 statusClass="status-stop";
-
-noDeliveryCount++;
-
+stop++;
 }
-else if(noDeliveryDays>=13){
-
-status=noDeliveryDays+" Days Slow Moving";
-
+else if(noDelivery>=13){
+status="Slow Moving";
 statusClass="status-slow";
-
 slow++;
-
 }
 else{
-
 running++;
-
 }
 
 if(stockDays<=5 && item.stock>0){
-
 critical++;
 
 criticalHTML += `
-
 <tr>
-
 <td>${item.floor}</td>
-
 <td>${item.type}</td>
-
 <td>${item.size}</td>
-
 <td class="stock-warning">${item.stock}</td>
-
 <td>${runningDays}</td>
-
-</tr>
-
-`;
-
+</tr>`;
 }
 
 html += `
-
 <tr>
-
 <td>${item.floor}</td>
-
 <td>${item.sl}</td>
-
 <td>${item.type}</td>
-
 <td>${item.size}</td>
-
 <td class="${stockClass}">${item.stock}</td>
-
-<td>${avgShow}</td>
-
+<td>${avg.toFixed(1)}</td>
 <td>${runningDays}</td>
-
-<td>${noDeliveryDays} Days</td>
-
+<td>${noDelivery} Days</td>
 <td class="${statusClass}">${status}</td>
+</tr>`;
 
-</tr>
-
-`;
-
-chartLabels.push(item.type+"-"+item.size);
-
-chartStock.push(item.stock);
-
+labels.push(item.type+"-"+item.size);
+stocks.push(item.stock);
 trendLabels.push(item.type);
-
 trendData.push(item.deliveryTotal);
 
 });
 
-if(selectedFloor==="Kadom R"){
-grandTotal=1259;
-}
-
-if(selectedFloor==="ALL"){
-grandTotal=11583;
-}
-
 html += `
-
 <tr class="totalRow">
+<td colspan="4">GRAND TOTAL</td>
+<td>${grand}</td>
+<td colspan="4">LIVE UPDATE</td>
+</tr>`;
 
-<td colspan="4">GRAND TOTAL STOCK</td>
+document.getElementById("reportBody").innerHTML = html;
+document.getElementById("criticalBody").innerHTML = criticalHTML;
 
-<td>${grandTotal}</td>
+document.getElementById("totalItem").innerText = total;
+document.getElementById("runningItem").innerText = running;
+document.getElementById("slowItem").innerText = slow;
+document.getElementById("noDeliveryItem").innerText = stop;
+document.getElementById("criticalItem").innerText = critical;
+document.getElementById("grandTotal").innerText = grand;
 
-<td colspan="4">MATCH DAILY ENTRY REPORT</td>
-
-</tr>
-
-`;
-
-body.innerHTML=html;
-
-criticalBody.innerHTML=criticalHTML;
-
-document.getElementById("totalItem").innerText=totalItem;
-
-document.getElementById("runningItem").innerText=running;
-
-document.getElementById("slowItem").innerText=slow;
-
-document.getElementById("noDeliveryItem").innerText=noDeliveryCount;
-
-document.getElementById("criticalItem").innerText=critical;
-
-document.getElementById("grandTotal").innerText=grandTotal;
-
-drawStockChart(chartLabels,chartStock);
-
+drawStockChart(labels,stocks);
 drawTrendChart(trendLabels,trendData);
 
 }
 
 function drawStockChart(labels,data){
 
-const oldChart=Chart.getChart("stockChart");
+const old=Chart.getChart("stockChart");
+if(old) old.destroy();
 
-if(oldChart){
-oldChart.destroy();
-}
-
-const ctx=document.getElementById("stockChart");
-
-new Chart(ctx,{
-
+new Chart(document.getElementById("stockChart"),{
 type:"bar",
-
 data:{
 labels:labels,
 datasets:[{
@@ -715,59 +452,42 @@ data:data,
 backgroundColor:"#2563eb"
 }]
 }
-
 });
 
 }
 
 function drawTrendChart(labels,data){
 
-const oldChart=Chart.getChart("trendChart");
+const old=Chart.getChart("trendChart");
+if(old) old.destroy();
 
-if(oldChart){
-oldChart.destroy();
-}
-
-const ctx=document.getElementById("trendChart");
-
-new Chart(ctx,{
-
+new Chart(document.getElementById("trendChart"),{
 type:"line",
-
 data:{
 labels:labels,
 datasets:[{
-label:"Needle Consumption Trend",
+label:"Consumption Trend",
 data:data,
-borderColor:"#22c55e"
+borderColor:"#22c55e",
+fill:false,
+tension:.3
 }]
 }
-
 });
 
 }
 
 window.exportExcel=function(){
-
 let table=document.getElementById("mainTable");
-
-let wb=XLSX.utils.table_to_book(table,{
-sheet:"Needle Report"
-});
-
-XLSX.writeFile(wb,"Needle_Ageing_Report.xlsx");
-
+let wb=XLSX.utils.table_to_book(table,{sheet:"Needle Report"});
+XLSX.writeFile(wb,"Needle_Live_Report.xlsx");
 }
 
 window.downloadPDF=function(){
-
-html2pdf()
-.from(document.body)
-.save("Needle_Ageing_Report.pdf");
-
+html2pdf().from(document.body).save("Needle_Live_Report.pdf");
 }
 
-loadReport();
+startLive();
 
 </script>
 
