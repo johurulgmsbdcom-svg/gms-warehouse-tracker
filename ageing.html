@@ -368,6 +368,16 @@ const app = initializeApp(firebaseConfig);
 
 const db = getFirestore(app);
 
+function cleanText(value){
+
+return String(value || "")
+.toUpperCase()
+.replace(/\s+/g,"")
+.replace(/-/g,"")
+.trim();
+
+}
+
 document.getElementById("floorSelect")
 .addEventListener("change",loadReport);
 
@@ -416,9 +426,9 @@ return;
 }
 
 let key=
-day.floor.trim()+"_"+
-row.needleType.trim()+"_"+
-row.size.trim();
+cleanText(day.floor)+"_"+
+cleanText(row.needleType)+"_"+
+cleanText(row.size);
 
 let present=Number(row.present)||0;
 
@@ -432,7 +442,9 @@ floor:day.floor,
 
 sl:row.sl || "",
 
-type:row.needleType || "",
+type:cleanText(row.needleType),
+
+displayName:row.needleType || "",
 
 size:row.size || "",
 
@@ -451,6 +463,8 @@ lastDate:day.date
 }
 
 latestMap[key].stock=present;
+
+latestMap[key].displayName=row.needleType || "";
 
 latestMap[key].lastDate=day.date;
 
@@ -601,7 +615,7 @@ criticalHTML += `
 
 <td>${item.floor}</td>
 
-<td>${item.type}</td>
+<td>${item.displayName}</td>
 
 <td>${item.size}</td>
 
@@ -623,7 +637,7 @@ html += `
 
 <td>${item.sl}</td>
 
-<td>${item.type}</td>
+<td>${item.displayName}</td>
 
 <td>${item.size}</td>
 
@@ -641,11 +655,11 @@ html += `
 
 `;
 
-chartLabels.push(item.type+"-"+item.size);
+chartLabels.push(item.displayName+"-"+item.size);
 
 chartStock.push(item.stock);
 
-trendLabels.push(item.type);
+trendLabels.push(item.displayName);
 
 trendData.push(item.deliveryTotal);
 
