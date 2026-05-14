@@ -1,18 +1,21 @@
-# FULL FINAL CODE (COPY ALL AND REPLACE OLD FILE)
-
-```html
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
+
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
 <title>Needle Ageing Report</title>
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
 <script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
+
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 
 <style>
+
 *{
 margin:0;
 padding:0;
@@ -159,39 +162,92 @@ border-radius:12px;
 padding:10px;
 margin-top:20px;
 }
+
+@media(max-width:700px){
+
+th{
+font-size:10px;
+padding:6px 2px;
+}
+
+td{
+font-size:9px;
+padding:5px 2px;
+}
+
+.header h1{
+font-size:22px;
+}
+
+}
+
+@media print{
+
+body{
+background:white;
+color:black;
+}
+
+.topbar{
+display:none;
+}
+
+canvas{
+display:none;
+}
+
+}
+
 </style>
+
 </head>
 
 <body>
 
 <div class="header">
+
 <h1>GMS TEXTILES LTD</h1>
+
 <h2>Needle Ageing Report</h2>
+
 </div>
 
 <div class="topbar">
+
 <select id="floorSelect">
+
 <option value="ALL">ALL FLOOR</option>
+
 <option value="Kadom R">Kadom R</option>
 <option value="Kadom N">Kadom N</option>
+
 <option value="Shapla R">Shapla R</option>
 <option value="Shapla N">Shapla N</option>
+
 <option value="Poddo R">Poddo R</option>
 <option value="Poddo N">Poddo N</option>
+
 <option value="Belly R">Belly R</option>
 <option value="Belly N">Belly N</option>
+
 <option value="Sample R">Sample R</option>
 <option value="Sample N">Sample N</option>
+
 <option value="EMBROIDERY R">EMBROIDERY R</option>
 <option value="EMBROIDERY N">EMBROIDERY N</option>
+
 </select>
 
 <button onclick="window.print()">Print</button>
+
 <button onclick="exportExcel()">Excel</button>
+
 <button onclick="downloadPDF()">PDF</button>
+
 </div>
 
 <div class="dashboard">
+
 <div class="card">
 <h3>Total Item</h3>
 <p id="totalItem">0</p>
@@ -219,14 +275,45 @@ margin-top:20px;
 
 <div class="card">
 <h3>Total Stock</h3>
-<p id="grandTotal">11583</p>
+<p id="grandTotal">0</p>
 </div>
+
+</div>
+
+<h2 style="margin-top:20px;">Critical Stock Alert</h2>
+
+<div class="tableWrap">
+
+<table>
+
+<thead>
+
+<tr>
+
+<th>Floor</th>
+<th>Needle</th>
+<th>Size</th>
+<th>Stock</th>
+<th>Running Days</th>
+
+</tr>
+
+</thead>
+
+<tbody id="criticalBody"></tbody>
+
+</table>
+
 </div>
 
 <div class="tableWrap">
+
 <table id="mainTable">
+
 <thead>
+
 <tr>
+
 <th>Floor</th>
 <th>SL</th>
 <th>Needle Type</th>
@@ -236,11 +323,20 @@ margin-top:20px;
 <th>Running Days</th>
 <th>No Delivery</th>
 <th>Status</th>
+
 </tr>
+
 </thead>
+
 <tbody id="reportBody"></tbody>
+
 </table>
+
 </div>
+
+<canvas id="stockChart"></canvas>
+
+<canvas id="trendChart"></canvas>
 
 <script type="module">
 
@@ -253,22 +349,24 @@ getDocs
 } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-firestore.js";
 
 const firebaseConfig = {
+
 apiKey: "AIzaSyD-wBCF5eeWMHobLFOhBzKW7aB2pagz9-w",
+
 authDomain: "gms-warehouse-tracker-7f57e.firebaseapp.com",
+
 projectId: "gms-warehouse-tracker-7f57e",
+
 storageBucket: "gms-warehouse-tracker-7f57e.firebasestorage.app",
+
 messagingSenderId: "992250313291",
+
 appId: "1:992250313291:web:ee3bceae76d4d53bc26bce"
+
 };
 
 const app = initializeApp(firebaseConfig);
-const db = getFirestore(app);
 
-const floorTotals = {
-"ALL":11583,
-"Kadom R":1259,
-"Kadom N":1259
-};
+const db = getFirestore(app);
 
 document.getElementById("floorSelect")
 .addEventListener("change",loadReport);
@@ -278,6 +376,9 @@ async function loadReport(){
 let selectedFloor=document.getElementById("floorSelect").value;
 
 let body=document.getElementById("reportBody");
+
+let criticalBody=document.getElementById("criticalBody");
+
 body.innerHTML="<tr><td colspan='9'>Loading...</td></tr>";
 
 let snap=await getDocs(collection(db,"dailyPosting"));
@@ -285,10 +386,15 @@ let snap=await getDocs(collection(db,"dailyPosting"));
 let allData=[];
 
 snap.forEach(doc=>{
+
 let data=doc.data();
+
 if(data.date){
+
 allData.push(data);
+
 }
+
 });
 
 allData.sort((a,b)=>new Date(a.date)-new Date(b.date));
@@ -297,10 +403,7 @@ let latestMap={};
 
 allData.forEach(day=>{
 
-if(
-selectedFloor !== "ALL" &&
-day.floor.trim().toLowerCase() !== selectedFloor.trim().toLowerCase()
-){
+if(selectedFloor!=="ALL" && day.floor!==selectedFloor){
 return;
 }
 
@@ -318,153 +421,368 @@ row.needleType.trim()+"_"+
 row.size.trim();
 
 let present=Number(row.present)||0;
+
 let delivery=Number(row.delivery)||0;
 
 if(!latestMap[key]){
+
 latestMap[key]={
+
 floor:day.floor,
+
 sl:row.sl || "",
+
 type:row.needleType || "",
+
 size:row.size || "",
-stock:0,
+
+stock:present,
+
 deliveryTotal:0,
+
 deliveryDays:0,
-history:[]
+
+history:[],
+
+lastDate:day.date
+
 };
+
 }
 
-latestMap[key].stock += present;
+latestMap[key].stock=present;
+
+latestMap[key].lastDate=day.date;
 
 if(delivery>0){
+
 latestMap[key].deliveryTotal += delivery;
+
 latestMap[key].deliveryDays +=1;
+
 }
 
 latestMap[key].history.push({
+
+date:day.date,
+
 delivery:delivery
+
 });
 
 });
+
 });
 
 let html="";
+
+let criticalHTML="";
+
 let totalItem=0;
+
 let running=0;
+
 let slow=0;
+
 let noDeliveryCount=0;
+
 let critical=0;
+
 let grandTotal=0;
+
+let chartLabels=[];
+
+let chartStock=[];
+
+let trendLabels=[];
+
+let trendData=[];
 
 Object.values(latestMap).forEach(item=>{
 
 totalItem++;
+
 grandTotal += Number(item.stock)||0;
 
 let avgUse=0;
 
 if(item.deliveryDays>0){
+
 avgUse=item.deliveryTotal/item.deliveryDays;
+
 }
 
 let avgShow=avgUse.toFixed(1);
 
 let runningDays="-";
 
+let stockDays=999;
+
 if(avgUse>0){
-runningDays=Math.floor(item.stock/avgUse)+" Days";
+
+stockDays=item.stock/avgUse;
+
+runningDays=Math.floor(stockDays)+" Days";
+
 }
 
 let noDeliveryDays=0;
 
 for(let i=item.history.length-1;i>=0;i--){
+
 if(item.history[i].delivery>0){
 break;
 }
+
 noDeliveryDays++;
+
 }
 
 let stockClass="stock-normal";
 
 if(item.stock===0){
+
 stockClass="stock-empty";
+
 }
-else if(item.stock<=5){
+else if(noDeliveryDays>=30){
+
+stockClass="stock-danger";
+
+}
+else if(stockDays<=7){
+
 stockClass="stock-warning";
-critical++;
+
 }
 
 let status="Running";
+
 let statusClass="status-running";
 
 if(item.stock===0){
+
 status="No Stock";
+
 statusClass="status-stop";
+
+}
+else if(noDeliveryDays>=30){
+
+status=noDeliveryDays+" Days No Delivery";
+
+statusClass="status-stop";
+
+noDeliveryCount++;
+
 }
 else if(noDeliveryDays>=13){
-status="Slow Moving";
+
+status=noDeliveryDays+" Days Slow Moving";
+
 statusClass="status-slow";
+
 slow++;
+
 }
 else{
+
 running++;
+
+}
+
+if(stockDays<=5 && item.stock>0){
+
+critical++;
+
+criticalHTML += `
+
+<tr>
+
+<td>${item.floor}</td>
+
+<td>${item.type}</td>
+
+<td>${item.size}</td>
+
+<td class="stock-warning">${item.stock}</td>
+
+<td>${runningDays}</td>
+
+</tr>
+
+`;
+
 }
 
 html += `
+
 <tr>
+
 <td>${item.floor}</td>
+
 <td>${item.sl}</td>
+
 <td>${item.type}</td>
+
 <td>${item.size}</td>
+
 <td class="${stockClass}">${item.stock}</td>
+
 <td>${avgShow}</td>
+
 <td>${runningDays}</td>
+
 <td>${noDeliveryDays} Days</td>
+
 <td class="${statusClass}">${status}</td>
+
 </tr>
+
 `;
+
+chartLabels.push(item.type+"-"+item.size);
+
+chartStock.push(item.stock);
+
+trendLabels.push(item.type);
+
+trendData.push(item.deliveryTotal);
 
 });
 
-if(selectedFloor === "ALL"){
-grandTotal = 11583;
-}
-
-if(selectedFloor === "Kadom R"){
-grandTotal = 1259;
-}
-
 html += `
+
 <tr class="totalRow">
+
 <td colspan="4">GRAND TOTAL STOCK</td>
+
 <td>${grandTotal}</td>
-<td colspan="4">FINAL REPORT</td>
+
+<td colspan="4">MATCH DAILY ENTRY REPORT</td>
+
 </tr>
+
 `;
 
 body.innerHTML=html;
 
+criticalBody.innerHTML=criticalHTML;
+
 document.getElementById("totalItem").innerText=totalItem;
+
 document.getElementById("runningItem").innerText=running;
+
 document.getElementById("slowItem").innerText=slow;
+
 document.getElementById("noDeliveryItem").innerText=noDeliveryCount;
+
 document.getElementById("criticalItem").innerText=critical;
+
 document.getElementById("grandTotal").innerText=grandTotal;
+
+drawStockChart(chartLabels,chartStock);
+
+drawTrendChart(trendLabels,trendData);
+
+console.log("FINAL STOCK =",grandTotal);
+
+}
+
+function drawStockChart(labels,data){
+
+const oldChart=Chart.getChart("stockChart");
+
+if(oldChart){
+oldChart.destroy();
+}
+
+const ctx=document.getElementById("stockChart");
+
+new Chart(ctx,{
+
+type:"bar",
+
+data:{
+
+labels:labels,
+
+datasets:[{
+
+label:"Current Stock",
+
+data:data,
+
+backgroundColor:"#2563eb"
+
+}]
+
+}
+
+});
+
+}
+
+function drawTrendChart(labels,data){
+
+const oldChart=Chart.getChart("trendChart");
+
+if(oldChart){
+oldChart.destroy();
+}
+
+const ctx=document.getElementById("trendChart");
+
+new Chart(ctx,{
+
+type:"line",
+
+data:{
+
+labels:labels,
+
+datasets:[{
+
+label:"Needle Consumption Trend",
+
+data:data,
+
+borderColor:"#22c55e"
+
+}]
+
+}
+
+});
 
 }
 
 window.exportExcel=function(){
+
 let table=document.getElementById("mainTable");
-let wb=XLSX.utils.table_to_book(table,{sheet:"Needle Report"});
+
+let wb=XLSX.utils.table_to_book(table,{
+
+sheet:"Needle Report"
+
+});
+
 XLSX.writeFile(wb,"Needle_Ageing_Report.xlsx");
+
 }
 
 window.downloadPDF=function(){
-html2pdf().from(document.body).save("Needle_Ageing_Report.pdf");
+
+html2pdf()
+.from(document.body)
+.save("Needle_Ageing_Report.pdf");
+
 }
 
 loadReport();
 
 </script>
+
 </body>
+
 </html>
-```
