@@ -278,32 +278,6 @@ display:none;
 
 </div>
 
-<h2 style="margin-top:20px;">Critical Stock Alert</h2>
-
-<div class="tableWrap">
-
-<table>
-
-<thead>
-
-<tr>
-
-<th>Floor</th>
-<th>Needle</th>
-<th>Size</th>
-<th>Stock</th>
-<th>Running Days</th>
-
-</tr>
-
-</thead>
-
-<tbody id="criticalBody"></tbody>
-
-</table>
-
-</div>
-
 <div class="tableWrap">
 
 <table id="mainTable">
@@ -385,8 +359,6 @@ let selectedFloor=document.getElementById("floorSelect").value;
 
 let body=document.getElementById("reportBody");
 
-let criticalBody=document.getElementById("criticalBody");
-
 body.innerHTML="<tr><td colspan='9'>Loading...</td></tr>";
 
 let snap=await getDocs(collection(db,"dailyPosting"));
@@ -419,27 +391,15 @@ if(!day.rows) return;
 
 day.rows.forEach(row=>{
 
-// ===== DELETE EXTRA ITEMS =====
+// ===== DELETE ONLY THIS ITEM =====
 
 if(
 
-(
 cleanText(day.floor)==="KADOMR"
 &&
 cleanText(row.needleType)==="DBX1SF"
 &&
-cleanText(row.size)==="11LP"
-)
-
-||
-
-(
-cleanText(day.floor)==="KADOMR"
-&&
-cleanText(row.needleType)==="DCX1SF"
-&&
-cleanText(row.size)==="9AP"
-)
+cleanText(row.size)==="11AP"
 
 ){
 return;
@@ -468,8 +428,6 @@ floor:day.floor,
 
 sl:row.sl || "",
 
-type:cleanText(row.needleType),
-
 displayName:row.needleType || "",
 
 size:row.size || "",
@@ -480,19 +438,13 @@ deliveryTotal:0,
 
 deliveryDays:0,
 
-history:[],
-
-lastDate:day.date
+history:[]
 
 };
 
 }
 
 latestMap[key].stock=present;
-
-latestMap[key].displayName=row.needleType || "";
-
-latestMap[key].lastDate=day.date;
 
 if(delivery>0){
 
@@ -515,26 +467,17 @@ delivery:delivery
 
 let html="";
 
-let criticalHTML="";
-
 let totalItem=0;
-
 let running=0;
-
 let slow=0;
-
 let noDeliveryCount=0;
-
 let critical=0;
-
 let grandTotal=0;
 
 let chartLabels=[];
-
 let chartStock=[];
 
 let trendLabels=[];
-
 let trendData=[];
 
 Object.values(latestMap).forEach(item=>{
@@ -630,30 +573,6 @@ running++;
 
 }
 
-if(stockDays<=5 && item.stock>0){
-
-critical++;
-
-criticalHTML += `
-
-<tr>
-
-<td>${item.floor}</td>
-
-<td>${item.displayName}</td>
-
-<td>${item.size}</td>
-
-<td class="stock-warning">${item.stock}</td>
-
-<td>${runningDays}</td>
-
-</tr>
-
-`;
-
-}
-
 html += `
 
 <tr>
@@ -706,18 +625,11 @@ html += `
 
 body.innerHTML=html;
 
-criticalBody.innerHTML=criticalHTML;
-
 document.getElementById("totalItem").innerText=totalItem;
-
 document.getElementById("runningItem").innerText=running;
-
 document.getElementById("slowItem").innerText=slow;
-
 document.getElementById("noDeliveryItem").innerText=noDeliveryCount;
-
 document.getElementById("criticalItem").innerText=critical;
-
 document.getElementById("grandTotal").innerText=grandTotal;
 
 drawStockChart(chartLabels,chartStock);
