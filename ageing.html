@@ -1,15 +1,21 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
+
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
 <title>Needle Ageing Report</title>
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
 <script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
+
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 
 <style>
+
 *{
 margin:0;
 padding:0;
@@ -17,98 +23,78 @@ box-sizing:border-box;
 }
 
 body{
-font-family:Arial,Helvetica,sans-serif;
-background:#031433;
-color:#fff;
-padding:12px;
+background:#071229;
+color:white;
+font-family:Arial,sans-serif;
+padding:10px;
 }
 
-/* HEADER */
 .header{
 text-align:center;
 margin-bottom:15px;
 }
 
 .header h1{
-font-size:34px;
-font-weight:900;
+font-size:28px;
 }
 
 .header h2{
-font-size:22px;
+font-size:18px;
 margin-top:5px;
-color:#dbeafe;
+color:#cbd5e1;
 }
 
-.live{
-margin-top:10px;
-font-size:22px;
-font-weight:bold;
-color:#22c55e;
-}
-
-/* TOPBAR */
 .topbar{
 display:flex;
 justify-content:center;
 gap:10px;
 flex-wrap:wrap;
-margin:18px 0;
+margin-bottom:15px;
 }
 
 select,button{
-padding:11px 18px;
+padding:10px;
 border:none;
-border-radius:10px;
+border-radius:8px;
 font-weight:bold;
-font-size:15px;
-cursor:pointer;
+font-size:14px;
 }
 
 button{
 background:#2563eb;
-color:#fff;
+color:white;
+cursor:pointer;
 }
 
-/* DASHBOARD */
 .dashboard{
 display:grid;
-grid-template-columns:repeat(auto-fit,minmax(220px,1fr));
+grid-template-columns:repeat(auto-fit,minmax(170px,1fr));
 gap:12px;
-margin-top:10px;
+margin-bottom:15px;
 }
 
 .card{
-background:#0b1a3c;
+background:#0f172a;
 border:1px solid #334155;
-border-radius:14px;
-padding:18px;
+border-radius:12px;
+padding:15px;
 text-align:center;
-box-shadow:0 8px 18px rgba(0,0,0,.25);
 }
 
 .card h3{
-color:#93c5fd;
-font-size:17px;
-margin-bottom:12px;
+color:#94a3b8;
+margin-bottom:10px;
+font-size:15px;
 }
 
 .card p{
-font-size:38px;
-font-weight:900;
-}
-
-/* TABLE */
-h2.section{
-margin-top:18px;
-margin-bottom:10px;
 font-size:28px;
+font-weight:bold;
 }
 
 .tableWrap{
 overflow:auto;
-margin-bottom:16px;
-border-radius:14px;
+margin-top:15px;
 }
 
 table{
@@ -119,110 +105,145 @@ background:#08112c;
 
 th{
 background:#0f172a;
-padding:12px 8px;
-font-size:14px;
-border:1px solid #334155;
+border:2px solid #d1d5db;
+padding:10px 5px;
+font-size:13px;
 }
 
 td{
-padding:10px 8px;
-font-size:13px;
+border:2px solid #d1d5db;
+padding:8px 4px;
 text-align:center;
+font-size:12px;
 font-weight:bold;
-border:1px solid #334155;
+}
+
+.stock-normal{
+background:#2563eb;
+color:white;
+}
+
+.stock-warning{
+background:#fb923c;
+color:white;
+}
+
+.stock-danger{
+background:#dc2626;
+color:white;
+}
+
+.stock-empty{
+background:white;
+color:black;
+}
+
+.status-running{
+color:#22c55e;
+}
+
+.status-slow{
+color:#facc15;
+}
+
+.status-stop{
+color:#ff4d4d;
 }
 
 .totalRow{
 background:#1e293b;
 color:#22c55e;
-font-size:16px;
-}
-
-/* COLORS */
-.stock-normal{background:#2563eb}
-.stock-warning{background:#fb923c}
-.stock-danger{background:#dc2626}
-.stock-empty{background:#fff;color:#000}
-
-.status-running{color:#22c55e}
-.status-slow{color:#facc15}
-.status-stop{color:#ff4d4d}
-
-/* CHART */
-.chartGrid{
-display:grid;
-grid-template-columns:1fr 1fr;
-gap:15px;
-margin-top:18px;
-}
-
-.chartBox{
-background:#fff;
-padding:14px;
-border-radius:14px;
-height:380px;
+font-size:15px;
 }
 
 canvas{
-width:100% !important;
-height:100% !important;
-}
-
-/* MOBILE */
-@media(max-width:900px){
-.chartGrid{
-grid-template-columns:1fr;
-}
+background:white;
+border-radius:12px;
+padding:10px;
+margin-top:20px;
 }
 
 @media(max-width:700px){
 
-.header h1{font-size:24px}
-.header h2{font-size:16px}
-.live{font-size:16px}
+th{
+font-size:10px;
+padding:6px 2px;
+}
 
-th{font-size:10px;padding:7px 4px}
-td{font-size:10px;padding:7px 4px}
+td{
+font-size:9px;
+padding:5px 2px;
+}
 
-.card h3{font-size:14px}
-.card p{font-size:28px}
+.header h1{
+font-size:22px;
+}
+
 }
 
 @media print{
-.topbar,.live,.chartGrid{display:none}
-body{background:#fff;color:#000}
+
+body{
+background:white;
+color:black;
 }
+
+.topbar{
+display:none;
+}
+
+canvas{
+display:none;
+}
+
+}
+
 </style>
+
 </head>
 
 <body>
 
 <div class="header">
+
 <h1>GMS TEXTILES LTD</h1>
-<h2>Needle Ageing Live Report</h2>
-<div class="live">🟢 LIVE DATA CONNECTED</div>
+
+<h2>Needle Ageing Report</h2>
+
 </div>
 
 <div class="topbar">
+
 <select id="floorSelect">
+
 <option value="ALL">ALL FLOOR</option>
-<option>Kadom R</option>
-<option>Kadom N</option>
-<option>Shapla R</option>
-<option>Shapla N</option>
-<option>Poddo R</option>
-<option>Poddo N</option>
-<option>Belly R</option>
-<option>Belly N</option>
-<option>Sample R</option>
-<option>Sample N</option>
-<option>EMBROIDERY R</option>
-<option>EMBROIDERY N</option>
+
+<option value="Kadom R">Kadom R</option>
+<option value="Kadom N">Kadom N</option>
+
+<option value="Shapla R">Shapla R</option>
+<option value="Shapla N">Shapla N</option>
+
+<option value="Poddo R">Poddo R</option>
+<option value="Poddo N">Poddo N</option>
+
+<option value="Belly R">Belly R</option>
+<option value="Belly N">Belly N</option>
+
+<option value="Sample R">Sample R</option>
+<option value="Sample N">Sample N</option>
+
+<option value="EMBROIDERY R">EMBROIDERY R</option>
+<option value="EMBROIDERY N">EMBROIDERY N</option>
+
 </select>
 
 <button onclick="window.print()">Print</button>
+
 <button onclick="exportExcel()">Excel</button>
+
 <button onclick="downloadPDF()">PDF</button>
+
 </div>
 
 <div class="dashboard">
@@ -259,27 +280,40 @@ body{background:#fff;color:#000}
 
 </div>
 
-<h2 class="section">Critical Stock Alert</h2>
+<h2 style="margin-top:20px;">Critical Stock Alert</h2>
 
 <div class="tableWrap">
+
 <table>
+
 <thead>
+
 <tr>
+
 <th>Floor</th>
 <th>Needle</th>
 <th>Size</th>
 <th>Stock</th>
 <th>Running Days</th>
+
 </tr>
+
 </thead>
+
 <tbody id="criticalBody"></tbody>
+
 </table>
+
 </div>
 
 <div class="tableWrap">
+
 <table id="mainTable">
+
 <thead>
+
 <tr>
+
 <th>Floor</th>
 <th>SL</th>
 <th>Needle Type</th>
@@ -289,21 +323,20 @@ body{background:#fff;color:#000}
 <th>Running Days</th>
 <th>No Delivery</th>
 <th>Status</th>
+
 </tr>
+
 </thead>
+
 <tbody id="reportBody"></tbody>
+
 </table>
+
 </div>
 
-<div class="chartGrid">
-<div class="chartBox">
 <canvas id="stockChart"></canvas>
-</div>
 
-<div class="chartBox">
 <canvas id="trendChart"></canvas>
-</div>
-</div>
 
 <script type="module">
 
@@ -312,44 +345,57 @@ import { initializeApp } from "https://www.gstatic.com/firebasejs/12.12.1/fireba
 import {
 getFirestore,
 collection,
-onSnapshot
+getDocs
 } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-firestore.js";
 
-/* YOUR FIREBASE */
 const firebaseConfig = {
+
 apiKey: "AIzaSyD-wBCF5eeWMHobLFOhBzKW7aB2pagz9-w",
+
 authDomain: "gms-warehouse-tracker-7f57e.firebaseapp.com",
+
 projectId: "gms-warehouse-tracker-7f57e",
+
 storageBucket: "gms-warehouse-tracker-7f57e.firebasestorage.app",
+
 messagingSenderId: "992250313291",
+
 appId: "1:992250313291:web:ee3bceae76d4d53bc26bce"
+
 };
 
 const app = initializeApp(firebaseConfig);
+
 const db = getFirestore(app);
 
-document.getElementById("floorSelect").addEventListener("change",loadReport);
+document.getElementById("floorSelect")
+.addEventListener("change",loadReport);
 
-function loadReport(){
+async function loadReport(){
 
-const floor = document.getElementById("floorSelect").value;
+let selectedFloor=document.getElementById("floorSelect").value;
 
-onSnapshot(collection(db,"dailyPosting"),(snap)=>{
+let body=document.getElementById("reportBody");
+
+let criticalBody=document.getElementById("criticalBody");
+
+body.innerHTML="<tr><td colspan='9'>Loading...</td></tr>";
+
+let snap=await getDocs(collection(db,"dailyPosting"));
 
 let allData=[];
 
 snap.forEach(doc=>{
+
 let data=doc.data();
-if(data.date) allData.push(data);
-});
 
-renderData(allData,floor);
+if(data.date){
 
-});
+allData.push(data);
 
 }
 
-function renderData(allData,selectedFloor){
+});
 
 allData.sort((a,b)=>new Date(a.date)-new Date(b.date));
 
@@ -357,105 +403,192 @@ let latestMap={};
 
 allData.forEach(day=>{
 
-if(selectedFloor!=="ALL" && day.floor!==selectedFloor) return;
+if(selectedFloor!=="ALL" && day.floor!==selectedFloor){
+return;
+}
+
 if(!day.rows) return;
 
 day.rows.forEach(row=>{
 
-if(!row.needleType || !row.size) return;
+if(!row.needleType || !row.size){
+return;
+}
 
-let key = day.floor+"_"+row.needleType+"_"+row.size;
+let key=
+day.floor.trim()+"_"+
+row.needleType.trim()+"_"+
+row.size.trim();
 
-let present = Number(row.present)||0;
-let delivery = Number(row.delivery)||0;
+let present=Number(row.present)||0;
+
+let delivery=Number(row.delivery)||0;
 
 if(!latestMap[key]){
 
 latestMap[key]={
+
 floor:day.floor,
-sl:row.sl||"",
-type:row.needleType,
-size:row.size,
-stock:0,
+
+sl:row.sl || "",
+
+type:row.needleType || "",
+
+size:row.size || "",
+
+stock:present,
+
 deliveryTotal:0,
+
 deliveryDays:0,
-history:[]
+
+history:[],
+
+lastDate:day.date
+
 };
 
 }
 
-latestMap[key].stock = present;
+latestMap[key].stock=present;
+
+latestMap[key].lastDate=day.date;
 
 if(delivery>0){
+
 latestMap[key].deliveryTotal += delivery;
-latestMap[key].deliveryDays++;
+
+latestMap[key].deliveryDays +=1;
+
 }
 
-latestMap[key].history.push(delivery);
+latestMap[key].history.push({
+
+date:day.date,
+
+delivery:delivery
+
+});
 
 });
 
 });
 
 let html="";
+
 let criticalHTML="";
 
-let total=0;
-let running=0;
-let slow=0;
-let stop=0;
-let critical=0;
-let grand=0;
+let totalItem=0;
 
-let labels=[];
-let stockData=[];
+let running=0;
+
+let slow=0;
+
+let noDeliveryCount=0;
+
+let critical=0;
+
+let grandTotal=0;
+
+let chartLabels=[];
+
+let chartStock=[];
+
 let trendLabels=[];
+
 let trendData=[];
 
 Object.values(latestMap).forEach(item=>{
 
-total++;
-grand += item.stock;
+totalItem++;
 
-let avg = item.deliveryDays ? item.deliveryTotal/item.deliveryDays : 0;
+grandTotal += Number(item.stock)||0;
 
-let stockDays = avg>0 ? item.stock/avg : 999;
+let avgUse=0;
 
-let runningDays = avg>0 ? Math.floor(stockDays)+" Days" : "-";
+if(item.deliveryDays>0){
 
-let noDelivery=0;
+avgUse=item.deliveryTotal/item.deliveryDays;
+
+}
+
+let avgShow=avgUse.toFixed(1);
+
+let runningDays="-";
+
+let stockDays=999;
+
+if(avgUse>0){
+
+stockDays=item.stock/avgUse;
+
+runningDays=Math.floor(stockDays)+" Days";
+
+}
+
+let noDeliveryDays=0;
 
 for(let i=item.history.length-1;i>=0;i--){
-if(item.history[i]>0) break;
-noDelivery++;
+
+if(item.history[i].delivery>0){
+break;
+}
+
+noDeliveryDays++;
+
 }
 
 let stockClass="stock-normal";
 
-if(item.stock===0) stockClass="stock-empty";
-else if(stockDays<=5) stockClass="stock-warning";
-else if(noDelivery>=30) stockClass="stock-danger";
+if(item.stock===0){
+
+stockClass="stock-empty";
+
+}
+else if(noDeliveryDays>=30){
+
+stockClass="stock-danger";
+
+}
+else if(stockDays<=7){
+
+stockClass="stock-warning";
+
+}
 
 let status="Running";
+
 let statusClass="status-running";
 
 if(item.stock===0){
+
 status="No Stock";
+
 statusClass="status-stop";
-stop++;
+
 }
-else if(noDelivery>=30){
-status="No Delivery";
+else if(noDeliveryDays>=30){
+
+status=noDeliveryDays+" Days No Delivery";
+
 statusClass="status-stop";
-stop++;
+
+noDeliveryCount++;
+
 }
-else if(noDelivery>=13){
-status="Slow Moving";
+else if(noDeliveryDays>=13){
+
+status=noDeliveryDays+" Days Slow Moving";
+
 statusClass="status-slow";
+
 slow++;
+
 }
 else{
+
 running++;
+
 }
 
 if(stockDays<=5 && item.stock>0){
@@ -463,125 +596,186 @@ if(stockDays<=5 && item.stock>0){
 critical++;
 
 criticalHTML += `
+
 <tr>
+
 <td>${item.floor}</td>
+
 <td>${item.type}</td>
+
 <td>${item.size}</td>
+
 <td class="stock-warning">${item.stock}</td>
+
 <td>${runningDays}</td>
+
 </tr>
+
 `;
 
 }
 
 html += `
+
 <tr>
+
 <td>${item.floor}</td>
+
 <td>${item.sl}</td>
+
 <td>${item.type}</td>
+
 <td>${item.size}</td>
+
 <td class="${stockClass}">${item.stock}</td>
-<td>${avg.toFixed(1)}</td>
+
+<td>${avgShow}</td>
+
 <td>${runningDays}</td>
-<td>${noDelivery} Days</td>
+
+<td>${noDeliveryDays} Days</td>
+
 <td class="${statusClass}">${status}</td>
+
 </tr>
+
 `;
 
-labels.push(item.type+"-"+item.size);
-stockData.push(item.stock);
+chartLabels.push(item.type+"-"+item.size);
+
+chartStock.push(item.stock);
 
 trendLabels.push(item.type);
+
 trendData.push(item.deliveryTotal);
 
 });
 
 html += `
+
 <tr class="totalRow">
+
 <td colspan="4">GRAND TOTAL STOCK</td>
-<td>${grand}</td>
-<td colspan="4">LIVE UPDATE</td>
+
+<td>${grandTotal}</td>
+
+<td colspan="4">MATCH DAILY ENTRY REPORT</td>
+
 </tr>
+
 `;
 
-document.getElementById("reportBody").innerHTML = html;
-document.getElementById("criticalBody").innerHTML = criticalHTML;
+body.innerHTML=html;
 
-document.getElementById("totalItem").innerText = total;
-document.getElementById("runningItem").innerText = running;
-document.getElementById("slowItem").innerText = slow;
-document.getElementById("noDeliveryItem").innerText = stop;
-document.getElementById("criticalItem").innerText = critical;
-document.getElementById("grandTotal").innerText = grand;
+criticalBody.innerHTML=criticalHTML;
 
-drawStockChart(labels,stockData);
+document.getElementById("totalItem").innerText=totalItem;
+
+document.getElementById("runningItem").innerText=running;
+
+document.getElementById("slowItem").innerText=slow;
+
+document.getElementById("noDeliveryItem").innerText=noDeliveryCount;
+
+document.getElementById("criticalItem").innerText=critical;
+
+document.getElementById("grandTotal").innerText=grandTotal;
+
+drawStockChart(chartLabels,chartStock);
+
 drawTrendChart(trendLabels,trendData);
 
+console.log("FINAL STOCK =",grandTotal);
+
 }
 
-/* CHART 1 */
 function drawStockChart(labels,data){
 
-let old = Chart.getChart("stockChart");
-if(old) old.destroy();
+const oldChart=Chart.getChart("stockChart");
 
-new Chart(document.getElementById("stockChart"),{
-type:"bar",
-data:{
-labels:labels,
-datasets:[{
-label:"Current Stock",
-data:data,
-backgroundColor:"#2563eb"
-}]
-},
-options:{
-responsive:true,
-maintainAspectRatio:false
+if(oldChart){
+oldChart.destroy();
 }
+
+const ctx=document.getElementById("stockChart");
+
+new Chart(ctx,{
+
+type:"bar",
+
+data:{
+
+labels:labels,
+
+datasets:[{
+
+label:"Current Stock",
+
+data:data,
+
+backgroundColor:"#2563eb"
+
+}]
+
+}
+
 });
 
 }
 
-/* CHART 2 */
 function drawTrendChart(labels,data){
 
-let old = Chart.getChart("trendChart");
-if(old) old.destroy();
+const oldChart=Chart.getChart("trendChart");
 
-new Chart(document.getElementById("trendChart"),{
-type:"line",
-data:{
-labels:labels,
-datasets:[{
-label:"Needle Consumption",
-data:data,
-borderColor:"#22c55e",
-fill:false,
-tension:.3
-}]
-},
-options:{
-responsive:true,
-maintainAspectRatio:false
+if(oldChart){
+oldChart.destroy();
 }
+
+const ctx=document.getElementById("trendChart");
+
+new Chart(ctx,{
+
+type:"line",
+
+data:{
+
+labels:labels,
+
+datasets:[{
+
+label:"Needle Consumption Trend",
+
+data:data,
+
+borderColor:"#22c55e"
+
+}]
+
+}
+
 });
 
 }
 
-/* EXCEL */
 window.exportExcel=function(){
 
 let table=document.getElementById("mainTable");
-let wb=XLSX.utils.table_to_book(table,{sheet:"Needle Report"});
+
+let wb=XLSX.utils.table_to_book(table,{
+
+sheet:"Needle Report"
+
+});
+
 XLSX.writeFile(wb,"Needle_Ageing_Report.xlsx");
 
 }
 
-/* PDF */
 window.downloadPDF=function(){
 
-html2pdf().from(document.body).save("Needle_Ageing_Report.pdf");
+html2pdf()
+.from(document.body)
+.save("Needle_Ageing_Report.pdf");
 
 }
 
@@ -590,4 +784,5 @@ loadReport();
 </script>
 
 </body>
+
 </html>
