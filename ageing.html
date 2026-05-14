@@ -179,23 +179,6 @@ font-size:22px;
 
 }
 
-@media print{
-
-body{
-background:white;
-color:black;
-}
-
-.topbar{
-display:none;
-}
-
-canvas{
-display:none;
-}
-
-}
-
 </style>
 
 </head>
@@ -264,11 +247,6 @@ display:none;
 <div class="card">
 <h3>No Delivery</h3>
 <p id="noDeliveryItem">0</p>
-</div>
-
-<div class="card">
-<h3>Critical Stock</h3>
-<p id="criticalItem">0</p>
 </div>
 
 <div class="card">
@@ -391,30 +369,115 @@ if(!day.rows) return;
 
 day.rows.forEach(row=>{
 
-// ===== DELETE ONLY THIS ITEM =====
-
-if(
-
-cleanText(day.floor)==="KADOMR"
-&&
-cleanText(row.needleType)==="DBX1SF"
-&&
-cleanText(row.size)==="11AP"
-
-){
-return;
-}
-
-// ===== END DELETE =====
-
 if(!row.needleType || !row.size){
 return;
 }
 
-let key=
-cleanText(day.floor)+"_"+
-cleanText(row.needleType)+"_"+
-cleanText(row.size);
+let floorName=cleanText(day.floor);
+let needleName=cleanText(row.needleType);
+let needleSize=cleanText(row.size);
+
+// ===== KADOM R VALID ITEMS ONLY =====
+
+if(floorName==="KADOMR"){
+
+const validItems=[
+
+"KADOMR_DBX1_7",
+"KADOMR_DBX1_8",
+"KADOMR_DBX1KN_8",
+"KADOMR_DBX1NS_8",
+"KADOMR_DBX1_9",
+"KADOMR_DBX1KN_9",
+"KADOMR_DBX1NS_8LP",
+"KADOMR_DBX1SF_9B",
+"KADOMR_DBXK5KK_9B",
+"KADOMR_DBX1_10",
+"KADOMR_DBX1KN_10",
+"KADOMR_DBX1_11",
+"KADOMR_DBX1_12SPI",
+"KADOMR_DBX1_12",
+"KADOMR_DBX1_14",
+"KADOMR_DBXK5KK_9S",
+"KADOMR_DBX1_12SPD",
+"KADOMR_DCX1_7",
+"KADOMR_DCX1_8",
+"KADOMR_DCX1KN_8",
+"KADOMR_DCX1_9",
+"KADOMR_DCX1SF_9LP",
+"KADOMR_DCX1NS_8",
+"KADOMR_DCX1_10",
+"KADOMR_DCX1_11",
+"KADOMR_DCX1_12",
+"KADOMR_DCX1_14",
+"KADOMR_UYX128_7",
+"KADOMR_UYX128KN_8",
+"KADOMR_UYX128_9",
+"KADOMR_UYX128_9SPD",
+"KADOMR_UYX128KN_9",
+"KADOMR_UYX128KKKN_9",
+"KADOMR_UYX128KK_7",
+"KADOMR_UYX128_10",
+"KADOMR_UYX128KN_10PD",
+"KADOMR_UY128NY2_10SPD",
+"KADOMR_UYX128_11",
+"KADOMR_UYX128_11SPD",
+"KADOMR_UYX128KN_11",
+"KADOMR_UYX128KN_11PD",
+"KADOMR_UYX128_12",
+"KADOMR_UY128GAS_12",
+"KADOMR_UYX128_14",
+"KADOMR_DPX5NS_8",
+"KADOMR_UYUOX113_9",
+"KADOMR_UYUOX113_11",
+"KADOMR_UYUOX113_12",
+"KADOMR_UYUOX113_14",
+"KADOMR_DVX57_12",
+"KADOMR_DPX5_9",
+"KADOMR_DPX5_10SPD",
+"KADOMR_DPX5_11",
+"KADOMR_DPX5_9SLP",
+"KADOMR_DPX5_12",
+"KADOMR_DPX5_12SPD",
+"KADOMR_DPX5_14SPD",
+"KADOMR_DPX5_14",
+"KADOMR_DPX17_9",
+"KADOMR_DPX17_11",
+"KADOMR_UYX128KKKN_10",
+"KADOMR_DPX5KN_8",
+"KADOMR_DBX1SF_8",
+"KADOMR_DBX1NS_9",
+"KADOMR_DCX1KN_9",
+"KADOMR_DPX5NS_9",
+"KADOMR_UYX128KK_8",
+"KADOMR_UOX113_11SPI",
+"KADOMR_DBX1SF_8LP",
+"KADOMR_DBX1SF_9LP",
+"KADOMR_DBX1SF_11AP",
+"KADOMR_DCX1SF_8LP",
+"KADOMR_DCX1SF_9AP",
+"KADOMR_DCX1SF_11LP",
+"KADOMR_UYX128SF_9LP",
+"KADOMR_UYX128SF_10PD",
+"KADOMR_UYX128SF_10LP",
+"KADOMR_UYX128SAN_10",
+"KADOMR_UYX128SF_11PD",
+"KADOMR_UYX128SAN_12",
+"KADOMR_DPX5SF_11LP"
+
+];
+
+let currentItem=floorName+"_"+needleName+"_"+needleSize;
+
+if(!validItems.includes(currentItem)){
+return;
+}
+
+}
+
+// ===== END VALIDATION =====
+
+let key=floorName+"_"+needleName+"_"+needleSize;
 
 let present=Number(row.present)||0;
 
@@ -471,7 +534,6 @@ let totalItem=0;
 let running=0;
 let slow=0;
 let noDeliveryCount=0;
-let critical=0;
 let grandTotal=0;
 
 let chartLabels=[];
@@ -629,7 +691,6 @@ document.getElementById("totalItem").innerText=totalItem;
 document.getElementById("runningItem").innerText=running;
 document.getElementById("slowItem").innerText=slow;
 document.getElementById("noDeliveryItem").innerText=noDeliveryCount;
-document.getElementById("criticalItem").innerText=critical;
 document.getElementById("grandTotal").innerText=grandTotal;
 
 drawStockChart(chartLabels,chartStock);
@@ -661,7 +722,6 @@ labels:labels,
 datasets:[{
 
 label:"Current Stock",
-
 data:data,
 backgroundColor:"#2563eb"
 
@@ -694,7 +754,6 @@ labels:labels,
 datasets:[{
 
 label:"Needle Consumption Trend",
-
 data:data,
 borderColor:"#22c55e"
 
