@@ -7,6 +7,8 @@
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
 <style>
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap');
+
 :root{
   --bg:#0a1628;
   --card:#1e293b;
@@ -18,10 +20,11 @@
   --green:#10b981;
   --red:#ef4444;
   --yellow:#f59e0b;
+  --purple:#8b5cf6;
   --shadow:0 10px 40px rgba(0,0,0,.4);
 }
 body.light{
-  --bg:#f1f5f9;
+  --bg:#f8fafc;
   --card:#ffffff;
   --card2:#e2e8f0;
   --text:#1e293b;
@@ -32,11 +35,11 @@ body.light{
 *{box-sizing:border-box;margin:0;padding:0}
 body{
   margin:0;
-  background:linear-gradient(135deg,#0a1628 0%,#1e293b 100%);
+  background:linear-gradient(135deg,#0a1628 0%,#1e293b 50%,#0f172a 100%);
   color:var(--text);
-  font-family:'Inter','Segoe UI',system-ui,sans-serif;
-  padding-bottom:78px;
-  font-weight:500;
+  font-family:'Poppins',sans-serif;
+  padding-bottom:100px;
+  font-weight:400;
   line-height:1.6;
 }
 
@@ -47,39 +50,41 @@ body{
   top:0;
   bottom:0;
   width:280px;
-  background:linear-gradient(180deg,var(--card) 0%,var(--card2) 100%);
-  border-right:1px solid var(--border);
+  background:linear-gradient(180deg,#1e293b 0%,#0f172a 100%);
+  border-right:1px solid rgba(59,130,246,0.2);
   display:flex;
   flex-direction:column;
   z-index:1000;
-  transition:transform .3s ease;
+  transition:transform .3s cubic-bezier(0.4,0,0.2,1);
   overflow-y:auto;
   overflow-x:hidden;
   transform:translateX(0);
-  box-shadow:4px 0 24px rgba(0,0,0,.3);
+  box-shadow:4px 0 30px rgba(0,0,0,.5);
 }
 @media(max-width:900px){
   .sidebar{transform:translateX(-100%);}
   .sidebar.show{transform:translateX(0);}
 }
 .sidebarHeader{
-  padding:24px 20px;
-  border-bottom:1px solid var(--border);
+  padding:28px 20px;
+  border-bottom:1px solid rgba(59,130,246,0.2);
   display:flex;
   align-items:center;
   gap:14px;
-  background:linear-gradient(135deg,rgba(59,130,246,.1) 0%,rgba(16,185,129,.1) 100%);
+  background:linear-gradient(135deg,rgba(59,130,246,.15) 0%,rgba(139,92,246,.15) 100%);
 }
 .sidebarHeader .companyLogo{
-  width:48px;
-  height:48px;
+  width:50px;
+  height:50px;
   border-radius:12px;
   object-fit:contain;
+  box-shadow:0 4px 15px rgba(59,130,246,.4);
 }
 .sidebarHeader .logo{
-  font-size:22px;
+  font-size:24px;
   font-weight:700;
   color:var(--text);
+  letter-spacing:-0.5px;
 }
 .sidebarHeader .sub{
   font-size:12px;
@@ -92,7 +97,7 @@ body{
   padding:20px 12px;
   display:flex;
   flex-direction:column;
-  gap:8px;
+  gap:6px;
 }
 .sidebarNav button{
   background:transparent;
@@ -100,11 +105,11 @@ body{
   border:1px solid transparent;
   padding:14px 18px;
   border-radius:12px;
-  font-size:15px;
+  font-size:14px;
   font-weight:500;
   cursor:pointer;
   text-align:left;
-  transition:all .3s;
+  transition:all .3s cubic-bezier(0.4,0,0.2,1);
   display:flex;
   align-items:center;
   gap:12px;
@@ -112,18 +117,18 @@ body{
 }
 .sidebarNav button:hover{
   background:rgba(59,130,246,.1);
-  border-color:var(--blue);
-  transform:translateX(4px);
+  border-color:rgba(59,130,246,.3);
+  transform:translateX(5px);
 }
 .sidebarNav button.active{
-  background:linear-gradient(135deg,var(--blue),#8b5cf6);
+  background:linear-gradient(135deg,var(--blue),var(--purple));
   color:#fff;
-  box-shadow:0 4px 16px rgba(59,130,246,.4);
+  box-shadow:0 4px 20px rgba(59,130,246,.4);
   font-weight:600;
 }
 .sidebarFooter{
   padding:20px;
-  border-top:1px solid var(--border);
+  border-top:1px solid rgba(59,130,246,0.2);
   display:flex;
   flex-direction:column;
   gap:10px;
@@ -136,25 +141,36 @@ body{
   cursor:pointer;
   border:none;
   font-size:14px;
-  background:var(--blue);
+  background:linear-gradient(135deg,var(--blue),var(--purple));
   color:#fff;
   transition:all .3s;
+  box-shadow:0 4px 15px rgba(59,130,246,.3);
 }
-.sidebarFooter .logoutBtn{background:var(--red);}
+.sidebarFooter .themeBtn:hover,.sidebarFooter .logoutBtn:hover{
+  transform:translateY(-2px);
+  box-shadow:0 6px 20px rgba(59,130,246,.5);
+}
+.sidebarFooter .logoutBtn{
+  background:linear-gradient(135deg,var(--red),#f97316);
+  box-shadow:0 4px 15px rgba(239,68,68,.3);
+}
+.sidebarFooter .logoutBtn:hover{
+  box-shadow:0 6px 20px rgba(239,68,68,.5);
+}
 
 /* ===== MAIN CONTENT ===== */
 .mainContent{
   margin-left:280px;
   min-height:100vh;
   background:var(--bg);
-  transition:margin-left .3s ease;
+  transition:margin-left .3s cubic-bezier(0.4,0,0.2,1);
 }
 @media(max-width:900px){.mainContent{margin-left:0;}}
 
 /* ===== TOP BAR ===== */
 .topBar{
-  background:linear-gradient(135deg,var(--card) 0%,var(--card2) 100%);
-  border-bottom:1px solid var(--border);
+  background:linear-gradient(135deg,rgba(30,41,59,.95) 0%,rgba(51,65,85,.95) 100%);
+  border-bottom:1px solid rgba(59,130,246,0.2);
   padding:16px 28px;
   display:flex;
   align-items:center;
@@ -162,34 +178,41 @@ body{
   position:sticky;
   top:0;
   z-index:100;
+  backdrop-filter:blur(10px);
 }
 .menuToggle{
-  background:linear-gradient(135deg,var(--blue),#8b5cf6);
+  background:linear-gradient(135deg,var(--blue),var(--purple));
   color:#fff;
   border:none;
-  padding:12px 20px;
+  padding:12px 24px;
   border-radius:12px;
   font-size:18px;
   cursor:pointer;
   font-weight:600;
   display:none;
+  box-shadow:0 4px 15px rgba(59,130,246,.4);
 }
 @media(max-width:900px){.menuToggle{display:block;}}
 .topBarRight{display:flex;align-items:center;gap:16px;}
 .topBarRight .autoSave{
   display:flex;align-items:center;gap:8px;
   color:var(--green);font-weight:600;font-size:14px;
+  animation:pulse 2s infinite;
 }
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.6}}
 .topBarRight .themeBtn{
-  background:var(--blue);color:#fff;border:none;
-  padding:10px 18px;border-radius:10px;font-weight:600;cursor:pointer;
+  background:linear-gradient(135deg,var(--blue),var(--purple));
+  color:#fff;border:none;padding:10px 20px;
+  border-radius:10px;font-weight:600;cursor:pointer;
+  box-shadow:0 4px 15px rgba(59,130,246,.3);
 }
 
 /* ===== NOTICE BAR ===== */
 .noticeBar{
-  background:linear-gradient(90deg,#f59e0b 0%,#3b82f6 100%);
+  background:linear-gradient(90deg,#f59e0b 0%,#ef4444 50%,#3b82f6 100%);
   color:#fff;padding:12px 0;font-weight:600;
   overflow:hidden;white-space:nowrap;
+  box-shadow:0 2px 10px rgba(245,158,11,.3);
 }
 .noticeMove{
   display:inline-block;padding-left:100%;
@@ -200,7 +223,15 @@ body{
 /* ===== PAGE CONTENT ===== */
 .page{display:none;padding:28px;}
 .page.activePage{display:block;}
-.dashTitle{font-size:32px;font-weight:700;margin-bottom:8px;}
+.dashTitle{
+  font-size:32px;
+  font-weight:700;
+  margin-bottom:8px;
+  background:linear-gradient(135deg,#fff,var(--blue));
+  -webkit-background-clip:text;
+  -webkit-text-fill-color:transparent;
+  background-clip:text;
+}
 .dashSub{color:var(--muted);margin-bottom:28px;font-weight:500;}
 .topGrid,.summaryLine,.chartGrid,.mcdDashboard,.grid{
   display:grid;gap:20px;margin-bottom:20px;
@@ -209,113 +240,262 @@ body{
 .chartGrid{grid-template-columns:1fr 1fr}
 .mcdDashboard{grid-template-columns:repeat(3,1fr)}
 .grid{grid-template-columns:repeat(3,1fr)}
+
+/* ===== CARDS ===== */
 .topCard,.sumBox,.needleSmall,.chartBox,.mcdBox,.card,.statusBox{
-  background:linear-gradient(135deg,var(--card),var(--card2));
-  border:1px solid var(--border);box-shadow:var(--shadow);border-radius:16px;
+  background:linear-gradient(135deg,rgba(30,41,59,.8) 0%,rgba(51,65,85,.8) 100%);
+  border:1px solid rgba(59,130,246,0.2);
+  box-shadow:var(--shadow);
+  border-radius:16px;
+  backdrop-filter:blur(10px);
 }
 .topCard{padding:24px;position:relative;overflow:hidden;}
 .topCard .label{color:var(--muted);font-size:13px;font-weight:600;text-transform:uppercase;letter-spacing:1px;}
 .topCard .num{font-size:32px;color:var(--green);font-weight:700;margin-top:10px;}
-.sumBox{padding:20px;text-align:center;}
-.sumBox span{color:var(--muted);font-size:14px;font-weight:500;display:block;margin-bottom:10px;}
+
+.sumBox{
+  padding:24px;
+  text-align:center;
+  transition:all .3s cubic-bezier(0.4,0,0.2,1);
+}
+.sumBox:hover{
+  transform:translateY(-5px);
+  box-shadow:0 15px 40px rgba(59,130,246,.3);
+  border-color:rgba(59,130,246,0.5);
+}
+.sumBox span{
+  color:var(--muted);
+  font-size:14px;
+  font-weight:500;
+  display:block;
+  margin-bottom:12px;
+}
 .sumBox b{
-  display:flex;align-items:center;justify-content:center;gap:10px;
-  color:var(--green);font-size:30px;font-weight:700;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap:12px;
+  color:var(--green);
+  font-size:30px;
+  font-weight:700;
 }
-.needleSmall{padding:20px;text-align:center;}
-.needleSmall span{color:var(--muted);font-weight:500;font-size:14px;display:block;margin-bottom:10px;}
+
+.needleSmall{
+  padding:24px;
+  text-align:center;
+  transition:all .3s;
+}
+.needleSmall:hover{
+  transform:translateY(-5px);
+  box-shadow:0 15px 40px rgba(16,185,129,.3);
+}
+.needleSmall span{color:var(--muted);font-weight:500;font-size:14px;display:block;margin-bottom:12px;}
 .needleSmall b{
-  display:flex;align-items:center;justify-content:center;gap:10px;
-  color:var(--green);font-size:36px;font-weight:700;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap:12px;
+  color:var(--green);
+  font-size:36px;
+  font-weight:700;
 }
+
 .chartBox{min-height:320px;padding:20px;}
 .chartBox h3{margin:0 0 16px;font-size:17px;font-weight:600;}
 .chartBox canvas{max-height:240px!important;}
-.mcdBox{padding:20px;}
+
+.mcdBox{padding:20px;transition:all .3s;}
+.mcdBox:hover{transform:translateY(-3px);box-shadow:0 10px 30px rgba(59,130,246,.3);}
 .mcdBox h3{margin:0 0 14px;font-size:17px;font-weight:600;}
 .miniRow{
   display:flex;justify-content:space-between;gap:10px;
-  padding:10px 0;border-bottom:1px solid var(--border);
+  padding:10px 0;border-bottom:1px solid rgba(255,255,255,.1);
   font-size:14px;font-weight:500;
 }
 .miniValue{color:var(--green);font-weight:600;}
 .miniChart{height:8px;background:rgba(255,255,255,.1);border-radius:20px;overflow:hidden;margin-top:12px;}
 .miniFill{height:100%;width:60%;background:linear-gradient(90deg,var(--green),var(--blue));}
+
 .card{
-  padding:24px;border-radius:16px;text-align:center;
-  font-size:15px;font-weight:600;cursor:pointer;
-  min-height:68px;display:flex;align-items:center;justify-content:center;gap:10px;
-  transition:all .3s;
+  padding:24px;
+  border-radius:16px;
+  text-align:center;
+  font-size:15px;
+  font-weight:600;
+  cursor:pointer;
+  min-height:68px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap:10px;
+  transition:all .3s cubic-bezier(0.4,0,0.2,1);
+  background:linear-gradient(135deg,rgba(59,130,246,.1),rgba(139,92,246,.1));
 }
-.card:hover{background:linear-gradient(135deg,var(--blue),#8b5cf6);color:#fff;transform:translateY(-4px);}
+.card:hover{
+  background:linear-gradient(135deg,var(--blue),var(--purple));
+  color:#fff;
+  transform:translateY(-5px);
+  box-shadow:0 12px 30px rgba(59,130,246,.4);
+}
+
 select,input,textarea{
-  width:100%;padding:16px;margin-top:8px;border-radius:12px;
-  border:1px solid var(--border);background:var(--card);color:var(--text);font-size:15px;
+  width:100%;
+  padding:16px;
+  margin-top:8px;
+  border-radius:12px;
+  border:1px solid rgba(59,130,246,0.3);
+  background:rgba(30,41,59,.8);
+  color:var(--text);
+  font-size:15px;
 }
 .btn{
-  padding:14px 28px;background:linear-gradient(135deg,var(--blue),#8b5cf6);
-  color:#fff;border:0;border-radius:12px;font-weight:600;cursor:pointer;margin-top:16px;
+  padding:14px 28px;
+  background:linear-gradient(135deg,var(--blue),var(--purple));
+  color:#fff;
+  border:0;
+  border-radius:12px;
+  font-weight:600;
+  cursor:pointer;
+  margin-top:16px;
+  box-shadow:0 4px 15px rgba(59,130,246,.4);
+  transition:all .3s;
 }
+.btn:hover{transform:translateY(-2px);box-shadow:0 8px 25px rgba(59,130,246,.5);}
+
 .statusBox{border-radius:16px;padding:20px;max-width:900px;margin:14px auto;}
 .statusTitle{font-size:20px;font-weight:700;margin-bottom:12px;}
 .statusLine{
-  display:flex;justify-content:space-between;border-bottom:1px solid var(--border);
+  display:flex;justify-content:space-between;border-bottom:1px solid rgba(255,255,255,.1);
   padding:10px 0;font-weight:500;
 }
 .statusSignal{font-size:32px;font-weight:700;margin-top:12px;}
 .safe{color:var(--green)}.warn{color:var(--yellow)}.stop{color:var(--red)}
 .progress{height:10px;background:rgba(255,255,255,.1);border-radius:20px;overflow:hidden;margin-top:12px;}
 .progressFill{height:100%;width:1%;background:linear-gradient(90deg,var(--green),var(--blue));}
+
 .attendanceBox{
-  grid-column:1/-1;min-height:360px;display:grid;
-  grid-template-columns:1.15fr .85fr;gap:24px;align-items:center;
+  grid-column:1/-1;
+  min-height:360px;
+  display:grid;
+  grid-template-columns:1.15fr .85fr;
+  gap:24px;
+  align-items:center;
 }
 .attChartSide canvas{max-height:260px!important}
 .attendanceInside{display:grid;grid-template-columns:1fr 1fr;gap:16px;}
 .attBox{
   background:linear-gradient(135deg,rgba(16,185,129,.1),rgba(59,130,246,.1));
-  border:1px solid var(--border);border-radius:16px;padding:20px;
+  border:1px solid rgba(59,130,246,0.2);
+  border-radius:16px;
+  padding:20px;
 }
 .attBox span{color:var(--muted);font-size:13px;font-weight:500;display:block;margin-bottom:10px;}
 .attBox b{color:var(--green);font-size:38px;font-weight:700;}
+
 .backupActionGrid{max-width:900px;margin:14px auto;grid-template-columns:repeat(4,1fr);}
-.creditFooter{
-  position:fixed;bottom:8px;left:50%;transform:translateX(-50%);
-  display:flex;align-items:center;gap:12px;background:rgba(30,41,59,.95);
-  border:1px solid var(--border);padding:10px 16px;border-radius:20px;z-index:999;
-}
-.creditItem{display:flex;align-items:center;gap:8px;color:var(--text);}
-.creditItem img{width:32px;height:32px;border-radius:50%;border:2px solid var(--green);}
-.creditText b{font-size:11px}.creditText span{color:var(--muted);font-size:9px}
 
 /* ===== LIVE SIGNAL ===== */
 .liveSignalCard{text-align:center;padding:32px 24px;}
 .liveSignalWrap{display:flex;align-items:center;justify-content:center;gap:18px;margin-top:16px;}
-.liveDot{width:48px;height:48px;background:var(--green);border-radius:50%;animation:livePulse 1.4s infinite;}
+.liveDot{
+  width:48px;
+  height:48px;
+  background:var(--green);
+  border-radius:50%;
+  animation:livePulse 1.4s infinite;
+  box-shadow:0 0 0 0 rgba(16,185,129,.7);
+}
 .liveText{color:var(--green);font-size:42px;font-weight:700;}
 @keyframes livePulse{
-  0%{box-shadow:0 0 0 0 rgba(16,185,129,.8)}
-  70%{box-shadow:0 0 0 24px rgba(16,185,129,0)}
-  100%{box-shadow:0 0 0 0 rgba(16,185,129,0)}
+  0%{box-shadow:0 0 0 0 rgba(16,185,129,.7);transform:scale(1)}
+  70%{box-shadow:0 0 0 20px rgba(16,185,129,0);transform:scale(1.1)}
+  100%{box-shadow:0 0 0 0 rgba(16,185,129,0);transform:scale(1)}
 }
 
 /* ===== COPY BUTTON ===== */
 .copyBtn{
-  background:rgba(59,130,246,0.15);border:1px solid rgba(59,130,246,0.5);
-  color:var(--blue);padding:8px 14px;border-radius:8px;cursor:pointer;
-  font-size:13px;font-weight:600;transition:all 0.3s;
+  background:rgba(59,130,246,0.2);
+  border:1px solid rgba(59,130,246,0.5);
+  color:var(--blue);
+  width:40px;
+  height:40px;
+  border-radius:10px;
+  cursor:pointer;
+  font-size:18px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  transition:all 0.3s;
 }
-.copyBtn:hover{background:rgba(59,130,246,0.3);transform:translateY(-2px);}
-.copyBtn.copied{background:rgba(16,185,129,0.3);border-color:var(--green);color:var(--green);}
-.copyWrapper{display:flex;align-items:center;justify-content:center;gap:10px;}
+.copyBtn:hover{
+  background:rgba(59,130,246,0.4);
+  transform:scale(1.1);
+  box-shadow:0 4px 15px rgba(59,130,246,.4);
+}
+.copyBtn.copied{
+  background:rgba(16,185,129,0.4);
+  border-color:var(--green);
+  color:var(--green);
+}
+.copyWrapper{display:flex;align-items:center;justify-content:center;gap:12px;}
 
-/* ===== RESPONSIVE ===== */
+/* ===== CREDIT FOOTER ===== */
+.creditFooter{
+  position:fixed;
+  bottom:10px;
+  left:50%;
+  transform:translateX(-50%);
+  display:flex;
+  align-items:center;
+  gap:16px;
+  background:linear-gradient(135deg,rgba(30,41,59,.95),rgba(51,65,85,.95));
+  border:1px solid rgba(59,130,246,0.3);
+  padding:12px 20px;
+  border-radius:16px;
+  box-shadow:0 8px 30px rgba(0,0,0,.5);
+  z-index:999;
+  backdrop-filter:blur(10px);
+}
+
+.creditItem{
+  display:flex;
+  align-items:center;
+  gap:10px;
+  color:var(--text);
+}
+.creditItem img{
+  width:40px;
+  height:40px;
+  border-radius:50%;
+  border:2px solid var(--green);
+  object-fit:cover;
+  box-shadow:0 4px 15px rgba(16,185,129,.4);
+}
+.creditText b{font-size:12px;font-weight:600;display:block;}
+.creditText span{color:var(--muted);font-size:10px;}
+.creditDivider{
+  width:1px;
+  height:35px;
+  background:linear-gradient(to bottom,transparent,rgba(59,130,246,0.5),transparent);
+}
+
+/* PC তে ৩ জন, Mobile এ ২ জন */
 @media(max-width:900px){
+  .creditItem:nth-child(3){display:none;}
+  .creditDivider:last-of-type{display:none;}
   .topGrid,.summaryLine,.chartGrid,.mcdDashboard,.grid,.backupActionGrid{grid-template-columns:1fr;}
   .attendanceBox{grid-template-columns:1fr}
   .page{padding:16px}
   .dashTitle{font-size:26px}
   .sumBox b{font-size:26px}
+  .liveText{font-size:36px}
+  .creditFooter{width:95%;max-width:95%;padding:10px 16px;flex-wrap:wrap;justify-content:center;}
+}
+
+@media(max-width:520px){
+  .attendanceInside{grid-template-columns:1fr}
+  .sumBox b{font-size:22px}
+  .creditItem img{width:35px;height:35px;}
 }
 </style>
 </head>
@@ -332,13 +512,13 @@ select,input,textarea{
   <div class="sidebarNav">
     <button class="active" onclick="openPage('home',this)">🏠 Dashboard</button>
     <button onclick="openPage('entry',this)">➕ New Entry</button>
-    <button onclick="openPage('reports',this)"> Reports</button>
-    <button id="needleNav" onclick="openPage('needle',this)"> Needle</button>
+    <button onclick="openPage('reports',this)">📑 Reports</button>
+    <button id="needleNav" onclick="openPage('needle',this)">🪡 Needle</button>
     <button id="adminNav" onclick="location.href='admin.html'">👑 Admin</button>
     <button id="manpowerNav" onclick="location.href='manpower.html'">👨‍🏭 Manpower</button>
     <button onclick="location.href='notice.html'">📢 Notice</button>
     <button onclick="location.href='online-users.html'">🟢 Online</button>
-    <button onclick="location.href='audit-history.html'"> Audit</button>
+    <button onclick="location.href='audit-history.html'">📜 Audit</button>
     <button id="backupNav" onclick="openPage('backup',this)">☁ Backup</button>
     <button onclick="location.href='change-password.html'">🔐 Password</button>
   </div>
@@ -347,7 +527,7 @@ select,input,textarea{
     <button class="logoutBtn" onclick="logout()">🚪 Logout</button>
   </div>
 </div>
-<div class="sidebarOverlay" id="sidebarOverlay" onclick="toggleSidebar()" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:999;"></div>
+<div class="sidebarOverlay" id="sidebarOverlay" onclick="toggleSidebar()" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:999;backdrop-filter:blur(4px);"></div>
 
 <div class="mainContent" id="mainContent">
   <div class="topBar">
@@ -374,19 +554,19 @@ select,input,textarea{
     </div>
     <div class="summaryLine" id="accessoriesSummary">
       <div class="sumBox"><span>📦 Accessories Stock</span><b id="sumAccessories">0</b></div>
-      <div class="sumBox"><span> Sewing Thread</span><b id="sumSewing">0</b></div>
+      <div class="sumBox"><span>🧵 Sewing Thread</span><b id="sumSewing">0</b></div>
       <div class="sumBox"><span>📏 Twill Tape</span><b id="sumTwill">0</b></div>
     </div>
     <div class="needleSmall" id="needleSummary"><span>🪡 Needle Today Stock</span><b id="needleToday">0</b></div>
     <div class="chartGrid">
       <div class="chartBox" id="accessoriesChartBox"><h3>📈 Accessories Stock Chart</h3><canvas id="accessoriesChart"></canvas></div>
       <div class="chartBox" id="needleChartBox"><h3>🏭 Needle Floor Wise Stock</h3><canvas id="needleChart"></canvas></div>
-      <div class="chartBox" id="greyChartBox"><h3> Grey Fabric Present Stock</h3><canvas id="greyChart"></canvas></div>
+      <div class="chartBox" id="greyChartBox"><h3>🏭 Grey Fabric Present Stock</h3><canvas id="greyChart"></canvas></div>
       <div class="chartBox" id="needleIssueChartBox"><h3>🪡 Needle Broken / Missing / Change</h3><canvas id="needleIssueChart"></canvas></div>
       <div class="chartBox attendanceBox" id="billingChartBox">
-        <div class="attChartSide"><h3>‍💼 Attendance Manpower Chart</h3><canvas id="billingChart"></canvas></div>
+        <div class="attChartSide"><h3>👨‍💼 Attendance Manpower Chart</h3><canvas id="billingChart"></canvas></div>
         <div class="attendanceInside">
-          <div class="attBox total"><span>‍🏭 Attendance Total</span><b id="attTotal">0</b></div>
+          <div class="attBox total"><span>👨‍🏭 Attendance Total</span><b id="attTotal">0</b></div>
           <div class="attBox present"><span>✅ Today Present</span><b id="attPresent">0</b></div>
           <div class="attBox leave"><span>🏖 Leave</span><b id="attLeave">0</b></div>
           <div class="attBox absent"><span>❌ Absent</span><b id="attAbsent">0</b></div>
@@ -400,33 +580,33 @@ select,input,textarea{
     <h2>➕ New Entry</h2>
     <label>🏢 Company</label>
     <select id="entryCompany"><option>GMS TEXTILES LTD</option><option>GMS COMPOSITE KNITTING</option></select>
-    <br><br><label> Department / MCD</label>
+    <br><br><label>📂 Department / MCD</label>
     <select id="entryMcd"></select>
     <button class="btn" onclick="loadEntry()">🚀 Open Entry</button>
     <br><br><div id="entryBox" class="grid"></div>
   </div>
 
   <div id="reports" class="page">
-    <h2> Reports</h2>
+    <h2>📑 Reports</h2>
     <label>🏢 Company</label>
     <select id="reportCompany"><option>GMS TEXTILES LTD</option><option>GMS COMPOSITE KNITTING</option></select>
     <br><br><label>📂 Department / MCD</label>
     <select id="reportMcd"></select>
-    <button class="btn" onclick="loadReport()"> Show Report</button>
+    <button class="btn" onclick="loadReport()">📊 Show Report</button>
     <br><br><div id="reportBox" class="grid"></div>
   </div>
 
   <div id="needle" class="page">
     <h2>🪡 Needle Section</h2>
     <div class="grid">
-      <div class="card" onclick="location.href='needle.html'"> Needle Daily Entry</div>
+      <div class="card" onclick="location.href='needle.html'">🪡 Needle Daily Entry</div>
       <div class="card" onclick="location.href='needle-dashboard.html'">🏭 Floor Wise Dashboard</div>
       <div class="card" onclick="location.href='ageing.html'">📑 Ageing Report</div>
-      <div class="card" onclick="location.href='needle-monthly.html'"> Needle Monthly Report</div>
+      <div class="card" onclick="location.href='needle-monthly.html'">📅 Needle Monthly Report</div>
       <div class="card" onclick="location.href='all-needle-reports.html'">📦 All Needle BNR/BNF</div>
       <div class="card" onclick="location.href='all-needle-summary.html'">📊 All Needle Summary</div>
       <div class="card" onclick="location.href='needle-report.html'">📝 Needle Issue Entry</div>
-      <div class="card" onclick="location.href='needle-report-view.html'"> Needle Issue Report</div>
+      <div class="card" onclick="location.href='needle-report-view.html'">📊 Needle Issue Report</div>
     </div>
   </div>
 
@@ -450,7 +630,20 @@ select,input,textarea{
   </div>
 
   <div class="creditFooter">
-    <div class="creditItem"><img src="https://i.ibb.co/5hzT1VGk/IMG.jpg"><div class="creditText"><b>Powered by JOHURUL</b><span>System Developer</span></div></div>
+    <div class="creditItem">
+      <img src="https://i.ibb.co/5hzT1VGk/IMG.jpg" alt="Johurul">
+      <div class="creditText"><b>Md. Johurul</b><span>System Developer</span></div>
+    </div>
+    <div class="creditDivider"></div>
+    <div class="creditItem">
+      <img src="https://i.ibb.co/DDqvG3pD/nazir.jpg" alt="Nazir">
+      <div class="creditText"><b>Md. Nazir Hossain</b><span>System Planning</span></div>
+    </div>
+    <div class="creditDivider"></div>
+    <div class="creditItem">
+      <img src="https://i.ibb.co/k6WC4fBm/asad.jpg" alt="Asad">
+      <div class="creditText"><b>Md. Asaduzzaman</b><span>Operational Support</span></div>
+    </div>
   </div>
 </div>
 
@@ -581,11 +774,11 @@ window.loadEntry=function(){
   const mcd=document.getElementById("entryMcd").value;
   const box=document.getElementById("entryBox");
   const common=commonEntryCards(company,mcd);
-  if(!canAccess(mcd)){box.innerHTML=`<div class="card"> Access Denied</div>${common}`;return;}
+  if(!canAccess(mcd)){box.innerHTML=`<div class="card">❌ Access Denied</div>${common}`;return;}
   if(company==="GMS COMPOSITE KNITTING"){box.innerHTML=`${common}<div class="card">🏭 Composite module later</div>`;return;}
   if(mcd==="ACCESSORIES MCD"){box.innerHTML=`<div class="card" onclick="location.href='sewing-thread.html'">🧵 Sewing Thread</div><div class="card" onclick="location.href='twill-tape.html'">📏 Twill Tape</div><div class="card" onclick="location.href='accessories.html'">📦 Accessories</div><div class="card" onclick="location.href='accessories-inventory.html'">🧾 Inventory</div>${common}`;return;}
   if(mcd==="GREY FABRIC MCD"){box.innerHTML=`<div class="card" onclick="location.href='grey-fabric.html'">🏭 Grey Fabric Daily</div><div class="card" onclick="location.href='grey-fabric-monthly.html'">📅 Grey Monthly</div>${common}`;return;}
-  if(mcd==="BILLING SECTION"){box.innerHTML=`<div class="card" onclick="location.href='billing-manpower-report.html'">👨‍💼 Billing Manpower</div>${common}`;return;}
+  if(mcd==="BILLING SECTION"){box.innerHTML=`<div class="card" onclick="location.href='billing-manpower-report.html'">👨‍ Billing Manpower</div>${common}`;return;}
   box.innerHTML=`<div class="card">📝 ${mcd} Daily Entry</div><div class="card" onclick="location.href='billing-manpower-report.html'">👨‍💼 Billing Manpower</div>${common}`;
 };
 
@@ -595,10 +788,10 @@ window.loadReport=function(){
   const box=document.getElementById("reportBox");
   const common=commonReportCards(company,mcd);
   if(!canAccess(mcd)){box.innerHTML=`<div class="card">❌ Access Denied</div>${common}`;return;}
-  if(company==="GMS COMPOSITE KNITTING"){box.innerHTML=`${common}<div class="card"> Composite report later</div>`;return;}
-  if(mcd==="ACCESSORIES MCD"){box.innerHTML=`<div class="card" onclick="location.href='sewing-thread.html'">🧵 Sewing Thread</div><div class="card" onclick="location.href='twill-tape.html'"> Twill Tape</div><div class="card" onclick="location.href='accessories.html'"> Accessories</div><div class="card" onclick="location.href='accessories-inventory-report.html'">📊 Inventory</div>${common}`;return;}
-  if(mcd==="GREY FABRIC MCD"){box.innerHTML=`<div class="card" onclick="location.href='grey-fabric.html'"> Grey Fabric</div><div class="card" onclick="location.href='grey-fabric-monthly.html'">📅 Grey Monthly</div>${common}`;return;}
-  if(mcd==="BILLING SECTION"){box.innerHTML=`<div class="card" onclick="location.href='billing-manpower-report.html'">👨💼 Billing Manpower</div>${common}`;return;}
+  if(company==="GMS COMPOSITE KNITTING"){box.innerHTML=`${common}<div class="card">🏭 Composite report later</div>`;return;}
+  if(mcd==="ACCESSORIES MCD"){box.innerHTML=`<div class="card" onclick="location.href='sewing-thread.html'">🧵 Sewing Thread</div><div class="card" onclick="location.href='twill-tape.html'">📏 Twill Tape</div><div class="card" onclick="location.href='accessories.html'">📦 Accessories</div><div class="card" onclick="location.href='accessories-inventory-report.html'">📊 Inventory</div>${common}`;return;}
+  if(mcd==="GREY FABRIC MCD"){box.innerHTML=`<div class="card" onclick="location.href='grey-fabric.html'">🏭 Grey Fabric</div><div class="card" onclick="location.href='grey-fabric-monthly.html'">📅 Grey Monthly</div>${common}`;return;}
+  if(mcd==="BILLING SECTION"){box.innerHTML=`<div class="card" onclick="location.href='billing-manpower-report.html'">👨‍ Billing Manpower</div>${common}`;return;}
   box.innerHTML=`<div class="card">📑 ${mcd} Report</div><div class="card" onclick="location.href='billing-manpower-report.html'">👨‍💼 Billing Manpower</div>${common}`;
 };
 
@@ -680,7 +873,7 @@ function updateLimitBox(firebase){
 
 const chartPalette=["#38bdf8","#22c55e","#f59e0b","#a855f7","#ef4444","#14b8a6","#eab308","#6366f1","#ec4899","#84cc16","#06b6d4","#f97316"];
 function chartColors(count){return Array.from({length:count},(_,i)=>chartPalette[i%chartPalette.length]);}
-const valueLabelPlugin={id:"valueLabelPlugin",afterDatasetsDraw(chart){const {ctx}=chart;ctx.save();ctx.font="600 12px Inter";ctx.fillStyle=document.body.classList.contains("light")?"#1e293b":"#f1f5f9";ctx.textAlign="center";chart.data.datasets.forEach((dataset,di)=>{const meta=chart.getDatasetMeta(di);meta.data.forEach((bar,i)=>{const value=dataset.data[i];if(value===undefined||value===null)return;ctx.fillText(fmt(value),bar.x,bar.y-6);});});ctx.restore();}};
+const valueLabelPlugin={id:"valueLabelPlugin",afterDatasetsDraw(chart){const {ctx}=chart;ctx.save();ctx.font="600 12px Poppins";ctx.fillStyle=document.body.classList.contains("light")?"#1e293b":"#f1f5f9";ctx.textAlign="center";chart.data.datasets.forEach((dataset,di)=>{const meta=chart.getDatasetMeta(di);meta.data.forEach((bar,i)=>{const value=dataset.data[i];if(value===undefined||value===null)return;ctx.fillText(fmt(value),bar.x,bar.y-6);});});ctx.restore();}};
 function barOptions(titleText){return{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},title:{display:!!titleText,text:titleText,font:{size:14,weight:"600"}},tooltip:{backgroundColor:"rgba(15,23,42,.95)",titleColor:"#fff",bodyColor:"#fff"}},scales:{y:{beginAtZero:true,grid:{color:"rgba(255,255,255,.1)"}},x:{grid:{display:false},ticks:{font:{size:11,weight:"500"},color:"var(--muted)"}}}};}
 
 function renderCharts(sewing,accessories,twill,floorStocks,grey,billing,needleIssue){
@@ -738,11 +931,11 @@ async function loadDashboardStock(){
     updateLimitBox(firebase);
 
     if(isAccessoriesAllowed()){
-      document.getElementById("sumAccessories").innerHTML=`<span>${fmt(accessories)}</span><button class="copyBtn" onclick="copyToClipboard('${accessories}',this)">📋 Copy</button>`;
-      document.getElementById("sumSewing").innerHTML=`<span>${fmt(sewing)}</span><button class="copyBtn" onclick="copyToClipboard('${sewing}',this)">📋 Copy</button>`;
-      document.getElementById("sumTwill").innerHTML=`<span>${fmt(twill)}</span><button class="copyBtn" onclick="copyToClipboard('${twill}',this)">📋 Copy</button>`;
+      document.getElementById("sumAccessories").innerHTML=`<span>${fmt(accessories)}</span><button class="copyBtn" onclick="copyToClipboard('${accessories}',this)" title="Copy">📋</button>`;
+      document.getElementById("sumSewing").innerHTML=`<span>${fmt(sewing)}</span><button class="copyBtn" onclick="copyToClipboard('${sewing}',this)" title="Copy">📋</button>`;
+      document.getElementById("sumTwill").innerHTML=`<span>${fmt(twill)}</span><button class="copyBtn" onclick="copyToClipboard('${twill}',this)" title="Copy">📋</button>`;
     }
-    if(isNeedleAllowed())document.getElementById("needleToday").innerHTML=`<span>${fmt(needleData.total)}</span><button class="copyBtn" onclick="copyToClipboard('${needleData.total}',this)">📋 Copy</button>`;
+    if(isNeedleAllowed())document.getElementById("needleToday").innerHTML=`<span>${fmt(needleData.total)}</span><button class="copyBtn" onclick="copyToClipboard('${needleData.total}',this)" title="Copy">📋</button>`;
 
     renderCharts(sewing,accessories,twill,needleData.floorStocks,grey,billing,needleIssue);
 
@@ -751,13 +944,13 @@ async function loadDashboardStock(){
       if(!allowed.includes(mcd))return;
       let mp=manpower[mcd]||{count:0,salary:0};
       if(mcd==="ACCESSORIES MCD"){
-        html+=`<div class="mcdBox"><h3>📦 ACCESSORIES MCD</h3><div class="miniRow"><span> Accessories With Sample</span><span class="miniValue">${fmt(accessories)}</span></div><div class="miniRow"><span>🧵 Sewing Thread</span><span class="miniValue">${fmt(sewing)}</span></div><div class="miniRow"><span>📏 Twill Tape</span><span class="miniValue">${fmt(twill)}</span></div><div class="miniChart"><div class="miniFill"></div></div></div>`;
+        html+=`<div class="mcdBox"><h3>📦 ACCESSORIES MCD</h3><div class="miniRow"><span>📦 Accessories With Sample</span><span class="miniValue">${fmt(accessories)}</span></div><div class="miniRow"><span>🧵 Sewing Thread</span><span class="miniValue">${fmt(sewing)}</span></div><div class="miniRow"><span>📏 Twill Tape</span><span class="miniValue">${fmt(twill)}</span></div><div class="miniChart"><div class="miniFill"></div></div></div>`;
       }else if(mcd==="GREY FABRIC MCD"){
-        html+=`<div class="mcdBox"><h3>🏭 GREY FABRIC MCD</h3><div class="miniRow"><span> Today Closing Balance</span><span class="miniValue">${fmt(grey.total)}</span></div><div class="miniRow"><span>📊 Closing Chart</span><span class="miniValue">LIVE</span></div><div class="miniChart"><div class="miniFill" style="width:65%"></div></div></div>`;
+        html+=`<div class="mcdBox"><h3>🏭 GREY FABRIC MCD</h3><div class="miniRow"><span>📦 Today Closing Balance</span><span class="miniValue">${fmt(grey.total)}</span></div><div class="miniRow"><span>📊 Closing Chart</span><span class="miniValue">LIVE</span></div><div class="miniChart"><div class="miniFill" style="width:65%"></div></div></div>`;
       }else if(mcd==="BILLING SECTION"){
-        html+=`<div class="mcdBox"><h3>‍💼 BILLING SECTION</h3><div class="miniRow"><span>‍🏭 Total Manpower</span><span class="miniValue">${fmt(billing.total)}</span></div><div class="miniRow"><span> Leave</span><span class="miniValue">${fmt(billing.leave)}</span></div><div class="miniRow"><span>❌ Absent</span><span class="miniValue">${fmt(billing.absent)}</span></div><div class="miniRow"><span>✅ Today Present</span><span class="miniValue">${fmt(billing.present)}</span></div><div class="miniChart"><div class="miniFill" style="width:55%"></div></div></div>`;
+        html+=`<div class="mcdBox"><h3>👨‍💼 BILLING SECTION</h3><div class="miniRow"><span>👨‍ Total Manpower</span><span class="miniValue">${fmt(billing.total)}</span></div><div class="miniRow"><span>🏖 Leave</span><span class="miniValue">${fmt(billing.leave)}</span></div><div class="miniRow"><span>❌ Absent</span><span class="miniValue">${fmt(billing.absent)}</span></div><div class="miniRow"><span>✅ Today Present</span><span class="miniValue">${fmt(billing.present)}</span></div><div class="miniChart"><div class="miniFill" style="width:55%"></div></div></div>`;
       }else{
-        html+=`<div class="mcdBox"><h3>📂 ${mcd}</h3>${isManpowerAllowed()?`<div class="miniRow"><span>‍🏭 Manpower</span><span class="miniValue">${fmt(mp.count)}</span></div><div class="miniRow"><span>💰 Salary</span><span class="miniValue">${fmt(mp.salary)}</span></div>`:""}<div class="miniRow"><span>📊 Stock / Report</span><span class="miniValue">Pending</span></div><div class="miniChart"><div class="miniFill" style="width:35%"></div></div></div>`;
+        html+=`<div class="mcdBox"><h3>📂 ${mcd}</h3>${isManpowerAllowed()?`<div class="miniRow"><span>👨‍🏭 Manpower</span><span class="miniValue">${fmt(mp.count)}</span></div><div class="miniRow"><span>💰 Salary</span><span class="miniValue">${fmt(mp.salary)}</span></div>`:""}<div class="miniRow"><span>📊 Stock / Report</span><span class="miniValue">Pending</span></div><div class="miniChart"><div class="miniFill" style="width:35%"></div></div></div>`;
       }
     });
     document.getElementById("mcdDashboard").innerHTML=html||"<div class='mcdBox'><h3>❌ No Access</h3></div>";
@@ -868,10 +1061,9 @@ setInterval(updateLastActive,60000);setInterval(loadNotices,60000);
 window.copyToClipboard=async function(text,btnElement){
   try{
     await navigator.clipboard.writeText(String(text));
-    const originalText=btnElement.innerText;
-    btnElement.innerText='✓ Copied!';
+    btnElement.innerHTML='✓';
     btnElement.classList.add('copied');
-    setTimeout(()=>{btnElement.innerText=originalText;btnElement.classList.remove('copied');},2000);
+    setTimeout(()=>{btnElement.innerHTML='📋';btnElement.classList.remove('copied');},2000);
   }catch(err){
     const textArea=document.createElement('textarea');
     textArea.value=text;
@@ -879,9 +1071,9 @@ window.copyToClipboard=async function(text,btnElement){
     textArea.select();
     document.execCommand('copy');
     document.body.removeChild(textArea);
-    btnElement.innerText='✓ Copied!';
+    btnElement.innerHTML='✓';
     btnElement.classList.add('copied');
-    setTimeout(()=>{btnElement.innerText=' Copy';btnElement.classList.remove('copied');},2000);
+    setTimeout(()=>{btnElement.innerHTML='📋';btnElement.classList.remove('copied');},2000);
   }
 };
 
