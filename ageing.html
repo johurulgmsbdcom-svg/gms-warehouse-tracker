@@ -9,9 +9,7 @@
 <title>Needle Ageing Report</title>
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-
 <script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
-
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 
 <style>
@@ -421,6 +419,34 @@ if(!day.rows) return;
 
 day.rows.forEach(row=>{
 
+// ===== DELETE EXTRA ITEMS =====
+
+if(
+
+(
+cleanText(day.floor)==="KADOMR"
+&&
+cleanText(row.needleType)==="DBX1SF"
+&&
+cleanText(row.size)==="11LP"
+)
+
+||
+
+(
+cleanText(day.floor)==="KADOMR"
+&&
+cleanText(row.needleType)==="DCX1SF"
+&&
+cleanText(row.size)==="9AP"
+)
+
+){
+return;
+}
+
+// ===== END DELETE =====
+
 if(!row.needleType || !row.size){
 return;
 }
@@ -479,7 +505,6 @@ latestMap[key].deliveryDays +=1;
 latestMap[key].history.push({
 
 date:day.date,
-
 delivery:delivery
 
 });
@@ -726,7 +751,6 @@ datasets:[{
 label:"Current Stock",
 
 data:data,
-
 backgroundColor:"#2563eb"
 
 }]
@@ -760,7 +784,6 @@ datasets:[{
 label:"Needle Consumption Trend",
 
 data:data,
-
 borderColor:"#22c55e"
 
 }]
@@ -776,9 +799,7 @@ window.exportExcel=function(){
 let table=document.getElementById("mainTable");
 
 let wb=XLSX.utils.table_to_book(table,{
-
 sheet:"Needle Report"
-
 });
 
 XLSX.writeFile(wb,"Needle_Ageing_Report.xlsx");
