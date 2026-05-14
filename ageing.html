@@ -10,27 +10,22 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 
 <style>
-*{
-margin:0;
-padding:0;
-box-sizing:border-box;
-}
+*{margin:0;padding:0;box-sizing:border-box;}
 
 :root{
 --bg:#031433;
 --card:#0b1a3c;
 --card2:#0f172a;
---text:#ffffff;
+--text:#fff;
 --border:#334155;
 --blue:#2563eb;
 --green:#22c55e;
 --yellow:#facc15;
 --red:#dc2626;
---white:#ffffff;
 }
 
 body.light{
---bg:#f1f5f9;
+--bg:#f8fafc;
 --card:#ffffff;
 --card2:#e2e8f0;
 --text:#111827;
@@ -45,30 +40,11 @@ padding:12px;
 transition:.3s;
 }
 
-/* HEADER */
-.header{
-text-align:center;
-margin-bottom:14px;
-}
+.header{text-align:center;margin-bottom:15px;}
+.header h1{font-size:34px;font-weight:900;}
+.header h2{font-size:22px;margin-top:5px;}
+.live{margin-top:8px;font-size:20px;font-weight:bold;color:var(--green);}
 
-.header h1{
-font-size:34px;
-font-weight:900;
-}
-
-.header h2{
-font-size:22px;
-margin-top:6px;
-}
-
-.live{
-margin-top:10px;
-font-size:22px;
-font-weight:bold;
-color:var(--green);
-}
-
-/* ALERT */
 .alertBox{
 display:none;
 background:var(--red);
@@ -78,21 +54,20 @@ border-radius:12px;
 font-size:22px;
 font-weight:900;
 text-align:center;
-margin-bottom:14px;
+margin-bottom:15px;
 animation:blink .8s infinite;
 }
 
 @keyframes blink{
-50%{opacity:.3}
+50%{opacity:.35;}
 }
 
-/* TOPBAR */
 .topbar{
 display:flex;
 justify-content:center;
 gap:10px;
 flex-wrap:wrap;
-margin-bottom:14px;
+margin-bottom:15px;
 }
 
 select,button{
@@ -100,7 +75,6 @@ padding:10px 16px;
 border:none;
 border-radius:10px;
 font-weight:bold;
-font-size:15px;
 cursor:pointer;
 }
 
@@ -109,7 +83,6 @@ background:var(--blue);
 color:#fff;
 }
 
-/* DASHBOARD */
 .dashboard{
 display:grid;
 grid-template-columns:repeat(auto-fit,minmax(220px,1fr));
@@ -131,11 +104,10 @@ margin-bottom:10px;
 }
 
 .card p{
-font-size:36px;
+font-size:34px;
 font-weight:900;
 }
 
-/* TABLE */
 .section{
 font-size:28px;
 margin:16px 0 10px;
@@ -143,8 +115,7 @@ margin:16px 0 10px;
 
 .tableWrap{
 overflow:auto;
-margin-bottom:14px;
-border-radius:14px;
+margin-bottom:15px;
 }
 
 table{
@@ -155,55 +126,50 @@ background:var(--card);
 
 th{
 background:var(--card2);
-padding:11px 8px;
+padding:10px 6px;
 font-size:13px;
 border:1px solid var(--border);
 }
 
 td{
-padding:10px 8px;
+padding:9px 6px;
 font-size:12px;
-text-align:center;
 font-weight:bold;
+text-align:center;
 border:1px solid var(--border);
 }
 
 .totalRow{
 background:#1e293b;
 color:#22c55e;
-font-size:15px;
 }
 
-/* STOCK COLORS */
 .stock-normal{background:#2563eb;color:#fff;}
 .stock-warning{background:#fb923c;color:#fff;}
 .stock-danger{background:#dc2626;color:#fff;}
 .stock-empty{background:#fff;color:#000;}
 
-/* STATUS */
 .status-running{color:#22c55e;}
 .status-slow{color:#facc15;}
-.status-stop{color:#ff4d4d;font-weight:900;}
+.status-stop{color:#ff4d4d;}
 
-/* RED ALERT ROW */
 .redAlert{
 background:#7f1d1d !important;
 color:#fff !important;
 animation:blink 1s infinite;
 }
 
-/* CHART */
 .chartGrid{
 display:grid;
 grid-template-columns:1fr 1fr;
-gap:14px;
+gap:15px;
 margin-top:18px;
 }
 
 .chartBox{
 background:#fff;
-border-radius:14px;
 padding:14px;
+border-radius:14px;
 height:380px;
 }
 
@@ -217,20 +183,17 @@ height:100% !important;
 }
 
 @media(max-width:700px){
-.header h1{font-size:24px}
-.header h2{font-size:16px}
-.live{font-size:16px}
-.section{font-size:22px}
-
-th{font-size:10px}
-td{font-size:10px}
-
-.card p{font-size:28px}
+.header h1{font-size:24px;}
+.header h2{font-size:16px;}
+.section{font-size:22px;}
+th{font-size:10px;}
+td{font-size:10px;}
+.card p{font-size:28px;}
 }
 
 @media print{
-.topbar,.chartGrid,.live{display:none}
-body{background:#fff;color:#000}
+.topbar,.chartGrid,.live{display:none;}
+body{background:#fff;color:#000;}
 }
 </style>
 </head>
@@ -248,18 +211,18 @@ body{background:#fff;color:#000}
 <div class="topbar">
 <select id="floorSelect">
 <option value="ALL">ALL FLOOR</option>
-<option>Kadom R</option>
-<option>Kadom N</option>
-<option>Shapla R</option>
-<option>Shapla N</option>
-<option>Poddo R</option>
-<option>Poddo N</option>
-<option>Belly R</option>
-<option>Belly N</option>
-<option>Sample R</option>
-<option>Sample N</option>
-<option>EMBROIDERY R</option>
-<option>EMBROIDERY N</option>
+<option value="Kadom R">Kadom R</option>
+<option value="Kadom N">Kadom N</option>
+<option value="Shapla R">Shapla R</option>
+<option value="Shapla N">Shapla N</option>
+<option value="Poddo R">Poddo R</option>
+<option value="Poddo N">Poddo N</option>
+<option value="Belly R">Belly R</option>
+<option value="Belly N">Belly N</option>
+<option value="Sample R">Sample R</option>
+<option value="Sample N">Sample N</option>
+<option value="EMBROIDERY R">EMBROIDERY R</option>
+<option value="EMBROIDERY N">EMBROIDERY N</option>
 </select>
 
 <button onclick="window.print()">Print</button>
@@ -323,7 +286,7 @@ body{background:#fff;color:#000}
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-app.js";
 import { getFirestore, collection, onSnapshot } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-firestore.js";
 
-/* FIREBASE */
+/* FIREBASE CONFIG */
 const firebaseConfig = {
 apiKey: "AIzaSyD-wBCF5eeWMHobLFOhBzKW7aB2pagz9-w",
 authDomain: "gms-warehouse-tracker-7f57e.firebaseapp.com",
@@ -336,9 +299,12 @@ appId: "1:992250313291:web:ee3bceae76d4d53bc26bce"
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
-document.getElementById("floorSelect").addEventListener("change",loadReport);
+let stockChart=null;
+let trendChart=null;
 
-function loadReport(){
+document.getElementById("floorSelect").addEventListener("change",startLive);
+
+function startLive(){
 
 const floor=document.getElementById("floorSelect").value;
 
@@ -347,21 +313,23 @@ onSnapshot(collection(db,"dailyPosting"),(snap)=>{
 let allData=[];
 
 snap.forEach(doc=>{
-let data=doc.data();
-if(data.date) allData.push(data);
+const d=doc.data();
+if(d.date) allData.push(d);
 });
 
-renderData(allData,floor);
+renderReport(allData,floor);
 
+},(error)=>{
+console.error(error);
 });
 
 }
 
-function renderData(allData,selectedFloor){
+function renderReport(allData,selectedFloor){
 
 allData.sort((a,b)=>new Date(a.date)-new Date(b.date));
 
-let latestMap={};
+let map={};
 
 allData.forEach(day=>{
 
@@ -374,11 +342,8 @@ if(!row.needleType || !row.size) return;
 
 let key=day.floor+"_"+row.needleType+"_"+row.size;
 
-let present=Number(row.present)||0;
-let delivery=Number(row.delivery)||0;
-
-if(!latestMap[key]){
-latestMap[key]={
+if(!map[key]){
+map[key]={
 floor:day.floor,
 sl:row.sl||"",
 type:row.needleType,
@@ -390,14 +355,17 @@ history:[]
 };
 }
 
-latestMap[key].stock=present;
+let present=Number(row.present)||0;
+let delivery=Number(row.delivery)||0;
+
+map[key].stock=present;
 
 if(delivery>0){
-latestMap[key].deliveryTotal+=delivery;
-latestMap[key].deliveryDays++;
+map[key].deliveryTotal+=delivery;
+map[key].deliveryDays++;
 }
 
-latestMap[key].history.push(delivery);
+map[key].history.push(delivery);
 
 });
 
@@ -406,29 +374,29 @@ latestMap[key].history.push(delivery);
 let html="";
 let criticalHTML="";
 
-let total=0,running=0,slow=0,stop=0,critical=0,grand=0;
-let redAlertCount=0;
+let total=0,running=0,slow=0,stop=0,critical=0,grand=0,redCount=0;
 
-let labels=[],stockData=[],trendLabels=[],trendData=[];
+let labels=[];
+let stockData=[];
+let trendLabels=[];
+let trendData=[];
 
-Object.values(latestMap).forEach(item=>{
+Object.values(map).forEach(item=>{
 
 total++;
 grand+=item.stock;
 
-let avg=item.deliveryDays ? item.deliveryTotal/item.deliveryDays : 0;
-let stockDays=avg>0 ? item.stock/avg : 999;
-let runningDays=avg>0 ? Math.floor(stockDays)+" Days":"-";
+let avg=item.deliveryDays?item.deliveryTotal/item.deliveryDays:0;
+let stockDays=avg>0?item.stock/avg:999;
+let runningDays=avg>0?Math.floor(stockDays)+" Days":"-";
 
 let noDelivery=0;
-
 for(let i=item.history.length-1;i>=0;i--){
 if(item.history[i]>0) break;
 noDelivery++;
 }
 
 let stockClass="stock-normal";
-
 if(item.stock===0) stockClass="stock-empty";
 else if(stockDays<=5) stockClass="stock-warning";
 else if(noDelivery>=30) stockClass="stock-danger";
@@ -447,7 +415,7 @@ status="🚨 30 Days No Delivery";
 statusClass="status-stop";
 rowClass="redAlert";
 stop++;
-redAlertCount++;
+redCount++;
 }
 else if(noDelivery>=13){
 status="Slow Moving";
@@ -461,7 +429,7 @@ running++;
 if(stockDays<=5 && item.stock>0){
 critical++;
 
-criticalHTML += `
+criticalHTML+=`
 <tr>
 <td>${item.floor}</td>
 <td>${item.type}</td>
@@ -471,7 +439,7 @@ criticalHTML += `
 </tr>`;
 }
 
-html += `
+html+=`
 <tr class="${rowClass}">
 <td>${item.floor}</td>
 <td>${item.sl}</td>
@@ -491,7 +459,7 @@ trendData.push(item.deliveryTotal);
 
 });
 
-html += `
+html+=`
 <tr class="totalRow">
 <td colspan="4">GRAND TOTAL STOCK</td>
 <td>${grand}</td>
@@ -508,56 +476,49 @@ document.getElementById("noDeliveryItem").innerText=stop;
 document.getElementById("criticalItem").innerText=critical;
 document.getElementById("grandTotal").innerText=grand;
 
-/* ALERT BOX */
-if(redAlertCount>0){
-document.getElementById("alertBox").style.display="block";
-}else{
-document.getElementById("alertBox").style.display="none";
-}
+document.getElementById("alertBox").style.display=redCount>0?"block":"none";
 
-drawStockChart(labels,stockData);
-drawTrendChart(trendLabels,trendData);
+drawCharts(labels,stockData,trendLabels,trendData);
 
 }
 
-function drawStockChart(labels,data){
+function drawCharts(labels,stockData,trendLabels,trendData){
 
-let old=Chart.getChart("stockChart");
-if(old) old.destroy();
+if(stockChart) stockChart.destroy();
+if(trendChart) trendChart.destroy();
 
-new Chart(document.getElementById("stockChart"),{
+stockChart=new Chart(document.getElementById("stockChart"),{
 type:"bar",
 data:{
 labels:labels,
 datasets:[{
 label:"Current Stock",
-data:data,
+data:stockData,
 backgroundColor:"#2563eb"
 }]
 },
-options:{responsive:true,maintainAspectRatio:false}
+options:{
+responsive:true,
+maintainAspectRatio:false
+}
 });
 
-}
-
-function drawTrendChart(labels,data){
-
-let old=Chart.getChart("trendChart");
-if(old) old.destroy();
-
-new Chart(document.getElementById("trendChart"),{
+trendChart=new Chart(document.getElementById("trendChart"),{
 type:"line",
 data:{
-labels:labels,
+labels:trendLabels,
 datasets:[{
 label:"Needle Consumption",
-data:data,
+data:trendData,
 borderColor:"#22c55e",
 fill:false,
 tension:.3
 }]
 },
-options:{responsive:true,maintainAspectRatio:false}
+options:{
+responsive:true,
+maintainAspectRatio:false
+}
 });
 
 }
@@ -566,18 +527,17 @@ window.exportExcel=function(){
 let table=document.getElementById("mainTable");
 let wb=XLSX.utils.table_to_book(table,{sheet:"Needle Report"});
 XLSX.writeFile(wb,"Needle_Ageing_Report.xlsx");
-}
+};
 
 window.downloadPDF=function(){
 html2pdf().from(document.body).save("Needle_Ageing_Report.pdf");
-}
+};
 
-/* DARK WHITE MODE */
 window.toggleMode=function(){
 document.body.classList.toggle("light");
-}
+};
 
-loadReport();
+startLive();
 
 </script>
 
