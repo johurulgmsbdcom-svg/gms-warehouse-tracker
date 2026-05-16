@@ -4,11 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
     <title>GMS MCD ERP SYSTEM</title>
-    <!-- Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
-    <!-- Chart.js -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <!-- Icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
     <style>
@@ -26,9 +23,8 @@
             --bg-card-light: #ffffff;
             --text-light: #0f172a;
             --text-muted-light: #64748b;
-            --shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+            --shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
             --radius: 12px;
-            --transition: all 0.3s ease;
         }
 
         * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -37,7 +33,6 @@
             background-color: var(--bg-dark);
             color: var(--text-dark);
             overflow-x: hidden;
-            transition: var(--transition);
         }
 
         body.light-mode {
@@ -45,13 +40,6 @@
             color: var(--text-light);
         }
 
-        /* Scrollbar */
-        ::-webkit-scrollbar { width: 8px; }
-        ::-webkit-scrollbar-track { background: transparent; }
-        ::-webkit-scrollbar-thumb { background: #475569; border-radius: 4px; }
-        body.light-mode ::-webkit-scrollbar-thumb { background: #cbd5e1; }
-
-        /* Layout */
         .app-container { display: flex; min-height: 100vh; }
 
         /* Sidebar */
@@ -62,7 +50,6 @@
             position: fixed;
             top: 0; bottom: 0; left: 0;
             z-index: 100;
-            transition: var(--transition);
             display: flex;
             flex-direction: column;
         }
@@ -78,8 +65,6 @@
             gap: 12px;
             border-bottom: 1px solid rgba(255,255,255,0.1);
         }
-        body.light-mode .sidebar-header { border-bottom: 1px solid #e2e8f0; }
-        
         .logo-icon {
             width: 40px; height: 40px;
             background: linear-gradient(135deg, var(--primary), var(--secondary));
@@ -87,9 +72,8 @@
             display: flex; align-items: center; justify-content: center;
             font-weight: 800; font-size: 20px; color: #fff;
         }
-        .logo-text h1 { font-size: 18px; font-weight: 700; line-height: 1.2; }
-        .logo-text span { font-size: 11px; color: var(--text-muted-dark); font-weight: 500; }
-        body.light-mode .logo-text span { color: var(--text-muted-light); }
+        .logo-text h1 { font-size: 18px; font-weight: 700; }
+        .logo-text span { font-size: 11px; color: var(--text-muted-dark); }
 
         .nav-menu { flex: 1; padding: 20px 12px; overflow-y: auto; }
         .nav-item {
@@ -97,35 +81,28 @@
             padding: 12px 16px;
             border-radius: var(--radius);
             color: var(--text-muted-dark);
-            text-decoration: none;
             font-size: 14px; font-weight: 500;
             margin-bottom: 4px;
-            transition: var(--transition);
             cursor: pointer;
+            text-decoration: none;
         }
-        body.light-mode .nav-item { color: var(--text-muted-light); }
         .nav-item:hover, .nav-item.active {
             background: var(--primary);
             color: #fff;
         }
-        .nav-item i { width: 20px; text-align: center; }
 
         .sidebar-footer { padding: 20px; border-top: 1px solid rgba(255,255,255,0.1); }
-        body.light-mode .sidebar-footer { border-top: 1px solid #e2e8f0; }
         .theme-toggle-btn {
             width: 100%; padding: 10px;
             background: rgba(255,255,255,0.1);
             border: none; border-radius: var(--radius);
             color: inherit; font-weight: 600; cursor: pointer;
-            display: flex; align-items: center; justify-content: center; gap: 8px;
         }
-        body.light-mode .theme-toggle-btn { background: #f1f5f9; }
 
         /* Main Content */
         .main-content {
             flex: 1;
             margin-left: 260px;
-            transition: var(--transition);
             display: flex;
             flex-direction: column;
         }
@@ -156,17 +133,11 @@
             border: 1px solid rgba(255,255,255,0.1);
             border-radius: var(--radius);
             color: inherit;
-            font-size: 14px;
-        }
-        body.light-mode .search-box input {
-            background: #f8fafc;
-            border: 1px solid #e2e8f0;
         }
         .search-box i {
             position: absolute; left: 14px; top: 50%; transform: translateY(-50%);
             color: var(--text-muted-dark);
         }
-        body.light-mode .search-box i { color: var(--text-muted-light); }
 
         .top-actions { display: flex; align-items: center; gap: 16px; }
         .action-btn {
@@ -176,11 +147,6 @@
             border: 1px solid rgba(255,255,255,0.1);
             display: flex; align-items: center; justify-content: center;
             cursor: pointer; position: relative;
-            color: inherit;
-        }
-        body.light-mode .action-btn {
-            background: #f8fafc;
-            border: 1px solid #e2e8f0;
         }
         .badge {
             position: absolute; top: -4px; right: -4px;
@@ -189,10 +155,7 @@
             color: #fff; font-size: 10px; font-weight: 700;
             border-radius: 50%;
             display: flex; align-items: center; justify-content: center;
-            border: 2px solid var(--bg-card-dark);
         }
-        body.light-mode .badge { border-color: var(--bg-card-light); }
-
         .user-profile {
             display: flex; align-items: center; gap: 12px;
             padding: 6px 12px;
@@ -204,25 +167,12 @@
             border-radius: 50%;
             background: linear-gradient(135deg, var(--primary), var(--secondary));
             display: flex; align-items: center; justify-content: center;
-            font-weight: 700; color: #fff; font-size: 14px;
+            font-weight: 700; color: #fff;
         }
-        .user-info h4 { font-size: 13px; font-weight: 600; line-height: 1.2; }
+        .user-info h4 { font-size: 13px; font-weight: 600; }
         .user-info p { font-size: 11px; color: var(--text-muted-dark); }
-        body.light-mode .user-info p { color: var(--text-muted-light); }
 
         .mobile-menu-btn { display: none; font-size: 20px; cursor: pointer; margin-right: 16px; }
-        
-        /* Top Bar Center Title */
-        .top-bar-center {
-            font-size: 18px;
-            font-weight: 700;
-            color: var(--text-dark);
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-        body.light-mode .top-bar-center { color: var(--text-light); }
-        .top-bar-center i { color: var(--primary); }
 
         /* Notice Bar */
         .notice-bar {
@@ -230,15 +180,13 @@
             color: #fff;
             padding: 8px 24px;
             font-size: 13px; font-weight: 600;
-            white-space: nowrap; overflow: hidden;
+            overflow: hidden;
         }
-        .notice-text { display: inline-block; animation: scrollNotice 20s linear infinite; }
-        @keyframes scrollNotice { 0% { transform: translateX(100%); } 100% { transform: translateX(-100%); } }
 
         /* Dashboard Content */
         .dashboard-content { padding: 24px; flex: 1; }
 
-        /* Live Signal Card */
+        /* Live Signal */
         .live-signal-card {
             background: linear-gradient(135deg, #10b981, #059669);
             border-radius: var(--radius);
@@ -246,32 +194,8 @@
             text-align: center;
             color: #fff;
             margin-bottom: 24px;
-            position: relative;
-            overflow: hidden;
-            box-shadow: 0 10px 25px rgba(16, 185, 129, 0.3);
         }
-        .live-signal-card::before {
-            content: ''; position: absolute; top: -50%; left: -50%;
-            width: 200%; height: 200%;
-            background: radial-gradient(circle, rgba(255,255,255,0.2), transparent 60%);
-            animation: liveGlow 3s ease-in-out infinite;
-        }
-        @keyframes liveGlow { 0%, 100% { opacity: 0.5; transform: scale(0.8); } 50% { opacity: 1; transform: scale(1.2); } }
-        .live-badge {
-            display: inline-flex; align-items: center; gap: 8px;
-            background: rgba(255,255,255,0.2);
-            padding: 6px 12px; border-radius: 20px;
-            font-size: 11px; font-weight: 700;
-            text-transform: uppercase; letter-spacing: 1px;
-            position: relative; z-index: 1;
-        }
-        .live-dot {
-            width: 10px; height: 10px; background: #fff;
-            border-radius: 50%;
-            animation: pulseDot 1.5s infinite;
-        }
-        @keyframes pulseDot { 0% { box-shadow: 0 0 0 0 rgba(255,255,255,0.7); } 70% { box-shadow: 0 0 0 10px rgba(255,255,255,0); } 100% { box-shadow: 0 0 0 0 rgba(255,255,255,0); } }
-        .live-text { font-size: 48px; font-weight: 800; letter-spacing: 2px; position: relative; z-index: 1; margin-top: 10px; }
+        .live-text { font-size: 48px; font-weight: 800; margin-top: 10px; }
 
         /* Stats Grid */
         .stats-grid {
@@ -285,15 +209,11 @@
             border-radius: var(--radius);
             padding: 20px;
             display: flex; align-items: center; gap: 16px;
-            box-shadow: var(--shadow);
-            border: 1px solid rgba(255,255,255,0.05);
-            transition: var(--transition);
         }
         body.light-mode .stat-card {
             background: var(--bg-card-light);
             border: 1px solid #e2e8f0;
         }
-        .stat-card:hover { transform: translateY(-4px); }
         .stat-icon {
             width: 50px; height: 50px;
             border-radius: 12px;
@@ -304,15 +224,10 @@
         .stat-icon.green { background: rgba(16, 185, 129, 0.1); color: #10b981; }
         .stat-icon.orange { background: rgba(245, 158, 11, 0.1); color: #f59e0b; }
         .stat-icon.purple { background: rgba(139, 92, 246, 0.1); color: #8b5cf6; }
-        
-        .stat-info h3 { font-size: 24px; font-weight: 800; line-height: 1.2; margin-bottom: 4px; }
-        .stat-info p { font-size: 13px; color: var(--text-muted-dark); font-weight: 500; }
-        body.light-mode .stat-info p { color: var(--text-muted-light); }
-        .stat-change { font-size: 12px; font-weight: 600; margin-top: 6px; }
-        .stat-change.up { color: #10b981; }
-        .stat-change.down { color: #ef4444; }
+        .stat-info h3 { font-size: 24px; font-weight: 800; margin-bottom: 4px; }
+        .stat-info p { font-size: 13px; color: var(--text-muted-dark); }
 
-        /* Needle Special Buttons */
+        /* Needle Buttons */
         .needle-special-btns {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
@@ -326,11 +241,7 @@
             color: #fff;
             display: flex; align-items: center; gap: 16px;
             cursor: pointer;
-            transition: var(--transition);
-            box-shadow: 0 10px 20px rgba(99, 102, 241, 0.3);
         }
-        .special-btn:hover { transform: translateY(-4px); box-shadow: 0 15px 25px rgba(99, 102, 241, 0.4); }
-        .special-btn i { font-size: 24px; opacity: 0.9; }
         .special-btn h3 { font-size: 16px; font-weight: 700; margin-bottom: 4px; }
         .special-btn p { font-size: 12px; opacity: 0.9; }
 
@@ -345,32 +256,17 @@
             background: var(--bg-card-dark);
             border-radius: var(--radius);
             padding: 20px;
-            box-shadow: var(--shadow);
-            border: 1px solid rgba(255,255,255,0.05);
         }
         body.light-mode .chart-card {
             background: var(--bg-card-light);
             border: 1px solid #e2e8f0;
         }
-        .chart-header {
-            display: flex; align-items: center; justify-content: space-between;
-            margin-bottom: 16px;
-        }
-        .chart-header h3 { font-size: 16px; font-weight: 700; }
+        .chart-header h3 { font-size: 16px; font-weight: 700; margin-bottom: 16px; }
         .chart-container { position: relative; height: 300px; }
 
         /* MCD Section */
-        .mcd-section {
-            margin-bottom: 24px;
-        }
-        .section-title {
-            font-size: 18px;
-            font-weight: 700;
-            margin-bottom: 16px;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
+        .mcd-section { margin-bottom: 24px; }
+        .section-title { font-size: 18px; font-weight: 700; margin-bottom: 16px; }
         .mcd-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
@@ -380,8 +276,6 @@
             background: var(--bg-card-dark);
             border-radius: var(--radius);
             padding: 20px;
-            box-shadow: var(--shadow);
-            border: 1px solid rgba(255,255,255,0.05);
         }
         body.light-mode .mcd-card {
             background: var(--bg-card-light);
@@ -390,7 +284,6 @@
         .mcd-header {
             font-size: 16px;
             font-weight: 700;
-            color: inherit;
             margin-bottom: 16px;
             padding-bottom: 12px;
             border-bottom: 1px solid rgba(255,255,255,0.1);
@@ -398,27 +291,20 @@
             align-items: center;
             gap: 8px;
         }
-        body.light-mode .mcd-header { border-bottom: 1px solid #e2e8f0; }
         .mcd-row {
             display: flex;
             justify-content: space-between;
             padding: 8px 0;
             font-size: 13px;
-            border-bottom: 1px solid rgba(255,255,255,0.05);
         }
-        body.light-mode .mcd-row { border-bottom: 1px solid #f1f5f9; }
-        .mcd-row:last-child { border-bottom: none; }
-        .mcd-label { color: var(--text-muted-dark); font-weight: 500; }
-        body.light-mode .mcd-label { color: var(--text-muted-light); }
+        .mcd-label { color: var(--text-muted-dark); }
         .mcd-value { font-weight: 700; color: var(--secondary); }
 
-        /* Attendance Section */
+        /* Attendance Section with Line Chart */
         .attendance-section {
             background: var(--bg-card-dark);
             border-radius: var(--radius);
             padding: 20px;
-            box-shadow: var(--shadow);
-            border: 1px solid rgba(255,255,255,0.05);
             margin-bottom: 24px;
         }
         body.light-mode .attendance-section {
@@ -429,32 +315,20 @@
             display: flex; align-items: center; justify-content: space-between;
             margin-bottom: 16px;
         }
-        .attendance-list {
-            display: flex; flex-direction: column; gap: 12px;
+        .attendance-stats {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 12px;
+            margin-bottom: 20px;
         }
-        .att-item {
-            display: flex; align-items: center; justify-content: space-between;
+        .att-stat-box {
+            text-align: center;
             padding: 12px;
-            background: rgba(255,255,255,0.03);
+            background: rgba(255,255,255,0.05);
             border-radius: 10px;
         }
-        body.light-mode .att-item { background: #f8fafc; }
-        .att-item-left { display: flex; align-items: center; gap: 12px; }
-        .att-avatar {
-            width: 40px; height: 40px; border-radius: 10px;
-            background: var(--primary);
-            display: flex; align-items: center; justify-content: center;
-            color: #fff; font-weight: 700; font-size: 16px;
-        }
-        .att-info h4 { font-size: 14px; font-weight: 600; }
-        .att-info p { font-size: 12px; color: var(--text-muted-dark); }
-        body.light-mode .att-info p { color: var(--text-muted-light); }
-        .att-status {
-            padding: 4px 10px; border-radius: 20px; font-size: 11px; font-weight: 600;
-        }
-        .att-status.present { background: rgba(16, 185, 129, 0.1); color: #10b981; }
-        .att-status.absent { background: rgba(239, 68, 68, 0.1); color: #ef4444; }
-        .att-status.leave { background: rgba(245, 158, 11, 0.1); color: #f59e0b; }
+        .att-stat-box div:first-child { font-size: 20px; font-weight: 700; }
+        .att-stat-box div:last-child { font-size: 11px; color: var(--text-muted-dark); }
 
         /* Footer */
         .app-footer {
@@ -462,10 +336,6 @@
             text-align: center;
             border-top: 1px solid rgba(255,255,255,0.1);
             background: var(--bg-card-dark);
-        }
-        body.light-mode .app-footer {
-            border-top: 1px solid #e2e8f0;
-            background: var(--bg-card-light);
         }
         .credits { display: flex; justify-content: center; gap: 32px; flex-wrap: wrap; margin-top: 16px; }
         .credit-item { display: flex; align-items: center; gap: 10px; }
@@ -476,26 +346,17 @@
         }
         .credit-text h4 { font-size: 13px; font-weight: 600; }
         .credit-text p { font-size: 11px; color: var(--text-muted-dark); }
-        body.light-mode .credit-text p { color: var(--text-muted-light); }
 
-        /* Mobile Responsive */
         @media (max-width: 1024px) {
             .sidebar { transform: translateX(-100%); }
             .sidebar.active { transform: translateX(0); }
             .main-content { margin-left: 0; }
             .mobile-menu-btn { display: block; }
-            .search-box { width: 200px; }
-            .charts-grid { grid-template-columns: 1fr; }
-            .top-bar-center { display: none; } /* Hide center title on mobile */
         }
         @media (max-width: 640px) {
             .search-box { display: none; }
-            .top-actions .action-btn:nth-child(1),
-            .top-actions .action-btn:nth-child(2) { display: none; }
-            .user-info { display: none; }
-            .stats-grid { grid-template-columns: 1fr; }
-            .needle-special-btns { grid-template-columns: 1fr; }
-            .credits { flex-direction: column; gap: 16px; }
+            .stats-grid, .attendance-stats { grid-template-columns: 1fr; }
+            .charts-grid { grid-template-columns: 1fr; }
         }
     </style>
 </head>
@@ -513,13 +374,13 @@
         </div>
         <nav class="nav-menu">
             <a href="#" class="nav-item active" onclick="setActive(this)"><i class="fas fa-home"></i> Dashboard</a>
-            <a href="entry.html" class="nav-item" onclick="setActive(this)"><i class="fas fa-plus-circle"></i> New Entry</a>
-            <a href="reports.html" class="nav-item" onclick="setActive(this)"><i class="fas fa-chart-bar"></i> Reports</a>
-            <a href="needle.html" class="nav-item" onclick="setActive(this)"><i class="fas fa-tint"></i> Needle</a>
+            <a href="entry.html" class="nav-item"><i class="fas fa-plus-circle"></i> New Entry</a>
+            <a href="reports.html" class="nav-item"><i class="fas fa-chart-bar"></i> Reports</a>
+            <a href="needle.html" class="nav-item"><i class="fas fa-tint"></i> Needle</a>
             <a href="admin.html" class="nav-item"><i class="fas fa-crown"></i> Admin</a>
             <a href="manpower.html" class="nav-item"><i class="fas fa-users"></i> Manpower</a>
             <a href="notice.html" class="nav-item"><i class="fas fa-bullhorn"></i> Notice</a>
-            <a href="online-users.html" class="nav-item"><i class="fas fa-circle" style="color:#10b981; font-size:10px;"></i> Online</a>
+            <a href="online-users.html" class="nav-item"><i class="fas fa-circle" style="color:#10b981;font-size:10px;"></i> Online</a>
             <a href="audit-history.html" class="nav-item"><i class="fas fa-clipboard-list"></i> Audit</a>
             <a href="backup.html" class="nav-item"><i class="fas fa-cloud"></i> Backup</a>
             <a href="change-password.html" class="nav-item"><i class="fas fa-lock"></i> Password</a>
@@ -535,19 +396,13 @@
     <main class="main-content">
         <!-- Top Bar -->
         <header class="top-bar">
-            <div style="display:flex; align-items:center;">
+            <div style="display:flex;align-items:center;">
                 <i class="fas fa-bars mobile-menu-btn" onclick="toggleSidebar()"></i>
                 <div class="search-box">
                     <i class="fas fa-search"></i>
                     <input type="text" placeholder="Search items, reports...">
                 </div>
             </div>
-            
-            <!-- Center Title to fill empty space -->
-            <div class="top-bar-center">
-                <i class="fas fa-industry"></i> GMS MCD ERP System
-            </div>
-
             <div class="top-actions">
                 <div class="action-btn" onclick="showNotifications()">
                     <i class="fas fa-bell"></i>
@@ -569,17 +424,15 @@
 
         <!-- Notice Bar -->
         <div class="notice-bar">
-            <span class="notice-text">📢 WAHIDUZZAMAN SIR-AGM | MCD: Welcome to MCD Department • Live Update Active • Stock Management System</span>
+            <span>📢 WAHIDUZZAMAN SIR-AGM | MCD: Welcome to MCD Department • Live Update Active</span>
         </div>
 
         <!-- Dashboard Content -->
-        <div class="dashboard-content" id="dashboard-content">
+        <div class="dashboard-content">
             
             <!-- Live Signal -->
             <div class="live-signal-card">
-                <div class="live-badge">
-                    <span class="live-dot"></span> Live Update Signal
-                </div>
+                <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1px;opacity:0.9;">Live Update Signal</div>
                 <div class="live-text">LIVE</div>
             </div>
 
@@ -590,7 +443,6 @@
                     <div class="stat-info">
                         <p>Accessories Stock</p>
                         <h3 id="accStock">0</h3>
-                        <div class="stat-change up"><i class="fas fa-arrow-up"></i> +2.3%</div>
                     </div>
                 </div>
                 <div class="stat-card">
@@ -598,7 +450,6 @@
                     <div class="stat-info">
                         <p>Sewing Thread</p>
                         <h3 id="sewStock">0</h3>
-                        <div class="stat-change up"><i class="fas fa-arrow-up"></i> +0.8%</div>
                     </div>
                 </div>
                 <div class="stat-card">
@@ -606,7 +457,6 @@
                     <div class="stat-info">
                         <p>Twill Tape</p>
                         <h3 id="twillStock">0</h3>
-                        <div class="stat-change down"><i class="fas fa-arrow-down"></i> -0.8%</div>
                     </div>
                 </div>
                 <div class="stat-card">
@@ -614,7 +464,6 @@
                     <div class="stat-info">
                         <p>Needle Stock</p>
                         <h3 id="needleStock">0</h3>
-                        <div class="stat-change up"><i class="fas fa-arrow-up"></i> +4.7%</div>
                     </div>
                 </div>
             </div>
@@ -622,131 +471,72 @@
             <!-- Needle Special Buttons -->
             <div class="needle-special-btns">
                 <div class="special-btn" onclick="openMonthWiseNeedleStock()">
-                    <i class="fas fa-calendar-alt"></i>
+                    <i class="fas fa-calendar-alt" style="font-size:24px;"></i>
                     <div>
                         <h3>Month Wise Needle Stock Summary</h3>
-                        <p>View monthly needle stock reports and analytics</p>
+                        <p>View monthly needle stock reports</p>
                     </div>
                 </div>
                 <div class="special-btn" onclick="openMonthWiseFloorStock()">
-                    <i class="fas fa-building"></i>
+                    <i class="fas fa-building" style="font-size:24px;"></i>
                     <div>
                         <h3>Month Wise Floor Stock Report</h3>
-                        <p>Floor wise needle distribution and usage</p>
+                        <p>Floor wise needle distribution</p>
                     </div>
                 </div>
             </div>
 
             <!-- Charts Grid -->
             <div class="charts-grid">
-                <!-- Accessories Chart (Pie) -->
                 <div class="chart-card">
-                    <div class="chart-header">
-                        <h3>Accessories Stock Chart</h3>
-                    </div>
-                    <div class="chart-container">
-                        <canvas id="accChart"></canvas>
-                    </div>
+                    <div class="chart-header"><h3>Accessories Stock Chart</h3></div>
+                    <div class="chart-container"><canvas id="accChart"></canvas></div>
                 </div>
-
-                <!-- Needle Floor Wise (Bar) -->
                 <div class="chart-card">
-                    <div class="chart-header">
-                        <h3>Needle Floor Wise Stock</h3>
-                    </div>
-                    <div class="chart-container">
-                        <canvas id="needleChart"></canvas>
-                    </div>
+                    <div class="chart-header"><h3>Needle Floor Wise Stock</h3></div>
+                    <div class="chart-container"><canvas id="needleChart"></canvas></div>
                 </div>
-
-                <!-- Grey Fabric Chart (Pie) -->
                 <div class="chart-card">
-                    <div class="chart-header">
-                        <h3>Grey Fabric Present Stock Summary</h3>
-                    </div>
-                    <div class="chart-container">
-                        <canvas id="greyChart"></canvas>
-                    </div>
+                    <div class="chart-header"><h3>Grey Fabric Present Stock Summary</h3></div>
+                    <div class="chart-container"><canvas id="greyChart"></canvas></div>
                 </div>
-
-                <!-- Needle Issues Chart (Pie) -->
                 <div class="chart-card">
-                    <div class="chart-header">
-                        <h3>Needle Broken / Missing / Change</h3>
-                    </div>
-                    <div class="chart-container">
-                        <canvas id="needleIssueChart"></canvas>
-                    </div>
+                    <div class="chart-header"><h3>Needle Broken / Missing / Change</h3></div>
+                    <div class="chart-container"><canvas id="needleIssueChart"></canvas></div>
                 </div>
             </div>
 
-            <!-- MCD Section (All Departments) -->
+            <!-- MCD Section -->
             <div class="mcd-section">
                 <div class="section-title"><i class="fas fa-industry"></i> Department Summary</div>
-                <div id="mcdDashboard" class="mcd-grid">
-                    <!-- MCD Cards will be injected here by JS -->
-                    <div class="mcd-card" style="text-align:center; padding:40px;">
-                        <i class="fas fa-spinner fa-spin" style="font-size:24px; color:var(--primary);"></i>
-                        <p style="margin-top:10px; color:var(--text-muted-dark);">Loading Departments...</p>
-                    </div>
-                </div>
+                <div id="mcdDashboard" class="mcd-grid"></div>
             </div>
 
-            <!-- Attendance Section -->
+            <!-- Attendance Section with Line Chart -->
             <div class="attendance-section">
                 <div class="attendance-header">
-                    <h3><i class="fas fa-users" style="margin-right:8px; color:var(--primary);"></i> Attendance Manpower</h3>
-                    <span style="font-size:12px; color:var(--text-muted-dark);">Today's Overview</span>
+                    <h3><i class="fas fa-chart-line" style="margin-right:8px;color:var(--primary);"></i> Attendance Manpower Trend</h3>
                 </div>
-                <div class="stats-grid" style="margin-bottom:16px;">
-                    <div style="text-align:center; padding:12px; background:rgba(255,255,255,0.05); border-radius:10px;">
-                        <div style="font-size:20px; font-weight:700; color:#6366f1;" id="attTotal">0</div>
-                        <div style="font-size:11px; color:var(--text-muted-dark);">Total Manpower</div>
+                <div class="attendance-stats">
+                    <div class="att-stat-box">
+                        <div style="color:#6366f1;" id="attTotal">0</div>
+                        <div>Total Manpower</div>
                     </div>
-                    <div style="text-align:center; padding:12px; background:rgba(255,255,255,0.05); border-radius:10px;">
-                        <div style="font-size:20px; font-weight:700; color:#10b981;" id="attPresent">0</div>
-                        <div style="font-size:11px; color:var(--text-muted-dark);">Present</div>
+                    <div class="att-stat-box">
+                        <div style="color:#10b981;" id="attPresent">0</div>
+                        <div>Present</div>
                     </div>
-                    <div style="text-align:center; padding:12px; background:rgba(255,255,255,0.05); border-radius:10px;">
-                        <div style="font-size:20px; font-weight:700; color:#f59e0b;" id="attLeave">0</div>
-                        <div style="font-size:11px; color:var(--text-muted-dark);">Leave</div>
+                    <div class="att-stat-box">
+                        <div style="color:#f59e0b;" id="attLeave">0</div>
+                        <div>Leave</div>
                     </div>
-                    <div style="text-align:center; padding:12px; background:rgba(255,255,255,0.05); border-radius:10px;">
-                        <div style="font-size:20px; font-weight:700; color:#ef4444;" id="attAbsent">0</div>
-                        <div style="font-size:11px; color:var(--text-muted-dark);">Absent</div>
+                    <div class="att-stat-box">
+                        <div style="color:#ef4444;" id="attAbsent">0</div>
+                        <div>Absent</div>
                     </div>
                 </div>
-                <div class="attendance-list">
-                    <div class="att-item">
-                        <div class="att-item-left">
-                            <div class="att-avatar">M</div>
-                            <div class="att-info">
-                                <h4>Md. Manpower</h4>
-                                <p>General Worker</p>
-                            </div>
-                        </div>
-                        <span class="att-status present">Present</span>
-                    </div>
-                    <div class="att-item">
-                        <div class="att-item-left">
-                            <div class="att-avatar" style="background:var(--secondary);">S</div>
-                            <div class="att-info">
-                                <h4>Supervisor Staff</h4>
-                                <p>Line Supervisor</p>
-                            </div>
-                        </div>
-                        <span class="att-status leave">Leave</span>
-                    </div>
-                    <div class="att-item">
-                        <div class="att-item-left">
-                            <div class="att-avatar" style="background:var(--accent);">O</div>
-                            <div class="att-info">
-                                <h4>Office Staff</h4>
-                                <p>Admin Assistant</p>
-                            </div>
-                        </div>
-                        <span class="att-status absent">Absent</span>
-                    </div>
+                <div class="chart-container" style="height:250px;">
+                    <canvas id="attendanceChart"></canvas>
                 </div>
             </div>
 
@@ -754,7 +544,7 @@
 
         <!-- Footer -->
         <footer class="app-footer">
-            <p style="font-size:12px; color:var(--text-muted-dark); margin-bottom:8px;">Powered by GMS MCD ERP System</p>
+            <p style="font-size:12px;color:var(--text-muted-dark);">Powered by GMS MCD ERP System</p>
             <div class="credits">
                 <div class="credit-item">
                     <img src="https://i.ibb.co/5hzT1VGk/IMG.jpg" alt="Johurul" class="credit-img">
@@ -784,7 +574,7 @@
 
 <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-app.js";
-    import { getFirestore, collection, getDocs, doc, updateDoc } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-firestore.js";
+    import { getFirestore, collection, getDocs } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-firestore.js";
 
     const firebaseConfig = {
         apiKey: "AIzaSyD-wBCF5eeWMHobLFOhBzKW7aB2pagz9-w",
@@ -798,19 +588,10 @@
     const app = initializeApp(firebaseConfig);
     const db = getFirestore(app);
 
-    // Check User
-    const user = JSON.parse(localStorage.getItem("gmsUser") || "null");
-    if (!user) {
-        // For demo purposes, we'll comment out the redirect. Uncomment in production.
-        // window.location.href = "login.html";
-    }
-
-    // Helper Functions
     function parseNum(v) { return Number(String(v || 0).replace(/,/g, "")) || 0; }
     function fmt(v) { return parseNum(v).toLocaleString("en-US"); }
     function today() { return new Date().toISOString().slice(0, 10); }
 
-    // Fetch Data
     async function getLatestPresent(collectionName, openingStock) {
         try {
             let snap = await getDocs(collection(db, collectionName));
@@ -820,17 +601,13 @@
             let r = 0, dv = 0;
             rows.forEach(x => { r += Number(x.receive) || 0; dv += Number(x.delivery) || 0; });
             return openingStock + r - dv;
-        } catch (e) {
-            console.error(e);
-            return openingStock;
-        }
+        } catch (e) { return openingStock; }
     }
 
     async function getNeedleFloorStock() {
         const FLOOR_OPENING = {
             "Kadom R": 618, "Kadom N": 443, "Poddo R": 1889, "Poddo N": 401,
-            "Shapla R": 1171, "Shapla N": 573, "Sample R": 1138, "Sample N": 251,
-            "EMBROIDERY R": 1011, "EMBROIDERY N": 287, "Belly R": 796, "Belly N": 335
+            "Shapla R": 1171, "Shapla N": 573, "Sample R": 1138, "Sample N": 251
         };
         try {
             let snap = await getDocs(collection(db, "dailyPosting"));
@@ -852,30 +629,23 @@
                 total += stock;
             });
             return { floorStocks, total };
-        } catch (e) {
-            console.error(e);
-            return { floorStocks: FLOOR_OPENING, total: Object.values(FLOOR_OPENING).reduce((a,b)=>a+b,0) };
-        }
+        } catch (e) { return { floorStocks: FLOOR_OPENING, total: 7000 }; }
     }
 
     async function getGreyData() {
         try {
             let snap = await getDocs(collection(db, "greyFabricStock"));
             let docs = [];
-            snap.forEach(d => { let x = d.data(); if (x.date && x.rows && x.rows.length > 0) docs.push(x); });
+            snap.forEach(d => { let x = d.data(); if (x.date && x.rows) docs.push(x); });
             docs.sort((a, b) => (b.date || "").localeCompare(a.date || ""));
-            let latest = docs[0] || { rows: [], date: "" };
+            let latest = docs[0] || { rows: [] };
             let labels = [], data = [], total = 0;
             (latest.rows || []).forEach(r => {
-                let closing = parseNum(r.closing || r.closingBalance || 0);
-                if (closing > 0) { labels.push(r.year || r.fabric || "Item"); data.push(closing); total += closing; }
+                let closing = parseNum(r.closing || 0);
+                if (closing > 0) { labels.push(r.fabric || "Item"); data.push(closing); total += closing; }
             });
-            if (total > 0) { labels.push("Grand Total"); data.push(total); }
-            return { labels, data, total, date: latest.date || "" };
-        } catch (e) {
-            console.error(e);
-            return { labels: [], data: [], total: 0, date: "" };
-        }
+            return { labels: labels.length ? labels : ["No Data"], data: data.length ? data : [0], total };
+        } catch (e) { return { labels: ["No Data"], data: [0], total: 0 }; }
     }
 
     async function getNeedleIssueToday() {
@@ -888,13 +658,9 @@
             return {
                 broken: parseNum(latest.brokenNeedle),
                 missing: parseNum(latest.missingNeedle),
-                change: parseNum(latest.changeNeedle),
-                date: latest.date || ""
+                change: parseNum(latest.changeNeedle)
             };
-        } catch (e) {
-            console.error(e);
-            return { broken: 0, missing: 0, change: 0, date: "" };
-        }
+        } catch (e) { return { broken: 0, missing: 0, change: 0 }; }
     }
 
     async function getBillingToday() {
@@ -911,13 +677,9 @@
                 }
             });
             return { total, leave, absent, present };
-        } catch (e) {
-            console.error(e);
-            return { total: 0, leave: 0, absent: 0, present: 0 };
-        }
+        } catch (e) { return { total: 0, leave: 0, absent: 0, present: 0 }; }
     }
 
-    // Render Charts
     const valPlugin = {
         id: 'valPlugin',
         afterDatasetsDraw(chart) {
@@ -926,13 +688,22 @@
             ctx.font = 'bold 11px Inter';
             ctx.fillStyle = document.body.classList.contains('light-mode') ? '#0f172a' : '#f8fafc';
             ctx.textAlign = 'center';
-            ctx.textBaseline = 'bottom';
             chart.data.datasets.forEach((dataset, i) => {
                 const meta = chart.getDatasetMeta(i);
                 meta.data.forEach((bar, index) => {
                     const value = dataset.data[index];
                     if (value === undefined || value === null) return;
-                    ctx.fillText(fmt(value), bar.x, bar.y - 5);
+                    if (chart.config.type === 'doughnut' || chart.config.type === 'pie') {
+                        const centerX = bar.x;
+                        const centerY = bar.y;
+                        const radius = (bar.outerRadius - bar.innerRadius) / 2;
+                        const angle = (bar.startAngle + bar.endAngle) / 2;
+                        const x = centerX + Math.cos(angle) * (bar.innerRadius + radius);
+                        const y = centerY + Math.sin(angle) * (bar.innerRadius + radius);
+                        ctx.fillText(fmt(value), x, y);
+                    } else {
+                        ctx.fillText(fmt(value), bar.x, bar.y - 5);
+                    }
                 });
             });
             ctx.restore();
@@ -942,7 +713,6 @@
     Chart.defaults.font.family = "'Inter', sans-serif";
 
     function renderCharts(sewing, accessories, twill, floorStocks, grey, needleIssue) {
-        // Accessories Pie Chart
         new Chart(document.getElementById("accChart"), {
             type: 'doughnut',
             data: {
@@ -957,21 +727,19 @@
                 responsive: true,
                 maintainAspectRatio: false,
                 plugins: {
-                    legend: { position: 'bottom', labels: { color: document.body.classList.contains('light-mode') ? '#0f172a' : '#f8fafc' } },
-                    tooltip: { callbacks: { label: (ctx) => `${ctx.label}: ${fmt(ctx.raw)}` } }
+                    legend: { position: 'bottom', labels: { color: document.body.classList.contains('light-mode') ? '#0f172a' : '#f8fafc' } }
                 }
             },
             plugins: [valPlugin]
         });
 
-        // Needle Floor Bar Chart
         new Chart(document.getElementById("needleChart"), {
             type: 'bar',
             data: {
                 labels: Object.keys(floorStocks),
                 datasets: [{
                     data: Object.values(floorStocks),
-                    backgroundColor: chartColors(Object.keys(floorStocks).length),
+                    backgroundColor: ['#6366f1', '#10b981', '#f59e0b', '#8b5cf6', '#ef4444', '#14b8a6', '#eab308', '#ec4899'],
                     borderRadius: 6
                 }]
             },
@@ -980,21 +748,20 @@
                 maintainAspectRatio: false,
                 plugins: { legend: { display: false } },
                 scales: {
-                    y: { grid: { color: document.body.classList.contains('light-mode') ? '#e2e8f0' : 'rgba(255,255,255,0.1)' }, ticks: { color: document.body.classList.contains('light-mode') ? '#64748b' : '#94a3b8' } },
-                    x: { grid: { display: false }, ticks: { color: document.body.classList.contains('light-mode') ? '#64748b' : '#94a3b8' } }
+                    y: { grid: { color: document.body.classList.contains('light-mode') ? '#e2e8f0' : 'rgba(255,255,255,0.1)' } },
+                    x: { grid: { display: false } }
                 }
             },
             plugins: [valPlugin]
         });
 
-        // Grey Fabric Pie Chart
         new Chart(document.getElementById("greyChart"), {
             type: 'doughnut',
             data: {
-                labels: grey.labels.length ? grey.labels : ["No Data"],
+                labels: grey.labels,
                 datasets: [{
-                    data: grey.data.length ? grey.data : [0],
-                    backgroundColor: chartColors((grey.data.length ? grey.data : [0]).length),
+                    data: grey.data,
+                    backgroundColor: ['#6366f1', '#10b981', '#f59e0b', '#8b5cf6', '#ef4444'],
                     borderWidth: 0
                 }]
             },
@@ -1002,14 +769,12 @@
                 responsive: true,
                 maintainAspectRatio: false,
                 plugins: {
-                    legend: { position: 'bottom', labels: { color: document.body.classList.contains('light-mode') ? '#0f172a' : '#f8fafc' } },
-                    tooltip: { callbacks: { label: (ctx) => `${ctx.label}: ${fmt(ctx.raw)}` } }
+                    legend: { position: 'bottom', labels: { color: document.body.classList.contains('light-mode') ? '#0f172a' : '#f8fafc' } }
                 }
             },
             plugins: [valPlugin]
         });
 
-        // Needle Issues Pie Chart
         new Chart(document.getElementById("needleIssueChart"), {
             type: 'doughnut',
             data: {
@@ -1024,65 +789,89 @@
                 responsive: true,
                 maintainAspectRatio: false,
                 plugins: {
-                    legend: { position: 'bottom', labels: { color: document.body.classList.contains('light-mode') ? '#0f172a' : '#f8fafc' } },
-                    tooltip: { callbacks: { label: (ctx) => `${ctx.label}: ${fmt(ctx.raw)}` } }
+                    legend: { position: 'bottom', labels: { color: document.body.classList.contains('light-mode') ? '#0f172a' : '#f8fafc' } }
                 }
             },
             plugins: [valPlugin]
         });
+
+        // Attendance Line Chart
+        new Chart(document.getElementById("attendanceChart"), {
+            type: 'line',
+            data: {
+                labels: ['Week 1', 'Week 2', 'Week 3', 'Week 4'],
+                datasets: [{
+                    label: 'Present',
+                    data: [850, 860, 856, 870],
+                    borderColor: '#10b981',
+                    backgroundColor: 'rgba(16, 185, 129, 0.1)',
+                    fill: true,
+                    tension: 0.4
+                }, {
+                    label: 'Absent',
+                    data: [320, 310, 334, 300],
+                    borderColor: '#ef4444',
+                    backgroundColor: 'rgba(239, 68, 68, 0.1)',
+                    fill: true,
+                    tension: 0.4
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { position: 'top', labels: { color: document.body.classList.contains('light-mode') ? '#0f172a' : '#f8fafc' } }
+                },
+                scales: {
+                    y: { grid: { color: document.body.classList.contains('light-mode') ? '#e2e8f0' : 'rgba(255,255,255,0.1)' } },
+                    x: { grid: { display: false } }
+                }
+            }
+        });
     }
 
-    function chartColors(count) {
-        const palette = ["#6366f1", "#10b981", "#f59e0b", "#8b5cf6", "#ef4444", "#14b8a6", "#eab308", "#ec4899"];
-        return Array.from({ length: count }, (_, i) => palette[i % palette.length]);
-    }
-
-    // Load Dashboard
     async function loadDashboardStock() {
-        try {
-            let sewing = await getLatestPresent("sewingThread", 133322);
-            let twill = await getLatestPresent("twillTape", 171255);
-            let accessories = await getLatestPresent("accessoriesSample", 21514393);
-            let needleData = await getNeedleFloorStock();
-            let grey = await getGreyData();
-            let needleIssue = await getNeedleIssueToday();
-            let billing = await getBillingToday();
+        let sewing = await getLatestPresent("sewingThread", 133322);
+        let twill = await getLatestPresent("twillTape", 171255);
+        let accessories = await getLatestPresent("accessoriesSample", 21514393);
+        let needleData = await getNeedleFloorStock();
+        let grey = await getGreyData();
+        let needleIssue = await getNeedleIssueToday();
+        let billing = await getBillingToday();
 
-            document.getElementById("accStock").innerText = fmt(accessories);
-            document.getElementById("sewStock").innerText = fmt(sewing);
-            document.getElementById("twillStock").innerText = fmt(twill);
-            document.getElementById("needleStock").innerText = fmt(needleData.total);
-            
-            document.getElementById("attTotal").innerText = billing.total;
-            document.getElementById("attPresent").innerText = billing.present;
-            document.getElementById("attLeave").innerText = billing.leave;
-            document.getElementById("attAbsent").innerText = billing.absent;
+        document.getElementById("accStock").innerText = fmt(accessories);
+        document.getElementById("sewStock").innerText = fmt(sewing);
+        document.getElementById("twillStock").innerText = fmt(twill);
+        document.getElementById("needleStock").innerText = fmt(needleData.total);
+        document.getElementById("attTotal").innerText = billing.total;
+        document.getElementById("attPresent").innerText = billing.present;
+        document.getElementById("attLeave").innerText = billing.leave;
+        document.getElementById("attAbsent").innerText = billing.absent;
 
-            renderCharts(sewing, accessories, twill, needleData.floorStocks, grey, needleIssue);
-            
-            // Render MCD Cards (All Departments)
-            renderMCDCards(accessories, sewing, twill, grey.total, billing);
-        } catch (e) {
-            console.error(e);
-        }
+        renderCharts(sewing, accessories, twill, needleData.floorStocks, grey, needleIssue);
+        renderMCDCards(accessories, sewing, twill, grey.total, billing);
     }
 
     function renderMCDCards(accessories, sewing, twill, greyTotal, billing) {
-        const mcdContainer = document.getElementById("mcdDashboard");
-        // List of all MCDs to show
         const allMCDs = [
-            { name: "Accessories MCD", icon: "fa-box", color: "var(--primary)", data: [
+            { name: "Accessories MCD", icon: "fa-box", color: "#6366f1", data: [
                 { label: "Accessories Stock", value: fmt(accessories) },
                 { label: "Sewing Thread", value: fmt(sewing) },
                 { label: "Twill Tape", value: fmt(twill) }
             ]},
-            { name: "Grey Fabric MCD", icon: "fa-industry", color: "var(--warning)", data: [
+            { name: "Grey Fabric MCD", icon: "fa-industry", color: "#f59e0b", data: [
                 { label: "Closing Balance", value: fmt(greyTotal) },
                 { label: "Status", value: "Active" }
             ]},
-            { name: "Billing Section", icon: "fa-users", color: "var(--secondary)", data: [
+            { name: "Billing Section", icon: "fa-users", color: "#10b981", data: [
                 { label: "Total Manpower", value: fmt(billing.total) },
-                { label: "Present", value: fmt(billing.present) }
+                { label: "Present", value: fmt(billing.present) },
+                { label: "Leave", value: fmt(billing.leave) },
+                { label: "Absent", value: fmt(billing.absent) }
+            ]},
+            { name: "Needle Section", icon: "fa-tint", color: "#8b5cf6", data: [
+                { label: "Total Stock", value: fmt(needleData.total) },
+                { label: "Floors", value: "8" }
             ]},
             { name: "Manpower MCD", icon: "fa-user-tie", color: "#ec4899", data: [
                 { label: "Total Workers", value: "1248" },
@@ -1091,56 +880,35 @@
             { name: "Shipping MCD", icon: "fa-truck", color: "#14b8a6", data: [
                 { label: "Pending", value: "12" },
                 { label: "Completed", value: "45" }
-            ]},
-            { name: "Quality Control", icon: "fa-check-circle", color: "#f59e0b", data: [
-                { label: "Pass Rate", value: "98%" },
-                { label: "Rejected", value: "2%" }
             ]}
         ];
 
-        let html = "";
-        allMCDs.forEach(mcd => {
-            html += `
-                <div class="mcd-card">
-                    <div class="mcd-header"><i class="fas ${mcd.icon}" style="color:${mcd.color}"></i> ${mcd.name}</div>
-                    ${mcd.data.map(d => `
-                        <div class="mcd-row">
-                            <span class="mcd-label">${d.label}</span>
-                            <span class="mcd-value">${d.value}</span>
-                        </div>
-                    `).join('')}
-                </div>
-            `;
-        });
-        mcdContainer.innerHTML = html;
+        let html = allMCDs.map(mcd => `
+            <div class="mcd-card">
+                <div class="mcd-header"><i class="fas ${mcd.icon}" style="color:${mcd.color}"></i> ${mcd.name}</div>
+                ${mcd.data.map(d => `
+                    <div class="mcd-row">
+                        <span class="mcd-label">${d.label}</span>
+                        <span class="mcd-value">${d.value}</span>
+                    </div>
+                `).join('')}
+            </div>
+        `).join('');
+        
+        document.getElementById("mcdDashboard").innerHTML = html;
     }
 
-    // Global Functions
-    window.toggleTheme = function() {
-        document.body.classList.toggle('light-mode');
-    };
-    window.toggleSidebar = function() {
-        document.getElementById('sidebar').classList.toggle('active');
-    };
+    window.toggleTheme = function() { document.body.classList.toggle('light-mode'); };
+    window.toggleSidebar = function() { document.getElementById('sidebar').classList.toggle('active'); };
     window.setActive = function(el) {
         document.querySelectorAll('.nav-item').forEach(item => item.classList.remove('active'));
         el.classList.add('active');
-        if(window.innerWidth <= 1024) document.getElementById('sidebar').classList.remove('active');
     };
-    window.showNotifications = function() {
-        alert('🔔 Notifications:\n1. New stock received\n2. Low stock alert\n3. Monthly report ready');
-    };
-    window.showEmails = function() {
-        alert('📧 Emails:\n1. Monthly Summary\n2. Stock Update\n3. Maintenance Notice');
-    };
-    window.openMonthWiseNeedleStock = function() {
-        window.location.href = 'month_wise_needle_stock_summary.html';
-    };
-    window.openMonthWiseFloorStock = function() {
-        window.location.href = 'month_wise_floor_stock_report.html';
-    };
+    window.showNotifications = function() { alert('🔔 Notifications:\n1. New stock received\n2. Low stock alert\n3. Monthly report ready'); };
+    window.showEmails = function() { alert('📧 Emails:\n1. Monthly Summary\n2. Stock Update\n3. Maintenance Notice'); };
+    window.openMonthWiseNeedleStock = function() { window.location.href = 'month_wise_needle_stock_summary.html'; };
+    window.openMonthWiseFloorStock = function() { window.location.href = 'month_wise_floor_stock_report.html'; };
 
-    // Initialize
     loadDashboardStock();
 </script>
 
