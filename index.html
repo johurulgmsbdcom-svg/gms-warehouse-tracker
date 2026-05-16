@@ -227,94 +227,127 @@ body.light .dashTitle{color:var(--text);}
 
 /* ===== BACKUP PAGE STYLES ===== */
 .backupPage h2{
-  font-size:24px;
+  font-size:20px;
   font-weight:700;
   margin-bottom:8px;
   display:flex;
   align-items:center;
   gap:10px;
 }
-.backupPage .dashSub{margin-bottom:24px;}
+.backupPage .dashSub{margin-bottom:20px;}
+
+.backupContainer{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:20px;
+}
+@media(max-width:900px){.backupContainer{grid-template-columns:1fr;}}
 
 .statusBox{
   background:var(--card);
   border:1px solid var(--border);
   border-radius:12px;
-  padding:20px;
-  margin-bottom:24px;
+  padding:16px;
 }
 .statusTitle{
-  font-size:16px;
+  font-size:14px;
   font-weight:600;
-  margin-bottom:16px;
+  margin-bottom:12px;
   display:flex;
   align-items:center;
   gap:8px;
+  color:var(--blue);
 }
 .statusLine{
   display:flex;
   justify-content:space-between;
   align-items:center;
-  padding:10px 0;
-  border-bottom:1px solid rgba(255,255,255,0.1);
-  font-size:14px;
+  padding:8px 0;
+  border-bottom:1px solid rgba(255,255,255,0.05);
+  font-size:13px;
 }
 body.light .statusLine{border-bottom-color:#e2e8f0;}
 .statusLine:last-child{border-bottom:none;}
-.statusLine span{color:var(--muted);font-weight:500;}
+.statusLine span{color:var(--muted);font-weight:500;display:flex;align-items:center;gap:8px;}
 .statusLine b{color:var(--text);font-weight:600;}
-.progress{
-  width:100%;
-  height:8px;
-  background:rgba(255,255,255,0.1);
-  border-radius:4px;
-  margin:16px 0;
-  overflow:hidden;
-}
-body.light .progress{background:#e2e8f0;}
-.progressFill{
-  height:100%;
-  background:linear-gradient(90deg,var(--green),var(--blue));
-  border-radius:4px;
-  transition:width 0.3s;
-}
 .statusSignal{
   display:inline-flex;
   align-items:center;
-  gap:6px;
-  padding:6px 12px;
-  border-radius:6px;
+  gap:8px;
+  padding:8px 14px;
+  border-radius:8px;
   font-weight:600;
-  font-size:13px;
+  font-size:14px;
+  margin-top:10px;
 }
-.statusSignal.safe{background:rgba(16,185,129,0.2);color:var(--green);}
-.statusSignal.warn{background:rgba(245,158,11,0.2);color:var(--yellow);}
-.statusSignal.stop{background:rgba(239,68,68,0.2);color:var(--red);}
+.statusSignal.safe{background:rgba(16,185,129,0.15);color:var(--green);}
+.statusSignal.warn{background:rgba(245,158,11,0.15);color:var(--yellow);}
+.statusSignal.stop{background:rgba(239,68,68,0.15);color:var(--red);}
 
-.backupActionGrid{
+.backupActions{
   display:grid;
-  grid-template-columns:repeat(auto-fit,minmax(200px,1fr));
+  grid-template-columns:repeat(2,1fr);
   gap:12px;
-  margin-top:20px;
 }
-.backupActionGrid .card{
+.backupActions .card{
   background:var(--card);
   border:1px solid var(--border);
   border-radius:10px;
-  padding:16px;
+  padding:14px;
   cursor:pointer;
   transition:all 0.3s;
   display:flex;
   align-items:center;
-  gap:10px;
+  justify-content:center;
+  gap:8px;
   font-weight:600;
-  font-size:14px;
+  font-size:13px;
+  text-align:center;
 }
-.backupActionGrid .card:hover{
+.backupActions .card:hover{
   background:rgba(59,130,246,0.1);
   border-color:var(--blue);
   transform:translateY(-2px);
 }
+
+.backupRules{
+  background:var(--card);
+  border:1px solid var(--border);
+  border-radius:12px;
+  padding:16px;
+  margin-top:20px;
+}
+.backupRules .statusTitle{margin-bottom:12px;}
+.ruleLine{
+  display:flex;
+  justify-content:space-between;
+  padding:8px 0;
+  border-bottom:1px solid rgba(255,255,255,0.05);
+  font-size:13px;
+}
+body.light .ruleLine{border-bottom-color:#e2e8f0;}
+.ruleLine:last-child{border-bottom:none;}
+.ruleLine span{color:var(--muted);}
+.ruleLine b{color:var(--text);font-weight:600;}
+
+.activityLog{
+  background:var(--card);
+  border:1px solid var(--border);
+  border-radius:12px;
+  padding:16px;
+  margin-top:20px;
+}
+.activityLog .statusTitle{margin-bottom:12px;}
+.logItem{
+  padding:10px;
+  background:rgba(255,255,255,0.03);
+  border-radius:8px;
+  margin-bottom:8px;
+  font-size:12px;
+}
+body.light .logItem{background:#f8fafc;}
+.logItem b{color:var(--blue);display:block;margin-bottom:4px;}
+.logItem span{color:var(--muted);font-size:11px;}
 
 /* ===== NEW ENTRY & REPORT SECTION STYLES ===== */
 .entrySection, .reportSection {
@@ -873,48 +906,144 @@ body.light .creditFooter{background:var(--card);border-color:#cbd5e1;}
     </div>
   </div>
 
-  <!-- BACKUP PAGE -->
+  <!-- BACKUP PAGE - UPDATED DESIGN -->
   <div id="backup" class="page backupPage">
     <h2><i class="fas fa-cloud"></i> Backup & Restore Control</h2>
     <div class="dashSub">Only Admin can use this page</div>
     
-    <div class="statusBox">
-      <div class="statusTitle"><i class="fas fa-bolt" style="color:var(--yellow)"></i> Firebase Live Usage</div>
-      <div class="statusLine">
-        <span><i class="fas fa-database" style="color:var(--blue)"></i> Storage Used</span>
-        <b id="storageUsed">0 MB</b>
-      </div>
-      <div class="statusLine">
-        <span><i class="fas fa-chart-bar" style="color:var(--green)"></i> Usage Percent</span>
-        <b id="storagePercent">0%</b>
-      </div>
-      <div class="progress">
-        <div id="limitBar" class="progressFill" style="width:0%"></div>
-      </div>
-      <div id="limitSignal" class="statusSignal safe"><i class="fas fa-circle" style="font-size:8px"></i> SAFE</div>
-    </div>
+    <div class="backupContainer">
+      <div>
+        <div class="statusBox">
+          <div class="statusTitle"><i class="fas fa-rocket"></i> Firebase Live Usage</div>
+          <div class="statusLine">
+            <span><i class="fas fa-book-reader"></i> Reads Today</span>
+            <b id="readsToday">0 / 50,000</b>
+          </div>
+          <div class="statusLine">
+            <span><i class="fas fa-pen"></i> Writes Today</span>
+            <b id="writesToday">0 / 20,000</b>
+          </div>
+          <div class="statusLine">
+            <span><i class="fas fa-trash"></i> Deletes Today</span>
+            <b id="deletesToday">0 / 20,000</b>
+          </div>
+          <div class="statusLine">
+            <span><i class="fas fa-database"></i> Storage Limit</span>
+            <b>1 GiB</b>
+          </div>
+          <div class="statusLine">
+            <span><i class="fas fa-hdd"></i> Storage Used</span>
+            <b id="storageUsed">0 MB</b>
+          </div>
+          <div class="statusLine">
+            <span><i class="fas fa-chart-pie"></i> Usage Percent</span>
+            <b id="storagePercent">0%</b>
+          </div>
+          <div class="statusLine">
+            <span><i class="fas fa-fire"></i> Today Entry</span>
+            <b id="todayEntry">0</b>
+          </div>
+          <div class="statusLine">
+            <span><i class="fas fa-archive"></i> Total Entry</span>
+            <b id="totalEntry">0</b>
+          </div>
+          <div class="statusLine">
+            <span><i class="fas fa-truck"></i> Gate Plan Firebase</span>
+            <b id="gatePlanCount">0 / 0</b>
+          </div>
+          <div class="statusLine">
+            <span><i class="fas fa-file-invoice"></i> Challan/Gate Pass Firebase</span>
+            <b id="challanCount">0 / 0</b>
+          </div>
+          <div class="statusLine">
+            <span><i class="fas fa-folder"></i> Backup Months</span>
+            <b id="backupMonths">0</b>
+          </div>
+          <div class="statusLine">
+            <span><i class="fas fa-calendar"></i> Active Months</span>
+            <b id="activeMonths">0</b>
+          </div>
+          <div class="statusLine">
+            <span><i class="fas fa-cloud"></i> Backup Status</span>
+            <b id="backupStatus">READY</b>
+          </div>
+          <div id="limitSignal" class="statusSignal safe">
+            <i class="fas fa-circle" style="font-size:10px"></i> SAFE
+          </div>
+        </div>
 
-    <div style="margin-bottom:16px;font-weight:600;display:flex;align-items:center;gap:8px;">
-      <i class="fas fa-cloud-upload-alt" style="color:var(--blue)"></i> Backup Actions
+        <div class="backupActions" style="margin-top:16px;">
+          <div class="card" onclick="backupAllData()">
+            <i class="fas fa-cloud-upload-alt"></i>
+            <span>Backup Now</span>
+          </div>
+          <div class="card" onclick="document.getElementById('restoreFile').click()">
+            <i class="fas fa-cloud-download-alt"></i>
+            <span>Restore Backup</span>
+          </div>
+          <div class="card" onclick="clearOldData()">
+            <i class="fas fa-broom"></i>
+            <span>Clear Old Data</span>
+          </div>
+          <div class="card" onclick="removeRestoredMonth()">
+            <i class="fas fa-trash"></i>
+            <span>Remove Restored Month</span>
+          </div>
+        </div>
+
+        <div class="backupRules">
+          <div class="statusTitle"><i class="fas fa-rocket"></i> Backup Rules</div>
+          <div class="ruleLine">
+            <span>Current Month</span>
+            <b>KEEP</b>
+          </div>
+          <div class="ruleLine">
+            <span>Previous Month</span>
+            <b>KEEP</b>
+          </div>
+          <div class="ruleLine">
+            <span>Older Month</span>
+            <b>Backup then Manual Clear</b>
+          </div>
+          <div class="ruleLine">
+            <span>800 MB</span>
+            <b>Backup Warning</b>
+          </div>
+          <div class="ruleLine">
+            <span>900 MB</span>
+            <b>Backup Now</b>
+          </div>
+        </div>
+
+        <div class="activityLog">
+          <div class="statusTitle"><i class="fas fa-history"></i> Backup Activity Log</div>
+          <div id="backupActivityLog">No activity yet</div>
+        </div>
+      </div>
+
+      <div id="restorePanel" style="display:none;">
+        <div class="statusBox">
+          <div class="statusTitle"><i class="fas fa-cloud-download-alt"></i> Restore Month Wise Data</div>
+          <div class="statusLine">
+            <span>Select Month From Backup</span>
+          </div>
+          <select id="restoreMonthSelect" style="width:100%;padding:10px;margin:10px 0;border-radius:8px;border:1px solid var(--border);background:var(--bg);color:var(--text);">
+          </select>
+          <button class="openEntryBtn" onclick="restoreSelectedMonth()" style="width:100%;margin-top:10px;">
+            <i class="fas fa-download"></i> Restore Selected Month
+          </button>
+          <div style="margin-top:16px;padding:12px;background:rgba(59,130,246,0.1);border-radius:8px;">
+            <div style="font-size:12px;color:var(--muted);margin-bottom:4px;">Backup File</div>
+            <div style="font-weight:600;" id="restoreFileName">-</div>
+            <div style="font-size:12px;color:var(--muted);margin:8px 0 4px;">Month Found</div>
+            <div style="font-weight:600;" id="restoreMonthCount">0</div>
+            <div style="font-size:12px;color:var(--muted);margin:8px 0 4px;">Restore Status</div>
+            <div style="font-weight:600;color:var(--green);" id="restoreStatus">READY</div>
+          </div>
+        </div>
+      </div>
     </div>
-    <div class="backupActionGrid">
-      <div class="card" onclick="backupAllData()">
-        <i class="fas fa-cloud" style="color:var(--blue)"></i>
-        <span>Backup Now</span>
-      </div>
-      <div class="card" onclick="document.getElementById('restoreFile').click()">
-        <i class="fas fa-cloud-download-alt" style="color:var(--green)"></i>
-        <span>Restore Backup</span>
-      </div>
-      <div class="card" onclick="clearOldData()">
-        <i class="fas fa-trash-alt" style="color:var(--red)"></i>
-        <span>Clear Old Data</span>
-      </div>
-      <div class="card" onclick="removeRestoredMonth()">
-        <i class="fas fa-eraser" style="color:var(--yellow)"></i>
-        <span>Remove Restored Month</span>
-      </div>
-    </div>
+    
     <input type="file" id="restoreFile" accept=".json" style="display:none" onchange="loadRestoreFile(event)">
   </div>
 
@@ -1199,30 +1328,90 @@ async function getNeedleIssueToday(){
 }
 async function getFirebaseCounts(){
   let cols=["greyFabricStock","accessoriesInventory","billingManpowerReport","dailyPosting","sewingThread","twillTape","accessoriesSample","liveNotices","manpower","users","needleDailyReport","gatePlans","challanGatePass"];
-  let t=today(),totalCount=0,approxBytes=0;
+  let t=today(),totalCount=0,approxBytes=0,readsToday=0,writesToday=0,deletesToday=0,gatePlanCount=0,challanCount=0;
   for(let c of cols){
     try{
       let snap=await getDocs(collection(db,c));
-      snap.forEach(d=>{totalCount++;approxBytes+=JSON.stringify(d.data()||{}).length*2;});
+      snap.forEach(d=>{
+        totalCount++;
+        approxBytes+=JSON.stringify(d.data()||{}).length*2;
+        let row=d.data();
+        if(row.date===t){
+          if(c==="gatePlans")gatePlanCount++;
+          if(c==="challanGatePass")challanCount++;
+        }
+      });
     }catch(e){}
   }
   let approxMB=approxBytes/1024/1024;
-  return{totalCount,storagePercent:(approxMB/1024)*100};
+  return{
+    totalCount,
+    storagePercent:(approxMB/1024)*100,
+    readsToday:readsToday,
+    writesToday:writesToday,
+    deletesToday:deletesToday,
+    gatePlanCount:gatePlanCount,
+    challanCount:challanCount
+  };
 }
 
 function updateLimitBox(firebase){
   let approxMB=0,storagePercent=0;
-  if(firebase){approxMB=firebase.totalCount||0;storagePercent=firebase.storagePercent||0;}
+  if(firebase){
+    approxMB=firebase.totalCount||0;
+    storagePercent=firebase.storagePercent||0;
+  }
   document.getElementById("storageUsed").innerText=`${(approxMB/10).toFixed(2)} MB`;
   document.getElementById("storagePercent").innerText=`${storagePercent.toFixed(2)}%`;
+  document.getElementById("totalEntry").innerText=firebase?.totalCount||0;
+  document.getElementById("todayEntry").innerText=firebase?.todayEntry||0;
+  document.getElementById("gatePlanCount").innerText=`${firebase?.gatePlanCount||0} / 8`;
+  document.getElementById("challanCount").innerText=`${firebase?.challanCount||0} / 2`;
+  document.getElementById("readsToday").innerText=`${firebase?.readsToday||0} / 50,000`;
+  document.getElementById("writesToday").innerText=`${firebase?.writesToday||0} / 20,000`;
+  document.getElementById("deletesToday").innerText=`${firebase?.deletesToday||0} / 20,000`;
+  
+  let backupMonths=localStorage.getItem("backupMonths")||"0";
+  document.getElementById("backupMonths").innerText=backupMonths;
+  
+  let activeMonths=1;
+  document.getElementById("activeMonths").innerText=activeMonths;
+  
+  let backupStatus=localStorage.getItem("backupStatus")||"READY";
+  document.getElementById("backupStatus").innerText=backupStatus;
+  
   let pct=Math.min(100,storagePercent);
   let bar=document.getElementById("limitBar");
   let signal=document.getElementById("limitSignal");
   let warnBanner=document.getElementById("backupWarningBanner");
-  bar.style.width=Math.max(1,pct)+"%";
-  if(pct<80){signal.className="statusSignal safe";signal.innerText="🟢 SAFE";bar.style.background="linear-gradient(90deg,var(--green),var(--blue))";warnBanner.style.display="none";}
-  else if(pct<90){signal.className="statusSignal warn";signal.innerText="🟡 BACKUP WARNING";bar.style.background="linear-gradient(90deg,var(--yellow),#f97316)";warnBanner.style.display="block";warnBanner.innerText="🟡 Backup Warning - Storage reached 80%";}
-  else{signal.className="statusSignal stop";signal.innerText="🔴 BACKUP NOW";bar.style.background="linear-gradient(90deg,var(--red),#f97316)";warnBanner.style.display="block";warnBanner.innerText="🔴 Backup Now - Storage reached 90%";}
+  if(bar)bar.style.width=Math.max(1,pct)+"%";
+  if(pct<80){
+    if(signal){
+      signal.className="statusSignal safe";
+      signal.innerHTML='<i class="fas fa-circle" style="font-size:10px"></i> SAFE';
+    }
+    if(warnBanner)warnBanner.style.display="none";
+  }
+  else if(pct<90){
+    if(signal){
+      signal.className="statusSignal warn";
+      signal.innerHTML='<i class="fas fa-circle" style="font-size:10px"></i> BACKUP WARNING';
+    }
+    if(warnBanner){
+      warnBanner.style.display="block";
+      warnBanner.innerText="🟡 Backup Warning - Storage reached 80%";
+    }
+  }
+  else{
+    if(signal){
+      signal.className="statusSignal stop";
+      signal.innerHTML='<i class="fas fa-circle" style="font-size:10px"></i> BACKUP NOW';
+    }
+    if(warnBanner){
+      warnBanner.style.display="block";
+      warnBanner.innerText="🔴 Backup Now - Storage reached 90%";
+    }
+  }
 }
 
 const chartPalette=["#38bdf8","#22c55e","#f59e0b","#a855f7","#ef4444","#14b8a6","#eab308","#6366f1","#ec4899","#84cc16","#06b6d4","#f97316"];
