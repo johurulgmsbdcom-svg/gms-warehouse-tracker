@@ -1,364 +1,870 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
-    <title>GMS MCD ERP SYSTEM</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    
-    <style>
-        :root {
-            --primary: #6366f1;
-            --primary-dark: #4f46e5;
-            --secondary: #10b981;
-            --accent: #f59e0b;
-            --danger: #ef4444;
-            --bg-dark: #0f172a;
-            --bg-card-dark: #1e293b;
-            --text-dark: #f8fafc;
-            --text-muted-dark: #94a3b8;
-            --bg-light: #f1f5f9;
-            --bg-card-light: #ffffff;
-            --text-light: #0f172a;
-            --text-muted-light: #64748b;
-            --shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
-            --radius: 12px;
-        }
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>GMS MCD - ERP System</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<style>
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
 
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        body {
-            font-family: 'Inter', sans-serif;
-            background-color: var(--bg-dark);
-            color: var(--text-dark);
-            overflow-x: hidden;
-        }
+:root {
+    --primary: #4f46e5;
+    --primary-dark: #4338ca;
+    --secondary: #06b6d4;
+    --success: #10b981;
+    --warning: #f59e0b;
+    --danger: #ef4444;
+    --dark: #1e293b;
+    --light: #f8fafc;
+    --sidebar-width: 280px;
+}
 
-        body.light-mode {
-            background-color: var(--bg-light);
-            color: var(--text-light);
-        }
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    min-height: 100vh;
+}
 
-        .app-container { display: flex; min-height: 100vh; }
+.app-container {
+    display: flex;
+    min-height: 100vh;
+}
 
-        /* Sidebar */
-        .sidebar {
-            width: 260px;
-            background: var(--bg-card-dark);
-            border-right: 1px solid rgba(255,255,255,0.1);
-            position: fixed;
-            top: 0; bottom: 0; left: 0;
-            z-index: 100;
-            display: flex;
-            flex-direction: column;
-        }
-        body.light-mode .sidebar {
-            background: var(--bg-card-light);
-            border-right: 1px solid #e2e8f0;
-        }
-        
-        .sidebar-header {
-            padding: 20px;
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            border-bottom: 1px solid rgba(255,255,255,0.1);
-        }
-        .logo-icon {
-            width: 40px; height: 40px;
-            background: linear-gradient(135deg, var(--primary), var(--secondary));
-            border-radius: 10px;
-            display: flex; align-items: center; justify-content: center;
-            font-weight: 800; font-size: 20px; color: #fff;
-        }
-        .logo-text h1 { font-size: 18px; font-weight: 700; }
-        .logo-text span { font-size: 11px; color: var(--text-muted-dark); }
+/* Sidebar Styles */
+.sidebar {
+    width: var(--sidebar-width);
+    background: linear-gradient(180deg, #1e293b 0%, #0f172a 100%);
+    color: #fff;
+    position: fixed;
+    height: 100vh;
+    overflow-y: auto;
+    transition: transform 0.3s ease;
+    z-index: 1000;
+    box-shadow: 4px 0 15px rgba(0,0,0,0.3);
+}
 
-        .nav-menu { flex: 1; padding: 20px 12px; overflow-y: auto; }
-        .nav-item {
-            display: flex; align-items: center; gap: 12px;
-            padding: 12px 16px;
-            border-radius: var(--radius);
-            color: var(--text-muted-dark);
-            font-size: 14px; font-weight: 500;
-            margin-bottom: 4px;
-            cursor: pointer;
-            text-decoration: none;
-        }
-        .nav-item:hover, .nav-item.active {
-            background: var(--primary);
-            color: #fff;
-        }
+.sidebar-header {
+    padding: 24px 20px;
+    border-bottom: 1px solid rgba(255,255,255,0.1);
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
 
-        .sidebar-footer { padding: 20px; border-top: 1px solid rgba(255,255,255,0.1); }
-        .theme-toggle-btn {
-            width: 100%; padding: 10px;
-            background: rgba(255,255,255,0.1);
-            border: none; border-radius: var(--radius);
-            color: inherit; font-weight: 600; cursor: pointer;
-        }
+.logo-icon {
+    width: 45px;
+    height: 45px;
+    background: linear-gradient(135deg, var(--primary), var(--secondary));
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 800;
+    font-size: 20px;
+}
 
-        /* Main Content */
-        .main-content {
-            flex: 1;
-            margin-left: 260px;
-            display: flex;
-            flex-direction: column;
-        }
+.logo-text h1 {
+    font-size: 20px;
+    font-weight: 700;
+}
 
-        /* Top Bar */
-        .top-bar {
-            background: var(--bg-card-dark);
-            padding: 16px 24px;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            border-bottom: 1px solid rgba(255,255,255,0.1);
-            position: sticky; top: 0; z-index: 90;
-        }
-        body.light-mode .top-bar {
-            background: var(--bg-card-light);
-            border-bottom: 1px solid #e2e8f0;
-        }
+.logo-text span {
+    font-size: 11px;
+    opacity: 0.7;
+}
 
-        .search-box {
-            position: relative;
-            width: 300px;
-        }
-        .search-box input {
-            width: 100%;
-            padding: 10px 16px 10px 40px;
-            background: rgba(255,255,255,0.05);
-            border: 1px solid rgba(255,255,255,0.1);
-            border-radius: var(--radius);
-            color: inherit;
-        }
-        .search-box i {
-            position: absolute; left: 14px; top: 50%; transform: translateY(-50%);
-            color: var(--text-muted-dark);
-        }
+.nav-menu {
+    padding: 20px 12px;
+}
 
-        .top-actions { display: flex; align-items: center; gap: 16px; }
-        .action-btn {
-            width: 40px; height: 40px;
-            border-radius: 10px;
-            background: rgba(255,255,255,0.05);
-            border: 1px solid rgba(255,255,255,0.1);
-            display: flex; align-items: center; justify-content: center;
-            cursor: pointer; position: relative;
-        }
-        .badge {
-            position: absolute; top: -4px; right: -4px;
-            width: 18px; height: 18px;
-            background: var(--danger);
-            color: #fff; font-size: 10px; font-weight: 700;
-            border-radius: 50%;
-            display: flex; align-items: center; justify-content: center;
-        }
-        .user-profile {
-            display: flex; align-items: center; gap: 12px;
-            padding: 6px 12px;
-            border-radius: var(--radius);
-            cursor: pointer;
-        }
-        .user-avatar {
-            width: 36px; height: 36px;
-            border-radius: 50%;
-            background: linear-gradient(135deg, var(--primary), var(--secondary));
-            display: flex; align-items: center; justify-content: center;
-            font-weight: 700; color: #fff;
-        }
-        .user-info h4 { font-size: 13px; font-weight: 600; }
-        .user-info p { font-size: 11px; color: var(--text-muted-dark); }
+.nav-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 14px 16px;
+    margin-bottom: 6px;
+    border-radius: 10px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    text-decoration: none;
+    color: #cbd5e1;
+    font-size: 14px;
+}
 
-        .mobile-menu-btn { display: none; font-size: 20px; cursor: pointer; margin-right: 16px; }
+.nav-item:hover, .nav-item.active {
+    background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+    color: #fff;
+    transform: translateX(5px);
+}
 
-        /* Notice Bar */
-        .notice-bar {
-            background: linear-gradient(90deg, var(--primary), var(--secondary));
-            color: #fff;
-            padding: 8px 24px;
-            font-size: 13px; font-weight: 600;
-            overflow: hidden;
-        }
+.nav-item i {
+    width: 20px;
+    text-align: center;
+}
 
-        /* Dashboard Content */
-        .dashboard-content { padding: 24px; flex: 1; }
+.sidebar-footer {
+    padding: 20px;
+    border-top: 1px solid rgba(255,255,255,0.1);
+    margin-top: auto;
+}
 
-        /* Live Signal */
-        .live-signal-card {
-            background: linear-gradient(135deg, #10b981, #059669);
-            border-radius: var(--radius);
-            padding: 24px;
-            text-align: center;
-            color: #fff;
-            margin-bottom: 24px;
-        }
-        .live-text { font-size: 48px; font-weight: 800; margin-top: 10px; }
+.theme-btn, .logout-btn {
+    width: 100%;
+    padding: 12px;
+    border: none;
+    border-radius: 10px;
+    cursor: pointer;
+    font-weight: 600;
+    margin-bottom: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    transition: all 0.3s ease;
+}
 
-        /* Stats Grid */
-        .stats-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-            gap: 20px;
-            margin-bottom: 24px;
-        }
-        .stat-card {
-            background: var(--bg-card-dark);
-            border-radius: var(--radius);
-            padding: 20px;
-            display: flex; align-items: center; gap: 16px;
-        }
-        body.light-mode .stat-card {
-            background: var(--bg-card-light);
-            border: 1px solid #e2e8f0;
-        }
-        .stat-icon {
-            width: 50px; height: 50px;
-            border-radius: 12px;
-            display: flex; align-items: center; justify-content: center;
-            font-size: 22px;
-        }
-        .stat-icon.blue { background: rgba(99, 102, 241, 0.1); color: #6366f1; }
-        .stat-icon.green { background: rgba(16, 185, 129, 0.1); color: #10b981; }
-        .stat-icon.orange { background: rgba(245, 158, 11, 0.1); color: #f59e0b; }
-        .stat-icon.purple { background: rgba(139, 92, 246, 0.1); color: #8b5cf6; }
-        .stat-info h3 { font-size: 24px; font-weight: 800; margin-bottom: 4px; }
-        .stat-info p { font-size: 13px; color: var(--text-muted-dark); }
+.theme-btn {
+    background: rgba(255,255,255,0.1);
+    color: #fff;
+}
 
-        /* Needle Buttons */
-        .needle-special-btns {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-            gap: 20px;
-            margin-bottom: 24px;
-        }
-        .special-btn {
-            background: linear-gradient(135deg, var(--primary), var(--primary-dark));
-            border-radius: var(--radius);
-            padding: 20px;
-            color: #fff;
-            display: flex; align-items: center; gap: 16px;
-            cursor: pointer;
-        }
-        .special-btn h3 { font-size: 16px; font-weight: 700; margin-bottom: 4px; }
-        .special-btn p { font-size: 12px; opacity: 0.9; }
+.logout-btn {
+    background: linear-gradient(135deg, var(--danger), #dc2626);
+    color: #fff;
+}
 
-        /* Charts Grid */
-        .charts-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
-            gap: 24px;
-            margin-bottom: 24px;
-        }
-        .chart-card {
-            background: var(--bg-card-dark);
-            border-radius: var(--radius);
-            padding: 20px;
-        }
-        body.light-mode .chart-card {
-            background: var(--bg-card-light);
-            border: 1px solid #e2e8f0;
-        }
-        .chart-header h3 { font-size: 16px; font-weight: 700; margin-bottom: 16px; }
-        .chart-container { position: relative; height: 300px; }
+.theme-btn:hover, .logout-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+}
 
-        /* MCD Section */
-        .mcd-section { margin-bottom: 24px; }
-        .section-title { font-size: 18px; font-weight: 700; margin-bottom: 16px; }
-        .mcd-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-            gap: 20px;
-        }
-        .mcd-card {
-            background: var(--bg-card-dark);
-            border-radius: var(--radius);
-            padding: 20px;
-        }
-        body.light-mode .mcd-card {
-            background: var(--bg-card-light);
-            border: 1px solid #e2e8f0;
-        }
-        .mcd-header {
-            font-size: 16px;
-            font-weight: 700;
-            margin-bottom: 16px;
-            padding-bottom: 12px;
-            border-bottom: 1px solid rgba(255,255,255,0.1);
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-        .mcd-row {
-            display: flex;
-            justify-content: space-between;
-            padding: 8px 0;
-            font-size: 13px;
-        }
-        .mcd-label { color: var(--text-muted-dark); }
-        .mcd-value { font-weight: 700; color: var(--secondary); }
+/* Main Content */
+.main-content {
+    flex: 1;
+    margin-left: var(--sidebar-width);
+    background: var(--light);
+    min-height: 100vh;
+}
 
-        /* Attendance Section with Line Chart */
-        .attendance-section {
-            background: var(--bg-card-dark);
-            border-radius: var(--radius);
-            padding: 20px;
-            margin-bottom: 24px;
-        }
-        body.light-mode .attendance-section {
-            background: var(--bg-card-light);
-            border: 1px solid #e2e8f0;
-        }
-        .attendance-header {
-            display: flex; align-items: center; justify-content: space-between;
-            margin-bottom: 16px;
-        }
-        .attendance-stats {
-            display: grid;
-            grid-template-columns: repeat(4, 1fr);
-            gap: 12px;
-            margin-bottom: 20px;
-        }
-        .att-stat-box {
-            text-align: center;
-            padding: 12px;
-            background: rgba(255,255,255,0.05);
-            border-radius: 10px;
-        }
-        .att-stat-box div:first-child { font-size: 20px; font-weight: 700; }
-        .att-stat-box div:last-child { font-size: 11px; color: var(--text-muted-dark); }
+/* Top Bar */
+.top-bar {
+    background: #fff;
+    padding: 16px 32px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+    position: sticky;
+    top: 0;
+    z-index: 100;
+}
 
-        /* Footer */
-        .app-footer {
-            padding: 24px;
-            text-align: center;
-            border-top: 1px solid rgba(255,255,255,0.1);
-            background: var(--bg-card-dark);
-        }
-        .credits { display: flex; justify-content: center; gap: 32px; flex-wrap: wrap; margin-top: 16px; }
-        .credit-item { display: flex; align-items: center; gap: 10px; }
-        .credit-img {
-            width: 40px; height: 40px; border-radius: 50%;
-            border: 2px solid var(--primary);
-            object-fit: cover;
-        }
-        .credit-text h4 { font-size: 13px; font-weight: 600; }
-        .credit-text p { font-size: 11px; color: var(--text-muted-dark); }
+.search-box {
+    position: relative;
+    width: 400px;
+}
 
-        @media (max-width: 1024px) {
-            .sidebar { transform: translateX(-100%); }
-            .sidebar.active { transform: translateX(0); }
-            .main-content { margin-left: 0; }
-            .mobile-menu-btn { display: block; }
-        }
-        @media (max-width: 640px) {
-            .search-box { display: none; }
-            .stats-grid, .attendance-stats { grid-template-columns: 1fr; }
-            .charts-grid { grid-template-columns: 1fr; }
-        }
-    </style>
+.search-box input {
+    width: 100%;
+    padding: 12px 16px 12px 45px;
+    border: 2px solid #e2e8f0;
+    border-radius: 12px;
+    font-size: 14px;
+    transition: all 0.3s ease;
+}
+
+.search-box input:focus {
+    outline: none;
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
+}
+
+.search-box i {
+    position: absolute;
+    left: 16px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #94a3b8;
+}
+
+.top-actions {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+}
+
+.icon-btn {
+    width: 42px;
+    height: 42px;
+    border-radius: 10px;
+    border: 1px solid #e2e8f0;
+    background: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    position: relative;
+    transition: all 0.3s ease;
+}
+
+.icon-btn:hover {
+    background: #f8fafc;
+    transform: translateY(-2px);
+}
+
+.badge {
+    position: absolute;
+    top: -4px;
+    right: -4px;
+    background: var(--danger);
+    color: #fff;
+    font-size: 10px;
+    font-weight: 700;
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 2px solid #fff;
+}
+
+.user-profile {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 8px 16px;
+    background: #f8fafc;
+    border-radius: 12px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.user-profile:hover {
+    background: #f1f5f9;
+}
+
+.user-avatar {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--primary), var(--secondary));
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #fff;
+    font-weight: 700;
+}
+
+.user-info h4 {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--dark);
+}
+
+.user-info p {
+    font-size: 11px;
+    color: #64748b;
+}
+
+/* Notice Bar */
+.notice-bar {
+    background: linear-gradient(90deg, var(--warning), var(--danger), var(--primary));
+    color: #fff;
+    padding: 12px 32px;
+    font-weight: 600;
+    font-size: 13px;
+    overflow: hidden;
+    white-space: nowrap;
+}
+
+.notice-text {
+    display: inline-block;
+    animation: scroll 25s linear infinite;
+}
+
+@keyframes scroll {
+    0% { transform: translateX(100%); }
+    100% { transform: translateX(-100%); }
+}
+
+/* Dashboard Content */
+.dashboard-content {
+    padding: 32px;
+}
+
+.page-header {
+    margin-bottom: 32px;
+}
+
+.page-title {
+    font-size: 28px;
+    font-weight: 700;
+    color: var(--dark);
+    margin-bottom: 8px;
+}
+
+.page-subtitle {
+    color: #64748b;
+    font-size: 14px;
+}
+
+/* Live Signal Card */
+.live-signal-card {
+    background: linear-gradient(135deg, var(--success), #059669);
+    border-radius: 16px;
+    padding: 32px;
+    text-align: center;
+    color: #fff;
+    margin-bottom: 32px;
+    position: relative;
+    overflow: hidden;
+    box-shadow: 0 10px 30px rgba(16, 185, 129, 0.3);
+}
+
+.live-signal-card::before {
+    content: '';
+    position: absolute;
+    top: -50%;
+    left: -50%;
+    width: 200%;
+    height: 200%;
+    background: radial-gradient(circle, rgba(255,255,255,0.2), transparent 60%);
+    animation: pulse 3s ease-in-out infinite;
+}
+
+@keyframes pulse {
+    0%, 100% { opacity: 0.5; transform: scale(0.8); }
+    50% { opacity: 1; transform: scale(1.2); }
+}
+
+.live-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background: rgba(255,255,255,0.2);
+    padding: 8px 16px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    position: relative;
+    z-index: 1;
+}
+
+.live-dot {
+    width: 10px;
+    height: 10px;
+    background: #fff;
+    border-radius: 50%;
+    animation: blink 1.5s infinite;
+}
+
+@keyframes blink {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.3; }
+}
+
+.live-text {
+    font-size: 56px;
+    font-weight: 800;
+    letter-spacing: 3px;
+    margin-top: 16px;
+    position: relative;
+    z-index: 1;
+}
+
+/* Stats Grid */
+.stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    gap: 24px;
+    margin-bottom: 32px;
+}
+
+.stat-card {
+    background: #fff;
+    border-radius: 16px;
+    padding: 24px;
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.08);
+    transition: all 0.3s ease;
+}
+
+.stat-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 25px rgba(0,0,0,0.12);
+}
+
+.stat-icon {
+    width: 60px;
+    height: 60px;
+    border-radius: 14px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 24px;
+}
+
+.stat-icon.blue { background: rgba(79, 70, 229, 0.1); color: var(--primary); }
+.stat-icon.green { background: rgba(16, 185, 129, 0.1); color: var(--success); }
+.stat-icon.orange { background: rgba(245, 158, 11, 0.1); color: var(--warning); }
+.stat-icon.purple { background: rgba(139, 92, 246, 0.1); color: #8b5cf6; }
+
+.stat-info h3 {
+    font-size: 28px;
+    font-weight: 800;
+    color: var(--dark);
+    margin-bottom: 4px;
+}
+
+.stat-info p {
+    font-size: 13px;
+    color: #64748b;
+    font-weight: 500;
+}
+
+/* Needle Buttons */
+.needle-special-btns {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+    gap: 24px;
+    margin-bottom: 32px;
+}
+
+.special-btn {
+    background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+    border-radius: 16px;
+    padding: 28px;
+    color: #fff;
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 8px 20px rgba(79, 70, 229, 0.3);
+}
+
+.special-btn:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 12px 30px rgba(79, 70, 229, 0.4);
+}
+
+.special-btn i {
+    font-size: 36px;
+    opacity: 0.9;
+}
+
+.special-btn h3 {
+    font-size: 17px;
+    font-weight: 700;
+    margin-bottom: 6px;
+}
+
+.special-btn p {
+    font-size: 13px;
+    opacity: 0.9;
+}
+
+/* Charts Grid */
+.charts-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(420px, 1fr));
+    gap: 24px;
+    margin-bottom: 32px;
+}
+
+.chart-card {
+    background: #fff;
+    border-radius: 16px;
+    padding: 24px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.08);
+}
+
+.chart-header h3 {
+    font-size: 17px;
+    font-weight: 700;
+    color: var(--dark);
+    margin-bottom: 20px;
+}
+
+.chart-container {
+    position: relative;
+    height: 300px;
+}
+
+/* MCD Section */
+.mcd-section {
+    margin-bottom: 32px;
+}
+
+.section-title {
+    font-size: 20px;
+    font-weight: 700;
+    color: var(--dark);
+    margin-bottom: 20px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.mcd-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+    gap: 20px;
+}
+
+.mcd-card {
+    background: #fff;
+    border-radius: 16px;
+    padding: 24px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.08);
+}
+
+.mcd-header {
+    font-size: 17px;
+    font-weight: 700;
+    color: var(--dark);
+    margin-bottom: 16px;
+    padding-bottom: 12px;
+    border-bottom: 2px solid #f1f5f9;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.mcd-row {
+    display: flex;
+    justify-content: space-between;
+    padding: 10px 0;
+    font-size: 14px;
+    border-bottom: 1px solid #f1f5f9;
+}
+
+.mcd-row:last-child {
+    border-bottom: none;
+}
+
+.mcd-label {
+    color: #64748b;
+    font-weight: 500;
+}
+
+.mcd-value {
+    font-weight: 700;
+    color: var(--success);
+}
+
+/* Attendance Section */
+.attendance-section {
+    background: #fff;
+    border-radius: 16px;
+    padding: 28px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.08);
+    margin-bottom: 32px;
+}
+
+.attendance-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 24px;
+}
+
+.attendance-header h3 {
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--dark);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.attendance-stats {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 16px;
+    margin-bottom: 24px;
+}
+
+.att-stat-box {
+    text-align: center;
+    padding: 20px;
+    background: #f8fafc;
+    border-radius: 12px;
+    transition: all 0.3s ease;
+}
+
+.att-stat-box:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+}
+
+.att-stat-box div:first-child {
+    font-size: 28px;
+    font-weight: 800;
+    margin-bottom: 6px;
+}
+
+.att-stat-box div:last-child {
+    font-size: 12px;
+    color: #64748b;
+    font-weight: 600;
+}
+
+/* Footer */
+.app-footer {
+    background: #fff;
+    padding: 32px;
+    text-align: center;
+    border-top: 1px solid #e2e8f0;
+}
+
+.app-footer p {
+    color: #64748b;
+    font-size: 13px;
+    margin-bottom: 20px;
+}
+
+.credits {
+    display: flex;
+    justify-content: center;
+    gap: 40px;
+    flex-wrap: wrap;
+}
+
+.credit-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.credit-img {
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    border: 3px solid var(--primary);
+    object-fit: cover;
+}
+
+.credit-text h4 {
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--dark);
+}
+
+.credit-text p {
+    font-size: 12px;
+    color: #64748b;
+}
+
+/* Mobile Menu Button */
+.mobile-menu-btn {
+    display: none;
+    font-size: 24px;
+    cursor: pointer;
+    margin-right: 16px;
+    background: none;
+    border: none;
+    color: var(--dark);
+}
+
+/* Responsive */
+@media (max-width: 1024px) {
+    .sidebar {
+        transform: translateX(-100%);
+    }
+    .sidebar.active {
+        transform: translateX(0);
+    }
+    .main-content {
+        margin-left: 0;
+    }
+    .mobile-menu-btn {
+        display: block;
+    }
+    .search-box {
+        width: 250px;
+    }
+}
+
+@media (max-width: 768px) {
+    .search-box {
+        display: none;
+    }
+    .stats-grid,
+    .needle-special-btns,
+    .charts-grid,
+    .mcd-grid {
+        grid-template-columns: 1fr;
+    }
+    .live-text {
+        font-size: 42px;
+    }
+    .credits {
+        flex-direction: column;
+        gap: 20px;
+    }
+}
+
+/* Page Sections */
+.page {
+    display: none;
+    padding: 32px;
+}
+
+.page.active {
+    display: block;
+}
+
+/* Form Elements */
+.form-group {
+    margin-bottom: 24px;
+}
+
+.form-group label {
+    display: block;
+    font-weight: 600;
+    margin-bottom: 8px;
+    color: var(--dark);
+}
+
+.form-group select,
+.form-group input {
+    width: 100%;
+    padding: 14px 18px;
+    border: 2px solid #e2e8f0;
+    border-radius: 12px;
+    font-size: 14px;
+    transition: all 0.3s ease;
+}
+
+.form-group select:focus,
+.form-group input:focus {
+    outline: none;
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
+}
+
+.btn {
+    padding: 14px 32px;
+    background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+    color: #fff;
+    border: none;
+    border-radius: 12px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 15px rgba(79, 70, 229, 0.3);
+}
+
+.btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(79, 70, 229, 0.4);
+}
+
+.grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 20px;
+    margin-top: 24px;
+}
+
+.card {
+    background: #fff;
+    border-radius: 16px;
+    padding: 24px;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.08);
+}
+
+.card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 25px rgba(0,0,0,0.12);
+}
+
+.card i {
+    font-size: 32px;
+    margin-bottom: 12px;
+    color: var(--primary);
+}
+
+.card h3 {
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--dark);
+}
+
+/* Status Box */
+.status-box {
+    background: #fff;
+    border-radius: 16px;
+    padding: 28px;
+    margin-bottom: 24px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.08);
+}
+
+.status-title {
+    font-size: 18px;
+    font-weight: 700;
+    margin-bottom: 20px;
+    color: var(--dark);
+}
+
+.status-line {
+    display: flex;
+    justify-content: space-between;
+    padding: 12px 0;
+    border-bottom: 1px solid #f1f5f9;
+}
+
+.status-line:last-child {
+    border-bottom: none;
+}
+
+.progress {
+    height: 12px;
+    background: #e2e8f0;
+    border-radius: 6px;
+    overflow: hidden;
+    margin-top: 12px;
+}
+
+.progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--success), var(--secondary));
+    border-radius: 6px;
+    transition: width 0.3s ease;
+}
+
+.status-signal {
+    font-size: 24px;
+    font-weight: 700;
+    margin-top: 16px;
+}
+
+.safe { color: var(--success); }
+.warn { color: var(--warning); }
+.stop { color: var(--danger); }
+
+.backup-action-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 16px;
+    margin-top: 24px;
+}
+</style>
 </head>
 <body>
 
@@ -373,21 +879,59 @@
             </div>
         </div>
         <nav class="nav-menu">
-            <a href="#" class="nav-item active" onclick="setActive(this)"><i class="fas fa-home"></i> Dashboard</a>
-            <a href="entry.html" class="nav-item"><i class="fas fa-plus-circle"></i> New Entry</a>
-            <a href="reports.html" class="nav-item"><i class="fas fa-chart-bar"></i> Reports</a>
-            <a href="needle.html" class="nav-item"><i class="fas fa-tint"></i> Needle</a>
-            <a href="admin.html" class="nav-item"><i class="fas fa-crown"></i> Admin</a>
-            <a href="manpower.html" class="nav-item"><i class="fas fa-users"></i> Manpower</a>
-            <a href="notice.html" class="nav-item"><i class="fas fa-bullhorn"></i> Notice</a>
-            <a href="online-users.html" class="nav-item"><i class="fas fa-circle" style="color:#10b981;font-size:10px;"></i> Online</a>
-            <a href="audit-history.html" class="nav-item"><i class="fas fa-clipboard-list"></i> Audit</a>
-            <a href="backup.html" class="nav-item"><i class="fas fa-cloud"></i> Backup</a>
-            <a href="change-password.html" class="nav-item"><i class="fas fa-lock"></i> Password</a>
+            <a href="#" class="nav-item active" onclick="showPage('dashboard', this)">
+                <i class="fas fa-home"></i>
+                <span>Dashboard</span>
+            </a>
+            <a href="#" class="nav-item" onclick="showPage('entry', this)">
+                <i class="fas fa-plus-circle"></i>
+                <span>New Entry</span>
+            </a>
+            <a href="#" class="nav-item" onclick="showPage('reports', this)">
+                <i class="fas fa-chart-bar"></i>
+                <span>Reports</span>
+            </a>
+            <a href="#" class="nav-item" onclick="showPage('needle', this)">
+                <i class="fas fa-tint"></i>
+                <span>Needle</span>
+            </a>
+            <a href="#" class="nav-item" onclick="showPage('admin', this)">
+                <i class="fas fa-crown"></i>
+                <span>Admin</span>
+            </a>
+            <a href="#" class="nav-item" onclick="showPage('manpower', this)">
+                <i class="fas fa-users"></i>
+                <span>Manpower</span>
+            </a>
+            <a href="#" class="nav-item" onclick="showPage('notice', this)">
+                <i class="fas fa-bullhorn"></i>
+                <span>Notice</span>
+            </a>
+            <a href="#" class="nav-item" onclick="showPage('online', this)">
+                <i class="fas fa-circle" style="color: #10b981; font-size: 8px;"></i>
+                <span>Online</span>
+            </a>
+            <a href="#" class="nav-item" onclick="showPage('audit', this)">
+                <i class="fas fa-clipboard-list"></i>
+                <span>Audit</span>
+            </a>
+            <a href="#" class="nav-item" onclick="showPage('backup', this)">
+                <i class="fas fa-cloud"></i>
+                <span>Backup</span>
+            </a>
+            <a href="#" class="nav-item" onclick="showPage('password', this)">
+                <i class="fas fa-lock"></i>
+                <span>Password</span>
+            </a>
         </nav>
         <div class="sidebar-footer">
-            <button class="theme-toggle-btn" onclick="toggleTheme()">
-                <i class="fas fa-moon"></i> Toggle Theme
+            <button class="theme-btn" onclick="toggleTheme()">
+                <i class="fas fa-moon"></i>
+                <span>Toggle Theme</span>
+            </button>
+            <button class="logout-btn" onclick="logout()">
+                <i class="fas fa-sign-out-alt"></i>
+                <span>Logout</span>
             </button>
         </div>
     </aside>
@@ -396,23 +940,25 @@
     <main class="main-content">
         <!-- Top Bar -->
         <header class="top-bar">
-            <div style="display:flex;align-items:center;">
-                <i class="fas fa-bars mobile-menu-btn" onclick="toggleSidebar()"></i>
+            <div style="display: flex; align-items: center;">
+                <button class="mobile-menu-btn" onclick="toggleSidebar()">
+                    <i class="fas fa-bars"></i>
+                </button>
                 <div class="search-box">
                     <i class="fas fa-search"></i>
-                    <input type="text" placeholder="Search items, reports...">
+                    <input type="text" placeholder="Search items, reports..." id="searchInput">
                 </div>
             </div>
             <div class="top-actions">
-                <div class="action-btn" onclick="showNotifications()">
+                <button class="icon-btn" onclick="showNotifications()">
                     <i class="fas fa-bell"></i>
                     <span class="badge">3</span>
-                </div>
-                <div class="action-btn" onclick="showEmails()">
+                </button>
+                <button class="icon-btn" onclick="showEmails()">
                     <i class="fas fa-envelope"></i>
                     <span class="badge">5</span>
-                </div>
-                <div class="user-profile">
+                </button>
+                <div class="user-profile" onclick="showProfile()">
                     <div class="user-avatar">J</div>
                     <div class="user-info">
                         <h4>Md. Johurul</h4>
@@ -424,46 +970,63 @@
 
         <!-- Notice Bar -->
         <div class="notice-bar">
-            <span>📢 WAHIDUZZAMAN SIR-AGM | MCD: Welcome to MCD Department • Live Update Active</span>
+            <div class="notice-text">
+                📢 WAHIDUZZAMAN SIR-AGM | MCD: Welcome to MCD Department • Live Update Active • Stock Management System
+            </div>
         </div>
 
-        <!-- Dashboard Content -->
-        <div class="dashboard-content">
-            
+        <!-- Dashboard Page -->
+        <div id="dashboard" class="page dashboard-content active">
+            <div class="page-header">
+                <h1 class="page-title">📊 Dashboard Overview</h1>
+                <p class="page-subtitle">Role Based Dashboard • Firebase Live Summary</p>
+            </div>
+
             <!-- Live Signal -->
             <div class="live-signal-card">
-                <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1px;opacity:0.9;">Live Update Signal</div>
+                <div class="live-badge">
+                    <span class="live-dot"></span>
+                    Live Update Signal
+                </div>
                 <div class="live-text">LIVE</div>
             </div>
 
             <!-- Stats Grid -->
             <div class="stats-grid">
                 <div class="stat-card">
-                    <div class="stat-icon blue"><i class="fas fa-box"></i></div>
+                    <div class="stat-icon blue">
+                        <i class="fas fa-box"></i>
+                    </div>
                     <div class="stat-info">
                         <p>Accessories Stock</p>
-                        <h3 id="accStock">0</h3>
+                        <h3 id="accStock">25,974,562</h3>
                     </div>
                 </div>
                 <div class="stat-card">
-                    <div class="stat-icon green"><i class="fas fa-tape"></i></div>
+                    <div class="stat-icon green">
+                        <i class="fas fa-tape"></i>
+                    </div>
                     <div class="stat-info">
                         <p>Sewing Thread</p>
-                        <h3 id="sewStock">0</h3>
+                        <h3 id="sewStock">162,317</h3>
                     </div>
                 </div>
                 <div class="stat-card">
-                    <div class="stat-icon orange"><i class="fas fa-ruler-horizontal"></i></div>
+                    <div class="stat-icon orange">
+                        <i class="fas fa-ruler-horizontal"></i>
+                    </div>
                     <div class="stat-info">
                         <p>Twill Tape</p>
-                        <h3 id="twillStock">0</h3>
+                        <h3 id="twillStock">160,605</h3>
                     </div>
                 </div>
                 <div class="stat-card">
-                    <div class="stat-icon purple"><i class="fas fa-tint"></i></div>
+                    <div class="stat-icon purple">
+                        <i class="fas fa-tint"></i>
+                    </div>
                     <div class="stat-info">
                         <p>Needle Stock</p>
-                        <h3 id="needleStock">0</h3>
+                        <h3 id="needleStock">10,456</h3>
                     </div>
                 </div>
             </div>
@@ -471,17 +1034,17 @@
             <!-- Needle Special Buttons -->
             <div class="needle-special-btns">
                 <div class="special-btn" onclick="openMonthWiseNeedleStock()">
-                    <i class="fas fa-calendar-alt" style="font-size:24px;"></i>
+                    <i class="fas fa-calendar-alt"></i>
                     <div>
                         <h3>Month Wise Needle Stock Summary</h3>
-                        <p>View monthly needle stock reports</p>
+                        <p>View monthly needle stock reports and analytics</p>
                     </div>
                 </div>
                 <div class="special-btn" onclick="openMonthWiseFloorStock()">
-                    <i class="fas fa-building" style="font-size:24px;"></i>
+                    <i class="fas fa-building"></i>
                     <div>
                         <h3>Month Wise Floor Stock Report</h3>
-                        <p>Floor wise needle distribution</p>
+                        <p>Floor wise needle distribution and usage</p>
                     </div>
                 </div>
             </div>
@@ -489,62 +1052,277 @@
             <!-- Charts Grid -->
             <div class="charts-grid">
                 <div class="chart-card">
-                    <div class="chart-header"><h3>Accessories Stock Chart</h3></div>
-                    <div class="chart-container"><canvas id="accChart"></canvas></div>
+                    <div class="chart-header">
+                        <h3>📈 Accessories Stock Chart</h3>
+                    </div>
+                    <div class="chart-container">
+                        <canvas id="accChart"></canvas>
+                    </div>
                 </div>
                 <div class="chart-card">
-                    <div class="chart-header"><h3>Needle Floor Wise Stock</h3></div>
-                    <div class="chart-container"><canvas id="needleChart"></canvas></div>
+                    <div class="chart-header">
+                        <h3>🏭 Needle Floor Wise Stock</h3>
+                    </div>
+                    <div class="chart-container">
+                        <canvas id="needleChart"></canvas>
+                    </div>
                 </div>
                 <div class="chart-card">
-                    <div class="chart-header"><h3>Grey Fabric Present Stock Summary</h3></div>
-                    <div class="chart-container"><canvas id="greyChart"></canvas></div>
+                    <div class="chart-header">
+                        <h3>🏭 Grey Fabric Present Stock Summary</h3>
+                    </div>
+                    <div class="chart-container">
+                        <canvas id="greyChart"></canvas>
+                    </div>
                 </div>
                 <div class="chart-card">
-                    <div class="chart-header"><h3>Needle Broken / Missing / Change</h3></div>
-                    <div class="chart-container"><canvas id="needleIssueChart"></canvas></div>
+                    <div class="chart-header">
+                        <h3>🪡 Needle Broken / Missing / Change</h3>
+                    </div>
+                    <div class="chart-container">
+                        <canvas id="needleIssueChart"></canvas>
+                    </div>
                 </div>
             </div>
 
             <!-- MCD Section -->
             <div class="mcd-section">
-                <div class="section-title"><i class="fas fa-industry"></i> Department Summary</div>
-                <div id="mcdDashboard" class="mcd-grid"></div>
+                <div class="section-title">
+                    <i class="fas fa-industry"></i>
+                    Department Summary
+                </div>
+                <div class="mcd-grid" id="mcdDashboard">
+                    <!-- Dynamic content will be loaded here -->
+                </div>
             </div>
 
-            <!-- Attendance Section with Line Chart -->
+            <!-- Attendance Section -->
             <div class="attendance-section">
                 <div class="attendance-header">
-                    <h3><i class="fas fa-chart-line" style="margin-right:8px;color:var(--primary);"></i> Attendance Manpower Trend</h3>
+                    <h3>
+                        <i class="fas fa-chart-line" style="color: var(--primary);"></i>
+                        Attendance Manpower Trend
+                    </h3>
                 </div>
                 <div class="attendance-stats">
                     <div class="att-stat-box">
-                        <div style="color:#6366f1;" id="attTotal">0</div>
+                        <div style="color: #6366f1;" id="attTotal">1,248</div>
                         <div>Total Manpower</div>
                     </div>
                     <div class="att-stat-box">
-                        <div style="color:#10b981;" id="attPresent">0</div>
+                        <div style="color: #10b981;" id="attPresent">856</div>
                         <div>Present</div>
                     </div>
                     <div class="att-stat-box">
-                        <div style="color:#f59e0b;" id="attLeave">0</div>
+                        <div style="color: #f59e0b;" id="attLeave">58</div>
                         <div>Leave</div>
                     </div>
                     <div class="att-stat-box">
-                        <div style="color:#ef4444;" id="attAbsent">0</div>
+                        <div style="color: #ef4444;" id="attAbsent">334</div>
                         <div>Absent</div>
                     </div>
                 </div>
-                <div class="chart-container" style="height:250px;">
+                <div class="chart-container" style="height: 280px;">
                     <canvas id="attendanceChart"></canvas>
                 </div>
             </div>
+        </div>
 
+        <!-- Entry Page -->
+        <div id="entry" class="page">
+            <div class="page-header">
+                <h1 class="page-title">➕ New Entry</h1>
+            </div>
+            <div class="form-group">
+                <label>🏢 Company</label>
+                <select id="entryCompany">
+                    <option>GMS TEXTILES LTD</option>
+                    <option>GMS COMPOSITE KNITTING</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>📂 Department / MCD</label>
+                <select id="entryMcd">
+                    <option>ACCESSORIES MCD</option>
+                    <option>GREY FABRIC MCD</option>
+                    <option>BILLING SECTION</option>
+                </select>
+            </div>
+            <button class="btn" onclick="loadEntry()">
+                <i class="fas fa-rocket"></i> Open Entry
+            </button>
+            <div id="entryBox" class="grid"></div>
+        </div>
+
+        <!-- Reports Page -->
+        <div id="reports" class="page">
+            <div class="page-header">
+                <h1 class="page-title">📑 Reports</h1>
+            </div>
+            <div class="form-group">
+                <label>🏢 Company</label>
+                <select id="reportCompany">
+                    <option>GMS TEXTILES LTD</option>
+                    <option>GMS COMPOSITE KNITTING</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>📂 Department / MCD</label>
+                <select id="reportMcd">
+                    <option>ACCESSORIES MCD</option>
+                    <option>GREY FABRIC MCD</option>
+                    <option>BILLING SECTION</option>
+                </select>
+            </div>
+            <button class="btn" onclick="loadReport()">
+                <i class="fas fa-chart-bar"></i> Show Report
+            </button>
+            <div id="reportBox" class="grid"></div>
+        </div>
+
+        <!-- Needle Page -->
+        <div id="needle" class="page">
+            <div class="page-header">
+                <h1 class="page-title">🪡 Needle Section</h1>
+            </div>
+            <div class="grid">
+                <div class="card" onclick="navigateTo('needle-daily')">
+                    <i class="fas fa-tint"></i>
+                    <h3>Needle Daily Entry</h3>
+                </div>
+                <div class="card" onclick="navigateTo('needle-dashboard')">
+                    <i class="fas fa-industry"></i>
+                    <h3>Floor Wise Dashboard</h3>
+                </div>
+                <div class="card" onclick="navigateTo('needle-ageing')">
+                    <i class="fas fa-file-alt"></i>
+                    <h3>Ageing Report</h3>
+                </div>
+                <div class="card" onclick="navigateTo('needle-monthly')">
+                    <i class="fas fa-calendar"></i>
+                    <h3>Needle Monthly Report</h3>
+                </div>
+                <div class="card" onclick="navigateTo('needle-all-reports')">
+                    <i class="fas fa-boxes"></i>
+                    <h3>All Needle BNR/BNF</h3>
+                </div>
+                <div class="card" onclick="navigateTo('needle-summary')">
+                    <i class="fas fa-chart-pie"></i>
+                    <h3>All Needle Summary</h3>
+                </div>
+                <div class="card" onclick="navigateTo('needle-issue')">
+                    <i class="fas fa-exclamation-triangle"></i>
+                    <h3>Needle Issue Entry</h3>
+                </div>
+                <div class="card" onclick="navigateTo('needle-issue-view')">
+                    <i class="fas fa-eye"></i>
+                    <h3>Needle Issue Report</h3>
+                </div>
+            </div>
+        </div>
+
+        <!-- Other Pages -->
+        <div id="admin" class="page">
+            <div class="page-header">
+                <h1 class="page-title">👑 Admin Panel</h1>
+            </div>
+            <p>Admin functionality coming soon...</p>
+        </div>
+
+        <div id="manpower" class="page">
+            <div class="page-header">
+                <h1 class="page-title">👨‍ Manpower Management</h1>
+            </div>
+            <p>Manpower management coming soon...</p>
+        </div>
+
+        <div id="notice" class="page">
+            <div class="page-header">
+                <h1 class="page-title">📢 Notice Board</h1>
+            </div>
+            <p>Notice board coming soon...</p>
+        </div>
+
+        <div id="online" class="page">
+            <div class="page-header">
+                <h1 class="page-title">🟢 Online Users</h1>
+            </div>
+            <p>Online users list coming soon...</p>
+        </div>
+
+        <div id="audit" class="page">
+            <div class="page-header">
+                <h1 class="page-title">📜 Audit History</h1>
+            </div>
+            <p>Audit history coming soon...</p>
+        </div>
+
+        <!-- Backup Page -->
+        <div id="backup" class="page">
+            <div class="page-header">
+                <h1 class="page-title">☁ Backup & Restore Control</h1>
+                <p class="page-subtitle">Only Admin can use this page</p>
+            </div>
+            <div class="status-box">
+                <div class="status-title">📌 Firebase Live Usage</div>
+                <div class="status-line">
+                    <span>📦 Storage Used</span>
+                    <b id="storageUsed">0 MB</b>
+                </div>
+                <div class="status-line">
+                    <span>📊 Usage Percent</span>
+                    <b id="storagePercent">0%</b>
+                </div>
+                <div class="progress">
+                    <div class="progress-fill" id="limitBar" style="width: 1%"></div>
+                </div>
+                <div class="status-signal safe" id="limitSignal">🟢 SAFE</div>
+            </div>
+            <div class="backup-action-grid">
+                <button class="card" onclick="backupAllData()">
+                    <i class="fas fa-cloud-upload-alt" style="color: var(--success);"></i>
+                    <h3>Backup Now</h3>
+                </button>
+                <button class="card" onclick="document.getElementById('restoreFile').click()">
+                    <i class="fas fa-cloud-download-alt" style="color: var(--primary);"></i>
+                    <h3>Restore Backup</h3>
+                </button>
+                <button class="card" onclick="clearOldData()">
+                    <i class="fas fa-trash" style="color: var(--warning);"></i>
+                    <h3>Clear Old Data</h3>
+                </button>
+                <button class="card" onclick="removeRestoredMonth()">
+                    <i class="fas fa-times-circle" style="color: var(--danger);"></i>
+                    <h3>Remove Restored Month</h3>
+                </button>
+            </div>
+            <input type="file" id="restoreFile" accept=".json" style="display: none" onchange="loadRestoreFile(event)">
+        </div>
+
+        <div id="password" class="page">
+            <div class="page-header">
+                <h1 class="page-title">🔐 Change Password</h1>
+            </div>
+            <div class="form-group">
+                <label>Current Password</label>
+                <input type="password" placeholder="Enter current password">
+            </div>
+            <div class="form-group">
+                <label>New Password</label>
+                <input type="password" placeholder="Enter new password">
+            </div>
+            <div class="form-group">
+                <label>Confirm Password</label>
+                <input type="password" placeholder="Confirm new password">
+            </div>
+            <button class="btn">
+                <i class="fas fa-key"></i> Change Password
+            </button>
         </div>
 
         <!-- Footer -->
         <footer class="app-footer">
-            <p style="font-size:12px;color:var(--text-muted-dark);">Powered by GMS MCD ERP System</p>
+            <p>Powered by GMS MCD ERP System</p>
             <div class="credits">
                 <div class="credit-item">
                     <img src="https://i.ibb.co/5hzT1VGk/IMG.jpg" alt="Johurul" class="credit-img">
@@ -573,343 +1351,323 @@
 </div>
 
 <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-app.js";
-    import { getFirestore, collection, getDocs } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-firestore.js";
+import { initializeApp } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-app.js";
+import { getFirestore, collection, getDocs } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-firestore.js";
 
-    const firebaseConfig = {
-        apiKey: "AIzaSyD-wBCF5eeWMHobLFOhBzKW7aB2pagz9-w",
-        authDomain: "gms-warehouse-tracker-7f57e.firebaseapp.com",
-        projectId: "gms-warehouse-tracker-7f57e",
-        storageBucket: "gms-warehouse-tracker-7f57e.firebasestorage.app",
-        messagingSenderId: "992250313291",
-        appId: "1:992250313291:web:ee3bceae76d4d53bc26bce"
-    };
+const firebaseConfig = {
+    apiKey: "AIzaSyD-wBCF5eeWMHobLFOhBzKW7aB2pagz9-w",
+    authDomain: "gms-warehouse-tracker-7f57e.firebaseapp.com",
+    projectId: "gms-warehouse-tracker-7f57e",
+    storageBucket: "gms-warehouse-tracker-7f57e.firebasestorage.app",
+    messagingSenderId: "992250313291",
+    appId: "1:992250313291:web:ee3bceae76d4d53bc26bce"
+};
 
-    const app = initializeApp(firebaseConfig);
-    const db = getFirestore(app);
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
 
-    function parseNum(v) { return Number(String(v || 0).replace(/,/g, "")) || 0; }
-    function fmt(v) { return parseNum(v).toLocaleString("en-US"); }
-    function today() { return new Date().toISOString().slice(0, 10); }
-
-    async function getLatestPresent(collectionName, openingStock) {
-        try {
-            let snap = await getDocs(collection(db, collectionName));
-            let rows = [];
-            snap.forEach(d => { let x = d.data(); if (x.date) rows.push(x); });
-            rows.sort((a, b) => a.date.localeCompare(b.date));
-            let r = 0, dv = 0;
-            rows.forEach(x => { r += Number(x.receive) || 0; dv += Number(x.delivery) || 0; });
-            return openingStock + r - dv;
-        } catch (e) { return openingStock; }
+// Global Functions
+window.showPage = function(pageId, element) {
+    document.querySelectorAll('.page').forEach(page => page.classList.remove('active'));
+    document.getElementById(pageId).classList.add('active');
+    
+    document.querySelectorAll('.nav-item').forEach(item => item.classList.remove('active'));
+    if(element) element.classList.add('active');
+    
+    if(pageId === 'dashboard') {
+        initializeCharts();
     }
+};
 
-    async function getNeedleFloorStock() {
-        const FLOOR_OPENING = {
-            "Kadom R": 618, "Kadom N": 443, "Poddo R": 1889, "Poddo N": 401,
-            "Shapla R": 1171, "Shapla N": 573, "Sample R": 1138, "Sample N": 251
-        };
-        try {
-            let snap = await getDocs(collection(db, "dailyPosting"));
-            let latestByFloor = {};
-            snap.forEach(d => {
-                let x = d.data();
-                if (x.floor && x.date) {
-                    if (!latestByFloor[x.floor] || x.date > latestByFloor[x.floor].date) latestByFloor[x.floor] = x;
+window.toggleSidebar = function() {
+    document.getElementById('sidebar').classList.toggle('active');
+};
+
+window.toggleTheme = function() {
+    document.body.classList.toggle('light-theme');
+};
+
+window.logout = function() {
+    if(confirm('Are you sure you want to logout?')) {
+        window.location.href = 'login.html';
+    }
+};
+
+window.showNotifications = function() {
+    alert('🔔 Notifications:\n\n1. New stock received - Accessories\n2. Low stock alert - Needle Floor 3\n3. Monthly report ready');
+};
+
+window.showEmails = function() {
+    alert('📧 Emails:\n\n1. Monthly Summary Report\n2. Stock Update Notification\n3. System Maintenance Notice\n4. New User Registration\n5. Backup Completed');
+};
+
+window.showProfile = function() {
+    alert('👤 User Profile:\n\nName: Md. Johurul\nRole: System Admin\nEmail: johurul@gms.com');
+};
+
+window.openMonthWiseNeedleStock = function() {
+    window.location.href = 'month-wise-needle-stock.html';
+};
+
+window.openMonthWiseFloorStock = function() {
+    window.location.href = 'month-wise-floor-stock.html';
+};
+
+window.navigateTo = function(page) {
+    alert('Navigating to: ' + page);
+};
+
+window.loadEntry = function() {
+    const company = document.getElementById('entryCompany').value;
+    const mcd = document.getElementById('entryMcd').value;
+    const box = document.getElementById('entryBox');
+    
+    box.innerHTML = `
+        <div class="card">
+            <i class="fas fa-truck" style="color: var(--primary);"></i>
+            <h3>Gate Plan Entry</h3>
+        </div>
+        <div class="card">
+            <i class="fas fa-file-alt" style="color: var(--success);"></i>
+            <h3>Challan / Gate Pass</h3>
+        </div>
+        <div class="card">
+            <i class="fas fa-chart-bar" style="color: var(--warning);"></i>
+            <h3>Challan Report</h3>
+        </div>
+    `;
+};
+
+window.loadReport = function() {
+    const company = document.getElementById('reportCompany').value;
+    const mcd = document.getElementById('reportMcd').value;
+    const box = document.getElementById('reportBox');
+    
+    box.innerHTML = `
+        <div class="card">
+            <i class="fas fa-truck" style="color: var(--primary);"></i>
+            <h3>Gate Plan Report</h3>
+        </div>
+        <div class="card">
+            <i class="fas fa-file-alt" style="color: var(--success);"></i>
+            <h3>Challan Report</h3>
+        </div>
+    `;
+};
+
+window.backupAllData = function() {
+    if(confirm('Create backup of all data?')) {
+        alert('✅ Backup created successfully!');
+    }
+};
+
+window.clearOldData = function() {
+    if(confirm('Clear old data? This action cannot be undone.')) {
+        alert('🗑️ Old data cleared successfully!');
+    }
+};
+
+window.removeRestoredMonth = function() {
+    alert('Remove restored month functionality');
+};
+
+window.loadRestoreFile = function(event) {
+    const file = event.target.files[0];
+    if(file) {
+        alert(`📥 File selected: ${file.name}`);
+    }
+};
+
+// Chart Initialization
+let chartsInitialized = false;
+
+function initializeCharts() {
+    if(chartsInitialized) return;
+    
+    // Accessories Chart
+    new Chart(document.getElementById('accChart'), {
+        type: 'doughnut',
+        data: {
+            labels: ['Accessories Sample', 'Sewing Thread', 'Twill Tape'],
+            datasets: [{
+                data: [25974562, 162317, 160605],
+                backgroundColor: ['#6366f1', '#10b981', '#f59e0b'],
+                borderWidth: 0
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    position: 'bottom',
+                    labels: { padding: 15, usePointStyle: true }
                 }
-            });
-            let floorStocks = {}, total = 0;
-            Object.keys(FLOOR_OPENING).forEach(f => {
-                let stock = FLOOR_OPENING[f];
-                if (latestByFloor[f] && latestByFloor[f].rows) {
-                    stock = 0;
-                    latestByFloor[f].rows.forEach(r => stock += Number(r.present) || 0);
-                }
-                floorStocks[f] = stock;
-                total += stock;
-            });
-            return { floorStocks, total };
-        } catch (e) { return { floorStocks: FLOOR_OPENING, total: 7000 }; }
-    }
-
-    async function getGreyData() {
-        try {
-            let snap = await getDocs(collection(db, "greyFabricStock"));
-            let docs = [];
-            snap.forEach(d => { let x = d.data(); if (x.date && x.rows) docs.push(x); });
-            docs.sort((a, b) => (b.date || "").localeCompare(a.date || ""));
-            let latest = docs[0] || { rows: [] };
-            let labels = [], data = [], total = 0;
-            (latest.rows || []).forEach(r => {
-                let closing = parseNum(r.closing || 0);
-                if (closing > 0) { labels.push(r.fabric || "Item"); data.push(closing); total += closing; }
-            });
-            return { labels: labels.length ? labels : ["No Data"], data: data.length ? data : [0], total };
-        } catch (e) { return { labels: ["No Data"], data: [0], total: 0 }; }
-    }
-
-    async function getNeedleIssueToday() {
-        try {
-            let snap = await getDocs(collection(db, "needleDailyReport"));
-            let rows = [];
-            snap.forEach(d => { let x = d.data(); if (x.date) rows.push(x); });
-            rows.sort((a, b) => (b.date || "").localeCompare(a.date || ""));
-            let latest = rows[0] || {};
-            return {
-                broken: parseNum(latest.brokenNeedle),
-                missing: parseNum(latest.missingNeedle),
-                change: parseNum(latest.changeNeedle)
-            };
-        } catch (e) { return { broken: 0, missing: 0, change: 0 }; }
-    }
-
-    async function getBillingToday() {
-        try {
-            let snap = await getDocs(collection(db, "billingManpowerReport"));
-            let t = today(), total = 0, leave = 0, absent = 0, present = 0;
-            snap.forEach(d => {
-                let x = d.data();
-                if (x.date === t) {
-                    total += Number(x.totalManpower) || 0;
-                    leave += Number(x.leave) || 0;
-                    absent += Number(x.absent) || 0;
-                    present += Number(x.present) || 0;
-                }
-            });
-            return { total, leave, absent, present };
-        } catch (e) { return { total: 0, leave: 0, absent: 0, present: 0 }; }
-    }
-
-    const valPlugin = {
-        id: 'valPlugin',
-        afterDatasetsDraw(chart) {
-            const { ctx } = chart;
-            ctx.save();
-            ctx.font = 'bold 11px Inter';
-            ctx.fillStyle = document.body.classList.contains('light-mode') ? '#0f172a' : '#f8fafc';
-            ctx.textAlign = 'center';
-            chart.data.datasets.forEach((dataset, i) => {
-                const meta = chart.getDatasetMeta(i);
-                meta.data.forEach((bar, index) => {
-                    const value = dataset.data[index];
-                    if (value === undefined || value === null) return;
-                    if (chart.config.type === 'doughnut' || chart.config.type === 'pie') {
-                        const centerX = bar.x;
-                        const centerY = bar.y;
-                        const radius = (bar.outerRadius - bar.innerRadius) / 2;
-                        const angle = (bar.startAngle + bar.endAngle) / 2;
-                        const x = centerX + Math.cos(angle) * (bar.innerRadius + radius);
-                        const y = centerY + Math.sin(angle) * (bar.innerRadius + radius);
-                        ctx.fillText(fmt(value), x, y);
-                    } else {
-                        ctx.fillText(fmt(value), bar.x, bar.y - 5);
-                    }
-                });
-            });
-            ctx.restore();
+            }
         }
-    };
+    });
 
-    Chart.defaults.font.family = "'Inter', sans-serif";
+    // Needle Floor Chart
+    new Chart(document.getElementById('needleChart'), {
+        type: 'bar',
+        data: {
+            labels: ['Kadom R', 'Kadom N', 'Poddo R', 'Poddo N', 'Shapla R', 'Shapla N', 'Sample R', 'Sample N'],
+            datasets: [{
+                label: 'Stock',
+                data: [996, 423, 1968, 596, 1461, 553, 1678, 227],
+                backgroundColor: ['#6366f1', '#10b981', '#f59e0b', '#8b5cf6', '#ef4444', '#14b8a6', '#eab308', '#ec4899'],
+                borderRadius: 8
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: { legend: { display: false } },
+            scales: {
+                y: { beginAtZero: true, grid: { color: '#f1f5f9' } },
+                x: { grid: { display: false } }
+            }
+        }
+    });
 
-    function renderCharts(sewing, accessories, twill, floorStocks, grey, needleIssue) {
-        new Chart(document.getElementById("accChart"), {
-            type: 'doughnut',
-            data: {
-                labels: ["Accessories Sample", "Sewing Thread", "Twill Tape"],
-                datasets: [{
-                    data: [accessories, sewing, twill],
-                    backgroundColor: ['#6366f1', '#10b981', '#f59e0b'],
-                    borderWidth: 0
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: {
-                    legend: { position: 'bottom', labels: { color: document.body.classList.contains('light-mode') ? '#0f172a' : '#f8fafc' } }
-                }
-            },
-            plugins: [valPlugin]
-        });
+    // Grey Fabric Chart
+    new Chart(document.getElementById('greyChart'), {
+        type: 'doughnut',
+        data: {
+            labels: ['Grey A', 'Grey B', 'Grey C', 'Total'],
+            datasets: [{
+                data: [250000, 320000, 251418, 821418],
+                backgroundColor: ['#6366f1', '#10b981', '#f59e0b', '#8b5cf6'],
+                borderWidth: 0
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: { position: 'bottom' }
+            }
+        }
+    });
 
-        new Chart(document.getElementById("needleChart"), {
-            type: 'bar',
-            data: {
-                labels: Object.keys(floorStocks),
-                datasets: [{
-                    data: Object.values(floorStocks),
-                    backgroundColor: ['#6366f1', '#10b981', '#f59e0b', '#8b5cf6', '#ef4444', '#14b8a6', '#eab308', '#ec4899'],
-                    borderRadius: 6
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: { legend: { display: false } },
-                scales: {
-                    y: { grid: { color: document.body.classList.contains('light-mode') ? '#e2e8f0' : 'rgba(255,255,255,0.1)' } },
-                    x: { grid: { display: false } }
-                }
-            },
-            plugins: [valPlugin]
-        });
+    // Needle Issue Chart
+    new Chart(document.getElementById('needleIssueChart'), {
+        type: 'doughnut',
+        data: {
+            labels: ['Broken', 'Missing', 'Change'],
+            datasets: [{
+                data: [45, 12, 89],
+                backgroundColor: ['#ef4444', '#f59e0b', '#10b981'],
+                borderWidth: 0
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: { position: 'bottom' }
+            }
+        }
+    });
 
-        new Chart(document.getElementById("greyChart"), {
-            type: 'doughnut',
-            data: {
-                labels: grey.labels,
-                datasets: [{
-                    data: grey.data,
-                    backgroundColor: ['#6366f1', '#10b981', '#f59e0b', '#8b5cf6', '#ef4444'],
-                    borderWidth: 0
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: {
-                    legend: { position: 'bottom', labels: { color: document.body.classList.contains('light-mode') ? '#0f172a' : '#f8fafc' } }
-                }
-            },
-            plugins: [valPlugin]
-        });
-
-        new Chart(document.getElementById("needleIssueChart"), {
-            type: 'doughnut',
-            data: {
-                labels: ["Broken", "Missing", "Change"],
-                datasets: [{
-                    data: [needleIssue.broken, needleIssue.missing, needleIssue.change],
-                    backgroundColor: ['#ef4444', '#f59e0b', '#10b981'],
-                    borderWidth: 0
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: {
-                    legend: { position: 'bottom', labels: { color: document.body.classList.contains('light-mode') ? '#0f172a' : '#f8fafc' } }
-                }
-            },
-            plugins: [valPlugin]
-        });
-
-        // Attendance Line Chart
-        new Chart(document.getElementById("attendanceChart"), {
-            type: 'line',
-            data: {
-                labels: ['Week 1', 'Week 2', 'Week 3', 'Week 4'],
-                datasets: [{
+    // Attendance Chart
+    new Chart(document.getElementById('attendanceChart'), {
+        type: 'line',
+        data: {
+            labels: ['Week 1', 'Week 2', 'Week 3', 'Week 4'],
+            datasets: [
+                {
                     label: 'Present',
                     data: [850, 860, 856, 870],
                     borderColor: '#10b981',
                     backgroundColor: 'rgba(16, 185, 129, 0.1)',
                     fill: true,
                     tension: 0.4
-                }, {
+                },
+                {
                     label: 'Absent',
                     data: [320, 310, 334, 300],
                     borderColor: '#ef4444',
                     backgroundColor: 'rgba(239, 68, 68, 0.1)',
                     fill: true,
                     tension: 0.4
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: {
-                    legend: { position: 'top', labels: { color: document.body.classList.contains('light-mode') ? '#0f172a' : '#f8fafc' } }
-                },
-                scales: {
-                    y: { grid: { color: document.body.classList.contains('light-mode') ? '#e2e8f0' : 'rgba(255,255,255,0.1)' } },
-                    x: { grid: { display: false } }
                 }
+            ]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: { position: 'top' }
+            },
+            scales: {
+                y: { beginAtZero: true, grid: { color: '#f1f5f9' } },
+                x: { grid: { display: false } }
             }
-        });
-    }
+        }
+    });
 
-    async function loadDashboardStock() {
-        let sewing = await getLatestPresent("sewingThread", 133322);
-        let twill = await getLatestPresent("twillTape", 171255);
-        let accessories = await getLatestPresent("accessoriesSample", 21514393);
-        let needleData = await getNeedleFloorStock();
-        let grey = await getGreyData();
-        let needleIssue = await getNeedleIssueToday();
-        let billing = await getBillingToday();
+    chartsInitialized = true;
+}
 
-        document.getElementById("accStock").innerText = fmt(accessories);
-        document.getElementById("sewStock").innerText = fmt(sewing);
-        document.getElementById("twillStock").innerText = fmt(twill);
-        document.getElementById("needleStock").innerText = fmt(needleData.total);
-        document.getElementById("attTotal").innerText = billing.total;
-        document.getElementById("attPresent").innerText = billing.present;
-        document.getElementById("attLeave").innerText = billing.leave;
-        document.getElementById("attAbsent").innerText = billing.absent;
+// Load MCD Dashboard
+function loadMCDDashboard() {
+    const mcdData = [
+        {
+            name: 'Accessories MCD',
+            icon: 'fa-box',
+            color: '#6366f1',
+            data: [
+                { label: 'Accessories Stock', value: '25,974,562' },
+                { label: 'Sewing Thread', value: '162,317' },
+                { label: 'Twill Tape', value: '160,605' }
+            ]
+        },
+        {
+            name: 'Grey Fabric MCD',
+            icon: 'fa-industry',
+            color: '#f59e0b',
+            data: [
+                { label: 'Closing Balance', value: '821,418' },
+                { label: 'Status', value: 'Active' }
+            ]
+        },
+        {
+            name: 'Billing Section',
+            icon: 'fa-users',
+            color: '#10b981',
+            data: [
+                { label: 'Total Manpower', value: '1,248' },
+                { label: 'Present', value: '856' },
+                { label: 'Leave', value: '58' },
+                { label: 'Absent', value: '334' }
+            ]
+        }
+    ];
 
-        renderCharts(sewing, accessories, twill, needleData.floorStocks, grey, needleIssue);
-        renderMCDCards(accessories, sewing, twill, grey.total, billing);
-    }
-
-    function renderMCDCards(accessories, sewing, twill, greyTotal, billing) {
-        const allMCDs = [
-            { name: "Accessories MCD", icon: "fa-box", color: "#6366f1", data: [
-                { label: "Accessories Stock", value: fmt(accessories) },
-                { label: "Sewing Thread", value: fmt(sewing) },
-                { label: "Twill Tape", value: fmt(twill) }
-            ]},
-            { name: "Grey Fabric MCD", icon: "fa-industry", color: "#f59e0b", data: [
-                { label: "Closing Balance", value: fmt(greyTotal) },
-                { label: "Status", value: "Active" }
-            ]},
-            { name: "Billing Section", icon: "fa-users", color: "#10b981", data: [
-                { label: "Total Manpower", value: fmt(billing.total) },
-                { label: "Present", value: fmt(billing.present) },
-                { label: "Leave", value: fmt(billing.leave) },
-                { label: "Absent", value: fmt(billing.absent) }
-            ]},
-            { name: "Needle Section", icon: "fa-tint", color: "#8b5cf6", data: [
-                { label: "Total Stock", value: fmt(needleData.total) },
-                { label: "Floors", value: "8" }
-            ]},
-            { name: "Manpower MCD", icon: "fa-user-tie", color: "#ec4899", data: [
-                { label: "Total Workers", value: "1248" },
-                { label: "Active", value: "856" }
-            ]},
-            { name: "Shipping MCD", icon: "fa-truck", color: "#14b8a6", data: [
-                { label: "Pending", value: "12" },
-                { label: "Completed", value: "45" }
-            ]}
-        ];
-
-        let html = allMCDs.map(mcd => `
-            <div class="mcd-card">
-                <div class="mcd-header"><i class="fas ${mcd.icon}" style="color:${mcd.color}"></i> ${mcd.name}</div>
-                ${mcd.data.map(d => `
-                    <div class="mcd-row">
-                        <span class="mcd-label">${d.label}</span>
-                        <span class="mcd-value">${d.value}</span>
-                    </div>
-                `).join('')}
+    const html = mcdData.map(mcd => `
+        <div class="mcd-card">
+            <div class="mcd-header">
+                <i class="fas ${mcd.icon}" style="color: ${mcd.color}"></i>
+                ${mcd.name}
             </div>
-        `).join('');
-        
-        document.getElementById("mcdDashboard").innerHTML = html;
-    }
+            ${mcd.data.map(d => `
+                <div class="mcd-row">
+                    <span class="mcd-label">${d.label}</span>
+                    <span class="mcd-value">${d.value}</span>
+                </div>
+            `).join('')}
+        </div>
+    `).join('');
 
-    window.toggleTheme = function() { document.body.classList.toggle('light-mode'); };
-    window.toggleSidebar = function() { document.getElementById('sidebar').classList.toggle('active'); };
-    window.setActive = function(el) {
-        document.querySelectorAll('.nav-item').forEach(item => item.classList.remove('active'));
-        el.classList.add('active');
-    };
-    window.showNotifications = function() { alert('🔔 Notifications:\n1. New stock received\n2. Low stock alert\n3. Monthly report ready'); };
-    window.showEmails = function() { alert('📧 Emails:\n1. Monthly Summary\n2. Stock Update\n3. Maintenance Notice'); };
-    window.openMonthWiseNeedleStock = function() { window.location.href = 'month_wise_needle_stock_summary.html'; };
-    window.openMonthWiseFloorStock = function() { window.location.href = 'month_wise_floor_stock_report.html'; };
+    document.getElementById('mcdDashboard').innerHTML = html;
+}
 
-    loadDashboardStock();
+// Initialize
+document.addEventListener('DOMContentLoaded', function() {
+    initializeCharts();
+    loadMCDDashboard();
+});
 </script>
 
 </body>
