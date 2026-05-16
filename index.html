@@ -5,855 +5,660 @@
 <title>GMS MCD SYSTEM</title>
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
 <style>
-@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap');
-
 :root{
-  --bg:#0a1628;
-  --card:#1e293b;
-  --card2:#334155;
-  --text:#f1f5f9;
-  --muted:#cbd5e1;
-  --border:#475569;
-  --blue:#3b82f6;
-  --green:#10b981;
+  --bg:#07111f;
+  --card:#101b2d;
+  --card2:#14233a;
+  --text:#fff;
+  --muted:#9fb0c7;
+  --border:#263855;
+  --blue:#2563eb;
+  --green:#22c55e;
   --red:#ef4444;
   --yellow:#f59e0b;
-  --purple:#8b5cf6;
-  --shadow:0 10px 40px rgba(0,0,0,.4);
+  --shadow:0 14px 34px rgba(0,0,0,.28);
 }
 body.light{
-  --bg:#f8fafc;
-  --card:#ffffff;
-  --card2:#f1f5f9;
-  --text:#1e293b;
+  --bg:#eef3f9;
+  --card:#fff;
+  --card2:#f8fafc;
+  --text:#0f172a;
   --muted:#64748b;
   --border:#cbd5e1;
-  --shadow:0 10px 40px rgba(0,0,0,.1);
+  --shadow:0 12px 26px rgba(15,23,42,.14);
 }
-*{box-sizing:border-box;margin:0;padding:0}
+*{box-sizing:border-box}
 body{
   margin:0;
-  background:var(--bg);
+  background:radial-gradient(circle at top left,rgba(37,99,235,.13),transparent 35%),var(--bg);
   color:var(--text);
-  font-family:'Poppins',sans-serif;
-  padding-bottom:100px;
-  font-weight:400;
-  line-height:1.6;
+  font-family:"Segoe UI Emoji","Apple Color Emoji","Segoe UI",Arial,sans-serif;
+  padding-bottom:78px;
+  font-weight:650;
 }
-
-/* ===== SIDEBAR ===== */
-.sidebar{
-  position:fixed;
-  left:0;
-  top:0;
-  bottom:0;
-  width:220px;
-  background:linear-gradient(180deg,#1e293b 0%,#0f172a 100%);
-  border-right:1px solid rgba(59,130,246,0.2);
-  display:flex;
-  flex-direction:column;
-  z-index:1000;
-  transition:transform .3s cubic-bezier(0.4,0,0.2,1);
-  overflow-y:auto;
-  box-shadow:4px 0 30px rgba(0,0,0,.5);
-}
-body.light .sidebar{
-  background:linear-gradient(180deg,#ffffff 0%,#f1f5f9 100%);
-  border-right-color:#cbd5e1;
-}
-@media(max-width:900px){
-  .sidebar{transform:translateX(-100%);}
-  .sidebar.show{transform:translateX(0);}
-}
-.sidebarHeader{
-  padding:20px 16px;
-  border-bottom:1px solid rgba(59,130,246,0.2);
-  display:flex;
-  align-items:center;
-  gap:10px;
-}
-.sidebarHeader .logo{
-  font-size:18px;
-  font-weight:800;
-  color:#f1f5f9;
-  letter-spacing:-0.5px;
-}
-body.light .sidebarHeader .logo{color:#1e293b;}
-.sidebarHeader .sub{
-  font-size:10px;
-  color:#cbd5e1;
-  font-weight:500;
-}
-body.light .sidebarHeader .sub{color:#64748b;}
-.sidebarNav{
-  flex:1;
-  padding:12px 10px;
-  display:flex;
-  flex-direction:column;
-  gap:4px;
-}
-.sidebarNav button{
-  background:transparent;
-  color:#cbd5e1;
-  border:1px solid transparent;
-  padding:10px 12px;
-  border-radius:8px;
-  font-size:13px;
-  font-weight:500;
-  cursor:pointer;
-  text-align:left;
-  transition:all .3s cubic-bezier(0.4,0,0.2,1);
-  display:flex;
-  align-items:center;
-  gap:10px;
-}
-body.light .sidebarNav button{color:#475569;}
-.sidebarNav button:hover{
-  background:rgba(59,130,246,.15);
-  border-color:rgba(59,130,246,.4);
-  transform:translateX(4px);
-  color:#f1f5f9;
-}
-body.light .sidebarNav button:hover{color:#1e293b;}
-.sidebarNav button.active{
-  background:linear-gradient(135deg,var(--blue),var(--purple));
-  color:#fff!important;
-  box-shadow:0 4px 20px rgba(59,130,246,.4);
-  font-weight:600;
-}
-.sidebarFooter{
-  padding:16px;
-  border-top:1px solid rgba(59,130,246,0.2);
-  display:flex;
-  flex-direction:column;
-  gap:8px;
-}
-.sidebarFooter .themeBtn,.sidebarFooter .logoutBtn{
-  width:100%;
-  padding:10px 12px;
-  border-radius:8px;
-  font-weight:600;
-  cursor:pointer;
-  border:none;
-  font-size:12px;
-  background:linear-gradient(135deg,var(--blue),var(--purple));
-  color:#fff;
-  transition:all .3s;
-}
-.sidebarFooter .logoutBtn{
-  background:linear-gradient(135deg,var(--red),#f97316);
-}
-
-/* ===== MAIN CONTENT ===== */
-.mainContent{
-  margin-left:220px;
-  min-height:100vh;
-  background:var(--bg);
-  transition:margin-left .3s cubic-bezier(0.4,0,0.2,1);
-}
-@media(max-width:900px){.mainContent{margin-left:0;}}
-
-/* ===== TOP BAR ===== */
-.topBar{
-  background:rgba(30,41,59,.95);
-  border-bottom:1px solid rgba(59,130,246,0.2);
-  padding:12px 20px;
+.header{
+  background:var(--card);
+  border-bottom:1px solid var(--border);
   display:flex;
   align-items:center;
   justify-content:space-between;
-  position:sticky;
-  top:0;
-  z-index:100;
-  backdrop-filter:blur(10px);
-}
-body.light .topBar{
-  background:rgba(255,255,255,.95);
-  border-bottom-color:#cbd5e1;
-}
-.menuToggle{
-  background:var(--blue);
-  color:#fff;
-  border:none;
-  padding:8px 16px;
-  border-radius:8px;
-  font-size:14px;
-  cursor:pointer;
-  font-weight:600;
-  display:none;
-}
-@media(max-width:900px){.menuToggle{display:block;}}
-.topBarRight{display:flex;align-items:center;gap:12px;}
-.topBarRight .autoSave{
-  display:flex;align-items:center;gap:6px;
-  color:var(--green);font-weight:600;font-size:12px;
-}
-.topBarRight .themeBtn{
-  background:rgba(59,130,246,.2);
-  color:var(--blue);
-  border:1px solid rgba(59,130,246,.3);
-  padding:6px 12px;
-  border-radius:8px;
-  font-weight:600;
-  cursor:pointer;
-  font-size:12px;
-}
-
-/* ===== NOTICE BAR ===== */
-.noticeBar{
-  background:linear-gradient(90deg,#f59e0b 0%,#ef4444 50%,#3b82f6 100%);
-  color:#fff;padding:8px 0;font-weight:600;
-  overflow:hidden;white-space:nowrap;
-}
-.noticeMove{
-  display:inline-block;padding-left:100%;
-  animation:marquee 25s linear infinite;
-}
-@keyframes marquee{0%{transform:translateX(0)}100%{transform:translateX(-100%)}}
-
-/* ===== PAGE CONTENT ===== */
-.page{display:none;padding:20px;}
-.page.activePage{display:block;}
-.dashTitle{
-  font-size:22px;
-  font-weight:700;
-  margin-bottom:4px;
-  color:var(--text);
-}
-body.light .dashTitle{color:var(--text);}
-.dashSub{color:var(--muted);margin-bottom:20px;font-weight:500;font-size:13px;}
-
-/* ===== NEW ENTRY & REPORT SECTION STYLES ===== */
-.entrySection, .reportSection {
-  background: var(--card);
-  border-radius: 16px;
-  padding: 24px;
-  margin-bottom: 24px;
-  box-shadow: 0 4px 20px rgba(0,0,0,0.1);
-}
-body.light .entrySection, body.light .reportSection {
-  background: #ffffff;
-  box-shadow: 0 4px 20px rgba(0,0,0,0.08);
-}
-
-.entrySection h2, .reportSection h2 {
-  font-size: 22px;
-  font-weight: 700;
-  margin-bottom: 20px;
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  color: var(--text);
-}
-
-.formGroup {
-  margin-bottom: 16px;
-}
-
-.formGroup label {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  font-size: 13px;
-  font-weight: 600;
-  color: var(--muted);
-  margin-bottom: 6px;
-}
-
-.formGroup select {
-  width: 100%;
-  padding: 12px 14px;
-  border: 1px solid var(--border);
-  border-radius: 10px;
-  background: var(--bg);
-  color: var(--text);
-  font-size: 13px;
-  font-weight: 500;
-  cursor: pointer;
-  transition: all 0.3s;
-  font-family: 'Poppins', sans-serif;
-}
-body.light .formGroup select {
-  background: #f8fafc;
-  border-color: #cbd5e1;
-}
-
-.formGroup select:focus {
-  outline: none;
-  border-color: var(--blue);
-  box-shadow: 0 0 0 3px rgba(59,130,246,0.1);
-}
-
-.openEntryBtn {
-  background: linear-gradient(135deg, #3b82f6, #8b5cf6);
-  color: #fff;
-  border: none;
-  padding: 12px 24px;
-  border-radius: 10px;
-  font-size: 14px;
-  font-weight: 600;
-  cursor: pointer;
-  display: inline-flex;
-  align-items: center;
-  gap: 10px;
-  transition: all 0.3s;
-  box-shadow: 0 4px 15px rgba(59,130,246,0.3);
-  margin-bottom: 24px;
-}
-
-.openEntryBtn:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 6px 20px rgba(59,130,246,0.4);
-}
-
-.entryCardsGrid, .reportCardsGrid {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 14px;
-}
-
-@media (max-width: 900px) {
-  .entryCardsGrid, .reportCardsGrid {
-    grid-template-columns: repeat(2, 1fr);
-  }
-}
-
-@media (max-width: 600px) {
-  .entryCardsGrid, .reportCardsGrid {
-    grid-template-columns: 1fr;
-  }
-}
-
-.entryCard, .reportCard {
-  background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
-  border: 1px solid rgba(59,130,246,0.1);
-  border-radius: 12px;
-  padding: 18px;
-  cursor: pointer;
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 10px;
-  font-size: 13px;
-  font-weight: 600;
-  color: var(--text);
-  box-shadow: 0 2px 10px rgba(0,0,0,0.05);
-  min-height: 65px;
-}
-
-body.light .entryCard, body.light .reportCard {
-  background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
-  border-color: #e2e8f0;
-}
-
-.entryCard:hover, .reportCard:hover {
-  transform: translateY(-3px);
-  box-shadow: 0 8px 25px rgba(59,130,246,0.15);
-  border-color: rgba(59,130,246,0.3);
-}
-
-.entryCard i, .reportCard i {
-  font-size: 16px;
-  color: var(--blue);
-}
-
-/* ===== LIVE SIGNAL CARD ===== */
-.liveSignalCard{
-  background: var(--card);
-  border: 1px solid rgba(16,185,129,0.2);
-  border-radius: 16px;
-  padding: 20px;
-  text-align: center;
-  margin-bottom: 20px;
-  position: relative;
-  overflow: hidden;
-  box-shadow: 0 4px 20px rgba(0,0,0,0.2);
-}
-.liveSignalWrap{
-  display:flex;
-  align-items:center;
-  justify-content:center;
+  padding:10px 18px;
   gap:12px;
 }
-.liveDot{
-  width:12px;
-  height:12px;
-  background:var(--green);
-  border-radius:50%;
-  animation:livePulse 1.5s infinite;
-  box-shadow:0 0 0 0 rgba(16,185,129,.7);
+.logoArea{display:flex;align-items:center;gap:10px}
+.companyLogo{width:42px;height:42px;object-fit:contain;border-radius:8px}
+.logo{font-size:23px;font-weight:1000}
+.sub{font-size:12px;color:var(--muted);font-weight:900}
+.rightTop{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.autoSave{color:var(--green);font-weight:1000}
+.themeBtn,.logoutBtn{
+  background:var(--blue);
+  color:#fff;
+  border:0;
+  padding:9px 14px;
+  border-radius:24px;
+  font-weight:1000;
+  cursor:pointer;
 }
-.liveText{
+.logoutBtn{background:var(--red)}
+.noticeBar{
+  background:linear-gradient(90deg,#f59e0b,#2563eb);
+  color:#fff;
+  padding:9px 0;
+  font-weight:1000;
+  overflow:hidden;
+  white-space:nowrap;
+}
+.noticeMove{
+  display:inline-block;
+  padding-left:100%;
+  animation:marquee 24s linear infinite;
+}
+@keyframes marquee{
+  0%{transform:translateX(0)}
+  100%{transform:translateX(-100%)}
+}
+.nav{
+  display:flex;
+  gap:12px;
+  padding:14px 18px;
+  background:rgba(255,255,255,.03);
+  border-bottom:1px solid var(--border);
+  flex-wrap:wrap;
+}
+.nav button{
+  background:var(--card);
+  color:var(--text);
+  border:1px solid var(--border);
+  padding:13px 22px;
+  border-radius:12px;
+  font-size:15px;
+  font-weight:1000;
+  cursor:pointer;
+}
+.nav button.active{
+  background:linear-gradient(135deg,#2563eb,#7c3aed);
+  color:white;
+}
+.page{
+  display:none;
+  padding:18px;
+}
+.page.activePage{
+  display:block;
+}
+.dashTitle{
+  font-size:26px;
+  font-weight:1000;
+}
+.dashSub{
+  color:var(--muted);
+  margin:5px 0 14px;
+  font-weight:900;
+}
+.topGrid,.summaryLine,.chartGrid,.mcdDashboard,.grid{
+  display:grid;
+  gap:14px;
+  margin-bottom:14px;
+}
+.topGrid,.summaryLine{grid-template-columns:repeat(3,1fr)}
+.chartGrid{grid-template-columns:1fr 1fr}
+.mcdDashboard{grid-template-columns:repeat(3,1fr)}
+.grid{grid-template-columns:repeat(3,1fr)}
+.topCard,.sumBox,.needleSmall,.chartBox,.mcdBox,.card,.statusBox{
+  background:linear-gradient(135deg,var(--card),var(--card2));
+  border:1px solid var(--border);
+  box-shadow:var(--shadow);
+}
+.topCard{border-radius:20px;padding:16px}
+.topCard .label{
+  color:var(--muted);
+  font-size:12px;
+  font-weight:1000;
+  text-transform:uppercase;
+}
+.topCard .num{
+  font-size:27px;
+  color:var(--green);
+  font-weight:1000;
+  margin-top:6px;
+}
+.sumBox{
+  border-radius:18px;
+  padding:13px;
+  text-align:center;
+}
+.sumBox span{
+  color:var(--muted);
+  font-size:12px;
+  font-weight:1000;
+}
+.sumBox b{
+  display:block;
+  color:var(--green);
+  font-size:22px;
+  margin-top:5px;
+  font-weight:1000;
+}
+.needleSmall{
+  border-radius:20px;
+  padding:14px;
+  text-align:center;
+}
+.needleSmall span{color:var(--muted);font-weight:1000}
+.needleSmall b{
+  display:block;
   color:var(--green);
   font-size:28px;
-  font-weight:800;
-  letter-spacing: 1px;
+  margin-top:4px;
+  font-weight:1000;
 }
-.liveLabel{
-  color:var(--muted);
-  font-size:10px;
-  font-weight:600;
-  text-transform:uppercase;
-  letter-spacing:1px;
-  margin-bottom:6px;
+.chartBox{
+  min-height:285px;
+  border-radius:22px;
+  padding:14px;
+  position:relative;
+}
+.chartBox h3{
+  margin:0 0 8px;
+  font-size:16px;
+  font-weight:1000;
+}
+.chartBox canvas{
+  max-height:220px!important;
+}
+.mcdBox{
+  border-radius:18px;
+  padding:15px;
+}
+.mcdBox h3{
+  margin:0 0 10px;
+  font-size:17px;
+}
+.miniRow{
+  display:flex;
+  justify-content:space-between;
+  gap:10px;
+  padding:8px 0;
+  border-bottom:1px solid var(--border);
+  font-size:13px;
+  font-weight:900;
+}
+.miniValue{
+  color:var(--green);
+  font-weight:1000;
+}
+.miniChart{
+  height:7px;
+  background:rgba(255,255,255,.10);
+  border-radius:20px;
+  overflow:hidden;
+  margin-top:10px;
+}
+.miniFill{
+  height:100%;
+  width:60%;
+  background:linear-gradient(90deg,#22c55e,#2563eb);
+}
+.card{
+  padding:22px;
+  border-radius:16px;
+  text-align:center;
+  font-size:16px;
+  font-weight:1000;
+  cursor:pointer;
+  min-height:62px;
   display:flex;
   align-items:center;
   justify-content:center;
-  gap:6px;
+  gap:8px;
 }
-
-@keyframes livePulse{
-  0%{box-shadow:0 0 0 0 rgba(16,185,129,.7);transform:scale(1)}
-  70%{box-shadow:0 0 0 10px rgba(16,185,129,0);transform:scale(1.1)}
-  100%{box-shadow:0 0 0 0 rgba(16,185,129,0);transform:scale(1)}
+.card:hover{
+  background:linear-gradient(135deg,#2563eb,#7c3aed);
+  color:#fff;
 }
-
-/* ===== 1-LINE STATS ===== */
-.stat-row {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 14px;
-  margin-bottom: 20px;
-}
-.stat-card-new {
-  padding: 18px;
-  border-radius: 16px;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  color: white;
-  transition: transform 0.3s;
-  box-shadow: 0 4px 15px rgba(0,0,0,0.2);
-}
-.stat-card-new:hover { transform: translateY(-4px); }
-
-.bg-blue { background: linear-gradient(135deg, #3b82f6, #2563eb); }
-.bg-green { background: linear-gradient(135deg, #10b981, #059669); }
-.bg-orange { background: linear-gradient(135deg, #f59e0b, #d97706); }
-.bg-purple { background: linear-gradient(135deg, #8b5cf6, #7c3aed); }
-
-.stat-info h3 { font-size: 22px; font-weight: 800; margin-bottom: 4px; }
-.stat-info p { font-size: 11px; opacity: 0.9; font-weight: 500; }
-.stat-icon { font-size: 28px; opacity: 0.7; }
-
-@media(max-width:900px){
-  .stat-row{grid-template-columns:1fr 1fr;}
-}
-@media(max-width:500px){
-  .stat-row{grid-template-columns:1fr;}
-}
-
-/* ===== CHARTS & GRIDS ===== */
-.chartGrid{
-  display:grid;
-  gap:16px;
-  margin-bottom:20px;
-  grid-template-columns:1fr 1fr;
-}
-@media(max-width:900px){.chartGrid{grid-template-columns:1fr;}}
-
-.chartBox{
+select,input,textarea{
+  width:100%;
+  padding:14px;
+  margin-top:6px;
+  border-radius:10px;
+  border:1px solid var(--border);
   background:var(--card);
-  border:1px solid rgba(59,130,246,0.1);
-  border-radius:16px;
-  padding:16px;
-}
-body.light .chartBox{border-color:#cbd5e1;}
-.chartBox h3{margin:0 0 14px;font-size:15px;font-weight:600;color:var(--text);}
-body.light .chartBox h3{color:var(--text);}
-.chartBox canvas{max-height:260px!important;}
-
-.needleSmall{
-  background:var(--card);
-  border:1px solid rgba(59,130,246,0.1);
-  border-radius:16px;
-  padding:20px;
-  text-align:center;
-  margin-bottom:20px;
-}
-body.light .needleSmall{border-color:#cbd5e1;}
-.needleSmall span{color:var(--muted);font-weight:500;font-size:13px;display:block;margin-bottom:10px;}
-.needleSmall b{color:var(--green);font-size:32px;font-weight:700;}
-
-.mcdDashboard{
-  display:grid;
-  grid-template-columns:repeat(3,1fr);
-  gap:16px;
-  margin-bottom:20px;
-}
-@media(max-width:900px){.mcdDashboard{grid-template-columns:1fr;}}
-
-.mcdBox{
-  background:var(--card);
-  border:1px solid rgba(59,130,246,0.1);
-  border-radius:16px;
-  padding:16px;
-}
-body.light .mcdBox{border-color:#cbd5e1;}
-.mcdBox h3{margin:0 0 12px;font-size:15px;font-weight:600;color:var(--text);}
-body.light .mcdBox h3{color:var(--text);}
-.miniRow{
-  display:flex;justify-content:space-between;gap:10px;
-  padding:6px 0;border-bottom:1px solid rgba(255,255,255,.1);
-  font-size:12px;font-weight:500;
-}
-body.light .miniRow{border-bottom-color:#cbd5e1;}
-.miniValue{color:var(--green);font-weight:600;}
-
-/* ===== NEEDLE BUTTONS GRID ===== */
-.needleGrid{
-  display:grid;
-  grid-template-columns:repeat(auto-fill,minmax(240px,1fr));
-  gap:14px;
-}
-.needleCard{
-  background:var(--card);
-  border:1px solid rgba(59,130,246,0.15);
-  border-radius:12px;
-  padding:14px 16px;
-  display:flex;
-  align-items:center;
-  gap:14px;
-  cursor:pointer;
-  transition:all .3s;
   color:var(--text);
+  font-size:16px;
 }
-body.light .needleCard{background:var(--card);}
-.needleCard:hover{
-  background:rgba(59,130,246,0.1);
-  border-color:var(--blue);
-  transform:scale(1.02);
+.btn{
+  padding:13px 24px;
+  background:var(--blue);
+  color:white;
+  border:0;
+  border-radius:10px;
+  font-weight:1000;
+  cursor:pointer;
+  margin-top:12px;
 }
-.needleCard i{font-size:18px;color:var(--blue);width:28px;text-align:center;}
-.needleCard span{font-size:13px;font-weight:600;}
-
-/* ===== FOOTER ===== */
+.statusBox{
+  border-radius:18px;
+  padding:15px;
+  max-width:900px;
+  margin:14px auto;
+}
+.statusTitle{
+  font-size:18px;
+  font-weight:1000;
+  margin-bottom:8px;
+}
+.statusLine{
+  display:flex;
+  justify-content:space-between;
+  border-bottom:1px solid var(--border);
+  padding:7px 0;
+  font-weight:900;
+}
+.statusSignal{
+  font-size:28px;
+  font-weight:1000;
+  margin-top:10px;
+}
+.safe{color:var(--green)}
+.warn{color:var(--yellow)}
+.stop{color:var(--red)}
+.progress{
+  height:9px;
+  background:rgba(255,255,255,.12);
+  border-radius:20px;
+  overflow:hidden;
+  margin-top:10px;
+}
+.progressFill{
+  height:100%;
+  width:1%;
+  background:var(--green);
+}
+.attendanceBox{
+  grid-column:1/-1;
+  min-height:340px;
+  display:grid;
+  grid-template-columns:1.15fr .85fr;
+  gap:18px;
+  align-items:center;
+}
+.attChartSide canvas{max-height:250px!important}
+.attendanceInside{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:14px;
+}
+.attBox{
+  background:linear-gradient(135deg,rgba(34,197,94,.08),rgba(37,99,235,.08)),var(--card);
+  border:1px solid var(--border);
+  border-radius:18px;
+  padding:16px;
+  min-height:92px;
+}
+.attBox span{
+  color:var(--muted);
+  font-size:13px;
+  font-weight:1000;
+  text-transform:uppercase;
+}
+.attBox b{
+  display:block;
+  color:var(--green);
+  font-size:34px;
+  margin-top:8px;
+  font-weight:1000;
+}
+.attBox.leave b{color:#f59e0b}
+.attBox.absent b{color:#ef4444}
+.backupActionGrid{
+  max-width:900px;
+  margin:14px auto;
+  grid-template-columns:repeat(4,1fr);
+}
+.logItem{
+  border-bottom:1px solid var(--border);
+  padding:8px 0;
+  font-size:13px;
+  font-weight:800;
+}
+.logItem b{color:var(--green)}
+.backupWarningBanner{
+  background:linear-gradient(90deg,#ef4444,#f59e0b);
+  color:white;
+  text-align:center;
+  padding:10px;
+  font-size:15px;
+  font-weight:1000;
+}
 .creditFooter{
   position:fixed;
-  bottom:10px;
+  bottom:6px;
   left:50%;
   transform:translateX(-50%);
   display:flex;
   align-items:center;
-  gap:16px;
-  background:var(--card);
-  border:1px solid rgba(59,130,246,0.3);
-  padding:10px 16px;
-  border-radius:16px;
-  box-shadow:0 8px 30px rgba(0,0,0,.5);
+  gap:8px;
+  background:rgba(16,27,45,.92);
+  border:1px solid var(--border);
+  padding:6px 10px;
+  border-radius:18px;
+  box-shadow:0 10px 25px rgba(0,0,0,.25);
   z-index:999;
-  backdrop-filter:blur(10px);
+  max-width:92%;
+  overflow-x:auto;
 }
-body.light .creditFooter{background:var(--card);border-color:#cbd5e1;}
-.creditItem{display:flex;align-items:center;gap:10px;color:var(--text);}
-.creditItem img{width:36px;height:36px;border-radius:50%;border:2px solid var(--green);object-fit:cover;}
-.creditText b{font-size:11px;font-weight:600;display:block;}
-.creditText span{color:var(--muted);font-size:9px;}
-.creditDivider{width:1px;height:30px;background:rgba(59,130,246,0.5);}
-
+body.light .creditFooter{background:rgba(255,255,255,.96)}
+.creditItem{
+  display:flex;
+  align-items:center;
+  gap:6px;
+  color:var(--text);
+  white-space:nowrap;
+}
+.creditItem img{
+  width:28px;
+  height:28px;
+  border-radius:50%;
+  border:2px solid var(--green);
+  object-fit:cover;
+  background:#fff;
+}
+.creditText{line-height:1.1;font-size:9px;font-weight:700}
+.creditText b{font-size:10px}
+.creditText span{display:block;color:var(--muted);font-size:8px}
+.creditDivider{width:1px;height:24px;background:var(--border)}
 @media(max-width:900px){
-  .pc-only{display:none!important;}
-  .creditFooter{width:95%;max-width:95%;padding:8px 12px;flex-wrap:wrap;justify-content:center;}
+  .header{display:block;text-align:center}
+  .logoArea{justify-content:center}
+  .rightTop{justify-content:center;margin-top:8px}
+  .nav button{flex:1 1 42%;padding:10px 12px;font-size:14px}
+  .topGrid,.summaryLine,.chartGrid,.mcdDashboard,.grid,.backupActionGrid{grid-template-columns:1fr}
+  .attendanceBox{grid-template-columns:1fr}
+  .attendanceInside{grid-template-columns:1fr 1fr}
+  .page{padding:12px}
+  .creditFooter{width:95%;max-width:95%}
 }
+@media(max-width:520px){
+  .attendanceInside{grid-template-columns:1fr}
+}
+
+/* ===== LIVE UPDATE SIGNAL CARD ===== */
+.liveSignalCard{
+  position:relative;
+  overflow:hidden;
+}
+.liveSignalCard:before{
+  content:"";
+  position:absolute;
+  inset:-40%;
+  background:radial-gradient(circle,rgba(34,197,94,.18),transparent 55%);
+  animation:signalGlow 2s infinite;
+}
+.liveSignalWrap{
+  position:relative;
+  display:flex;
+  align-items:center;
+  gap:14px;
+  margin-top:12px;
+}
+.liveDot{
+  width:38px;
+  height:38px;
+  background:#22c55e;
+  border-radius:50%;
+  box-shadow:0 0 0 0 rgba(34,197,94,.8);
+  animation:livePulse 1.4s infinite;
+}
+.liveText{
+  color:#22c55e;
+  font-size:34px;
+  font-weight:1000;
+  letter-spacing:1px;
+}
+@keyframes livePulse{
+  0%{box-shadow:0 0 0 0 rgba(34,197,94,.85);transform:scale(1)}
+  70%{box-shadow:0 0 0 18px rgba(34,197,94,0);transform:scale(1.08)}
+  100%{box-shadow:0 0 0 0 rgba(34,197,94,0);transform:scale(1)}
+}
+@keyframes signalGlow{
+  0%,100%{opacity:.4}
+  50%{opacity:1}
+}
+@media(max-width:700px){
+  .liveText{font-size:30px}
+  .liveDot{width:32px;height:32px}
+}
+
+
+.topGridSingle{grid-template-columns:1fr!important}
+.topGridSingle .topCard{min-height:120px}
+
+
+/* ===== COMPANY-WISE ENTRY/REPORT FIX ===== */
+#entryCompany,#reportCompany,#entryMcd,#reportMcd{
+  max-width:100%;
+}
+
+
+/* ===== FINAL INDEX CHALLAN/GATE BUTTON FIX ===== */
+.card[onclick*="challan-entry"],
+.card[onclick*="challan-report"],
+.card[onclick*="gate-plan"]{
+  cursor:pointer;
+}
+
 </style>
 </head>
 
 <body>
-<div class="sidebar" id="sidebar">
-  <div class="sidebarHeader">
-    <div style="width:36px;height:36px;background:var(--blue);border-radius:8px;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:18px;color:#fff;">G</div>
+
+<div class="header">
+  <div class="logoArea">
+    <img src="logo.png" class="companyLogo" onerror="this.style.display='none'">
     <div>
-      <div class="logo">GMS MCD</div>
+      <div class="logo">GMS MCD SYSTEM</div>
       <div class="sub" id="loginInfo">Loading...</div>
     </div>
   </div>
-  <div class="sidebarNav">
-    <button class="active" onclick="openPage('home',this)">🏠 Dashboard</button>
-    <button onclick="openPage('entry',this)">➕ New Entry</button>
-    <button onclick="openPage('reports',this)">📑 Reports</button>
-    <button id="needleNav" onclick="openPage('needle',this)">🪡 Needle</button>
-    <button id="adminNav" onclick="location.href='admin.html'">👑 Admin</button>
-    <button id="manpowerNav" onclick="location.href='manpower.html'">👨‍ Manpower</button>
-    <button onclick="location.href='notice.html'">📢 Notice</button>
-    <button onclick="location.href='online-users.html'">🟢 Online</button>
-    <button onclick="location.href='audit-history.html'">📜 Audit</button>
-    <button id="backupNav" onclick="openPage('backup',this)">☁ Backup</button>
-    <button onclick="location.href='change-password.html'">🔐 Password</button>
-  </div>
-  <div class="sidebarFooter">
-    <button class="themeBtn" onclick="toggleTheme()">🌙 / ️ Theme</button>
+  <div class="rightTop">
+    <span class="autoSave">🟢 Live</span>
+    <button class="themeBtn" onclick="toggleTheme()">🌙 / ☀️</button>
+    <button class="themeBtn" onclick="location.href='profile.html'">👤 Profile</button>
     <button class="logoutBtn" onclick="logout()">🚪 Logout</button>
   </div>
 </div>
-<div class="sidebarOverlay" id="sidebarOverlay" onclick="toggleSidebar()" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:999;backdrop-filter:blur(4px);"></div>
 
-<div class="mainContent" id="mainContent">
-  <div class="topBar">
-    <button class="menuToggle" onclick="toggleSidebar()">☰ Menu</button>
-    <div class="topBarRight">
-      <span class="autoSave"><div style="width:8px;height:8px;background:var(--green);border-radius:50%;animation:pulse 2s infinite;"></div> Live</span>
-      <button class="themeBtn" onclick="location.href='profile.html'">👤 Profile</button>
-    </div>
-  </div>
-  <div id="backupWarningBanner" class="backupWarningBanner" style="display:none">🔴 BACKUP NEEDED</div>
-  <div class="noticeBar"><div class="noticeMove" id="noticeMove">📢 Loading live notice...</div></div>
+<div id="backupWarningBanner" class="backupWarningBanner" style="display:none">🔴 BACKUP NEEDED</div>
+<div class="noticeBar"><div class="noticeMove" id="noticeMove">📢 Loading live notice...</div></div>
 
-  <div id="home" class="page activePage">
-    <div class="dashTitle">📊 Dashboard Overview</div>
-    <div class="dashSub">Role Based Dashboard • Firebase Live Summary</div>
-    
-    <div class="liveSignalCard">
-      <div class="liveLabel">
-        <div style="width:8px;height:8px;background:var(--green);border-radius:50%;"></div>
-        LIVE UPDATE SIGNAL
-      </div>
+<div class="nav">
+  <button class="active" onclick="openPage('home',this)">🏠 Dashboard</button>
+  <button onclick="openPage('entry',this)">➕ New Entry</button>
+  <button onclick="openPage('reports',this)">📑 Reports</button>
+  <button id="needleNav" onclick="openPage('needle',this)">🪡 Needle</button>
+  <button id="adminNav" onclick="location.href='admin.html'">👑 Admin</button>
+  <button id="manpowerNav" onclick="location.href='manpower.html'">👨‍🏭 Manpower</button>
+  <button onclick="location.href='notice.html'">📢 Notice</button>
+  <button onclick="location.href='online-users.html'">🟢 Online</button>
+  <button onclick="location.href='audit-history.html'">📜 Audit</button>
+  <button id="backupNav" onclick="openPage('backup',this)">☁ Backup</button>
+  <button onclick="location.href='change-password.html'">🔐 Password</button>
+</div>
+
+<div id="home" class="page activePage">
+  <div class="dashTitle">📊 Dashboard Overview</div>
+  <div class="dashSub">Role Based Dashboard • Firebase Live Summary</div>
+
+  <div class="topGrid topGridSingle">
+    <div class="topCard liveSignalCard">
+      <div class="label">🟢 Live Update Signal</div>
       <div class="liveSignalWrap">
-        <div class="liveDot"></div>
+        <span class="liveDot"></span>
         <span class="liveText">LIVE</span>
       </div>
     </div>
-
-    <div class="stat-row" id="accessoriesSummary">
-      <div class="stat-card-new bg-blue">
-        <div class="stat-info">
-          <p>📦 Accessories Stock</p>
-          <h3 id="sumAccessories">0</h3>
-        </div>
-        <div class="stat-icon"><i class="fas fa-box"></i></div>
-      </div>
-      <div class="stat-card-new bg-green">
-        <div class="stat-info">
-          <p>🧵 Sewing Thread</p>
-          <h3 id="sumSewing">0</h3>
-        </div>
-        <div class="stat-icon"><i class="fas fa-tape"></i></div>
-      </div>
-      <div class="stat-card-new bg-orange">
-        <div class="stat-info">
-          <p>📏 Twill Tape</p>
-          <h3 id="sumTwill">0</h3>
-        </div>
-        <div class="stat-icon"><i class="fas fa-ruler-horizontal"></i></div>
-      </div>
-      <div class="stat-card-new bg-purple" id="needleSummary">
-        <div class="stat-info">
-          <p>🪡 Needle Today Stock</p>
-          <h3 id="needleToday">0</h3>
-        </div>
-        <div class="stat-icon"><i class="fas fa-syringe"></i></div>
-      </div>
-    </div>
-
-    <div class="chartGrid">
-      <div class="chartBox" id="accessoriesChartBox"><h3>📈 Accessories Stock Chart</h3><canvas id="accessoriesChart"></canvas></div>
-      <div class="chartBox" id="needleChartBox"><h3>🏭 Needle Floor Wise Stock</h3><canvas id="needleChart"></canvas></div>
-      <div class="chartBox" id="greyChartBox"><h3>🏭 Grey Fabric Present Stock</h3><canvas id="greyChart"></canvas></div>
-      <div class="chartBox" id="needleIssueChartBox"><h3>🪡 Needle Broken / Missing / Change</h3><canvas id="needleIssueChart"></canvas></div>
-      <div class="chartBox" id="billingChartBox" style="grid-column:1/-1;">
-        <h3>👨‍ Attendance Manpower Chart</h3>
-        <div class="chartGrid">
-          <div style="text-align:center;"><canvas id="billingChart"></canvas></div>
-          <div style="display:flex;flex-direction:column;justify-content:center;gap:10px;">
-            <div style="background:rgba(16,185,129,.1);padding:14px;border-radius:12px;">
-              <span style="color:var(--muted);font-size:11px;">👨‍ Attendance Total</span>
-              <b style="color:var(--green);font-size:22px;" id="attTotal">0</b>
-            </div>
-            <div style="background:rgba(16,185,129,.1);padding:14px;border-radius:12px;">
-              <span style="color:var(--muted);font-size:11px;">✅ Today Present</span>
-              <b style="color:var(--green);font-size:22px;" id="attPresent">0</b>
-            </div>
-            <div style="background:rgba(245,158,11,.1);padding:14px;border-radius:12px;">
-              <span style="color:var(--muted);font-size:11px;">🏖 Leave</span>
-              <b style="color:var(--yellow);font-size:22px;" id="attLeave">0</b>
-            </div>
-            <div style="background:rgba(239,68,68,.1);padding:14px;border-radius:12px;">
-              <span style="color:var(--muted);font-size:11px;">❌ Absent</span>
-              <b style="color:var(--red);font-size:22px;" id="attAbsent">0</b>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-    <div id="mcdDashboard" class="mcdDashboard">Loading...</div>
   </div>
 
-  <!-- NEW ENTRY PAGE -->
-  <div id="entry" class="page">
-    <div class="entrySection">
-      <h2><i class="fas fa-plus"></i> New Entry</h2>
-      
-      <div class="formGroup">
-        <label><i class="fas fa-building" style="color:var(--blue)"></i> Company</label>
-        <select id="entryCompany">
-          <option value="GMS TEXTILES LTD">GMS TEXTILES LTD</option>
-          <option value="GMS COMPOSITE KNITTING">GMS COMPOSITE KNITTING</option>
-        </select>
-      </div>
-
-      <div class="formGroup">
-        <label><i class="fas fa-folder" style="color:var(--yellow)"></i> Department / MCD</label>
-        <select id="entryMcd">
-          <option value="ACCESSORIES MCD">ACCESSORIES MCD</option>
-          <option value="GREY FABRIC MCD">GREY FABRIC MCD</option>
-          <option value="BILLING SECTION">BILLING SECTION</option>
-          <option value="SHIPMENT MCD">SHIPMENT MCD</option>
-          <option value="OUTER WEAR MCD">OUTER WEAR MCD</option>
-          <option value="YARN MCD">YARN MCD</option>
-          <option value="PRINTING MCD">PRINTING MCD</option>
-          <option value="JHUT MCD">JHUT MCD</option>
-          <option value="GENERAL MCD">GENERAL MCD</option>
-          <option value="LEFTOVER MCD">LEFTOVER MCD</option>
-          <option value="FINISH FABRIC MCD">FINISH FABRIC MCD</option>
-          <option value="YARN DYEING MCD">YARN DYEING MCD</option>
-          <option value="CHEMICAL MCD">CHEMICAL MCD</option>
-          <option value="GENERAL TECHNICAL MCD">GENERAL TECHNICAL MCD</option>
-        </select>
-      </div>
-
-      <button class="openEntryBtn" onclick="loadEntry()">
-        <i class="fas fa-rocket"></i> Open Entry
-      </button>
-
-      <div id="entryBox" class="entryCardsGrid"></div>
-    </div>
+  <div class="summaryLine" id="accessoriesSummary">
+    <div class="sumBox"><span>📦 Accessories With Sample Stock</span><b id="sumAccessories">0</b></div>
+    <div class="sumBox"><span>🧵 Sewing Thread Stock</span><b id="sumSewing">0</b></div>
+    <div class="sumBox"><span>📏 Twill Tape Stock</span><b id="sumTwill">0</b></div>
   </div>
 
-  <!-- REPORTS PAGE -->
-  <div id="reports" class="page">
-    <div class="reportSection">
-      <h2><i class="fas fa-file-alt"></i> Reports</h2>
-      
-      <div class="formGroup">
-        <label><i class="fas fa-building" style="color:var(--blue)"></i> Company</label>
-        <select id="reportCompany">
-          <option value="GMS TEXTILES LTD">GMS TEXTILES LTD</option>
-          <option value="GMS COMPOSITE KNITTING">GMS COMPOSITE KNITTING</option>
-        </select>
+  <div class="needleSmall" id="needleSummary"><span>🪡 Needle Today Stock</span><b id="needleToday">0</b></div>
+
+  <div class="chartGrid">
+    <div class="chartBox" id="accessoriesChartBox"><h3>📈 Accessories Stock Chart</h3><canvas id="accessoriesChart"></canvas></div>
+    <div class="chartBox" id="needleChartBox"><h3>🏭 Needle Floor Wise Stock</h3><canvas id="needleChart"></canvas></div>
+    <div class="chartBox" id="greyChartBox"><h3>🏭 Grey Fabric Present Stock Summary</h3><canvas id="greyChart"></canvas></div>
+    <div class="chartBox" id="needleIssueChartBox"><h3>🪡 Needle Broken / Missing / Change</h3><canvas id="needleIssueChart"></canvas></div>
+    <div class="chartBox attendanceBox" id="billingChartBox">
+      <div class="attChartSide">
+        <h3>👨‍💼 Attendance Manpower Chart</h3>
+        <canvas id="billingChart"></canvas>
       </div>
-
-      <div class="formGroup">
-        <label><i class="fas fa-folder" style="color:var(--yellow)"></i> Department / MCD</label>
-        <select id="reportMcd">
-          <option value="ACCESSORIES MCD">ACCESSORIES MCD</option>
-          <option value="GREY FABRIC MCD">GREY FABRIC MCD</option>
-          <option value="BILLING SECTION">BILLING SECTION</option>
-          <option value="SHIPMENT MCD">SHIPMENT MCD</option>
-          <option value="OUTER WEAR MCD">OUTER WEAR MCD</option>
-          <option value="YARN MCD">YARN MCD</option>
-          <option value="PRINTING MCD">PRINTING MCD</option>
-          <option value="JHUT MCD">JHUT MCD</option>
-          <option value="GENERAL MCD">GENERAL MCD</option>
-          <option value="LEFTOVER MCD">LEFTOVER MCD</option>
-          <option value="FINISH FABRIC MCD">FINISH FABRIC MCD</option>
-          <option value="YARN DYEING MCD">YARN DYEING MCD</option>
-          <option value="CHEMICAL MCD">CHEMICAL MCD</option>
-          <option value="GENERAL TECHNICAL MCD">GENERAL TECHNICAL MCD</option>
-        </select>
-      </div>
-
-      <button class="openEntryBtn" onclick="loadReport()">
-        <i class="fas fa-chart-bar"></i> Show Report
-      </button>
-
-      <div id="reportBox" class="reportCardsGrid"></div>
-    </div>
-  </div>
-
-  <div id="needle" class="page">
-    <h2>🪡 Needle Section</h2>
-    <div class="needleGrid">
-      <div class="needleCard" onclick="location.href='needle.html'"><i class="fas fa-syringe"></i><span>Needle Daily Entry</span></div>
-      <div class="needleCard" onclick="location.href='needle-dashboard.html'"><i class="fas fa-industry"></i><span>Floor Wise Dashboard</span></div>
-      <div class="needleCard" onclick="location.href='ageing.html'"><i class="fas fa-hourglass-half"></i><span>Ageing Report</span></div>
-      <div class="needleCard" onclick="location.href='needle-monthly.html'"><i class="fas fa-calendar-alt"></i><span>Needle Monthly Report</span></div>
-      <div class="needleCard" onclick="location.href='all-needle-reports.html'"><i class="fas fa-file-archive"></i><span>All Needle BNR/BNF</span></div>
-      <div class="needleCard" onclick="location.href='all-needle-summary.html'"><i class="fas fa-chart-pie"></i><span>All Needle Summary</span></div>
-      <div class="needleCard" onclick="location.href='needle-report.html'"><i class="fas fa-file-signature"></i><span>Needle Issue Entry</span></div>
-      <div class="needleCard" onclick="location.href='needle-report-view.html'"><i class="fas fa-file-invoice"></i><span>Needle Issue Report</span></div>
-      <div class="needleCard" style="border-color: var(--blue); background: rgba(59,130,246,0.1);" onclick="location.href='month_wise_needle_stock_summary.html'">
-        <i class="fas fa-calendar-check" style="color:var(--blue)"></i><span>Month Wise Needle Stock Summary</span>
-      </div>
-      <div class="needleCard" style="border-color: var(--purple); background: rgba(139,92,246,0.1);" onclick="location.href='month_wise_needle_stock_report_carry_fixed.html'">
-        <i class="fas fa-building" style="color:var(--purple)"></i><span>Month Wise Floor Stock Report</span>
+      <div class="attendanceInside">
+        <div class="attBox total"><span>👨‍🏭 Attendance Total</span><b id="attTotal">0</b></div>
+        <div class="attBox present"><span>✅ Today Present</span><b id="attPresent">0</b></div>
+        <div class="attBox leave"><span>🏖 Leave</span><b id="attLeave">0</b></div>
+        <div class="attBox absent"><span>❌ Absent</span><b id="attAbsent">0</b></div>
       </div>
     </div>
   </div>
 
-  <div id="backup" class="page">
-    <h2>☁ Backup & Restore Control</h2>
-    <div class="dashSub">Only Admin can use this page</div>
-    <div class="statusBox">
-      <div class="statusTitle">📌 Firebase Live Usage</div>
-      <div class="statusLine"><span>📦 Storage Used</span><b id="storageUsed">0 MB</b></div>
-      <div class="statusLine"><span>📊 Usage Percent</span><b id="storagePercent">0%</b></div>
-      <div class="progress"><div id="limitBar" class="progressFill"></div></div>
-      <div id="limitSignal" class="statusSignal safe">🟢 SAFE</div>
-    </div>
-    <div class="grid backupActionGrid">
-      <div class="card" onclick="backupAllData()">☁ Backup Now</div>
-      <div class="card" onclick="document.getElementById('restoreFile').click()">📥 Restore Backup</div>
-      <div class="card" onclick="clearOldData()">🧹 Clear Old Data</div>
-      <div class="card" onclick="removeRestoredMonth()">🗑 Remove Restored Month</div>
-    </div>
-    <input type="file" id="restoreFile" accept=".json" style="display:none" onchange="loadRestoreFile(event)">
-  </div>
+  <div id="mcdDashboard" class="mcdDashboard">Loading...</div>
+</div>
 
-  <!-- Footer -->
-  <div class="creditFooter">
-    <div class="creditItem">
-      <img src="https://i.ibb.co/5hzT1VGk/IMG.jpg" alt="Johurul">
-      <div class="creditText"><b>Md. Johurul</b><span>System Developer</span></div>
-    </div>
-    <div class="creditDivider"></div>
-    <div class="creditItem pc-only">
-      <img src="https://i.ibb.co/DDqvG3pD/nazir.jpg" alt="Nazir">
-      <div class="creditText"><b>Md. Nazir Hossain</b><span>System Planning</span></div>
-    </div>
-    <div class="creditDivider pc-only"></div>
-    <div class="creditItem pc-only">
-      <img src="https://i.ibb.co/k6WC4fBm/asad.jpg" alt="Asad">
-      <div class="creditText"><b>Md. Asaduzzaman</b><span>Operational Support</span></div>
-    </div>
+<div id="entry" class="page">
+  <h2>➕ New Entry</h2>
+  <label>🏢 Company</label>
+  <select id="entryCompany"><option>GMS TEXTILES LTD</option><option>GMS COMPOSITE KNITTING</option></select>
+  <br><br>
+  <label>📂 Department / MCD</label>
+  <select id="entryMcd"></select>
+  <button class="btn" onclick="loadEntry()">🚀 Open Entry</button>
+  <br><br>
+  <div id="entryBox" class="grid"></div>
+</div>
+
+<div id="reports" class="page">
+  <h2>📑 Reports</h2>
+  <label>🏢 Company</label>
+  <select id="reportCompany"><option>GMS TEXTILES LTD</option><option>GMS COMPOSITE KNITTING</option></select>
+  <br><br>
+  <label>📂 Department / MCD</label>
+  <select id="reportMcd"></select>
+  <button class="btn" onclick="loadReport()">📊 Show Report</button>
+  <br><br>
+  <div id="reportBox" class="grid"></div>
+</div>
+
+<div id="needle" class="page">
+  <h2>🪡 Needle Section</h2>
+  <div class="grid">
+    <div class="card" onclick="location.href='needle.html'">🪡 Needle Daily Entry</div>
+    <div class="card" onclick="location.href='needle-dashboard.html'">🏭 Floor Wise Dashboard</div>
+    <div class="card" onclick="location.href='ageing.html'">
+📑 Ageing Report
+</div>
+    <div class="card" onclick="location.href='needle-monthly.html'">📅 Needle Monthly Report</div>
+    <div class="card" onclick="location.href='all-needle-reports.html'">📦 All Needle BNR/BNF</div>
+    <div class="card" onclick="location.href='all-needle-summary.html'">📊 All Needle Summary</div>
+    <div class="card" onclick="location.href='needle-report.html'">📝 Needle Issue Entry</div>
+    <div class="card" onclick="location.href='needle-report-view.html'">📊 Needle Issue Report</div>
+    <div class="card" onclick="location.href='month_wise_needle_stock_summary.html'">📅 Month Wise Needle Stock Summary</div>
+    <div class="card" onclick="location.href='month_wise_needle_stock_report_carry_fixed.html'">📋 Month Wise Floor Stock Report</div>
   </div>
 </div>
 
-<!-- ===== GLOBAL NAVIGATION FUNCTIONS ===== -->
-<script>
-window.urlCompanyName = function(company){
-  if(company==="GMS COMPOSITE KNITTING") return "GMS COMPOSITE KNITTING IND LTD.";
-  if(company==="GMS TEXTILES LTD") return "GMS TEXTILES LTD.";
-  return company || "GMS TEXTILES LTD.";
-};
-window.enc = function(v){ return encodeURIComponent(v || ""); };
+<div id="backup" class="page">
+  <h2>☁ Backup & Restore Control</h2>
+  <div class="dashSub">Only Admin can use this page</div>
 
-window.openGatePlanEntry = function(company,mcd){
-  location.href = "gate-plan.html?company=" + window.enc(window.urlCompanyName(company)) + "&mcd=" + window.enc(mcd || "");
-};
-window.openChallanEntry = function(company,mcd){
-  location.href = "challan-entry.html?company=" + window.enc(window.urlCompanyName(company)) + "&mcd=" + window.enc(mcd || "");
-};
-window.openGatePlanReport = function(company,mcd){
-  location.href = "gate-plan-report.html?company=" + window.enc(window.urlCompanyName(company)) + "&mcd=" + window.enc(mcd || "");
-};
-window.openChallanReport = function(company,mcd){
-  location.href = "challan-report.html?company=" + window.enc(window.urlCompanyName(company)) + "&mcd=" + window.enc(mcd || "");
-};
+  <div class="statusBox">
+    <div class="statusTitle">📌 Firebase Live Usage</div>
+    <div class="statusLine"><span>📖 Reads Today</span><b id="readsToday">0 / 50,000</b></div>
+    <div class="statusLine"><span>✍️ Writes Today</span><b id="writesToday">0 / 20,000</b></div>
+    <div class="statusLine"><span>🗑 Deletes Today</span><b id="deletesToday">0 / 20,000</b></div>
+    <div class="statusLine"><span>💾 Storage Limit</span><b>1 GiB</b></div>
+    <div class="statusLine"><span>📦 Storage Used</span><b id="storageUsed">0 MB</b></div>
+    <div class="statusLine"><span>📊 Usage Percent</span><b id="storagePercent">0%</b></div>
+    <div class="statusLine"><span>🔥 Today Entry</span><b id="firebaseToday">0</b></div>
+    <div class="statusLine"><span>🗃 Total Entry</span><b id="firebaseTotal">0</b></div>
+    <div class="statusLine"><span>🚚 Gate Plan Firebase</span><b id="gateLocal">0 / 0</b></div>
+    <div class="statusLine"><span>📄 Challan/Gate Pass Firebase</span><b id="challanLocal">0 / 0</b></div>
+    <div class="statusLine"><span>📁 Backup Months</span><b id="backupMonths">0</b></div>
+    <div class="statusLine"><span>🗓 Active Months</span><b id="activeMonths">0</b></div>
+    <div class="statusLine"><span>☁ Backup Status</span><b id="backupStatus">READY</b></div>
+    <div class="progress"><div id="limitBar" class="progressFill"></div></div>
+    <div id="limitSignal" class="statusSignal safe">🟢 SAFE</div>
+  </div>
 
-window.commonEntryCards = function(company,mcd){
-  return `<div class="entryCard" onclick="openGatePlanEntry('${company}','${mcd}')"><i class="fas fa-truck"></i> Gate Plan Entry</div>
-  <div class="entryCard" onclick="openChallanEntry('${company}','${mcd}')"><i class="fas fa-file-invoice"></i> Challan / Gate Pass</div>
-  <div class="entryCard" onclick="openChallanReport('${company}','${mcd}')"><i class="fas fa-file-alt"></i> Challan / Gate Pass Report</div>`;
-};
-window.commonReportCards = function(company,mcd){
-  return `<div class="reportCard" onclick="openGatePlanReport('${company}','${mcd}')"><i class="fas fa-truck"></i> Gate Plan Report</div>
-  <div class="reportCard" onclick="openChallanReport('${company}','${mcd}')"><i class="fas fa-file-invoice"></i> Challan / Gate Pass Report</div>`;
-};
-</script>
+  <div class="grid backupActionGrid">
+    <div class="card" onclick="backupAllData()">☁ Backup Now</div>
+    <div class="card" onclick="document.getElementById('restoreFile').click()">📥 Restore Backup</div>
+    <div class="card" onclick="clearOldData()">🧹 Clear Old Data</div>
+    <div class="card" onclick="removeRestoredMonth()">🗑 Remove Restored Month</div>
+  </div>
 
-<!-- ===== FIREBASE MODULE ===== -->
+  <input type="file" id="restoreFile" accept=".json" style="display:none" onchange="loadRestoreFile(event)">
+
+  <div class="statusBox" id="restorePanel" style="display:none">
+    <div class="statusTitle">📥 Restore Month Wise Data</div>
+    <label>Select Month From Backup</label>
+    <select id="restoreMonthSelect"></select>
+    <button class="btn" onclick="restoreSelectedMonth()">Restore Selected Month</button>
+    <div class="statusLine"><span>Backup File</span><b id="restoreFileName">-</b></div>
+    <div class="statusLine"><span>Month Found</span><b id="restoreMonthCount">0</b></div>
+    <div class="statusLine"><span>Restore Status</span><b id="restoreStatus">READY</b></div>
+  </div>
+
+  <div class="statusBox">
+    <div class="statusTitle">📌 Backup Rules</div>
+    <div class="statusLine"><span>Current Month</span><b>KEEP</b></div>
+    <div class="statusLine"><span>Previous Month</span><b>KEEP</b></div>
+    <div class="statusLine"><span>Older Month</span><b>Backup then Manual Clear</b></div>
+    <div class="statusLine"><span>800 MB</span><b>Backup Warning</b></div>
+    <div class="statusLine"><span>900 MB</span><b>Backup Now</b></div>
+  </div>
+
+  <div class="statusBox">
+    <div class="statusTitle">📜 Backup Activity Log</div>
+    <div id="backupActivityLog">No activity yet</div>
+  </div>
+</div>
+
+<div class="creditFooter">
+  <div class="creditItem"><img src="https://i.ibb.co/5hzT1VGk/IMG.jpg"><div class="creditText"><b>Powered by JOHURUL</b><span>System Developer & Dashboard Design</span></div></div>
+  <div class="creditDivider"></div>
+  <div class="creditItem"><img src="https://i.ibb.co/DDqvG3pD/nazir.jpg"><div class="creditText"><b>Md. Nazir Hossain</b><span>System Planning & Report Guideline</span></div></div>
+  <div class="creditDivider"></div>
+  <div class="creditItem"><img src="https://i.ibb.co/k6WC4fBm/asad.jpg"><div class="creditText"><b>Md. Asaduzzaman</b><span>Operational Support & Report Management</span></div></div>
+</div>
+
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-app.js";
 import { getFirestore, collection, getDocs, doc, updateDoc, setDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-firestore.js";
@@ -904,7 +709,9 @@ function isNeedleAllowed(){return userRole==="admin"||userRole==="full"||needleA
 function isAccessoriesAllowed(){return userRole==="admin"||userRole==="full"||userMCDs.includes("ACCESSORIES MCD");}
 function isGreyAllowed(){return userRole==="admin"||userRole==="full"||userMCDs.includes("GREY FABRIC MCD");}
 function isBillingAllowed(){return userRole==="admin"||userRole==="full"||userMCDs.includes("BILLING SECTION");}
-function isManpowerAllowed(){return userRole==="admin"||userRole==="full"||manpowerAccess===true||manpowerAccess==="all"||manpowerAccess==="selected";}
+function isManpowerAllowed(){
+  return userRole==="admin"||userRole==="full"||manpowerAccess===true||manpowerAccess==="all"||manpowerAccess==="selected";
+}
 
 function setupRoleUI(){
   if(userRole!=="admin"){
@@ -930,7 +737,11 @@ function setupRoleUI(){
   document.getElementById("reportMcd").innerHTML=list.map(x=>`<option>${x}</option>`).join("");
 }
 
-window.logout=function(){localStorage.removeItem("gmsUser");window.location.href="login.html";};
+window.logout=function(){
+  localStorage.removeItem("gmsUser");
+  window.location.href="login.html";
+};
+
 window.toggleTheme=function(){
   document.body.classList.toggle("light");
   localStorage.setItem("theme",document.body.classList.contains("light")?"light":"dark");
@@ -938,174 +749,330 @@ window.toggleTheme=function(){
 };
 if(localStorage.getItem("theme")==="light")document.body.classList.add("light");
 
-window.toggleSidebar=function(){
-  const sidebar=document.getElementById("sidebar");
-  const overlay=document.getElementById("sidebarOverlay");
-  sidebar.classList.toggle("show");
-  overlay.classList.toggle("show");
-};
-
 window.openPage=function(id,btn){
   document.querySelectorAll(".page").forEach(p=>p.classList.remove("activePage"));
   document.getElementById(id).classList.add("activePage");
-  document.querySelectorAll(".sidebarNav button").forEach(b=>b.classList.remove("active"));
+  document.querySelectorAll(".nav button").forEach(b=>b.classList.remove("active"));
   if(btn)btn.classList.add("active");
   if(id==="home")loadDashboardStock();
   if(id==="backup"){loadDashboardStock();renderBackupLog();}
-  if(window.innerWidth<=900){
-    const sidebar=document.getElementById("sidebar");
-    const overlay=document.getElementById("sidebarOverlay");
-    sidebar.classList.remove("show");
-    overlay.classList.remove("show");
-  }
 };
+
+
+
+
+/* ===== FINAL GATE PLAN + CHALLAN BUTTON LINK FIX ===== */
+function urlCompanyName(company){
+  if(company==="GMS COMPOSITE KNITTING") return "GMS COMPOSITE KNITTING IND LTD.";
+  if(company==="GMS TEXTILES LTD") return "GMS TEXTILES LTD.";
+  return company || "GMS TEXTILES LTD.";
+}
+function enc(v){ return encodeURIComponent(v || ""); }
+function openGatePlanEntry(company,mcd){
+  location.href = "gate-plan.html?company=" + enc(urlCompanyName(company)) + "&mcd=" + enc(mcd || "");
+}
+function openChallanEntry(company,mcd){
+  location.href = "challan-entry.html?company=" + enc(urlCompanyName(company)) + "&mcd=" + enc(mcd || "");
+}
+function openGatePlanReport(company,mcd){
+  location.href = "gate-plan-report.html?company=" + enc(urlCompanyName(company)) + "&mcd=" + enc(mcd || "");
+}
+function openChallanReport(company,mcd){
+  location.href = "challan-report.html?company=" + enc(urlCompanyName(company)) + "&mcd=" + enc(mcd || "");
+}
+function commonEntryCards(company,mcd){
+  return `
+    <div class="card" onclick="openGatePlanEntry('${company}','${mcd}')">🚚 Gate Plan Entry</div>
+    <div class="card" onclick="openChallanEntry('${company}','${mcd}')">📄 Challan / Gate Pass</div>
+    <div class="card" onclick="openChallanReport('${company}','${mcd}')">📑 Challan / Gate Pass Report</div>
+  `;
+}
+function commonReportCards(company,mcd){
+  return `
+    <div class="card" onclick="openGatePlanReport('${company}','${mcd}')">🚚 Gate Plan Report</div>
+    <div class="card" onclick="openChallanReport('${company}','${mcd}')">📄 Challan / Gate Pass Report</div>
+  `;
+}
+
 
 window.loadEntry=function(){
   const company=document.getElementById("entryCompany").value;
   const mcd=document.getElementById("entryMcd").value;
   const box=document.getElementById("entryBox");
-  const common=window.commonEntryCards(company,mcd);
-  
-  if(!canAccess(mcd)){box.innerHTML=`<div class="entryCard">❌ Access Denied</div>${common}`;return;}
-  if(company==="GMS COMPOSITE KNITTING"){box.innerHTML=`${common}<div class="entryCard">🏭 Composite module later</div>`;return;}
+  const common=commonEntryCards(company,mcd);
+
+  // Gate Plan + Challan button sob company/MCD te thakbe
+  if(!canAccess(mcd)){
+    box.innerHTML=`<div class="card">❌ Access Denied</div>${common}`;
+    return;
+  }
+
+  if(company==="GMS COMPOSITE KNITTING"){
+    box.innerHTML=`
+      ${common}
+      <div class="card">🏭 Composite own entry module later add হবে</div>
+    `;
+    return;
+  }
+
   if(mcd==="ACCESSORIES MCD"){
     box.innerHTML=`
-      <div class="entryCard" onclick="location.href='sewing-thread.html'"><i class="fas fa-spools"></i> Sewing Thread</div>
-      <div class="entryCard" onclick="location.href='twill-tape.html'"><i class="fas fa-ruler-horizontal"></i> Twill Tape</div>
-      <div class="entryCard" onclick="location.href='accessories.html'"><i class="fas fa-box"></i> Accessories</div>
-      <div class="entryCard" onclick="location.href='accessories-inventory.html'"><i class="fas fa-clipboard-list"></i> Inventory</div>
+      <div class="card" onclick="location.href='sewing-thread.html'">🧵 Sewing Thread</div>
+      <div class="card" onclick="location.href='twill-tape.html'">📏 Twill Tape</div>
+      <div class="card" onclick="location.href='accessories.html'">📦 Accessories With Sample</div>
+      <div class="card" onclick="location.href='accessories-inventory.html'">🧾 Inventory Posting</div>
+      <div class="card" onclick="location.href='billing-manpower-report.html'">👨‍💼 Billing Manpower Report</div>
       ${common}
     `;
-    return;
-  }
-  if(mcd==="GREY FABRIC MCD"){
+  }else if(mcd==="GREY FABRIC MCD"){
     box.innerHTML=`
-      <div class="entryCard" onclick="location.href='grey-fabric.html'"><i class="fas fa-industry"></i> Grey Fabric Daily</div>
-      <div class="entryCard" onclick="location.href='grey-fabric-monthly.html'"><i class="fas fa-calendar"></i> Grey Monthly</div>
+      <div class="card" onclick="location.href='grey-fabric.html'">🏭 Grey Fabric Daily</div>
+      <div class="card" onclick="location.href='grey-fabric-monthly.html'">📅 Grey Fabric Monthly</div>
+      <div class="card" onclick="location.href='billing-manpower-report.html'">👨‍💼 Billing Manpower Report</div>
       ${common}
     `;
-    return;
-  }
-  if(mcd==="BILLING SECTION"){
+  }else if(mcd==="BILLING SECTION"){
     box.innerHTML=`
-      <div class="entryCard" onclick="location.href='billing-manpower-report.html'"><i class="fas fa-users"></i> Billing Manpower</div>
+      <div class="card" onclick="location.href='billing-manpower-report.html'">👨‍💼 Billing Manpower Report</div>
       ${common}
     `;
-    return;
+  }else{
+    box.innerHTML=`
+      <div class="card">📝 ${mcd} Daily Entry</div>
+      <div class="card" onclick="location.href='billing-manpower-report.html'">👨‍💼 Billing Manpower Report</div>
+      ${common}
+    `;
   }
-  box.innerHTML=`<div class="entryCard">📝 ${mcd} Daily Entry</div><div class="entryCard" onclick="location.href='billing-manpower-report.html'"><i class="fas fa-users"></i> Billing Manpower</div>${common}`;
 };
 
 window.loadReport=function(){
-  const company=document.getElementById("reportCompany")?.value||document.getElementById("entryCompany").value;
+  const company=document.getElementById("reportCompany") ? document.getElementById("reportCompany").value : document.getElementById("entryCompany").value;
   const mcd=document.getElementById("reportMcd").value;
   const box=document.getElementById("reportBox");
-  const common=window.commonReportCards(company,mcd);
-  
-  if(!canAccess(mcd)){box.innerHTML=`<div class="reportCard">❌ Access Denied</div>${common}`;return;}
-  if(company==="GMS COMPOSITE KNITTING"){box.innerHTML=`${common}<div class="reportCard">🏭 Composite report later</div>`;return;}
+  const common=commonReportCards(company,mcd);
+
+  // Gate Plan Report + Challan Report sob company/MCD te thakbe
+  if(!canAccess(mcd)){
+    box.innerHTML=`<div class="card">❌ Access Denied</div>${common}`;
+    return;
+  }
+
+  if(company==="GMS COMPOSITE KNITTING"){
+    box.innerHTML=`
+      ${common}
+      <div class="card">🏭 Composite own report module later add হবে</div>
+    `;
+    return;
+  }
+
   if(mcd==="ACCESSORIES MCD"){
     box.innerHTML=`
-      <div class="reportCard" onclick="location.href='sewing-thread.html'"><i class="fas fa-spools"></i> Sewing Thread</div>
-      <div class="reportCard" onclick="location.href='twill-tape.html'"><i class="fas fa-ruler-horizontal"></i> Twill Tape</div>
-      <div class="reportCard" onclick="location.href='accessories.html'"><i class="fas fa-box"></i> Accessories</div>
-      <div class="reportCard" onclick="location.href='accessories-inventory-report.html'"><i class="fas fa-chart-bar"></i> Inventory</div>
+      <div class="card" onclick="location.href='sewing-thread.html'">🧵 Sewing Thread Report</div>
+      <div class="card" onclick="location.href='twill-tape.html'">📏 Twill Tape Report</div>
+      <div class="card" onclick="location.href='accessories.html'">📦 Accessories Report</div>
+      <div class="card" onclick="location.href='accessories-inventory-report.html'">📊 Inventory Report</div>
+      <div class="card" onclick="location.href='billing-manpower-report.html'">👨‍💼 Billing Manpower Report</div>
       ${common}
     `;
-    return;
-  }
-  if(mcd==="GREY FABRIC MCD"){
+  }else if(mcd==="GREY FABRIC MCD"){
     box.innerHTML=`
-      <div class="reportCard" onclick="location.href='grey-fabric.html'"><i class="fas fa-industry"></i> Grey Fabric</div>
-      <div class="reportCard" onclick="location.href='grey-fabric-monthly.html'"><i class="fas fa-calendar"></i> Grey Monthly</div>
+      <div class="card" onclick="location.href='grey-fabric.html'">🏭 Grey Fabric Daily Report</div>
+      <div class="card" onclick="location.href='grey-fabric-monthly.html'">📅 Grey Fabric Monthly Report</div>
+      <div class="card" onclick="location.href='billing-manpower-report.html'">👨‍💼 Billing Manpower Report</div>
       ${common}
     `;
-    return;
-  }
-  if(mcd==="BILLING SECTION"){
+  }else if(mcd==="BILLING SECTION"){
     box.innerHTML=`
-      <div class="reportCard" onclick="location.href='billing-manpower-report.html'"><i class="fas fa-users"></i> Billing Manpower</div>
+      <div class="card" onclick="location.href='billing-manpower-report.html'">👨‍💼 Billing Manpower Report</div>
       ${common}
     `;
-    return;
+  }else{
+    box.innerHTML=`
+      <div class="card">📑 ${mcd} Report</div>
+      <div class="card" onclick="location.href='billing-manpower-report.html'">👨‍💼 Billing Manpower Report</div>
+      ${common}
+    `;
   }
-  box.innerHTML=`<div class="reportCard">📑 ${mcd} Report</div><div class="reportCard" onclick="location.href='billing-manpower-report.html'"><i class="fas fa-users"></i> Billing Manpower</div>${common}`;
 };
+
 
 async function getLatestPresent(collectionName,openingStock){
   let snap=await getDocs(collection(db,collectionName));
-  let rows=[];snap.forEach(d=>{let x=d.data();if(x.date)rows.push(x);});
+  let rows=[];
+  snap.forEach(d=>{let x=d.data();if(x.date)rows.push(x);});
   rows.sort((a,b)=>a.date.localeCompare(b.date));
-  let r=0,dv=0;rows.forEach(x=>{r+=Number(x.receive)||0;dv+=Number(x.delivery)||0;});
+  let r=0,dv=0;
+  rows.forEach(x=>{r+=Number(x.receive)||0;dv+=Number(x.delivery)||0;});
   return openingStock+r-dv;
 }
+
 async function getManpowerSummary(){
   let snap=await getDocs(collection(db,"manpower"));
   let map={},totalCount=0,totalSalary=0;
-  snap.forEach(d=>{let x=d.data();let m=x.mcd||"UNKNOWN";if(!map[m])map[m]={count:0,salary:0};map[m].count++;map[m].salary+=Number(x.salary)||0;totalCount++;totalSalary+=Number(x.salary)||0;});
+  snap.forEach(d=>{
+    let x=d.data();
+    let m=x.mcd||"UNKNOWN";
+    if(!map[m])map[m]={count:0,salary:0};
+    map[m].count++;
+    map[m].salary+=Number(x.salary)||0;
+    totalCount++;
+    totalSalary+=Number(x.salary)||0;
+  });
   return{map,totalCount,totalSalary};
 }
+
 async function getNeedleFloorStock(){
   let snap=await getDocs(collection(db,"dailyPosting"));
   let latestByFloor={};
-  snap.forEach(d=>{let x=d.data();if(x.floor&&x.date){if(!latestByFloor[x.floor]||x.date>latestByFloor[x.floor].date)latestByFloor[x.floor]=x;}});
+  snap.forEach(d=>{
+    let x=d.data();
+    if(x.floor&&x.date){
+      if(!latestByFloor[x.floor]||x.date>latestByFloor[x.floor].date)latestByFloor[x.floor]=x;
+    }
+  });
   let floorStocks={},total=0;
   Object.keys(FLOOR_OPENING).forEach(f=>{
     let stock=FLOOR_OPENING[f];
-    if(latestByFloor[f]&&latestByFloor[f].rows){stock=0;latestByFloor[f].rows.forEach(r=>stock+=Number(r.present)||0);}
-    floorStocks[f]=stock;total+=stock;
+    if(latestByFloor[f]&&latestByFloor[f].rows){
+      stock=0;
+      latestByFloor[f].rows.forEach(r=>stock+=Number(r.present)||0);
+    }
+    floorStocks[f]=stock;
+    total+=stock;
   });
   return{floorStocks,total};
 }
+
 async function getGreyData(){
   let snap=await getDocs(collection(db,"greyFabricStock"));
-  let docs=[];snap.forEach(d=>{let x=d.data();if(x.date&&x.rows&&x.rows.length>0)docs.push(x);});
-  docs.sort((a,b)=>(b.date||"").localeCompare(a.date||""));
+  let docs=[];
+  snap.forEach(d=>{
+    let x=d.data();
+    if(x.date&&x.rows&&x.rows.length>0)docs.push(x);
+  });
+  docs.sort((a,b)=>{
+    let dateCompare=(b.date||"").localeCompare(a.date||"");
+    if(dateCompare!==0)return dateCompare;
+    return (b.savedAt||b.createdAt||"").localeCompare(a.savedAt||a.createdAt||"");
+  });
   let latest=docs[0]||{rows:[],date:""};
   let labels=[],data=[],total=0;
-  (latest.rows||[]).forEach(r=>{let closing=parseNum(r.closing||r.closingBalance||0);if(closing>0){labels.push(r.year||r.fabric||"Item");data.push(closing);total+=closing;}});
+  (latest.rows||[]).forEach(r=>{
+    let name=r.year||r.fabric||"Item";
+    let closing=parseNum(r.closing||r.closingBalance||0);
+    if(closing>0){labels.push(name);data.push(closing);total+=closing;}
+  });
   if(total>0){labels.push("Grand Total");data.push(total);}
   return{labels,data,total,date:latest.date||""};
 }
+
 async function getBillingToday(){
   let snap=await getDocs(collection(db,"billingManpowerReport"));
   let t=today(),total=0,leave=0,absent=0,present=0;
-  snap.forEach(d=>{let x=d.data();if(x.date===t){total+=Number(x.totalManpower)||0;leave+=Number(x.leave)||0;absent+=Number(x.absent)||0;present+=Number(x.present)||0;}});
+  snap.forEach(d=>{
+    let x=d.data();
+    if(x.date===t){
+      total+=Number(x.totalManpower)||0;
+      leave+=Number(x.leave)||0;
+      absent+=Number(x.absent)||0;
+      present+=Number(x.present)||0;
+    }
+  });
   return{total,leave,absent,present};
 }
+
 async function getNeedleIssueToday(){
   let snap=await getDocs(collection(db,"needleDailyReport"));
-  let rows=[];snap.forEach(d=>{let x=d.data();if(x.date)rows.push(x);});
+  let rows=[];
+  snap.forEach(d=>{let x=d.data();if(x.date)rows.push(x);});
   rows.sort((a,b)=>(b.date||"").localeCompare(a.date||""));
   let latest=rows[0]||{};
-  return{broken:parseNum(latest.brokenNeedle),missing:parseNum(latest.missingNeedle),change:parseNum(latest.changeNeedle),date:latest.date||""};
+  return{
+    broken:parseNum(latest.brokenNeedle),
+    missing:parseNum(latest.missingNeedle),
+    change:parseNum(latest.changeNeedle),
+    date:latest.date||""
+  };
 }
+
 async function getFirebaseCounts(){
   let cols=["greyFabricStock","accessoriesInventory","billingManpowerReport","dailyPosting","sewingThread","twillTape","accessoriesSample","liveNotices","manpower","users","needleDailyReport","gatePlans","challanGatePass"];
-  let t=today(),totalCount=0,approxBytes=0;
+  let t=today(),todayCount=0,totalCount=0,gateToday=0,gateTotal=0,challanToday=0,challanTotal=0;
+  let activeMonthSet=new Set();
+  let approxBytes=0;
+
   for(let c of cols){
     try{
       let snap=await getDocs(collection(db,c));
-      snap.forEach(d=>{totalCount++;approxBytes+=JSON.stringify(d.data()||{}).length*2;});
+      snap.forEach(d=>{
+        totalCount++;
+        let x=d.data();
+        approxBytes+=JSON.stringify(x||{}).length*2;
+        let date=x.date||x.postingDate||(x.createdAt||"").slice(0,10)||"";
+        if(date===t)todayCount++;
+        if(date&&date.length>=7)activeMonthSet.add(date.slice(0,7));
+        if(c==="gatePlans"){
+          gateTotal++;
+          if(date===t)gateToday++;
+        }
+        if(c==="challanGatePass"){
+          challanTotal++;
+          if(date===t)challanToday++;
+        }
+      });
     }catch(e){}
   }
+
   let approxMB=approxBytes/1024/1024;
-  return{totalCount,storagePercent:(approxMB/1024)*100};
+  let storagePercent=(approxMB/1024)*100;
+  return{todayCount,totalCount,gateToday,gateTotal,challanToday,challanTotal,activeMonths:activeMonthSet.size,approxMB,storagePercent};
 }
 
 function updateLimitBox(firebase){
-  let approxMB=0,storagePercent=0;
-  if(firebase){approxMB=firebase.totalCount||0;storagePercent=firebase.storagePercent||0;}
-  document.getElementById("storageUsed").innerText=`${(approxMB/10).toFixed(2)} MB`;
+  let todayCount=firebase.todayCount||0;
+  let totalCount=firebase.totalCount||0;
+  let gateToday=firebase.gateToday||0;
+  let gateTotal=firebase.gateTotal||0;
+  let approxMB=firebase.approxMB||0;
+  let storagePercent=firebase.storagePercent||0;
+
+  document.getElementById("firebaseToday").innerText=fmt(todayCount);
+  document.getElementById("firebaseTotal").innerText=fmt(totalCount);
+  document.getElementById("gateLocal").innerText=`${fmt(gateToday)} / ${fmt(gateTotal)}`;
+  if(document.getElementById("challanLocal"))document.getElementById("challanLocal").innerText=`${fmt(firebase.challanToday||0)} / ${fmt(firebase.challanTotal||0)}`;
+  document.getElementById("readsToday").innerText=`${fmt(totalCount)} / 50,000`;
+  document.getElementById("writesToday").innerText=`${fmt(todayCount)} / 20,000`;
+  document.getElementById("deletesToday").innerText=`0 / 20,000`;
+  document.getElementById("storageUsed").innerText=`${approxMB.toFixed(2)} MB`;
   document.getElementById("storagePercent").innerText=`${storagePercent.toFixed(2)}%`;
+  document.getElementById("activeMonths").innerText=fmt(firebase.activeMonths||0);
+  document.getElementById("backupMonths").innerText=localStorage.getItem("backupMonths")||"0";
+  document.getElementById("backupStatus").innerText=localStorage.getItem("backupStatus")||"READY";
+
   let pct=Math.min(100,storagePercent);
   let bar=document.getElementById("limitBar");
   let signal=document.getElementById("limitSignal");
   let warnBanner=document.getElementById("backupWarningBanner");
   bar.style.width=Math.max(1,pct)+"%";
-  if(pct<80){signal.className="statusSignal safe";signal.innerText="🟢 SAFE";bar.style.background="linear-gradient(90deg,var(--green),var(--blue))";warnBanner.style.display="none";}
-  else if(pct<90){signal.className="statusSignal warn";signal.innerText="🟡 BACKUP WARNING";bar.style.background="linear-gradient(90deg,var(--yellow),#f97316)";warnBanner.style.display="block";warnBanner.innerText="🟡 Backup Warning - Storage reached 80%";}
-  else{signal.className="statusSignal stop";signal.innerText="🔴 BACKUP NOW";bar.style.background="linear-gradient(90deg,var(--red),#f97316)";warnBanner.style.display="block";warnBanner.innerText="🔴 Backup Now - Storage reached 90%";}
+
+  if(pct<80){
+    signal.className="statusSignal safe";
+    signal.innerText="🟢 SAFE";
+    bar.style.background="var(--green)";
+    warnBanner.style.display="none";
+  }else if(pct<90){
+    signal.className="statusSignal warn";
+    signal.innerText="🟡 BACKUP WARNING";
+    bar.style.background="var(--yellow)";
+    warnBanner.style.display="block";
+    warnBanner.innerText="🟡 Backup Warning - Storage reached 80%";
+  }else{
+    signal.className="statusSignal stop";
+    signal.innerText="🔴 BACKUP NOW";
+    bar.style.background="var(--red)";
+    warnBanner.style.display="block";
+    warnBanner.innerText="🔴 Backup Now - Storage reached 90%";
+  }
 }
 
 const chartPalette=["#38bdf8","#22c55e","#f59e0b","#a855f7","#ef4444","#14b8a6","#eab308","#6366f1","#ec4899","#84cc16","#06b6d4","#f97316"];
@@ -1116,8 +1083,8 @@ const valueLabelPlugin={
   afterDatasetsDraw(chart){
     const {ctx}=chart;
     ctx.save();
-    ctx.font="600 12px Poppins";
-    ctx.fillStyle=document.body.classList.contains("light")?"#1e293b":"#f1f5f9";
+    ctx.font="900 11px Segoe UI";
+    ctx.fillStyle=document.body.classList.contains("light")?"#111827":"#eef6ff";
     ctx.textAlign="center";
     chart.data.datasets.forEach((dataset,di)=>{
       const meta=chart.getDatasetMeta(di);
@@ -1132,32 +1099,17 @@ const valueLabelPlugin={
 };
 
 function barOptions(titleText){
-  const isLight=document.body.classList.contains("light");
   return{
     responsive:true,
     maintainAspectRatio:false,
     plugins:{
       legend:{display:false},
-      title:{display:!!titleText,text:titleText,font:{size:14,weight:"600"},color:isLight?"#1e293b":"#f1f5f9"},
-      tooltip:{backgroundColor:"rgba(15,23,42,.95)",titleColor:"#fff",bodyColor:"#fff",titleFont:{size:13,weight:"600"},bodyFont:{size:12,weight:"500"}}
+      title:{display:!!titleText,text:titleText,font:{size:13,weight:"bold"}},
+      tooltip:{backgroundColor:"rgba(15,23,42,.92)",titleColor:"#fff",bodyColor:"#fff"}
     },
     scales:{
-      y:{
-        beginAtZero:true,
-        grid:{color:isLight?"rgba(0,0,0,.1)":"rgba(148,163,184,.2)"},
-        ticks:{font:{size:11,weight:"500"},color:isLight?"#475569":"#cbd5e1"}
-      },
-      x:{
-        grid:{display:false},
-        ticks:{
-          font:{size:12,weight:"600"},
-          color:isLight?"#475569":"#cbd5e1",
-          maxRotation:45,
-          minRotation:0,
-          autoSkip:false,
-          padding:8
-        }
-      }
+      y:{beginAtZero:true},
+      x:{grid:{display:false},ticks:{font:{size:10,weight:"bold"}}}
     }
   };
 }
@@ -1167,66 +1119,46 @@ function renderCharts(sewing,accessories,twill,floorStocks,grey,billing,needleIs
     if(accessoriesChart)accessoriesChart.destroy();
     accessoriesChart=new Chart(document.getElementById("accessoriesChart"),{
       type:"bar",
-      data:{
-        labels:["Sewing Thread","Accessories Sample","Twill Tape"],
-        datasets:[{data:[sewing,accessories,twill],backgroundColor:["#38bdf8","#22c55e","#f59e0b"],borderRadius:12,barPercentage:0.6}]
-      },
+      data:{labels:["Sewing Thread","Accessories Sample","Twill Tape"],datasets:[{data:[sewing,accessories,twill],backgroundColor:chartColors(3),borderRadius:12}]},
       options:barOptions("Accessories Stock Summary"),
       plugins:[valueLabelPlugin]
     });
   }
+
   if(isNeedleAllowed()){
     if(needleChart)needleChart.destroy();
     needleChart=new Chart(document.getElementById("needleChart"),{
       type:"bar",
-      data:{
-        labels:Object.keys(floorStocks),
-        datasets:[{data:Object.values(floorStocks),backgroundColor:chartColors(Object.keys(floorStocks).length),borderRadius:10,barPercentage:0.6}]
-      },
+      data:{labels:Object.keys(floorStocks),datasets:[{data:Object.values(floorStocks),backgroundColor:chartColors(Object.keys(floorStocks).length),borderRadius:10}]},
       options:barOptions("Needle Floor Wise Stock"),
       plugins:[valueLabelPlugin]
     });
+
     if(needleIssueChart)needleIssueChart.destroy();
     needleIssueChart=new Chart(document.getElementById("needleIssueChart"),{
       type:"bar",
-      data:{
-        labels:["Broken","Missing","Change"],
-        datasets:[{data:[needleIssue.broken,needleIssue.missing,needleIssue.change],backgroundColor:["#ef4444","#f59e0b","#22c55e"],borderRadius:10,barPercentage:0.6}]
-      },
+      data:{labels:["Broken","Missing","Change"],datasets:[{data:[needleIssue.broken,needleIssue.missing,needleIssue.change],backgroundColor:["#ef4444","#f59e0b","#22c55e"],borderRadius:10}]},
       options:barOptions("Needle Issue Summary"),
       plugins:[valueLabelPlugin]
     });
   }
+
   if(isGreyAllowed()){
     if(greyChart)greyChart.destroy();
     greyChart=new Chart(document.getElementById("greyChart"),{
       type:"bar",
-      data:{
-        labels:grey.labels.length?grey.labels:["No Data"],
-        datasets:[{data:grey.data.length?grey.data:[0],backgroundColor:chartColors((grey.data.length?grey.data:[0]).length),borderRadius:10,barPercentage:0.6}]
-      },
+      data:{labels:grey.labels.length?grey.labels:["No Data"],datasets:[{data:grey.data.length?grey.data:[0],backgroundColor:chartColors((grey.data.length?grey.data:[0]).length),borderRadius:10}]},
       options:barOptions("Grey Fabric Present Stock Summary"),
       plugins:[valueLabelPlugin]
     });
   }
+
   if(isBillingAllowed()){
     if(billingChart)billingChart.destroy();
     billingChart=new Chart(document.getElementById("billingChart"),{
       type:"doughnut",
-      data:{
-        labels:["Present","Leave","Absent"],
-        datasets:[{data:[billing.present,billing.leave,billing.absent],backgroundColor:["#22c55e","#f59e0b","#ef4444"],borderWidth:3,borderColor:document.body.classList.contains("light")?"#ffffff":"#1e293b"}]
-      },
-      options:{
-        responsive:true,
-        maintainAspectRatio:false,
-        plugins:{
-          legend:{
-            position:"bottom",
-            labels:{font:{size:12,weight:"600",family:"Poppins"},color:document.body.classList.contains("light")?"#1e293b":"#f1f5f9",padding:16,usePointStyle:true,pointStyle:"circle"}
-          }
-        }
-      }
+      data:{labels:["Present","Leave","Absent"],datasets:[{data:[billing.present,billing.leave,billing.absent],backgroundColor:["#22c55e","#f59e0b","#ef4444"]}]},
+      options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:"bottom"}}}
     });
   }
 }
@@ -1234,13 +1166,21 @@ function renderCharts(sewing,accessories,twill,floorStocks,grey,billing,needleIs
 async function loadNotices(){
   try{
     let snap=await getDocs(collection(db,"liveNotices"));
-    let rows=[];snap.forEach(d=>rows.push(d.data()));
+    let rows=[];
+    snap.forEach(d=>rows.push(d.data()));
     rows.sort((a,b)=>(b.createdAt||"").localeCompare(a.createdAt||""));
-    document.getElementById("noticeMove").innerText=rows.length?rows.slice(0,5).map(n=>`📢 ${n.user||"User"}: ${n.text||""}`).join("      "):"📢 No live notice found";
-  }catch(e){document.getElementById("noticeMove").innerText="📢 Notice loading problem";}
+    let text=rows.length?rows.slice(0,5).map(n=>`📢 ${n.user||"User"}: ${n.text||""}`).join("   ⚡   "):"📢 No live notice found";
+    document.getElementById("noticeMove").innerText=text;
+  }catch(e){
+    document.getElementById("noticeMove").innerText="📢 Notice loading problem";
+  }
 }
 
-async function updateLastActive(){if(user.id){try{await updateDoc(doc(db,"users",user.id),{lastActive:new Date().toISOString()});}catch(e){}}}
+async function updateLastActive(){
+  if(user.id){
+    try{await updateDoc(doc(db,"users",user.id),{lastActive:new Date().toISOString()});}catch(e){}
+  }
+}
 
 async function loadDashboardStock(){
   try{
@@ -1256,12 +1196,29 @@ async function loadDashboardStock(){
     let manpower=manpowerData.map;
     let allowed=allowedMCDList();
 
+    let totalManpower=0,totalSalary=0;
+    if(isManpowerAllowed()){
+      if(userRole==="admin"||userRole==="full"){
+        totalManpower=manpowerData.totalCount;
+        totalSalary=manpowerData.totalSalary;
+      }else{
+        allowed.forEach(m=>{
+          totalManpower+=manpower[m]?.count||0;
+          totalSalary+=manpower[m]?.salary||0;
+        });
+      }
+    }
+
+    if(document.getElementById("kpiManpower")) document.getElementById("kpiManpower").innerText=fmt(totalManpower);
+    if(document.getElementById("kpiSalary")) document.getElementById("kpiSalary").innerText=fmt(totalSalary);
+
     if(isBillingAllowed()){
       document.getElementById("attTotal").innerText=billing.total;
       document.getElementById("attLeave").innerText=billing.leave;
       document.getElementById("attAbsent").innerText=billing.absent;
       document.getElementById("attPresent").innerText=billing.present;
     }
+
     updateLimitBox(firebase);
 
     if(isAccessoriesAllowed()){
@@ -1269,6 +1226,7 @@ async function loadDashboardStock(){
       document.getElementById("sumSewing").innerText=fmt(sewing);
       document.getElementById("sumTwill").innerText=fmt(twill);
     }
+
     if(isNeedleAllowed())document.getElementById("needleToday").innerText=fmt(needleData.total);
 
     renderCharts(sewing,accessories,twill,needleData.floorStocks,grey,billing,needleIssue);
@@ -1277,18 +1235,23 @@ async function loadDashboardStock(){
     ALL_MCD.forEach(mcd=>{
       if(!allowed.includes(mcd))return;
       let mp=manpower[mcd]||{count:0,salary:0};
+
       if(mcd==="ACCESSORIES MCD"){
-        html+=`<div class="mcdBox"><h3>📦 ACCESSORIES MCD</h3><div class="miniRow"><span>📦 Accessories With Sample</span><span class="miniValue">${fmt(accessories)}</span></div><div class="miniRow"><span>🧵 Sewing Thread</span><span class="miniValue">${fmt(sewing)}</span></div><div class="miniRow"><span>📏 Twill Tape</span><span class="miniValue">${fmt(twill)}</span></div><div class="miniChart"><div class="miniFill"></div></div></div>`;
+        html+=`<div class="mcdBox"><h3>📦 ACCESSORIES MCD</h3><div class="miniRow"><span>📦 Accessories With Sample</span><span class="miniValue">${fmt(accessories)}</span></div><div class="miniRow"><span>🧵 Sewing Thread</span><span class="miniValue">${fmt(sewing)}</span></div><div class="miniRow"><span>📏 Twill Tape</span><span class="miniValue">${fmt(twill)}</span></div><div class="miniRow"><span>🧾 Inventory Report</span><span class="miniValue">LIVE</span></div><div class="miniRow"><span>🚚 Gate Plan</span><span class="miniValue">${firebase.gateToday}/${firebase.gateTotal}</span></div><div class="miniRow"><span>📄 Challan / Gate Pass</span><span class="miniValue">${firebase.challanToday||0}/${firebase.challanTotal||0}</span></div>${isManpowerAllowed()?`<div class="miniRow"><span>👨‍🏭 Manpower</span><span class="miniValue">${fmt(mp.count)}</span></div><div class="miniRow"><span>💰 Salary</span><span class="miniValue">${fmt(mp.salary)}</span></div>`:""}<div class="miniChart"><div class="miniFill"></div></div></div>`;
       }else if(mcd==="GREY FABRIC MCD"){
-        html+=`<div class="mcdBox"><h3>🏭 GREY FABRIC MCD</h3><div class="miniRow"><span>📦 Today Closing Balance</span><span class="miniValue">${fmt(grey.total)}</span></div><div class="miniRow"><span>📊 Closing Chart</span><span class="miniValue">LIVE</span></div><div class="miniChart"><div class="miniFill" style="width:65%"></div></div></div>`;
+        html+=`<div class="mcdBox"><h3>🏭 GREY FABRIC MCD</h3><div class="miniRow"><span>📦 Today Closing Balance</span><span class="miniValue">${fmt(grey.total)}</span></div><div class="miniRow"><span>📊 Closing Chart</span><span class="miniValue">LIVE</span></div><div class="miniRow"><span>📅 Monthly Report</span><span class="miniValue">LIVE</span></div>${isManpowerAllowed()?`<div class="miniRow"><span>👨‍🏭 Manpower</span><span class="miniValue">${fmt(mp.count)}</span></div><div class="miniRow"><span>💰 Salary</span><span class="miniValue">${fmt(mp.salary)}</span></div>`:""}<div class="miniChart"><div class="miniFill" style="width:65%"></div></div></div>`;
       }else if(mcd==="BILLING SECTION"){
-        html+=`<div class="mcdBox"><h3>👨‍ BILLING SECTION</h3><div class="miniRow"><span>👨‍ Total Manpower</span><span class="miniValue">${fmt(billing.total)}</span></div><div class="miniRow"><span>🏖 Leave</span><span class="miniValue">${fmt(billing.leave)}</span></div><div class="miniRow"><span>❌ Absent</span><span class="miniValue">${fmt(billing.absent)}</span></div><div class="miniRow"><span>✅ Today Present</span><span class="miniValue">${fmt(billing.present)}</span></div><div class="miniChart"><div class="miniFill" style="width:55%"></div></div></div>`;
+        html+=`<div class="mcdBox"><h3>👨‍💼 BILLING SECTION</h3><div class="miniRow"><span>👨‍🏭 Total Manpower</span><span class="miniValue">${fmt(billing.total)}</span></div><div class="miniRow"><span>🏖 Leave</span><span class="miniValue">${fmt(billing.leave)}</span></div><div class="miniRow"><span>❌ Absent</span><span class="miniValue">${fmt(billing.absent)}</span></div><div class="miniRow"><span>✅ Today Present</span><span class="miniValue">${fmt(billing.present)}</span></div><div class="miniChart"><div class="miniFill" style="width:55%"></div></div></div>`;
       }else{
-        html+=`<div class="mcdBox"><h3>📂 ${mcd}</h3>${isManpowerAllowed()?`<div class="miniRow"><span>👨‍ Manpower</span><span class="miniValue">${fmt(mp.count)}</span></div><div class="miniRow"><span>💰 Salary</span><span class="miniValue">${fmt(mp.salary)}</span></div>`:""}<div class="miniRow"><span>📊 Stock / Report</span><span class="miniValue">Pending</span></div><div class="miniChart"><div class="miniFill" style="width:35%"></div></div></div>`;
+        html+=`<div class="mcdBox"><h3>📂 ${mcd}</h3>${isManpowerAllowed()?`<div class="miniRow"><span>👨‍🏭 Manpower</span><span class="miniValue">${fmt(mp.count)}</span></div><div class="miniRow"><span>💰 Salary</span><span class="miniValue">${fmt(mp.salary)}</span></div>`:""}<div class="miniRow"><span>📊 Stock / Report</span><span class="miniValue">Pending</span></div><div class="miniChart"><div class="miniFill" style="width:35%"></div></div></div>`;
       }
     });
+
     document.getElementById("mcdDashboard").innerHTML=html||"<div class='mcdBox'><h3>❌ No Access</h3></div>";
-  }catch(e){console.log(e);document.getElementById("mcdDashboard").innerHTML="Firebase data load error";}
+  }catch(e){
+    console.log(e);
+    document.getElementById("mcdDashboard").innerHTML="Firebase data load error";
+  }
 }
 
 function addBackupLog(type,details){
@@ -1305,8 +1268,13 @@ function renderBackupLog(){
   if(logs.length===0){box.innerHTML="No activity yet";return;}
   box.innerHTML=logs.map(x=>`<div class="logItem"><b>${x.type}</b> - ${x.details}<br><span>${x.time} • ${x.user}</span></div>`).join("");
 }
-function getRowMonth(row){let dt=row.date||row.postingDate||row.entryDate||(row.createdAt||"").slice(0,10)||"";return dt&&dt.length>=7?dt.slice(0,7):"";}
-function backupDocId(row){return row._docId||row.id||row.challanNo||row.gatePlanNo||row.gatePassNo||(row.date||"no-date")+"-"+Date.now()+"-"+Math.floor(Math.random()*999999);}
+function getRowMonth(row){
+  let dt=row.date||row.postingDate||row.entryDate||(row.createdAt||"").slice(0,10)||"";
+  return dt&&dt.length>=7?dt.slice(0,7):"";
+}
+function backupDocId(row){
+  return row._docId||row.id||row.challanNo||row.gatePlanNo||row.gatePassNo||(row.date||"no-date")+"-"+Date.now()+"-"+Math.floor(Math.random()*999999);
+}
 
 window.backupAllData=async function(){
   if(userRole!=="admin"){alert("Admin only");return;}
@@ -1314,81 +1282,719 @@ window.backupAllData=async function(){
     let backup={date:new Date().toISOString(),backupMonths:[],data:{}};
     const cols=["greyFabricStock","accessoriesInventory","billingManpowerReport","dailyPosting","sewingThread","twillTape","accessoriesSample","liveNotices","manpower","needleDailyReport","gatePlans","challanGatePass"];
     for(let c of cols){
-      let snap=await getDocs(collection(db,c));backup.data[c]=[];
-      snap.forEach(d=>{let row=d.data();row._docId=d.id;backup.data[c].push(row);let month=getRowMonth(row);if(month&&!backup.backupMonths.includes(month))backup.backupMonths.push(month);});
+      let snap=await getDocs(collection(db,c));
+      backup.data[c]=[];
+      snap.forEach(d=>{
+        let row=d.data();
+        row._docId=d.id;
+        backup.data[c].push(row);
+        let month=getRowMonth(row);
+        if(month&&!backup.backupMonths.includes(month))backup.backupMonths.push(month);
+      });
     }
     backup.backupMonths.sort();
     let blob=new Blob([JSON.stringify(backup,null,2)],{type:"application/json"});
-    let a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download="gms-backup-"+new Date().toISOString().slice(0,10)+".json";a.click();
-    localStorage.setItem("backupMonths",backup.backupMonths.length);localStorage.setItem("backupStatus","DONE");localStorage.setItem("lastBackupDate",new Date().toISOString());
-    addBackupLog("BACKUP","Backup downloaded. Months: "+backup.backupMonths.length);alert("Backup Download Complete");loadDashboardStock();
-  }catch(e){console.log(e);alert("Backup Failed: "+e.message);}
+    let a=document.createElement("a");
+    a.href=URL.createObjectURL(blob);
+    a.download="gms-backup-"+new Date().toISOString().slice(0,10)+".json";
+    a.click();
+    localStorage.setItem("backupMonths",backup.backupMonths.length);
+    localStorage.setItem("backupStatus","DONE");
+    localStorage.setItem("lastBackupDate",new Date().toISOString());
+    addBackupLog("BACKUP","Backup downloaded. Months: "+backup.backupMonths.length);
+    alert("Backup Download Complete");
+    loadDashboardStock();
+  }catch(e){
+    console.log(e);
+    alert("Backup Failed: "+e.message);
+  }
 };
 
 window.loadRestoreFile=function(event){
   if(userRole!=="admin"){alert("Admin only");return;}
-  let file=event.target.files[0];if(!file)return;
+  let file=event.target.files[0];
+  if(!file)return;
   let reader=new FileReader();
   reader.onload=function(e){
     try{
       selectedBackupData=JSON.parse(e.target.result);
-      let monthSet=new Set();Object.keys(selectedBackupData.data||{}).forEach(col=>{(selectedBackupData.data[col]||[]).forEach(row=>{let m=getRowMonth(row);if(m)monthSet.add(m);});});
-      let months=Array.from(monthSet).sort();if(months.length===0){alert("No month data found");return;}
+      let monthSet=new Set();
+      Object.keys(selectedBackupData.data||{}).forEach(col=>{
+        (selectedBackupData.data[col]||[]).forEach(row=>{
+          let m=getRowMonth(row);
+          if(m)monthSet.add(m);
+        });
+      });
+      let months=Array.from(monthSet).sort();
+      if(months.length===0){alert("No month data found in backup file");return;}
       document.getElementById("restorePanel").style.display="block";
-      document.getElementById("restoreFileName").innerText=file.name;document.getElementById("restoreMonthCount").innerText=months.length;
+      document.getElementById("restoreFileName").innerText=file.name;
+      document.getElementById("restoreMonthCount").innerText=months.length;
       document.getElementById("restoreStatus").innerText="FILE LOADED";
       document.getElementById("restoreMonthSelect").innerHTML=months.map(m=>`<option value="${m}">${m}</option>`).join("");
       addBackupLog("RESTORE FILE","Loaded file: "+file.name+", months: "+months.length);
-    }catch(err){console.log(err);alert("Invalid backup JSON file");}
-  };reader.readAsText(file);
+    }catch(err){
+      console.log(err);
+      alert("Invalid backup JSON file");
+    }
+  };
+  reader.readAsText(file);
 };
 
 window.restoreSelectedMonth=async function(){
   if(userRole!=="admin"){alert("Admin only");return;}
   if(!selectedBackupData){alert("Please select backup JSON file first");return;}
-  let month=document.getElementById("restoreMonthSelect").value;if(!month){alert("Please select month");return;}
+  let month=document.getElementById("restoreMonthSelect").value;
+  if(!month){alert("Please select month");return;}
   if(!confirm("Restore data for month: "+month+" ?"))return;
   try{
-    document.getElementById("restoreStatus").innerText="RESTORING...";let total=0;
+    document.getElementById("restoreStatus").innerText="RESTORING...";
+    let total=0;
     const data=selectedBackupData.data||{};
-    for(let col of Object.keys(data)){for(let row of (data[col]||[])){if(getRowMonth(row)!==month)continue;let id=String(backupDocId(row)).replaceAll("/","-").replaceAll(" ","-");let cleanRow={...row};delete cleanRow._docId;cleanRow.restoredAt=new Date().toISOString();cleanRow.restoredMonth=month;await setDoc(doc(db,col,id),cleanRow,{merge:true});total++;}}
-    localStorage.setItem("backupStatus","RESTORED "+month);localStorage.setItem("lastRestoredMonth",month);
+    for(let col of Object.keys(data)){
+      for(let row of (data[col]||[])){
+        if(getRowMonth(row)!==month)continue;
+        let id=String(backupDocId(row)).replaceAll("/","-").replaceAll(" ","-");
+        let cleanRow={...row};
+        delete cleanRow._docId;
+        cleanRow.restoredAt=new Date().toISOString();
+        cleanRow.restoredMonth=month;
+        await setDoc(doc(db,col,id),cleanRow,{merge:true});
+        total++;
+      }
+    }
+    localStorage.setItem("backupStatus","RESTORED "+month);
+    localStorage.setItem("lastRestoredMonth",month);
     document.getElementById("restoreStatus").innerText="RESTORED "+total+" DATA";
-    addBackupLog("RESTORE","Month "+month+" restored. Data: "+total);alert("Restore Complete: "+total+" data restored for "+month);loadDashboardStock();
-  }catch(e){console.log(e);document.getElementById("restoreStatus").innerText="RESTORE FAILED";alert("Restore Failed: "+e.message);}
+    addBackupLog("RESTORE","Month "+month+" restored. Data: "+total);
+    alert("Restore Complete: "+total+" data restored for "+month);
+    loadDashboardStock();
+  }catch(e){
+    console.log(e);
+    document.getElementById("restoreStatus").innerText="RESTORE FAILED";
+    alert("Restore Failed: "+e.message);
+  }
 };
 
 window.clearOldData=async function(){
   if(userRole!=="admin"){alert("Admin only");return;}
   let backupStatus=localStorage.getItem("backupStatus")||"";
-  if(backupStatus!=="DONE"&&!backupStatus.startsWith("RESTORED")){alert("আগে Backup Now করে JSON download নিন। Backup DONE না হলে data clear হবে না।");return;}
-  let now=new Date();let currentMonth=now.getFullYear()+"-"+String(now.getMonth()+1).padStart(2,"0");
-  let prev=new Date(now.getFullYear(),now.getMonth()-1,1);let previousMonth=prev.getFullYear()+"-"+String(prev.getMonth()+1).padStart(2,"0");
-  let ok=confirm("Clear Old Data?\n\nKEEP:\n"+currentMonth+" (Current Month)\n"+previousMonth+" (Previous Month)\n\nDELETE:\nOlder months only\n\nBackup Status: "+backupStatus);if(!ok)return;
+  if(backupStatus!=="DONE"&&!backupStatus.startsWith("RESTORED")){
+    alert("আগে Backup Now করে JSON download নিন। Backup DONE না হলে data clear হবে না।");
+    return;
+  }
+
+  let now=new Date();
+  let currentMonth=now.getFullYear()+"-"+String(now.getMonth()+1).padStart(2,"0");
+  let prev=new Date(now.getFullYear(),now.getMonth()-1,1);
+  let previousMonth=prev.getFullYear()+"-"+String(prev.getMonth()+1).padStart(2,"0");
+
+  let ok=confirm("Clear Old Data?\n\nKEEP:\n"+currentMonth+" (Current Month)\n"+previousMonth+" (Previous Month)\n\nDELETE:\nOlder months only\n\nBackup Status: "+backupStatus);
+  if(!ok)return;
+
   const cols=["greyFabricStock","accessoriesInventory","billingManpowerReport","dailyPosting","sewingThread","twillTape","accessoriesSample","liveNotices","needleDailyReport","gatePlans","challanGatePass"];
   let deleted=0,kept=0,skipped=0;
+
   try{
-    for(let c of cols){let snap=await getDocs(collection(db,c));for(let d of snap.docs){let month=getRowMonth(d.data());if(!month){skipped++;continue;}if(month===currentMonth||month===previousMonth){kept++;continue;}await deleteDoc(doc(db,c,d.id));deleted++;}}
-    localStorage.setItem("backupStatus","OLD DATA CLEARED");localStorage.setItem("lastClearDate",new Date().toISOString());localStorage.setItem("lastDeleteCount",deleted);
-    addBackupLog("CLEAR","Deleted: "+deleted+", Kept: "+kept+", Skipped: "+skipped);alert("Clear Complete\n\nDeleted Old Data: "+deleted+"\nKept Current+Previous: "+kept+"\nSkipped No-Date: "+skipped);loadDashboardStock();
-  }catch(e){console.log(e);alert("Clear Failed: "+e.message);}
+    for(let c of cols){
+      let snap=await getDocs(collection(db,c));
+      for(let d of snap.docs){
+        let month=getRowMonth(d.data());
+        if(!month){skipped++;continue;}
+        if(month===currentMonth||month===previousMonth){kept++;continue;}
+        await deleteDoc(doc(db,c,d.id));
+        deleted++;
+      }
+    }
+    localStorage.setItem("backupStatus","OLD DATA CLEARED");
+    localStorage.setItem("lastClearDate",new Date().toISOString());
+    localStorage.setItem("lastDeleteCount",deleted);
+    addBackupLog("CLEAR","Deleted: "+deleted+", Kept: "+kept+", Skipped: "+skipped);
+    alert("Clear Complete\n\nDeleted Old Data: "+deleted+"\nKept Current+Previous: "+kept+"\nSkipped No-Date: "+skipped);
+    loadDashboardStock();
+  }catch(e){
+    console.log(e);
+    alert("Clear Failed: "+e.message);
+  }
 };
 
 window.removeRestoredMonth=async function(){
   if(userRole!=="admin"){alert("Admin only");return;}
-  let month=localStorage.getItem("lastRestoredMonth")||"";if(!month){alert("No restored month found.");return;}
+  let month=localStorage.getItem("lastRestoredMonth")||"";
+  if(!month){alert("No restored month found.");return;}
   if(!confirm("Remove restored month data: "+month+" ?"))return;
+
   const cols=["greyFabricStock","accessoriesInventory","billingManpowerReport","dailyPosting","sewingThread","twillTape","accessoriesSample","liveNotices","needleDailyReport","gatePlans","challanGatePass"];
-  let deleted=0;try{
-    for(let c of cols){let snap=await getDocs(collection(db,c));for(let d of snap.docs){let row=d.data();if(row.restoredMonth===month){await deleteDoc(doc(db,c,d.id));deleted++;}}}
-    localStorage.removeItem("lastRestoredMonth");localStorage.setItem("backupStatus","RESTORED MONTH REMOVED");
-    addBackupLog("REMOVE RESTORED","Month "+month+" removed. Data: "+deleted);alert("Restored Month Removed: "+deleted+" data");loadDashboardStock();
-  }catch(e){console.log(e);alert("Remove Failed: "+e.message);}
+  let deleted=0;
+  try{
+    for(let c of cols){
+      let snap=await getDocs(collection(db,c));
+      for(let d of snap.docs){
+        let row=d.data();
+        if(row.restoredMonth===month){
+          await deleteDoc(doc(db,c,d.id));
+          deleted++;
+        }
+      }
+    }
+    localStorage.removeItem("lastRestoredMonth");
+    localStorage.setItem("backupStatus","RESTORED MONTH REMOVED");
+    addBackupLog("REMOVE RESTORED","Month "+month+" removed. Data: "+deleted);
+    alert("Restored Month Removed: "+deleted+" data");
+    loadDashboardStock();
+  }catch(e){
+    console.log(e);
+    alert("Remove Failed: "+e.message);
+  }
 };
 
-// Initialize
-setupRoleUI();loadDashboardStock();loadNotices();updateLastActive();renderBackupLog();
-setInterval(updateLastActive,60000);setInterval(loadNotices,60000);
+setupRoleUI();
+loadDashboardStock();
+loadNotices();
+updateLastActive();
+renderBackupLog();
+setInterval(updateLastActive,60000);
+setInterval(loadNotices,60000);
 </script>
+
+
+<script>
+/* ===== FINAL HARD FIX: GATE PLAN + CHALLAN BUTTONS ===== */
+(function(){
+  function enc(v){ return encodeURIComponent(v || ""); }
+
+  function fixedCompany(company){
+    if(company === "GMS COMPOSITE KNITTING") return "GMS COMPOSITE KNITTING IND LTD.";
+    if(company === "GMS TEXTILES LTD") return "GMS TEXTILES LTD.";
+    return company || "GMS TEXTILES LTD.";
+  }
+
+  window.openGatePlanEntry = function(company,mcd){
+    location.href = "gate-plan.html?company=" + enc(fixedCompany(company)) + "&mcd=" + enc(mcd || "");
+  };
+
+  window.openChallanEntry = function(company,mcd){
+    location.href = "challan-entry.html?company=" + enc(fixedCompany(company)) + "&mcd=" + enc(mcd || "");
+  };
+
+  window.openGatePlanReport = function(company,mcd){
+    location.href = "gate-plan-report.html?company=" + enc(fixedCompany(company)) + "&mcd=" + enc(mcd || "");
+  };
+
+  window.openChallanReport = function(company,mcd){
+    location.href = "challan-report.html?company=" + enc(fixedCompany(company)) + "&mcd=" + enc(mcd || "");
+  };
+
+  function card(html){ return html; }
+
+  function commonEntryCards(company,mcd){
+  return `
+    <div class="card" onclick="openGatePlanEntry('${company}','${mcd}')">🚚 Gate Plan Entry</div>
+    <div class="card" onclick="openChallanEntry('${company}','${mcd}')">📄 Challan / Gate Pass</div>
+    <div class="card" onclick="openChallanReport('${company}','${mcd}')">📑 Challan / Gate Pass Report</div>
+  `;
+}
+
+  function commonReportCards(company,mcd){
+    return `
+      <div class="card" onclick="openGatePlanReport('${company}','${mcd}')">🚚 Gate Plan Report</div>
+      <div class="card" onclick="openChallanReport('${company}','${mcd}')">📄 Challan / Gate Pass Report</div>
+    `;
+  }
+
+  function getEntryCompany(){
+    const el = document.getElementById("entryCompany");
+    return el ? el.value : "GMS TEXTILES LTD";
+  }
+
+  function getReportCompany(){
+    const el = document.getElementById("reportCompany");
+    if(el) return el.value;
+    const e = document.getElementById("entryCompany");
+    return e ? e.value : "GMS TEXTILES LTD";
+  }
+
+  window.loadEntry = function(){
+    const company = getEntryCompany();
+    const mcdEl = document.getElementById("entryMcd");
+    const mcd = mcdEl ? mcdEl.value : "ACCESSORIES MCD";
+    const box = document.getElementById("entryBox");
+    if(!box) return;
+
+    const common = commonEntryCards(company,mcd);
+
+    if(company === "GMS COMPOSITE KNITTING"){
+      box.innerHTML = `
+        ${common}
+        <div class="card">🏭 Composite Own Entry Module Later</div>
+      `;
+      return;
+    }
+
+    if(mcd === "ACCESSORIES MCD"){
+      box.innerHTML = `
+        <div class="card" onclick="location.href='sewing-thread.html'">🧵 Sewing Thread</div>
+        <div class="card" onclick="location.href='twill-tape.html'">📏 Twill Tape</div>
+        <div class="card" onclick="location.href='accessories.html'">📦 Accessories With Sample</div>
+        <div class="card" onclick="location.href='accessories-inventory.html'">🧾 Inventory Posting</div>
+        <div class="card" onclick="location.href='billing-manpower-report.html'">👨‍💼 Billing Manpower Report</div>
+        ${common}
+      `;
+      return;
+    }
+
+    if(mcd === "GREY FABRIC MCD"){
+      box.innerHTML = `
+        <div class="card" onclick="location.href='grey-fabric.html'">🏭 Grey Fabric Daily</div>
+        <div class="card" onclick="location.href='grey-fabric-monthly.html'">📅 Grey Fabric Monthly</div>
+        <div class="card" onclick="location.href='billing-manpower-report.html'">👨‍💼 Billing Manpower Report</div>
+        ${common}
+      `;
+      return;
+    }
+
+    if(mcd === "BILLING SECTION"){
+      box.innerHTML = `
+        <div class="card" onclick="location.href='billing-manpower-report.html'">👨‍💼 Billing Manpower Report</div>
+        ${common}
+      `;
+      return;
+    }
+
+    box.innerHTML = `
+      <div class="card">📝 ${mcd} Daily Entry</div>
+      <div class="card" onclick="location.href='billing-manpower-report.html'">👨‍💼 Billing Manpower Report</div>
+      ${common}
+    `;
+  };
+
+  window.loadReport = function(){
+    const company = getReportCompany();
+    const mcdEl = document.getElementById("reportMcd");
+    const mcd = mcdEl ? mcdEl.value : "ACCESSORIES MCD";
+    const box = document.getElementById("reportBox");
+    if(!box) return;
+
+    const common = commonReportCards(company,mcd);
+
+    if(company === "GMS COMPOSITE KNITTING"){
+      box.innerHTML = `
+        ${common}
+        <div class="card">🏭 Composite Own Report Module Later</div>
+      `;
+      return;
+    }
+
+    if(mcd === "ACCESSORIES MCD"){
+      box.innerHTML = `
+        <div class="card" onclick="location.href='sewing-thread.html'">🧵 Sewing Thread Report</div>
+        <div class="card" onclick="location.href='twill-tape.html'">📏 Twill Tape Report</div>
+        <div class="card" onclick="location.href='accessories.html'">📦 Accessories Report</div>
+        <div class="card" onclick="location.href='accessories-inventory-report.html'">📊 Inventory Report</div>
+        <div class="card" onclick="location.href='billing-manpower-report.html'">👨‍💼 Billing Manpower Report</div>
+        ${common}
+      `;
+      return;
+    }
+
+    if(mcd === "GREY FABRIC MCD"){
+      box.innerHTML = `
+        <div class="card" onclick="location.href='grey-fabric.html'">🏭 Grey Fabric Daily Report</div>
+        <div class="card" onclick="location.href='grey-fabric-monthly.html'">📅 Grey Fabric Monthly Report</div>
+        <div class="card" onclick="location.href='billing-manpower-report.html'">👨‍💼 Billing Manpower Report</div>
+        ${common}
+      `;
+      return;
+    }
+
+    if(mcd === "BILLING SECTION"){
+      box.innerHTML = `
+        <div class="card" onclick="location.href='billing-manpower-report.html'">👨‍💼 Billing Manpower Report</div>
+        ${common}
+      `;
+      return;
+    }
+
+    box.innerHTML = `
+      <div class="card">📑 ${mcd} Report</div>
+      <div class="card" onclick="location.href='billing-manpower-report.html'">👨‍💼 Billing Manpower Report</div>
+      ${common}
+    `;
+  };
+
+  function ensureReportCompanySelect(){
+    const reports = document.getElementById("reports");
+    if(!reports) return;
+    if(document.getElementById("reportCompany")) return;
+
+    const label = document.createElement("label");
+    label.innerHTML = "🏢 Company";
+    const sel = document.createElement("select");
+    sel.id = "reportCompany";
+    sel.innerHTML = `
+      <option>GMS TEXTILES LTD</option>
+      <option>GMS COMPOSITE KNITTING</option>
+    `;
+    const h2 = reports.querySelector("h2");
+    if(h2){
+      h2.insertAdjacentElement("afterend", document.createElement("br"));
+      h2.insertAdjacentElement("afterend", sel);
+      h2.insertAdjacentElement("afterend", label);
+    }
+  }
+
+  function fixExistingDeadCards(){
+    document.querySelectorAll(".card").forEach(c=>{
+      const t=(c.innerText||"").trim();
+      if(t.includes("Challan / Gate Pass") && !t.includes("Report")){
+        c.onclick=function(){
+          openChallanEntry(getEntryCompany(), document.getElementById("entryMcd") ? document.getElementById("entryMcd").value : "");
+        };
+      }
+      if(t.includes("Challan / Gate Pass Report")){
+        c.onclick=function(){
+          openChallanReport(getReportCompany(), document.getElementById("reportMcd") ? document.getElementById("reportMcd").value : "");
+        };
+      }
+    });
+  }
+
+  document.addEventListener("DOMContentLoaded",function(){
+    ensureReportCompanySelect();
+    const entryBtn = document.querySelector("button[onclick*='loadEntry']");
+    if(entryBtn) entryBtn.addEventListener("click",()=>setTimeout(fixExistingDeadCards,100));
+    const reportBtn = document.querySelector("button[onclick*='loadReport']");
+    if(reportBtn) reportBtn.addEventListener("click",()=>setTimeout(fixExistingDeadCards,100));
+    setTimeout(fixExistingDeadCards,500);
+  });
+})();
+</script>
+
+
+<script>
+/* ===== ABSOLUTE FINAL BUTTON FIX ===== */
+(function(){
+  function enc(v){ return encodeURIComponent(v || ""); }
+  function fixCompany(c){
+    if(c==="GMS COMPOSITE KNITTING") return "GMS COMPOSITE KNITTING IND LTD.";
+    if(c==="GMS TEXTILES LTD") return "GMS TEXTILES LTD.";
+    return c || "GMS TEXTILES LTD.";
+  }
+  function getEntryCompany(){
+    const e=document.getElementById("entryCompany");
+    return e ? e.value : "GMS TEXTILES LTD";
+  }
+  function getEntryMcd(){
+    const e=document.getElementById("entryMcd");
+    return e ? e.value : "ACCESSORIES MCD";
+  }
+  function getReportCompany(){
+    const e=document.getElementById("reportCompany");
+    if(e) return e.value;
+    return getEntryCompany();
+  }
+  function getReportMcd(){
+    const e=document.getElementById("reportMcd");
+    return e ? e.value : getEntryMcd();
+  }
+
+  window.openGatePlanEntry=function(c,m){
+    location.href="gate-plan.html?company="+enc(fixCompany(c))+"&mcd="+enc(m||"");
+  };
+  window.openChallanEntry=function(c,m){
+    location.href="challan-entry.html?company="+enc(fixCompany(c))+"&mcd="+enc(m||"");
+  };
+  window.openGatePlanReport=function(c,m){
+    location.href="gate-plan-report.html?company="+enc(fixCompany(c))+"&mcd="+enc(m||"");
+  };
+  window.openChallanReport=function(c,m){
+    location.href="challan-report.html?company="+enc(fixCompany(c))+"&mcd="+enc(m||"");
+  };
+
+  function entryCommon(c,m){
+  return `
+    <div class="card" onclick="openGatePlanEntry('${c}','${m}')">🚚 Gate Plan Entry</div>
+    <div class="card" onclick="openChallanEntry('${c}','${m}')">📄 Challan / Gate Pass</div>
+    <div class="card" onclick="openChallanReport('${c}','${m}')">📑 Challan / Gate Pass Report</div>
+  `;
+}
+  function reportCommon(c,m){
+    return `
+      <div class="card" onclick="openGatePlanReport('${c}','${m}')">🚚 Gate Plan Report</div>
+      <div class="card" onclick="openChallanReport('${c}','${m}')">📑 Challan / Gate Pass Report</div>
+    `;
+  }
+
+  window.loadEntry=function(){
+    const c=getEntryCompany();
+    const m=getEntryMcd();
+    const box=document.getElementById("entryBox");
+    if(!box) return;
+
+    const common=entryCommon(c,m);
+
+    if(c==="GMS COMPOSITE KNITTING"){
+      box.innerHTML=common + `<div class="card">🏭 Composite module later</div>`;
+      return;
+    }
+
+    if(m==="ACCESSORIES MCD"){
+      box.innerHTML=`
+        <div class="card" onclick="location.href='sewing-thread.html'">🧵 Sewing Thread</div>
+        <div class="card" onclick="location.href='twill-tape.html'">📏 Twill Tape</div>
+        <div class="card" onclick="location.href='accessories.html'">📦 Accessories With Sample</div>
+        <div class="card" onclick="location.href='accessories-inventory.html'">🧾 Inventory Posting</div>
+        <div class="card" onclick="location.href='billing-manpower-report.html'">👨‍💼 Billing Manpower Report</div>
+        ${common}
+      `;
+      return;
+    }
+
+    if(m==="GREY FABRIC MCD"){
+      box.innerHTML=`
+        <div class="card" onclick="location.href='grey-fabric.html'">🏭 Grey Fabric Daily</div>
+        <div class="card" onclick="location.href='grey-fabric-monthly.html'">📅 Grey Fabric Monthly</div>
+        <div class="card" onclick="location.href='billing-manpower-report.html'">👨‍💼 Billing Manpower Report</div>
+        ${common}
+      `;
+      return;
+    }
+
+    box.innerHTML=`
+      <div class="card">📝 ${m} Daily Entry</div>
+      <div class="card" onclick="location.href='billing-manpower-report.html'">👨‍💼 Billing Manpower Report</div>
+      ${common}
+    `;
+  };
+
+  window.loadReport=function(){
+    const c=getReportCompany();
+    const m=getReportMcd();
+    const box=document.getElementById("reportBox");
+    if(!box) return;
+    const common=reportCommon(c,m);
+
+    if(c==="GMS COMPOSITE KNITTING"){
+      box.innerHTML=common + `<div class="card">🏭 Composite report later</div>`;
+      return;
+    }
+
+    if(m==="ACCESSORIES MCD"){
+      box.innerHTML=`
+        <div class="card" onclick="location.href='sewing-thread.html'">🧵 Sewing Thread Report</div>
+        <div class="card" onclick="location.href='twill-tape.html'">📏 Twill Tape Report</div>
+        <div class="card" onclick="location.href='accessories.html'">📦 Accessories Report</div>
+        <div class="card" onclick="location.href='accessories-inventory-report.html'">📊 Inventory Report</div>
+        <div class="card" onclick="location.href='billing-manpower-report.html'">👨‍💼 Billing Manpower Report</div>
+        ${common}
+      `;
+      return;
+    }
+
+    if(m==="GREY FABRIC MCD"){
+      box.innerHTML=`
+        <div class="card" onclick="location.href='grey-fabric.html'">🏭 Grey Fabric Daily Report</div>
+        <div class="card" onclick="location.href='grey-fabric-monthly.html'">📅 Grey Fabric Monthly Report</div>
+        <div class="card" onclick="location.href='billing-manpower-report.html'">👨‍💼 Billing Manpower Report</div>
+        ${common}
+      `;
+      return;
+    }
+
+    box.innerHTML=`
+      <div class="card">📑 ${m} Report</div>
+      <div class="card" onclick="location.href='billing-manpower-report.html'">👨‍💼 Billing Manpower Report</div>
+      ${common}
+    `;
+  };
+
+  function ensureReportCompany(){
+    const reports=document.getElementById("reports");
+    if(!reports || document.getElementById("reportCompany")) return;
+    const h2=reports.querySelector("h2");
+    if(!h2) return;
+    h2.insertAdjacentHTML("afterend",`
+      <label>🏢 Company</label>
+      <select id="reportCompany">
+        <option>GMS TEXTILES LTD</option>
+        <option>GMS COMPOSITE KNITTING</option>
+      </select><br><br>
+    `);
+  }
+
+  function fixDeadCards(){
+    document.querySelectorAll(".card").forEach(card=>{
+      const t=(card.innerText||"").trim();
+      if(t==="📄 Challan / Gate Pass" || t==="Challan / Gate Pass"){
+        card.onclick=function(){ openChallanEntry(getEntryCompany(),getEntryMcd()); };
+      }
+      if(t.includes("Challan / Gate Pass Report")){
+        card.onclick=function(){ openChallanReport(getReportCompany(),getReportMcd()); };
+      }
+      if(t.includes("Gate Plan Entry")){
+        card.onclick=function(){ openGatePlanEntry(getEntryCompany(),getEntryMcd()); };
+      }
+    });
+  }
+
+  document.addEventListener("DOMContentLoaded",function(){
+    ensureReportCompany();
+    setTimeout(fixDeadCards,300);
+    document.addEventListener("click",function(){
+      setTimeout(fixDeadCards,100);
+    });
+  });
+})();
+</script>
+
+
+<script>
+/* ===== TRUE FINAL FALLBACK: ADD MISSING CHALLAN REPORT BUTTON ===== */
+(function(){
+  function enc(v){return encodeURIComponent(v||"");}
+  function fixCompany(c){
+    if(c==="GMS COMPOSITE KNITTING") return "GMS COMPOSITE KNITTING IND LTD.";
+    if(c==="GMS TEXTILES LTD") return "GMS TEXTILES LTD.";
+    return c || "GMS TEXTILES LTD.";
+  }
+  function getEntryCompany(){return document.getElementById("entryCompany")?.value || "GMS TEXTILES LTD";}
+  function getEntryMcd(){return document.getElementById("entryMcd")?.value || "ACCESSORIES MCD";}
+  function getReportCompany(){return document.getElementById("reportCompany")?.value || getEntryCompany();}
+  function getReportMcd(){return document.getElementById("reportMcd")?.value || getEntryMcd();}
+
+  window.openChallanEntry=function(c,m){
+    location.href="challan-entry.html?company="+enc(fixCompany(c))+"&mcd="+enc(m||"");
+  };
+  window.openChallanReport=function(c,m){
+    location.href="challan-report.html?company="+enc(fixCompany(c))+"&mcd="+enc(m||"");
+  };
+  window.openGatePlanEntry=window.openGatePlanEntry||function(c,m){
+    location.href="gate-plan.html?company="+enc(fixCompany(c))+"&mcd="+enc(m||"");
+  };
+  window.openGatePlanReport=window.openGatePlanReport||function(c,m){
+    location.href="gate-plan-report.html?company="+enc(fixCompany(c))+"&mcd="+enc(m||"");
+  };
+
+  function addEntryReportButton(){
+    const box=document.getElementById("entryBox");
+    if(!box) return;
+    const text=box.innerText||"";
+    const c=getEntryCompany(), m=getEntryMcd();
+
+    // fix challan entry button
+    [...box.querySelectorAll(".card")].forEach(card=>{
+      const t=(card.innerText||"").trim();
+      if(t.includes("Challan / Gate Pass") && !t.includes("Report")){
+        card.onclick=function(){openChallanEntry(c,m);};
+      }
+      if(t.includes("Gate Plan Entry")){
+        card.onclick=function(){openGatePlanEntry(c,m);};
+      }
+    });
+
+    // add report button if missing
+    if(!text.includes("Challan / Gate Pass Report")){
+      const d=document.createElement("div");
+      d.className="card";
+      d.innerHTML="📑 Challan / Gate Pass Report";
+      d.onclick=function(){openChallanReport(c,m);};
+      box.appendChild(d);
+    }
+  }
+
+  function addReportButton(){
+    const box=document.getElementById("reportBox");
+    if(!box) return;
+    const text=box.innerText||"";
+    const c=getReportCompany(), m=getReportMcd();
+
+    [...box.querySelectorAll(".card")].forEach(card=>{
+      const t=(card.innerText||"").trim();
+      if(t.includes("Challan / Gate Pass Report")){
+        card.onclick=function(){openChallanReport(c,m);};
+      }
+    });
+
+    if(!text.includes("Challan / Gate Pass Report")){
+      const d=document.createElement("div");
+      d.className="card";
+      d.innerHTML="📑 Challan / Gate Pass Report";
+      d.onclick=function(){openChallanReport(c,m);};
+      box.appendChild(d);
+    }
+  }
+
+  document.addEventListener("click",function(){
+    setTimeout(addEntryReportButton,150);
+    setTimeout(addReportButton,150);
+  });
+  document.addEventListener("DOMContentLoaded",function(){
+    setInterval(function(){
+      addEntryReportButton();
+      addReportButton();
+    },1000);
+  });
+})();
+</script>
+
+
+<script>
+/* ===== FINAL FILE NAME LINK FIX ===== */
+(function(){
+  function enc(v){return encodeURIComponent(v||"");}
+  function companyFix(c){
+    if(c==="GMS COMPOSITE KNITTING") return "GMS COMPOSITE KNITTING IND LTD.";
+    if(c==="GMS TEXTILES LTD") return "GMS TEXTILES LTD.";
+    return c || "GMS TEXTILES LTD.";
+  }
+  function entryCompany(){return document.getElementById("entryCompany")?.value || "GMS TEXTILES LTD";}
+  function entryMcd(){return document.getElementById("entryMcd")?.value || "ACCESSORIES MCD";}
+  function reportCompany(){return document.getElementById("reportCompany")?.value || entryCompany();}
+  function reportMcd(){return document.getElementById("reportMcd")?.value || entryMcd();}
+
+  window.openChallanEntry=function(c,m){
+    location.href="challan-entry.html?company="+enc(companyFix(c))+"&mcd="+enc(m||"");
+  };
+  window.openChallanReport=function(c,m){
+    location.href="challan-report.html?company="+enc(companyFix(c))+"&mcd="+enc(m||"");
+  };
+
+  function fixCards(){
+    document.querySelectorAll(".card").forEach(card=>{
+      const t=(card.innerText||"").trim();
+      if(t.includes("Challan / Gate Pass") && !t.includes("Report")){
+        card.onclick=function(){openChallanEntry(entryCompany(),entryMcd());};
+      }
+      if(t.includes("Challan / Gate Pass Report")){
+        card.onclick=function(){openChallanReport(reportCompany(),reportMcd());};
+      }
+    });
+  }
+
+  document.addEventListener("DOMContentLoaded",function(){
+    setInterval(fixCards,800);
+  });
+  document.addEventListener("click",function(){
+    setTimeout(fixCards,100);
+  });
+})();
+</script>
+</script>
+
+<!--Start of Tawk.to Script-->
+<script type="text/javascript">
+var Tawk_API=Tawk_API||{}, Tawk_LoadStart=new Date();
+(function(){
+var s1=document.createElement("script"),s0=document.getElementsByTagName("script")[0];
+s1.async=true;
+s1.src='https://embed.tawk.to/6a02e2c82f319e1c3199c506/1jodkbocc';
+s1.charset='UTF-8';
+s1.setAttribute('crossorigin','*');
+s0.parentNode.insertBefore(s1,s0);
+})();
+</script>
+<!--End of Tawk.to Script-->
+
+</body>
 </body>
 </html>
