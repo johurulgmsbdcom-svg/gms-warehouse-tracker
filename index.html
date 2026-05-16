@@ -359,28 +359,40 @@ body.light .card{color:#1e293b;}
   box-shadow:0 12px 30px rgba(59,130,246,.4);
 }
 
-/* Needle Section Special Buttons */
-.needleSpecialBtn{
-  background:linear-gradient(135deg,var(--blue),var(--purple));
-  color:#fff;
-  padding:20px;
-  border-radius:16px;
-  cursor:pointer;
-  transition:all .3s;
+/* Needle Section Grid */
+.needleGrid{
+  display:grid;
+  grid-template-columns:repeat(auto-fill,minmax(280px,1fr));
+  gap:16px;
+  margin-top:20px;
+}
+.needleCard{
+  background:rgba(30,41,59,.6);
+  border:1px solid rgba(59,130,246,0.15);
+  border-radius:12px;
+  padding:16px 20px;
   display:flex;
   align-items:center;
-  gap:12px;
-  border:none;
+  gap:16px;
+  cursor:pointer;
+  transition:all .3s;
+  color:#f1f5f9;
+}
+body.light .needleCard{background:rgba(241,245,249,.6);}
+.needleCard:hover{
+  background:rgba(59,130,246,0.15);
+  border-color:var(--blue);
+  transform:scale(1.02);
+}
+.needleCard i{
+  font-size:20px;
+  color:var(--blue);
+  width:30px;
+  text-align:center;
+}
+.needleCard span{
   font-size:14px;
   font-weight:600;
-  box-shadow:0 4px 15px rgba(59,130,246,.3);
-}
-.needleSpecialBtn:hover{
-  transform:translateY(-3px);
-  box-shadow:0 8px 25px rgba(59,130,246,.5);
-}
-.needleSpecialBtn i{
-  font-size:20px;
 }
 
 select,input,textarea{
@@ -585,20 +597,20 @@ body.light .creditItem{color:#1e293b;}
       </div>
     </div>
     <div class="summaryLine" id="accessoriesSummary">
-      <div class="sumBox"><span>📦 Accessories Stock</span><b id="sumAccessories">0</b></div>
-      <div class="sumBox"><span>🧵 Sewing Thread</span><b id="sumSewing">0</b></div>
-      <div class="sumBox"><span>📏 Twill Tape</span><b id="sumTwill">0</b></div>
+      <div class="sumBox"><span>📦 Accessories With Sample Stock</span><b id="sumAccessories">0</b></div>
+      <div class="sumBox"><span>🧵 Sewing Thread Stock</span><b id="sumSewing">0</b></div>
+      <div class="sumBox"><span>📏 Twill Tape Stock</span><b id="sumTwill">0</b></div>
     </div>
     <div class="needleSmall" id="needleSummary"><span>🪡 Needle Today Stock</span><b id="needleToday">0</b></div>
     <div class="chartGrid">
       <div class="chartBox" id="accessoriesChartBox"><h3>📈 Accessories Stock Chart</h3><canvas id="accessoriesChart"></canvas></div>
       <div class="chartBox" id="needleChartBox"><h3>🏭 Needle Floor Wise Stock</h3><canvas id="needleChart"></canvas></div>
-      <div class="chartBox" id="greyChartBox"><h3>🏭 Grey Fabric Present Stock</h3><canvas id="greyChart"></canvas></div>
+      <div class="chartBox" id="greyChartBox"><h3>🏭 Grey Fabric Present Stock Summary</h3><canvas id="greyChart"></canvas></div>
       <div class="chartBox" id="needleIssueChartBox"><h3>🪡 Needle Broken / Missing / Change</h3><canvas id="needleIssueChart"></canvas></div>
       <div class="chartBox attendanceBox" id="billingChartBox">
         <div class="attChartSide"><h3>👨‍💼 Attendance Manpower Chart</h3><canvas id="billingChart"></canvas></div>
         <div class="attendanceInside">
-          <div class="attBox total"><span>👨‍ Attendance Total</span><b id="attTotal">0</b></div>
+          <div class="attBox total"><span>👨‍🏭 Attendance Total</span><b id="attTotal">0</b></div>
           <div class="attBox present"><span>✅ Today Present</span><b id="attPresent">0</b></div>
           <div class="attBox leave"><span>🏖 Leave</span><b id="attLeave">0</b></div>
           <div class="attBox absent"><span>❌ Absent</span><b id="attAbsent">0</b></div>
@@ -631,27 +643,50 @@ body.light .creditItem{color:#1e293b;}
   <div id="needle" class="page">
     <h2>🪡 Needle Section</h2>
     
-    <!-- ADDED: Two Special Buttons as per image -->
-    <div class="grid" style="margin-bottom:20px;">
-      <button class="needleSpecialBtn" onclick="location.href='month-wise-needle-stock.html'">
+    <!-- Needle Grid with 10 Buttons including 2 new ones -->
+    <div class="needleGrid">
+      <div class="needleCard" onclick="location.href='needle.html'">
+        <i class="fas fa-syringe"></i>
+        <span>Needle Daily Entry</span>
+      </div>
+      <div class="needleCard" onclick="location.href='needle-dashboard.html'">
+        <i class="fas fa-industry"></i>
+        <span>Floor Wise Dashboard</span>
+      </div>
+      <div class="needleCard" onclick="location.href='ageing.html'">
+        <i class="fas fa-hourglass-half"></i>
+        <span>Ageing Report</span>
+      </div>
+      <div class="needleCard" onclick="location.href='needle-monthly.html'">
         <i class="fas fa-calendar-alt"></i>
+        <span>Needle Monthly Report</span>
+      </div>
+      <div class="needleCard" onclick="location.href='all-needle-reports.html'">
+        <i class="fas fa-file-archive"></i>
+        <span>All Needle BNR/BNF</span>
+      </div>
+      <div class="needleCard" onclick="location.href='all-needle-summary.html'">
+        <i class="fas fa-chart-pie"></i>
+        <span>All Needle Summary</span>
+      </div>
+      <div class="needleCard" onclick="location.href='needle-report.html'">
+        <i class="fas fa-file-signature"></i>
+        <span>Needle Issue Entry</span>
+      </div>
+      <div class="needleCard" onclick="location.href='needle-report-view.html'">
+        <i class="fas fa-file-invoice"></i>
+        <span>Needle Issue Report</span>
+      </div>
+      <!-- NEW BUTTON 1 -->
+      <div class="needleCard" style="border-color: var(--blue); background: rgba(59,130,246,0.1);" onclick="location.href='month-wise-needle-stock.html'">
+        <i class="fas fa-calendar-check" style="color:var(--blue)"></i>
         <span>Month Wise Needle Stock Summary</span>
-      </button>
-      <button class="needleSpecialBtn" onclick="location.href='month-wise-floor-stock.html'">
-        <i class="fas fa-building"></i>
+      </div>
+      <!-- NEW BUTTON 2 -->
+      <div class="needleCard" style="border-color: var(--purple); background: rgba(139,92,246,0.1);" onclick="location.href='month-wise-floor-stock.html'">
+        <i class="fas fa-building" style="color:var(--purple)"></i>
         <span>Month Wise Floor Stock Report</span>
-      </button>
-    </div>
-    
-    <div class="grid">
-      <div class="card" onclick="location.href='needle.html'">🪡 Needle Daily Entry</div>
-      <div class="card" onclick="location.href='needle-dashboard.html'">🏭 Floor Wise Dashboard</div>
-      <div class="card" onclick="location.href='ageing.html'">📑 Ageing Report</div>
-      <div class="card" onclick="location.href='needle-monthly.html'">📅 Needle Monthly Report</div>
-      <div class="card" onclick="location.href='all-needle-reports.html'">📦 All Needle BNR/BNF</div>
-      <div class="card" onclick="location.href='all-needle-summary.html'">📊 All Needle Summary</div>
-      <div class="card" onclick="location.href='needle-report.html'">📝 Needle Issue Entry</div>
-      <div class="card" onclick="location.href='needle-report-view.html'">📊 Needle Issue Report</div>
+      </div>
     </div>
   </div>
 
@@ -693,9 +728,8 @@ body.light .creditItem{color:#1e293b;}
   </div>
 </div>
 
-<!-- ===== GLOBAL NAVIGATION FUNCTIONS (FIXED) ===== -->
+<!-- ===== GLOBAL NAVIGATION FUNCTIONS ===== -->
 <script>
-// ===== URL Helper Functions =====
 window.urlCompanyName = function(company){
   if(company==="GMS COMPOSITE KNITTING") return "GMS COMPOSITE KNITTING IND LTD.";
   if(company==="GMS TEXTILES LTD") return "GMS TEXTILES LTD.";
@@ -703,7 +737,6 @@ window.urlCompanyName = function(company){
 };
 window.enc = function(v){ return encodeURIComponent(v || ""); };
 
-// ===== Navigation Functions (Exposed to Window) =====
 window.openGatePlanEntry = function(company,mcd){
   location.href = "gate-plan.html?company=" + window.enc(window.urlCompanyName(company)) + "&mcd=" + window.enc(mcd || "");
 };
@@ -717,7 +750,6 @@ window.openChallanReport = function(company,mcd){
   location.href = "challan-report.html?company=" + window.enc(window.urlCompanyName(company)) + "&mcd=" + window.enc(mcd || "");
 };
 
-// ===== Common Card Generators =====
 window.commonEntryCards = function(company,mcd){
   return `<div class="card" onclick="openGatePlanEntry('${company}','${mcd}')">🚚 Gate Plan Entry</div>
   <div class="card" onclick="openChallanEntry('${company}','${mcd}')">📄 Challan / Gate Pass</div>
@@ -836,7 +868,6 @@ window.openPage=function(id,btn){
   }
 };
 
-// ===== FIXED: Entry & Report Functions with Global Access =====
 window.loadEntry=function(){
   const company=document.getElementById("entryCompany").value;
   const mcd=document.getElementById("entryMcd").value;
@@ -861,11 +892,10 @@ window.loadReport=function(){
   if(company==="GMS COMPOSITE KNITTING"){box.innerHTML=`${common}<div class="card">🏭 Composite report later</div>`;return;}
   if(mcd==="ACCESSORIES MCD"){box.innerHTML=`<div class="card" onclick="location.href='sewing-thread.html'">🧵 Sewing Thread</div><div class="card" onclick="location.href='twill-tape.html'">📏 Twill Tape</div><div class="card" onclick="location.href='accessories.html'">📦 Accessories</div><div class="card" onclick="location.href='accessories-inventory-report.html'">📊 Inventory</div>${common}`;return;}
   if(mcd==="GREY FABRIC MCD"){box.innerHTML=`<div class="card" onclick="location.href='grey-fabric.html'">🏭 Grey Fabric</div><div class="card" onclick="location.href='grey-fabric-monthly.html'">📅 Grey Monthly</div>${common}`;return;}
-  if(mcd==="BILLING SECTION"){box.innerHTML=`<div class="card" onclick="location.href='billing-manpower-report.html'">👨‍💼 Billing Manpower</div>${common}`;return;}
+  if(mcd==="BILLING SECTION"){box.innerHTML=`<div class="card" onclick="location.href='billing-manpower-report.html'">👨‍ Billing Manpower</div>${common}`;return;}
   box.innerHTML=`<div class="card">📑 ${mcd} Report</div><div class="card" onclick="location.href='billing-manpower-report.html'">👨‍ Billing Manpower</div>${common}`;
 };
 
-// ===== Firebase Functions (Same as before) =====
 async function getLatestPresent(collectionName,openingStock){
   let snap=await getDocs(collection(db,collectionName));
   let rows=[];snap.forEach(d=>{let x=d.data();if(x.date)rows.push(x);});
