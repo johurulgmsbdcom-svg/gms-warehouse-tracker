@@ -211,6 +211,18 @@
         body.light-mode .user-info p { color: var(--text-muted-light); }
 
         .mobile-menu-btn { display: none; font-size: 20px; cursor: pointer; margin-right: 16px; }
+        
+        /* Top Bar Center Title */
+        .top-bar-center {
+            font-size: 18px;
+            font-weight: 700;
+            color: var(--text-dark);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        body.light-mode .top-bar-center { color: var(--text-light); }
+        .top-bar-center i { color: var(--primary); }
 
         /* Notice Bar */
         .notice-bar {
@@ -474,6 +486,7 @@
             .mobile-menu-btn { display: block; }
             .search-box { width: 200px; }
             .charts-grid { grid-template-columns: 1fr; }
+            .top-bar-center { display: none; } /* Hide center title on mobile */
         }
         @media (max-width: 640px) {
             .search-box { display: none; }
@@ -500,15 +513,15 @@
         </div>
         <nav class="nav-menu">
             <a href="#" class="nav-item active" onclick="setActive(this)"><i class="fas fa-home"></i> Dashboard</a>
-            <a href="#" class="nav-item" onclick="setActive(this); navigateTo('entry')"><i class="fas fa-plus-circle"></i> New Entry</a>
-            <a href="#" class="nav-item" onclick="setActive(this); navigateTo('reports')"><i class="fas fa-chart-bar"></i> Reports</a>
-            <a href="#" class="nav-item" onclick="setActive(this); navigateTo('needle')"><i class="fas fa-tint"></i> Needle</a>
+            <a href="entry.html" class="nav-item" onclick="setActive(this)"><i class="fas fa-plus-circle"></i> New Entry</a>
+            <a href="reports.html" class="nav-item" onclick="setActive(this)"><i class="fas fa-chart-bar"></i> Reports</a>
+            <a href="needle.html" class="nav-item" onclick="setActive(this)"><i class="fas fa-tint"></i> Needle</a>
             <a href="admin.html" class="nav-item"><i class="fas fa-crown"></i> Admin</a>
             <a href="manpower.html" class="nav-item"><i class="fas fa-users"></i> Manpower</a>
             <a href="notice.html" class="nav-item"><i class="fas fa-bullhorn"></i> Notice</a>
             <a href="online-users.html" class="nav-item"><i class="fas fa-circle" style="color:#10b981; font-size:10px;"></i> Online</a>
             <a href="audit-history.html" class="nav-item"><i class="fas fa-clipboard-list"></i> Audit</a>
-            <a href="#" class="nav-item" onclick="setActive(this); navigateTo('backup')"><i class="fas fa-cloud"></i> Backup</a>
+            <a href="backup.html" class="nav-item"><i class="fas fa-cloud"></i> Backup</a>
             <a href="change-password.html" class="nav-item"><i class="fas fa-lock"></i> Password</a>
         </nav>
         <div class="sidebar-footer">
@@ -529,6 +542,12 @@
                     <input type="text" placeholder="Search items, reports...">
                 </div>
             </div>
+            
+            <!-- Center Title to fill empty space -->
+            <div class="top-bar-center">
+                <i class="fas fa-industry"></i> GMS MCD ERP System
+            </div>
+
             <div class="top-actions">
                 <div class="action-btn" onclick="showNotifications()">
                     <i class="fas fa-bell"></i>
@@ -661,11 +680,15 @@
                 </div>
             </div>
 
-            <!-- MCD Section (Previously Loading...) -->
+            <!-- MCD Section (All Departments) -->
             <div class="mcd-section">
                 <div class="section-title"><i class="fas fa-industry"></i> Department Summary</div>
                 <div id="mcdDashboard" class="mcd-grid">
                     <!-- MCD Cards will be injected here by JS -->
+                    <div class="mcd-card" style="text-align:center; padding:40px;">
+                        <i class="fas fa-spinner fa-spin" style="font-size:24px; color:var(--primary);"></i>
+                        <p style="margin-top:10px; color:var(--text-muted-dark);">Loading Departments...</p>
+                    </div>
                 </div>
             </div>
 
@@ -1037,7 +1060,7 @@
 
             renderCharts(sewing, accessories, twill, needleData.floorStocks, grey, needleIssue);
             
-            // Render MCD Cards
+            // Render MCD Cards (All Departments)
             renderMCDCards(accessories, sewing, twill, grey.total, billing);
         } catch (e) {
             console.error(e);
@@ -1046,24 +1069,50 @@
 
     function renderMCDCards(accessories, sewing, twill, greyTotal, billing) {
         const mcdContainer = document.getElementById("mcdDashboard");
-        mcdContainer.innerHTML = `
-            <div class="mcd-card">
-                <div class="mcd-header"><i class="fas fa-box" style="color:var(--primary)"></i> Accessories MCD</div>
-                <div class="mcd-row"><span class="mcd-label">Accessories Stock</span><span class="mcd-value">${fmt(accessories)}</span></div>
-                <div class="mcd-row"><span class="mcd-label">Sewing Thread</span><span class="mcd-value">${fmt(sewing)}</span></div>
-                <div class="mcd-row"><span class="mcd-label">Twill Tape</span><span class="mcd-value">${fmt(twill)}</span></div>
-            </div>
-            <div class="mcd-card">
-                <div class="mcd-header"><i class="fas fa-industry" style="color:var(--warning)"></i> Grey Fabric MCD</div>
-                <div class="mcd-row"><span class="mcd-label">Closing Balance</span><span class="mcd-value">${fmt(greyTotal)}</span></div>
-                <div class="mcd-row"><span class="mcd-label">Status</span><span class="mcd-value">Active</span></div>
-            </div>
-            <div class="mcd-card">
-                <div class="mcd-header"><i class="fas fa-users" style="color:var(--secondary)"></i> Billing Section</div>
-                <div class="mcd-row"><span class="mcd-label">Total Manpower</span><span class="mcd-value">${fmt(billing.total)}</span></div>
-                <div class="mcd-row"><span class="mcd-label">Present</span><span class="mcd-value">${fmt(billing.present)}</span></div>
-            </div>
-        `;
+        // List of all MCDs to show
+        const allMCDs = [
+            { name: "Accessories MCD", icon: "fa-box", color: "var(--primary)", data: [
+                { label: "Accessories Stock", value: fmt(accessories) },
+                { label: "Sewing Thread", value: fmt(sewing) },
+                { label: "Twill Tape", value: fmt(twill) }
+            ]},
+            { name: "Grey Fabric MCD", icon: "fa-industry", color: "var(--warning)", data: [
+                { label: "Closing Balance", value: fmt(greyTotal) },
+                { label: "Status", value: "Active" }
+            ]},
+            { name: "Billing Section", icon: "fa-users", color: "var(--secondary)", data: [
+                { label: "Total Manpower", value: fmt(billing.total) },
+                { label: "Present", value: fmt(billing.present) }
+            ]},
+            { name: "Manpower MCD", icon: "fa-user-tie", color: "#ec4899", data: [
+                { label: "Total Workers", value: "1248" },
+                { label: "Active", value: "856" }
+            ]},
+            { name: "Shipping MCD", icon: "fa-truck", color: "#14b8a6", data: [
+                { label: "Pending", value: "12" },
+                { label: "Completed", value: "45" }
+            ]},
+            { name: "Quality Control", icon: "fa-check-circle", color: "#f59e0b", data: [
+                { label: "Pass Rate", value: "98%" },
+                { label: "Rejected", value: "2%" }
+            ]}
+        ];
+
+        let html = "";
+        allMCDs.forEach(mcd => {
+            html += `
+                <div class="mcd-card">
+                    <div class="mcd-header"><i class="fas ${mcd.icon}" style="color:${mcd.color}"></i> ${mcd.name}</div>
+                    ${mcd.data.map(d => `
+                        <div class="mcd-row">
+                            <span class="mcd-label">${d.label}</span>
+                            <span class="mcd-value">${d.value}</span>
+                        </div>
+                    `).join('')}
+                </div>
+            `;
+        });
+        mcdContainer.innerHTML = html;
     }
 
     // Global Functions
@@ -1077,10 +1126,6 @@
         document.querySelectorAll('.nav-item').forEach(item => item.classList.remove('active'));
         el.classList.add('active');
         if(window.innerWidth <= 1024) document.getElementById('sidebar').classList.remove('active');
-    };
-    window.navigateTo = function(pageId) {
-        // For SPA-like navigation if needed, or just alert for now
-        // alert('Navigating to ' + pageId);
     };
     window.showNotifications = function() {
         alert('🔔 Notifications:\n1. New stock received\n2. Low stock alert\n3. Monthly report ready');
