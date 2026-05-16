@@ -1,743 +1,993 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-<meta charset="UTF-8">
-<title>GMS MCD ERP SYSTEM</title>
-<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+    <title>GMS MCD ERP SYSTEM</title>
+    <!-- Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <style>
+        :root {
+            --primary: #6366f1;
+            --primary-dark: #4f46e5;
+            --secondary: #10b981;
+            --accent: #f59e0b;
+            --danger: #ef4444;
+            --bg-dark: #0f172a;
+            --bg-card-dark: #1e293b;
+            --text-dark: #f8fafc;
+            --text-muted-dark: #94a3b8;
+            --bg-light: #f1f5f9;
+            --bg-card-light: #ffffff;
+            --text-light: #0f172a;
+            --text-muted-light: #64748b;
+            --shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+            --radius: 12px;
+            --transition: all 0.3s ease;
+        }
 
-<style>
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bg-dark);
+            color: var(--text-dark);
+            overflow-x: hidden;
+            transition: var(--transition);
+        }
 
-:root{
-  --primary:#4f46e5;
-  --secondary:#0ea5e9;
-  --success:#10b981;
-  --warning:#f59e0b;
-  --danger:#ef4444;
-  --dark:#0f172a;
-  --light:#f8fafc;
-  --border:#e2e8f0;
-  --shadow:0 4px 6px -1px rgba(0,0,0,0.1);
-  --shadow-lg:0 10px 15px -3px rgba(0,0,0,0.1);
-}
+        body.light-mode {
+            background-color: var(--bg-light);
+            color: var(--text-light);
+        }
 
-*{box-sizing:border-box;margin:0;padding:0}
-body{
-  font-family:'Inter',sans-serif;
-  background:#f1f5f9;
-  color:#334155;
-  overflow-x:hidden;
-}
+        /* Scrollbar */
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #475569; border-radius: 4px; }
+        body.light-mode ::-webkit-scrollbar-thumb { background: #cbd5e1; }
 
-/* SIDEBAR */
-.sidebar{
-  position:fixed;
-  left:0;
-  top:0;
-  bottom:0;
-  width:220px;
-  background:linear-gradient(180deg,#1e293b 0%,#0f172a 100%);
-  color:#fff;
-  z-index:1000;
-  display:flex;
-  flex-direction:column;
-}
-.sidebar-header{
-  padding:20px 16px;
-  border-bottom:1px solid rgba(255,255,255,0.1);
-  display:flex;
-  align-items:center;
-  gap:12px;
-}
-.sidebar-logo{
-  width:44px;
-  height:44px;
-  background:linear-gradient(135deg,var(--primary),var(--secondary));
-  border-radius:10px;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  font-weight:800;
-  font-size:18px;
-}
-.sidebar-title h1{font-size:20px;font-weight:700}
-.sidebar-title span{font-size:11px;color:#94a3b8}
-.sidebar-nav{flex:1;padding:16px 10px;display:flex;flex-direction:column;gap:4px;overflow-y:auto}
-.nav-item{
-  padding:10px 14px;
-  border-radius:10px;
-  cursor:pointer;
-  display:flex;
-  align-items:center;
-  gap:10px;
-  font-size:13px;
-  font-weight:500;
-  color:#94a3b8;
-  transition:all 0.3s;
-}
-.nav-item:hover{background:rgba(79,70,229,0.1);color:#fff;transform:translateX(4px)}
-.nav-item.active{background:var(--primary);color:#fff;box-shadow:0 4px 12px rgba(79,70,229,0.4)}
-.sidebar-footer{padding:16px;border-top:1px solid rgba(255,255,255,0.1)}
-.btn-sidebar{
-  width:100%;
-  padding:10px;
-  border:none;
-  border-radius:10px;
-  font-weight:600;
-  cursor:pointer;
-  margin-bottom:6px;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  gap:6px;
-  font-size:13px;
-}
-.btn-theme{background:rgba(255,255,255,0.1);color:#fff}
-.btn-logout{background:var(--danger);color:#fff}
+        /* Layout */
+        .app-container { display: flex; min-height: 100vh; }
 
-/* MAIN CONTENT */
-.main-content{margin-left:220px;min-height:100vh;background:#fff}
+        /* Sidebar */
+        .sidebar {
+            width: 260px;
+            background: var(--bg-card-dark);
+            border-right: 1px solid rgba(255,255,255,0.1);
+            position: fixed;
+            top: 0; bottom: 0; left: 0;
+            z-index: 100;
+            transition: var(--transition);
+            display: flex;
+            flex-direction: column;
+        }
+        body.light-mode .sidebar {
+            background: var(--bg-card-light);
+            border-right: 1px solid #e2e8f0;
+        }
+        
+        .sidebar-header {
+            padding: 20px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+        }
+        body.light-mode .sidebar-header { border-bottom: 1px solid #e2e8f0; }
+        
+        .logo-icon {
+            width: 40px; height: 40px;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            border-radius: 10px;
+            display: flex; align-items: center; justify-content: center;
+            font-weight: 800; font-size: 20px; color: #fff;
+        }
+        .logo-text h1 { font-size: 18px; font-weight: 700; line-height: 1.2; }
+        .logo-text span { font-size: 11px; color: var(--text-muted-dark); font-weight: 500; }
+        body.light-mode .logo-text span { color: var(--text-muted-light); }
 
-/* TOP BAR */
-.top-bar{
-  background:#fff;
-  border-bottom:1px solid var(--border);
-  padding:12px 32px;
-  display:flex;
-  align-items:center;
-  justify-content:space-between;
-  position:sticky;
-  top:0;
-  z-index:100;
-}
-.search-box{
-  position:relative;
-  width:400px;
-}
-.search-box input{
-  width:100%;
-  padding:10px 16px 10px 40px;
-  border:1px solid var(--border);
-  border-radius:10px;
-  font-size:14px;
-}
-.search-box i{
-  position:absolute;
-  left:14px;
-  top:50%;
-  transform:translateY(-50%);
-  color:#94a3b8;
-}
-.top-actions{display:flex;align-items:center;gap:16px}
-.icon-btn{
-  width:40px;
-  height:40px;
-  border-radius:10px;
-  border:1px solid var(--border);
-  background:#fff;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  cursor:pointer;
-  position:relative;
-  transition:all 0.3s;
-}
-.icon-btn:hover{background:#f8fafc;border-color:var(--primary)}
-.badge{
-  position:absolute;
-  top:-4px;
-  right:-4px;
-  width:18px;
-  height:18px;
-  background:var(--danger);
-  color:#fff;
-  border-radius:50%;
-  font-size:10px;
-  font-weight:700;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  border:2px solid #fff;
-}
-.user-profile{
-  display:flex;
-  align-items:center;
-  gap:10px;
-  padding:6px 14px;
-  border:1px solid var(--border);
-  border-radius:10px;
-  cursor:pointer;
-}
-.avatar{
-  width:32px;
-  height:32px;
-  background:linear-gradient(135deg,var(--primary),var(--secondary));
-  border-radius:50%;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  color:#fff;
-  font-weight:700;
-  font-size:13px;
-}
-.user-info span{display:block;font-size:13px;font-weight:600}
-.user-info small{font-size:11px;color:#64748b}
+        .nav-menu { flex: 1; padding: 20px 12px; overflow-y: auto; }
+        .nav-item {
+            display: flex; align-items: center; gap: 12px;
+            padding: 12px 16px;
+            border-radius: var(--radius);
+            color: var(--text-muted-dark);
+            text-decoration: none;
+            font-size: 14px; font-weight: 500;
+            margin-bottom: 4px;
+            transition: var(--transition);
+            cursor: pointer;
+        }
+        body.light-mode .nav-item { color: var(--text-muted-light); }
+        .nav-item:hover, .nav-item.active {
+            background: var(--primary);
+            color: #fff;
+        }
+        .nav-item i { width: 20px; text-align: center; }
 
-/* NOTICE BAR */
-.notice-bar{
-  background:linear-gradient(90deg,#f97316,#ef4444,#4f46e5);
-  color:#fff;
-  padding:10px 32px;
-  font-size:13px;
-  font-weight:600;
-  white-space:nowrap;
-  overflow:hidden;
-}
-.notice-text{display:inline-block;animation:scrollText 25s linear infinite}
-@keyframes scrollText{0%{transform:translateX(100%)}100%{transform:translateX(-100%)}}
+        .sidebar-footer { padding: 20px; border-top: 1px solid rgba(255,255,255,0.1); }
+        body.light-mode .sidebar-footer { border-top: 1px solid #e2e8f0; }
+        .theme-toggle-btn {
+            width: 100%; padding: 10px;
+            background: rgba(255,255,255,0.1);
+            border: none; border-radius: var(--radius);
+            color: inherit; font-weight: 600; cursor: pointer;
+            display: flex; align-items: center; justify-content: center; gap: 8px;
+        }
+        body.light-mode .theme-toggle-btn { background: #f1f5f9; }
 
-/* DASHBOARD */
-.dashboard-content{padding:32px}
-.page-header{margin-bottom:24px}
-.page-title{font-size:24px;font-weight:700;color:#1e293b;margin-bottom:6px}
-.page-subtitle{font-size:13px;color:#64748b}
+        /* Main Content */
+        .main-content {
+            flex: 1;
+            margin-left: 260px;
+            transition: var(--transition);
+            display: flex;
+            flex-direction: column;
+        }
 
-/* LIVE CARD */
-.live-card{
-  background:linear-gradient(135deg,#10b981,#059669);
-  border-radius:16px;
-  padding:32px;
-  text-align:center;
-  color:#fff;
-  margin-bottom:24px;
-  position:relative;
-  overflow:hidden;
-  box-shadow:0 10px 25px rgba(16,185,129,0.3);
-}
-.live-card::before{
-  content:'';
-  position:absolute;
-  top:-50%;
-  left:-50%;
-  width:200%;
-  height:200%;
-  background:radial-gradient(circle,rgba(255,255,255,0.2),transparent 50%);
-  animation:glow 3s ease-in-out infinite;
-}
-@keyframes glow{0%,100%{opacity:0.4;transform:scale(1)}50%{opacity:0.8;transform:scale(1.1)}}
-.live-badge{
-  display:inline-flex;
-  align-items:center;
-  gap:8px;
-  background:rgba(255,255,255,0.2);
-  padding:8px 16px;
-  border-radius:20px;
-  font-size:11px;
-  font-weight:600;
-  margin-bottom:12px;
-  position:relative;
-  z-index:1;
-}
-.live-dot{
-  width:10px;
-  height:10px;
-  background:#fff;
-  border-radius:50%;
-  animation:pulse 1.5s infinite;
-}
-@keyframes pulse{0%{box-shadow:0 0 0 0 rgba(255,255,255,0.7)}70%{box-shadow:0 0 0 20px rgba(255,255,255,0)}100%{box-shadow:0 0 0 0 rgba(255,255,255,0)}}
-.live-text{font-size:48px;font-weight:800;letter-spacing:2px;position:relative;z-index:1}
+        /* Top Bar */
+        .top-bar {
+            background: var(--bg-card-dark);
+            padding: 16px 24px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+            position: sticky; top: 0; z-index: 90;
+        }
+        body.light-mode .top-bar {
+            background: var(--bg-card-light);
+            border-bottom: 1px solid #e2e8f0;
+        }
 
-/* STATS GRID */
-.stats-grid{
-  display:grid;
-  grid-template-columns:repeat(auto-fit,minmax(220px,1fr));
-  gap:20px;
-  margin-bottom:24px;
-}
-.stat-card{
-  background:#fff;
-  border-radius:14px;
-  padding:20px;
-  border:1px solid var(--border);
-  box-shadow:var(--shadow);
-  display:flex;
-  align-items:center;
-  gap:16px;
-  transition:all 0.3s;
-}
-.stat-card:hover{transform:translateY(-4px);box-shadow:var(--shadow-lg)}
-.stat-icon{
-  width:48px;
-  height:48px;
-  border-radius:12px;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  font-size:20px;
-}
-.stat-icon.blue{background:#dbeafe;color:#2563eb}
-.stat-icon.green{background:#dcfce7;color:#16a34a}
-.stat-icon.orange{background:#fef3c7;color:#d97706}
-.stat-icon.purple{background:#f3e8ff;color:#9333ea}
-.stat-content{flex:1}
-.stat-label{font-size:12px;color:#64748b;font-weight:500;margin-bottom:4px;display:flex;justify-content:space-between}
-.stat-value{font-size:26px;font-weight:800;color:#1e293b}
-.stat-change{font-size:11px;font-weight:600;margin-top:4px}
-.stat-change.positive{color:var(--success)}
-.stat-change.negative{color:var(--danger)}
+        .search-box {
+            position: relative;
+            width: 300px;
+        }
+        .search-box input {
+            width: 100%;
+            padding: 10px 16px 10px 40px;
+            background: rgba(255,255,255,0.05);
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: var(--radius);
+            color: inherit;
+            font-size: 14px;
+        }
+        body.light-mode .search-box input {
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+        }
+        .search-box i {
+            position: absolute; left: 14px; top: 50%; transform: translateY(-50%);
+            color: var(--text-muted-dark);
+        }
+        body.light-mode .search-box i { color: var(--text-muted-light); }
 
-/* CHARTS GRID */
-.charts-grid{
-  display:grid;
-  grid-template-columns:repeat(auto-fit,minmax(400px,1fr));
-  gap:24px;
-  margin-bottom:24px;
-}
-.chart-card{
-  background:#fff;
-  border-radius:14px;
-  padding:24px;
-  border:1px solid var(--border);
-  box-shadow:var(--shadow);
-}
-.chart-header{
-  display:flex;
-  align-items:center;
-  justify-content:space-between;
-  margin-bottom:20px;
-}
-.chart-title{font-size:16px;font-weight:700;color:#1e293b}
-.chart-wrapper{position:relative;height:280px}
+        .top-actions { display: flex; align-items: center; gap: 16px; }
+        .action-btn {
+            width: 40px; height: 40px;
+            border-radius: 10px;
+            background: rgba(255,255,255,0.05);
+            border: 1px solid rgba(255,255,255,0.1);
+            display: flex; align-items: center; justify-content: center;
+            cursor: pointer; position: relative;
+            color: inherit;
+        }
+        body.light-mode .action-btn {
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+        }
+        .badge {
+            position: absolute; top: -4px; right: -4px;
+            width: 18px; height: 18px;
+            background: var(--danger);
+            color: #fff; font-size: 10px; font-weight: 700;
+            border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            border: 2px solid var(--bg-card-dark);
+        }
+        body.light-mode .badge { border-color: var(--bg-card-light); }
 
-/* NEEDLE BUTTONS SECTION */
-.needle-buttons{
-  display:grid;
-  grid-template-columns:repeat(auto-fit,minmax(300px,1fr));
-  gap:20px;
-  margin-bottom:24px;
-}
-.needle-btn-card{
-  background:linear-gradient(135deg,var(--primary),var(--secondary));
-  border-radius:14px;
-  padding:24px;
-  color:#fff;
-  cursor:pointer;
-  transition:all 0.3s;
-  display:flex;
-  align-items:center;
-  gap:16px;
-  box-shadow:0 10px 25px rgba(79,70,229,0.3);
-}
-.needle-btn-card:hover{
-  transform:translateY(-4px);
-  box-shadow:0 15px 35px rgba(79,70,229,0.4);
-}
-.needle-btn-icon{
-  width:56px;
-  height:56px;
-  background:rgba(255,255,255,0.2);
-  border-radius:12px;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  font-size:24px;
-}
-.needle-btn-content h3{
-  font-size:16px;
-  font-weight:700;
-  margin-bottom:4px;
-}
-.needle-btn-content p{
-  font-size:13px;
-  opacity:0.9;
-}
+        .user-profile {
+            display: flex; align-items: center; gap: 12px;
+            padding: 6px 12px;
+            border-radius: var(--radius);
+            cursor: pointer;
+        }
+        .user-avatar {
+            width: 36px; height: 36px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            display: flex; align-items: center; justify-content: center;
+            font-weight: 700; color: #fff; font-size: 14px;
+        }
+        .user-info h4 { font-size: 13px; font-weight: 600; line-height: 1.2; }
+        .user-info p { font-size: 11px; color: var(--text-muted-dark); }
+        body.light-mode .user-info p { color: var(--text-muted-light); }
 
-/* MCD GRID */
-.mcd-grid{
-  display:grid;
-  grid-template-columns:repeat(auto-fit,minmax(280px,1fr));
-  gap:20px;
-  margin-bottom:24px;
-}
-.mcd-card{
-  background:#fff;
-  border-radius:14px;
-  padding:20px;
-  border:1px solid var(--border);
-  box-shadow:var(--shadow);
-}
-.mcd-header{
-  font-size:16px;
-  font-weight:700;
-  color:#1e293b;
-  margin-bottom:16px;
-  padding-bottom:12px;
-  border-bottom:1px solid var(--border);
-  display:flex;
-  align-items:center;
-  gap:8px;
-}
-.mcd-row{
-  display:flex;
-  justify-content:space-between;
-  padding:8px 0;
-  font-size:13px;
-  border-bottom:1px solid #f1f5f9;
-}
-.mcd-row:last-child{border-bottom:none}
-.mcd-label{color:#64748b;font-weight:500}
-.mcd-value{font-weight:700;color:var(--success)}
+        .mobile-menu-btn { display: none; font-size: 20px; cursor: pointer; margin-right: 16px; }
 
-/* TEAM FOOTER */
-.team-footer{
-  display:flex;
-  justify-content:center;
-  gap:48px;
-  padding:32px;
-  background:#fff;
-  border-top:1px solid var(--border);
-  margin-top:32px;
-}
-.team-member{
-  text-align:center;
-}
-.team-avatar{
-  width:64px;
-  height:64px;
-  border-radius:50%;
-  border:3px solid #e2e8f0;
-  overflow:hidden;
-  margin-bottom:8px;
-}
-.team-avatar img{width:100%;height:100%;object-fit:cover}
-.team-name{font-size:13px;font-weight:600;color:#1e293b}
-.team-role{font-size:11px;color:#64748b}
+        /* Notice Bar */
+        .notice-bar {
+            background: linear-gradient(90deg, var(--primary), var(--secondary));
+            color: #fff;
+            padding: 8px 24px;
+            font-size: 13px; font-weight: 600;
+            white-space: nowrap; overflow: hidden;
+        }
+        .notice-text { display: inline-block; animation: scrollNotice 20s linear infinite; }
+        @keyframes scrollNotice { 0% { transform: translateX(100%); } 100% { transform: translateX(-100%); } }
 
-/* RESPONSIVE */
-@media(max-width:1024px){
-  .sidebar{transform:translateX(-100%)}
-  .sidebar.show{transform:translateX(0)}
-  .main-content{margin-left:0}
-  .search-box{width:200px}
-  .charts-grid{grid-template-columns:1fr}
-  .menu-toggle{display:block!important}
-}
-@media(max-width:640px){
-  .search-box{display:none}
-  .stats-grid{grid-template-columns:1fr}
-  .mcd-grid{grid-template-columns:1fr}
-  .team-footer{flex-direction:column;gap:24px}
-  .needle-buttons{grid-template-columns:1fr}
-}
-</style>
+        /* Dashboard Content */
+        .dashboard-content { padding: 24px; flex: 1; }
+
+        /* Live Signal Card */
+        .live-signal-card {
+            background: linear-gradient(135deg, #10b981, #059669);
+            border-radius: var(--radius);
+            padding: 24px;
+            text-align: center;
+            color: #fff;
+            margin-bottom: 24px;
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 10px 25px rgba(16, 185, 129, 0.3);
+        }
+        .live-signal-card::before {
+            content: ''; position: absolute; top: -50%; left: -50%;
+            width: 200%; height: 200%;
+            background: radial-gradient(circle, rgba(255,255,255,0.2), transparent 60%);
+            animation: liveGlow 3s ease-in-out infinite;
+        }
+        @keyframes liveGlow { 0%, 100% { opacity: 0.5; transform: scale(0.8); } 50% { opacity: 1; transform: scale(1.2); } }
+        .live-badge {
+            display: inline-flex; align-items: center; gap: 8px;
+            background: rgba(255,255,255,0.2);
+            padding: 6px 12px; border-radius: 20px;
+            font-size: 11px; font-weight: 700;
+            text-transform: uppercase; letter-spacing: 1px;
+            position: relative; z-index: 1;
+        }
+        .live-dot {
+            width: 10px; height: 10px; background: #fff;
+            border-radius: 50%;
+            animation: pulseDot 1.5s infinite;
+        }
+        @keyframes pulseDot { 0% { box-shadow: 0 0 0 0 rgba(255,255,255,0.7); } 70% { box-shadow: 0 0 0 10px rgba(255,255,255,0); } 100% { box-shadow: 0 0 0 0 rgba(255,255,255,0); } }
+        .live-text { font-size: 48px; font-weight: 800; letter-spacing: 2px; position: relative; z-index: 1; margin-top: 10px; }
+
+        /* Stats Grid */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+            gap: 20px;
+            margin-bottom: 24px;
+        }
+        .stat-card {
+            background: var(--bg-card-dark);
+            border-radius: var(--radius);
+            padding: 20px;
+            display: flex; align-items: center; gap: 16px;
+            box-shadow: var(--shadow);
+            border: 1px solid rgba(255,255,255,0.05);
+            transition: var(--transition);
+        }
+        body.light-mode .stat-card {
+            background: var(--bg-card-light);
+            border: 1px solid #e2e8f0;
+        }
+        .stat-card:hover { transform: translateY(-4px); }
+        .stat-icon {
+            width: 50px; height: 50px;
+            border-radius: 12px;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 22px;
+        }
+        .stat-icon.blue { background: rgba(99, 102, 241, 0.1); color: #6366f1; }
+        .stat-icon.green { background: rgba(16, 185, 129, 0.1); color: #10b981; }
+        .stat-icon.orange { background: rgba(245, 158, 11, 0.1); color: #f59e0b; }
+        .stat-icon.purple { background: rgba(139, 92, 246, 0.1); color: #8b5cf6; }
+        
+        .stat-info h3 { font-size: 24px; font-weight: 800; line-height: 1.2; margin-bottom: 4px; }
+        .stat-info p { font-size: 13px; color: var(--text-muted-dark); font-weight: 500; }
+        body.light-mode .stat-info p { color: var(--text-muted-light); }
+        .stat-change { font-size: 12px; font-weight: 600; margin-top: 6px; }
+        .stat-change.up { color: #10b981; }
+        .stat-change.down { color: #ef4444; }
+
+        /* Needle Special Buttons */
+        .needle-special-btns {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            margin-bottom: 24px;
+        }
+        .special-btn {
+            background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+            border-radius: var(--radius);
+            padding: 20px;
+            color: #fff;
+            display: flex; align-items: center; gap: 16px;
+            cursor: pointer;
+            transition: var(--transition);
+            box-shadow: 0 10px 20px rgba(99, 102, 241, 0.3);
+        }
+        .special-btn:hover { transform: translateY(-4px); box-shadow: 0 15px 25px rgba(99, 102, 241, 0.4); }
+        .special-btn i { font-size: 24px; opacity: 0.9; }
+        .special-btn h3 { font-size: 16px; font-weight: 700; margin-bottom: 4px; }
+        .special-btn p { font-size: 12px; opacity: 0.9; }
+
+        /* Charts Grid */
+        .charts-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+            gap: 24px;
+            margin-bottom: 24px;
+        }
+        .chart-card {
+            background: var(--bg-card-dark);
+            border-radius: var(--radius);
+            padding: 20px;
+            box-shadow: var(--shadow);
+            border: 1px solid rgba(255,255,255,0.05);
+        }
+        body.light-mode .chart-card {
+            background: var(--bg-card-light);
+            border: 1px solid #e2e8f0;
+        }
+        .chart-header {
+            display: flex; align-items: center; justify-content: space-between;
+            margin-bottom: 16px;
+        }
+        .chart-header h3 { font-size: 16px; font-weight: 700; }
+        .chart-container { position: relative; height: 300px; }
+
+        /* Attendance Section */
+        .attendance-section {
+            background: var(--bg-card-dark);
+            border-radius: var(--radius);
+            padding: 20px;
+            box-shadow: var(--shadow);
+            border: 1px solid rgba(255,255,255,0.05);
+            margin-bottom: 24px;
+        }
+        body.light-mode .attendance-section {
+            background: var(--bg-card-light);
+            border: 1px solid #e2e8f0;
+        }
+        .attendance-header {
+            display: flex; align-items: center; justify-content: space-between;
+            margin-bottom: 16px;
+        }
+        .attendance-list {
+            display: flex; flex-direction: column; gap: 12px;
+        }
+        .att-item {
+            display: flex; align-items: center; justify-content: space-between;
+            padding: 12px;
+            background: rgba(255,255,255,0.03);
+            border-radius: 10px;
+        }
+        body.light-mode .att-item { background: #f8fafc; }
+        .att-item-left { display: flex; align-items: center; gap: 12px; }
+        .att-avatar {
+            width: 40px; height: 40px; border-radius: 10px;
+            background: var(--primary);
+            display: flex; align-items: center; justify-content: center;
+            color: #fff; font-weight: 700; font-size: 16px;
+        }
+        .att-info h4 { font-size: 14px; font-weight: 600; }
+        .att-info p { font-size: 12px; color: var(--text-muted-dark); }
+        body.light-mode .att-info p { color: var(--text-muted-light); }
+        .att-status {
+            padding: 4px 10px; border-radius: 20px; font-size: 11px; font-weight: 600;
+        }
+        .att-status.present { background: rgba(16, 185, 129, 0.1); color: #10b981; }
+        .att-status.absent { background: rgba(239, 68, 68, 0.1); color: #ef4444; }
+        .att-status.leave { background: rgba(245, 158, 11, 0.1); color: #f59e0b; }
+
+        /* Footer */
+        .app-footer {
+            padding: 24px;
+            text-align: center;
+            border-top: 1px solid rgba(255,255,255,0.1);
+            background: var(--bg-card-dark);
+        }
+        body.light-mode .app-footer {
+            border-top: 1px solid #e2e8f0;
+            background: var(--bg-card-light);
+        }
+        .credits { display: flex; justify-content: center; gap: 32px; flex-wrap: wrap; margin-top: 16px; }
+        .credit-item { display: flex; align-items: center; gap: 10px; }
+        .credit-img {
+            width: 40px; height: 40px; border-radius: 50%;
+            border: 2px solid var(--primary);
+            object-fit: cover;
+        }
+        .credit-text h4 { font-size: 13px; font-weight: 600; }
+        .credit-text p { font-size: 11px; color: var(--text-muted-dark); }
+        body.light-mode .credit-text p { color: var(--text-muted-light); }
+
+        /* Mobile Responsive */
+        @media (max-width: 1024px) {
+            .sidebar { transform: translateX(-100%); }
+            .sidebar.active { transform: translateX(0); }
+            .main-content { margin-left: 0; }
+            .mobile-menu-btn { display: block; }
+            .search-box { width: 200px; }
+            .charts-grid { grid-template-columns: 1fr; }
+        }
+        @media (max-width: 640px) {
+            .search-box { display: none; }
+            .top-actions .action-btn:nth-child(1),
+            .top-actions .action-btn:nth-child(2) { display: none; }
+            .user-info { display: none; }
+            .stats-grid { grid-template-columns: 1fr; }
+            .needle-special-btns { grid-template-columns: 1fr; }
+            .credits { flex-direction: column; gap: 16px; }
+        }
+    </style>
 </head>
-
 <body>
-<!-- SIDEBAR -->
-<nav class="sidebar" id="sidebar">
-  <div class="sidebar-header">
-    <div class="sidebar-logo">G</div>
-    <div class="sidebar-title">
-      <h1>GMS MCD</h1>
-      <span>ERP System</span>
-    </div>
-  </div>
-  <div class="sidebar-nav">
-    <div class="nav-item active" onclick="setActive(this)"><i class="fas fa-home"></i> Dashboard</div>
-    <div class="nav-item" onclick="setActive(this)"><i class="fas fa-plus-circle"></i> New Entry</div>
-    <div class="nav-item" onclick="setActive(this)"><i class="fas fa-chart-bar"></i> Reports</div>
-    <div class="nav-item" onclick="setActive(this)"><i class="fas fa-tint"></i> Needle</div>
-    <div class="nav-item" onclick="setActive(this)"><i class="fas fa-crown"></i> Admin</div>
-    <div class="nav-item" onclick="setActive(this)"><i class="fas fa-users"></i> Manpower</div>
-    <div class="nav-item" onclick="setActive(this)"><i class="fas fa-bullhorn"></i> Notice</div>
-    <div class="nav-item" onclick="setActive(this)"><i class="fas fa-circle" style="color:#10b981;font-size:8px"></i> Online</div>
-    <div class="nav-item" onclick="setActive(this)"><i class="fas fa-clipboard-list"></i> Audit</div>
-    <div class="nav-item" onclick="setActive(this)"><i class="fas fa-cloud"></i> Backup</div>
-    <div class="nav-item" onclick="setActive(this)"><i class="fas fa-lock"></i> Password</div>
-  </div>
-  <div class="sidebar-footer">
-    <button class="btn-sidebar btn-theme" onclick="toggleTheme()"><i class="fas fa-moon"></i> Theme</button>
-    <button class="btn-sidebar btn-logout" onclick="logout()"><i class="fas fa-sign-out-alt"></i> Logout</button>
-  </div>
-</nav>
 
-<!-- MAIN CONTENT -->
-<main class="main-content">
-  <!-- TOP BAR -->
-  <header class="top-bar">
-    <div style="display:flex;align-items:center;gap:12px">
-      <button class="menu-toggle" onclick="toggleSidebar()" style="display:none;background:none;border:none;font-size:20px;cursor:pointer"><i class="fas fa-bars"></i></button>
-      <div class="search-box">
-        <i class="fas fa-search"></i>
-        <input type="text" placeholder="Search items, reports...">
-      </div>
-    </div>
-    <div class="top-actions">
-      <button class="icon-btn" onclick="showNotifications()">
-        <i class="fas fa-bell"></i>
-        <span class="badge">3</span>
-      </button>
-      <button class="icon-btn" onclick="showEmails()">
-        <i class="fas fa-envelope"></i>
-        <span class="badge">5</span>
-      </button>
-      <div class="user-profile">
-        <div class="avatar">J</div>
-        <div class="user-info">
-          <span>Md. Johurul</span>
-          <small>System Admin</small>
+<div class="app-container">
+    <!-- Sidebar -->
+    <aside class="sidebar" id="sidebar">
+        <div class="sidebar-header">
+            <div class="logo-icon">G</div>
+            <div class="logo-text">
+                <h1>GMS MCD</h1>
+                <span>ERP SYSTEM</span>
+            </div>
         </div>
-      </div>
-    </div>
-  </header>
-
-  <!-- NOTICE BAR -->
-  <div class="notice-bar">
-    <div class="notice-text">📢 WAHIDUZZAMAN SIR-AGM | MCD: Welcome to MCD Department • Live Update Active • Stock Management System</div>
-  </div>
-
-  <!-- DASHBOARD CONTENT -->
-  <div class="dashboard-content">
-    <div class="page-header">
-      <h1 class="page-title">Dashboard Overview</h1>
-      <p class="page-subtitle">Role Based Dashboard • Firebase Live Summary</p>
-    </div>
-
-    <!-- LIVE CARD -->
-    <div class="live-card">
-      <div class="live-badge">
-        <span class="live-dot"></span>
-        LIVE UPDATE SIGNAL
-      </div>
-      <div class="live-text">LIVE</div>
-    </div>
-
-    <!-- STATS GRID -->
-    <div class="stats-grid">
-      <div class="stat-card">
-        <div class="stat-icon blue"><i class="fas fa-box"></i></div>
-        <div class="stat-content">
-          <div class="stat-label">Accessories Stock <span style="color:var(--success)">+2.3%</span></div>
-          <div class="stat-value" id="accStock">25,974,562</div>
+        <nav class="nav-menu">
+            <a href="#" class="nav-item active" onclick="setActive(this)"><i class="fas fa-home"></i> Dashboard</a>
+            <a href="#" class="nav-item" onclick="setActive(this); openPage('entry')"><i class="fas fa-plus-circle"></i> New Entry</a>
+            <a href="#" class="nav-item" onclick="setActive(this); openPage('reports')"><i class="fas fa-chart-bar"></i> Reports</a>
+            <a href="#" class="nav-item" onclick="setActive(this); openPage('needle')"><i class="fas fa-tint"></i> Needle</a>
+            <a href="admin.html" class="nav-item"><i class="fas fa-crown"></i> Admin</a>
+            <a href="manpower.html" class="nav-item"><i class="fas fa-users"></i> Manpower</a>
+            <a href="notice.html" class="nav-item"><i class="fas fa-bullhorn"></i> Notice</a>
+            <a href="online-users.html" class="nav-item"><i class="fas fa-circle" style="color:#10b981; font-size:10px;"></i> Online</a>
+            <a href="audit-history.html" class="nav-item"><i class="fas fa-clipboard-list"></i> Audit</a>
+            <a href="#" class="nav-item" onclick="setActive(this); openPage('backup')"><i class="fas fa-cloud"></i> Backup</a>
+            <a href="change-password.html" class="nav-item"><i class="fas fa-lock"></i> Password</a>
+        </nav>
+        <div class="sidebar-footer">
+            <button class="theme-toggle-btn" onclick="toggleTheme()">
+                <i class="fas fa-moon"></i> Toggle Theme
+            </button>
         </div>
-      </div>
-      <div class="stat-card">
-        <div class="stat-icon green"><i class="fas fa-tape"></i></div>
-        <div class="stat-content">
-          <div class="stat-label">Sewing Thread <span style="color:var(--success)">+0.8%</span></div>
-          <div class="stat-value" id="sewStock">162,317</div>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="main-content">
+        <!-- Top Bar -->
+        <header class="top-bar">
+            <div style="display:flex; align-items:center;">
+                <i class="fas fa-bars mobile-menu-btn" onclick="toggleSidebar()"></i>
+                <div class="search-box">
+                    <i class="fas fa-search"></i>
+                    <input type="text" placeholder="Search items, reports...">
+                </div>
+            </div>
+            <div class="top-actions">
+                <div class="action-btn" onclick="showNotifications()">
+                    <i class="fas fa-bell"></i>
+                    <span class="badge">3</span>
+                </div>
+                <div class="action-btn" onclick="showEmails()">
+                    <i class="fas fa-envelope"></i>
+                    <span class="badge">5</span>
+                </div>
+                <div class="user-profile">
+                    <div class="user-avatar">J</div>
+                    <div class="user-info">
+                        <h4>Md. Johurul</h4>
+                        <p>System Admin</p>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <!-- Notice Bar -->
+        <div class="notice-bar">
+            <span class="notice-text">📢 WAHIDUZZAMAN SIR-AGM | MCD: Welcome to MCD Department • Live Update Active • Stock Management System</span>
         </div>
-      </div>
-      <div class="stat-card">
-        <div class="stat-icon orange"><i class="fas fa-ruler-horizontal"></i></div>
-        <div class="stat-content">
-          <div class="stat-label">Twill Tape <span style="color:var(--danger)">-0.8%</span></div>
-          <div class="stat-value" id="twillStock">160,605</div>
+
+        <!-- Dashboard Content -->
+        <div class="dashboard-content" id="dashboard-content">
+            
+            <!-- Live Signal -->
+            <div class="live-signal-card">
+                <div class="live-badge">
+                    <span class="live-dot"></span> Live Update Signal
+                </div>
+                <div class="live-text">LIVE</div>
+            </div>
+
+            <!-- Stats Grid -->
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-icon blue"><i class="fas fa-box"></i></div>
+                    <div class="stat-info">
+                        <p>Accessories Stock</p>
+                        <h3 id="accStock">0</h3>
+                        <div class="stat-change up"><i class="fas fa-arrow-up"></i> +2.3%</div>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon green"><i class="fas fa-tape"></i></div>
+                    <div class="stat-info">
+                        <p>Sewing Thread</p>
+                        <h3 id="sewStock">0</h3>
+                        <div class="stat-change up"><i class="fas fa-arrow-up"></i> +0.8%</div>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon orange"><i class="fas fa-ruler-horizontal"></i></div>
+                    <div class="stat-info">
+                        <p>Twill Tape</p>
+                        <h3 id="twillStock">0</h3>
+                        <div class="stat-change down"><i class="fas fa-arrow-down"></i> -0.8%</div>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon purple"><i class="fas fa-tint"></i></div>
+                    <div class="stat-info">
+                        <p>Needle Stock</p>
+                        <h3 id="needleStock">0</h3>
+                        <div class="stat-change up"><i class="fas fa-arrow-up"></i> +4.7%</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Needle Special Buttons -->
+            <div class="needle-special-btns">
+                <div class="special-btn" onclick="openMonthWiseNeedleStock()">
+                    <i class="fas fa-calendar-alt"></i>
+                    <div>
+                        <h3>Month Wise Needle Stock Summary</h3>
+                        <p>View monthly needle stock reports and analytics</p>
+                    </div>
+                </div>
+                <div class="special-btn" onclick="openMonthWiseFloorStock()">
+                    <i class="fas fa-building"></i>
+                    <div>
+                        <h3>Month Wise Floor Stock Report</h3>
+                        <p>Floor wise needle distribution and usage</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Charts Grid -->
+            <div class="charts-grid">
+                <!-- Accessories Chart (Pie) -->
+                <div class="chart-card">
+                    <div class="chart-header">
+                        <h3>Accessories Stock Chart</h3>
+                    </div>
+                    <div class="chart-container">
+                        <canvas id="accChart"></canvas>
+                    </div>
+                </div>
+
+                <!-- Needle Floor Wise (Bar) -->
+                <div class="chart-card">
+                    <div class="chart-header">
+                        <h3>Needle Floor Wise Stock</h3>
+                    </div>
+                    <div class="chart-container">
+                        <canvas id="needleChart"></canvas>
+                    </div>
+                </div>
+
+                <!-- Grey Fabric Chart (Pie) -->
+                <div class="chart-card">
+                    <div class="chart-header">
+                        <h3>Grey Fabric Present Stock Summary</h3>
+                    </div>
+                    <div class="chart-container">
+                        <canvas id="greyChart"></canvas>
+                    </div>
+                </div>
+
+                <!-- Needle Issues Chart (Pie) -->
+                <div class="chart-card">
+                    <div class="chart-header">
+                        <h3>Needle Broken / Missing / Change</h3>
+                    </div>
+                    <div class="chart-container">
+                        <canvas id="needleIssueChart"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Attendance Section -->
+            <div class="attendance-section">
+                <div class="attendance-header">
+                    <h3><i class="fas fa-users" style="margin-right:8px; color:var(--primary);"></i> Attendance Manpower</h3>
+                    <span style="font-size:12px; color:var(--text-muted-dark);">Today's Overview</span>
+                </div>
+                <div class="stats-grid" style="margin-bottom:16px;">
+                    <div style="text-align:center; padding:12px; background:rgba(255,255,255,0.05); border-radius:10px;">
+                        <div style="font-size:20px; font-weight:700; color:#6366f1;" id="attTotal">0</div>
+                        <div style="font-size:11px; color:var(--text-muted-dark);">Total Manpower</div>
+                    </div>
+                    <div style="text-align:center; padding:12px; background:rgba(255,255,255,0.05); border-radius:10px;">
+                        <div style="font-size:20px; font-weight:700; color:#10b981;" id="attPresent">0</div>
+                        <div style="font-size:11px; color:var(--text-muted-dark);">Present</div>
+                    </div>
+                    <div style="text-align:center; padding:12px; background:rgba(255,255,255,0.05); border-radius:10px;">
+                        <div style="font-size:20px; font-weight:700; color:#f59e0b;" id="attLeave">0</div>
+                        <div style="font-size:11px; color:var(--text-muted-dark);">Leave</div>
+                    </div>
+                    <div style="text-align:center; padding:12px; background:rgba(255,255,255,0.05); border-radius:10px;">
+                        <div style="font-size:20px; font-weight:700; color:#ef4444;" id="attAbsent">0</div>
+                        <div style="font-size:11px; color:var(--text-muted-dark);">Absent</div>
+                    </div>
+                </div>
+                <div class="attendance-list">
+                    <div class="att-item">
+                        <div class="att-item-left">
+                            <div class="att-avatar">M</div>
+                            <div class="att-info">
+                                <h4>Md. Manpower</h4>
+                                <p>General Worker</p>
+                            </div>
+                        </div>
+                        <span class="att-status present">Present</span>
+                    </div>
+                    <div class="att-item">
+                        <div class="att-item-left">
+                            <div class="att-avatar" style="background:var(--secondary);">S</div>
+                            <div class="att-info">
+                                <h4>Supervisor Staff</h4>
+                                <p>Line Supervisor</p>
+                            </div>
+                        </div>
+                        <span class="att-status leave">Leave</span>
+                    </div>
+                    <div class="att-item">
+                        <div class="att-item-left">
+                            <div class="att-avatar" style="background:var(--accent);">O</div>
+                            <div class="att-info">
+                                <h4>Office Staff</h4>
+                                <p>Admin Assistant</p>
+                            </div>
+                        </div>
+                        <span class="att-status absent">Absent</span>
+                    </div>
+                </div>
+            </div>
+
         </div>
-      </div>
-      <div class="stat-card">
-        <div class="stat-icon purple"><i class="fas fa-tint"></i></div>
-        <div class="stat-content">
-          <div class="stat-label">Needle Stock <span style="color:var(--success)">+4.7%</span></div>
-          <div class="stat-value" id="needleStock">10,456</div>
-        </div>
-      </div>
-    </div>
 
-    <!-- NEEDLE BUTTONS -->
-    <div class="needle-buttons">
-      <div class="needle-btn-card" onclick="openMonthWiseNeedleStock()">
-        <div class="needle-btn-icon">
-          <i class="fas fa-calendar-alt"></i>
-        </div>
-        <div class="needle-btn-content">
-          <h3>Month Wise Needle Stock Summary</h3>
-          <p>View monthly needle stock reports and analytics</p>
-        </div>
-      </div>
-      <div class="needle-btn-card" onclick="openMonthWiseFloorStock()">
-        <div class="needle-btn-icon">
-          <i class="fas fa-building"></i>
-        </div>
-        <div class="needle-btn-content">
-          <h3>Month Wise Floor Stock Report</h3>
-          <p>Floor wise needle distribution and usage</p>
-        </div>
-      </div>
-    </div>
+        <!-- Footer -->
+        <footer class="app-footer">
+            <p style="font-size:12px; color:var(--text-muted-dark); margin-bottom:8px;">Powered by GMS MCD ERP System</p>
+            <div class="credits">
+                <div class="credit-item">
+                    <img src="https://i.ibb.co/5hzT1VGk/IMG.jpg" alt="Johurul" class="credit-img">
+                    <div class="credit-text">
+                        <h4>Md. Johurul</h4>
+                        <p>System Developer</p>
+                    </div>
+                </div>
+                <div class="credit-item">
+                    <img src="https://i.ibb.co/DDqvG3pD/nazir.jpg" alt="Nazir" class="credit-img">
+                    <div class="credit-text">
+                        <h4>Md. Nazir Hossain</h4>
+                        <p>System Planning</p>
+                    </div>
+                </div>
+                <div class="credit-item">
+                    <img src="https://i.ibb.co/k6WC4fBm/asad.jpg" alt="Asad" class="credit-img">
+                    <div class="credit-text">
+                        <h4>Md. Asaduzzaman</h4>
+                        <p>Operational Support</p>
+                    </div>
+                </div>
+            </div>
+        </footer>
+    </main>
+</div>
 
-    <!-- CHARTS -->
-    <div class="charts-grid">
-      <div class="chart-card">
-        <div class="chart-header">
-          <div class="chart-title">Accessories Stock Chart</div>
-        </div>
-        <div class="chart-wrapper"><canvas id="accChart"></canvas></div>
-      </div>
-      <div class="chart-card">
-        <div class="chart-header">
-          <div class="chart-title">Needle Floor Wise Stock</div>
-        </div>
-        <div class="chart-wrapper"><canvas id="needleChart"></canvas></div>
-      </div>
-    </div>
+<script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-app.js";
+    import { getFirestore, collection, getDocs, doc, updateDoc } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-firestore.js";
 
-    <!-- MCD CARDS -->
-    <div class="mcd-grid">
-      <div class="mcd-card">
-        <div class="mcd-header"><i class="fas fa-box" style="color:var(--primary)"></i> Accessories MCD</div>
-        <div class="mcd-row"><span class="mcd-label">Avg. Lead Time:</span><span class="mcd-value">4.2d</span></div>
-        <div class="mcd-row"><span class="mcd-label">On-Time Delivery:</span><span class="mcd-value">98.7%</span></div>
-        <div class="mcd-row"><span class="mcd-label">Total Items:</span><span class="mcd-value">96.7%</span></div>
-      </div>
-      <div class="mcd-card">
-        <div class="mcd-header"><i class="fas fa-industry" style="color:var(--warning)"></i> Grey Fabric MCD</div>
-        <div class="mcd-row"><span class="mcd-label">Avg. Lead Time:</span><span class="mcd-value">18.3d</span></div>
-        <div class="mcd-row"><span class="mcd-label">On-Time Delivery:</span><span class="mcd-value">98.3%</span></div>
-        <div class="mcd-row"><span class="mcd-label">Total Items:</span><span class="mcd-value">48%</span></div>
-      </div>
-      <div class="mcd-card">
-        <div class="mcd-header"><i class="fas fa-users" style="color:var(--success)"></i> Billing Section</div>
-        <div class="mcd-row"><span class="mcd-label">Avg. Lead Time:</span><span class="mcd-value">0.9d</span></div>
-        <div class="mcd-row"><span class="mcd-label">On-Time Delivery:</span><span class="mcd-value">88.3%</span></div>
-        <div class="mcd-row"><span class="mcd-label">Total Items:</span><span class="mcd-value">16.2%</span></div>
-      </div>
-    </div>
+    const firebaseConfig = {
+        apiKey: "AIzaSyD-wBCF5eeWMHobLFOhBzKW7aB2pagz9-w",
+        authDomain: "gms-warehouse-tracker-7f57e.firebaseapp.com",
+        projectId: "gms-warehouse-tracker-7f57e",
+        storageBucket: "gms-warehouse-tracker-7f57e.firebasestorage.app",
+        messagingSenderId: "992250313291",
+        appId: "1:992250313291:web:ee3bceae76d4d53bc26bce"
+    };
 
-    <!-- TEAM FOOTER -->
-    <div class="team-footer">
-      <div class="team-member">
-        <div class="team-avatar"><img src="https://i.ibb.co/5hzT1VGk/IMG.jpg" alt="Johurul"></div>
-        <div class="team-name">Md. Johurul</div>
-        <div class="team-role">System Developer</div>
-      </div>
-      <div class="team-member">
-        <div class="team-avatar"><img src="https://i.ibb.co/DDqvG3pD/nazir.jpg" alt="Nazir"></div>
-        <div class="team-name">Md. Nazir Hossain</div>
-        <div class="team-role">System Planning</div>
-      </div>
-      <div class="team-member">
-        <div class="team-avatar"><img src="https://i.ibb.co/k6WC4fBm/asad.jpg" alt="Asad"></div>
-        <div class="team-name">Md. Asaduzzaman</div>
-        <div class="team-role">Operational Support</div>
-      </div>
-    </div>
-  </div>
-</main>
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
 
-<script>
-// FUNCTIONS
-window.toggleSidebar = function() {
-  document.getElementById('sidebar').classList.toggle('show');
-};
-window.setActive = function(el) {
-  document.querySelectorAll('.nav-item').forEach(item => item.classList.remove('active'));
-  el.classList.add('active');
-  if(window.innerWidth <= 1024) document.getElementById('sidebar').classList.remove('show');
-};
-window.toggleTheme = function() {
-  document.body.classList.toggle('light-theme');
-};
-window.logout = function() {
-  if(confirm('Are you sure you want to logout?')) {
-    window.location.href = 'login.html';
-  }
-};
-window.showNotifications = function() {
-  alert('🔔 Notifications:\n\n1. New stock received - Accessories\n2. Low stock alert - Needle Floor 3\n3. Monthly report ready');
-};
-window.showEmails = function() {
-  alert('📧 Emails:\n\n1. Monthly Summary Report\n2. Stock Update Notification\n3. System Maintenance Notice\n4. New User Registration\n5. Backup Completed');
-};
-
-// NEW FUNCTIONS FOR NEEDLE BUTTONS
-window.openMonthWiseNeedleStock = function() {
-  // Navigate to Month Wise Needle Stock Summary page
-  window.location.href = 'month-wise-needle-stock.html';
-  // Or show alert for now
-  // alert('📊 Opening Month Wise Needle Stock Summary Report...\n\nThis will show:\n- Monthly needle consumption\n- Floor wise distribution\n- Stock movement analysis');
-};
-
-window.openMonthWiseFloorStock = function() {
-  // Navigate to Month Wise Floor Stock Report page
-  window.location.href = 'month-wise-floor-stock.html';
-  // Or show alert for now
-  // alert('🏭 Opening Month Wise Floor Stock Report...\n\nThis will show:\n- Floor wise needle stock\n- Monthly usage patterns\n- Stock balance by floor');
-};
-
-// CHART PLUGINS
-const valPlugin = {
-  id: 'valPlugin',
-  afterDatasetsDraw(chart) {
-    const { ctx } = chart;
-    ctx.save();
-    ctx.font = 'bold 11px Inter';
-    ctx.fillStyle = '#334155';
-    ctx.textAlign = 'center';
-    ctx.textBaseline = 'bottom';
-    chart.data.datasets.forEach((dataset, i) => {
-      const meta = chart.getDatasetMeta(i);
-      meta.data.forEach((bar, index) => {
-        const value = dataset.data[index];
-        ctx.fillText(value.toLocaleString(), bar.x, bar.y - 5);
-      });
-    });
-    ctx.restore();
-  }
-};
-
-Chart.defaults.font.family = "'Inter', sans-serif";
-
-// ACCESSORIES CHART
-new Chart(document.getElementById('accChart'), {
-  type: 'bar',
-  data: {
-    labels: ['Sewing Thread', 'Acc. Sample', 'Twill Tape'],
-    datasets: [{
-      data: [162317, 25974562, 160605],
-      backgroundColor: ['#10b981', '#4f46e5', '#f59e0b'],
-      borderRadius: 8,
-      barPercentage: 0.6
-    }]
-  },
-  options: {
-    responsive: true,
-    maintainAspectRatio: false,
-    plugins: { legend: { display: false } },
-    scales: {
-      y: { beginAtZero: true, grid: { color: '#f1f5f9' }, ticks: { font: { size: 11 } } },
-      x: { grid: { display: false }, ticks: { font: { size: 11, weight: '600' } } }
+    // Check User
+    const user = JSON.parse(localStorage.getItem("gmsUser") || "null");
+    if (!user) {
+        window.location.href = "login.html";
     }
-  },
-  plugins: [valPlugin]
-});
 
-// NEEDLE CHART
-new Chart(document.getElementById('needleChart'), {
-  type: 'bar',
-  data: {
-    labels: ['Kadom R', 'Kadom N', 'Poddo R', 'Poddo N', 'Shapla R', 'Shapla N', 'Sample R', 'Sample N'],
-    datasets: [{
-      data: [996, 423, 1968, 596, 1461, 553, 1678, 227],
-      backgroundColor: ['#4f46e5', '#10b981', '#f59e0b', '#0ea5e9', '#8b5cf6', '#ec4899', '#ef4444', '#14b8a6'],
-      borderRadius: 8,
-      barPercentage: 0.6
-    }]
-  },
-  options: {
-    responsive: true,
-    maintainAspectRatio: false,
-    plugins: { legend: { display: false } },
-    scales: {
-      y: { beginAtZero: true, grid: { color: '#f1f5f9' }, ticks: { font: { size: 11 } } },
-      x: { grid: { display: false }, ticks: { font: { size: 11, weight: '600' } } }
+    document.getElementById("loginInfo").innerText = `${user.name || "User"} • ${user.role.toUpperCase()}`;
+
+    // Helper Functions
+    function parseNum(v) { return Number(String(v || 0).replace(/,/g, "")) || 0; }
+    function fmt(v) { return parseNum(v).toLocaleString("en-US"); }
+    function today() { return new Date().toISOString().slice(0, 10); }
+
+    // Fetch Data
+    async function getLatestPresent(collectionName, openingStock) {
+        let snap = await getDocs(collection(db, collectionName));
+        let rows = [];
+        snap.forEach(d => { let x = d.data(); if (x.date) rows.push(x); });
+        rows.sort((a, b) => a.date.localeCompare(b.date));
+        let r = 0, dv = 0;
+        rows.forEach(x => { r += Number(x.receive) || 0; dv += Number(x.delivery) || 0; });
+        return openingStock + r - dv;
     }
-  },
-  plugins: [valPlugin]
-});
+
+    async function getNeedleFloorStock() {
+        const FLOOR_OPENING = {
+            "Kadom R": 618, "Kadom N": 443, "Poddo R": 1889, "Poddo N": 401,
+            "Shapla R": 1171, "Shapla N": 573, "Sample R": 1138, "Sample N": 251,
+            "EMBROIDERY R": 1011, "EMBROIDERY N": 287, "Belly R": 796, "Belly N": 335
+        };
+        let snap = await getDocs(collection(db, "dailyPosting"));
+        let latestByFloor = {};
+        snap.forEach(d => {
+            let x = d.data();
+            if (x.floor && x.date) {
+                if (!latestByFloor[x.floor] || x.date > latestByFloor[x.floor].date) latestByFloor[x.floor] = x;
+            }
+        });
+        let floorStocks = {}, total = 0;
+        Object.keys(FLOOR_OPENING).forEach(f => {
+            let stock = FLOOR_OPENING[f];
+            if (latestByFloor[f] && latestByFloor[f].rows) {
+                stock = 0;
+                latestByFloor[f].rows.forEach(r => stock += Number(r.present) || 0);
+            }
+            floorStocks[f] = stock;
+            total += stock;
+        });
+        return { floorStocks, total };
+    }
+
+    async function getGreyData() {
+        let snap = await getDocs(collection(db, "greyFabricStock"));
+        let docs = [];
+        snap.forEach(d => { let x = d.data(); if (x.date && x.rows && x.rows.length > 0) docs.push(x); });
+        docs.sort((a, b) => (b.date || "").localeCompare(a.date || ""));
+        let latest = docs[0] || { rows: [], date: "" };
+        let labels = [], data = [], total = 0;
+        (latest.rows || []).forEach(r => {
+            let closing = parseNum(r.closing || r.closingBalance || 0);
+            if (closing > 0) { labels.push(r.year || r.fabric || "Item"); data.push(closing); total += closing; }
+        });
+        if (total > 0) { labels.push("Grand Total"); data.push(total); }
+        return { labels, data, total, date: latest.date || "" };
+    }
+
+    async function getNeedleIssueToday() {
+        let snap = await getDocs(collection(db, "needleDailyReport"));
+        let rows = [];
+        snap.forEach(d => { let x = d.data(); if (x.date) rows.push(x); });
+        rows.sort((a, b) => (b.date || "").localeCompare(a.date || ""));
+        let latest = rows[0] || {};
+        return {
+            broken: parseNum(latest.brokenNeedle),
+            missing: parseNum(latest.missingNeedle),
+            change: parseNum(latest.changeNeedle),
+            date: latest.date || ""
+        };
+    }
+
+    async function getBillingToday() {
+        let snap = await getDocs(collection(db, "billingManpowerReport"));
+        let t = today(), total = 0, leave = 0, absent = 0, present = 0;
+        snap.forEach(d => {
+            let x = d.data();
+            if (x.date === t) {
+                total += Number(x.totalManpower) || 0;
+                leave += Number(x.leave) || 0;
+                absent += Number(x.absent) || 0;
+                present += Number(x.present) || 0;
+            }
+        });
+        return { total, leave, absent, present };
+    }
+
+    // Render Charts
+    const valPlugin = {
+        id: 'valPlugin',
+        afterDatasetsDraw(chart) {
+            const { ctx } = chart;
+            ctx.save();
+            ctx.font = 'bold 11px Inter';
+            ctx.fillStyle = document.body.classList.contains('light-mode') ? '#0f172a' : '#f8fafc';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'bottom';
+            chart.data.datasets.forEach((dataset, i) => {
+                const meta = chart.getDatasetMeta(i);
+                meta.data.forEach((bar, index) => {
+                    const value = dataset.data[index];
+                    if (value === undefined || value === null) return;
+                    ctx.fillText(fmt(value), bar.x, bar.y - 5);
+                });
+            });
+            ctx.restore();
+        }
+    };
+
+    Chart.defaults.font.family = "'Inter', sans-serif";
+
+    function renderCharts(sewing, accessories, twill, floorStocks, grey, needleIssue) {
+        // Accessories Pie Chart
+        new Chart(document.getElementById("accChart"), {
+            type: 'doughnut',
+            data: {
+                labels: ["Accessories Sample", "Sewing Thread", "Twill Tape"],
+                datasets: [{
+                    data: [accessories, sewing, twill],
+                    backgroundColor: ['#6366f1', '#10b981', '#f59e0b'],
+                    borderWidth: 0
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { position: 'bottom', labels: { color: document.body.classList.contains('light-mode') ? '#0f172a' : '#f8fafc' } },
+                    tooltip: { callbacks: { label: (ctx) => `${ctx.label}: ${fmt(ctx.raw)}` } }
+                }
+            },
+            plugins: [valPlugin]
+        });
+
+        // Needle Floor Bar Chart
+        new Chart(document.getElementById("needleChart"), {
+            type: 'bar',
+            data: {
+                labels: Object.keys(floorStocks),
+                datasets: [{
+                    data: Object.values(floorStocks),
+                    backgroundColor: chartColors(Object.keys(floorStocks).length),
+                    borderRadius: 6
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: { legend: { display: false } },
+                scales: {
+                    y: { grid: { color: document.body.classList.contains('light-mode') ? '#e2e8f0' : 'rgba(255,255,255,0.1)' }, ticks: { color: document.body.classList.contains('light-mode') ? '#64748b' : '#94a3b8' } },
+                    x: { grid: { display: false }, ticks: { color: document.body.classList.contains('light-mode') ? '#64748b' : '#94a3b8' } }
+                }
+            },
+            plugins: [valPlugin]
+        });
+
+        // Grey Fabric Pie Chart
+        new Chart(document.getElementById("greyChart"), {
+            type: 'doughnut',
+            data: {
+                labels: grey.labels.length ? grey.labels : ["No Data"],
+                datasets: [{
+                    data: grey.data.length ? grey.data : [0],
+                    backgroundColor: chartColors((grey.data.length ? grey.data : [0]).length),
+                    borderWidth: 0
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { position: 'bottom', labels: { color: document.body.classList.contains('light-mode') ? '#0f172a' : '#f8fafc' } },
+                    tooltip: { callbacks: { label: (ctx) => `${ctx.label}: ${fmt(ctx.raw)}` } }
+                }
+            },
+            plugins: [valPlugin]
+        });
+
+        // Needle Issues Pie Chart
+        new Chart(document.getElementById("needleIssueChart"), {
+            type: 'doughnut',
+            data: {
+                labels: ["Broken", "Missing", "Change"],
+                datasets: [{
+                    data: [needleIssue.broken, needleIssue.missing, needleIssue.change],
+                    backgroundColor: ['#ef4444', '#f59e0b', '#10b981'],
+                    borderWidth: 0
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { position: 'bottom', labels: { color: document.body.classList.contains('light-mode') ? '#0f172a' : '#f8fafc' } },
+                    tooltip: { callbacks: { label: (ctx) => `${ctx.label}: ${fmt(ctx.raw)}` } }
+                }
+            },
+            plugins: [valPlugin]
+        });
+    }
+
+    function chartColors(count) {
+        const palette = ["#6366f1", "#10b981", "#f59e0b", "#8b5cf6", "#ef4444", "#14b8a6", "#eab308", "#ec4899"];
+        return Array.from({ length: count }, (_, i) => palette[i % palette.length]);
+    }
+
+    // Load Dashboard
+    async function loadDashboardStock() {
+        try {
+            let sewing = await getLatestPresent("sewingThread", 133322);
+            let twill = await getLatestPresent("twillTape", 171255);
+            let accessories = await getLatestPresent("accessoriesSample", 21514393);
+            let needleData = await getNeedleFloorStock();
+            let grey = await getGreyData();
+            let needleIssue = await getNeedleIssueToday();
+            let billing = await getBillingToday();
+
+            document.getElementById("accStock").innerText = fmt(accessories);
+            document.getElementById("sewStock").innerText = fmt(sewing);
+            document.getElementById("twillStock").innerText = fmt(twill);
+            document.getElementById("needleStock").innerText = fmt(needleData.total);
+            
+            document.getElementById("attTotal").innerText = billing.total;
+            document.getElementById("attPresent").innerText = billing.present;
+            document.getElementById("attLeave").innerText = billing.leave;
+            document.getElementById("attAbsent").innerText = billing.absent;
+
+            renderCharts(sewing, accessories, twill, needleData.floorStocks, grey, needleIssue);
+        } catch (e) {
+            console.error(e);
+        }
+    }
+
+    // Global Functions
+    window.toggleTheme = function() {
+        document.body.classList.toggle('light-mode');
+    };
+    window.toggleSidebar = function() {
+        document.getElementById('sidebar').classList.toggle('active');
+    };
+    window.setActive = function(el) {
+        document.querySelectorAll('.nav-item').forEach(item => item.classList.remove('active'));
+        el.classList.add('active');
+        if(window.innerWidth <= 1024) document.getElementById('sidebar').classList.remove('active');
+    };
+    window.openPage = function(pageId) {
+        // Navigation logic for internal pages if needed
+        // For now, simple redirect or alert
+        alert('Navigating to ' + pageId);
+    };
+    window.showNotifications = function() {
+        alert('🔔 Notifications:\n1. New stock received\n2. Low stock alert\n3. Monthly report ready');
+    };
+    window.showEmails = function() {
+        alert('📧 Emails:\n1. Monthly Summary\n2. Stock Update\n3. Maintenance Notice');
+    };
+    window.openMonthWiseNeedleStock = function() {
+        window.location.href = 'month_wise_needle_stock_summary.html';
+    };
+    window.openMonthWiseFloorStock = function() {
+        window.location.href = 'month_wise_needle_stock_report_carry_fixed.html';
+    };
+
+    // Initialize
+    loadDashboardStock();
 </script>
 
 </body>
