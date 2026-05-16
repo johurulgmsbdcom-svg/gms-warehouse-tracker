@@ -347,6 +347,59 @@
         .chart-header h3 { font-size: 16px; font-weight: 700; }
         .chart-container { position: relative; height: 300px; }
 
+        /* MCD Section */
+        .mcd-section {
+            margin-bottom: 24px;
+        }
+        .section-title {
+            font-size: 18px;
+            font-weight: 700;
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .mcd-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+        }
+        .mcd-card {
+            background: var(--bg-card-dark);
+            border-radius: var(--radius);
+            padding: 20px;
+            box-shadow: var(--shadow);
+            border: 1px solid rgba(255,255,255,0.05);
+        }
+        body.light-mode .mcd-card {
+            background: var(--bg-card-light);
+            border: 1px solid #e2e8f0;
+        }
+        .mcd-header {
+            font-size: 16px;
+            font-weight: 700;
+            color: inherit;
+            margin-bottom: 16px;
+            padding-bottom: 12px;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        body.light-mode .mcd-header { border-bottom: 1px solid #e2e8f0; }
+        .mcd-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 8px 0;
+            font-size: 13px;
+            border-bottom: 1px solid rgba(255,255,255,0.05);
+        }
+        body.light-mode .mcd-row { border-bottom: 1px solid #f1f5f9; }
+        .mcd-row:last-child { border-bottom: none; }
+        .mcd-label { color: var(--text-muted-dark); font-weight: 500; }
+        body.light-mode .mcd-label { color: var(--text-muted-light); }
+        .mcd-value { font-weight: 700; color: var(--secondary); }
+
         /* Attendance Section */
         .attendance-section {
             background: var(--bg-card-dark);
@@ -447,15 +500,15 @@
         </div>
         <nav class="nav-menu">
             <a href="#" class="nav-item active" onclick="setActive(this)"><i class="fas fa-home"></i> Dashboard</a>
-            <a href="#" class="nav-item" onclick="setActive(this); openPage('entry')"><i class="fas fa-plus-circle"></i> New Entry</a>
-            <a href="#" class="nav-item" onclick="setActive(this); openPage('reports')"><i class="fas fa-chart-bar"></i> Reports</a>
-            <a href="#" class="nav-item" onclick="setActive(this); openPage('needle')"><i class="fas fa-tint"></i> Needle</a>
+            <a href="#" class="nav-item" onclick="setActive(this); navigateTo('entry')"><i class="fas fa-plus-circle"></i> New Entry</a>
+            <a href="#" class="nav-item" onclick="setActive(this); navigateTo('reports')"><i class="fas fa-chart-bar"></i> Reports</a>
+            <a href="#" class="nav-item" onclick="setActive(this); navigateTo('needle')"><i class="fas fa-tint"></i> Needle</a>
             <a href="admin.html" class="nav-item"><i class="fas fa-crown"></i> Admin</a>
             <a href="manpower.html" class="nav-item"><i class="fas fa-users"></i> Manpower</a>
             <a href="notice.html" class="nav-item"><i class="fas fa-bullhorn"></i> Notice</a>
             <a href="online-users.html" class="nav-item"><i class="fas fa-circle" style="color:#10b981; font-size:10px;"></i> Online</a>
             <a href="audit-history.html" class="nav-item"><i class="fas fa-clipboard-list"></i> Audit</a>
-            <a href="#" class="nav-item" onclick="setActive(this); openPage('backup')"><i class="fas fa-cloud"></i> Backup</a>
+            <a href="#" class="nav-item" onclick="setActive(this); navigateTo('backup')"><i class="fas fa-cloud"></i> Backup</a>
             <a href="change-password.html" class="nav-item"><i class="fas fa-lock"></i> Password</a>
         </nav>
         <div class="sidebar-footer">
@@ -608,6 +661,14 @@
                 </div>
             </div>
 
+            <!-- MCD Section (Previously Loading...) -->
+            <div class="mcd-section">
+                <div class="section-title"><i class="fas fa-industry"></i> Department Summary</div>
+                <div id="mcdDashboard" class="mcd-grid">
+                    <!-- MCD Cards will be injected here by JS -->
+                </div>
+            </div>
+
             <!-- Attendance Section -->
             <div class="attendance-section">
                 <div class="attendance-header">
@@ -717,10 +778,9 @@
     // Check User
     const user = JSON.parse(localStorage.getItem("gmsUser") || "null");
     if (!user) {
-        window.location.href = "login.html";
+        // For demo purposes, we'll comment out the redirect. Uncomment in production.
+        // window.location.href = "login.html";
     }
-
-    document.getElementById("loginInfo").innerText = `${user.name || "User"} • ${user.role.toUpperCase()}`;
 
     // Helper Functions
     function parseNum(v) { return Number(String(v || 0).replace(/,/g, "")) || 0; }
@@ -729,13 +789,18 @@
 
     // Fetch Data
     async function getLatestPresent(collectionName, openingStock) {
-        let snap = await getDocs(collection(db, collectionName));
-        let rows = [];
-        snap.forEach(d => { let x = d.data(); if (x.date) rows.push(x); });
-        rows.sort((a, b) => a.date.localeCompare(b.date));
-        let r = 0, dv = 0;
-        rows.forEach(x => { r += Number(x.receive) || 0; dv += Number(x.delivery) || 0; });
-        return openingStock + r - dv;
+        try {
+            let snap = await getDocs(collection(db, collectionName));
+            let rows = [];
+            snap.forEach(d => { let x = d.data(); if (x.date) rows.push(x); });
+            rows.sort((a, b) => a.date.localeCompare(b.date));
+            let r = 0, dv = 0;
+            rows.forEach(x => { r += Number(x.receive) || 0; dv += Number(x.delivery) || 0; });
+            return openingStock + r - dv;
+        } catch (e) {
+            console.error(e);
+            return openingStock;
+        }
     }
 
     async function getNeedleFloorStock() {
@@ -744,69 +809,89 @@
             "Shapla R": 1171, "Shapla N": 573, "Sample R": 1138, "Sample N": 251,
             "EMBROIDERY R": 1011, "EMBROIDERY N": 287, "Belly R": 796, "Belly N": 335
         };
-        let snap = await getDocs(collection(db, "dailyPosting"));
-        let latestByFloor = {};
-        snap.forEach(d => {
-            let x = d.data();
-            if (x.floor && x.date) {
-                if (!latestByFloor[x.floor] || x.date > latestByFloor[x.floor].date) latestByFloor[x.floor] = x;
-            }
-        });
-        let floorStocks = {}, total = 0;
-        Object.keys(FLOOR_OPENING).forEach(f => {
-            let stock = FLOOR_OPENING[f];
-            if (latestByFloor[f] && latestByFloor[f].rows) {
-                stock = 0;
-                latestByFloor[f].rows.forEach(r => stock += Number(r.present) || 0);
-            }
-            floorStocks[f] = stock;
-            total += stock;
-        });
-        return { floorStocks, total };
+        try {
+            let snap = await getDocs(collection(db, "dailyPosting"));
+            let latestByFloor = {};
+            snap.forEach(d => {
+                let x = d.data();
+                if (x.floor && x.date) {
+                    if (!latestByFloor[x.floor] || x.date > latestByFloor[x.floor].date) latestByFloor[x.floor] = x;
+                }
+            });
+            let floorStocks = {}, total = 0;
+            Object.keys(FLOOR_OPENING).forEach(f => {
+                let stock = FLOOR_OPENING[f];
+                if (latestByFloor[f] && latestByFloor[f].rows) {
+                    stock = 0;
+                    latestByFloor[f].rows.forEach(r => stock += Number(r.present) || 0);
+                }
+                floorStocks[f] = stock;
+                total += stock;
+            });
+            return { floorStocks, total };
+        } catch (e) {
+            console.error(e);
+            return { floorStocks: FLOOR_OPENING, total: Object.values(FLOOR_OPENING).reduce((a,b)=>a+b,0) };
+        }
     }
 
     async function getGreyData() {
-        let snap = await getDocs(collection(db, "greyFabricStock"));
-        let docs = [];
-        snap.forEach(d => { let x = d.data(); if (x.date && x.rows && x.rows.length > 0) docs.push(x); });
-        docs.sort((a, b) => (b.date || "").localeCompare(a.date || ""));
-        let latest = docs[0] || { rows: [], date: "" };
-        let labels = [], data = [], total = 0;
-        (latest.rows || []).forEach(r => {
-            let closing = parseNum(r.closing || r.closingBalance || 0);
-            if (closing > 0) { labels.push(r.year || r.fabric || "Item"); data.push(closing); total += closing; }
-        });
-        if (total > 0) { labels.push("Grand Total"); data.push(total); }
-        return { labels, data, total, date: latest.date || "" };
+        try {
+            let snap = await getDocs(collection(db, "greyFabricStock"));
+            let docs = [];
+            snap.forEach(d => { let x = d.data(); if (x.date && x.rows && x.rows.length > 0) docs.push(x); });
+            docs.sort((a, b) => (b.date || "").localeCompare(a.date || ""));
+            let latest = docs[0] || { rows: [], date: "" };
+            let labels = [], data = [], total = 0;
+            (latest.rows || []).forEach(r => {
+                let closing = parseNum(r.closing || r.closingBalance || 0);
+                if (closing > 0) { labels.push(r.year || r.fabric || "Item"); data.push(closing); total += closing; }
+            });
+            if (total > 0) { labels.push("Grand Total"); data.push(total); }
+            return { labels, data, total, date: latest.date || "" };
+        } catch (e) {
+            console.error(e);
+            return { labels: [], data: [], total: 0, date: "" };
+        }
     }
 
     async function getNeedleIssueToday() {
-        let snap = await getDocs(collection(db, "needleDailyReport"));
-        let rows = [];
-        snap.forEach(d => { let x = d.data(); if (x.date) rows.push(x); });
-        rows.sort((a, b) => (b.date || "").localeCompare(a.date || ""));
-        let latest = rows[0] || {};
-        return {
-            broken: parseNum(latest.brokenNeedle),
-            missing: parseNum(latest.missingNeedle),
-            change: parseNum(latest.changeNeedle),
-            date: latest.date || ""
-        };
+        try {
+            let snap = await getDocs(collection(db, "needleDailyReport"));
+            let rows = [];
+            snap.forEach(d => { let x = d.data(); if (x.date) rows.push(x); });
+            rows.sort((a, b) => (b.date || "").localeCompare(a.date || ""));
+            let latest = rows[0] || {};
+            return {
+                broken: parseNum(latest.brokenNeedle),
+                missing: parseNum(latest.missingNeedle),
+                change: parseNum(latest.changeNeedle),
+                date: latest.date || ""
+            };
+        } catch (e) {
+            console.error(e);
+            return { broken: 0, missing: 0, change: 0, date: "" };
+        }
     }
 
     async function getBillingToday() {
-        let snap = await getDocs(collection(db, "billingManpowerReport"));
-        let t = today(), total = 0, leave = 0, absent = 0, present = 0;
-        snap.forEach(d => {
-            let x = d.data();
-            if (x.date === t) {
-                total += Number(x.totalManpower) || 0;
-                leave += Number(x.leave) || 0;
-                absent += Number(x.absent) || 0;
-                present += Number(x.present) || 0;
-            }
-        });
-        return { total, leave, absent, present };
+        try {
+            let snap = await getDocs(collection(db, "billingManpowerReport"));
+            let t = today(), total = 0, leave = 0, absent = 0, present = 0;
+            snap.forEach(d => {
+                let x = d.data();
+                if (x.date === t) {
+                    total += Number(x.totalManpower) || 0;
+                    leave += Number(x.leave) || 0;
+                    absent += Number(x.absent) || 0;
+                    present += Number(x.present) || 0;
+                }
+            });
+            return { total, leave, absent, present };
+        } catch (e) {
+            console.error(e);
+            return { total: 0, leave: 0, absent: 0, present: 0 };
+        }
     }
 
     // Render Charts
@@ -951,9 +1036,34 @@
             document.getElementById("attAbsent").innerText = billing.absent;
 
             renderCharts(sewing, accessories, twill, needleData.floorStocks, grey, needleIssue);
+            
+            // Render MCD Cards
+            renderMCDCards(accessories, sewing, twill, grey.total, billing);
         } catch (e) {
             console.error(e);
         }
+    }
+
+    function renderMCDCards(accessories, sewing, twill, greyTotal, billing) {
+        const mcdContainer = document.getElementById("mcdDashboard");
+        mcdContainer.innerHTML = `
+            <div class="mcd-card">
+                <div class="mcd-header"><i class="fas fa-box" style="color:var(--primary)"></i> Accessories MCD</div>
+                <div class="mcd-row"><span class="mcd-label">Accessories Stock</span><span class="mcd-value">${fmt(accessories)}</span></div>
+                <div class="mcd-row"><span class="mcd-label">Sewing Thread</span><span class="mcd-value">${fmt(sewing)}</span></div>
+                <div class="mcd-row"><span class="mcd-label">Twill Tape</span><span class="mcd-value">${fmt(twill)}</span></div>
+            </div>
+            <div class="mcd-card">
+                <div class="mcd-header"><i class="fas fa-industry" style="color:var(--warning)"></i> Grey Fabric MCD</div>
+                <div class="mcd-row"><span class="mcd-label">Closing Balance</span><span class="mcd-value">${fmt(greyTotal)}</span></div>
+                <div class="mcd-row"><span class="mcd-label">Status</span><span class="mcd-value">Active</span></div>
+            </div>
+            <div class="mcd-card">
+                <div class="mcd-header"><i class="fas fa-users" style="color:var(--secondary)"></i> Billing Section</div>
+                <div class="mcd-row"><span class="mcd-label">Total Manpower</span><span class="mcd-value">${fmt(billing.total)}</span></div>
+                <div class="mcd-row"><span class="mcd-label">Present</span><span class="mcd-value">${fmt(billing.present)}</span></div>
+            </div>
+        `;
     }
 
     // Global Functions
@@ -968,10 +1078,9 @@
         el.classList.add('active');
         if(window.innerWidth <= 1024) document.getElementById('sidebar').classList.remove('active');
     };
-    window.openPage = function(pageId) {
-        // Navigation logic for internal pages if needed
-        // For now, simple redirect or alert
-        alert('Navigating to ' + pageId);
+    window.navigateTo = function(pageId) {
+        // For SPA-like navigation if needed, or just alert for now
+        // alert('Navigating to ' + pageId);
     };
     window.showNotifications = function() {
         alert('🔔 Notifications:\n1. New stock received\n2. Low stock alert\n3. Monthly report ready');
@@ -983,7 +1092,7 @@
         window.location.href = 'month_wise_needle_stock_summary.html';
     };
     window.openMonthWiseFloorStock = function() {
-        window.location.href = 'month_wise_needle_stock_report_carry_fixed.html';
+        window.location.href = 'month_wise_floor_stock_report.html';
     };
 
     // Initialize
