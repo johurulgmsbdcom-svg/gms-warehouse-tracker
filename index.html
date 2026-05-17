@@ -891,35 +891,37 @@ body.light .creditFooter{background:var(--card);border-color:#cbd5e1;}
 #adminSyncPanel {
   background: var(--card);
   border: 1px solid var(--border);
-  border-radius: 12px;
-  padding: 15px;
-  margin: 15px 0;
+  border-radius: 16px;
+  padding: 20px;
+  margin-top: 30px;
 }
 #adminSyncPanel h3 {
   color: var(--yellow);
-  margin: 0 0 10px 0;
-  font-size: 16px;
+  margin: 0 0 15px 0;
+  font-size: 18px;
 }
 #pendingTableBody tr {
   border-bottom: 1px solid rgba(255,255,255,0.05);
 }
 #pendingTableBody td {
-  padding: 8px;
+  padding: 12px;
   font-size: 13px;
 }
 .pending-badge {
   background: #f59e0b;
   color: #000;
-  padding: 2px 8px;
+  padding: 4px 10px;
   border-radius: 12px;
   font-size: 11px;
+  font-weight: 600;
 }
 .synced-badge {
   background: #10b981;
   color: #fff;
-  padding: 2px 8px;
+  padding: 4px 10px;
   border-radius: 12px;
   font-size: 11px;
+  font-weight: 600;
 }
 
 /* ===== TOAST NOTIFICATION ===== */
@@ -1018,34 +1020,11 @@ body.light .creditFooter{background:var(--card);border-color:#cbd5e1;}
       </div>
       <div id="quotaAlertList"></div>
       <p style="color:var(--muted); font-size:11px; margin:10px 0 0 0;">
-        ✅ Reports & Entries are working normally via local queue. Data will auto-sync when limits reset.
+        ✅ Reports & Entries working normally. Data will auto-sync when limits reset.
       </p>
     </div>
 
-    <!-- 📦 Admin Sync Queue Panel -->
-    <div id="adminSyncPanel" style="display:none;">
-      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
-        <h3>📦 Pending Data Sync: <span id="pendingCount">0</span></h3>
-        <button onclick="forceSyncNow()" style="background:var(--blue); color:#fff; border:none; padding:6px 12px; border-radius:6px; cursor:pointer; font-weight:600;">🔄 Force Sync</button>
-      </div>
-      <div style="overflow-x:auto;">
-        <table style="width:100%; border-collapse:collapse; font-size:13px;">
-          <thead>
-            <tr style="background:rgba(255,255,255,0.05);">
-              <th style="padding:8px; text-align:left; color:var(--muted);">User</th>
-              <th style="padding:8px; text-align:left; color:var(--muted);">Type</th>
-              <th style="padding:8px; text-align:left; color:var(--muted);">Serial/Data</th>
-              <th style="padding:8px; text-align:left; color:var(--muted);">Time</th>
-              <th style="padding:8px; text-align:center; color:var(--muted);">Status</th>
-            </tr>
-          </thead>
-          <tbody id="pendingTableBody">
-            <tr><td colspan="5" style="padding:15px; text-align:center; color:var(--muted);">No pending data. All synced! ✅</td></tr>
-          </tbody>
-        </table>
-      </div>
-    </div>
-    
+    <!-- 🟢 LIVE Signal (Top) -->
     <div class="liveSignalCard">
       <div class="liveLabel">
         <div style="width:8px;height:8px;background:var(--green);border-radius:50%;"></div>
@@ -1057,6 +1036,7 @@ body.light .creditFooter{background:var(--card);border-color:#cbd5e1;}
       </div>
     </div>
 
+    <!-- 📦 Stock Summary Cards (Top) -->
     <div class="stat-row" id="accessoriesSummary">
       <div class="stat-card-new bg-blue">
         <div class="stat-info">
@@ -1088,37 +1068,81 @@ body.light .creditFooter{background:var(--card);border-color:#cbd5e1;}
       </div>
     </div>
 
-    <div class="chartGrid">
-      <div class="chartBox" id="accessoriesChartBox"><h3>📈 Accessories Stock Chart</h3><canvas id="accessoriesChart"></canvas></div>
-      <div class="chartBox" id="needleChartBox"><h3>🏭 Needle Floor Wise Stock</h3><canvas id="needleChart"></canvas></div>
-      <div class="chartBox" id="greyChartBox"><h3>🏭 Grey Fabric Present Stock</h3><canvas id="greyChart"></canvas></div>
-      <div class="chartBox" id="needleIssueChartBox"><h3>🪡 Needle Broken / Missing / Change</h3><canvas id="needleIssueChart"></canvas></div>
-      <div class="chartBox" id="billingChartBox" style="grid-column:1/-1;">
-        <h3>👨‍ Attendance Manpower Chart</h3>
-        <div class="chartGrid">
-          <div style="text-align:center;"><canvas id="billingChart"></canvas></div>
-          <div style="display:flex;flex-direction:column;justify-content:center;gap:10px;">
-            <div style="background:rgba(16,185,129,.1);padding:14px;border-radius:12px;">
-              <span style="color:var(--muted);font-size:11px;">👨‍ Attendance Total</span>
-              <b style="color:var(--green);font-size:22px;" id="attTotal">0</b>
-            </div>
-            <div style="background:rgba(16,185,129,.1);padding:14px;border-radius:12px;">
-              <span style="color:var(--muted);font-size:11px;">✅ Today Present</span>
-              <b style="color:var(--green);font-size:22px;" id="attPresent">0</b>
-            </div>
-            <div style="background:rgba(245,158,11,.1);padding:14px;border-radius:12px;">
-              <span style="color:var(--muted);font-size:11px;">🏖 Leave</span>
-              <b style="color:var(--yellow);font-size:22px;" id="attLeave">0</b>
-            </div>
-            <div style="background:rgba(239,68,68,.1);padding:14px;border-radius:12px;">
-              <span style="color:var(--muted);font-size:11px;">❌ Absent</span>
-              <b style="color:var(--red);font-size:22px;" id="attAbsent">0</b>
-            </div>
+    <!-- 🏭 MCD Dashboard Boxes (Middle) -->
+    <div id="mcdDashboard" class="mcdDashboard">Loading...</div>
+
+    <!-- 👨‍ Attendance Manpower Chart (Bottom) -->
+    <div class="chartBox" id="billingChartBox" style="margin-bottom:20px;">
+      <h3>👨‍ Attendance Manpower Chart</h3>
+      <div class="chartGrid">
+        <div style="text-align:center;"><canvas id="billingChart"></canvas></div>
+        <div style="display:flex;flex-direction:column;justify-content:center;gap:10px;">
+          <div style="background:rgba(16,185,129,.1);padding:14px;border-radius:12px;">
+            <span style="color:var(--muted);font-size:11px;">👨‍ Attendance Total</span>
+            <b style="color:var(--green);font-size:22px;" id="attTotal">0</b>
+          </div>
+          <div style="background:rgba(16,185,129,.1);padding:14px;border-radius:12px;">
+            <span style="color:var(--muted);font-size:11px;">✅ Today Present</span>
+            <b style="color:var(--green);font-size:22px;" id="attPresent">0</b>
+          </div>
+          <div style="background:rgba(245,158,11,.1);padding:14px;border-radius:12px;">
+            <span style="color:var(--muted);font-size:11px;">🏖 Leave</span>
+            <b style="color:var(--yellow);font-size:22px;" id="attLeave">0</b>
+          </div>
+          <div style="background:rgba(239,68,68,.1);padding:14px;border-radius:12px;">
+            <span style="color:var(--muted);font-size:11px;">❌ Absent</span>
+            <b style="color:var(--red);font-size:22px;" id="attAbsent">0</b>
           </div>
         </div>
       </div>
     </div>
-    <div id="mcdDashboard" class="mcdDashboard">Loading...</div>
+
+    <!-- 📊 All Charts Grid (Very Bottom) -->
+    <div class="chartGrid" style="margin-top:20px;">
+      <div class="chartBox" id="accessoriesChartBox">
+        <h3>📈 Accessories Stock Chart</h3>
+        <canvas id="accessoriesChart"></canvas>
+      </div>
+      <div class="chartBox" id="needleChartBox">
+        <h3>🏭 Needle Floor Wise Stock</h3>
+        <canvas id="needleChart"></canvas>
+      </div>
+      <div class="chartBox" id="greyChartBox">
+        <h3>🏭 Grey Fabric Present Stock</h3>
+        <canvas id="greyChart"></canvas>
+      </div>
+      <div class="chartBox" id="needleIssueChartBox">
+        <h3>🪡 Needle Broken / Missing / Change</h3>
+        <canvas id="needleIssueChart"></canvas>
+      </div>
+    </div>
+
+    <!-- 📦 Admin Sync Panel (Last, Only for Admin) -->
+    <div id="adminSyncPanel" style="display:none; background:var(--card); border:1px solid var(--border); border-radius:16px; padding:20px; margin-top:30px;">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
+        <h3 style="color:var(--yellow); margin:0; font-size:18px;">📦 Pending Data Sync: <span id="pendingCount">0</span></h3>
+        <button onclick="forceSyncNow()" style="background:var(--blue); color:#fff; border:none; padding:10px 20px; border-radius:8px; cursor:pointer; font-weight:600; font-size:14px;">🔄 Force Sync</button>
+      </div>
+      <div style="overflow-x:auto;">
+        <table style="width:100%; border-collapse:collapse; font-size:13px;">
+          <thead>
+            <tr style="background:rgba(255,255,255,0.05); border-bottom:2px solid var(--border);">
+              <th style="padding:12px; text-align:left; color:var(--muted);">User</th>
+              <th style="padding:12px; text-align:left; color:var(--muted);">Type</th>
+              <th style="padding:12px; text-align:left; color:var(--muted);">Serial/Data</th>
+              <th style="padding:12px; text-align:left; color:var(--muted);">Time</th>
+              <th style="padding:12px; text-align:center; color:var(--muted);">Status</th>
+            </tr>
+          </thead>
+          <tbody id="pendingTableBody">
+            <tr><td colspan="5" style="padding:20px; text-align:center; color:var(--green); font-weight:600;">✅ All data synced. Queue empty.</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div style="margin-top:15px; padding:12px; background:rgba(16,185,129,0.1); border-radius:8px; font-size:12px; color:var(--muted);">
+        <i class="fas fa-info-circle"></i> Auto-sync runs every 5 minutes. Manual sync available via Force Sync button.
+      </div>
+    </div>
   </div>
 
   <!-- NEW ENTRY PAGE -->
@@ -1530,43 +1554,67 @@ window.saveDataOffline = function(collectionName, data, serialPrefix = "") {
     if(userRole === "admin" || userRole === "full") renderAdminSyncTable();
 };
 
-// 2. ব্যাকগ্রাউন্ড অটো-সিঙ্ক
+// 2. Auto-Sync (প্রতি ৫ মিনিট)
 window.autoSyncQueue = async function() {
     let queue = getQueue();
     let pending = queue.filter(x => x.status === "pending");
     if(pending.length === 0) return;
 
+    console.log(`🔄 Auto-syncing ${pending.length} items...`);
     let syncedIds = [];
+    
     try {
         for(let item of pending) {
             try {
                 await setDoc(doc(db, item.collection, item.id), item.data, { merge: true });
+                item.status = "synced";
+                item.syncedAt = new Date().toLocaleString();
                 syncedIds.push(item.id);
             } catch(err) {
-                if(err.code === 'resource-exhausted' || err.code === 'permission-denied' || err.code === 'unavailable') {
-                    console.log("⏸️ Sync paused (limits). Auto-retry active.");
+                if(err.code === 'resource-exhausted' || err.code === 'permission-denied') {
+                    console.log("⏸️ Sync paused (quota limit). Will retry later.");
                     break;
                 }
             }
         }
 
         if(syncedIds.length > 0) {
-            let newQueue = queue.filter(item => !syncedIds.includes(item.id));
+            let newQueue = queue.map(item => 
+                syncedIds.includes(item.id) ? {...item, status: "synced"} : item
+            );
             setQueue(newQueue);
-            if(userRole === "admin") renderAdminSyncTable();
-            console.log(`☁️ ${syncedIds.length} items silently synced.`);
+            
+            if(userRole === "admin" || userRole === "full") {
+                renderAdminSyncTable();
+                showToast(`☁️ ${syncedIds.length} items synced automatically`);
+            }
+            console.log(`✅ ${syncedIds.length} items synced successfully`);
         }
     } catch(e) {
-        console.log("Sync module ready.");
+        console.log("Sync error:", e);
     }
 };
 
-// 3. এডমিন পেন্ডিং লিস্ট
+// 3. Manual Force Sync (এডমিন বাটন)
+window.forceSyncNow = function() {
+    let queue = getQueue();
+    let pending = queue.filter(x => x.status === "pending");
+    
+    if(pending.length === 0) {
+        showToast("✅ No pending data to sync");
+        return;
+    }
+    
+    showToast(`🔄 Syncing ${pending.length} items...`);
+    window.autoSyncQueue();
+};
+
+// 4. এডমিন টেবিল রেন্ডার
 function renderAdminSyncTable() {
     let panel = document.getElementById("adminSyncPanel");
     if(!panel) return;
+    
     panel.style.display = "block";
-
     let queue = getQueue();
     let pending = queue.filter(x => x.status === "pending");
     let tbody = document.getElementById("pendingTableBody");
@@ -1574,43 +1622,41 @@ function renderAdminSyncTable() {
 
     if(countEl) countEl.innerText = pending.length;
 
-    if(!tbody) {
-        panel.innerHTML += `
-        <div style="overflow-x:auto;margin-top:10px;">
-            <table style="width:100%;border-collapse:collapse;font-size:13px;">
-                <thead><tr style="background:rgba(255,255,255,0.05);">
-                    <th style="padding:8px;text-align:left;color:var(--muted);">User</th>
-                    <th style="padding:8px;text-align:left;color:var(--muted);">Type</th>
-                    <th style="padding:8px;text-align:left;color:var(--muted);">Serial/Data</th>
-                    <th style="padding:8px;text-align:left;color:var(--muted);">Time</th>
-                    <th style="padding:8px;text-align:center;color:var(--muted);">Status</th>
-                </tr></thead>
-                <tbody id="pendingTableBody"></tbody>
-            </table>
-        </div>`;
-        tbody = document.getElementById("pendingTableBody");
-    }
+    if(!tbody) return;
 
-    tbody.innerHTML = "";
     if(pending.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="5" style="padding:15px;text-align:center;color:var(--muted);">✅ All data synced. Queue empty.</td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="5" style="padding:20px; text-align:center; color:var(--green); font-weight:600;">✅ All data synced. Queue empty.</td></tr>`;
         return;
     }
 
-    pending.forEach(item => {
+    tbody.innerHTML = pending.map(item => {
         let summary = item.data.buyer || item.data.challanNo || item.data.floor || item.serial || "Entry";
-        tbody.innerHTML += `
+        return `
             <tr style="border-bottom:1px solid rgba(255,255,255,0.05);">
-                <td style="padding:8px;">${item.user}</td>
-                <td style="padding:8px;">${item.collection}</td>
-                <td style="padding:8px;">${summary}</td>
-                <td style="padding:8px;color:var(--muted);">${item.time}</td>
-                <td style="padding:8px;text-align:center;"><span class="pending-badge">⏳ Queued</span></td>
-            </tr>`;
-    });
+                <td style="padding:12px;">${item.user}</td>
+                <td style="padding:12px;">${item.collection}</td>
+                <td style="padding:12px;">${summary}</td>
+                <td style="padding:12px; color:var(--muted);">${item.time}</td>
+                <td style="padding:12px; text-align:center;">
+                    <span class="pending-badge">⏳ Pending</span>
+                </td>
+            </tr>
+        `;
+    }).join('');
 }
 
-// 4. এডমিন কোটা অ্যালার্ট
+// 5. লোকাল UI আপডেট
+function updateLocalUI(col, data) {
+    if(col.includes("needle") || col.includes("posting")) {
+        let stockEl = document.getElementById("needleToday");
+        if(stockEl) {
+            let current = parseInt(stockEl.innerText.replace(/,/g,'')) || 0;
+            stockEl.innerText = (current + (data.receive||0) - (data.delivery||0)).toLocaleString();
+        }
+    }
+}
+
+// 6. এডমিন কোটা অ্যালার্ট
 window.triggerQuotaAlert = function(type, details = "") {
     if(userRole !== "admin" && userRole !== "full") return;
     let alerts = getQuotaAlerts();
@@ -1653,18 +1699,6 @@ function dailyQuotaReset() {
         localStorage.removeItem(QUOTA_ALERT_KEY);
         localStorage.setItem("GMS_QUOTA_LAST_RESET", today);
         console.log("🔄 Daily quota alerts reset.");
-    }
-}
-
-window.forceSyncNow = function() {
-    showToast("🔄 Syncing pending data...");
-    window.autoSyncQueue();
-};
-
-function updateLocalUI(col, data) {
-    if(col.includes("needle") || col.includes("posting")) {
-        let stockEl = document.getElementById("presentStock");
-        if(stockEl) stockEl.value = data.present || (data.opening||0) + (data.receive||0) - (data.delivery||0);
     }
 }
 
@@ -2209,8 +2243,11 @@ document.addEventListener("DOMContentLoaded", () => {
     renderQuotaAlerts();
     renderAdminSyncTable();
   }
-  window.autoSyncQueue();
+  // Auto-sync every 5 minutes
   setInterval(window.autoSyncQueue, 300000);
+  // Initial sync check after 2 seconds
+  setTimeout(window.autoSyncQueue, 2000);
+  
   document.addEventListener("visibilitychange", () => {
     if(document.visibilityState === "visible") {
       dailyQuotaReset();
