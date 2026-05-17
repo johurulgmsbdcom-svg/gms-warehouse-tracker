@@ -279,6 +279,19 @@ body.light .systemNameBar{
   cursor:pointer;
   font-size:12px;
 }
+.profileBtnTop{
+  background:rgba(139,92,246,.2);
+  color:var(--purple);
+  border:1px solid rgba(139,92,246,.3);
+  padding:6px 14px;
+  border-radius:8px;
+  font-weight:600;
+  cursor:pointer;
+  font-size:12px;
+  display:flex;
+  align-items:center;
+  gap:6px;
+}
 
 /* ===== NOTICE BAR ===== */
 .noticeBar{
@@ -773,7 +786,14 @@ body.light .needleCard{background:var(--card);}
 }
 body.light .creditFooter{background:var(--card);border-color:#cbd5e1;}
 .creditItem{display:flex;align-items:center;gap:10px;color:var(--text);}
-.creditItem img{width:36px;height:36px;border-radius:50%;border:2px solid var(--green);object-fit:cover;}
+.creditItem img{
+  width:40px;
+  height:40px;
+  border-radius:50%;
+  border:2px solid var(--green);
+  object-fit:cover;
+  cursor:pointer;
+}
 .creditText b{font-size:11px;font-weight:600;display:block;color:var(--text);}
 .creditText span{color:var(--muted);font-size:9px;}
 .creditDivider{width:1px;height:30px;background:rgba(59,130,246,0.5);}
@@ -781,6 +801,52 @@ body.light .creditFooter{background:var(--card);border-color:#cbd5e1;}
 @media(max-width:900px){
   .pc-only{display:none!important;}
   .creditFooter{width:95%;max-width:95%;padding:8px 12px;flex-wrap:wrap;justify-content:center;}
+}
+
+/* ===== PROFILE MODAL ===== */
+.profileModal {
+  display: none;
+  position: fixed;
+  top: 0; left: 0; width: 100%; height: 100%;
+  background: rgba(0,0,0,0.8);
+  z-index: 2000;
+  justify-content: center;
+  align-items: center;
+}
+.profileModalContent {
+  background: var(--card);
+  padding: 30px;
+  border-radius: 16px;
+  text-align: center;
+  max-width: 400px;
+  width: 90%;
+  border: 1px solid var(--border);
+}
+.profileModalContent img {
+  width: 120px; height: 120px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 3px solid var(--blue);
+  margin-bottom: 15px;
+}
+.profileUploadBtn {
+  background: var(--blue);
+  color: #fff;
+  padding: 10px 20px;
+  border-radius: 8px;
+  cursor: pointer;
+  display: inline-block;
+  margin-top: 10px;
+  font-weight: 600;
+}
+.closeModal {
+  margin-top: 15px;
+  background: var(--red);
+  color: #fff;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 6px;
+  cursor: pointer;
 }
 </style>
 </head>
@@ -808,11 +874,24 @@ body.light .creditFooter{background:var(--card);border-color:#cbd5e1;}
     <button onclick="location.href='change-password.html'">🔐 Password</button>
   </div>
   <div class="sidebarFooter">
-    <button class="themeBtn" onclick="toggleTheme()">🌙 / ☀️ Theme</button>
+    <button class="themeBtn" onclick="toggleTheme()">🌙 / ️ Theme</button>
     <button class="logoutBtn" onclick="logout()">🚪 Logout</button>
   </div>
 </div>
 <div class="sidebarOverlay" id="sidebarOverlay" onclick="toggleSidebar()" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:999;backdrop-filter:blur(4px);"></div>
+
+<!-- PROFILE UPLOAD MODAL -->
+<div id="profileModal" class="profileModal">
+  <div class="profileModalContent">
+    <h3 style="margin-bottom:15px;">👤 Update Profile Photo</h3>
+    <img id="modalProfileImg" src="https://i.ibb.co/5hzT1VGk/IMG.jpg" alt="Profile">
+    <br>
+    <input type="file" id="profilePicInput" accept="image/*" style="display:none" onchange="handleProfileUpload(this)">
+    <label for="profilePicInput" class="profileUploadBtn">📷 Choose Photo</label>
+    <br>
+    <button class="closeModal" onclick="closeProfileModal()">Close</button>
+  </div>
+</div>
 
 <div class="mainContent" id="mainContent">
   <!-- SYSTEM NAME WITH GLOWING EFFECT -->
@@ -825,7 +904,7 @@ body.light .creditFooter{background:var(--card);border-color:#cbd5e1;}
       <button class="menuToggle" onclick="toggleSidebar()">☰ Menu</button>
       <div class="topBarRight">
         <span class="autoSave"><div style="width:8px;height:8px;background:var(--green);border-radius:50%;animation:pulse 2s infinite;"></div> Live</span>
-        <button class="themeBtn" onclick="location.href='profile.html'">👤 Profile</button>
+        <button class="profileBtnTop" onclick="openProfileModal()">👤 Profile</button>
       </div>
     </div>
   </div>
@@ -1158,7 +1237,7 @@ body.light .creditFooter{background:var(--card);border-color:#cbd5e1;}
   <!-- Footer -->
   <div class="creditFooter">
     <div class="creditItem">
-      <img src="https://i.ibb.co/5hzT1VGk/IMG.jpg" alt="Johurul">
+      <img id="footerProfileImg" src="https://i.ibb.co/5hzT1VGk/IMG.jpg" alt="Profile" onclick="openProfileModal()">
       <div class="creditText"><b>Md. Johurul</b><span>System Developer</span></div>
     </div>
     <div class="creditDivider"></div>
@@ -1205,6 +1284,33 @@ window.commonReportCards = function(company,mcd){
   return `<div class="reportCard" onclick="openGatePlanReport('${company}','${mcd}')"><i class="fas fa-truck"></i> Gate Plan Report</div>
   <div class="reportCard" onclick="openChallanReport('${company}','${mcd}')"><i class="fas fa-file-invoice"></i> Challan / Gate Pass Report</div>`;
 };
+
+// PROFILE FUNCTIONS
+window.openProfileModal = function(){
+  document.getElementById("profileModal").style.display = "flex";
+};
+window.closeProfileModal = function(){
+  document.getElementById("profileModal").style.display = "none";
+};
+window.handleProfileUpload = function(input){
+  if (input.files && input.files[0]) {
+    var reader = new FileReader();
+    reader.onload = function(e) {
+      var imgData = e.target.result;
+      localStorage.setItem('userProfilePic', imgData);
+      document.getElementById("modalProfileImg").src = imgData;
+      document.getElementById("footerProfileImg").src = imgData;
+    }
+    reader.readAsDataURL(input.files[0]);
+  }
+};
+function loadProfilePic(){
+  var pic = localStorage.getItem('userProfilePic');
+  if(pic){
+    document.getElementById("modalProfileImg").src = pic;
+    document.getElementById("footerProfileImg").src = pic;
+  }
+}
 </script>
 
 <!-- ===== FIREBASE MODULE ===== -->
@@ -1434,32 +1540,36 @@ async function getNeedleIssueToday(){
   let latest=rows[0]||{};
   return{broken:parseNum(latest.brokenNeedle),missing:parseNum(latest.missingNeedle),change:parseNum(latest.changeNeedle),date:latest.date||""};
 }
+
+// IMPROVED FIREBASE COUNTS FUNCTION
 async function getFirebaseCounts(){
   let cols=["greyFabricStock","accessoriesInventory","billingManpowerReport","dailyPosting","sewingThread","twillTape","accessoriesSample","liveNotices","manpower","users","needleDailyReport","gatePlans","challanGatePass"];
-  let t=today(),totalCount=0,approxBytes=0,readsToday=0,writesToday=0,deletesToday=0,gatePlanCount=0,challanCount=0;
+  let t=today(),totalCount=0,approxBytes=0,todayCount=0,gatePlanCount=0,challanCount=0;
+  
   for(let c of cols){
     try{
       let snap=await getDocs(collection(db,c));
       snap.forEach(d=>{
         totalCount++;
-        approxBytes+=JSON.stringify(d.data()||{}).length*2;
         let row=d.data();
-        if(row.date===t){
-          if(c==="gatePlans")gatePlanCount++;
-          if(c==="challanGatePass")challanCount++;
-        }
+        approxBytes+=JSON.stringify(row||{}).length*2;
+        
+        // Count Today's Entries
+        if(row.date === t) todayCount++;
+        
+        if(c==="gatePlans") gatePlanCount++;
+        if(c==="challanGatePass") challanCount++;
       });
-    }catch(e){}
+    }catch(e){console.log("Error counting:",c,e);}
   }
+  
   let approxMB=approxBytes/1024/1024;
   return{
     totalCount,
     storagePercent:(approxMB/1024)*100,
-    readsToday:readsToday,
-    writesToday:writesToday,
-    deletesToday:deletesToday,
-    gatePlanCount:gatePlanCount,
-    challanCount:challanCount
+    todayEntry: todayCount,
+    gatePlanCount,
+    challanCount
   };
 }
 
@@ -1471,13 +1581,12 @@ function updateLimitBox(firebase){
   }
   document.getElementById("storageUsed").innerText=`${(approxMB/10).toFixed(2)} MB`;
   document.getElementById("storagePercent").innerText=`${storagePercent.toFixed(2)}%`;
+  
+  // Update Stats
   document.getElementById("totalEntry").innerText=firebase?.totalCount||0;
-  document.getElementById("todayEntry").innerText=firebase?.todayEntry||0;
+  document.getElementById("todayEntry").innerText=firebase?.todayEntry||0; // Show Today Entry
   document.getElementById("gatePlanCount").innerText=`${firebase?.gatePlanCount||0} / 8`;
   document.getElementById("challanCount").innerText=`${firebase?.challanCount||0} / 2`;
-  document.getElementById("readsToday").innerText=`${firebase?.readsToday||0} / 50,000`;
-  document.getElementById("writesToday").innerText=`${firebase?.writesToday||0} / 20,000`;
-  document.getElementById("deletesToday").innerText=`${firebase?.deletesToday||0} / 20,000`;
   
   let backupMonths=localStorage.getItem("backupMonths")||"0";
   document.getElementById("backupMonths").innerText=backupMonths;
@@ -1805,7 +1914,7 @@ window.removeRestoredMonth=async function(){
 };
 
 // Initialize
-setupRoleUI();loadDashboardStock();loadNotices();updateLastActive();renderBackupLog();
+setupRoleUI();loadDashboardStock();loadNotices();updateLastActive();renderBackupLog();loadProfilePic();
 setInterval(updateLastActive,60000);setInterval(loadNotices,60000);
 </script>
 </body>
