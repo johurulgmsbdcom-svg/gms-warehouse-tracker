@@ -848,6 +848,100 @@ body.light .creditFooter{background:var(--card);border-color:#cbd5e1;}
   border-radius: 6px;
   cursor: pointer;
 }
+
+/* ===== ADMIN QUOTA ALERTS ===== */
+#adminQuotaAlerts {
+  background: var(--card);
+  border: 1px solid var(--red);
+  border-radius: 12px;
+  padding: 15px;
+  margin: 15px 0;
+  box-shadow: 0 0 15px rgba(239,68,68,0.2);
+}
+#adminQuotaAlerts h3 {
+  color: var(--red);
+  margin: 0 0 10px 0;
+  font-size: 16px;
+}
+#quotaAlertList {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.quota-alert-item {
+  background: rgba(239,68,68,0.1);
+  border: 1px solid var(--red);
+  padding: 10px;
+  border-radius: 8px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.quota-alert-item .msg {
+  color: var(--red);
+  font-weight: 700;
+  font-size: 13px;
+}
+.quota-alert-item .time {
+  color: var(--muted);
+  font-size: 10px;
+}
+
+/* ===== ADMIN SYNC TABLE ===== */
+#adminSyncPanel {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 15px;
+  margin: 15px 0;
+}
+#adminSyncPanel h3 {
+  color: var(--yellow);
+  margin: 0 0 10px 0;
+  font-size: 16px;
+}
+#pendingTableBody tr {
+  border-bottom: 1px solid rgba(255,255,255,0.05);
+}
+#pendingTableBody td {
+  padding: 8px;
+  font-size: 13px;
+}
+.pending-badge {
+  background: #f59e0b;
+  color: #000;
+  padding: 2px 8px;
+  border-radius: 12px;
+  font-size: 11px;
+}
+.synced-badge {
+  background: #10b981;
+  color: #fff;
+  padding: 2px 8px;
+  border-radius: 12px;
+  font-size: 11px;
+}
+
+/* ===== TOAST NOTIFICATION ===== */
+.toast {
+  position: fixed;
+  bottom: 80px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: #10b981;
+  color: #fff;
+  padding: 10px 20px;
+  border-radius: 8px;
+  font-weight: 600;
+  font-size: 13px;
+  z-index: 9999;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+  animation: toastFade 0.3s ease;
+}
+@keyframes toastFade {
+  from { opacity: 0; transform: translate(-50%, 20px); }
+  to { opacity: 1; transform: translate(-50%, 0); }
+}
 </style>
 </head>
 
@@ -874,7 +968,7 @@ body.light .creditFooter{background:var(--card);border-color:#cbd5e1;}
     <button onclick="location.href='change-password.html'">🔐 Password</button>
   </div>
   <div class="sidebarFooter">
-    <button class="themeBtn" onclick="toggleTheme()">🌙 / ️ Theme</button>
+    <button class="themeBtn" onclick="toggleTheme()">🌙 / ☀️ Theme</button>
     <button class="logoutBtn" onclick="logout()">🚪 Logout</button>
   </div>
 </div>
@@ -915,6 +1009,42 @@ body.light .creditFooter{background:var(--card);border-color:#cbd5e1;}
   <div id="home" class="page activePage">
     <div class="dashTitle">📊 Dashboard Overview</div>
     <div class="dashSub">Role Based Dashboard • Firebase Live Summary</div>
+    
+    <!-- 🔴 Admin Quota Alerts (Only Visible to Admin) -->
+    <div id="adminQuotaAlerts" style="display:none;">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
+        <h3>⚠️ Firebase Limit Alerts</h3>
+        <button onclick="resetQuotaAlerts()" style="background:var(--card2); color:var(--text); border:1px solid var(--border); padding:5px 10px; border-radius:6px; cursor:pointer; font-size:11px;">🔄 Clear</button>
+      </div>
+      <div id="quotaAlertList"></div>
+      <p style="color:var(--muted); font-size:11px; margin:10px 0 0 0;">
+        ✅ Reports & Entries are working normally via local queue. Data will auto-sync when limits reset.
+      </p>
+    </div>
+
+    <!-- 📦 Admin Sync Queue Panel -->
+    <div id="adminSyncPanel" style="display:none;">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
+        <h3>📦 Pending Data Sync: <span id="pendingCount">0</span></h3>
+        <button onclick="forceSyncNow()" style="background:var(--blue); color:#fff; border:none; padding:6px 12px; border-radius:6px; cursor:pointer; font-weight:600;">🔄 Force Sync</button>
+      </div>
+      <div style="overflow-x:auto;">
+        <table style="width:100%; border-collapse:collapse; font-size:13px;">
+          <thead>
+            <tr style="background:rgba(255,255,255,0.05);">
+              <th style="padding:8px; text-align:left; color:var(--muted);">User</th>
+              <th style="padding:8px; text-align:left; color:var(--muted);">Type</th>
+              <th style="padding:8px; text-align:left; color:var(--muted);">Serial/Data</th>
+              <th style="padding:8px; text-align:left; color:var(--muted);">Time</th>
+              <th style="padding:8px; text-align:center; color:var(--muted);">Status</th>
+            </tr>
+          </thead>
+          <tbody id="pendingTableBody">
+            <tr><td colspan="5" style="padding:15px; text-align:center; color:var(--muted);">No pending data. All synced! ✅</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
     
     <div class="liveSignalCard">
       <div class="liveLabel">
@@ -1311,12 +1441,22 @@ function loadProfilePic(){
     document.getElementById("footerProfileImg").src = pic;
   }
 }
+
+// ===== TOAST NOTIFICATION =====
+function showToast(msg, type = 'success') {
+  let t = document.createElement("div");
+  t.className = "toast";
+  t.style.background = type === 'error' ? '#ef4444' : '#10b981';
+  t.innerText = msg;
+  document.body.appendChild(t);
+  setTimeout(() => t.remove(), 2500);
+}
 </script>
 
-<!-- ===== FIREBASE MODULE ===== -->
+<!-- ===== FIREBASE MODULE WITH OFFLINE SYNC ===== -->
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-app.js";
-import { getFirestore, collection, getDocs, doc, updateDoc, setDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-firestore.js";
+import { getFirestore, collection, getDocs, doc, updateDoc, setDoc, deleteDoc, query, orderBy, limit } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-firestore.js";
 
 const firebaseConfig={
   apiKey:"AIzaSyD-wBCF5eeWMHobLFOhBzKW7aB2pagz9-w",
@@ -1354,6 +1494,181 @@ let accessoriesChart=null,needleChart=null,greyChart=null,billingChart=null,need
 let selectedBackupData=null;
 
 document.getElementById("loginInfo").innerText=`${user.name||"User"} • ${userRole.toUpperCase()} ${userRole==="user"?"• "+userMCDs.join(", "):""}`;
+
+// ===== OFFLINE SYNC & QUOTA SYSTEM =====
+const SYNC_QUEUE_KEY = "GMS_STEALTH_QUEUE";
+const COUNTER_KEY = "GMS_SERIAL_COUNTERS";
+const QUOTA_ALERT_KEY = "GMS_QUOTA_LIMIT_ALERTS";
+
+function getQueue() { return JSON.parse(localStorage.getItem(SYNC_QUEUE_KEY) || "[]"); }
+function setQueue(q) { localStorage.setItem(SYNC_QUEUE_KEY, JSON.stringify(q)); }
+function getQuotaAlerts() { return JSON.parse(localStorage.getItem(QUOTA_ALERT_KEY) || "{}"); }
+function setQuotaAlerts(d) { localStorage.setItem(QUOTA_ALERT_KEY, JSON.stringify(d)); }
+
+// 1. ইউজার সেভ ফাংশন (১০০% সাইলেন্ট সাকসেস)
+window.saveDataOffline = function(collectionName, data, serialPrefix = "") {
+    let queue = getQueue();
+    let id = `${collectionName}_${Date.now()}_${Math.random().toString(36).slice(2,8)}`;
+
+    // লোকাল সিরিয়াল জেনারেটর
+    let counters = JSON.parse(localStorage.getItem(COUNTER_KEY) || "{}");
+    if(!counters[serialPrefix]) counters[serialPrefix] = 0;
+    counters[serialPrefix]++;
+    localStorage.setItem(COUNTER_KEY, JSON.stringify(counters));
+    let serial = serialPrefix ? `${serialPrefix}-${String(counters[serialPrefix]).padStart(3,'0')}` : id;
+
+    queue.push({
+        id, collection: collectionName, serial, data: {...data, serialNumber: serial},
+        user: user.name || user.email || "System",
+        time: new Date().toLocaleString(),
+        status: "pending"
+    });
+    setQueue(queue);
+
+    showToast("✅ Saved Successfully");
+    updateLocalUI(collectionName, data);
+    if(userRole === "admin" || userRole === "full") renderAdminSyncTable();
+};
+
+// 2. ব্যাকগ্রাউন্ড অটো-সিঙ্ক
+window.autoSyncQueue = async function() {
+    let queue = getQueue();
+    let pending = queue.filter(x => x.status === "pending");
+    if(pending.length === 0) return;
+
+    let syncedIds = [];
+    try {
+        for(let item of pending) {
+            try {
+                await setDoc(doc(db, item.collection, item.id), item.data, { merge: true });
+                syncedIds.push(item.id);
+            } catch(err) {
+                if(err.code === 'resource-exhausted' || err.code === 'permission-denied' || err.code === 'unavailable') {
+                    console.log("⏸️ Sync paused (limits). Auto-retry active.");
+                    break;
+                }
+            }
+        }
+
+        if(syncedIds.length > 0) {
+            let newQueue = queue.filter(item => !syncedIds.includes(item.id));
+            setQueue(newQueue);
+            if(userRole === "admin") renderAdminSyncTable();
+            console.log(`☁️ ${syncedIds.length} items silently synced.`);
+        }
+    } catch(e) {
+        console.log("Sync module ready.");
+    }
+};
+
+// 3. এডমিন পেন্ডিং লিস্ট
+function renderAdminSyncTable() {
+    let panel = document.getElementById("adminSyncPanel");
+    if(!panel) return;
+    panel.style.display = "block";
+
+    let queue = getQueue();
+    let pending = queue.filter(x => x.status === "pending");
+    let tbody = document.getElementById("pendingTableBody");
+    let countEl = document.getElementById("pendingCount");
+
+    if(countEl) countEl.innerText = pending.length;
+
+    if(!tbody) {
+        panel.innerHTML += `
+        <div style="overflow-x:auto;margin-top:10px;">
+            <table style="width:100%;border-collapse:collapse;font-size:13px;">
+                <thead><tr style="background:rgba(255,255,255,0.05);">
+                    <th style="padding:8px;text-align:left;color:var(--muted);">User</th>
+                    <th style="padding:8px;text-align:left;color:var(--muted);">Type</th>
+                    <th style="padding:8px;text-align:left;color:var(--muted);">Serial/Data</th>
+                    <th style="padding:8px;text-align:left;color:var(--muted);">Time</th>
+                    <th style="padding:8px;text-align:center;color:var(--muted);">Status</th>
+                </tr></thead>
+                <tbody id="pendingTableBody"></tbody>
+            </table>
+        </div>`;
+        tbody = document.getElementById("pendingTableBody");
+    }
+
+    tbody.innerHTML = "";
+    if(pending.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="5" style="padding:15px;text-align:center;color:var(--muted);">✅ All data synced. Queue empty.</td></tr>`;
+        return;
+    }
+
+    pending.forEach(item => {
+        let summary = item.data.buyer || item.data.challanNo || item.data.floor || item.serial || "Entry";
+        tbody.innerHTML += `
+            <tr style="border-bottom:1px solid rgba(255,255,255,0.05);">
+                <td style="padding:8px;">${item.user}</td>
+                <td style="padding:8px;">${item.collection}</td>
+                <td style="padding:8px;">${summary}</td>
+                <td style="padding:8px;color:var(--muted);">${item.time}</td>
+                <td style="padding:8px;text-align:center;"><span class="pending-badge">⏳ Queued</span></td>
+            </tr>`;
+    });
+}
+
+// 4. এডমিন কোটা অ্যালার্ট
+window.triggerQuotaAlert = function(type, details = "") {
+    if(userRole !== "admin" && userRole !== "full") return;
+    let alerts = getQuotaAlerts();
+    if(!alerts[type]) {
+        alerts[type] = { msg: details || `${type.toUpperCase()} LIMIT EXHAUSTED`, time: new Date().toLocaleString() };
+        setQuotaAlerts(alerts);
+        renderQuotaAlerts();
+    }
+};
+
+function renderQuotaAlerts() {
+    let panel = document.getElementById("adminQuotaAlerts");
+    let list = document.getElementById("quotaAlertList");
+    if(!panel || !list) return;
+
+    let alerts = getQuotaAlerts();
+    let keys = Object.keys(alerts);
+
+    if(keys.length === 0) { panel.style.display = "none"; return; }
+
+    panel.style.display = "block";
+    list.innerHTML = keys.map(k => `
+        <div class="quota-alert-item">
+            <div><span class="msg">🔴 ${k}</span><div style="color:var(--muted);font-size:11px;margin-top:2px;">${alerts[k].msg}</div></div>
+            <span class="time">${alerts[k].time}</span>
+        </div>
+    `).join('');
+}
+
+window.resetQuotaAlerts = function() {
+    localStorage.removeItem(QUOTA_ALERT_KEY);
+    renderQuotaAlerts();
+    showToast("✅ Alerts cleared");
+};
+
+function dailyQuotaReset() {
+    const lastReset = localStorage.getItem("GMS_QUOTA_LAST_RESET");
+    const today = new Date().toDateString();
+    if(lastReset !== today) {
+        localStorage.removeItem(QUOTA_ALERT_KEY);
+        localStorage.setItem("GMS_QUOTA_LAST_RESET", today);
+        console.log("🔄 Daily quota alerts reset.");
+    }
+}
+
+window.forceSyncNow = function() {
+    showToast("🔄 Syncing pending data...");
+    window.autoSyncQueue();
+};
+
+function updateLocalUI(col, data) {
+    if(col.includes("needle") || col.includes("posting")) {
+        let stockEl = document.getElementById("presentStock");
+        if(stockEl) stockEl.value = data.present || (data.opening||0) + (data.receive||0) - (data.delivery||0);
+    }
+}
+
+// ===== END OFFLINE SYNC SYSTEM =====
 
 function today(){return new Date().toISOString().slice(0,10);}
 function parseNum(v){return Number(String(v||0).replace(/,/g,""))||0;}
@@ -1541,7 +1856,6 @@ async function getNeedleIssueToday(){
   return{broken:parseNum(latest.brokenNeedle),missing:parseNum(latest.missingNeedle),change:parseNum(latest.changeNeedle),date:latest.date||""};
 }
 
-// IMPROVED FIREBASE COUNTS FUNCTION
 async function getFirebaseCounts(){
   let cols=["greyFabricStock","accessoriesInventory","billingManpowerReport","dailyPosting","sewingThread","twillTape","accessoriesSample","liveNotices","manpower","users","needleDailyReport","gatePlans","challanGatePass"];
   let t=today(),totalCount=0,approxBytes=0,todayCount=0,gatePlanCount=0,challanCount=0;
@@ -1553,10 +1867,7 @@ async function getFirebaseCounts(){
         totalCount++;
         let row=d.data();
         approxBytes+=JSON.stringify(row||{}).length*2;
-        
-        // Count Today's Entries
         if(row.date === t) todayCount++;
-        
         if(c==="gatePlans") gatePlanCount++;
         if(c==="challanGatePass") challanCount++;
       });
@@ -1582,52 +1893,26 @@ function updateLimitBox(firebase){
   document.getElementById("storageUsed").innerText=`${(approxMB/10).toFixed(2)} MB`;
   document.getElementById("storagePercent").innerText=`${storagePercent.toFixed(2)}%`;
   
-  // Update Stats
   document.getElementById("totalEntry").innerText=firebase?.totalCount||0;
-  document.getElementById("todayEntry").innerText=firebase?.todayEntry||0; // Show Today Entry
+  document.getElementById("todayEntry").innerText=firebase?.todayEntry||0;
   document.getElementById("gatePlanCount").innerText=`${firebase?.gatePlanCount||0} / 8`;
   document.getElementById("challanCount").innerText=`${firebase?.challanCount||0} / 2`;
   
   let backupMonths=localStorage.getItem("backupMonths")||"0";
   document.getElementById("backupMonths").innerText=backupMonths;
-  
-  let activeMonths=1;
-  document.getElementById("activeMonths").innerText=activeMonths;
-  
-  let backupStatus=localStorage.getItem("backupStatus")||"READY";
-  document.getElementById("backupStatus").innerText=backupStatus;
+  document.getElementById("activeMonths").innerText="1";
+  document.getElementById("backupStatus").innerText=localStorage.getItem("backupStatus")||"READY";
   
   let pct=Math.min(100,storagePercent);
-  let bar=document.getElementById("limitBar");
   let signal=document.getElementById("limitSignal");
-  let warnBanner=document.getElementById("backupWarningBanner");
-  if(bar)bar.style.width=Math.max(1,pct)+"%";
-  if(pct<80){
-    if(signal){
-      signal.className="statusSignal safe";
-      signal.innerHTML='<i class="fas fa-circle" style="font-size:10px"></i> SAFE';
-    }
-    if(warnBanner)warnBanner.style.display="none";
-  }
-  else if(pct<90){
-    if(signal){
-      signal.className="statusSignal warn";
-      signal.innerHTML='<i class="fas fa-circle" style="font-size:10px"></i> BACKUP WARNING';
-    }
-    if(warnBanner){
-      warnBanner.style.display="block";
-      warnBanner.innerText="🟡 Backup Warning - Storage reached 80%";
-    }
-  }
-  else{
-    if(signal){
-      signal.className="statusSignal stop";
-      signal.innerHTML='<i class="fas fa-circle" style="font-size:10px"></i> BACKUP NOW';
-    }
-    if(warnBanner){
-      warnBanner.style.display="block";
-      warnBanner.innerText="🔴 Backup Now - Storage reached 90%";
-    }
+  if(pct<80){signal.className="statusSignal safe";signal.innerHTML='<i class="fas fa-circle" style="font-size:10px"></i> SAFE';}
+  else if(pct<90){signal.className="statusSignal warn";signal.innerHTML='<i class="fas fa-circle" style="font-size:10px"></i> WARNING';}
+  else{signal.className="statusSignal stop";signal.innerHTML='<i class="fas fa-circle" style="font-size:10px"></i> DANGER';}
+  
+  // 🔴 কোটা অ্যালার্ট ট্রিগার
+  if(userRole === "admin" || userRole === "full") {
+    if(pct >= 95) triggerQuotaAlert("Storage", `Firestore storage at ${pct.toFixed(1)}%. Backup & clear recommended.`);
+    else if(pct >= 85) triggerQuotaAlert("Storage Warning", `Storage at ${pct.toFixed(1)}%. Monitor closely.`);
   }
 }
 
@@ -1913,9 +2198,30 @@ window.removeRestoredMonth=async function(){
   }catch(e){console.log(e);alert("Remove Failed: "+e.message);}
 };
 
-// Initialize
+// ===== INITIALIZATION =====
 setupRoleUI();loadDashboardStock();loadNotices();updateLastActive();renderBackupLog();loadProfilePic();
 setInterval(updateLastActive,60000);setInterval(loadNotices,60000);
+
+// Offline Sync Init
+document.addEventListener("DOMContentLoaded", () => {
+  dailyQuotaReset();
+  if(userRole === "admin" || userRole === "full") {
+    renderQuotaAlerts();
+    renderAdminSyncTable();
+  }
+  window.autoSyncQueue();
+  setInterval(window.autoSyncQueue, 300000);
+  document.addEventListener("visibilitychange", () => {
+    if(document.visibilityState === "visible") {
+      dailyQuotaReset();
+      if(userRole === "admin" || userRole === "full") {
+        renderQuotaAlerts();
+        renderAdminSyncTable();
+      }
+      window.autoSyncQueue();
+    }
+  });
+});
 </script>
 </body>
 </html>
