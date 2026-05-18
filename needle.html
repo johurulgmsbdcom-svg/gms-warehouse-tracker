@@ -34,11 +34,6 @@ h2{
   text-align:center;
   margin-bottom:8px!important;
   font-size:12px;
-  display:flex;
-  flex-wrap:wrap;
-  justify-content:center;
-  align-items:center;
-  gap:6px;
 }
 
 button{
@@ -57,10 +52,9 @@ button{
 .pdfBtn{background:#7c3aed}
 .homeBtn{background:#2563eb}
 .saveBtn{background:green}
-.auditBtn{background:#f59e0b}
 
 input,select,textarea,button{
-  font-size:16px;
+  font-size:16px; /* mobile/app focus zoom off */
 }
 
 select,
@@ -72,6 +66,7 @@ input[type="text"]{
   max-width:150px;
 }
 
+/* full screen fit: no side scroll */
 .tableWrap{
   width:100%;
   max-width:100%;
@@ -110,6 +105,7 @@ input[type="text"]{
   font-weight:bold;
 }
 
+/* column width total 100% */
 .col-sl{width:6%;font-size:9px!important}
 .col-type{width:22%;font-size:10px!important}
 .col-size{width:8%;font-size:10px!important}
@@ -124,7 +120,7 @@ input[type="text"]{
   height:24px;
   padding:1px;
   text-align:center;
-  font-size:16px;
+  font-size:16px; /* focus zoom off */
   font-weight:bold;
   border:1px solid #999;
   border-radius:3px;
@@ -156,75 +152,6 @@ input[type="text"]{
   padding:2px;
   font-size:10px;
 }
-
-/* AUDIT MODAL STYLES */
-#auditModal{
-  display:none;
-  position:fixed;
-  top:0;
-  left:0;
-  width:100%;
-  height:100%;
-  background:rgba(0,0,0,0.85);
-  z-index:9999;
-  overflow:auto;
-  backdrop-filter:blur(3px);
-}
-
-.modalContent{
-  background:#1e293b;
-  margin:5% auto;
-  padding:15px;
-  border-radius:12px;
-  max-width:95%;
-  width:900px;
-  box-shadow:0 10px 30px rgba(0,0,0,0.5);
-}
-
-.modalHeader{
-  display:flex;
-  justify-content:space-between;
-  align-items:center;
-  margin-bottom:12px;
-}
-
-.modalHeader h3{
-  color:#fbbf24;
-  margin:0;
-}
-
-.closeBtn{
-  background:#ef4444;
-  padding:6px 12px;
-  font-size:12px;
-}
-
-#auditTable{
-  width:100%;
-  border-collapse:collapse;
-  background:white;
-  color:black;
-  font-size:12px;
-}
-
-#auditTable th{
-  background:#0f172a;
-  color:white;
-  padding:8px 5px;
-  position:sticky;
-  top:0;
-}
-
-#auditTable td{
-  padding:6px 5px;
-  border:1px solid #cbd5e1;
-  text-align:left;
-  vertical-align:top;
-}
-
-.action-CREATE{color:#16a34a;font-weight:bold}
-.action-UPDATE{color:#d97706;font-weight:bold}
-.action-DELETE{color:#dc2626;font-weight:bold}
 
 @media(max-width:480px){
   body{padding:2px}
@@ -299,7 +226,6 @@ input[type="text"]{
 
 <div class="topControls">
 Operator: <input type="text" id="operatorName" placeholder="Enter name" style="max-width:120px;">
-
 Date: <input type="date" id="postDate">
 
 Floor:
@@ -323,7 +249,6 @@ Floor:
 <button class="deleteBtn" onclick="deleteData()">Delete Data</button>
 <button class="excelBtn" onclick="exportExcel()">Export Excel</button>
 <button class="pdfBtn" onclick="exportPDF()">PDF / Print</button>
-<button class="auditBtn" onclick="openAuditModal()">📋 Audit Log</button>
 <button class="homeBtn" onclick="location.href='index.html'">Back Home</button>
 </div>
 
@@ -373,27 +298,9 @@ Floor:
 </div>
 </div>
 
-<!-- AUDIT MODAL -->
-<div id="auditModal">
-  <div class="modalContent">
-    <div class="modalHeader">
-      <h3>📋 Audit Trail - Who Did What</h3>
-      <button class="closeBtn" onclick="document.getElementById('auditModal').style.display='none'">✕ Close</button>
-    </div>
-    <div style="max-height:70vh;overflow:auto;">
-      <table id="auditTable">
-        <thead>
-          <tr><th>Date/Time</th><th>Floor</th><th>Operator</th><th>Action</th><th>Details / Changes</th></tr>
-        </thead>
-        <tbody id="auditBody"></tbody>
-      </table>
-    </div>
-  </div>
-</div>
-
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-app.js";
-import { getFirestore, doc, setDoc, getDoc, deleteDoc, collection, getDocs, addDoc, query, orderBy, limit } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-firestore.js";
+import { getFirestore, doc, setDoc, getDoc, deleteDoc, collection, getDocs, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-firestore.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyD-wBCF5eeWMHobLFOhBzKW7aB2pagz9-w",
@@ -1129,7 +1036,7 @@ function updateTotal(){
 async function saveData(){
   let date=document.getElementById("postDate").value;
   let floor=document.getElementById("floor").value;
-  let operator=document.getElementById("operatorName").value.trim() || "Unknown";
+  let operator=document.getElementById("operatorName").value.trim() || localStorage.getItem("lastOperator") || "Unknown";
   let items=getItems();
 
   if(!date){
@@ -1164,20 +1071,12 @@ async function saveData(){
       let old = oldRows[i] || {};
       let neu = rows[i];
       if(JSON.stringify(old) !== JSON.stringify(neu)){
-        changed.push({
-          sl: neu.sl, 
-          type: neu.needleType, 
-          size: neu.size, 
-          oldRcv: old.receive, 
-          newRcv: neu.receive, 
-          oldDlv: old.delivery, 
-          newDlv: neu.delivery
-        });
+        changed.push({sl: neu.sl, type: neu.needleType, size: neu.size, oldRcv: old.receive, newRcv: neu.receive, oldDlv: old.delivery, newDlv: neu.delivery});
       }
     }
     details = {changedItems: changed, count: changed.length};
   } else {
-    details = {totalItems: rows.length, action: "New posting created"};
+    details = {totalItems: rows.length, msg: "New posting"};
   }
 
   await setDoc(docRef,{
@@ -1185,19 +1084,23 @@ async function saveData(){
     month:getMonth(date),
     floor:floor,
     rows:rows,
-    updatedAt: new Date()
+    operator:operator,
+    updatedAt: serverTimestamp()
   });
 
-  // AUDIT LOG SAVE
-  await addDoc(collection(db, "auditLogs"), {
-    action: action,
-    floor: floor,
-    date: date,
-    operator: operator,
-    timestamp: new Date(),
-    details: details
-  });
+  // 🔹 Silent Audit Log (Background e save hobe)
+  try {
+    await addDoc(collection(db, "auditLogs"), {
+      action: action,
+      floor: floor,
+      date: date,
+      operator: operator,
+      timestamp: serverTimestamp(),
+      details: details
+    });
+  } catch(e) { console.error("Audit log error:", e); }
 
+  localStorage.setItem("lastOperator", operator);
   await loadData();
   alert("Saved Successfully");
 }
@@ -1205,7 +1108,7 @@ async function saveData(){
 async function deleteData(){
   let date=document.getElementById("postDate").value;
   let floor=document.getElementById("floor").value;
-  let operator=document.getElementById("operatorName").value.trim() || "Unknown";
+  let operator=document.getElementById("operatorName").value.trim() || localStorage.getItem("lastOperator") || "Unknown";
 
   if(!date){
     alert("Date select koro");
@@ -1218,19 +1121,16 @@ async function deleteData(){
   let oldDoc = await getDoc(docRef);
   
   if(oldDoc.exists()){
-    // AUDIT LOG BEFORE DELETE
-    await addDoc(collection(db, "auditLogs"), {
-      action: "DELETE",
-      floor: floor,
-      date: date,
-      operator: operator,
-      timestamp: new Date(),
-      details: {
-        deletedFloor: floor, 
-        deletedDate: date, 
-        itemsCount: oldDoc.data().rows?.length || 0
-      }
-    });
+    try {
+      await addDoc(collection(db, "auditLogs"), {
+        action: "DELETE",
+        floor: floor,
+        date: date,
+        operator: operator,
+        timestamp: serverTimestamp(),
+        details: { deletedFloor: floor, deletedDate: date, itemsCount: oldDoc.data().rows?.length || 0 }
+      });
+    } catch(e) { console.error("Audit log error:", e); }
   }
   
   await deleteDoc(docRef);
@@ -1246,6 +1146,7 @@ async function loadData(){
   if(!date){
     loadTable();
     showMonthlySummary(0,0,0,0,0);
+    document.getElementById("operatorName").value = localStorage.getItem("lastOperator") || "";
     return;
   }
 
@@ -1303,6 +1204,9 @@ async function loadData(){
   }
 
   loadTable(previousList);
+
+  // 🔹 Operator Auto-Fill Logic
+  document.getElementById("operatorName").value = todayData?.operator || localStorage.getItem("lastOperator") || "";
 
   for(let i=0;i<items.length;i++){
     document.getElementById("r"+i).value = todayReceive[i] || "";
@@ -1374,32 +1278,6 @@ window.deleteData=deleteData;
 window.loadData=loadData;
 window.exportExcel=exportExcel;
 window.exportPDF=exportPDF;
-
-// AUDIT MODAL FUNCTION
-window.openAuditModal = async function(){
-  document.getElementById("auditModal").style.display = "block";
-  
-  let q = query(collection(db, "auditLogs"), orderBy("timestamp", "desc"), limit(150));
-  let snap = await getDocs(q);
-  let html = "";
-  
-  snap.forEach(d => {
-    let data = d.data();
-    let ts = data.timestamp ? new Date(data.timestamp.seconds * 1000).toLocaleString() : "-";
-    let det = typeof data.details === 'object' ? JSON.stringify(data.details).replace(/"/g, "'") : data.details;
-    let shortDet = det.length > 120 ? det.substring(0, 120) + "..." : det;
-    
-    html += `<tr>
-      <td style="white-space:nowrap">${ts}</td>
-      <td>${data.floor}</td>
-      <td>${data.operator}</td>
-      <td class="action-${data.action}">${data.action}</td>
-      <td style="font-size:11px;word-break:break-word">${shortDet}</td>
-    </tr>`;
-  });
-  
-  document.getElementById("auditBody").innerHTML = html || "<tr><td colspan='5' style='text-align:center;padding:20px;'>📭 No audit logs found</td></tr>";
-};
 
 // Enter dile same column er nicher box e jabe, Tab dile samner box e jabe
 document.addEventListener("keydown", function(e){
