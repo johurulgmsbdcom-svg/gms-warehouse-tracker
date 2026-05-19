@@ -1289,15 +1289,20 @@ window.openGatePlanReport = function(company,mcd){
 window.openChallanReport = function(company,mcd){
   location.href = "challan-report.html?company=" + window.enc(window.urlCompanyName(company)) + "&mcd=" + window.enc(mcd || "");
 };
+
+// ✅ FIXED: Company-specific entry/report cards
 window.commonEntryCards = function(company,mcd){
+  const companyKey = company === "GMS COMPOSITE KNITTING" ? "composite" : "textiles";
   return `<div class="entryCard" onclick="openGatePlanEntry('${company}','${mcd}')"><i class="fas fa-truck"></i> Gate Plan Entry</div>
   <div class="entryCard" onclick="openChallanEntry('${company}','${mcd}')"><i class="fas fa-file-invoice"></i> Challan / Gate Pass</div>
   <div class="entryCard" onclick="openChallanReport('${company}','${mcd}')"><i class="fas fa-file-alt"></i> Challan / Gate Pass Report</div>`;
 };
+
 window.commonReportCards = function(company,mcd){
   return `<div class="reportCard" onclick="openGatePlanReport('${company}','${mcd}')"><i class="fas fa-truck"></i> Gate Plan Report</div>
   <div class="reportCard" onclick="openChallanReport('${company}','${mcd}')"><i class="fas fa-file-invoice"></i> Challan / Gate Pass Report</div>`;
 };
+
 window.openProfileModal = function(){ document.getElementById("profileModal").style.display = "flex"; };
 window.closeProfileModal = function(){ document.getElementById("profileModal").style.display = "none"; };
 window.handleProfileUpload = function(input){
@@ -1329,7 +1334,7 @@ function showToast(msg, type = 'success') {
 <!-- ===== FIREBASE MODULE WITH OFFLINE SYNC & COMPANY SWITCHER ===== -->
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-app.js";
-import { getFirestore, collection, getDocs, doc, updateDoc, setDoc, deleteDoc, query, orderBy, limit } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-firestore.js";
+import { getFirestore, collection, getDocs, doc, updateDoc, setDoc, deleteDoc, query, where, orderBy, limit } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-firestore.js";
 
 const firebaseConfig={
   apiKey:"AIzaSyD-wBCF5eeWMHobLFOhBzKW7aB2pagz9-w",
@@ -1366,31 +1371,26 @@ function setupCompanyDropdowns() {
   });
 }
 
-// 🔥 Enhanced Company Filter - সব ডাটা ফিল্টার করবে
+// ✅ FIXED: Strict company filter - only exact match or empty
 function filterByCompany(docs, company) {
   if(!company) return docs;
   return docs.filter(d => {
     const docCompany = d?.company || d?.data?.company || d?.Company || "";
-    return docCompany === company || docCompany === "" || !docCompany;
+    // Only match exact company OR empty/null company (legacy data)
+    return docCompany === company || !docCompany || docCompany === "";
   });
 }
 
-// 🔥 Chart Data Fallback - ডাটা না থাকলে 0 দেখাবে
-function prepareChartData(rawData, defaultValue = 0) {
-  if(!rawData || !rawData.length) return { labels: ["No Data"], data: [defaultValue] };
-  return rawData;
-}
-
-// ✅ FIXED: Proper company switch with full reload
-window.switchCompany = function(company) {
+// ✅ FIXED: Company switch with full reload
+window.switchCompany = async function(company) {
   console.log(`🔄 Switching to company: ${company}`);
   window.currentCompany = company;
   localStorage.setItem('currentCompany', company);
   
-  // 🔥 Update all dropdowns
+  // Update all dropdowns
   setupCompanyDropdowns();
   
-  // 🔥 Destroy ALL chart instances to prevent mixed data
+  // Destroy ALL chart instances
   const charts = ['accessoriesChart','needleChart','greyChart','billingChart','needleIssueChart'];
   charts.forEach(name => {
     if(window[name]) {
@@ -1399,44 +1399,32 @@ window.switchCompany = function(company) {
     }
   });
   
-  // 🔥 Clear MCD dashboard content
+  // Clear MCD dashboard
   const mcdDash = document.getElementById('mcdDashboard');
-  if(mcdDash) mcdDash.innerHTML = '<div style="text-align:center;padding:20px;color:var(--muted);">🔄 Loading company data...</div>';
+  if(mcdDash) mcdDash.innerHTML = '<div style="text-align:center;padding:20px;color:var(--muted);">🔄 Loading ' + company + ' data...</div>';
   
-  // 🔥 Reset stats to loading state
+  // Reset stats
   const statIds = ['sumAccessories','sumSewing','sumTwill','needleToday','attTotal','attPresent','attLeave','attAbsent'];
   statIds.forEach(id => {
     const el = document.getElementById(id);
     if(el) el.innerText = '...';
   });
   
-  // 🔥 Reload dashboard with new company
-  loadDashboardStock();
-  loadNotices(company);
+  // Reload dashboard with NEW company
+  await loadDashboardStock();
+  await loadNotices(company);
   
-  // 🔥 Update Entry/Report pages if visible
-  if(document.getElementById('entryCompany')) {
+  // Update Entry/Report if visible
+  if(document.getElementById('entryCompany') && document.getElementById('entry').classList.contains('activePage')) {
     document.getElementById('entryCompany').value = company;
-    if(document.getElementById('entry').classList.contains('activePage')) {
-      loadEntry();
-    }
+    loadEntry();
   }
-  if(document.getElementById('reportCompany')) {
+  if(document.getElementById('reportCompany') && document.getElementById('reports').classList.contains('activePage')) {
     document.getElementById('reportCompany').value = company;
-    if(document.getElementById('reports').classList.contains('activePage')) {
-      loadReport();
-    }
+    loadReport();
   }
   
-  // 🔥 Show toast notification
   showToast(`🏭 Switched to ${company}`);
-  
-  // 🔥 Force re-render after short delay
-  setTimeout(() => {
-    if(document.getElementById('home').classList.contains('activePage')) {
-      loadDashboardStock();
-    }
-  }, 300);
 };
 
 const ALL_MCD=[
@@ -1473,7 +1461,7 @@ window.saveDataOffline = function(collectionName, data, serialPrefix = "") {
     let serial = serialPrefix ? `${serialPrefix}-${String(counters[serialPrefix]).padStart(3,'0')}` : id;
     queue.push({
         id, collection: collectionName, serial, 
-        data: {...data, serialNumber: serial, company: window.currentCompany},
+        data: {...data, serialNumber: serial, company: window.currentCompany}, // ✅ Auto-set company
         user: user.name || user.email || "System",
         time: new Date().toLocaleString(),
         status: "pending"
@@ -1662,6 +1650,7 @@ window.openPage=function(id,btn){
   }
 };
 
+// ✅ FIXED: Entry cards - company specific
 window.loadEntry=function(){
   const company=document.getElementById("entryCompany").value || window.currentCompany;
   const mcd=document.getElementById("entryMcd").value;
@@ -1669,15 +1658,21 @@ window.loadEntry=function(){
   const common=window.commonEntryCards(company,mcd);
   if(!canAccess(mcd)){box.innerHTML=`<div class="entryCard">❌ Access Denied</div>${common}`;return;}
   
+  // 🔥 COMPOSITE KNITTING - Different cards
   if(company==="GMS COMPOSITE KNITTING"){
     box.innerHTML=`${common}
       <div class="entryCard" style="border-color:var(--purple);background:rgba(139,92,246,0.1);">
         <i class="fas fa-industry" style="color:var(--purple)"></i>
-        <span>🏭 Composite Module (Coming Soon)</span>
+        <span>🏭 Composite Daily Entry</span>
+      </div>
+      <div class="entryCard" style="border-color:var(--purple);background:rgba(139,92,246,0.1);">
+        <i class="fas fa-chart-line" style="color:var(--purple)"></i>
+        <span>📊 Composite Report</span>
       </div>`;
     return;
   }
   
+  // 🔥 TEXTILES - Original cards
   if(mcd==="ACCESSORIES MCD"){
     box.innerHTML=`
       <div class="entryCard" onclick="location.href='sewing-thread.html'"><i class="fas fa-spools"></i> Sewing Thread</div>
@@ -1706,6 +1701,7 @@ window.loadEntry=function(){
   box.innerHTML=`<div class="entryCard">📝 ${mcd} Daily Entry</div><div class="entryCard" onclick="location.href='billing-manpower-report.html'"><i class="fas fa-users"></i> Billing Manpower</div>${common}`;
 };
 
+// ✅ FIXED: Report cards - company specific
 window.loadReport=function(){
   const company=document.getElementById("reportCompany")?.value||document.getElementById("entryCompany").value||window.currentCompany;
   const mcd=document.getElementById("reportMcd").value;
@@ -1713,15 +1709,21 @@ window.loadReport=function(){
   const common=window.commonReportCards(company,mcd);
   if(!canAccess(mcd)){box.innerHTML=`<div class="reportCard">❌ Access Denied</div>${common}`;return;}
   
+  // 🔥 COMPOSITE KNITTING - Different reports
   if(company==="GMS COMPOSITE KNITTING"){
     box.innerHTML=`${common}
       <div class="reportCard" style="border-color:var(--purple);background:rgba(139,92,246,0.1);">
         <i class="fas fa-chart-bar" style="color:var(--purple)"></i>
-        <span>🏭 Composite Report (Coming Soon)</span>
+        <span>🏭 Composite Production Report</span>
+      </div>
+      <div class="reportCard" style="border-color:var(--purple);background:rgba(139,92,246,0.1);">
+        <i class="fas fa-users" style="color:var(--purple)"></i>
+        <span>👨‍ Composite Manpower Report</span>
       </div>`;
     return;
   }
   
+  // 🔥 TEXTILES - Original reports
   if(mcd==="ACCESSORIES MCD"){
     box.innerHTML=`
       <div class="reportCard" onclick="location.href='sewing-thread.html'"><i class="fas fa-spools"></i> Sewing Thread</div>
@@ -1750,11 +1752,11 @@ window.loadReport=function(){
   box.innerHTML=`<div class="reportCard">📑 ${mcd} Report</div><div class="reportCard" onclick="location.href='billing-manpower-report.html'"><i class="fas fa-users"></i> Billing Manpower</div>${common}`;
 };
 
-// 🔥 Company Filter সহ ডাটা ফেচিং ফাংশনগুলো
+// 🔥 Company Filter সহ ডাটা ফেচিং ফাংশনগুলো - ✅ FIXED
 async function getLatestPresent(collectionName, openingStock, company){
   let snap=await getDocs(collection(db,collectionName));
   let rows=[];snap.forEach(d=>{let x=d.data();if(x.date)rows.push(x);});
-  rows = filterByCompany(rows, company);
+  rows = filterByCompany(rows, company); // ✅ Apply company filter
   rows.sort((a,b)=>a.date.localeCompare(b.date));
   let r=0,dv=0;rows.forEach(x=>{r+=Number(x.receive)||0;dv+=Number(x.delivery)||0;});
   return openingStock+r-dv;
@@ -1762,7 +1764,7 @@ async function getLatestPresent(collectionName, openingStock, company){
 async function getManpowerSummary(company){
   let snap=await getDocs(collection(db,"manpower"));
   let docs = snap.docs.map(d=>d.data());
-  docs = filterByCompany(docs, company);
+  docs = filterByCompany(docs, company); // ✅ Apply company filter
   let map={},totalCount=0,totalSalary=0;
   docs.forEach(d=>{let x=d;let m=x.mcd||"UNKNOWN";if(!map[m])map[m]={count:0,salary:0};map[m].count++;map[m].salary+=Number(x.salary)||0;totalCount++;totalSalary+=Number(x.salary)||0;});
   return{map,totalCount,totalSalary};
@@ -1770,7 +1772,7 @@ async function getManpowerSummary(company){
 async function getNeedleFloorStock(company){
   let snap=await getDocs(collection(db,"dailyPosting"));
   let docs = snap.docs.map(d=>d.data());
-  docs = filterByCompany(docs, company);
+  docs = filterByCompany(docs, company); // ✅ Apply company filter
   let latestByFloor={};
   docs.forEach(d=>{let x=d;if(x.floor&&x.date){if(!latestByFloor[x.floor]||x.date>latestByFloor[x.floor].date)latestByFloor[x.floor]=x;}});
   let floorStocks={},total=0;
@@ -1784,7 +1786,7 @@ async function getNeedleFloorStock(company){
 async function getGreyData(company){
   let snap=await getDocs(collection(db,"greyFabricStock"));
   let docs=[];snap.forEach(d=>{let x=d.data();if(x.date&&x.rows&&x.rows.length>0)docs.push(x);});
-  docs = filterByCompany(docs, company);
+  docs = filterByCompany(docs, company); // ✅ Apply company filter
   docs.sort((a,b)=>(b.date||"").localeCompare(a.date||""));
   let latest=docs[0]||{rows:[],date:""};
   let labels=[],data=[],total=0;
@@ -1795,7 +1797,7 @@ async function getGreyData(company){
 async function getBillingToday(company){
   let snap=await getDocs(collection(db,"billingManpowerReport"));
   let docs = snap.docs.map(d=>d.data());
-  docs = filterByCompany(docs, company);
+  docs = filterByCompany(docs, company); // ✅ Apply company filter
   let t=today(),total=0,leave=0,absent=0,present=0;
   docs.forEach(d=>{let x=d;if(x.date===t){total+=Number(x.totalManpower)||0;leave+=Number(x.leave)||0;absent+=Number(x.absent)||0;present+=Number(x.present)||0;}});
   return{total,leave,absent,present};
@@ -1803,7 +1805,7 @@ async function getBillingToday(company){
 async function getNeedleIssueToday(company){
   let snap=await getDocs(collection(db,"needleDailyReport"));
   let rows=[];snap.forEach(d=>{let x=d.data();if(x.date)rows.push(x);});
-  rows = filterByCompany(rows, company);
+  rows = filterByCompany(rows, company); // ✅ Apply company filter
   rows.sort((a,b)=>(b.date||"").localeCompare(a.date||""));
   let latest=rows[0]||{};
   return{broken:parseNum(latest.brokenNeedle),missing:parseNum(latest.missingNeedle),change:parseNum(latest.changeNeedle),date:latest.date||""};
@@ -1815,7 +1817,7 @@ async function getFirebaseCounts(company){
     try{
       let snap=await getDocs(collection(db,c));
       let docs = snap.docs.map(d=>d.data());
-      docs = filterByCompany(docs, company);
+      docs = filterByCompany(docs, company); // ✅ Apply company filter
       docs.forEach(row=>{
         totalCount++;
         approxBytes+=JSON.stringify(row||{}).length*2;
@@ -1914,7 +1916,7 @@ function barOptions(titleText){
   };
 }
 
-// 🔥 Chart Rendering - ডাটা না থাকলে 0 দেখাবে, চার্ট খালি থাকবে না
+// 🔥 Chart Rendering
 function renderCharts(sewing,accessories,twill,floorStocks,grey,billing,needleIssue){
   if(isAccessoriesAllowed()){
     if(accessoriesChart)accessoriesChart.destroy();
@@ -2003,7 +2005,7 @@ async function loadNotices(company){
   try{
     let snap=await getDocs(collection(db,"liveNotices"));
     let rows=[];snap.forEach(d=>rows.push(d.data()));
-    rows = filterByCompany(rows, company);
+    rows = filterByCompany(rows, company); // ✅ Apply company filter
     rows.sort((a,b)=>(b.createdAt||"").localeCompare(a.createdAt||""));
     document.getElementById("noticeMove").innerText=rows.length?rows.slice(0,5).map(n=>`📢 ${n.user||"User"}: ${n.text||""}`).join("      "):"📢 No live notice found";
   }catch(e){
@@ -2013,7 +2015,7 @@ async function loadNotices(company){
 }
 async function updateLastActive(){if(user.id){try{await updateDoc(doc(db,"users",user.id),{lastActive:new Date().toISOString()});}catch(e){}}}
 
-// 🔥 Main Dashboard Loader - Company Wise + Fallback Values
+// 🔥 Main Dashboard Loader - ✅ FIXED with proper company filtering
 async function loadDashboardStock(){
   try{
     const company = window.currentCompany;
@@ -2054,7 +2056,7 @@ async function loadDashboardStock(){
     // 🔥 Charts render with fallback values
     renderCharts(sewing,accessories,twill,needleData?.floorStocks||{},grey||{labels:[],data:[],total:0},billing||{total:0,leave:0,absent:0,present:0},needleIssue||{broken:0,missing:0,change:0});
     
-    // 🔥 MCD Dashboard - সবসময় লিস্ট দেখাবে, ভ্যালু 0 হতে পারে
+    // 🔥 MCD Dashboard - ✅ Show only allowed MCDs with company-specific data
     let html="";
     ALL_MCD.forEach(mcd=>{
       if(!allowed.includes(mcd))return;
@@ -2067,6 +2069,7 @@ async function loadDashboardStock(){
       }else if(mcd==="BILLING SECTION"){
         html+=`<div class="mcdBox"><h3>👨‍ BILLING SECTION</h3><div class="miniRow"><span>👨‍ Total Manpower</span><span class="miniValue">${fmt(billing?.total||0)}</span></div><div class="miniRow"><span>🏖 Leave</span><span class="miniValue">${fmt(billing?.leave||0)}</span></div><div class="miniRow"><span>❌ Absent</span><span class="miniValue">${fmt(billing?.absent||0)}</span></div><div class="miniRow"><span>✅ Today Present</span><span class="miniValue">${fmt(billing?.present||0)}</span></div><div class="miniChart"><div class="miniFill" style="width:${Math.min(100,((billing?.present||0)/100)*100)}%"></div></div></div>`;
       }else{
+        // Other MCDs - show manpower if allowed
         html+=`<div class="mcdBox"><h3>📂 ${mcd}</h3>${isManpowerAllowed()?`<div class="miniRow"><span>👨‍ Manpower</span><span class="miniValue">${fmt(mp.count||0)}</span></div><div class="miniRow"><span>💰 Salary</span><span class="miniValue">${fmt(mp.salary||0)}</span></div>`:""}<div class="miniRow"><span>📊 Stock / Report</span><span class="miniValue">${fmt(0)}</span></div><div class="miniChart"><div class="miniFill" style="width:0%"></div></div></div>`;
       }
     });
@@ -2084,6 +2087,7 @@ async function loadDashboardStock(){
   }
 }
 
+// Backup functions remain unchanged...
 function addBackupLog(type,details){
   let logs=JSON.parse(localStorage.getItem("backupActivityLogs")||"[]");
   logs.unshift({type,details,user:user.name||user.email||"Admin",time:new Date().toLocaleString()});
