@@ -1152,29 +1152,13 @@ body.light .creditFooter{background:var(--card);border-color:#cbd5e1;}
       
       <div class="formGroup">
         <label><i class="fas fa-building" style="color:var(--blue)"></i> Company</label>
-        <select id="entryCompany">
-          <option value="GMS TEXTILES LTD">GMS TEXTILES LTD</option>
-          <option value="GMS COMPOSITE KNITTING">GMS COMPOSITE KNITTING</option>
-        </select>
+        <select id="entryCompany" onchange="loadEntry()"></select>
       </div>
 
       <div class="formGroup">
         <label><i class="fas fa-folder" style="color:var(--yellow)"></i> Department / MCD</label>
         <select id="entryMcd">
-          <option value="ACCESSORIES MCD">ACCESSORIES MCD</option>
-          <option value="GREY FABRIC MCD">GREY FABRIC MCD</option>
-          <option value="BILLING SECTION">BILLING SECTION</option>
-          <option value="SHIPMENT MCD">SHIPMENT MCD</option>
-          <option value="OUTER WEAR MCD">OUTER WEAR MCD</option>
-          <option value="YARN MCD">YARN MCD</option>
-          <option value="PRINTING MCD">PRINTING MCD</option>
-          <option value="JHUT MCD">JHUT MCD</option>
-          <option value="GENERAL MCD">GENERAL MCD</option>
-          <option value="LEFTOVER MCD">LEFTOVER MCD</option>
-          <option value="FINISH FABRIC MCD">FINISH FABRIC MCD</option>
-          <option value="YARN DYEING MCD">YARN DYEING MCD</option>
-          <option value="CHEMICAL MCD">CHEMICAL MCD</option>
-          <option value="GENERAL TECHNICAL MCD">GENERAL TECHNICAL MCD</option>
+          <!-- Dynamic options will be populated -->
         </select>
       </div>
 
@@ -1193,29 +1177,13 @@ body.light .creditFooter{background:var(--card);border-color:#cbd5e1;}
       
       <div class="formGroup">
         <label><i class="fas fa-building" style="color:var(--blue)"></i> Company</label>
-        <select id="reportCompany">
-          <option value="GMS TEXTILES LTD">GMS TEXTILES LTD</option>
-          <option value="GMS COMPOSITE KNITTING">GMS COMPOSITE KNITTING</option>
-        </select>
+        <select id="reportCompany" onchange="loadReport()"></select>
       </div>
 
       <div class="formGroup">
         <label><i class="fas fa-folder" style="color:var(--yellow)"></i> Department / MCD</label>
         <select id="reportMcd">
-          <option value="ACCESSORIES MCD">ACCESSORIES MCD</option>
-          <option value="GREY FABRIC MCD">GREY FABRIC MCD</option>
-          <option value="BILLING SECTION">BILLING SECTION</option>
-          <option value="SHIPMENT MCD">SHIPMENT MCD</option>
-          <option value="OUTER WEAR MCD">OUTER WEAR MCD</option>
-          <option value="YARN MCD">YARN MCD</option>
-          <option value="PRINTING MCD">PRINTING MCD</option>
-          <option value="JHUT MCD">JHUT MCD</option>
-          <option value="GENERAL MCD">GENERAL MCD</option>
-          <option value="LEFTOVER MCD">LEFTOVER MCD</option>
-          <option value="FINISH FABRIC MCD">FINISH FABRIC MCD</option>
-          <option value="YARN DYEING MCD">YARN DYEING MCD</option>
-          <option value="CHEMICAL MCD">CHEMICAL MCD</option>
-          <option value="GENERAL TECHNICAL MCD">GENERAL TECHNICAL MCD</option>
+          <!-- Dynamic options will be populated -->
         </select>
       </div>
 
@@ -1477,7 +1445,7 @@ function showToast(msg, type = 'success') {
 }
 </script>
 
-<!-- ===== FIREBASE MODULE WITH OFFLINE SYNC ===== -->
+<!-- ===== FIREBASE MODULE WITH OFFLINE SYNC & COMPANY FILTER ===== -->
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-app.js";
 import { getFirestore, collection, getDocs, doc, updateDoc, setDoc, deleteDoc, query, orderBy, limit } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-firestore.js";
@@ -1500,6 +1468,16 @@ const userRole=user.role||"user";
 const userMCDs=Array.isArray(user.mcdAccess)?user.mcdAccess:(user.mcd?[user.mcd]:[]);
 const needleAccess=user.needleAccess||false;
 const manpowerAccess=user.manpowerAccess||false;
+
+// 🔑 COMPANY ACCESS CONTROL
+const userCompanyAccess = user.companyAccess || (user.role === 'admin' || user.role === 'full' ? ['GMS TEXTILES LTD', 'GMS COMPOSITE KNITTING'] : ['GMS TEXTILES LTD']);
+window.userCompanyAccess = userCompanyAccess; // Global access
+
+function setupCompanyDropdowns() {
+  const opts = userCompanyAccess.map(c => `<option value="${c}">${c}</option>`).join('');
+  document.getElementById('entryCompany').innerHTML = opts;
+  document.getElementById('reportCompany').innerHTML = opts;
+}
 
 const ALL_MCD=[
   "GREY FABRIC MCD","SHIPMENT MCD","BILLING SECTION","OUTER WEAR MCD",
@@ -1841,23 +1819,37 @@ window.loadReport=function(){
   box.innerHTML=`<div class="reportCard">📑 ${mcd} Report</div><div class="reportCard" onclick="location.href='billing-manpower-report.html'"><i class="fas fa-users"></i> Billing Manpower</div>${common}`;
 };
 
-async function getLatestPresent(collectionName,openingStock){
+// 🔍 COMPANY FILTER HELPER
+function filterByCompany(docs, company) {
+  if(!company || userRole === 'admin' || userRole === 'full') return docs;
+  return docs.filter(d => {
+    const comp = d.company || d.data?.company;
+    return comp === company || !comp; // Backward compatibility
+  });
+}
+
+async function getLatestPresent(collectionName, openingStock, company){
   let snap=await getDocs(collection(db,collectionName));
   let rows=[];snap.forEach(d=>{let x=d.data();if(x.date)rows.push(x);});
+  rows = filterByCompany(rows, company);
   rows.sort((a,b)=>a.date.localeCompare(b.date));
   let r=0,dv=0;rows.forEach(x=>{r+=Number(x.receive)||0;dv+=Number(x.delivery)||0;});
   return openingStock+r-dv;
 }
-async function getManpowerSummary(){
+async function getManpowerSummary(company){
   let snap=await getDocs(collection(db,"manpower"));
+  let docs = snap.docs.map(d=>d.data());
+  docs = filterByCompany(docs, company);
   let map={},totalCount=0,totalSalary=0;
-  snap.forEach(d=>{let x=d.data();let m=x.mcd||"UNKNOWN";if(!map[m])map[m]={count:0,salary:0};map[m].count++;map[m].salary+=Number(x.salary)||0;totalCount++;totalSalary+=Number(x.salary)||0;});
+  docs.forEach(d=>{let x=d;let m=x.mcd||"UNKNOWN";if(!map[m])map[m]={count:0,salary:0};map[m].count++;map[m].salary+=Number(x.salary)||0;totalCount++;totalSalary+=Number(x.salary)||0;});
   return{map,totalCount,totalSalary};
 }
-async function getNeedleFloorStock(){
+async function getNeedleFloorStock(company){
   let snap=await getDocs(collection(db,"dailyPosting"));
+  let docs = snap.docs.map(d=>d.data());
+  docs = filterByCompany(docs, company);
   let latestByFloor={};
-  snap.forEach(d=>{let x=d.data();if(x.floor&&x.date){if(!latestByFloor[x.floor]||x.date>latestByFloor[x.floor].date)latestByFloor[x.floor]=x;}});
+  docs.forEach(d=>{let x=d;if(x.floor&&x.date){if(!latestByFloor[x.floor]||x.date>latestByFloor[x.floor].date)latestByFloor[x.floor]=x;}});
   let floorStocks={},total=0;
   Object.keys(FLOOR_OPENING).forEach(f=>{
     let stock=FLOOR_OPENING[f];
@@ -1866,9 +1858,10 @@ async function getNeedleFloorStock(){
   });
   return{floorStocks,total};
 }
-async function getGreyData(){
+async function getGreyData(company){
   let snap=await getDocs(collection(db,"greyFabricStock"));
   let docs=[];snap.forEach(d=>{let x=d.data();if(x.date&&x.rows&&x.rows.length>0)docs.push(x);});
+  docs = filterByCompany(docs, company);
   docs.sort((a,b)=>(b.date||"").localeCompare(a.date||""));
   let latest=docs[0]||{rows:[],date:""};
   let labels=[],data=[],total=0;
@@ -1876,30 +1869,34 @@ async function getGreyData(){
   if(total>0){labels.push("Grand Total");data.push(total);}
   return{labels,data,total,date:latest.date||""};
 }
-async function getBillingToday(){
+async function getBillingToday(company){
   let snap=await getDocs(collection(db,"billingManpowerReport"));
+  let docs = snap.docs.map(d=>d.data());
+  docs = filterByCompany(docs, company);
   let t=today(),total=0,leave=0,absent=0,present=0;
-  snap.forEach(d=>{let x=d.data();if(x.date===t){total+=Number(x.totalManpower)||0;leave+=Number(x.leave)||0;absent+=Number(x.absent)||0;present+=Number(x.present)||0;}});
+  docs.forEach(d=>{let x=d;if(x.date===t){total+=Number(x.totalManpower)||0;leave+=Number(x.leave)||0;absent+=Number(x.absent)||0;present+=Number(x.present)||0;}});
   return{total,leave,absent,present};
 }
-async function getNeedleIssueToday(){
+async function getNeedleIssueToday(company){
   let snap=await getDocs(collection(db,"needleDailyReport"));
   let rows=[];snap.forEach(d=>{let x=d.data();if(x.date)rows.push(x);});
+  rows = filterByCompany(rows, company);
   rows.sort((a,b)=>(b.date||"").localeCompare(a.date||""));
   let latest=rows[0]||{};
   return{broken:parseNum(latest.brokenNeedle),missing:parseNum(latest.missingNeedle),change:parseNum(latest.changeNeedle),date:latest.date||""};
 }
 
-async function getFirebaseCounts(){
+async function getFirebaseCounts(company){
   let cols=["greyFabricStock","accessoriesInventory","billingManpowerReport","dailyPosting","sewingThread","twillTape","accessoriesSample","liveNotices","manpower","users","needleDailyReport","gatePlans","challanGatePass"];
   let t=today(),totalCount=0,approxBytes=0,todayCount=0,gatePlanCount=0,challanCount=0;
   
   for(let c of cols){
     try{
       let snap=await getDocs(collection(db,c));
-      snap.forEach(d=>{
+      let docs = snap.docs.map(d=>d.data());
+      docs = filterByCompany(docs, company);
+      docs.forEach(row=>{
         totalCount++;
-        let row=d.data();
         approxBytes+=JSON.stringify(row||{}).length*2;
         if(row.date === t) todayCount++;
         if(c==="gatePlans") gatePlanCount++;
@@ -2073,11 +2070,11 @@ function renderCharts(sewing,accessories,twill,floorStocks,grey,billing,needleIs
   }
 }
 
-async function loadNotices(){
+async function loadNotices(company){
   try{
     let snap=await getDocs(collection(db,"liveNotices"));
-    let rows=[];
-    snap.forEach(d=>rows.push(d.data()));
+    let rows=[];snap.forEach(d=>rows.push(d.data()));
+    rows = filterByCompany(rows, company);
     rows.sort((a,b)=>(b.createdAt||"").localeCompare(a.createdAt||""));
     document.getElementById("noticeMove").innerText=rows.length?rows.slice(0,5).map(n=>`📢 ${n.user||"User"}: ${n.text||""}`).join("      "):"📢 No live notice found";
   }catch(e){
@@ -2090,15 +2087,16 @@ async function updateLastActive(){if(user.id){try{await updateDoc(doc(db,"users"
 
 async function loadDashboardStock(){
   try{
-    let sewing=await getLatestPresent("sewingThread",133322);
-    let twill=await getLatestPresent("twillTape",171255);
-    let accessories=await getLatestPresent("accessoriesSample",21514393);
-    let needleData=await getNeedleFloorStock();
-    let grey=await getGreyData();
-    let billing=await getBillingToday();
-    let needleIssue=await getNeedleIssueToday();
-    let firebase=await getFirebaseCounts();
-    let manpowerData=await getManpowerSummary();
+    const company = document.getElementById('entryCompany').value;
+    let sewing=await getLatestPresent("sewingThread",133322, company);
+    let twill=await getLatestPresent("twillTape",171255, company);
+    let accessories=await getLatestPresent("accessoriesSample",21514393, company);
+    let needleData=await getNeedleFloorStock(company);
+    let grey=await getGreyData(company);
+    let billing=await getBillingToday(company);
+    let needleIssue=await getNeedleIssueToday(company);
+    let firebase=await getFirebaseCounts(company);
+    let manpowerData=await getManpowerSummary(company);
     let manpower=manpowerData.map;
     let allowed=allowedMCDList();
 
@@ -2134,6 +2132,9 @@ async function loadDashboardStock(){
       }
     });
     document.getElementById("mcdDashboard").innerHTML=html||"<div class='mcdBox'><h3>❌ No Access</h3></div>";
+    
+    // Load notices for selected company
+    loadNotices(company);
   }catch(e){console.log(e);document.getElementById("mcdDashboard").innerHTML="Firebase data load error";}
 }
 
@@ -2233,8 +2234,15 @@ window.removeRestoredMonth=async function(){
 };
 
 // ===== INITIALIZATION =====
-setupRoleUI();loadDashboardStock();loadNotices();updateLastActive();renderBackupLog();loadProfilePic();
-setInterval(updateLastActive,60000);setInterval(loadNotices,60000);
+setupRoleUI();
+setupCompanyDropdowns(); // 🔑 Initialize company dropdowns
+loadDashboardStock();
+loadNotices(userCompanyAccess[0]);
+updateLastActive();
+renderBackupLog();
+loadProfilePic();
+setInterval(updateLastActive,60000);
+setInterval(loadNotices,60000);
 
 // Offline Sync Init
 document.addEventListener("DOMContentLoaded", () => {
