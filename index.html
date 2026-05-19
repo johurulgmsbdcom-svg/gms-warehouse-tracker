@@ -72,8 +72,8 @@ body.light .sidebar{
   padding:20px 16px;
   border-bottom:1px solid rgba(59,130,246,0.2);
   display:flex;
-  align-items:center;
-  gap:10px;
+  flex-direction:column;
+  gap:8px;
 }
 .sidebarHeader .logo{
   font-size:18px;
@@ -88,6 +88,40 @@ body.light .sidebarHeader .logo{color:#1e293b;}
   font-weight:500;
 }
 body.light .sidebarHeader .sub{color:#64748b;}
+
+/* Company Switch Button */
+.companySwitch{
+  display:flex;
+  background:rgba(59,130,246,0.15);
+  border:1px solid rgba(59,130,246,0.3);
+  border-radius:8px;
+  padding:4px;
+  gap:4px;
+}
+.companySwitch button{
+  flex:1;
+  padding:6px 8px;
+  border:none;
+  border-radius:6px;
+  background:transparent;
+  color:#cbd5e1;
+  font-size:10px;
+  font-weight:600;
+  cursor:pointer;
+  transition:all .2s;
+}
+body.light .companySwitch button{color:#475569;}
+.companySwitch button.active{
+  background:linear-gradient(135deg,var(--blue),var(--purple));
+  color:#fff!important;
+  font-weight:700;
+}
+.companySwitch button:hover:not(.active){
+  background:rgba(59,130,246,0.2);
+  color:#f1f5f9;
+}
+body.light .companySwitch button:hover:not(.active){color:#1e293b;}
+
 .sidebarNav{
   flex:1;
   padding:12px 10px;
@@ -334,6 +368,26 @@ body.light .systemNameBar{
 }
 body.light .dashTitle{color:var(--text);}
 .dashSub{color:var(--muted);margin-bottom:20px;font-weight:500;font-size:13px;}
+
+/* Company Badge */
+.companyBadge{
+  display:inline-flex;
+  align-items:center;
+  gap:6px;
+  padding:4px 12px;
+  background:rgba(59,130,246,0.15);
+  border:1px solid rgba(59,130,246,0.3);
+  border-radius:20px;
+  font-size:11px;
+  font-weight:600;
+  color:var(--blue);
+  margin-left:10px;
+}
+.companyBadge.composite{
+  background:rgba(139,92,246,0.15);
+  border-color:rgba(139,92,246,0.3);
+  color:var(--purple);
+}
 
 /* ===== BACKUP PAGE STYLES ===== */
 .backupPage h2{
@@ -944,16 +998,46 @@ body.light .creditFooter{background:var(--card);border-color:#cbd5e1;}
   from { opacity: 0; transform: translate(-50%, 20px); }
   to { opacity: 1; transform: translate(-50%, 0); }
 }
+
+/* ===== COMPOSITE EMPTY STATE ===== */
+.compositeEmpty{
+  text-align:center;
+  padding:40px 20px;
+  color:var(--muted);
+}
+.compositeEmpty i{
+  font-size:48px;
+  color:var(--purple);
+  margin-bottom:16px;
+  opacity:0.7;
+}
+.compositeEmpty h3{
+  color:var(--text);
+  font-size:18px;
+  margin-bottom:8px;
+}
+.compositeEmpty p{
+  font-size:13px;
+  max-width:400px;
+  margin:0 auto;
+}
 </style>
 </head>
 
 <body>
 <div class="sidebar" id="sidebar">
   <div class="sidebarHeader">
-    <div style="width:36px;height:36px;background:var(--blue);border-radius:8px;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:18px;color:#fff;">G</div>
-    <div>
-      <div class="logo">GMS MCD</div>
-      <div class="sub" id="loginInfo">Loading...</div>
+    <div style="display:flex;align-items:center;gap:10px;">
+      <div style="width:36px;height:36px;background:var(--blue);border-radius:8px;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:18px;color:#fff;">G</div>
+      <div>
+        <div class="logo">GMS MCD</div>
+        <div class="sub" id="loginInfo">Loading...</div>
+      </div>
+    </div>
+    <!-- Company Switch -->
+    <div class="companySwitch">
+      <button id="btnTextile" class="active" onclick="switchCompany('GMS TEXTILES LTD')">🏭 Textiles</button>
+      <button id="btnComposite" onclick="switchCompany('GMS COMPOSITE KNITTING')">🏢 Composite</button>
     </div>
   </div>
   <div class="sidebarNav">
@@ -970,7 +1054,7 @@ body.light .creditFooter{background:var(--card);border-color:#cbd5e1;}
     <button onclick="location.href='change-password.html'">🔐 Password</button>
   </div>
   <div class="sidebarFooter">
-    <button class="themeBtn" onclick="toggleTheme()">🌙 / ️ Theme</button>
+    <button class="themeBtn" onclick="toggleTheme()">🌙 / ☀️ Theme</button>
     <button class="logoutBtn" onclick="logout()">🚪 Logout</button>
   </div>
 </div>
@@ -1000,6 +1084,7 @@ body.light .creditFooter{background:var(--card);border-color:#cbd5e1;}
       <button class="menuToggle" onclick="toggleSidebar()">☰ Menu</button>
       <div class="topBarRight">
         <span class="autoSave"><div style="width:8px;height:8px;background:var(--green);border-radius:50%;animation:pulse 2s infinite;"></div> Live</span>
+        <span id="companyBadge" class="companyBadge">🏭 GMS TEXTILES</span>
         <button class="profileBtnTop" onclick="openProfileModal()">👤 Profile</button>
       </div>
     </div>
@@ -1009,7 +1094,7 @@ body.light .creditFooter{background:var(--card);border-color:#cbd5e1;}
   <div class="noticeBar"><div class="noticeMove" id="noticeMove">📢 Loading live notice...</div></div>
 
   <div id="home" class="page activePage">
-    <div class="dashTitle">📊 Dashboard Overview</div>
+    <div class="dashTitle">📊 Dashboard Overview <span id="dashCompanyBadge" class="companyBadge">🏭 TEXTILES</span></div>
     <div class="dashSub">Role Based Dashboard • Firebase Live Summary</div>
     
     <!-- 🔴 Admin Quota Alerts (Only Visible to Admin) -->
@@ -1036,86 +1121,99 @@ body.light .creditFooter{background:var(--card);border-color:#cbd5e1;}
       </div>
     </div>
 
-    <!-- 📦 STOCK CARDS (সবার আগে: Accessories, Sewing, Twill, Needle) -->
-    <div class="stat-row" id="accessoriesSummary">
-      <div class="stat-card-new bg-blue">
-        <div class="stat-info">
-          <p>📦 Accessories Stock</p>
-          <h3 id="sumAccessories">0</h3>
+    <!-- ===== TEXTILE DASHBOARD (Only for GMS TEXTILES) ===== -->
+    <div id="textileDashboard">
+      <!-- 📦 STOCK CARDS -->
+      <div class="stat-row" id="accessoriesSummary">
+        <div class="stat-card-new bg-blue">
+          <div class="stat-info">
+            <p>📦 Accessories Stock</p>
+            <h3 id="sumAccessories">0</h3>
+          </div>
+          <div class="stat-icon"><i class="fas fa-box"></i></div>
         </div>
-        <div class="stat-icon"><i class="fas fa-box"></i></div>
-      </div>
-      <div class="stat-card-new bg-green">
-        <div class="stat-info">
-          <p>🧵 Sewing Thread</p>
-          <h3 id="sumSewing">0</h3>
+        <div class="stat-card-new bg-green">
+          <div class="stat-info">
+            <p>🧵 Sewing Thread</p>
+            <h3 id="sumSewing">0</h3>
+          </div>
+          <div class="stat-icon"><i class="fas fa-tape"></i></div>
         </div>
-        <div class="stat-icon"><i class="fas fa-tape"></i></div>
-      </div>
-      <div class="stat-card-new bg-orange">
-        <div class="stat-info">
-          <p>📏 Twill Tape</p>
-          <h3 id="sumTwill">0</h3>
+        <div class="stat-card-new bg-orange">
+          <div class="stat-info">
+            <p>📏 Twill Tape</p>
+            <h3 id="sumTwill">0</h3>
+          </div>
+          <div class="stat-icon"><i class="fas fa-ruler-horizontal"></i></div>
         </div>
-        <div class="stat-icon"><i class="fas fa-ruler-horizontal"></i></div>
-      </div>
-      <div class="stat-card-new bg-purple" id="needleSummary">
-        <div class="stat-info">
-          <p>🪡 Needle Today Stock</p>
-          <h3 id="needleToday">0</h3>
+        <div class="stat-card-new bg-purple" id="needleSummary">
+          <div class="stat-info">
+            <p>🪡 Needle Today Stock</p>
+            <h3 id="needleToday">0</h3>
+          </div>
+          <div class="stat-icon"><i class="fas fa-syringe"></i></div>
         </div>
-        <div class="stat-icon"><i class="fas fa-syringe"></i></div>
       </div>
+
+      <!-- 📊 BAR CHARTS -->
+      <div class="chartGrid" style="margin-bottom:20px;">
+        <div class="chartBox" id="accessoriesChartBox">
+          <h3>📈 Accessories Stock Chart</h3>
+          <canvas id="accessoriesChart"></canvas>
+        </div>
+        <div class="chartBox" id="needleChartBox">
+          <h3>🏭 Needle Floor Wise Stock</h3>
+          <canvas id="needleChart"></canvas>
+        </div>
+        <div class="chartBox" id="greyChartBox">
+          <h3>🏭 Grey Fabric Present Stock</h3>
+          <canvas id="greyChart"></canvas>
+        </div>
+        <div class="chartBox" id="needleIssueChartBox">
+          <h3>🪡 Needle Broken / Missing / Change</h3>
+          <canvas id="needleIssueChart"></canvas>
+        </div>
+      </div>
+
+      <!-- 👨‍ Attendance Manpower Chart -->
+      <div class="chartBox" id="billingChartBox" style="margin-bottom:20px;">
+        <h3>👨‍ Attendance Manpower Chart</h3>
+        <div class="chartGrid">
+          <div style="text-align:center;"><canvas id="billingChart"></canvas></div>
+          <div style="display:flex;flex-direction:column;justify-content:center;gap:10px;">
+            <div style="background:rgba(16,185,129,.1);padding:14px;border-radius:12px;">
+              <span style="color:var(--muted);font-size:11px;">👨‍ Attendance Total</span>
+              <b style="color:var(--green);font-size:22px;" id="attTotal">0</b>
+            </div>
+            <div style="background:rgba(16,185,129,.1);padding:14px;border-radius:12px;">
+              <span style="color:var(--muted);font-size:11px;">✅ Today Present</span>
+              <b style="color:var(--green);font-size:22px;" id="attPresent">0</b>
+            </div>
+            <div style="background:rgba(245,158,11,.1);padding:14px;border-radius:12px;">
+              <span style="color:var(--muted);font-size:11px;">🏖 Leave</span>
+              <b style="color:var(--yellow);font-size:22px;" id="attLeave">0</b>
+            </div>
+            <div style="background:rgba(239,68,68,.1);padding:14px;border-radius:12px;">
+              <span style="color:var(--muted);font-size:11px;">❌ Absent</span>
+              <b style="color:var(--red);font-size:22px;" id="attAbsent">0</b>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 🏭 MCD DASHBOARD -->
+      <div id="mcdDashboard" class="mcdDashboard">Loading...</div>
     </div>
 
-    <!-- 📊 BAR CHARTS (চার্টস সেকশন: Accessories, Needle Floor, Grey, Needle Issue) -->
-    <div class="chartGrid" style="margin-bottom:20px;">
-      <div class="chartBox" id="accessoriesChartBox">
-        <h3>📈 Accessories Stock Chart</h3>
-        <canvas id="accessoriesChart"></canvas>
-      </div>
-      <div class="chartBox" id="needleChartBox">
-        <h3>🏭 Needle Floor Wise Stock</h3>
-        <canvas id="needleChart"></canvas>
-      </div>
-      <div class="chartBox" id="greyChartBox">
-        <h3>🏭 Grey Fabric Present Stock</h3>
-        <canvas id="greyChart"></canvas>
-      </div>
-      <div class="chartBox" id="needleIssueChartBox">
-        <h3>🪡 Needle Broken / Missing / Change</h3>
-        <canvas id="needleIssueChart"></canvas>
+    <!-- ===== COMPOSITE DASHBOARD (Only for GMS COMPOSITE) ===== -->
+    <div id="compositeDashboard" style="display:none;">
+      <div class="compositeEmpty">
+        <i class="fas fa-building"></i>
+        <h3>🏢 GMS COMPOSITE KNITTING</h3>
+        <p>Composite module is under development. Currently only <b>Gate Plan</b> and <b>Challan/Gate Pass</b> features are available.</p>
+        <p style="margin-top:12px;color:var(--blue);font-weight:600;">Go to New Entry → Select MCD → Use Gate Plan / Challan</p>
       </div>
     </div>
-
-    <!-- 👨‍ Attendance Manpower Chart (তারপরে) -->
-    <div class="chartBox" id="billingChartBox" style="margin-bottom:20px;">
-      <h3>👨‍ Attendance Manpower Chart</h3>
-      <div class="chartGrid">
-        <div style="text-align:center;"><canvas id="billingChart"></canvas></div>
-        <div style="display:flex;flex-direction:column;justify-content:center;gap:10px;">
-          <div style="background:rgba(16,185,129,.1);padding:14px;border-radius:12px;">
-            <span style="color:var(--muted);font-size:11px;">👨‍ Attendance Total</span>
-            <b style="color:var(--green);font-size:22px;" id="attTotal">0</b>
-          </div>
-          <div style="background:rgba(16,185,129,.1);padding:14px;border-radius:12px;">
-            <span style="color:var(--muted);font-size:11px;">✅ Today Present</span>
-            <b style="color:var(--green);font-size:22px;" id="attPresent">0</b>
-          </div>
-          <div style="background:rgba(245,158,11,.1);padding:14px;border-radius:12px;">
-            <span style="color:var(--muted);font-size:11px;">🏖 Leave</span>
-            <b style="color:var(--yellow);font-size:22px;" id="attLeave">0</b>
-          </div>
-          <div style="background:rgba(239,68,68,.1);padding:14px;border-radius:12px;">
-            <span style="color:var(--muted);font-size:11px;">❌ Absent</span>
-            <b style="color:var(--red);font-size:22px;" id="attAbsent">0</b>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- 🏭 MCD DASHBOARD (চার্টসের পরে) -->
-    <div id="mcdDashboard" class="mcdDashboard">Loading...</div>
 
     <!-- 📦 ADMIN SYNC PANEL (একদম শেষে) -->
     <div id="adminSyncPanel" style="display:none; background:var(--card); border:1px solid var(--border); border-radius:16px; padding:20px; margin-top:30px;">
@@ -1148,7 +1246,7 @@ body.light .creditFooter{background:var(--card);border-color:#cbd5e1;}
   <!-- NEW ENTRY PAGE -->
   <div id="entry" class="page">
     <div class="entrySection">
-      <h2><i class="fas fa-plus"></i> New Entry</h2>
+      <h2><i class="fas fa-plus"></i> New Entry <span id="entryCompanyBadge" class="companyBadge">🏭 TEXTILES</span></h2>
       
       <div class="formGroup">
         <label><i class="fas fa-building" style="color:var(--blue)"></i> Company</label>
@@ -1189,7 +1287,7 @@ body.light .creditFooter{background:var(--card);border-color:#cbd5e1;}
   <!-- REPORTS PAGE -->
   <div id="reports" class="page">
     <div class="reportSection">
-      <h2><i class="fas fa-file-alt"></i> Reports</h2>
+      <h2><i class="fas fa-file-alt"></i> Reports <span id="reportCompanyBadge" class="companyBadge">🏭 TEXTILES</span></h2>
       
       <div class="formGroup">
         <label><i class="fas fa-building" style="color:var(--blue)"></i> Company</label>
@@ -1228,7 +1326,7 @@ body.light .creditFooter{background:var(--card);border-color:#cbd5e1;}
   </div>
 
   <div id="needle" class="page">
-    <h2>🪡 Needle Section</h2>
+    <h2>🪡 Needle Section <span id="needleCompanyBadge" class="companyBadge">🏭 TEXTILES</span></h2>
     <div class="needleGrid">
       <div class="needleCard" onclick="location.href='needle.html'"><i class="fas fa-syringe"></i><span>Needle Daily Entry</span></div>
       <div class="needleCard" onclick="location.href='needle-dashboard.html'"><i class="fas fa-industry"></i><span>Floor Wise Dashboard</span></div>
@@ -1249,7 +1347,7 @@ body.light .creditFooter{background:var(--card);border-color:#cbd5e1;}
 
   <!-- BACKUP PAGE -->
   <div id="backup" class="page backupPage">
-    <h2><i class="fas fa-cloud"></i> Backup & Restore Control</h2>
+    <h2><i class="fas fa-cloud"></i> Backup & Restore Control <span id="backupCompanyBadge" class="companyBadge">🏭 TEXTILES</span></h2>
     <div class="dashSub">Only Admin can use this page</div>
     
     <div class="backupContainer">
@@ -1409,6 +1507,60 @@ body.light .creditFooter{background:var(--card);border-color:#cbd5e1;}
 
 <!-- ===== GLOBAL NAVIGATION FUNCTIONS ===== -->
 <script>
+// ===== COMPANY SWITCH SYSTEM =====
+window.getCurrentCompany = function() {
+  return localStorage.getItem('gmsSelectedCompany') || 'GMS TEXTILES LTD';
+};
+
+window.switchCompany = function(company) {
+  localStorage.setItem('gmsSelectedCompany', company);
+  
+  // Update UI buttons
+  document.getElementById('btnTextile').classList.toggle('active', company === 'GMS TEXTILES LTD');
+  document.getElementById('btnComposite').classList.toggle('active', company === 'GMS COMPOSITE KNITTING');
+  
+  // Update badges
+  const badgeText = company === 'GMS TEXTILES LTD' ? '🏭 TEXTILES' : '🏢 COMPOSITE';
+  const badgeClass = company === 'GMS TEXTILES LTD' ? '' : 'composite';
+  
+  document.getElementById('companyBadge').innerHTML = badgeText;
+  document.getElementById('companyBadge').className = 'companyBadge ' + badgeClass;
+  document.getElementById('dashCompanyBadge').innerHTML = badgeText;
+  document.getElementById('dashCompanyBadge').className = 'companyBadge ' + badgeClass;
+  document.getElementById('entryCompanyBadge').innerHTML = badgeText;
+  document.getElementById('entryCompanyBadge').className = 'companyBadge ' + badgeClass;
+  document.getElementById('reportCompanyBadge').innerHTML = badgeText;
+  document.getElementById('reportCompanyBadge').className = 'companyBadge ' + badgeClass;
+  document.getElementById('needleCompanyBadge').innerHTML = badgeText;
+  document.getElementById('needleCompanyBadge').className = 'companyBadge ' + badgeClass;
+  document.getElementById('backupCompanyBadge').innerHTML = badgeText;
+  document.getElementById('backupCompanyBadge').className = 'companyBadge ' + badgeClass;
+  
+  // Update dropdowns
+  document.getElementById('entryCompany').value = company;
+  document.getElementById('reportCompany').value = company;
+  
+  // Show/hide dashboard sections
+  const isTextile = company === 'GMS TEXTILES LTD';
+  document.getElementById('textileDashboard').style.display = isTextile ? 'block' : 'none';
+  document.getElementById('compositeDashboard').style.display = isTextile ? 'none' : 'block';
+  
+  // Reload dashboard data
+  if(document.getElementById('home').classList.contains('activePage')) {
+    loadDashboardStock();
+  }
+  
+  // Update entry/report boxes if visible
+  if(document.getElementById('entry').classList.contains('activePage')) {
+    loadEntry();
+  }
+  if(document.getElementById('reports').classList.contains('activePage')) {
+    loadReport();
+  }
+  
+  showToast(`🔄 Switched to ${company}`);
+};
+
 window.urlCompanyName = function(company){
   if(company==="GMS COMPOSITE KNITTING") return "GMS COMPOSITE KNITTING IND LTD.";
   if(company==="GMS TEXTILES LTD") return "GMS TEXTILES LTD.";
@@ -1429,6 +1581,19 @@ window.openChallanReport = function(company,mcd){
   location.href = "challan-report.html?company=" + window.enc(window.urlCompanyName(company)) + "&mcd=" + window.enc(mcd || "");
 };
 
+// Composite only shows Gate Plan/Challan cards
+window.compositeEntryCards = function(company,mcd){
+  return `<div class="entryCard" onclick="openGatePlanEntry('${company}','${mcd}')"><i class="fas fa-truck"></i> Gate Plan Entry</div>
+  <div class="entryCard" onclick="openChallanEntry('${company}','${mcd}')"><i class="fas fa-file-invoice"></i> Challan / Gate Pass</div>
+  <div class="entryCard" onclick="openChallanReport('${company}','${mcd}')"><i class="fas fa-file-alt"></i> Challan / Gate Pass Report</div>`;
+};
+
+window.compositeReportCards = function(company,mcd){
+  return `<div class="reportCard" onclick="openGatePlanReport('${company}','${mcd}')"><i class="fas fa-truck"></i> Gate Plan Report</div>
+  <div class="reportCard" onclick="openChallanReport('${company}','${mcd}')"><i class="fas fa-file-invoice"></i> Challan / Gate Pass Report</div>`;
+};
+
+// Textile full cards
 window.commonEntryCards = function(company,mcd){
   return `<div class="entryCard" onclick="openGatePlanEntry('${company}','${mcd}')"><i class="fas fa-truck"></i> Gate Plan Entry</div>
   <div class="entryCard" onclick="openChallanEntry('${company}','${mcd}')"><i class="fas fa-file-invoice"></i> Challan / Gate Pass</div>
@@ -1517,6 +1682,37 @@ const FLOOR_OPENING={
 let accessoriesChart=null,needleChart=null,greyChart=null,billingChart=null,needleIssueChart=null;
 let selectedBackupData=null;
 
+// Initialize company switch UI
+function initCompanySwitch() {
+  const company = window.getCurrentCompany();
+  document.getElementById('btnTextile').classList.toggle('active', company === 'GMS TEXTILES LTD');
+  document.getElementById('btnComposite').classList.toggle('active', company === 'GMS COMPOSITE KNITTING');
+  
+  const badgeText = company === 'GMS TEXTILES LTD' ? '🏭 TEXTILES' : '🏢 COMPOSITE';
+  const badgeClass = company === 'GMS TEXTILES LTD' ? '' : 'composite';
+  
+  document.getElementById('companyBadge').innerHTML = badgeText;
+  document.getElementById('companyBadge').className = 'companyBadge ' + badgeClass;
+  document.getElementById('dashCompanyBadge').innerHTML = badgeText;
+  document.getElementById('dashCompanyBadge').className = 'companyBadge ' + badgeClass;
+  document.getElementById('entryCompanyBadge').innerHTML = badgeText;
+  document.getElementById('entryCompanyBadge').className = 'companyBadge ' + badgeClass;
+  document.getElementById('reportCompanyBadge').innerHTML = badgeText;
+  document.getElementById('reportCompanyBadge').className = 'companyBadge ' + badgeClass;
+  document.getElementById('needleCompanyBadge').innerHTML = badgeText;
+  document.getElementById('needleCompanyBadge').className = 'companyBadge ' + badgeClass;
+  document.getElementById('backupCompanyBadge').innerHTML = badgeText;
+  document.getElementById('backupCompanyBadge').className = 'companyBadge ' + badgeClass;
+  
+  document.getElementById('entryCompany').value = company;
+  document.getElementById('reportCompany').value = company;
+  
+  // Show correct dashboard
+  const isTextile = company === 'GMS TEXTILES LTD';
+  document.getElementById('textileDashboard').style.display = isTextile ? 'block' : 'none';
+  document.getElementById('compositeDashboard').style.display = isTextile ? 'none' : 'block';
+}
+
 document.getElementById("loginInfo").innerText=`${user.name||"User"} • ${userRole.toUpperCase()} ${userRole==="user"?"• "+userMCDs.join(", "):""}`;
 
 // ===== OFFLINE SYNC & QUOTA SYSTEM =====
@@ -1542,7 +1738,7 @@ window.saveDataOffline = function(collectionName, data, serialPrefix = "") {
     let serial = serialPrefix ? `${serialPrefix}-${String(counters[serialPrefix]).padStart(3,'0')}` : id;
 
     queue.push({
-        id, collection: collectionName, serial, data: {...data, serialNumber: serial},
+        id, collection: collectionName, serial, data: {...data, serialNumber: serial, company: window.getCurrentCompany()},
         user: user.name || user.email || "System",
         time: new Date().toLocaleString(),
         status: "pending"
@@ -1773,10 +1969,17 @@ window.loadEntry=function(){
   const company=document.getElementById("entryCompany").value;
   const mcd=document.getElementById("entryMcd").value;
   const box=document.getElementById("entryBox");
+  
+  // Composite: Only show Gate Plan/Challan
+  if(company === "GMS COMPOSITE KNITTING") {
+    box.innerHTML = window.compositeEntryCards(company, mcd);
+    return;
+  }
+  
+  // Textile: Full functionality
   const common=window.commonEntryCards(company,mcd);
   
   if(!canAccess(mcd)){box.innerHTML=`<div class="entryCard">❌ Access Denied</div>${common}`;return;}
-  if(company==="GMS COMPOSITE KNITTING"){box.innerHTML=`${common}<div class="entryCard">🏭 Composite module later</div>`;return;}
   if(mcd==="ACCESSORIES MCD"){
     box.innerHTML=`
       <div class="entryCard" onclick="location.href='sewing-thread.html'"><i class="fas fa-spools"></i> Sewing Thread</div>
@@ -1809,10 +2012,17 @@ window.loadReport=function(){
   const company=document.getElementById("reportCompany")?.value||document.getElementById("entryCompany").value;
   const mcd=document.getElementById("reportMcd").value;
   const box=document.getElementById("reportBox");
+  
+  // Composite: Only show Gate Plan/Challan reports
+  if(company === "GMS COMPOSITE KNITTING") {
+    box.innerHTML = window.compositeReportCards(company, mcd);
+    return;
+  }
+  
+  // Textile: Full functionality
   const common=window.commonReportCards(company,mcd);
   
   if(!canAccess(mcd)){box.innerHTML=`<div class="reportCard">❌ Access Denied</div>${common}`;return;}
-  if(company==="GMS COMPOSITE KNITTING"){box.innerHTML=`${common}<div class="reportCard">🏭 Composite report later</div>`;return;}
   if(mcd==="ACCESSORIES MCD"){
     box.innerHTML=`
       <div class="reportCard" onclick="location.href='sewing-thread.html'"><i class="fas fa-spools"></i> Sewing Thread</div>
@@ -2089,6 +2299,19 @@ async function loadNotices(){
 async function updateLastActive(){if(user.id){try{await updateDoc(doc(db,"users",user.id),{lastActive:new Date().toISOString()});}catch(e){}}}
 
 async function loadDashboardStock(){
+  const company = window.getCurrentCompany();
+  
+  // Composite: Show empty dashboard, no data loading
+  if(company === "GMS COMPOSITE KNITTING") {
+    document.getElementById('textileDashboard').style.display = 'none';
+    document.getElementById('compositeDashboard').style.display = 'block';
+    return;
+  }
+  
+  // Textile: Load all data
+  document.getElementById('textileDashboard').style.display = 'block';
+  document.getElementById('compositeDashboard').style.display = 'none';
+  
   try{
     let sewing=await getLatestPresent("sewingThread",133322);
     let twill=await getLatestPresent("twillTape",171255);
@@ -2233,8 +2456,15 @@ window.removeRestoredMonth=async function(){
 };
 
 // ===== INITIALIZATION =====
-setupRoleUI();loadDashboardStock();loadNotices();updateLastActive();renderBackupLog();loadProfilePic();
-setInterval(updateLastActive,60000);setInterval(loadNotices,60000);
+setupRoleUI();
+initCompanySwitch(); // Initialize company switch
+loadDashboardStock();
+loadNotices();
+updateLastActive();
+renderBackupLog();
+loadProfilePic();
+setInterval(updateLastActive,60000);
+setInterval(loadNotices,60000);
 
 // Offline Sync Init
 document.addEventListener("DOMContentLoaded", () => {
