@@ -1362,12 +1362,49 @@ function setupCompanyDropdowns() {
   document.getElementById('companySwitcher').value = window.currentCompany;
 }
 
+// 🔥 Enhanced Company Filter - সব ডাটা ফিল্টার করবে
+function filterByCompany(docs, company) {
+  if(!company) return docs;
+  return docs.filter(d => {
+    const docCompany = d.company || d.data?.company || d.Company || "";
+    return docCompany === company || docCompany === "";
+  });
+}
+
+// 🔥 Chart Data Fallback - ডাটা না থাকলে 0 দেখাবে
+function prepareChartData(rawData, defaultValue = 0) {
+  if(!rawData || !rawData.length) return { labels: ["No Data"], data: [defaultValue] };
+  return rawData;
+}
+
 window.switchCompany = function(company) {
   window.currentCompany = company;
   localStorage.setItem('currentCompany', company);
+  
+  // সব ড্রপডাউন আপডেট
   setupCompanyDropdowns();
+  
+  // 🔥 Chart cache clear - মিক্সড ডাটা এড়াতে
+  if(window.accessoriesChart) { window.accessoriesChart.destroy(); window.accessoriesChart = null; }
+  if(window.needleChart) { window.needleChart.destroy(); window.needleChart = null; }
+  if(window.greyChart) { window.greyChart.destroy(); window.greyChart = null; }
+  if(window.billingChart) { window.billingChart.destroy(); window.billingChart = null; }
+  if(window.needleIssueChart) { window.needleIssueChart.destroy(); window.needleIssueChart = null; }
+  
+  // ড্যাশবোর্ড রিলোড
   loadDashboardStock();
   loadNotices(company);
+  
+  // Entry/Report পেজেও কোম্পানি সেট
+  if(document.getElementById('entryCompany')) {
+    document.getElementById('entryCompany').value = company;
+    loadEntry();
+  }
+  if(document.getElementById('reportCompany')) {
+    document.getElementById('reportCompany').value = company;
+    loadReport();
+  }
+  
   showToast(`🏭 Switched to ${company}`);
 };
 
@@ -1404,7 +1441,8 @@ window.saveDataOffline = function(collectionName, data, serialPrefix = "") {
     localStorage.setItem(COUNTER_KEY, JSON.stringify(counters));
     let serial = serialPrefix ? `${serialPrefix}-${String(counters[serialPrefix]).padStart(3,'0')}` : id;
     queue.push({
-        id, collection: collectionName, serial, data: {...data, serialNumber: serial, company: window.currentCompany},
+        id, collection: collectionName, serial, 
+        data: {...data, serialNumber: serial, company: window.currentCompany}, // 🔥 Auto-set company
         user: user.name || user.email || "System",
         time: new Date().toLocaleString(),
         status: "pending"
@@ -1594,12 +1632,22 @@ window.openPage=function(id,btn){
 };
 
 window.loadEntry=function(){
-  const company=document.getElementById("entryCompany").value;
+  const company=document.getElementById("entryCompany").value || window.currentCompany;
   const mcd=document.getElementById("entryMcd").value;
   const box=document.getElementById("entryBox");
   const common=window.commonEntryCards(company,mcd);
   if(!canAccess(mcd)){box.innerHTML=`<div class="entryCard">❌ Access Denied</div>${common}`;return;}
-  if(company==="GMS COMPOSITE KNITTING"){box.innerHTML=`${common}<div class="entryCard">🏭 Composite module later</div>`;return;}
+  
+  // 🔥 কোম্পানি অনুযায়ী আলাদা কার্ড
+  if(company==="GMS COMPOSITE KNITTING"){
+    box.innerHTML=`${common}
+      <div class="entryCard" style="border-color:var(--purple);background:rgba(139,92,246,0.1);">
+        <i class="fas fa-industry" style="color:var(--purple)"></i>
+        <span>🏭 Composite Module (Coming Soon)</span>
+      </div>`;
+    return;
+  }
+  
   if(mcd==="ACCESSORIES MCD"){
     box.innerHTML=`
       <div class="entryCard" onclick="location.href='sewing-thread.html'"><i class="fas fa-spools"></i> Sewing Thread</div>
@@ -1629,12 +1677,22 @@ window.loadEntry=function(){
 };
 
 window.loadReport=function(){
-  const company=document.getElementById("reportCompany")?.value||document.getElementById("entryCompany").value;
+  const company=document.getElementById("reportCompany")?.value||document.getElementById("entryCompany").value||window.currentCompany;
   const mcd=document.getElementById("reportMcd").value;
   const box=document.getElementById("reportBox");
   const common=window.commonReportCards(company,mcd);
   if(!canAccess(mcd)){box.innerHTML=`<div class="reportCard">❌ Access Denied</div>${common}`;return;}
-  if(company==="GMS COMPOSITE KNITTING"){box.innerHTML=`${common}<div class="reportCard">🏭 Composite report later</div>`;return;}
+  
+  // 🔥 কোম্পানি অনুযায়ী আলাদা রিপোর্ট
+  if(company==="GMS COMPOSITE KNITTING"){
+    box.innerHTML=`${common}
+      <div class="reportCard" style="border-color:var(--purple);background:rgba(139,92,246,0.1);">
+        <i class="fas fa-chart-bar" style="color:var(--purple)"></i>
+        <span>🏭 Composite Report (Coming Soon)</span>
+      </div>`;
+    return;
+  }
+  
   if(mcd==="ACCESSORIES MCD"){
     box.innerHTML=`
       <div class="reportCard" onclick="location.href='sewing-thread.html'"><i class="fas fa-spools"></i> Sewing Thread</div>
@@ -1663,19 +1721,14 @@ window.loadReport=function(){
   box.innerHTML=`<div class="reportCard">📑 ${mcd} Report</div><div class="reportCard" onclick="location.href='billing-manpower-report.html'"><i class="fas fa-users"></i> Billing Manpower</div>${common}`;
 };
 
-// 🔍 COMPANY FILTER HELPER
-function filterByCompany(docs, company) {
-  if(!company || userRole === 'admin' || userRole === 'full') return docs;
-  return docs.filter(d => {
-    const comp = d.company || d.data?.company;
-    return comp === company || !comp;
-  });
-}
-
+// 🔥 Company Filter সহ ডাটা ফেচিং ফাংশনগুলো
 async function getLatestPresent(collectionName, openingStock, company){
   let snap=await getDocs(collection(db,collectionName));
   let rows=[];snap.forEach(d=>{let x=d.data();if(x.date)rows.push(x);});
+  
+  // 🔥 Company Filter প্রয়োগ
   rows = filterByCompany(rows, company);
+  
   rows.sort((a,b)=>a.date.localeCompare(b.date));
   let r=0,dv=0;rows.forEach(x=>{r+=Number(x.receive)||0;dv+=Number(x.delivery)||0;});
   return openingStock+r-dv;
@@ -1683,7 +1736,10 @@ async function getLatestPresent(collectionName, openingStock, company){
 async function getManpowerSummary(company){
   let snap=await getDocs(collection(db,"manpower"));
   let docs = snap.docs.map(d=>d.data());
+  
+  // 🔥 Company Filter
   docs = filterByCompany(docs, company);
+  
   let map={},totalCount=0,totalSalary=0;
   docs.forEach(d=>{let x=d;let m=x.mcd||"UNKNOWN";if(!map[m])map[m]={count:0,salary:0};map[m].count++;map[m].salary+=Number(x.salary)||0;totalCount++;totalSalary+=Number(x.salary)||0;});
   return{map,totalCount,totalSalary};
@@ -1691,7 +1747,10 @@ async function getManpowerSummary(company){
 async function getNeedleFloorStock(company){
   let snap=await getDocs(collection(db,"dailyPosting"));
   let docs = snap.docs.map(d=>d.data());
+  
+  // 🔥 Company Filter
   docs = filterByCompany(docs, company);
+  
   let latestByFloor={};
   docs.forEach(d=>{let x=d;if(x.floor&&x.date){if(!latestByFloor[x.floor]||x.date>latestByFloor[x.floor].date)latestByFloor[x.floor]=x;}});
   let floorStocks={},total=0;
@@ -1705,7 +1764,10 @@ async function getNeedleFloorStock(company){
 async function getGreyData(company){
   let snap=await getDocs(collection(db,"greyFabricStock"));
   let docs=[];snap.forEach(d=>{let x=d.data();if(x.date&&x.rows&&x.rows.length>0)docs.push(x);});
+  
+  // 🔥 Company Filter
   docs = filterByCompany(docs, company);
+  
   docs.sort((a,b)=>(b.date||"").localeCompare(a.date||""));
   let latest=docs[0]||{rows:[],date:""};
   let labels=[],data=[],total=0;
@@ -1716,7 +1778,10 @@ async function getGreyData(company){
 async function getBillingToday(company){
   let snap=await getDocs(collection(db,"billingManpowerReport"));
   let docs = snap.docs.map(d=>d.data());
+  
+  // 🔥 Company Filter
   docs = filterByCompany(docs, company);
+  
   let t=today(),total=0,leave=0,absent=0,present=0;
   docs.forEach(d=>{let x=d;if(x.date===t){total+=Number(x.totalManpower)||0;leave+=Number(x.leave)||0;absent+=Number(x.absent)||0;present+=Number(x.present)||0;}});
   return{total,leave,absent,present};
@@ -1724,7 +1789,10 @@ async function getBillingToday(company){
 async function getNeedleIssueToday(company){
   let snap=await getDocs(collection(db,"needleDailyReport"));
   let rows=[];snap.forEach(d=>{let x=d.data();if(x.date)rows.push(x);});
+  
+  // 🔥 Company Filter
   rows = filterByCompany(rows, company);
+  
   rows.sort((a,b)=>(b.date||"").localeCompare(a.date||""));
   let latest=rows[0]||{};
   return{broken:parseNum(latest.brokenNeedle),missing:parseNum(latest.missingNeedle),change:parseNum(latest.changeNeedle),date:latest.date||""};
@@ -1736,7 +1804,10 @@ async function getFirebaseCounts(company){
     try{
       let snap=await getDocs(collection(db,c));
       let docs = snap.docs.map(d=>d.data());
+      
+      // 🔥 Company Filter
       docs = filterByCompany(docs, company);
+      
       docs.forEach(row=>{
         totalCount++;
         approxBytes+=JSON.stringify(row||{}).length*2;
@@ -1834,36 +1905,59 @@ function barOptions(titleText){
     }
   };
 }
+
+// 🔥 Chart Rendering - ডাটা না থাকলে 0 দেখাবে, চার্ট খালি থাকবে না
 function renderCharts(sewing,accessories,twill,floorStocks,grey,billing,needleIssue){
   if(isAccessoriesAllowed()){
     if(accessoriesChart)accessoriesChart.destroy();
+    
+    // 🔥 Fallback: ডাটা না থাকলে 0
+    const accLabels = ["Sewing Thread","Accessories Sample","Twill Tape"];
+    const accData = [sewing||0, accessories||0, twill||0];
+    
     accessoriesChart=new Chart(document.getElementById("accessoriesChart"),{
       type:"bar",
       data:{
-        labels:["Sewing Thread","Accessories Sample","Twill Tape"],
-        datasets:[{data:[sewing,accessories,twill],backgroundColor:["#38bdf8","#22c55e","#f59e0b"],borderRadius:12,barPercentage:0.6}]
+        labels:accLabels,
+        datasets:[{data:accData,backgroundColor:["#38bdf8","#22c55e","#f59e0b"],borderRadius:12,barPercentage:0.6}]
       },
-      options:barOptions("Accessories Stock Summary"),
+      options:{
+        ...barOptions("Accessories Stock Summary"),
+        plugins:{
+          tooltip:{
+            callbacks:{
+              label:function(context){return `${context.label}: ${fmt(context.parsed.y||0)}`;}
+            }
+          }
+        }
+      },
       plugins:[valueLabelPlugin]
     });
   }
   if(isNeedleAllowed()){
     if(needleChart)needleChart.destroy();
+    
+    // 🔥 Floor stocks fallback
+    const floorLabels = Object.keys(floorStocks||{}).length ? Object.keys(floorStocks) : ["No Data"];
+    const floorData = Object.keys(floorStocks||{}).length ? Object.values(floorStocks) : [0];
+    
     needleChart=new Chart(document.getElementById("needleChart"),{
       type:"bar",
       data:{
-        labels:Object.keys(floorStocks),
-        datasets:[{data:Object.values(floorStocks),backgroundColor:chartColors(Object.keys(floorStocks).length),borderRadius:10,barPercentage:0.6}]
+        labels:floorLabels,
+        datasets:[{data:floorData,backgroundColor:chartColors(floorLabels.length),borderRadius:10,barPercentage:0.6}]
       },
       options:barOptions("Needle Floor Wise Stock"),
       plugins:[valueLabelPlugin]
     });
     if(needleIssueChart)needleIssueChart.destroy();
+    
+    // 🔥 Needle issue fallback
     needleIssueChart=new Chart(document.getElementById("needleIssueChart"),{
       type:"bar",
       data:{
         labels:["Broken","Missing","Change"],
-        datasets:[{data:[needleIssue.broken,needleIssue.missing,needleIssue.change],backgroundColor:["#ef4444","#f59e0b","#22c55e"],borderRadius:10,barPercentage:0.6}]
+        datasets:[{data:[needleIssue?.broken||0, needleIssue?.missing||0, needleIssue?.change||0],backgroundColor:["#ef4444","#f59e0b","#22c55e"],borderRadius:10,barPercentage:0.6}]
       },
       options:barOptions("Needle Issue Summary"),
       plugins:[valueLabelPlugin]
@@ -1871,11 +1965,16 @@ function renderCharts(sewing,accessories,twill,floorStocks,grey,billing,needleIs
   }
   if(isGreyAllowed()){
     if(greyChart)greyChart.destroy();
+    
+    // 🔥 Grey data fallback
+    const greyLabels = (grey?.labels?.length) ? grey.labels : ["No Data"];
+    const greyData = (grey?.data?.length) ? grey.data : [0];
+    
     greyChart=new Chart(document.getElementById("greyChart"),{
       type:"bar",
       data:{
-        labels:grey.labels.length?grey.labels:["No Data"],
-        datasets:[{data:grey.data.length?grey.data:[0],backgroundColor:chartColors((grey.data.length?grey.data:[0]).length),borderRadius:10,barPercentage:0.6}]
+        labels:greyLabels,
+        datasets:[{data:greyData,backgroundColor:chartColors(greyData.length),borderRadius:10,barPercentage:0.6}]
       },
       options:barOptions("Grey Fabric Present Stock Summary"),
       plugins:[valueLabelPlugin]
@@ -1883,11 +1982,13 @@ function renderCharts(sewing,accessories,twill,floorStocks,grey,billing,needleIs
   }
   if(isBillingAllowed()){
     if(billingChart)billingChart.destroy();
+    
+    // 🔥 Billing fallback
     billingChart=new Chart(document.getElementById("billingChart"),{
       type:"doughnut",
       data:{
         labels:["Present","Leave","Absent"],
-        datasets:[{data:[billing.present,billing.leave,billing.absent],backgroundColor:["#22c55e","#f59e0b","#ef4444"],borderWidth:3,borderColor:document.body.classList.contains("light")?"#ffffff":"#1e293b"}]
+        datasets:[{data:[billing?.present||0, billing?.leave||0, billing?.absent||0],backgroundColor:["#22c55e","#f59e0b","#ef4444"],borderWidth:3,borderColor:document.body.classList.contains("light")?"#ffffff":"#1e293b"}]
       },
       options:{
         responsive:true,
@@ -1902,11 +2003,15 @@ function renderCharts(sewing,accessories,twill,floorStocks,grey,billing,needleIs
     });
   }
 }
+
 async function loadNotices(company){
   try{
     let snap=await getDocs(collection(db,"liveNotices"));
     let rows=[];snap.forEach(d=>rows.push(d.data()));
+    
+    // 🔥 Company Filter
     rows = filterByCompany(rows, company);
+    
     rows.sort((a,b)=>(b.createdAt||"").localeCompare(a.createdAt||""));
     document.getElementById("noticeMove").innerText=rows.length?rows.slice(0,5).map(n=>`📢 ${n.user||"User"}: ${n.text||""}`).join("      "):"📢 No live notice found";
   }catch(e){
@@ -1916,9 +2021,12 @@ async function loadNotices(company){
 }
 async function updateLastActive(){if(user.id){try{await updateDoc(doc(db,"users",user.id),{lastActive:new Date().toISOString()});}catch(e){}}}
 
+// 🔥 Main Dashboard Loader - Company Wise + Fallback Values
 async function loadDashboardStock(){
   try{
     const company = window.currentCompany;
+    
+    // 🔥 সব ফাংশনে company পাস করুন
     let sewing=await getLatestPresent("sewingThread",133322, company);
     let twill=await getLatestPresent("twillTape",171255, company);
     let accessories=await getLatestPresent("accessoriesSample",21514393, company);
@@ -1930,37 +2038,61 @@ async function loadDashboardStock(){
     let manpowerData=await getManpowerSummary(company);
     let manpower=manpowerData.map;
     let allowed=allowedMCDList();
+    
+    // 🔥 Billing stats with fallback
     if(isBillingAllowed()){
-      document.getElementById("attTotal").innerText=billing.total;
-      document.getElementById("attLeave").innerText=billing.leave;
-      document.getElementById("attAbsent").innerText=billing.absent;
-      document.getElementById("attPresent").innerText=billing.present;
+      document.getElementById("attTotal").innerText=fmt(billing?.total||0);
+      document.getElementById("attLeave").innerText=fmt(billing?.leave||0);
+      document.getElementById("attAbsent").innerText=fmt(billing?.absent||0);
+      document.getElementById("attPresent").innerText=fmt(billing?.present||0);
     }
+    
     updateLimitBox(firebase);
+    
+    // 🔥 Accessories stats with fallback
     if(isAccessoriesAllowed()){
-      document.getElementById("sumAccessories").innerText=fmt(accessories);
-      document.getElementById("sumSewing").innerText=fmt(sewing);
-      document.getElementById("sumTwill").innerText=fmt(twill);
+      document.getElementById("sumAccessories").innerText=fmt(accessories||0);
+      document.getElementById("sumSewing").innerText=fmt(sewing||0);
+      document.getElementById("sumTwill").innerText=fmt(twill||0);
     }
-    if(isNeedleAllowed())document.getElementById("needleToday").innerText=fmt(needleData.total);
-    renderCharts(sewing,accessories,twill,needleData.floorStocks,grey,billing,needleIssue);
+    
+    // 🔥 Needle stats with fallback
+    if(isNeedleAllowed())document.getElementById("needleToday").innerText=fmt(needleData?.total||0);
+    
+    // 🔥 Charts render with fallback values
+    renderCharts(sewing,accessories,twill,needleData?.floorStocks||{},grey||{labels:[],data:[],total:0},billing||{total:0,leave:0,absent:0,present:0},needleIssue||{broken:0,missing:0,change:0});
+    
+    // 🔥 MCD Dashboard - সবসময় লিস্ট দেখাবে, ভ্যালু 0 হতে পারে
     let html="";
     ALL_MCD.forEach(mcd=>{
       if(!allowed.includes(mcd))return;
       let mp=manpower[mcd]||{count:0,salary:0};
+      
       if(mcd==="ACCESSORIES MCD"){
-        html+=`<div class="mcdBox"><h3>📦 ACCESSORIES MCD</h3><div class="miniRow"><span>📦 Accessories With Sample</span><span class="miniValue">${fmt(accessories)}</span></div><div class="miniRow"><span>🧵 Sewing Thread</span><span class="miniValue">${fmt(sewing)}</span></div><div class="miniRow"><span>📏 Twill Tape</span><span class="miniValue">${fmt(twill)}</span></div><div class="miniChart"><div class="miniFill"></div></div></div>`;
+        html+=`<div class="mcdBox"><h3>📦 ACCESSORIES MCD</h3><div class="miniRow"><span>📦 Accessories With Sample</span><span class="miniValue">${fmt(accessories||0)}</span></div><div class="miniRow"><span>🧵 Sewing Thread</span><span class="miniValue">${fmt(sewing||0)}</span></div><div class="miniRow"><span>📏 Twill Tape</span><span class="miniValue">${fmt(twill||0)}</span></div><div class="miniChart"><div class="miniFill" style="width:${Math.min(100,((accessories||0)/21514393)*100)}%"></div></div></div>`;
       }else if(mcd==="GREY FABRIC MCD"){
-        html+=`<div class="mcdBox"><h3>🏭 GREY FABRIC MCD</h3><div class="miniRow"><span>📦 Today Closing Balance</span><span class="miniValue">${fmt(grey.total)}</span></div><div class="miniRow"><span>📊 Closing Chart</span><span class="miniValue">LIVE</span></div><div class="miniChart"><div class="miniFill" style="width:65%"></div></div></div>`;
+        html+=`<div class="mcdBox"><h3>🏭 GREY FABRIC MCD</h3><div class="miniRow"><span>📦 Today Closing Balance</span><span class="miniValue">${fmt(grey?.total||0)}</span></div><div class="miniRow"><span>📊 Closing Chart</span><span class="miniValue">LIVE</span></div><div class="miniChart"><div class="miniFill" style="width:${Math.min(100,((grey?.total||0)/50000)*100)}%"></div></div></div>`;
       }else if(mcd==="BILLING SECTION"){
-        html+=`<div class="mcdBox"><h3>👨‍ BILLING SECTION</h3><div class="miniRow"><span>👨‍ Total Manpower</span><span class="miniValue">${fmt(billing.total)}</span></div><div class="miniRow"><span>🏖 Leave</span><span class="miniValue">${fmt(billing.leave)}</span></div><div class="miniRow"><span>❌ Absent</span><span class="miniValue">${fmt(billing.absent)}</span></div><div class="miniRow"><span>✅ Today Present</span><span class="miniValue">${fmt(billing.present)}</span></div><div class="miniChart"><div class="miniFill" style="width:55%"></div></div></div>`;
+        html+=`<div class="mcdBox"><h3>👨‍ BILLING SECTION</h3><div class="miniRow"><span>👨‍ Total Manpower</span><span class="miniValue">${fmt(billing?.total||0)}</span></div><div class="miniRow"><span>🏖 Leave</span><span class="miniValue">${fmt(billing?.leave||0)}</span></div><div class="miniRow"><span>❌ Absent</span><span class="miniValue">${fmt(billing?.absent||0)}</span></div><div class="miniRow"><span>✅ Today Present</span><span class="miniValue">${fmt(billing?.present||0)}</span></div><div class="miniChart"><div class="miniFill" style="width:${Math.min(100,((billing?.present||0)/100)*100)}%"></div></div></div>`;
       }else{
-        html+=`<div class="mcdBox"><h3>📂 ${mcd}</h3>${isManpowerAllowed()?`<div class="miniRow"><span>👨‍ Manpower</span><span class="miniValue">${fmt(mp.count)}</span></div><div class="miniRow"><span>💰 Salary</span><span class="miniValue">${fmt(mp.salary)}</span></div>`:""}<div class="miniRow"><span>📊 Stock / Report</span><span class="miniValue">Pending</span></div><div class="miniChart"><div class="miniFill" style="width:35%"></div></div></div>`;
+        // 🔥 অন্যান্য MCD - ডাটা না থাকলে 0 দেখাবে
+        html+=`<div class="mcdBox"><h3>📂 ${mcd}</h3>${isManpowerAllowed()?`<div class="miniRow"><span>👨‍ Manpower</span><span class="miniValue">${fmt(mp.count||0)}</span></div><div class="miniRow"><span>💰 Salary</span><span class="miniValue">${fmt(mp.salary||0)}</span></div>`:""}<div class="miniRow"><span>📊 Stock / Report</span><span class="miniValue">${fmt(0)}</span></div><div class="miniChart"><div class="miniFill" style="width:0%"></div></div></div>`;
       }
     });
-    document.getElementById("mcdDashboard").innerHTML=html||"<div class='mcdBox'><h3>❌ No Access</h3></div>";
+    
+    // 🔥 MCD লিস্ট খালি হলেও fallback
+    document.getElementById("mcdDashboard").innerHTML=html || 
+      `<div class="mcdBox"><h3>⚠️ No MCD Access</h3><p style="color:var(--muted);font-size:12px;">Please contact admin for access</p></div>`;
+    
     loadNotices(company);
-  }catch(e){console.log(e);document.getElementById("mcdDashboard").innerHTML="Firebase data load error";}
+  }catch(e){
+    console.log(e);
+    // 🔥 এরর হলেও MCD লিস্ট 0 ভ্যালু সহ দেখাবে
+    const allowed = allowedMCDList();
+    document.getElementById("mcdDashboard").innerHTML = ALL_MCD.filter(m => allowed.includes(m))
+      .map(mcd => `<div class="mcdBox"><h3>📂 ${mcd}</h3><div class="miniRow"><span>📊 Data</span><span class="miniValue" style="color:var(--yellow)">0</span></div></div>`).join("") 
+      || "<div class='mcdBox'><h3>❌ No Access</h3></div>";
+  }
 }
 
 function addBackupLog(type,details){
