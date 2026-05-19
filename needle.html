@@ -4,222 +4,66 @@
 <title>Needle Daily Posting</title>
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
 <style>
-*{
-  box-sizing:border-box;
-}
+*{box-sizing:border-box}
+html,body{width:100%;max-width:100%;overflow-x:hidden;margin:0;padding:0;background:#0f172a;color:white;font-family:Arial,sans-serif;touch-action:manipulation}
+body{padding:4px}
+h2{text-align:center;font-size:17px;margin:6px 0 8px}
+.topControls{text-align:center;margin-bottom:8px!important;font-size:12px}
+button{padding:7px 9px;border:0;border-radius:6px;color:white;font-weight:bold;cursor:pointer;margin:2px;font-size:11px}
+.deleteBtn{background:#dc2626}.excelBtn{background:#16a34a}.pdfBtn{background:#7c3aed}.homeBtn{background:#2563eb}.saveBtn{background:green}
+input,select,textarea,button{font-size:16px}
+select,input[type="date"],input[type="text"]{padding:5px;border-radius:5px;border:1px solid #999;max-width:150px}
+.tableWrap{width:100%;max-width:100%;overflow-x:hidden}
+#reportTable{width:100%;max-width:100%;margin:0 auto;border-collapse:collapse;table-layout:fixed;background:white;color:black}
+#reportTable th,#reportTable td{border:1px solid #000;padding:1px;text-align:center;font-size:10px;line-height:1.08;white-space:nowrap;overflow:hidden}
+#reportTable thead{background:#1e293b;color:white}
+#reportTable tfoot{background:#334155;color:white;font-weight:bold}
+.col-sl{width:6%;font-size:9px!important}.col-type{width:22%;font-size:10px!important}.col-size{width:8%;font-size:10px!important}
+.col-prev{width:12%}.col-rcvd{width:11%}.col-dvld{width:11%}.col-present{width:14%}.col-bn{width:10%}
+.qtyInput{width:100%;height:24px;padding:1px;text-align:center;font-size:16px;font-weight:bold;border:1px solid #999;border-radius:3px;background:white;color:black;-webkit-text-size-adjust:100%}
+.summaryWrap{width:100%;max-width:100%;overflow-x:hidden}
+#summaryTable{width:100%;max-width:100%;margin:auto;text-align:center;border-collapse:collapse;table-layout:fixed;background:white;color:black}
+#summaryTable th,#summaryTable td{border:1px solid #000;padding:2px;font-size:10px}
 
-html,body{
-  width:100%;
-  max-width:100%;
-  overflow-x:hidden;
-  margin:0;
-  padding:0;
-  background:#0f172a;
-  color:white;
-  font-family:Arial, sans-serif;
-  touch-action:manipulation;
-}
+/* 🔴 Negative Stock Highlight */
+.negative-row{background:#fecaca!important}
+.negative-row td{color:#991b1b;font-weight:bold}
 
-body{
-  padding:4px;
-}
-
-h2{
-  text-align:center;
-  font-size:17px;
-  margin:6px 0 8px;
-}
-
-.topControls{
-  text-align:center;
-  margin-bottom:8px!important;
-  font-size:12px;
-}
-
-button{
-  padding:7px 9px;
-  border:0;
-  border-radius:6px;
-  color:white;
-  font-weight:bold;
-  cursor:pointer;
-  margin:2px;
-  font-size:11px;
-}
-
-.deleteBtn{background:#dc2626}
-.excelBtn{background:#16a34a}
-.pdfBtn{background:#7c3aed}
-.homeBtn{background:#2563eb}
-.saveBtn{background:green}
-
-input,select,textarea,button{
-  font-size:16px; /* mobile/app focus zoom off */
-}
-
-select,
-input[type="date"],
-input[type="text"]{
-  padding:5px;
-  border-radius:5px;
-  border:1px solid #999;
-  max-width:150px;
-}
-
-/* full screen fit: no side scroll */
-.tableWrap{
-  width:100%;
-  max-width:100%;
-  overflow-x:hidden;
-}
-
-#reportTable{
-  width:100%;
-  max-width:100%;
-  margin:0 auto;
-  border-collapse:collapse;
-  table-layout:fixed;
-  background:white;
-  color:black;
-}
-
-#reportTable th,
-#reportTable td{
-  border:1px solid #000;
-  padding:1px;
-  text-align:center;
-  font-size:10px;
-  line-height:1.08;
-  white-space:nowrap;
-  overflow:hidden;
-}
-
-#reportTable thead{
-  background:#1e293b;
-  color:white;
-}
-
-#reportTable tfoot{
-  background:#334155;
-  color:white;
-  font-weight:bold;
-}
-
-/* column width total 100% */
-.col-sl{width:6%;font-size:9px!important}
-.col-type{width:22%;font-size:10px!important}
-.col-size{width:8%;font-size:10px!important}
-.col-prev{width:12%}
-.col-rcvd{width:11%}
-.col-dvld{width:11%}
-.col-present{width:14%}
-.col-bn{width:10%}
-
-.qtyInput{
-  width:100%;
-  height:24px;
-  padding:1px;
-  text-align:center;
-  font-size:16px; /* focus zoom off */
-  font-weight:bold;
-  border:1px solid #999;
-  border-radius:3px;
-  background:white;
-  color:black;
-  -webkit-text-size-adjust:100%;
-}
-
-.summaryWrap{
-  width:100%;
-  max-width:100%;
-  overflow-x:hidden;
-}
-
-#summaryTable{
-  width:100%;
-  max-width:100%;
-  margin:auto;
-  text-align:center;
-  border-collapse:collapse;
-  table-layout:fixed;
-  background:white;
-  color:black;
-}
-
-#summaryTable th,
-#summaryTable td{
-  border:1px solid #000;
-  padding:2px;
-  font-size:10px;
-}
+/* 🎯 Popup Modal Styles */
+#negativePopup{display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.7);z-index:9999;justify-content:center;align-items:center}
+.popup-content{background:white;color:black;padding:16px;border-radius:10px;max-width:95%;width:400px;box-shadow:0 4px 20px rgba(0,0,0,0.3);position:relative}
+.popup-close{position:absolute;top:8px;right:12px;font-size:20px;cursor:pointer;color:#666;font-weight:bold}
+.popup-close:hover{color:#dc2626}
+.popup-title{font-size:16px;font-weight:bold;margin-bottom:12px;color:#dc2626;text-align:center}
+.popup-details{font-size:12px;line-height:1.6}
+.popup-details div{margin:4px 0;display:flex;justify-content:space-between}
+.popup-details span.label{font-weight:bold;color:#334155}
+.popup-details span.value{color:#1e293b;font-weight:500}
+.popup-fix-btn{background:#2563eb;color:white;border:none;padding:8px 16px;border-radius:6px;font-weight:bold;cursor:pointer;width:100%;margin-top:12px;font-size:13px}
+.popup-fix-btn:hover{background:#1d4ed8}
+.popup-footer{text-align:center;font-size:11px;color:#64748b;margin-top:8px}
 
 @media(max-width:480px){
-  body{padding:2px}
-  h2{font-size:15px;margin:4px 0}
-  .topControls{font-size:11px}
-
-  button{
-    padding:6px 7px;
-    font-size:10px;
-  }
-
-  #reportTable th,
-  #reportTable td{
-    font-size:9px;
-    padding:1px 0;
-  }
-
-  .col-sl{width:6%;font-size:8px!important}
-  .col-type{width:22%;font-size:9px!important}
-  .col-size{width:8%;font-size:9px!important}
-  .col-prev{width:12%}
-  .col-rcvd{width:11%}
-  .col-dvld{width:11%}
-  .col-present{width:14%}
-  .col-bn{width:10%}
-
-  .qtyInput{
-    height:22px;
-    font-size:16px;
-  }
+  body{padding:2px}h2{font-size:15px;margin:4px 0}.topControls{font-size:11px}
+  button{padding:6px 7px;font-size:10px}
+  #reportTable th,#reportTable td{font-size:9px;padding:1px 0}
+  .col-sl{width:6%;font-size:8px!important}.col-type{width:22%;font-size:9px!important}.col-size{width:8%;font-size:9px!important}
+  .col-prev{width:12%}.col-rcvd{width:11%}.col-dvld{width:11%}.col-present{width:14%}.col-bn{width:10%}
+  .qtyInput{height:22px;font-size:16px}
+  .popup-content{width:95%;padding:12px}
+  .popup-title{font-size:14px}
+  .popup-details{font-size:11px}
 }
-
 @media print{
-  html,body{
-    background:white!important;
-    color:black!important;
-    overflow:visible!important;
-  }
-
-  button,
-  input[type="date"],
-  select,
-  input[type="text"]{
-    display:none!important;
-  }
-
-  .tableWrap,
-  .summaryWrap{
-    overflow:visible!important;
-  }
-
-  #reportTable,
-  #summaryTable{
-    width:100%!important;
-    max-width:100%!important;
-    color:black!important;
-    background:white!important;
-  }
-
-  #reportTable th,
-  #reportTable td{
-    font-size:7px;
-    padding:1px;
-  }
+  html,body{background:white!important;color:black!important;overflow:visible!important}
+  button,input[type="date"],select,input[type="text"]{display:none!important}
+  .tableWrap,.summaryWrap{overflow:visible!important}
+  #reportTable,#summaryTable{width:100%!important;max-width:100%!important;color:black!important;background:white!important}
+  #reportTable th,#reportTable td{font-size:7px;padding:1px}
+  #negativePopup{display:none!important}
 }
 </style>
 </head>
-
 <body>
 
 <h2 style="text-align:center;">Needle Daily Posting</h2>
@@ -230,20 +74,10 @@ Date: <input type="date" id="postDate">
 
 Floor:
 <select id="floor" onchange="loadTable(); loadData();">
-<option>Kadom R</option>
-<option>Kadom N</option>
-<option>Shapla R</option>
-<option>Shapla N</option>
-<option>Poddo R</option>
-<option>Poddo N</option>
-<option>Belly R</option>
-<option>Belly N</option>
-<option>Sample R</option>
-<option>Sample N</option>
-<option>EMBROIDERY R</option>
-<option>EMBROIDERY N</option>
+<option>Kadom R</option><option>Kadom N</option><option>Shapla R</option><option>Shapla N</option>
+<option>Poddo R</option><option>Poddo N</option><option>Belly R</option><option>Belly N</option>
+<option>Sample R</option><option>Sample N</option><option>EMBROIDERY R</option><option>EMBROIDERY N</option>
 </select>
-
 <br><br>
 <button class="saveBtn" onclick="saveData()">💾 Save Data</button>
 <button class="deleteBtn" onclick="deleteData()">Delete Data</button>
@@ -256,27 +90,15 @@ Floor:
 <table id="reportTable" border="1">
 <thead style="background:#1e293b;">
 <tr>
-<th class="col-sl">SL</th>
-<th class="col-type">Needle Type</th>
-<th class="col-size">Size</th>
-<th class="col-prev">Previous</th>
-<th class="col-rcvd">Rcvd</th>
-<th class="col-dvld">Dvld</th>
-<th class="col-present">Present</th>
-<th class="col-bn" id="bnHeader">BNR</th>
+<th class="col-sl">SL</th><th class="col-type">Needle Type</th><th class="col-size">Size</th>
+<th class="col-prev">Previous</th><th class="col-rcvd">Rcvd</th><th class="col-dvld">Dvld</th>
+<th class="col-present">Present</th><th class="col-bn" id="bnHeader">BNR</th>
 </tr>
 </thead>
-
 <tbody id="tableBody"></tbody>
-
 <tfoot style="background:#334155;font-weight:bold;">
 <tr>
-<td colspan="3">TOTAL</td>
-<td id="totalPrevious">0</td>
-<td id="totalReceive">0</td>
-<td id="totalDelivery">0</td>
-<td id="totalPresent">0</td>
-<td id="totalBN">0</td>
+<td colspan="3">TOTAL</td><td id="totalPrevious">0</td><td id="totalReceive">0</td><td id="totalDelivery">0</td><td id="totalPresent">0</td><td id="totalBN">0</td>
 </tr>
 </tfoot>
 </table>
@@ -296,6 +118,17 @@ Floor:
 </tbody>
 </table>
 </div>
+</div>
+
+<!-- 🔴 Negative Stock Popup Modal -->
+<div id="negativePopup">
+  <div class="popup-content">
+    <span class="popup-close" onclick="closePopup()">❌</span>
+    <div class="popup-title">⚠️ Negative Stock Detected!</div>
+    <div class="popup-details" id="popupDetails"></div>
+    <button class="popup-fix-btn" onclick="fixNegativeRow()">📍 Fix করুন</button>
+    <div class="popup-footer">Present Stock ≥ 0 করলে পপআপ অটো বন্ধ হবে</div>
+  </div>
 </div>
 
 <script type="module">
@@ -340,7 +173,6 @@ const floorData = {
 [78,"UYX128-SF","10LP",0],[79,"UYX128-SAN","10",20],[80,"UYX128-SF","11PD",0],
 [81,"UYX128-SAN","12",20],[82,"DPX5-SF","11LP",0]
 ],
-
 "Kadom N": [
 [1,"DBX1","7",16],[2,"DBX1","8",0],[3,"DBX1- KN","8",0],[4,"DBX1- NS","8",0],
 [5,"DBX1","9",30],[6,"DBX1 -KN","9",0],[7,"DBX1 -NS","9",0],[8,"DBX1 -SF","9B",0],
@@ -358,626 +190,196 @@ const floorData = {
 [48,"DVX57","14",0],[49,"DPX5","9",20],[50,"DPX5","9SPD",0],[51,"DPX5","10SPD",0],
 [52,"DPX5","11",25],[53,"DPX5","12",10],[54,"DPX5","14",44],[55,"DPX17","9",20],
 [56,"DPX17","11",20],[57,"FLX118 -GCS","9",0],[58,"FLX118 -GCS","11",0]
- ],
-
+],
 "Poddo R": [
-[1,"DBX1","7",18],
-[2,"DBX1","8",3],
-[3,"DBX1- KN","8",0],
-[4,"DBX1- NS","8",0],
-[5,"DBX1","9",1],
-[6,"DBX1 -KN","9",0],
-[7,"DBX1-KN","09PD",31],
-[8,"DBX1 -NS","9",0],
-[9,"DBX1 -SF","9B",0],
-[10,"DBXK5-KK","9B",0],
-[11,"DBX1","10",6],
-[12,"DBX1 KN","10",0],
-[13,"DBX1","11",2],
-[14,"DBX1 KK","11J",0],
-[15,"DBX1","12",10],
-[16,"DBX1","14",20],
-[17,"DBXK5-KK","9S",0],
-[18,"TQX1","16",40],
-[19,"DCX1","7",44],
-[20,"DCX1","8",77],
-[21,"DCX1- KN","8",0],
-[22,"DCX1","9",27],
-[23,"DCX1 SF","9AP",0],
-[24,"DMX13-KN","10",0],
-[25,"DCX1","10",7],
-[26,"DCX1","11",3],
-[27,"DCX1","12",10],
-[28,"DCX1","14",14],
-[29,"UYX128","7",30],
-[30,"UYX128 -KN","8",36],
-[31,"UYX128","9",49],
-[32,"UY128","9 SPD",20],
-[33,"UYX128 -KN","9",0],
-[34,"UYX128 KK- KN","9",20],
-[35,"UYX128 -NY2","9B",0],
-[36,"UYX128","10",59],
-[37,"UYX128 -KN","10PD",0],
-[38,"UY128 NY2","10SPD",0],
-[39,"UYX128","11",19],
-[40,"UYX128","11SLP+",0],
-[41,"UYX128 -KN","11HP",40],
-[42,"UYX128 -KN-KN","11",16],
-[43,"UYX128","12",1],
-[44,"UY128++SAN","12",20],
-[45,"UYX128","14",68],
-[46,"UYX128 -NY2","14S",0],
-[47,"UY/UOX113","9",0],
-[48,"UY/UOX113","11",10],
-[49,"UY/UOX113","12",12],
-[50,"UY/UOX113","14",18],
-[51,"DVX57","14",39],
-[52,"DPX5","9",40],
-[53,"DVX57","12",42],
-[54,"DPX5","11",3],
-[55,"DPX5++","11SPD",0],
-[56,"DPX5","12",9],
-[57,"DPX5","12SPD",0],
-[58,"DPX5","14SPD",0],
-[59,"DPX5","14",38],
-[60,"DPX17","9",4],
-[61,"DPX17","11",18],
-[62,"FLX118 -GCS","10",33],
-[63,"FLX118 -GCS","11",0],
-[64,"DBX1-SF","8LP",24],
-[65,"DBX1-SF","9LP",0],
-[66,"DBX1-SF","10LP",185],
-[67,"DBX1-SF","11LP",0],
-[68,"DCX1-SF","8LP",0],
-[69,"DCX1-SF","9AP",13],
-[70,"DCX1-SF","10LP",0],
-[71,"DCX1-SF","11LP",8],
-[72,"UYX128-KN","8LP",0],
-[73,"UYX128-SF","8LP",81],
-[74,"UYX128-SAN","9XS",11],
-[75,"UYX128-SF","9LP",0],
-[76,"UYX128-KK-KN","9LP",0],
-[77,"UYX128-SAN","10XS",16],
-[78,"UYX128-SF","10LP",0],
-[79,"UYX128-SF","10PD",20],
-[80,"UYX128-KK-KN","10LP",57],
-[81,"UYX128-KN","11LP",70],
-[82,"UYX128-SF","11LP",0],
-[83,"UYX128-SF","11PD",0],
-[84,"UYX128-KK-KN","11LP",140],
-[85,"DPX5-KN","8LP",100],
-[86,"DPX5-SF","9LP",100],
-[87,"DPX5-SF","10LP",107],
-[88,"DPX5-SF","11LP",0]
-]
-  ,
-
+[1,"DBX1","7",18],[2,"DBX1","8",3],[3,"DBX1- KN","8",0],[4,"DBX1- NS","8",0],
+[5,"DBX1","9",1],[6,"DBX1 -KN","9",0],[7,"DBX1-KN","09PD",31],[8,"DBX1 -NS","9",0],
+[9,"DBX1 -SF","9B",0],[10,"DBXK5-KK","9B",0],[11,"DBX1","10",6],[12,"DBX1 KN","10",0],
+[13,"DBX1","11",2],[14,"DBX1 KK","11J",0],[15,"DBX1","12",10],[16,"DBX1","14",20],
+[17,"DBXK5-KK","9S",0],[18,"TQX1","16",40],[19,"DCX1","7",44],[20,"DCX1","8",77],
+[21,"DCX1- KN","8",0],[22,"DCX1","9",27],[23,"DCX1 SF","9AP",0],[24,"DMX13-KN","10",0],
+[25,"DCX1","10",7],[26,"DCX1","11",3],[27,"DCX1","12",10],[28,"DCX1","14",14],
+[29,"UYX128","7",30],[30,"UYX128 -KN","8",36],[31,"UYX128","9",49],[32,"UY128","9 SPD",20],
+[33,"UYX128 -KN","9",0],[34,"UYX128 KK- KN","9",20],[35,"UYX128 -NY2","9B",0],
+[36,"UYX128","10",59],[37,"UYX128 -KN","10PD",0],[38,"UY128 NY2","10SPD",0],
+[39,"UYX128","11",19],[40,"UYX128","11SLP+",0],[41,"UYX128 -KN","11HP",40],
+[42,"UYX128 -KN-KN","11",16],[43,"UYX128","12",1],[44,"UY128++SAN","12",20],
+[45,"UYX128","14",68],[46,"UYX128 -NY2","14S",0],[47,"UY/UOX113","9",0],
+[48,"UY/UOX113","11",10],[49,"UY/UOX113","12",12],[50,"UY/UOX113","14",18],
+[51,"DVX57","14",39],[52,"DPX5","9",40],[53,"DVX57","12",42],[54,"DPX5","11",3],
+[55,"DPX5++","11SPD",0],[56,"DPX5","12",9],[57,"DPX5","12SPD",0],[58,"DPX5","14SPD",0],
+[59,"DPX5","14",38],[60,"DPX17","9",4],[61,"DPX17","11",18],[62,"FLX118 -GCS","10",33],
+[63,"FLX118 -GCS","11",0],[64,"DBX1-SF","8LP",24],[65,"DBX1-SF","9LP",0],
+[66,"DBX1-SF","10LP",185],[67,"DBX1-SF","11LP",0],[68,"DCX1-SF","8LP",0],
+[69,"DCX1-SF","9AP",13],[70,"DCX1-SF","10LP",0],[71,"DCX1-SF","11LP",8],
+[72,"UYX128-KN","8LP",0],[73,"UYX128-SF","8LP",81],[74,"UYX128-SAN","9XS",11],
+[75,"UYX128-SF","9LP",0],[76,"UYX128-KK-KN","9LP",0],[77,"UYX128-SAN","10XS",16],
+[78,"UYX128-SF","10LP",0],[79,"UYX128-SF","10PD",20],[80,"UYX128-KK-KN","10LP",57],
+[81,"UYX128-KN","11LP",70],[82,"UYX128-SF","11LP",0],[83,"UYX128-SF","11PD",0],
+[84,"UYX128-KK-KN","11LP",140],[85,"DPX5-KN","8LP",100],[86,"DPX5-SF","9LP",100],
+[87,"DPX5-SF","10LP",107],[88,"DPX5-SF","11LP",0]
+],
 "Poddo N": [
-[1,"DBX1","7",0],
-[2,"DBX1","8",0],
-[3,"DBX1- KN","8",0],
-[4,"DBX1- NS","8",0],
-[5,"DBX1","9",3],
-[6,"DBX1 -KN","9",0],
-[7,"DBX1 -NS","9",0],
-[8,"DBX1 -SF","9B",0],
-[9,"DBXK5-KK","9B",0],
-[10,"DBX1","10",0],
-[11,"DBX1 -KN","10",0],
-[12,"DBX1 SF","10",0],
-[13,"DBX1","11",0],
-[14,"DBX1","12",0],
-[15,"DBX1","14",0],
-[16,"DBXK5-KK","9S",0],
-[17,"DBX1","12SPD",0],
-[18,"DCX1","7",0],
-[19,"DCX1","8",0],
-[20,"DCX1- KN","8",0],
-[21,"DCX1","9",3],
-[22,"DCX1 SF","9LP",0],
-[23,"DCX1","9JPD",0],
-[24,"DCX1","10",0],
-[25,"DCX1","11",0],
-[26,"DCX1","12",0],
-[27,"DCX1","14",0],
-[28,"UYX128","7",0],
-[29,"UYX128","8",0],
-[30,"UYX128","9",0],
-[31,"UYX128 -KN","8",0],
-[32,"UYX128 -KN","9",0],
-[33,"UYX128 KK- KN","9",0],
-[34,"UYX128 -NY2","9B",0],
-[35,"UYX128","10",0],
-[36,"UYX128 -KN","10PD",0],
-[37,"UYX128","11",0],
-[38,"UYX128","11SLP+",0],
-[39,"UYX128 -KN","11",0],
-[40,"UYX128 -KN","11HP",0],
-[41,"UYX128 -KN","11PD",0],
-[42,"UYX128","12",0],
-[43,"UYX128","14",0],
-[44,"UYX128 -NY2","14S",0],
-[45,"UY/UOX113","9",37],
-[46,"UY/UOX113","11",63],
-[47,"UY/UOX113","12",50],
-[48,"UY/UOX113","14",0],
-[49,"DVX57","14",104],
-[50,"DPX5","9",60],
-[51,"DPX5","9SPD",0],
-[52,"DPX5","10SPD",0],
-[53,"DPX5","11",9],
-[54,"DPX5","12",0],
-[55,"DPX5","12SPD",0],
-[56,"DPX5","14SPD",0],
-[57,"DPX5","14",0],
-[58,"DPX17","9",0],
-[59,"DPX17","11",56],
-[60,"FLX118 -GCS","11",16],
-[61,"DVX57","12",0]
-]
-  ,
-
+[1,"DBX1","7",0],[2,"DBX1","8",0],[3,"DBX1- KN","8",0],[4,"DBX1- NS","8",0],
+[5,"DBX1","9",3],[6,"DBX1 -KN","9",0],[7,"DBX1 -NS","9",0],[8,"DBX1 -SF","9B",0],
+[9,"DBXK5-KK","9B",0],[10,"DBX1","10",0],[11,"DBX1 -KN","10",0],[12,"DBX1 SF","10",0],
+[13,"DBX1","11",0],[14,"DBX1","12",0],[15,"DBX1","14",0],[16,"DBXK5-KK","9S",0],
+[17,"DBX1","12SPD",0],[18,"DCX1","7",0],[19,"DCX1","8",0],[20,"DCX1- KN","8",0],
+[21,"DCX1","9",3],[22,"DCX1 SF","9LP",0],[23,"DCX1","9JPD",0],[24,"DCX1","10",0],
+[25,"DCX1","11",0],[26,"DCX1","12",0],[27,"DCX1","14",0],[28,"UYX128","7",0],
+[29,"UYX128","8",0],[30,"UYX128","9",0],[31,"UYX128 -KN","8",0],[32,"UYX128 -KN","9",0],
+[33,"UYX128 KK- KN","9",0],[34,"UYX128 -NY2","9B",0],[35,"UYX128","10",0],
+[36,"UYX128 -KN","10PD",0],[37,"UYX128","11",0],[38,"UYX128","11SLP+",0],
+[39,"UYX128 -KN","11",0],[40,"UYX128 -KN","11HP",0],[41,"UYX128 -KN","11PD",0],
+[42,"UYX128","12",0],[43,"UYX128","14",0],[44,"UYX128 -NY2","14S",0],
+[45,"UY/UOX113","9",37],[46,"UY/UOX113","11",63],[47,"UY/UOX113","12",50],
+[48,"UY/UOX113","14",0],[49,"DVX57","14",104],[50,"DPX5","9",60],[51,"DPX5","9SPD",0],
+[52,"DPX5","10SPD",0],[53,"DPX5","11",9],[54,"DPX5","12",0],[55,"DPX5","12SPD",0],
+[56,"DPX5","14SPD",0],[57,"DPX5","14",0],[58,"DPX17","9",0],[59,"DPX17","11",56],
+[60,"FLX118 -GCS","11",16],[61,"DVX57","12",0]
+],
 "Shapla R": [
-[1,"DBX1","7",25],
-[2,"DBX1","8",16],
-[3,"DBX1- KN","8",0],
-[4,"DBX1- NS","8",0],
-[5,"DBX1","9",16],
-[6,"DBX1 -KN","10",0],
-[7,"DBX1-KN","9PD",0],
-[8,"DBX1 -NS","9",0],
-[9,"DBX1 -SF","9B",0],
-[10,"DBXK5-KK","9B",50],
-[11,"DBX1","10",37],
-[12,"DBX1","11",70],
-[13,"DBX1","12SPI",0],
-[14,"DBX1","12",0],
-[15,"DBX1","14",11],
-[16,"DBX1","14SPD",30],
-[17,"DBX1","12SPD",0],
-[18,"DCX1","7",46],
-[19,"DCX1","8",14],
-[20,"DCX1- KN","8",0],
-[21,"DCX1","9",68],
-[22,"DCX1 SF","9LP",0],
-[23,"DMX13-KN","10",0],
-[24,"DCX1","10",36],
-[25,"DCX1","11",54],
-[26,"DCX1","12",10],
-[27,"DCX1","14",0],
-[28,"UYX128","7",11],
-[29,"UYX128 -KN","8",0],
-[30,"UYX128","9",52],
-[31,"UY128","9SPD",30],
-[32,"UYX128 -KN","9",0],
-[33,"UYX128 KK- KN","9",20],
-[34,"UYX128 -NY2","9B",0],
-[35,"UYX128","10",43],
-[36,"UYX128 -KN-KN","10",30],
-[37,"UYX128","11",33],
-[38,"UY128 NY2","10SPD",30],
-[39,"UYX128 KN","11SLP+",35],
-[40,"UYX128 -Kk-kn","11",30],
-[41,"UYX128 -KN","11PD",0],
-[42,"UYX128","12",23],
-[43,"UY128++GAS","12",0],
-[44,"UYX128","14",15],
-[45,"UYX128 -NY2","14S",0],
-[46,"UY/UOX113","9",22],
-[47,"UY/UOX113","11",20],
-[48,"DVX57","12",0],
-[49,"UY/UOX113","14",55],
-[50,"DVX57","14",24],
-[51,"DPX5","9",9],
-[52,"DPX5++","9SLP",36],
-[53,"DPX5","10SPD",22],
-[54,"DPX5","11",25],
-[55,"DPX5","11SPD",0],
-[56,"DPX5","12",26],
-[57,"DPX5","12SPD",0],
-[58,"DPX5","14SPD",13],
-[59,"DPX5","14",0],
-[60,"DPX17","9",21],
-[61,"DPX17","11",45],
-[62,"FLX118 -GCS","9",0],
-[63,"FLX118 -GCS","11",18]
-]
-  ,
-
+[1,"DBX1","7",25],[2,"DBX1","8",16],[3,"DBX1- KN","8",0],[4,"DBX1- NS","8",0],
+[5,"DBX1","9",16],[6,"DBX1 -KN","10",0],[7,"DBX1-KN","9PD",0],[8,"DBX1 -NS","9",0],
+[9,"DBX1 -SF","9B",0],[10,"DBXK5-KK","9B",50],[11,"DBX1","10",37],[12,"DBX1","11",70],
+[13,"DBX1","12SPI",0],[14,"DBX1","12",0],[15,"DBX1","14",11],[16,"DBX1","14SPD",30],
+[17,"DBX1","12SPD",0],[18,"DCX1","7",46],[19,"DCX1","8",14],[20,"DCX1- KN","8",0],
+[21,"DCX1","9",68],[22,"DCX1 SF","9LP",0],[23,"DMX13-KN","10",0],[24,"DCX1","10",36],
+[25,"DCX1","11",54],[26,"DCX1","12",10],[27,"DCX1","14",0],[28,"UYX128","7",11],
+[29,"UYX128 -KN","8",0],[30,"UYX128","9",52],[31,"UY128","9SPD",30],[32,"UYX128 -KN","9",0],
+[33,"UYX128 KK- KN","9",20],[34,"UYX128 -NY2","9B",0],[35,"UYX128","10",43],
+[36,"UYX128 -KN-KN","10",30],[37,"UYX128","11",33],[38,"UY128 NY2","10SPD",30],
+[39,"UYX128 KN","11SLP+",35],[40,"UYX128 -Kk-kn","11",30],[41,"UYX128 -KN","11PD",0],
+[42,"UYX128","12",23],[43,"UY128++GAS","12",0],[44,"UYX128","14",15],[45,"UYX128 -NY2","14S",0],
+[46,"UY/UOX113","9",22],[47,"UY/UOX113","11",20],[48,"DVX57","12",0],[49,"UY/UOX113","14",55],
+[50,"DVX57","14",24],[51,"DPX5","9",9],[52,"DPX5++","9SLP",36],[53,"DPX5","10SPD",22],
+[54,"DPX5","11",25],[55,"DPX5","11SPD",0],[56,"DPX5","12",26],[57,"DPX5","12SPD",0],
+[58,"DPX5","14SPD",13],[59,"DPX5","14",0],[60,"DPX17","9",21],[61,"DPX17","11",45],
+[62,"FLX118 -GCS","9",0],[63,"FLX118 -GCS","11",18]
+],
 "Shapla N": [
-[1,"DBX1","7",16],
-[2,"DBX1","8",0],
-[3,"DBX1- KN","8",0],
-[4,"DBX1- NS","8",0],
-[5,"DBX1","9",27],
-[6,"DBX1 -KN","9",0],
-[7,"DBX1 -NS","9",0],
-[8,"DBX1 -SF","9B",0],
-[9,"DBXK5-KK","9B",0],
-[10,"DBX1","10",0],
-[11,"DBX1 -KN","10",0],
-[12,"DBX1 SF","10",0],
-[13,"DBX1","11",29],
-[14,"DBX1","12",54],
-[15,"DBX1","14",0],
-[16,"DBXK5-KK","9S",0],
-[17,"DBX1","12SPD",0],
-[18,"DCX1","7",27],
-[19,"DCX1","8",46],
-[20,"DCX1- KN","8",0],
-[21,"DCX1","9",79],
-[22,"DCX1 SF","9LP",0],
-[23,"DCX1","9JPD",0],
-[24,"DCX1","10",0],
-[25,"DCX1","11",23],
-[26,"DCX1","12",0],
-[27,"DCX1","14",0],
-[28,"UYX128","7",0],
-[29,"UYX128","8",0],
-[30,"UYX128 -KN","8",0],
-[31,"UYX128","9",27],
-[32,"UYX128 -KN","9",0],
-[33,"UYX128 KK- KN","9",0],
-[34,"UYX128 -NY2","9B",0],
-[35,"UYX128","10",47],
-[36,"UYX128 -KN","10PD",0],
-[37,"UYX128","11",5],
-[38,"UYX128","11SLP+",0],
-[39,"UYX128 -KN","11",0],
-[40,"UYX128 -KN","11HP",0],
-[41,"UYX128 -KN","11PD",0],
-[42,"UYX128","12",39],
-[43,"UYX128","14",0],
-[44,"UYX128 -NY2","14S",0],
-[45,"UY/UOX113","9",16],
-[46,"UY/UOX113","11",18],
-[47,"UY/UOX113","12",0],
-[48,"UY/UOX113","14",0],
-[49,"DVX57","14",30],
-[50,"DPX5","9",24],
-[51,"DPX5","9SPD",0],
-[52,"DPX5","10SPD",0],
-[53,"DPX5","11",10],
-[54,"DPX5","12",0],
-[55,"DPX5","12SPD",0],
-[56,"DPX5","14SPD",0],
-[57,"DPX5","14",0],
-[58,"DPX17","9",0],
-[59,"DPX17","11",6],
-[60,"FLX118 -GCS","9",0],
-[61,"FLX118 -GCS","11",50]
-]
-  ,
-
+[1,"DBX1","7",16],[2,"DBX1","8",0],[3,"DBX1- KN","8",0],[4,"DBX1- NS","8",0],
+[5,"DBX1","9",27],[6,"DBX1 -KN","9",0],[7,"DBX1 -NS","9",0],[8,"DBX1 -SF","9B",0],
+[9,"DBXK5-KK","9B",0],[10,"DBX1","10",0],[11,"DBX1 -KN","10",0],[12,"DBX1 SF","10",0],
+[13,"DBX1","11",29],[14,"DBX1","12",54],[15,"DBX1","14",0],[16,"DBXK5-KK","9S",0],
+[17,"DBX1","12SPD",0],[18,"DCX1","7",27],[19,"DCX1","8",46],[20,"DCX1- KN","8",0],
+[21,"DCX1","9",79],[22,"DCX1 SF","9LP",0],[23,"DCX1","9JPD",0],[24,"DCX1","10",0],
+[25,"DCX1","11",23],[26,"DCX1","12",0],[27,"DCX1","14",0],[28,"UYX128","7",0],
+[29,"UYX128","8",0],[30,"UYX128 -KN","8",0],[31,"UYX128","9",27],[32,"UYX128 -KN","9",0],
+[33,"UYX128 KK- KN","9",0],[34,"UYX128 -NY2","9B",0],[35,"UYX128","10",47],
+[36,"UYX128 -KN","10PD",0],[37,"UYX128","11",5],[38,"UYX128","11SLP+",0],
+[39,"UYX128 -KN","11",0],[40,"UYX128 -KN","11HP",0],[41,"UYX128 -KN","11PD",0],
+[42,"UYX128","12",39],[43,"UYX128","14",0],[44,"UYX128 -NY2","14S",0],
+[45,"UY/UOX113","9",16],[46,"UY/UOX113","11",18],[47,"UY/UOX113","12",0],
+[48,"UY/UOX113","14",0],[49,"DVX57","14",30],[50,"DPX5","9",24],[51,"DPX5","9SPD",0],
+[52,"DPX5","10SPD",0],[53,"DPX5","11",10],[54,"DPX5","12",0],[55,"DPX5","12SPD",0],
+[56,"DPX5","14SPD",0],[57,"DPX5","14",0],[58,"DPX17","9",0],[59,"DPX17","11",6],
+[60,"FLX118 -GCS","9",0],[61,"FLX118 -GCS","11",50]
+],
 "Sample R": [
-[1,"DBX1","7",33],
-[2,"DBX1","8",51],
-[3,"DBX1- KN","8",0],
-[4,"DBX1- NS","8",20],
-[5,"DBX1","9",7],
-[6,"DBX1 -KN","9",24],
-[7,"DBX1 -NS","9",0],
-[8,"DBX1 -SF","9B",0],
-[9,"DBXK5-KK","9B",0],
-[10,"DBX1","10",15],
-[11,"DBX1 -KN","10",0],
-[12,"DBX1 SF","10",0],
-[13,"DBX1","11",43],
-[14,"DBX1","12",30],
-[15,"DBX1","14",18],
-[16,"DBXK5-KK","9S",0],
-[17,"DBX1","12SPD",0],
-[18,"DCX1","7",40],
-[19,"DCX1","8",11],
-[20,"DCX1- KN","8",50],
-[21,"DCX1","9",23],
-[22,"DCX1 SF","9LP",0],
-[23,"DCX1","9JPD",0],
-[24,"DCX1","10",11],
-[25,"DCX1","11",30],
-[26,"DCX1","12",30],
-[27,"DCX1","14",26],
-[28,"UYX128","7",35],
-[29,"UYX128 KK- KK","8",0],
-[30,"UYX128 -KN","8",40],
-[31,"UYX128","9",55],
-[32,"UYX128 -KN","9",0],
-[33,"UYX128 KK- KN","9",10],
-[34,"UYX128 -NY2","9B",0],
-[35,"UYX128","10",48],
-[36,"UYX128 -KN","10PD",0],
-[37,"UYX128","11",13],
-[38,"UYX128","11SLP+",0],
-[39,"UYX128 -KN","11",0],
-[40,"UYX128 -KN","11HP",0],
-[41,"UYX128 -KN","11PD",0],
-[42,"UYX128","12",39],
-[43,"UYX128","14",24],
-[44,"UYX128 -NY2","14S",0],
-[45,"UY/UOX113","9",65],
-[46,"UY/UOX113","11",47],
-[47,"UY/UOX113","14",25],
-[48,"DOX558","12",0],
-[49,"DPX5","9",60],
-[50,"DPX5","9SPD",0],
-[51,"DPX5","10SPD",0],
-[52,"DPX5","11",26],
-[53,"DPX5","12",0],
-[54,"DPX5","12SPD",10],
-[55,"DPX5","14SPD",0],
-[56,"DPX5","14",31],
-[57,"DPX17","9",59],
-[58,"DPX17","11",60],
-[59,"DVX558","12",0],
-[60,"FLX118 -GCS","11",29]
-]
-  ,
-
+[1,"DBX1","7",33],[2,"DBX1","8",51],[3,"DBX1- KN","8",0],[4,"DBX1- NS","8",20],
+[5,"DBX1","9",7],[6,"DBX1 -KN","9",24],[7,"DBX1 -NS","9",0],[8,"DBX1 -SF","9B",0],
+[9,"DBXK5-KK","9B",0],[10,"DBX1","10",15],[11,"DBX1 -KN","10",0],[12,"DBX1 SF","10",0],
+[13,"DBX1","11",43],[14,"DBX1","12",30],[15,"DBX1","14",18],[16,"DBXK5-KK","9S",0],
+[17,"DBX1","12SPD",0],[18,"DCX1","7",40],[19,"DCX1","8",11],[20,"DCX1- KN","8",50],
+[21,"DCX1","9",23],[22,"DCX1 SF","9LP",0],[23,"DCX1","9JPD",0],[24,"DCX1","10",11],
+[25,"DCX1","11",30],[26,"DCX1","12",30],[27,"DCX1","14",26],[28,"UYX128","7",35],
+[29,"UYX128 KK- KK","8",0],[30,"UYX128 -KN","8",40],[31,"UYX128","9",55],
+[32,"UYX128 -KN","9",0],[33,"UYX128 KK- KN","9",10],[34,"UYX128 -NY2","9B",0],
+[35,"UYX128","10",48],[36,"UYX128 -KN","10PD",0],[37,"UYX128","11",13],
+[38,"UYX128","11SLP+",0],[39,"UYX128 -KN","11",0],[40,"UYX128 -KN","11HP",0],
+[41,"UYX128 -KN","11PD",0],[42,"UYX128","12",39],[43,"UYX128","14",24],
+[44,"UYX128 -NY2","14S",0],[45,"UY/UOX113","9",65],[46,"UY/UOX113","11",47],
+[47,"UY/UOX113","14",25],[48,"DOX558","12",0],[49,"DPX5","9",60],[50,"DPX5","9SPD",0],
+[51,"DPX5","10SPD",0],[52,"DPX5","11",26],[53,"DPX5","12",0],[54,"DPX5","12SPD",10],
+[55,"DPX5","14SPD",0],[56,"DPX5","14",31],[57,"DPX17","9",59],[58,"DPX17","11",60],
+[59,"DVX558","12",0],[60,"FLX118 -GCS","11",29]
+],
 "Sample N": [
-[1,"DBX1","7",10],
-[2,"DBX1","8",0],
-[3,"DBX1- KN","8",0],
-[4,"DBX1- NS","8",0],
-[5,"DBX1","9",23],
-[6,"DBX1 -KN","9",0],
-[7,"DBX1 -NS","9",0],
-[8,"DBX1 -SF","9B",0],
-[9,"DBXK5-KK","9B",0],
-[10,"DBX1","10",0],
-[11,"DBX1 -KN","10",0],
-[12,"DBX1 SF","10",0],
-[13,"DBX1","11",20],
-[14,"DBX1","12",0],
-[15,"DBX1","14",0],
-[16,"DBXK5-KK","9S",0],
-[17,"DBX1","12SPD",0],
-[18,"DCX1","7",10],
-[19,"DCX1","8",0],
-[20,"DCX1- KN","8",0],
-[21,"DCX1","9",41],
-[22,"DCX1 SF","9LP",0],
-[23,"DCX1","9JPD",0],
-[24,"DCX1","10",0],
-[25,"DCX1","11",0],
-[26,"DCX1","12",0],
-[27,"DCX1","14",0],
-[28,"UYX128","7",10],
-[29,"UYX128","8",0],
-[30,"UYX128 -KN","8",0],
-[31,"UYX128","9",19],
-[32,"UYX128 -KN","9",0],
-[33,"UYX128 KK- KN","9",0],
-[34,"UYX128 -NY2","9B",0],
-[35,"UYX128","10",0],
-[36,"UYX128 -KN","10PD",0],
-[37,"UYX128","11",20],
-[38,"UYX128","11SLP+",0],
-[39,"UYX128 -KN","11",0],
-[40,"UYX128 -KN","11HP",0],
-[41,"UYX128 -KN","11PD",0],
-[42,"UYX128","12",0],
-[43,"UYX128","14",0],
-[44,"UYX128 -NY2","14S",0],
-[45,"UY/UOX113","9",0],
-[46,"UY/UOX113","11",40],
-[47,"UY/UOX113","14",0],
-[48,"DVX57","14",0],
-[49,"DPX5","9",0],
-[50,"DPX5","9SPD",0],
-[51,"DPX5","10SPD",0],
-[52,"DPX5","11",20],
-[53,"DPX5","12",0],
-[54,"DPX5","14",0],
-[55,"DPX17","9",0],
-[56,"DPX17","11",20],
-[57,"FLX118 -GCS","9",0],
-[58,"FLX118 -GCS","11",18]
-]
-  ,
-
+[1,"DBX1","7",10],[2,"DBX1","8",0],[3,"DBX1- KN","8",0],[4,"DBX1- NS","8",0],
+[5,"DBX1","9",23],[6,"DBX1 -KN","9",0],[7,"DBX1 -NS","9",0],[8,"DBX1 -SF","9B",0],
+[9,"DBXK5-KK","9B",0],[10,"DBX1","10",0],[11,"DBX1 -KN","10",0],[12,"DBX1 SF","10",0],
+[13,"DBX1","11",20],[14,"DBX1","12",0],[15,"DBX1","14",0],[16,"DBXK5-KK","9S",0],
+[17,"DBX1","12SPD",0],[18,"DCX1","7",10],[19,"DCX1","8",0],[20,"DCX1- KN","8",0],
+[21,"DCX1","9",41],[22,"DCX1 SF","9LP",0],[23,"DCX1","9JPD",0],[24,"DCX1","10",0],
+[25,"DCX1","11",0],[26,"DCX1","12",0],[27,"DCX1","14",0],[28,"UYX128","7",10],
+[29,"UYX128","8",0],[30,"UYX128 -KN","8",0],[31,"UYX128","9",19],[32,"UYX128 -KN","9",0],
+[33,"UYX128 KK- KN","9",0],[34,"UYX128 -NY2","9B",0],[35,"UYX128","10",0],
+[36,"UYX128 -KN","10PD",0],[37,"UYX128","11",20],[38,"UYX128","11SLP+",0],
+[39,"UYX128 -KN","11",0],[40,"UYX128 -KN","11HP",0],[41,"UYX128 -KN","11PD",0],
+[42,"UYX128","12",0],[43,"UYX128","14",0],[44,"UYX128 -NY2","14S",0],
+[45,"UY/UOX113","9",0],[46,"UY/UOX113","11",40],[47,"UY/UOX113","14",0],
+[48,"DVX57","14",0],[49,"DPX5","9",0],[50,"DPX5","9SPD",0],[51,"DPX5","10SPD",0],
+[52,"DPX5","11",20],[53,"DPX5","12",0],[54,"DPX5","14",0],[55,"DPX17","9",0],
+[56,"DPX17","11",20],[57,"FLX118 -GCS","9",0],[58,"FLX118 -GCS","11",18]
+],
 "EMBROIDERY R": [
-[1,"DBX1","7",120],
-[2,"DBX1","8",214],
-[3,"DBX1","9",234],
-[4,"DBX1","10",0],
-[5,"DBX1","11",181],
-[6,"DBX1","12",0],
-[7,"DBX1","14",35],
-[8,"DCX1","9",0],
-[9,"DCX1","11",37],
-[10,"DPX5","9",0],
-[11,"DBXK5KK","9",0],
-[12,"DBXK5KK","10",20],
-[13,"DPX5","11",0],
-[14,"DPX5","14",0],
-[15,"PHXC70","14",65],
-[16,"PHXC70","16",39],
-[17,"TVX64","14",0],
-[18,"TVX64","16",35],
-[19,"TQX1","14",0],
-[20,"TQX1","16",0],
-[21,"UOX113","14",31],
-[22,"UOX113","16",0]
-]
-  ,
-
+[1,"DBX1","7",120],[2,"DBX1","8",214],[3,"DBX1","9",234],[4,"DBX1","10",0],
+[5,"DBX1","11",181],[6,"DBX1","12",0],[7,"DBX1","14",35],[8,"DCX1","9",0],
+[9,"DCX1","11",37],[10,"DPX5","9",0],[11,"DBXK5KK","9",0],[12,"DBXK5KK","10",20],
+[13,"DPX5","11",0],[14,"DPX5","14",0],[15,"PHXC70","14",65],[16,"PHXC70","16",39],
+[17,"TVX64","14",0],[18,"TVX64","16",35],[19,"TQX1","14",0],[20,"TQX1","16",0],
+[21,"UOX113","14",31],[22,"UOX113","16",0]
+],
 "EMBROIDERY N": [
-[1,"DBX1","7",22],
-[2,"DBX1","8",37],
-[3,"DBX1","9",36],
-[4,"DBX1","10",0],
-[5,"DBX1","11",10],
-[6,"DBX1","12",0],
-[7,"DBX1","14",15],
-[8,"DCX1","9",0],
-[9,"DCX1","11",68],
-[10,"DPX5","9",0],
-[11,"134 SAN DPX5","10",0],
-[12,"134 SAN DPX5","11",0],
-[13,"DPX5","11",0],
-[14,"DPX5","14",0],
-[15,"PHXC70","14",9],
-[16,"PHXC70","16",20],
-[17,"TVX64","14",0],
-[18,"TVX64","16",28],
-[19,"TQX1","14",0],
-[20,"TQX1","16",0],
-[21,"UOX113","14",42],
-[22,"UOX113","16",0]
-]
-  ,
-
+[1,"DBX1","7",22],[2,"DBX1","8",37],[3,"DBX1","9",36],[4,"DBX1","10",0],
+[5,"DBX1","11",10],[6,"DBX1","12",0],[7,"DBX1","14",15],[8,"DCX1","9",0],
+[9,"DCX1","11",68],[10,"DPX5","9",0],[11,"134 SAN DPX5","10",0],[12,"134 SAN DPX5","11",0],
+[13,"DPX5","11",0],[14,"DPX5","14",0],[15,"PHXC70","14",9],[16,"PHXC70","16",20],
+[17,"TVX64","14",0],[18,"TVX64","16",28],[19,"TQX1","14",0],[20,"TQX1","16",0],
+[21,"UOX113","14",42],[22,"UOX113","16",0]
+],
 "Belly R": [
-[1,"DBX1","7",7],
-[2,"DBX1","8",27],
-[3,"DBX1- KN","8",0],
-[4,"DBX1-NS","8LP",0],
-[5,"DBX1","9",100],
-[6,"DBX1 -KN","10",0],
-[7,"DBX1-KN","9PD",0],
-[8,"DBX1 -NS","9",0],
-[9,"DBX1","10",0],
-[10,"DBXK5-NS","10",0],
-[11,"DBX1-SF","10",0],
-[12,"DBX1","11",54],
-[13,"DBX1 NS","11J",0],
-[14,"DBX1","12",33],
-[15,"DBX1","14",31],
-[16,"DBXK5-KK","9S",0],
-[17,"DBX1","12SPD",0],
-[18,"DCX1","7",0],
-[19,"DCX1","9",8],
-[20,"DCX1- KN","8",0],
-[21,"DCX1","8",0],
-[22,"DCX1-NS","9",0],
-[23,"DCX1- KN","9",60],
-[24,"DCX1","10",14],
-[25,"DCX1","11",43],
-[26,"DCX1","12",11],
-[27,"DCX1","14",13],
-[28,"UYX128","7",0],
-[29,"UYX128 -KN","8",0],
-[30,"UYX128","9",10],
-[31,"UY128","9SPD",0],
-[32,"UYX128 -KN","9",0],
-[33,"UYX128 KK","7",0],
-[34,"UYX128 -NY2","9B",0],
-[35,"UYX128","10",20],
-[36,"DPX5","7",0],
-[37,"DPX5-NS","11",25],
-[38,"UYX128","11",23],
-[39,"DPX5-NS","9",20],
-[40,"UYX128 -KN","11",0],
-[41,"UYX128 -KN","11PD",0],
-[42,"UYX128","12",20],
-[43,"UY128++GAS","12",0],
-[44,"UYX128","14",16],
-[45,"UYX128 -NY2","14S",0],
-[46,"UY/UOX113","9",0],
-[47,"UY/UOX113","12",0],
-[48,"DPX5-NS","10",40],
-[49,"DCX1-NS","8",0],
-[50,"DVX57","14",0],
-[51,"DPX5","9",50],
-[52,"DPX5","9SLP",0],
-[53,"DPX5","10SPD",18],
-[54,"DPX5","11",40],
-[55,"DPX5","11SPD",0],
-[56,"DPX5","12",20],
-[57,"DPX5","12SPD",10],
-[58,"DPX5","14SPD",20],
-[59,"DPX5","14",15],
-[60,"DPX17","9",0],
-[61,"DPX17","11",28],
-[62,"FLX118 -GCS","9",0],
-[63,"FLX118 -GCS","11",0],
-[64,"UYX128 -KK","8",0],
-[65,"UOX113","11SPI",20],
-[66,"DPX5-SF","10LP",0],
-[67,"DPX5-KN","8LP",0],
-[68,"DPX5-SF","9LP",0],
-[69,"DBX1-SF","10LP",0]
-]
-  ,
-
+[1,"DBX1","7",7],[2,"DBX1","8",27],[3,"DBX1- KN","8",0],[4,"DBX1-NS","8LP",0],
+[5,"DBX1","9",100],[6,"DBX1 -KN","10",0],[7,"DBX1-KN","9PD",0],[8,"DBX1 -NS","9",0],
+[9,"DBX1","10",0],[10,"DBXK5-NS","10",0],[11,"DBX1-SF","10",0],[12,"DBX1","11",54],
+[13,"DBX1 NS","11J",0],[14,"DBX1","12",33],[15,"DBX1","14",31],[16,"DBXK5-KK","9S",0],
+[17,"DBX1","12SPD",0],[18,"DCX1","7",0],[19,"DCX1","9",8],[20,"DCX1- KN","8",0],
+[21,"DCX1","8",0],[22,"DCX1-NS","9",0],[23,"DCX1- KN","9",60],[24,"DCX1","10",14],
+[25,"DCX1","11",43],[26,"DCX1","12",11],[27,"DCX1","14",13],[28,"UYX128","7",0],
+[29,"UYX128 -KN","8",0],[30,"UYX128","9",10],[31,"UY128","9SPD",0],[32,"UYX128 -KN","9",0],
+[33,"UYX128 KK","7",0],[34,"UYX128 -NY2","9B",0],[35,"UYX128","10",20],
+[36,"DPX5","7",0],[37,"DPX5-NS","11",25],[38,"UYX128","11",23],[39,"DPX5-NS","9",20],
+[40,"UYX128 -KN","11",0],[41,"UYX128 -KN","11PD",0],[42,"UYX128","12",20],
+[43,"UY128++GAS","12",0],[44,"UYX128","14",16],[45,"UYX128 -NY2","14S",0],
+[46,"UY/UOX113","9",0],[47,"UY/UOX113","12",0],[48,"DPX5-NS","10",40],[49,"DCX1-NS","8",0],
+[50,"DVX57","14",0],[51,"DPX5","9",50],[52,"DPX5","9SLP",0],[53,"DPX5","10SPD",18],
+[54,"DPX5","11",40],[55,"DPX5","11SPD",0],[56,"DPX5","12",20],[57,"DPX5","12SPD",10],
+[58,"DPX5","14SPD",20],[59,"DPX5","14",15],[60,"DPX17","9",0],[61,"DPX17","11",28],
+[62,"FLX118 -GCS","9",0],[63,"FLX118 -GCS","11",0],[64,"UYX128 -KK","8",0],
+[65,"UOX113","11SPI",20],[66,"DPX5-SF","10LP",0],[67,"DPX5-KN","8LP",0],
+[68,"DPX5-SF","9LP",0],[69,"DBX1-SF","10LP",0]
+],
 "Belly N": [
-[1,"DBX1","7",0],
-[2,"DBX1","8",12],
-[3,"DBX1- KN","8",0],
-[4,"DBX1-SF","8",0],
-[5,"DBX1","9",12],
-[6,"DBX1 -KN","9",0],
-[7,"DBX1 -NS","9",0],
-[8,"DBX1 -SF","9B",0],
-[9,"DBXK5-KK","9B",0],
-[10,"DBX1","10",0],
-[11,"DBX1 -KN","10",0],
-[12,"DBX1 SF","10",0],
-[13,"DBX1","11",21],
-[14,"DBX1","12",20],
-[15,"DBX1","14",16],
-[16,"DBXK5-KK","9S",0],
-[17,"DBX1","12SPD",0],
-[18,"DCX1","7",0],
-[19,"DCX1","8",0],
-[20,"DCX1- KN","8",0],
-[21,"DCX1","9",12],
-[22,"DCX1 SF","9LP",0],
-[23,"DCX1- KN","9",0],
-[24,"DCX1","10",0],
-[25,"DCX1","11",20],
-[26,"DCX1","12",18],
-[27,"DCX1","14",20],
-[28,"UYX128","7",0],
-[29,"UYX128","8",0],
-[30,"UYX128 -KN","8",0],
-[31,"UYX128","9",26],
-[32,"UYX128","9SPD",0],
-[33,"UYX128 KK","7",0],
-[34,"UYX128 KK- KN","9",0],
-[35,"UYX128 -NY2","9B",0],
-[36,"UYX128","10",18],
-[37,"DPX5-KN","9",0],
-[38,"DPX5","7",0],
-[39,"UYX128","11",38],
-[40,"UYX128","11SLP+",0],
-[41,"UYX128 -KN","11",0],
-[42,"UYX128 -KN","11HP",0],
-[43,"UYX128 -KN","11PD",0],
-[44,"UYX128","12",28],
-[45,"UYX128","14",0],
-[46,"UYX128 -NY2","14S",0],
-[47,"UY/UOX113","9",0],
-[48,"UY/UOX113","11",0],
-[49,"UY/UOX113","12",0],
-[50,"UY/UOX113","14",0],
-[51,"DVX57","14",0],
-[52,"DPX5","11",9],
-[53,"DPX5","9SPD",0],
-[54,"DPX5","10SPD",0],
-[55,"DPX5","9",11],
-[56,"DPX5","12",15],
-[57,"DPX5","12SPD",0],
-[58,"DPX5","14SPD",0],
-[59,"DPX5","14",20],
-[60,"DPX17","9",0],
-[61,"DPX17","11",19],
-[62,"FLX118 -GCS","9",0],
-[63,"FLX118 -GCS","11",0],
-[64,"UYX128-KK","8",0],
-[65,"UOX113","9SPD",0],
-[66,"UOX113","11SPI",0]
-]
-};
+[1,"DBX1","7",0],[2,"DBX1","8",12],[3,"DBX1- KN","8",0],[4,"DBX1-SF","8",0],
+[5,"DBX1","9",12],[6,"DBX1 -KN","9",0],[7,"DBX1 -NS","9",0],[8,"DBX1 -SF","9B",0],
+[9,"DBXK5-KK","9B",0],[10,"DBX1","10",0],[11,"DBX1 -KN","10",0],[12,"DBX1 SF","10",0],
+[13,"DBX1","11",21],[14,"DBX1","12",20],[15,"DBX1","14",16],[16,"DBXK5-KK","9S",0],
+[17,"DBX1","12SPD",0],[18,"DCX1","7",0],[19,"DCX1","8",0],[20,"DCX1- KN","8",0],
+[21,"DCX1","9",12],[22,"DCX1 SF","9LP",0],[23,"DCX1- KN","9",0],[24,"DCX1","10",0],
+[25,"DCX1","11",20],[26,"DCX1","12",18],[27,"DCX1","14",20],[28,"UYX128","7",0],
+[29,"UYX128","8",0],[30,"UYX128 -KN","8",0],[31,"UYX128","9",26],[32,"UYX128","9SPD",0],
+[33,"UYX128 KK","7",0],[34,"UYX128 KK- KN","9",0],[35,"UYX128 -NY2","9B",0],
+[36,"UYX128","10",18],[37,"DPX5-KN","9",0],[38,"DPX5","7",0],[39,"UYX128","11",38],
+[40,"UYX128","11SLP+",0],[41,"UYX128 -KN","11",0],[42,"UYX128 -KN","11HP",0],
+[43,"UYX128 -KN","11PD",0],[44,"UYX128","12",28],[45,"UYX128","14",0],
+[46,"UYX128 -NY2","14S",0],[47,"UY/UOX113","9",0],[48,"UY/UOX113","11",0],
+[49,"UY/UOX113","12",0],[50,"UY/UOX113","14",0],[51,"DVX57","14",0],[52,"DPX5","11",9],
+[53,"DPX5","9SPD",0],[54,"DPX5","10SPD",0],[55,"DPX5","9",11],[56,"DPX5","12",15],
+[57,"DPX5","12SPD",0],[58,"DPX5","14SPD",0],[59,"DPX5","14",20],[60,"DPX17","9",0],
+[61,"DPX17","11",19],[62,"FLX118 -GCS","9",0],[63,"FLX118 -GCS","11",0],
+[64,"UYX128-KK","8",0],[65,"UOX113","9SPD",0],[66,"UOX113","11SPI",0]
+]};
+
+// 🔴 Global variable to track negative row index
+let negativeRowIndex = -1;
 
 function getItems(){
   let floor=document.getElementById("floor").value;
   return floorData[floor] || [];
 }
 
-function getMonth(date){
-  return date.slice(0,7);
-}
+function getMonth(date){return date.slice(0,7);}
 
 function loadTable(customPrevious=null){
   let items=getItems();
@@ -990,7 +392,7 @@ function loadTable(customPrevious=null){
   items.forEach((item,i)=>{
     let previous = customPrevious && customPrevious[i] !== undefined ? customPrevious[i] : item[3];
     html+=`
-    <tr>
+    <tr id="row${i}">
       <td class="col-sl">${item[0]}</td>
       <td class="col-type">${item[1]}</td>
       <td class="col-size">${item[2]}</td>
@@ -1004,14 +406,28 @@ function loadTable(customPrevious=null){
 
   document.getElementById("tableBody").innerHTML=html;
   updateTotal();
+  // Initial check after table load
+  setTimeout(checkNegativeStock, 100);
 }
 
 function calc(i){
   let p=Number(document.getElementById("p"+i).innerText)||0;
   let r=Number(document.getElementById("r"+i).value)||0;
   let d=Number(document.getElementById("d"+i).value)||0;
-  document.getElementById("b"+i).innerText=p+r-d;
+  let present = p+r-d;
+  document.getElementById("b"+i).innerText = present;
+  
+  // 🔴 Real-time visual highlight
+  let row = document.getElementById("row"+i);
+  if(present <= 0){
+    row.classList.add("negative-row");
+  } else {
+    row.classList.remove("negative-row");
+  }
+  
   updateTotal();
+  // 🔴 Real-time negative check
+  checkNegativeStock();
 }
 
 function updateTotal(){
@@ -1033,29 +449,93 @@ function updateTotal(){
   document.getElementById("totalBN").innerText=tbn;
 }
 
+// 🔴 Check for negative stock and show popup
+function checkNegativeStock(){
+  let items = getItems();
+  let floor = document.getElementById("floor").value;
+  let operator = document.getElementById("operatorName").value.trim() || "Unknown";
+  
+  // Find first negative or zero stock row
+  for(let i=0; i<items.length; i++){
+    let present = Number(document.getElementById("b"+i)?.innerText) || 0;
+    
+    // 🔴 Visual highlight for all negative rows
+    let row = document.getElementById("row"+i);
+    if(present <= 0){
+      row.classList.add("negative-row");
+    } else {
+      row.classList.remove("negative-row");
+    }
+    
+    // 🔴 Show popup for first negative found
+    if(present <= 0){
+      negativeRowIndex = i;
+      showNegativePopup(floor, operator, items[i][0], items[i][1], items[i][2], present);
+      return; // Stop at first negative
+    }
+  }
+  
+  // 🔴 If no negatives found, close popup
+  negativeRowIndex = -1;
+  closePopup();
+}
+
+// 🔴 Show popup with details
+function showNegativePopup(floor, operator, sl, needleType, size, stockValue){
+  let popup = document.getElementById("negativePopup");
+  let details = document.getElementById("popupDetails");
+  
+  details.innerHTML = `
+    <div><span class="label">Floor:</span><span class="value">${floor}</span></div>
+    <div><span class="label">Operator:</span><span class="value">${operator}</span></div>
+    <div><span class="label">SL:</span><span class="value">${sl}</span></div>
+    <div><span class="label">Needle Type:</span><span class="value">${needleType}</span></div>
+    <div><span class="label">Size:</span><span class="value">${size}</span></div>
+    <div><span class="label">Present Stock:</span><span class="value" style="color:#dc2626;font-weight:bold">${stockValue}</span></div>
+  `;
+  
+  popup.style.display = "flex";
+}
+
+// 🔴 Close popup
+function closePopup(){
+  document.getElementById("negativePopup").style.display = "none";
+}
+
+// 🔴 Fix button: scroll to row + focus delivery input
+function fixNegativeRow(){
+  if(negativeRowIndex >= 0){
+    let row = document.getElementById("row"+negativeRowIndex);
+    if(row){
+      row.scrollIntoView({behavior:"smooth", block:"center"});
+      // Highlight row temporarily
+      row.style.boxShadow = "0 0 0 3px #dc2626";
+      setTimeout(() => row.style.boxShadow = "", 2000);
+    }
+    
+    let deliveryInput = document.getElementById("d"+negativeRowIndex);
+    if(deliveryInput){
+      deliveryInput.focus();
+      deliveryInput.select();
+    }
+  }
+}
+
 async function saveData(){
   let date=document.getElementById("postDate").value;
   let floor=document.getElementById("floor").value;
   let operator=document.getElementById("operatorName").value.trim() || localStorage.getItem("lastOperator") || "Unknown";
   let items=getItems();
 
-  if(!date){
-    alert("Date select koro");
-    return;
-  }
+  if(!date){alert("Date select koro");return;}
 
   let rows=[];
   for(let i=0;i<items.length;i++){
     rows.push({
-      sl:items[i][0],
-      needleType:items[i][1],
-      size:items[i][2],
-      opening:Number(items[i][3])||0,
-      previous:Number(document.getElementById("p"+i).innerText)||0,
-      receive:Number(document.getElementById("r"+i).value)||0,
-      delivery:Number(document.getElementById("d"+i).value)||0,
-      present:Number(document.getElementById("b"+i).innerText)||0,
-      bn:Number(document.getElementById("bn"+i).value)||0
+      sl:items[i][0],needleType:items[i][1],size:items[i][2],
+      opening:Number(items[i][3])||0,previous:Number(document.getElementById("p"+i).innerText)||0,
+      receive:Number(document.getElementById("r"+i).value)||0,delivery:Number(document.getElementById("d"+i).value)||0,
+      present:Number(document.getElementById("b"+i).innerText)||0,bn:Number(document.getElementById("bn"+i).value)||0
     });
   }
 
@@ -1080,23 +560,12 @@ async function saveData(){
   }
 
   await setDoc(docRef,{
-    date:date,
-    month:getMonth(date),
-    floor:floor,
-    rows:rows,
-    operator:operator,
-    updatedAt: serverTimestamp()
+    date:date,month:getMonth(date),floor:floor,rows:rows,operator:operator,updatedAt: serverTimestamp()
   });
 
-  // 🔹 Silent Audit Log (Background e save hobe)
   try {
     await addDoc(collection(db, "auditLogs"), {
-      action: action,
-      floor: floor,
-      date: date,
-      operator: operator,
-      timestamp: serverTimestamp(),
-      details: details
+      action: action,floor: floor,date: date,operator: operator,timestamp: serverTimestamp(),details: details
     });
   } catch(e) { console.error("Audit log error:", e); }
 
@@ -1110,11 +579,7 @@ async function deleteData(){
   let floor=document.getElementById("floor").value;
   let operator=document.getElementById("operatorName").value.trim() || localStorage.getItem("lastOperator") || "Unknown";
 
-  if(!date){
-    alert("Date select koro");
-    return;
-  }
-
+  if(!date){alert("Date select koro");return;}
   if(!confirm("Ei date er data delete korba?")) return;
 
   let docRef = doc(db,"dailyPosting",floor+"_"+date);
@@ -1123,11 +588,7 @@ async function deleteData(){
   if(oldDoc.exists()){
     try {
       await addDoc(collection(db, "auditLogs"), {
-        action: "DELETE",
-        floor: floor,
-        date: date,
-        operator: operator,
-        timestamp: serverTimestamp(),
+        action: "DELETE",floor: floor,date: date,operator: operator,timestamp: serverTimestamp(),
         details: { deletedFloor: floor, deletedDate: date, itemsCount: oldDoc.data().rows?.length || 0 }
       });
     } catch(e) { console.error("Audit log error:", e); }
@@ -1162,11 +623,8 @@ async function loadData(){
   });
 
   monthRows.sort((a,b)=>a.date.localeCompare(b.date));
-
   let todayData=null;
-  monthRows.forEach(row=>{
-    if(row.date===date) todayData=row;
-  });
+  monthRows.forEach(row=>{if(row.date===date) todayData=row;});
 
   let monthlyReceive=Array(items.length).fill(0);
   let monthlyDelivery=Array(items.length).fill(0);
@@ -1195,7 +653,6 @@ async function loadData(){
   }
 
   let previousList=[];
-
   for(let i=0;i<items.length;i++){
     let opening=Number(items[i][3])||0;
     let beforeReceive=monthlyReceive[i]-todayReceive[i];
@@ -1204,35 +661,29 @@ async function loadData(){
   }
 
   loadTable(previousList);
-
-  // 🔹 Operator Auto-Fill Logic
   document.getElementById("operatorName").value = todayData?.operator || localStorage.getItem("lastOperator") || "";
 
   for(let i=0;i<items.length;i++){
     document.getElementById("r"+i).value = todayReceive[i] || "";
     document.getElementById("d"+i).value = todayDelivery[i] || "";
     document.getElementById("bn"+i).value = todayBN[i] || "";
-    calc(i);
+    calc(i); // 🔴 This triggers checkNegativeStock
   }
 
   updateMonthlySummary(monthlyReceive,monthlyDelivery,monthlyBN);
+  // 🔴 Final check after data load
+  setTimeout(checkNegativeStock, 200);
 }
 
 function updateMonthlySummary(monthlyReceive,monthlyDelivery,monthlyBN){
   let items=getItems();
   let opening=0, receive=0, delivery=0, present=0, bn=0;
-
   for(let i=0;i<items.length;i++){
     let op=Number(items[i][3])||0;
     let r=Number(monthlyReceive[i])||0;
     let d=Number(monthlyDelivery[i])||0;
-    opening+=op;
-    receive+=r;
-    delivery+=d;
-    present+=op+r-d;
-    bn+=Number(monthlyBN[i])||0;
+    opening+=op;receive+=r;delivery+=d;present+=op+r-d;bn+=Number(monthlyBN[i])||0;
   }
-
   showMonthlySummary(opening,receive,delivery,present,bn);
 }
 
@@ -1245,69 +696,39 @@ function showMonthlySummary(opening,receive,delivery,present,bn){
 }
 
 function exportExcel(){
-  let title=`
-    <h2>Needle Daily Posting</h2>
-    <h3>Floor: ${document.getElementById("floor").value}</h3>
-    <h3>Date: ${document.getElementById("postDate").value}</h3>
-  `;
-
+  let title=`<h2>Needle Daily Posting</h2><h3>Floor: ${document.getElementById("floor").value}</h3><h3>Date: ${document.getElementById("postDate").value}</h3>`;
   let table1=document.getElementById("reportTable").outerHTML;
   let table2=document.getElementById("summaryTable").outerHTML;
-
-  let file=new Blob([title+table1+"<br>"+table2],{
-    type:"application/vnd.ms-excel"
-  });
-
-  let a=document.createElement("a");
-  a.href=URL.createObjectURL(file);
-  a.download="needle-report.xls";
-  a.click();
+  let file=new Blob([title+table1+"<br>"+table2],{type:"application/vnd.ms-excel"});
+  let a=document.createElement("a");a.href=URL.createObjectURL(file);a.download="needle-report.xls";a.click();
 }
 
-function exportPDF(){
-  window.print();
-}
+function exportPDF(){window.print();}
 
 document.getElementById("postDate").addEventListener("change",loadData);
 
-window.loadTable=loadTable;
-window.calc=calc;
-window.updateTotal=updateTotal;
-window.saveData=saveData;
-window.deleteData=deleteData;
-window.loadData=loadData;
-window.exportExcel=exportExcel;
-window.exportPDF=exportPDF;
+// Make functions globally available
+window.loadTable=loadTable;window.calc=calc;window.updateTotal=updateTotal;
+window.saveData=saveData;window.deleteData=deleteData;window.loadData=loadData;
+window.exportExcel=exportExcel;window.exportPDF=exportPDF;
+window.checkNegativeStock=checkNegativeStock;window.closePopup=closePopup;window.fixNegativeRow=fixNegativeRow;
 
-// Enter dile same column er nicher box e jabe, Tab dile samner box e jabe
+// Enter/Tab navigation
 document.addEventListener("keydown", function(e){
   if(e.target.tagName !== "INPUT") return;
-
-  // sudhu table er Receive, Delivery, BN input box er jonno
   if(!e.target.id.match(/^(r|d|bn)\d+$/)) return;
-
-  // Tab er default kaj: samner box e jawa
-  if(e.key === "Tab"){
-    return;
-  }
-
-  // Enter dile same column er next row te jawa
+  if(e.key === "Tab") return;
   if(e.key === "Enter"){
     e.preventDefault();
-
     let col = e.target.id.replace(/[0-9]/g, "");
     let row = Number(e.target.id.replace(/\D/g, ""));
     let next = document.getElementById(col + (row + 1));
-
-    if(next){
-      next.focus();
-      next.select();
-    }
+    if(next){next.focus();next.select();}
   }
 });
 
+// Initialize
 loadTable();
 </script>
-
 </body>
 </html>
