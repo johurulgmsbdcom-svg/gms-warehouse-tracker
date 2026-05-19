@@ -1371,13 +1371,13 @@ function setupCompanyDropdowns() {
   });
 }
 
-// ✅ FIXED: Strict company filter - only exact match or empty
+// ✅ ✅ ✅ FIXED: STRICT Company Filter - Only exact match, NO fallback to empty/null
 function filterByCompany(docs, company) {
   if(!company) return docs;
   return docs.filter(d => {
-    const docCompany = d?.company || d?.data?.company || d?.Company || "";
-    // Only match exact company OR empty/null company (legacy data)
-    return docCompany === company || !docCompany || docCompany === "";
+    const docCompany = d?.company || d?.data?.company || d?.Company || null;
+    // ✅ শুধু exact match - empty/null company ডকুমেন্ট বাদ যাবে
+    return docCompany === company;
   });
 }
 
@@ -1396,6 +1396,15 @@ window.switchCompany = async function(company) {
     if(window[name]) {
       try { window[name].destroy(); } catch(e) {}
       window[name] = null;
+    }
+  });
+  
+  // Clear canvas contexts (extra safety)
+  charts.forEach(name => {
+    const canvas = document.getElementById(name);
+    if(canvas) {
+      const ctx = canvas.getContext('2d');
+      if(ctx) ctx.clearRect(0, 0, canvas.width, canvas.height);
     }
   });
   
@@ -1752,11 +1761,11 @@ window.loadReport=function(){
   box.innerHTML=`<div class="reportCard">📑 ${mcd} Report</div><div class="reportCard" onclick="location.href='billing-manpower-report.html'"><i class="fas fa-users"></i> Billing Manpower</div>${common}`;
 };
 
-// 🔥 Company Filter সহ ডাটা ফেচিং ফাংশনগুলো - ✅ FIXED
+// 🔥 Company Filter সহ ডাটা ফেচিং ফাংশনগুলো - ✅ FIXED with STRICT company matching
 async function getLatestPresent(collectionName, openingStock, company){
   let snap=await getDocs(collection(db,collectionName));
   let rows=[];snap.forEach(d=>{let x=d.data();if(x.date)rows.push(x);});
-  rows = filterByCompany(rows, company); // ✅ Apply company filter
+  rows = filterByCompany(rows, company); // ✅ Apply STRICT company filter
   rows.sort((a,b)=>a.date.localeCompare(b.date));
   let r=0,dv=0;rows.forEach(x=>{r+=Number(x.receive)||0;dv+=Number(x.delivery)||0;});
   return openingStock+r-dv;
@@ -1764,7 +1773,7 @@ async function getLatestPresent(collectionName, openingStock, company){
 async function getManpowerSummary(company){
   let snap=await getDocs(collection(db,"manpower"));
   let docs = snap.docs.map(d=>d.data());
-  docs = filterByCompany(docs, company); // ✅ Apply company filter
+  docs = filterByCompany(docs, company); // ✅ Apply STRICT company filter
   let map={},totalCount=0,totalSalary=0;
   docs.forEach(d=>{let x=d;let m=x.mcd||"UNKNOWN";if(!map[m])map[m]={count:0,salary:0};map[m].count++;map[m].salary+=Number(x.salary)||0;totalCount++;totalSalary+=Number(x.salary)||0;});
   return{map,totalCount,totalSalary};
@@ -1772,7 +1781,7 @@ async function getManpowerSummary(company){
 async function getNeedleFloorStock(company){
   let snap=await getDocs(collection(db,"dailyPosting"));
   let docs = snap.docs.map(d=>d.data());
-  docs = filterByCompany(docs, company); // ✅ Apply company filter
+  docs = filterByCompany(docs, company); // ✅ Apply STRICT company filter
   let latestByFloor={};
   docs.forEach(d=>{let x=d;if(x.floor&&x.date){if(!latestByFloor[x.floor]||x.date>latestByFloor[x.floor].date)latestByFloor[x.floor]=x;}});
   let floorStocks={},total=0;
@@ -1786,7 +1795,7 @@ async function getNeedleFloorStock(company){
 async function getGreyData(company){
   let snap=await getDocs(collection(db,"greyFabricStock"));
   let docs=[];snap.forEach(d=>{let x=d.data();if(x.date&&x.rows&&x.rows.length>0)docs.push(x);});
-  docs = filterByCompany(docs, company); // ✅ Apply company filter
+  docs = filterByCompany(docs, company); // ✅ Apply STRICT company filter
   docs.sort((a,b)=>(b.date||"").localeCompare(a.date||""));
   let latest=docs[0]||{rows:[],date:""};
   let labels=[],data=[],total=0;
@@ -1797,7 +1806,7 @@ async function getGreyData(company){
 async function getBillingToday(company){
   let snap=await getDocs(collection(db,"billingManpowerReport"));
   let docs = snap.docs.map(d=>d.data());
-  docs = filterByCompany(docs, company); // ✅ Apply company filter
+  docs = filterByCompany(docs, company); // ✅ Apply STRICT company filter
   let t=today(),total=0,leave=0,absent=0,present=0;
   docs.forEach(d=>{let x=d;if(x.date===t){total+=Number(x.totalManpower)||0;leave+=Number(x.leave)||0;absent+=Number(x.absent)||0;present+=Number(x.present)||0;}});
   return{total,leave,absent,present};
@@ -1805,7 +1814,7 @@ async function getBillingToday(company){
 async function getNeedleIssueToday(company){
   let snap=await getDocs(collection(db,"needleDailyReport"));
   let rows=[];snap.forEach(d=>{let x=d.data();if(x.date)rows.push(x);});
-  rows = filterByCompany(rows, company); // ✅ Apply company filter
+  rows = filterByCompany(rows, company); // ✅ Apply STRICT company filter
   rows.sort((a,b)=>(b.date||"").localeCompare(a.date||""));
   let latest=rows[0]||{};
   return{broken:parseNum(latest.brokenNeedle),missing:parseNum(latest.missingNeedle),change:parseNum(latest.changeNeedle),date:latest.date||""};
@@ -1817,7 +1826,7 @@ async function getFirebaseCounts(company){
     try{
       let snap=await getDocs(collection(db,c));
       let docs = snap.docs.map(d=>d.data());
-      docs = filterByCompany(docs, company); // ✅ Apply company filter
+      docs = filterByCompany(docs, company); // ✅ Apply STRICT company filter
       docs.forEach(row=>{
         totalCount++;
         approxBytes+=JSON.stringify(row||{}).length*2;
@@ -2005,7 +2014,7 @@ async function loadNotices(company){
   try{
     let snap=await getDocs(collection(db,"liveNotices"));
     let rows=[];snap.forEach(d=>rows.push(d.data()));
-    rows = filterByCompany(rows, company); // ✅ Apply company filter
+    rows = filterByCompany(rows, company); // ✅ Apply STRICT company filter
     rows.sort((a,b)=>(b.createdAt||"").localeCompare(a.createdAt||""));
     document.getElementById("noticeMove").innerText=rows.length?rows.slice(0,5).map(n=>`📢 ${n.user||"User"}: ${n.text||""}`).join("      "):"📢 No live notice found";
   }catch(e){
