@@ -1354,6 +1354,60 @@ const userCompanyAccess = user.companyAccess || (user.role === 'admin' || user.r
 window.userCompanyAccess = userCompanyAccess;
 window.currentCompany = localStorage.getItem('currentCompany') || userCompanyAccess[0];
 
+// ✅ NEW FINAL COMPANY FILTER
+function normalizeCompanyName(name=""){
+  return String(name)
+    .replace(/IND LTD\.?/gi,'')
+    .replace(/LIMITED/gi,'LTD')
+    .replace(/TEXTILES/gi,'TEXTILE')
+    .replace(/\s+/g,' ')
+    .trim()
+    .toUpperCase();
+}
+
+function filterByCompany(docs, company) {
+  if(!company) return docs;
+  const selected = normalizeCompanyName(company);
+  return docs.filter(d => {
+    const raw = d.company || d.data?.company || d.Company || "";
+    if(!raw) return false;
+    const docCompany = normalizeCompanyName(raw);
+    return (
+      docCompany.includes(selected) ||
+      selected.includes(docCompany)
+    );
+  });
+}
+
+// ✅ NEW FINAL MCD SYSTEM
+function getCompanyMCD(company){
+  if(company === "GMS COMPOSITE KNITTING"){
+    return [
+      "GREY FABRIC MCD",
+      "YARN MCD",
+      "CHEMICAL MCD",
+      "YARN DYEING MCD",
+      "GENERAL TECHNICAL MCD",
+      "PRINTING MCD",
+      "FINISH FABRIC MCD",
+      "LEFTOVER MCD"
+    ];
+  }
+  return [
+    "ACCESSORIES MCD",
+    "SHIPMENT MCD",
+    "OUTER WEAR MCD",
+    "BILLING SECTION",
+    "GENERAL MCD",
+    "JHUT MCD"
+  ];
+}
+
+const ALL_MCD = [
+  ...getCompanyMCD("GMS TEXTILES LTD"),
+  ...getCompanyMCD("GMS COMPOSITE KNITTING")
+];
+
 function setupCompanyDropdowns() {
   const opts = userCompanyAccess.map(c => `<option value="${c}" ${c===window.currentCompany?'selected':''}>${c}</option>`).join('');
   document.getElementById('entryCompany').innerHTML = opts;
@@ -1362,58 +1416,53 @@ function setupCompanyDropdowns() {
   document.getElementById('companySwitcher').value = window.currentCompany;
 }
 
-// 🔥 Enhanced Company Filter - সব ডাটা ফিল্টার করবে
-function filterByCompany(docs, company) {
-  if(!company) return docs;
-  return docs.filter(d => {
-    const docCompany = d.company || d.data?.company || d.Company || "";
-    return docCompany === company || docCompany === "";
-  });
-}
-
-// 🔥 Chart Data Fallback - ডাটা না থাকলে 0 দেখাবে
-function prepareChartData(rawData, defaultValue = 0) {
-  if(!rawData || !rawData.length) return { labels: ["No Data"], data: [defaultValue] };
-  return rawData;
-}
-
+// ✅ FINAL switchCompany() REPLACE
 window.switchCompany = function(company) {
   window.currentCompany = company;
   localStorage.setItem('currentCompany', company);
-  
-  // সব ড্রপডাউন আপডেট
   setupCompanyDropdowns();
-  
-  // 🔥 Chart cache clear - মিক্সড ডাটা এড়াতে
-  if(window.accessoriesChart) { window.accessoriesChart.destroy(); window.accessoriesChart = null; }
-  if(window.needleChart) { window.needleChart.destroy(); window.needleChart = null; }
-  if(window.greyChart) { window.greyChart.destroy(); window.greyChart = null; }
-  if(window.billingChart) { window.billingChart.destroy(); window.billingChart = null; }
-  if(window.needleIssueChart) { window.needleIssueChart.destroy(); window.needleIssueChart = null; }
-  
-  // ড্যাশবোর্ড রিলোড
+
+  // Clear all charts
+  if(window.accessoriesChart){ window.accessoriesChart.destroy(); window.accessoriesChart = null; }
+  if(window.needleChart){ window.needleChart.destroy(); window.needleChart = null; }
+  if(window.greyChart){ window.greyChart.destroy(); window.greyChart = null; }
+  if(window.billingChart){ window.billingChart.destroy(); window.billingChart = null; }
+  if(window.needleIssueChart){ window.needleIssueChart.destroy(); window.needleIssueChart = null; }
+
+  const isComposite = company === "GMS COMPOSITE KNITTING";
+
+  // Hide/Show Accessories Section for Composite
+  const accSection = document.getElementById("accessoriesSummary");
+  if(accSection){ accSection.style.display = isComposite ? "none" : "grid"; }
+
+  const accChart = document.getElementById("accessoriesChartBox");
+  if(accChart){ accChart.style.display = isComposite ? "none" : "block"; }
+
+  // Hide Billing Chart for Composite
+  const billingChart = document.getElementById("billingChartBox");
+  if(billingChart){ billingChart.style.display = isComposite ? "none" : "block"; }
+
+  // Grey Chart always visible
+  const greyChart = document.getElementById("greyChartBox");
+  if(greyChart){ greyChart.style.display = "block"; }
+
+  // Reload dashboard data
   loadDashboardStock();
   loadNotices(company);
-  
-  // Entry/Report পেজেও কোম্পানি সেট
-  if(document.getElementById('entryCompany')) {
+
+  // Update Entry/Report dropdowns
+  if(document.getElementById('entryCompany')){
     document.getElementById('entryCompany').value = company;
     loadEntry();
   }
-  if(document.getElementById('reportCompany')) {
+  if(document.getElementById('reportCompany')){
     document.getElementById('reportCompany').value = company;
     loadReport();
   }
-  
+
   showToast(`🏭 Switched to ${company}`);
 };
 
-const ALL_MCD=[
-  "GREY FABRIC MCD","SHIPMENT MCD","BILLING SECTION","OUTER WEAR MCD",
-  "YARN MCD","PRINTING MCD","JHUT MCD","GENERAL MCD","ACCESSORIES MCD",
-  "LEFTOVER MCD","FINISH FABRIC MCD","YARN DYEING MCD","CHEMICAL MCD",
-  "GENERAL TECHNICAL MCD"
-];
 const FLOOR_OPENING={
   "Kadom R":618,"Kadom N":443,"Poddo R":1889,"Poddo N":401,
   "Shapla R":1171,"Shapla N":573,"Sample R":1138,"Sample N":251,
@@ -1442,7 +1491,7 @@ window.saveDataOffline = function(collectionName, data, serialPrefix = "") {
     let serial = serialPrefix ? `${serialPrefix}-${String(counters[serialPrefix]).padStart(3,'0')}` : id;
     queue.push({
         id, collection: collectionName, serial, 
-        data: {...data, serialNumber: serial, company: window.currentCompany}, // 🔥 Auto-set company
+        data: {...data, serialNumber: serial, company: window.currentCompany},
         user: user.name || user.email || "System",
         time: new Date().toLocaleString(),
         status: "pending"
@@ -1638,7 +1687,6 @@ window.loadEntry=function(){
   const common=window.commonEntryCards(company,mcd);
   if(!canAccess(mcd)){box.innerHTML=`<div class="entryCard">❌ Access Denied</div>${common}`;return;}
   
-  // 🔥 কোম্পানি অনুযায়ী আলাদা কার্ড
   if(company==="GMS COMPOSITE KNITTING"){
     box.innerHTML=`${common}
       <div class="entryCard" style="border-color:var(--purple);background:rgba(139,92,246,0.1);">
@@ -1683,7 +1731,6 @@ window.loadReport=function(){
   const common=window.commonReportCards(company,mcd);
   if(!canAccess(mcd)){box.innerHTML=`<div class="reportCard">❌ Access Denied</div>${common}`;return;}
   
-  // 🔥 কোম্পানি অনুযায়ী আলাদা রিপোর্ট
   if(company==="GMS COMPOSITE KNITTING"){
     box.innerHTML=`${common}
       <div class="reportCard" style="border-color:var(--purple);background:rgba(139,92,246,0.1);">
@@ -1721,14 +1768,10 @@ window.loadReport=function(){
   box.innerHTML=`<div class="reportCard">📑 ${mcd} Report</div><div class="reportCard" onclick="location.href='billing-manpower-report.html'"><i class="fas fa-users"></i> Billing Manpower</div>${common}`;
 };
 
-// 🔥 Company Filter সহ ডাটা ফেচিং ফাংশনগুলো
 async function getLatestPresent(collectionName, openingStock, company){
   let snap=await getDocs(collection(db,collectionName));
   let rows=[];snap.forEach(d=>{let x=d.data();if(x.date)rows.push(x);});
-  
-  // 🔥 Company Filter প্রয়োগ
   rows = filterByCompany(rows, company);
-  
   rows.sort((a,b)=>a.date.localeCompare(b.date));
   let r=0,dv=0;rows.forEach(x=>{r+=Number(x.receive)||0;dv+=Number(x.delivery)||0;});
   return openingStock+r-dv;
@@ -1736,10 +1779,7 @@ async function getLatestPresent(collectionName, openingStock, company){
 async function getManpowerSummary(company){
   let snap=await getDocs(collection(db,"manpower"));
   let docs = snap.docs.map(d=>d.data());
-  
-  // 🔥 Company Filter
   docs = filterByCompany(docs, company);
-  
   let map={},totalCount=0,totalSalary=0;
   docs.forEach(d=>{let x=d;let m=x.mcd||"UNKNOWN";if(!map[m])map[m]={count:0,salary:0};map[m].count++;map[m].salary+=Number(x.salary)||0;totalCount++;totalSalary+=Number(x.salary)||0;});
   return{map,totalCount,totalSalary};
@@ -1747,10 +1787,7 @@ async function getManpowerSummary(company){
 async function getNeedleFloorStock(company){
   let snap=await getDocs(collection(db,"dailyPosting"));
   let docs = snap.docs.map(d=>d.data());
-  
-  // 🔥 Company Filter
   docs = filterByCompany(docs, company);
-  
   let latestByFloor={};
   docs.forEach(d=>{let x=d;if(x.floor&&x.date){if(!latestByFloor[x.floor]||x.date>latestByFloor[x.floor].date)latestByFloor[x.floor]=x;}});
   let floorStocks={},total=0;
@@ -1764,10 +1801,7 @@ async function getNeedleFloorStock(company){
 async function getGreyData(company){
   let snap=await getDocs(collection(db,"greyFabricStock"));
   let docs=[];snap.forEach(d=>{let x=d.data();if(x.date&&x.rows&&x.rows.length>0)docs.push(x);});
-  
-  // 🔥 Company Filter
   docs = filterByCompany(docs, company);
-  
   docs.sort((a,b)=>(b.date||"").localeCompare(a.date||""));
   let latest=docs[0]||{rows:[],date:""};
   let labels=[],data=[],total=0;
@@ -1778,10 +1812,7 @@ async function getGreyData(company){
 async function getBillingToday(company){
   let snap=await getDocs(collection(db,"billingManpowerReport"));
   let docs = snap.docs.map(d=>d.data());
-  
-  // 🔥 Company Filter
   docs = filterByCompany(docs, company);
-  
   let t=today(),total=0,leave=0,absent=0,present=0;
   docs.forEach(d=>{let x=d;if(x.date===t){total+=Number(x.totalManpower)||0;leave+=Number(x.leave)||0;absent+=Number(x.absent)||0;present+=Number(x.present)||0;}});
   return{total,leave,absent,present};
@@ -1789,10 +1820,7 @@ async function getBillingToday(company){
 async function getNeedleIssueToday(company){
   let snap=await getDocs(collection(db,"needleDailyReport"));
   let rows=[];snap.forEach(d=>{let x=d.data();if(x.date)rows.push(x);});
-  
-  // 🔥 Company Filter
   rows = filterByCompany(rows, company);
-  
   rows.sort((a,b)=>(b.date||"").localeCompare(a.date||""));
   let latest=rows[0]||{};
   return{broken:parseNum(latest.brokenNeedle),missing:parseNum(latest.missingNeedle),change:parseNum(latest.changeNeedle),date:latest.date||""};
@@ -1804,10 +1832,7 @@ async function getFirebaseCounts(company){
     try{
       let snap=await getDocs(collection(db,c));
       let docs = snap.docs.map(d=>d.data());
-      
-      // 🔥 Company Filter
       docs = filterByCompany(docs, company);
-      
       docs.forEach(row=>{
         totalCount++;
         approxBytes+=JSON.stringify(row||{}).length*2;
@@ -1906,15 +1931,11 @@ function barOptions(titleText){
   };
 }
 
-// 🔥 Chart Rendering - ডাটা না থাকলে 0 দেখাবে, চার্ট খালি থাকবে না
 function renderCharts(sewing,accessories,twill,floorStocks,grey,billing,needleIssue){
   if(isAccessoriesAllowed()){
     if(accessoriesChart)accessoriesChart.destroy();
-    
-    // 🔥 Fallback: ডাটা না থাকলে 0
     const accLabels = ["Sewing Thread","Accessories Sample","Twill Tape"];
     const accData = [sewing||0, accessories||0, twill||0];
-    
     accessoriesChart=new Chart(document.getElementById("accessoriesChart"),{
       type:"bar",
       data:{
@@ -1936,11 +1957,8 @@ function renderCharts(sewing,accessories,twill,floorStocks,grey,billing,needleIs
   }
   if(isNeedleAllowed()){
     if(needleChart)needleChart.destroy();
-    
-    // 🔥 Floor stocks fallback
     const floorLabels = Object.keys(floorStocks||{}).length ? Object.keys(floorStocks) : ["No Data"];
     const floorData = Object.keys(floorStocks||{}).length ? Object.values(floorStocks) : [0];
-    
     needleChart=new Chart(document.getElementById("needleChart"),{
       type:"bar",
       data:{
@@ -1951,8 +1969,6 @@ function renderCharts(sewing,accessories,twill,floorStocks,grey,billing,needleIs
       plugins:[valueLabelPlugin]
     });
     if(needleIssueChart)needleIssueChart.destroy();
-    
-    // 🔥 Needle issue fallback
     needleIssueChart=new Chart(document.getElementById("needleIssueChart"),{
       type:"bar",
       data:{
@@ -1965,11 +1981,8 @@ function renderCharts(sewing,accessories,twill,floorStocks,grey,billing,needleIs
   }
   if(isGreyAllowed()){
     if(greyChart)greyChart.destroy();
-    
-    // 🔥 Grey data fallback
     const greyLabels = (grey?.labels?.length) ? grey.labels : ["No Data"];
     const greyData = (grey?.data?.length) ? grey.data : [0];
-    
     greyChart=new Chart(document.getElementById("greyChart"),{
       type:"bar",
       data:{
@@ -1982,8 +1995,6 @@ function renderCharts(sewing,accessories,twill,floorStocks,grey,billing,needleIs
   }
   if(isBillingAllowed()){
     if(billingChart)billingChart.destroy();
-    
-    // 🔥 Billing fallback
     billingChart=new Chart(document.getElementById("billingChart"),{
       type:"doughnut",
       data:{
@@ -2008,10 +2019,7 @@ async function loadNotices(company){
   try{
     let snap=await getDocs(collection(db,"liveNotices"));
     let rows=[];snap.forEach(d=>rows.push(d.data()));
-    
-    // 🔥 Company Filter
     rows = filterByCompany(rows, company);
-    
     rows.sort((a,b)=>(b.createdAt||"").localeCompare(a.createdAt||""));
     document.getElementById("noticeMove").innerText=rows.length?rows.slice(0,5).map(n=>`📢 ${n.user||"User"}: ${n.text||""}`).join("      "):"📢 No live notice found";
   }catch(e){
@@ -2021,12 +2029,15 @@ async function loadNotices(company){
 }
 async function updateLastActive(){if(user.id){try{await updateDoc(doc(db,"users",user.id),{lastActive:new Date().toISOString()});}catch(e){}}}
 
-// 🔥 Main Dashboard Loader - Company Wise + Fallback Values
+// ✅ FINAL loadDashboardStock() WITH ALL FIXES
 async function loadDashboardStock(){
   try{
     const company = window.currentCompany;
     
-    // 🔥 সব ফাংশনে company পাস করুন
+    // ✅ ADD: Company type check & MCD list
+    const isComposite = company === "GMS COMPOSITE KNITTING";
+    const COMPANY_MCD = getCompanyMCD(company);
+
     let sewing=await getLatestPresent("sewingThread",133322, company);
     let twill=await getLatestPresent("twillTape",171255, company);
     let accessories=await getLatestPresent("accessoriesSample",21514393, company);
@@ -2039,7 +2050,6 @@ async function loadDashboardStock(){
     let manpower=manpowerData.map;
     let allowed=allowedMCDList();
     
-    // 🔥 Billing stats with fallback
     if(isBillingAllowed()){
       document.getElementById("attTotal").innerText=fmt(billing?.total||0);
       document.getElementById("attLeave").innerText=fmt(billing?.leave||0);
@@ -2049,22 +2059,26 @@ async function loadDashboardStock(){
     
     updateLimitBox(firebase);
     
-    // 🔥 Accessories stats with fallback
+    // ✅ Accessories 0 FIX for Composite
+    if(isComposite){
+      document.getElementById("sumAccessories").innerText = 0;
+      document.getElementById("sumSewing").innerText = 0;
+      document.getElementById("sumTwill").innerText = 0;
+    }
+    
     if(isAccessoriesAllowed()){
       document.getElementById("sumAccessories").innerText=fmt(accessories||0);
       document.getElementById("sumSewing").innerText=fmt(sewing||0);
       document.getElementById("sumTwill").innerText=fmt(twill||0);
     }
     
-    // 🔥 Needle stats with fallback
     if(isNeedleAllowed())document.getElementById("needleToday").innerText=fmt(needleData?.total||0);
     
-    // 🔥 Charts render with fallback values
     renderCharts(sewing,accessories,twill,needleData?.floorStocks||{},grey||{labels:[],data:[],total:0},billing||{total:0,leave:0,absent:0,present:0},needleIssue||{broken:0,missing:0,change:0});
     
-    // 🔥 MCD Dashboard - সবসময় লিস্ট দেখাবে, ভ্যালু 0 হতে পারে
+    // ✅ MCD Dashboard - USE COMPANY_MCD instead of ALL_MCD
     let html="";
-    ALL_MCD.forEach(mcd=>{
+    COMPANY_MCD.forEach(mcd=>{
       if(!allowed.includes(mcd))return;
       let mp=manpower[mcd]||{count:0,salary:0};
       
@@ -2075,21 +2089,20 @@ async function loadDashboardStock(){
       }else if(mcd==="BILLING SECTION"){
         html+=`<div class="mcdBox"><h3>👨‍ BILLING SECTION</h3><div class="miniRow"><span>👨‍ Total Manpower</span><span class="miniValue">${fmt(billing?.total||0)}</span></div><div class="miniRow"><span>🏖 Leave</span><span class="miniValue">${fmt(billing?.leave||0)}</span></div><div class="miniRow"><span>❌ Absent</span><span class="miniValue">${fmt(billing?.absent||0)}</span></div><div class="miniRow"><span>✅ Today Present</span><span class="miniValue">${fmt(billing?.present||0)}</span></div><div class="miniChart"><div class="miniFill" style="width:${Math.min(100,((billing?.present||0)/100)*100)}%"></div></div></div>`;
       }else{
-        // 🔥 অন্যান্য MCD - ডাটা না থাকলে 0 দেখাবে
         html+=`<div class="mcdBox"><h3>📂 ${mcd}</h3>${isManpowerAllowed()?`<div class="miniRow"><span>👨‍ Manpower</span><span class="miniValue">${fmt(mp.count||0)}</span></div><div class="miniRow"><span>💰 Salary</span><span class="miniValue">${fmt(mp.salary||0)}</span></div>`:""}<div class="miniRow"><span>📊 Stock / Report</span><span class="miniValue">${fmt(0)}</span></div><div class="miniChart"><div class="miniFill" style="width:0%"></div></div></div>`;
       }
     });
     
-    // 🔥 MCD লিস্ট খালি হলেও fallback
     document.getElementById("mcdDashboard").innerHTML=html || 
       `<div class="mcdBox"><h3>⚠️ No MCD Access</h3><p style="color:var(--muted);font-size:12px;">Please contact admin for access</p></div>`;
     
     loadNotices(company);
   }catch(e){
     console.log(e);
-    // 🔥 এরর হলেও MCD লিস্ট 0 ভ্যালু সহ দেখাবে
     const allowed = allowedMCDList();
-    document.getElementById("mcdDashboard").innerHTML = ALL_MCD.filter(m => allowed.includes(m))
+    const company = window.currentCompany;
+    const COMPANY_MCD = getCompanyMCD(company);
+    document.getElementById("mcdDashboard").innerHTML = COMPANY_MCD.filter(m => allowed.includes(m))
       .map(mcd => `<div class="mcdBox"><h3>📂 ${mcd}</h3><div class="miniRow"><span>📊 Data</span><span class="miniValue" style="color:var(--yellow)">0</span></div></div>`).join("") 
       || "<div class='mcdBox'><h3>❌ No Access</h3></div>";
   }
@@ -2216,6 +2229,14 @@ document.addEventListener("DOMContentLoaded", () => {
       window.autoSyncQueue();
     }
   });
+});
+
+// ✅ FINAL AUTO LOAD FIX
+window.addEventListener("load",()=>{
+  setupCompanyDropdowns();
+  setTimeout(()=>{
+    switchCompany(window.currentCompany);
+  },300);
 });
 </script>
 </body>
