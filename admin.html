@@ -7,499 +7,259 @@
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <style>
-    /* ===== CSS VARIABLES & RESET ===== */
-    :root {
-      --bg: #0a1628; --card: #1e293b; --card2: #334155; --text: #f1f5f9;
-      --muted: #cbd5e1; --border: #475569; --blue: #3b82f6; --green: #10b981;
-      --red: #ef4444; --yellow: #f59e0b; --purple: #8b5cf6;
-      --shadow: 0 10px 40px rgba(0,0,0,.4); --radius: 12px;
-      --transition: all .3s cubic-bezier(.4,0,.2,1);
-    }
-    body.light {
-      --bg: #f8fafc; --card: #ffffff; --card2: #f1f5f9; --text: #1e293b;
-      --muted: #64748b; --border: #cbd5e1; --shadow: 0 10px 40px rgba(0,0,0,.1);
-    }
-    * { box-sizing: border-box; margin: 0; padding: 0; }
-    body {
-      margin: 0; background: var(--bg); color: var(--text);
-      font-family: 'Segoe UI', 'Poppins', sans-serif; padding-bottom: 90px;
-      font-weight: 400; line-height: 1.6; min-height: 100vh;
-    }
-
-    /* ===== LOADING OVERLAY ===== */
-    #loader {
-      position: fixed; inset: 0; background: var(--bg); z-index: 9999;
-      display: flex; align-items: center; justify-content: center; flex-direction: column; gap: 12px;
-      transition: opacity .4s, visibility .4s;
-    }
-    #loader.hidden { opacity: 0; visibility: hidden; pointer-events: none; }
-    .spinner { width: 40px; height: 40px; border: 4px solid var(--border); border-top-color: var(--blue); border-radius: 50%; animation: spin 1s linear infinite; }
-    @keyframes spin { to { transform: rotate(360deg); } }
-    .loader-text { color: var(--muted); font-size: 13px; font-weight: 600; }
-
-    /* ===== SIDEBAR ===== */
-    .sidebar {
-      position: fixed; left: 0; top: 0; bottom: 0; width: 230px;
-      background: linear-gradient(180deg, var(--card) 0%, #0f172a 100%);
-      border-right: 1px solid rgba(59,130,246,.2); display: flex; flex-direction: column;
-      z-index: 1000; transition: transform .3s; overflow-y: auto; box-shadow: 4px 0 30px rgba(0,0,0,.5);
-    }
-    body.light .sidebar { background: linear-gradient(180deg, #fff 0%, #f1f5f9 100%); border-right-color: var(--border); }
-    @media(max-width: 900px) { .sidebar { transform: translateX(-100%); } .sidebar.show { transform: translateX(0); } }
-    .sidebarHeader { padding: 20px 16px; border-bottom: 1px solid rgba(59,130,246,.2); display: flex; flex-direction: column; gap: 10px; }
-    .logo-row { display: flex; align-items: center; gap: 10px; }
-    .logo-icon { width: 38px; height: 38px; background: var(--blue); border-radius: 10px; display: flex; align-items: center; justify-content: center; font-weight: 900; font-size: 18px; color: #fff; }
-    .logo-title { font-size: 17px; font-weight: 800; color: var(--text); letter-spacing: -.5px; }
-    .user-sub { font-size: 10px; color: var(--muted); font-weight: 500; }
-    .companySwitch { display: flex; background: rgba(59,130,246,.12); border: 1px solid rgba(59,130,246,.3); border-radius: 10px; padding: 4px; gap: 4px; }
-    .companySwitch button { flex: 1; padding: 7px 8px; border: none; border-radius: 7px; background: transparent; color: var(--muted); font-size: 11px; font-weight: 700; cursor: pointer; transition: var(--transition); }
-    body.light .companySwitch button { color: #475569; }
-    .companySwitch button.active { background: linear-gradient(135deg, var(--blue), var(--purple)); color: #fff !important; box-shadow: 0 2px 10px rgba(59,130,246,.4); }
-    .sidebarNav { flex: 1; padding: 12px 10px; display: flex; flex-direction: column; gap: 5px; }
-    .sidebarNav button {
-      background: transparent; color: var(--muted); border: 1px solid transparent;
-      padding: 10px 12px; border-radius: 10px; font-size: 13px; font-weight: 600;
-      cursor: pointer; text-align: left; transition: var(--transition); display: flex; align-items: center; gap: 10px;
-    }
-    .sidebarNav button:hover { background: rgba(59,130,246,.15); border-color: rgba(59,130,246,.4); transform: translateX(3px); color: var(--text); }
-    .sidebarNav button.active { background: linear-gradient(135deg, var(--blue), var(--purple)); color: #fff !important; box-shadow: 0 4px 15px rgba(59,130,246,.35); font-weight: 700; }
-    .sidebarFooter { padding: 14px 12px; border-top: 1px solid rgba(59,130,246,.2); display: flex; flex-direction: column; gap: 8px; }
-    .sf-btn { width: 100%; padding: 10px; border-radius: 10px; font-weight: 700; cursor: pointer; border: none; font-size: 12px; transition: var(--transition); }
-    .sf-btn.theme { background: linear-gradient(135deg, var(--blue), var(--purple)); color: #fff; }
-    .sf-btn.logout { background: linear-gradient(135deg, var(--red), #f97316); color: #fff; }
-    .sf-btn:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(0,0,0,.3); }
-
-    /* ===== MAIN LAYOUT ===== */
-    .mainContent { margin-left: 230px; min-height: 100vh; background: var(--bg); transition: margin-left .3s; }
-    @media(max-width: 900px) { .mainContent { margin-left: 0; } }
-    .overlay { position: fixed; inset: 0; background: rgba(0,0,0,.65); z-index: 999; backdrop-filter: blur(4px); display: none; }
-    .overlay.show { display: block; }
-
-    /* ===== TOP BAR ===== */
-    .topBar { background: rgba(30,41,59,.92); border-bottom: 1px solid rgba(59,130,246,.2); position: sticky; top: 0; z-index: 100; backdrop-filter: blur(10px); }
-    body.light .topBar { background: rgba(255,255,255,.92); border-bottom-color: var(--border); }
-    .systemNameBar { background: linear-gradient(90deg, #0a1628 0%, #1e293b 50%, #0a1628 100%); padding: 14px 20px; text-align: center; position: relative; overflow: hidden; }
-    body.light .systemNameBar { background: linear-gradient(90deg, #f8fafc 0%, #e2e8f0 50%, #f8fafc 100%); }
-    .systemNameBar::before { content: ''; position: absolute; top: 0; left: -100%; width: 100%; height: 100%; background: linear-gradient(90deg, transparent, rgba(59,130,246,.25), transparent); animation: shimmer 4s infinite; }
-    @keyframes shimmer { to { left: 100%; } }
-    .systemTitle { font-size: 28px; font-weight: 900; background: linear-gradient(90deg, var(--blue), var(--purple), var(--green), var(--yellow), var(--blue)); background-size: 300% 300%; -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; animation: gradFlow 5s ease infinite, glowPulse 2s ease-in-out infinite; letter-spacing: 1.5px; text-transform: uppercase; position: relative; z-index: 1; }
-    @keyframes gradFlow { 0%,100%{background-position:0% 50%} 50%{background-position:100% 50%} }
-    @keyframes glowPulse { 0%,100%{filter:brightness(1) drop-shadow(0 0 15px rgba(59,130,246,.5))} 50%{filter:brightness(1.2) drop-shadow(0 0 25px rgba(139,92,246,.7))} }
-    .systemSub { font-size: 11px; color: var(--muted); margin-top: 3px; font-weight: 600; letter-spacing: 2.5px; }
-    .topBarInner { display: flex; align-items: center; justify-content: space-between; padding: 12px 20px; }
-    .menuToggle { background: var(--blue); color: #fff; border: none; padding: 8px 16px; border-radius: 8px; font-size: 14px; cursor: pointer; font-weight: 700; display: none; }
-    @media(max-width: 900px) { .menuToggle { display: block; } }
-    .topBarRight { display: flex; align-items: center; gap: 12px; }
-    .liveBadge { display: flex; align-items: center; gap: 6px; color: var(--green); font-weight: 700; font-size: 12px; }
-    .liveDot { width: 8px; height: 8px; background: var(--green); border-radius: 50%; animation: pulse 1.5s infinite; }
-    @keyframes pulse { 0% { box-shadow: 0 0 0 0 rgba(16,185,129,.7); } 70% { box-shadow: 0 0 0 8px rgba(16,185,129,0); } 100% { box-shadow: 0 0 0 0 rgba(16,185,129,0); } }
-    .companyBadge { display: inline-flex; align-items: center; gap: 6px; padding: 5px 12px; background: rgba(59,130,246,.15); border: 1px solid rgba(59,130,246,.3); border-radius: 20px; font-size: 11px; font-weight: 700; color: var(--blue); }
-    .companyBadge.composite { background: rgba(139,92,246,.15); border-color: rgba(139,92,246,.3); color: var(--purple); }
-
-    /* ===== NOTICE BAR ===== */
-    .noticeBar { background: linear-gradient(90deg,var(--yellow) 0%,var(--red) 50%,var(--blue) 100%); color: #fff; padding: 9px 0; font-weight: 700; font-size: 13px; overflow: hidden; white-space: nowrap; width: 100%; }
-    .noticeMove { display: inline-block; padding-left: 100%; animation: marquee 35s linear infinite; }
-    @keyframes marquee { to { transform: translateX(-100%); } }
-
-    /* ===== PAGES & CARDS ===== */
-    .page { display: none; padding: 20px; animation: fadeIn .4s ease; }
-    .page.active { display: block; }
-    @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-    .pageTitle { font-size: 20px; font-weight: 800; margin-bottom: 4px; color: var(--text); display: flex; align-items: center; gap: 10px; }
-    .pageSub { color: var(--muted); margin-bottom: 20px; font-weight: 500; font-size: 12px; }
-    .emptyState { text-align: center; padding: 60px 20px; color: var(--muted); background: var(--card); border-radius: 16px; border: 1px dashed var(--border); margin-top: 20px; }
-    .emptyState i { font-size: 42px; margin-bottom: 12px; opacity: .7; }
-    .emptyState h3 { color: var(--text); font-size: 17px; margin-bottom: 6px; }
-    .emptyState p { font-size: 13px; max-width: 450px; margin: 0 auto; }
-
-    /* Stat Cards */
-    .statRow { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; margin-bottom: 20px; }
-    .statCard { padding: 16px; border-radius: 14px; display: flex; align-items: center; justify-content: space-between; color: #fff; transition: transform .3s; box-shadow: var(--shadow); }
-    .statCard:hover { transform: translateY(-3px); }
-    .bg-blue { background: linear-gradient(135deg, #3b82f6, #2563eb); }
-    .bg-green { background: linear-gradient(135deg, #10b981, #059669); }
-    .bg-orange { background: linear-gradient(135deg, #f59e0b, #d97706); }
-    .bg-purple { background: linear-gradient(135deg, #8b5cf6, #7c3aed); }
-    .statInfo h3 { font-size: 22px; font-weight: 800; margin-bottom: 2px; }
-    .statInfo p { font-size: 11px; opacity: .9; font-weight: 600; }
-    .statIcon { font-size: 26px; opacity: .7; }
-    @media(max-width: 900px) { .statRow { grid-template-columns: 1fr 1fr; } }
-    @media(max-width: 500px) { .statRow { grid-template-columns: 1fr; } }
-
-    /* Charts & Grid */
-    .chartGrid { display: grid; gap: 16px; margin-bottom: 20px; grid-template-columns: 1fr 1fr; }
-    @media(max-width: 900px) { .chartGrid { grid-template-columns: 1fr; } }
-    .chartBox { background: var(--card); border: 1px solid rgba(59,130,246,.12); border-radius: 14px; padding: 14px; box-shadow: 0 4px 15px rgba(0,0,0,.15); }
-    body.light .chartBox { border-color: var(--border); }
-    .chartBox h3 { margin: 0 0 12px; font-size: 14px; font-weight: 700; color: var(--text); }
-    .chartBox canvas { max-height: 240px !important; }
-    .mcdGrid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; margin-bottom: 20px; }
-    @media(max-width: 900px) { .mcdGrid { grid-template-columns: 1fr; } }
-    .mcdBox { background: var(--card); border: 1px solid rgba(59,130,246,.12); border-radius: 14px; padding: 14px; }
-    .mcdBox h3 { margin: 0 0 10px; font-size: 14px; font-weight: 700; color: var(--text); }
-    .miniRow { display: flex; justify-content: space-between; padding: 6px 0; border-bottom: 1px solid rgba(255,255,255,.06); font-size: 12px; font-weight: 600; }
-    body.light .miniRow { border-bottom-color: #e2e8f0; }
-    .miniValue { color: var(--green); font-weight: 800; }
-
-    /* Forms & Cards */
-    .entrySection, .reportSection { background: var(--card); border-radius: 14px; padding: 20px; margin-bottom: 20px; box-shadow: 0 4px 15px rgba(0,0,0,.1); border: 1px solid rgba(59,130,246,.1); }
-    .formGroup { margin-bottom: 14px; }
-    .formGroup label { display: flex; align-items: center; gap: 8px; font-size: 13px; font-weight: 700; color: var(--muted); margin-bottom: 5px; }
-    .formGroup select, .formGroup input { width: 100%; padding: 10px 12px; border: 1px solid var(--border); border-radius: 10px; background: var(--bg); color: var(--text); font-size: 13px; font-weight: 500; transition: var(--transition); }
-    .formGroup select:focus { outline: none; border-color: var(--blue); box-shadow: 0 0 0 3px rgba(59,130,246,.15); }
-    .openBtn { background: linear-gradient(135deg, var(--blue), var(--purple)); color: #fff !important; border: none; padding: 10px 20px; border-radius: 10px; font-size: 14px; font-weight: 700; cursor: pointer; display: inline-flex; align-items: center; gap: 8px; transition: var(--transition); margin-bottom: 20px; }
-    .openBtn:hover { transform: translateY(-2px); box-shadow: 0 6px 18px rgba(59,130,246,.35); }
-    .cardsGrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 12px; }
-    .dataCard { background: linear-gradient(135deg, #f8fafc, #f1f5f9); border: 1px solid rgba(59,130,246,.12); border-radius: 12px; padding: 16px; cursor: pointer; transition: var(--transition); display: flex; align-items: center; justify-content: center; gap: 8px; font-size: 13px; font-weight: 700; color: #1e293b !important; min-height: 55px; }
-    body.light .dataCard { background: #fff; border-color: #e2e8f0; }
-    .dataCard:hover { transform: translateY(-2px); box-shadow: 0 6px 18px rgba(59,130,246,.15); border-color: rgba(59,130,246,.3); }
-    .dataCard i { color: var(--blue); }
-
-    /* Needle Grid */
-    .needleGrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 12px; }
-    .needleCard { background: var(--card); border: 1px solid rgba(59,130,246,.15); border-radius: 12px; padding: 14px; display: flex; align-items: center; gap: 12px; cursor: pointer; transition: var(--transition); color: var(--text); }
-    .needleCard:hover { background: rgba(59,130,246,.08); border-color: var(--blue); transform: translateY(-2px); }
-    .needleCard i { font-size: 16px; color: var(--blue); width: 24px; text-align: center; }
-    .needleCard span { font-size: 13px; font-weight: 700; }
-
-    /* Footer & Toast */
-    .footer { position: fixed; bottom: 12px; left: 50%; transform: translateX(-50%); display: flex; align-items: center; gap: 14px; background: var(--card); border: 1px solid rgba(59,130,246,.25); padding: 8px 16px; border-radius: 16px; box-shadow: 0 8px 25px rgba(0,0,0,.4); z-index: 998; backdrop-filter: blur(8px); }
-    .footerItem { display: flex; align-items: center; gap: 8px; color: var(--text); }
-    .footerItem img { width: 36px; height: 36px; border-radius: 50%; border: 2px solid var(--green); object-fit: cover; cursor: pointer; }
-    .footerText b { font-size: 11px; font-weight: 700; display: block; }
-    .footerText span { color: var(--muted); font-size: 9px; }
-    .divider { width: 1px; height: 28px; background: rgba(59,130,246,.4); }
-    @media(max-width: 900px) { .pc-only { display: none !important; } .footer { width: 96%; padding: 8px 10px; flex-wrap: wrap; justify-content: center; } }
-    .toast { position: fixed; bottom: 80px; left: 50%; transform: translateX(-50%) translateY(10px); background: var(--green); color: #fff; padding: 10px 18px; border-radius: 10px; font-weight: 700; font-size: 13px; z-index: 9999; box-shadow: 0 4px 12px rgba(0,0,0,.3); opacity: 0; transition: all .3s; pointer-events: none; }
-    .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+    :root{--bg:#0a1628;--card:#1e293b;--card2:#334155;--text:#f1f5f9;--muted:#cbd5e1;--border:#475569;--blue:#3b82f6;--green:#10b981;--red:#ef4444;--yellow:#f59e0b;--purple:#8b5cf6;}
+    body.light{--bg:#f8fafc;--card:#fff;--card2:#f1f5f9;--text:#1e293b;--muted:#64748b;--border:#cbd5e1;}
+    *{box-sizing:border-box;margin:0;padding:0}body{margin:0;background:var(--bg);color:var(--text);font-family:'Segoe UI',sans-serif;padding-bottom:90px;line-height:1.5}
+    #loader{position:fixed;inset:0;background:var(--bg);z-index:9999;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;transition:opacity .3s,visibility .3s}
+    #loader.hidden{opacity:0;visibility:hidden;pointer-events:none}
+    .spin{width:36px;height:36px;border:4px solid var(--border);border-top-color:var(--blue);border-radius:50%;animation:sp 1s linear infinite}
+    @keyframes sp{to{transform:rotate(360deg)}}
+    .sidebar{position:fixed;left:0;top:0;bottom:0;width:220px;background:linear-gradient(180deg,var(--card),#0f172a);border-right:1px solid rgba(59,130,246,.2);display:flex;flex-direction:column;z-index:1000;transition:transform .3s;overflow-y:auto}
+    body.light .sidebar{background:linear-gradient(180deg,#fff,#f1f5f9);border-right-color:var(--border)}
+    @media(max-width:900px){.sidebar{transform:translateX(-100%)}.sidebar.show{transform:translateX(0)}}
+    .sidebarHeader{padding:18px 14px;border-bottom:1px solid rgba(59,130,246,.2)}
+    .logo-row{display:flex;align-items:center;gap:10px;margin-bottom:10px}
+    .logo-box{width:36px;height:36px;background:var(--blue);border-radius:9px;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:16px;color:#fff}
+    .logo-txt{font-size:16px;font-weight:800;color:var(--text)}
+    .user-sub{font-size:10px;color:var(--muted);margin-left:46px}
+    .cmpSwitch{display:flex;background:rgba(59,130,246,.12);border:1px solid rgba(59,130,246,.3);border-radius:9px;padding:3px;gap:3px;margin-left:46px;margin-top:8px}
+    .cmpSwitch button{flex:1;padding:6px;border:none;border-radius:7px;background:transparent;color:var(--muted);font-size:11px;font-weight:700;cursor:pointer;transition:.2s}
+    body.light .cmpSwitch button{color:#475569}
+    .cmpSwitch button.active{background:linear-gradient(135deg,var(--blue),var(--purple));color:#fff!important}
+    .navList{flex:1;padding:10px;display:flex;flex-direction:column;gap:4px}
+    .navBtn{background:transparent;color:var(--muted);border:1px solid transparent;padding:9px 11px;border-radius:9px;font-size:13px;font-weight:600;cursor:pointer;text-align:left;transition:.2s;display:flex;align-items:center;gap:9px}
+    .navBtn:hover{background:rgba(59,130,246,.15);transform:translateX(2px);color:var(--text)}
+    .navBtn.active{background:linear-gradient(135deg,var(--blue),var(--purple));color:#fff!important;font-weight:700}
+    .sideFoot{padding:14px;border-top:1px solid rgba(59,130,246,.2);display:flex;flex-direction:column;gap:6px}
+    .s-btn{width:100%;padding:9px;border-radius:8px;border:none;font-weight:700;cursor:pointer;font-size:12px;transition:.2s;color:#fff}
+    .s-btn.th{background:linear-gradient(135deg,var(--blue),var(--purple))}
+    .s-btn.lo{background:linear-gradient(135deg,var(--red),#f97316)}
+    .overlay{position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:999;display:none;backdrop-filter:blur(3px)}
+    .overlay.show{display:block}
+    .main{margin-left:220px;min-height:100vh;background:var(--bg);transition:margin .3s}
+    @media(max-width:900px){.main{margin-left:0}}
+    .topBar{background:rgba(30,41,59,.95);border-bottom:1px solid rgba(59,130,246,.2);position:sticky;top:0;z-index:100;backdrop-filter:blur(8px)}
+    body.light .topBar{background:rgba(255,255,255,.95);border-bottom-color:var(--border)}
+    .sysTitle{background:linear-gradient(90deg,#0a1628,#1e293b,#0a1628);padding:12px 16px;text-align:center;position:relative;overflow:hidden}
+    body.light .sysTitle{background:linear-gradient(90deg,#f8fafc,#e2e8f0,#f8fafc)}
+    .sysTitle::before{content:'';position:absolute;top:0;left:-100%;width:100%;height:100%;background:linear-gradient(90deg,transparent,rgba(59,130,246,.2),transparent);animation:sh 3s infinite}
+    @keyframes sh{to{left:100%}}
+    .sysTitle h1{font-size:26px;font-weight:900;background:linear-gradient(90deg,var(--blue),var(--purple),var(--green));-webkit-background-clip:text;-webkit-text-fill-color:transparent;letter-spacing:1px}
+    .sysTitle p{font-size:10px;color:var(--muted);font-weight:600;letter-spacing:2px;margin-top:2px}
+    .topInner{display:flex;align-items:center;justify-content:space-between;padding:10px 16px}
+    .menuBtn{background:var(--blue);color:#fff;border:none;padding:7px 14px;border-radius:7px;font-size:13px;cursor:pointer;display:none;font-weight:700}
+    @media(max-width:900px){.menuBtn{display:block}}
+    .topRight{display:flex;align-items:center;gap:10px}
+    .live{display:flex;align-items:center;gap:5px;color:var(--green);font-size:12px;font-weight:700}
+    .live i{width:8px;height:8px;background:var(--green);border-radius:50%;animation:pls 1.5s infinite}
+    @keyframes pls{0%,100%{box-shadow:0 0 0 0 rgba(16,185,129,.7)}50%{box-shadow:0 0 0 6px rgba(16,185,129,0)}}
+    .badge{display:inline-flex;align-items:center;gap:5px;padding:4px 10px;background:rgba(59,130,246,.15);border:1px solid rgba(59,130,246,.3);border-radius:18px;font-size:11px;font-weight:700;color:var(--blue)}
+    .badge.comp{background:rgba(139,92,246,.15);border-color:rgba(139,92,246,.3);color:var(--purple)}
+    .notice{background:linear-gradient(90deg,var(--yellow),var(--red),var(--blue));color:#fff;padding:8px 0;font-weight:700;font-size:12px;overflow:hidden;white-space:nowrap}
+    .notice span{display:inline-block;padding-left:100%;animation:mar 30s linear infinite}
+    @keyframes mar{to{transform:translateX(-100%)}}
+    .page{display:none;padding:16px;animation:fin .3s ease}
+    .page.act{display:block}
+    @keyframes fin{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+    .pgTitle{font-size:18px;font-weight:800;margin-bottom:4px;display:flex;align-items:center;gap:8px}
+    .pgSub{color:var(--muted);font-size:11px;margin-bottom:16px;font-weight:500}
+    .empty{text-align:center;padding:40px 16px;background:var(--card);border-radius:14px;border:1px dashed var(--border);color:var(--muted)}
+    .empty i{font-size:36px;margin-bottom:10px;opacity:.6}
+    .statRow{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:16px}
+    .sCard{padding:14px;border-radius:12px;display:flex;align-items:center;justify-content:space-between;color:#fff;box-shadow:0 4px 12px rgba(0,0,0,.2)}
+    .sCard:hover{transform:translateY(-2px)}
+    .b1{background:linear-gradient(135deg,#3b82f6,#2563eb)}.b2{background:linear-gradient(135deg,#10b981,#059669)}
+    .b3{background:linear-gradient(135deg,#f59e0b,#d97706)}.b4{background:linear-gradient(135deg,#8b5cf6,#7c3aed)}
+    .sInf h3{font-size:20px;font-weight:800;margin:0 0 2px}.sInf p{font-size:10px;opacity:.9;margin:0;font-weight:600}
+    .sIco{font-size:22px;opacity:.7}
+    @media(max-width:900px){.statRow{grid-template-columns:1fr 1fr}}@media(max-width:500px){.statRow{grid-template-columns:1fr}}
+    .cGrid{display:grid;gap:14px;margin-bottom:16px;grid-template-columns:1fr 1fr}
+    @media(max-width:900px){.cGrid{grid-template-columns:1fr}}
+    .cBox{background:var(--card);border:1px solid rgba(59,130,246,.1);border-radius:12px;padding:12px}
+    .cBox h3{margin:0 0 10px;font-size:13px;font-weight:700;color:var(--text)}
+    .cBox canvas{max-height:220px!important}
+    .mcdGrid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+    @media(max-width:900px){.mcdGrid{grid-template-columns:1fr}}
+    .mBox{background:var(--card);border:1px solid rgba(59,130,246,.1);border-radius:12px;padding:12px}
+    .mBox h3{margin:0 0 8px;font-size:13px;font-weight:700;color:var(--text)}
+    .mRow{display:flex;justify-content:space-between;padding:5px 0;border-bottom:1px solid rgba(255,255,255,.05);font-size:11px;font-weight:600}
+    .mVal{color:var(--green);font-weight:800}
+    .fSec{background:var(--card);border-radius:12px;padding:16px;margin-bottom:16px;border:1px solid rgba(59,130,246,.1)}
+    .fGrp{margin-bottom:12px}
+    .fGrp label{display:flex;align-items:center;gap:6px;font-size:12px;font-weight:700;color:var(--muted);margin-bottom:4px}
+    .fGrp select{width:100%;padding:8px 10px;border:1px solid var(--border);border-radius:8px;background:var(--bg);color:var(--text);font-size:13px}
+    .fBtn{background:linear-gradient(135deg,var(--blue),var(--purple));color:#fff;border:none;padding:9px 16px;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;display:inline-flex;align-items:center;gap:6px}
+    .cGrid2{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px}
+    .dCard{background:linear-gradient(135deg,#f8fafc,#f1f5f9);border:1px solid rgba(59,130,246,.1);border-radius:10px;padding:14px;cursor:pointer;transition:.2s;display:flex;align-items:center;justify-content:center;gap:6px;font-size:12px;font-weight:700;color:#1e293b}
+    body.light .dCard{background:#fff;border-color:#e2e8f0}
+    .dCard:hover{transform:translateY(-2px);box-shadow:0 6px 15px rgba(59,130,246,.15)}
+    .dCard i{color:var(--blue)}
+    .nGrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:10px}
+    .nCard{background:var(--card);border:1px solid rgba(59,130,246,.15);border-radius:10px;padding:12px;display:flex;align-items:center;gap:10px;cursor:pointer;transition:.2s;color:var(--text)}
+    .nCard:hover{background:rgba(59,130,246,.08);border-color:var(--blue)}
+    .nCard i{color:var(--blue);font-size:14px}
+    .nCard span{font-size:12px;font-weight:700}
+    .foot{position:fixed;bottom:10px;left:50%;transform:translateX(-50%);display:flex;align-items:center;gap:12px;background:var(--card);border:1px solid rgba(59,130,246,.2);padding:7px 12px;border-radius:14px;box-shadow:0 6px 20px rgba(0,0,0,.4);z-index:998}
+    .fIt{display:flex;align-items:center;gap:6px}
+    .fIt img{width:32px;height:32px;border-radius:50%;border:2px solid var(--green)}
+    .fTxt b{font-size:10px;font-weight:700;display:block}.fTxt span{color:var(--muted);font-size:8px}
+    .div{width:1px;height:24px;background:rgba(59,130,246,.4)}
+    @media(max-width:900px){.pc{display:none!important}.foot{width:95%;flex-wrap:wrap;justify-content:center}}
+    .tst{position:fixed;bottom:70px;left:50%;transform:translateX(-50%) translateY(10px);background:var(--green);color:#fff;padding:8px 14px;border-radius:8px;font-weight:700;font-size:12px;z-index:9999;opacity:0;transition:.3s}
+    .tst.show{opacity:1;transform:translateX(-50%) translateY(0)}
   </style>
 </head>
 <body>
-
-  <!-- Loading Overlay -->
-  <div id="loader">
-    <div class="spinner"></div>
-    <div class="loader-text">লোড হচ্ছে...</div>
+<div id="loader"><div class="spin"></div><div style="color:var(--muted);font-size:12px;font-weight:600">লোড হচ্ছে...</div></div>
+<aside class="sidebar" id="sidebar">
+  <div class="sidebarHeader">
+    <div class="logo-row"><div class="logo-box">G</div><div class="logo-txt">GMS MCD</div></div>
+    <div class="user-sub" id="uInfo">Checking...</div>
+    <div class="cmpSwitch" id="cmpSw">
+      <button id="btnT" class="active" onclick="switchCmp('GMS TEXTILES LTD')">🏭 Textiles</button>
+      <button id="btnC" onclick="switchCmp('GMS COMPOSITE KNITTING')">🏢 Composite</button>
+    </div>
   </div>
+  <div class="navList">
+    <button class="navBtn active" onclick="goPage('home',this)">🏠 Dashboard</button>
+    <button class="navBtn" onclick="goPage('entry',this)">➕ New Entry</button>
+    <button class="navBtn" onclick="goPage('reports',this)">📑 Reports</button>
+    <button class="navBtn" id="nNdl" onclick="goPage('needle',this)">🪡 Needle</button>
+    <button class="navBtn" id="nAdm" onclick="location.href='admin.html'">👑 Admin</button>
+    <button class="navBtn" id="nMan" onclick="location.href='manpower.html'">👨‍ Manpower</button>
+    <button class="navBtn" onclick="location.href='notice.html'">📢 Notice</button>
+    <button class="navBtn" onclick="location.href='online-users.html'">🟢 Online</button>
+    <button class="navBtn" onclick="location.href='audit-history.html'">📜 Audit</button>
+    <button class="navBtn" id="nBak" onclick="goPage('backup',this)">☁ Backup</button>
+    <button class="navBtn" onclick="location.href='change-password.html'">🔐 Password</button>
+  </div>
+  <div class="sideFoot">
+    <button class="s-btn th" onclick="toggleTheme()">🌙 / ☀️ Theme</button>
+    <button class="s-btn lo" onclick="logout()">🚪 Logout</button>
+  </div>
+</aside>
+<div class="overlay" id="ov" onclick="togSide()"></div>
 
-  <!-- Sidebar -->
-  <aside class="sidebar" id="sidebar">
-    <div class="sidebarHeader">
-      <div class="logo-row">
-        <div class="logo-icon">G</div>
-        <div><div class="logo-title">GMS MCD</div><div class="user-sub" id="loginInfo">Checking auth...</div></div>
-      </div>
-      <div class="companySwitch" id="companySwitch">
-        <button id="btnTextile" class="active" onclick="window.switchCompany('GMS TEXTILES LTD')">🏭 Textiles</button>
-        <button id="btnComposite" onclick="window.switchCompany('GMS COMPOSITE KNITTING')">🏢 Composite</button>
-      </div>
+<main class="main">
+  <header class="topBar">
+    <div class="sysTitle"><h1>GMS MCD ERP SYSTEM</h1><p>ENTERPRISE RESOURCE PLANNING</p></div>
+    <div class="topInner">
+      <button class="menuBtn" onclick="togSide()">☰ Menu</button>
+      <div class="topRight"><span class="live"><i></i> Live</span><span id="bTop" class="badge">🏭 TEXTILES</span></div>
     </div>
-    <nav class="sidebarNav">
-      <button class="active" onclick="navPage('home',this)">🏠 Dashboard</button>
-      <button onclick="navPage('entry',this)">➕ New Entry</button>
-      <button onclick="navPage('reports',this)">📑 Reports</button>
-      <button id="navNeedle" onclick="navPage('needle',this)">🪡 Needle</button>
-      <button id="navAdmin" onclick="location.href='admin.html'">👑 Admin</button>
-      <button id="navManpower" onclick="location.href='manpower.html'">👨‍ Manpower</button>
-      <button onclick="location.href='notice.html'">📢 Notice</button>
-      <button onclick="location.href='online-users.html'">🟢 Online</button>
-      <button onclick="location.href='audit-history.html'">📜 Audit</button>
-      <button id="navBackup" onclick="navPage('backup',this)">☁ Backup</button>
-      <button onclick="location.href='change-password.html'">🔐 Password</button>
-    </nav>
-    <div class="sidebarFooter">
-      <button class="sf-btn theme" onclick="toggleTheme()">🌙 / ☀️ Theme</button>
-      <button class="sf-btn logout" onclick="logout()">🚪 Logout</button>
+  </header>
+  <div class="notice"><span id="nBar">📢 System Ready • Live Sync Active</span></div>
+
+  <section id="home" class="page act">
+    <div class="pgTitle">📊 Dashboard <span id="bDash" class="badge">🏭 TEXTILES</span></div>
+    <div class="pgSub">Role Based • Firebase Sync • Strict Company Isolation</div>
+    <div id="dashT">
+      <div class="statRow">
+        <div class="sCard b1"><div class="sInf"><p>📦 Accessories</p><h3 id="vAcc">0</h3></div><div class="sIco"><i class="fas fa-box"></i></div></div>
+        <div class="sCard b2"><div class="sInf"><p>🧵 Sewing</p><h3 id="vSew">0</h3></div><div class="sIco"><i class="fas fa-tape"></i></div></div>
+        <div class="sCard b3"><div class="sInf"><p>📏 Twill</p><h3 id="vTwi">0</h3></div><div class="sIco"><i class="fas fa-ruler"></i></div></div>
+        <div class="sCard b4"><div class="sInf"><p>🪡 Needle</p><h3 id="vNdl">0</h3></div><div class="sIco"><i class="fas fa-syringe"></i></div></div>
+      </div>
+      <div class="cGrid">
+        <div class="cBox"><h3>📈 Accessories</h3><canvas id="chAcc"></canvas></div>
+        <div class="cBox"><h3>🏭 Needle Floor</h3><canvas id="chNdl"></canvas></div>
+        <div class="cBox"><h3>🏭 Grey Fabric</h3><canvas id="chGry"></canvas></div>
+        <div class="cBox"><h3>🪡 Issues</h3><canvas id="chIss"></canvas></div>
+      </div>
+      <div class="cBox" style="margin-bottom:16px"><h3>👨‍ Attendance</h3><div class="cGrid"><div style="text-align:center"><canvas id="chAtt"></canvas></div><div style="display:flex;flex-direction:column;gap:8px"><div style="background:rgba(16,185,129,.08);padding:10px;border-radius:8px"><span style="color:var(--muted);font-size:10px">Total</span><b style="color:var(--green);font-size:18px" id="aTot">0</b></div><div style="background:rgba(16,185,129,.08);padding:10px;border-radius:8px"><span style="color:var(--muted);font-size:10px">Present</span><b style="color:var(--green);font-size:18px" id="aPre">0</b></div><div style="background:rgba(245,158,11,.08);padding:10px;border-radius:8px"><span style="color:var(--muted);font-size:10px">Leave</span><b style="color:var(--yellow);font-size:18px" id="aLev">0</b></div><div style="background:rgba(239,68,68,.08);padding:10px;border-radius:8px"><span style="color:var(--muted);font-size:10px">Absent</span><b style="color:var(--red);font-size:18px" id="aAbs">0</b></div></div></div></div>
+      <div id="mcdL" class="mcdGrid">Loading MCD...</div>
     </div>
-  </aside>
-  <div class="overlay" id="overlay" onclick="toggleSidebar()"></div>
+    <div id="dashC" style="display:none"><div class="empty"><i class="fas fa-building"></i><h3>🏢 GMS COMPOSITE KNITTING</h3><p>Composite module active. Supports Gate Plan & Challan workflows.</p><p style="margin-top:8px;color:var(--blue);font-weight:700">👉 Go to New Entry → Select MCD</p></div></div>
+  </section>
 
-  <!-- Main Content -->
-  <main class="mainContent" id="mainContent">
-    <header class="topBar">
-      <div class="systemNameBar">
-        <div class="systemTitle">GMS MCD ERP SYSTEM</div>
-        <div class="systemSub">ENTERPRISE RESOURCE PLANNING</div>
-      </div>
-      <div class="topBarInner">
-        <button class="menuToggle" onclick="toggleSidebar()">☰ Menu</button>
-        <div class="topBarRight">
-          <span class="liveBadge"><div class="liveDot"></div> Live</span>
-          <span id="badgeTop" class="companyBadge">🏭 TEXTILES</span>
-        </div>
-      </div>
-    </header>
-    <div class="noticeBar"><div class="noticeMove" id="noticeBar">📢 System ready. Please wait for live data...</div></div>
+  <section id="entry" class="page"><div class="pgTitle">➕ Entry <span id="bEnt" class="badge">🏭 TEXTILES</span></div><div class="fSec"><div class="fGrp"><label>🏢 Company</label><select id="sEntC"></select></div><div class="fGrp"><label>📂 MCD</label><select id="sEntM"></select></div><button class="fBtn" onclick="loadEnt()"><i class="fas fa-rocket"></i> Open</button><div id="gEnt" class="cGrid2"></div></div></section>
+  <section id="reports" class="page"><div class="pgTitle">📑 Reports <span id="bRep" class="badge">🏭 TEXTILES</span></div><div class="fSec"><div class="fGrp"><label>🏢 Company</label><select id="sRepC"></select></div><div class="fGrp"><label>📂 MCD</label><select id="sRepM"></select></div><button class="fBtn" onclick="loadRep()"><i class="fas fa-chart"></i> Show</button><div id="gRep" class="cGrid2"></div></div></section>
+  <section id="needle" class="page"><div class="pgTitle">🪡 Needle <span id="bNdl" class="badge">🏭 TEXTILES</span></div><div class="nGrid"><div class="nCard" onclick="go('needle.html')"><i class="fas fa-syringe"></i><span>Daily Entry</span></div><div class="nCard" onclick="go('needle-dashboard.html')"><i class="fas fa-industry"></i><span>Floor Dash</span></div><div class="nCard" onclick="go('ageing.html')"><i class="fas fa-hourglass"></i><span>Ageing</span></div><div class="nCard" onclick="go('needle-monthly.html')"><i class="fas fa-calendar"></i><span>Monthly</span></div><div class="nCard" onclick="go('all-needle-reports.html')"><i class="fas fa-file"></i><span>All BNR</span></div><div class="nCard" onclick="go('all-needle-summary.html')"><i class="fas fa-chart-pie"></i><span>Summary</span></div></div></section>
+  <section id="backup" class="page"><div class="pgTitle">☁ Backup</div><div class="empty"><i class="fas fa-lock"></i><h3>Admin Only</h3><p>Backup restricted to administrators.</p></div></section>
 
-    <!-- DASHBOARD PAGE -->
-    <section id="home" class="page active">
-      <div class="pageTitle">📊 Dashboard Overview <span id="badgeDash" class="companyBadge">🏭 TEXTILES</span></div>
-      <div class="pageSub">Role Based • Firebase Sync • Company Isolated</div>
-      <div class="emptyState" style="margin-bottom:16px; padding:12px; background:var(--card2); border:1px solid rgba(59,130,246,.15); border-radius:10px; display:flex; align-items:center; gap:8px; justify-content:center; color:var(--green); font-weight:700;">
-        <div class="liveDot" style="margin:0;"></div> LIVE SIGNAL ACTIVE
-      </div>
+  <div class="foot">
+    <div class="fIt"><img src="https://i.ibb.co/5hzT1VGk/IMG.jpg"><div class="fTxt"><b>Md. Johurul</b><span>Developer</span></div></div><div class="div"></div><div class="fIt pc"><img src="https://i.ibb.co/DDqvG3pD/nazir.jpg"><div class="fTxt"><b>Nazir</b><span>Planning</span></div></div><div class="div pc"></div><div class="fIt pc"><img src="https://i.ibb.co/k6WC4fBm/asad.jpg"><div class="fTxt"><b>Asad</b><span>Ops</span></div></div>
+  </div>
+</main>
 
-      <!-- Textile Dashboard -->
-      <div id="dashTextile">
-        <div class="statRow">
-          <div class="statCard bg-blue"><div class="statInfo"><p>📦 Accessories</p><h3 id="valAcc">0</h3></div><div class="statIcon"><i class="fas fa-box"></i></div></div>
-          <div class="statCard bg-green"><div class="statInfo"><p>🧵 Sewing Thread</p><h3 id="valSew">0</h3></div><div class="statIcon"><i class="fas fa-tape"></i></div></div>
-          <div class="statCard bg-orange"><div class="statInfo"><p>📏 Twill Tape</p><h3 id="valTwi">0</h3></div><div class="statIcon"><i class="fas fa-ruler-horizontal"></i></div></div>
-          <div class="statCard bg-purple"><div class="statInfo"><p>🪡 Needle Stock</p><h3 id="valNdl">0</h3></div><div class="statIcon"><i class="fas fa-syringe"></i></div></div>
-        </div>
-        <div class="chartGrid">
-          <div class="chartBox"><h3>📈 Accessories Chart</h3><canvas id="chartAcc"></canvas></div>
-          <div class="chartBox"><h3>🏭 Needle Floor Stock</h3><canvas id="chartNdl"></canvas></div>
-          <div class="chartBox"><h3>🏭 Grey Fabric Stock</h3><canvas id="chartGry"></canvas></div>
-          <div class="chartBox"><h3>🪡 Needle Issues</h3><canvas id="chartNdlIss"></canvas></div>
-        </div>
-        <div class="chartBox" style="margin-bottom:20px;">
-          <h3>👨‍ Attendance Summary</h3>
-          <div class="chartGrid">
-            <div style="text-align:center;"><canvas id="chartAtt"></canvas></div>
-            <div style="display:flex;flex-direction:column;gap:10px;">
-              <div style="background:rgba(16,185,129,.08);padding:12px;border-radius:10px;"><span style="color:var(--muted);font-size:11px;">👨‍ Total</span><b style="color:var(--green);font-size:20px;" id="attTot">0</b></div>
-              <div style="background:rgba(16,185,129,.08);padding:12px;border-radius:10px;"><span style="color:var(--muted);font-size:11px;">✅ Present</span><b style="color:var(--green);font-size:20px;" id="attPre">0</b></div>
-              <div style="background:rgba(245,158,11,.08);padding:12px;border-radius:10px;"><span style="color:var(--muted);font-size:11px;">🏖 Leave</span><b style="color:var(--yellow);font-size:20px;" id="attLev">0</b></div>
-              <div style="background:rgba(239,68,68,.08);padding:12px;border-radius:10px;"><span style="color:var(--muted);font-size:11px;">❌ Absent</span><b style="color:var(--red);font-size:20px;" id="attAbs">0</b></div>
-            </div>
-          </div>
-        </div>
-        <div id="mcdList" class="mcdGrid">Loading MCD data...</div>
-      </div>
+<script>
+  window.toast=(m,t='success')=>{const d=document.createElement('div');d.className='tst';d.style.background=t==='error'?'var(--red)':'var(--green)';d.innerText=m;document.body.appendChild(d);requestAnimationFrame(()=>d.classList.add('show'));setTimeout(()=>{d.classList.remove('show');setTimeout(()=>d.remove(),300)},1800)};
+  window.goPage=(id,b)=>{document.querySelectorAll('.page').forEach(p=>p.classList.remove('act'));document.getElementById(id).classList.add('act');document.querySelectorAll('.navBtn').forEach(x=>x.classList.remove('active'));if(b)b.classList.add('active');if(id==='home')loadDash();if(innerWidth<=900)togSide()};
+  window.go=u=>location.href=u;
+  window.togSide=()=>{document.getElementById('sidebar').classList.toggle('show');document.getElementById('ov').classList.toggle('show')};
+  window.toggleTheme=()=>{document.body.classList.toggle('light');localStorage.setItem('theme',document.body.classList.contains('light')?'light':'dark')};
+  if(localStorage.getItem('theme')==='light')document.body.classList.add('light');
+  window.logout=()=>{localStorage.removeItem('gmsUser');location.href='login.html'};
+  let charts={};
+  function killC(id){if(charts[id]){charts[id].destroy();delete charts[id]}}
+  function updB(cmp){const isT=cmp==='GMS TEXTILES LTD';const t=isT?'🏭 TEXTILES':'🏢 COMPOSITE';const c=isT?'':'comp';['bTop','bDash','bEnt','bRep','bNdl'].forEach(x=>{const e=document.getElementById(x);if(e){e.innerHTML=t;e.className='badge '+c}});document.getElementById('btnT').classList.toggle('active',isT);document.getElementById('btnC').classList.toggle('active',!isT);document.getElementById('dashT').style.display=isT?'block':'none';document.getElementById('dashC').style.display=isT?'none':'block'}
+  window.switchCmp=cmp=>{const u=JSON.parse(localStorage.getItem('gmsUser')||'{}');if(u.userCompanies&&!u.userCompanies.includes(cmp))return toast('⛔ Company restricted','error');localStorage.setItem('gmsSelectedCompany',cmp);window.curCmp=cmp;updB(cmp);if(document.getElementById('home').classList.contains('act'))loadDash()};
+</script>
 
-      <!-- Composite Dashboard -->
-      <div id="dashComposite" style="display:none;">
-        <div class="emptyState">
-          <i class="fas fa-building"></i>
-          <h3>🏢 GMS COMPOSITE KNITTING</h3>
-          <p>Composite module is active. Currently supports <b>Gate Plan</b> and <b>Challan/Gate Pass</b> workflows.</p>
-          <p style="margin-top:10px; color:var(--blue); font-weight:700;">👉 Go to New Entry → Select MCD → Use Features</p>
-        </div>
-      </div>
-    </section>
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-app.js";
+  import { getFirestore, collection, getDocs } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-firestore.js";
+  
+  (async ()=>{
+    const cfg={apiKey:"AIzaSyD-wBCF5eeWMHobLFOhBzKW7aB2pagz9-w",authDomain:"gms-warehouse-tracker-7f57e.firebaseapp.com",projectId:"gms-warehouse-tracker-7f57e",storageBucket:"gms-warehouse-tracker-7f57e.firebasestorage.app",messagingSenderId:"992250313291",appId:"1:992250313291:web:ee3bceae76d4d53bc26bce"};
+    const app=initializeApp(cfg),db=getFirestore(app);
+    let user=null;try{user=JSON.parse(localStorage.getItem('gmsUser')||'null')}catch(e){}
+    if(!user){localStorage.clear();location.href='login.html';}
 
-    <!-- ENTRY PAGE -->
-    <section id="entry" class="page">
-      <div class="pageTitle">➕ New Entry <span id="badgeEntry" class="companyBadge">🏭 TEXTILES</span></div>
-      <div class="entrySection">
-        <div class="formGroup"><label>🏢 Company</label><select id="selEntryComp"></select></div>
-        <div class="formGroup"><label>📂 Department / MCD</label><select id="selEntryMcd"></select></div>
-        <button class="openBtn" onclick="loadEntryCards()"><i class="fas fa-rocket"></i> Open Entry</button>
-        <div id="entryGrid" class="cardsGrid"></div>
-      </div>
-    </section>
+    // 🛡️ STRICT COMPANY VALIDATION (NO FALLBACK)
+    let rawC = user.userCompanies || [];
+    let userC = Array.isArray(rawC) ? rawC.filter(c=>c && typeof c==='string') : [];
+    console.log("🔐 User Companies from DB:", userC);
 
-    <!-- REPORTS PAGE -->
-    <section id="reports" class="page">
-      <div class="pageTitle">📑 Reports <span id="badgeRep" class="companyBadge">🏭 TEXTILES</span></div>
-      <div class="reportSection">
-        <div class="formGroup"><label>🏢 Company</label><select id="selRepComp"></select></div>
-        <div class="formGroup"><label>📂 Department / MCD</label><select id="selRepMcd"></select></div>
-        <button class="openBtn" onclick="loadReportCards()"><i class="fas fa-chart-bar"></i> Show Reports</button>
-        <div id="reportGrid" class="cardsGrid"></div>
-      </div>
-    </section>
-
-    <!-- NEEDLE PAGE -->
-    <section id="needle" class="page">
-      <div class="pageTitle">🪡 Needle Module <span id="badgeNdl" class="companyBadge">🏭 TEXTILES</span></div>
-      <div class="needleGrid">
-        <div class="needleCard" onclick="go('needle.html')"><i class="fas fa-syringe"></i><span>Daily Entry</span></div>
-        <div class="needleCard" onclick="go('needle-dashboard.html')"><i class="fas fa-industry"></i><span>Floor Dashboard</span></div>
-        <div class="needleCard" onclick="go('ageing.html')"><i class="fas fa-hourglass-half"></i><span>Ageing Report</span></div>
-        <div class="needleCard" onclick="go('needle-monthly.html')"><i class="fas fa-calendar-alt"></i><span>Monthly Report</span></div>
-        <div class="needleCard" onclick="go('all-needle-reports.html')"><i class="fas fa-file-archive"></i><span>All BNR/BNF</span></div>
-        <div class="needleCard" onclick="go('all-needle-summary.html')"><i class="fas fa-chart-pie"></i><span>Summary</span></div>
-        <div class="needleCard" onclick="go('needle-report.html')"><i class="fas fa-file-signature"></i><span>Issue Entry</span></div>
-        <div class="needleCard" onclick="go('needle-report-view.html')"><i class="fas fa-file-invoice"></i><span>Issue Report</span></div>
-      </div>
-    </section>
-
-    <!-- BACKUP PAGE -->
-    <section id="backup" class="page">
-      <div class="pageTitle">☁ Backup & Control</div>
-      <div class="emptyState">
-        <i class="fas fa-shield-alt"></i>
-        <h3>Admin Only Section</h3>
-        <p>Backup management is restricted to system administrators.</p>
-      </div>
-    </section>
-
-    <!-- Footer -->
-    <div class="footer">
-      <div class="footerItem">
-        <img src="https://i.ibb.co/5hzT1VGk/IMG.jpg" alt="Dev">
-        <div class="footerText"><b>Md. Johurul</b><span>System Developer</span></div>
-      </div>
-      <div class="divider"></div>
-      <div class="footerItem pc-only">
-        <img src="https://i.ibb.co/DDqvG3pD/nazir.jpg" alt="Planner">
-        <div class="footerText"><b>Md. Nazir</b><span>System Planning</span></div>
-      </div>
-      <div class="divider pc-only"></div>
-      <div class="footerItem pc-only">
-        <img src="https://i.ibb.co/k6WC4fBm/asad.jpg" alt="Support">
-        <div class="footerText"><b>Md. Asad</b><span>Operations</span></div>
-      </div>
-    </div>
-  </main>
-
-  <!-- GLOBAL UTILS -->
-  <script>
-    // Safe Toast
-    window.toast = (msg, type='success') => {
-      const t = document.createElement('div'); t.className='toast';
-      t.style.background = type==='error' ? 'var(--red)' : 'var(--green)';
-      t.innerText = msg; document.body.appendChild(t);
-      requestAnimationFrame(()=>t.classList.add('show'));
-      setTimeout(()=>{t.classList.remove('show');setTimeout(()=>t.remove(),300);},2000);
-    };
-
-    // Navigation
-    window.navPage = (id, btn) => {
-      document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
-      document.getElementById(id).classList.add('active');
-      document.querySelectorAll('.sidebarNav button').forEach(b=>b.classList.remove('active'));
-      if(btn) btn.classList.add('active');
-      if(id==='home') window.loadDashboardStock();
-      if(window.innerWidth<=900) toggleSidebar();
-    };
-    window.go = u => location.href = u;
-    window.toggleSidebar = () => { document.getElementById('sidebar').classList.toggle('show'); document.getElementById('overlay').classList.toggle('show'); };
-    window.toggleTheme = () => { document.body.classList.toggle('light'); localStorage.setItem('theme', document.body.classList.contains('light')?'light':'dark'); };
-    if(localStorage.getItem('theme')==='light') document.body.classList.add('light');
-    window.logout = () => { localStorage.removeItem('gmsUser'); window.location.href='login.html'; };
-
-    // Company Switcher
-    window.switchCompany = (company) => {
-      const user = JSON.parse(localStorage.getItem('gmsUser')||'{}');
-      const allowed = user.userCompanies || [];
-      if(allowed.length>0 && !allowed.includes(company)) return toast('⛔ Company access restricted','error');
-      localStorage.setItem('gmsSelectedCompany', company);
-      window.currentCompany = company;
-      updateCompanyUI(company);
-      if(document.getElementById('home').classList.contains('active')) window.loadDashboardStock();
-    };
-
-    function updateCompanyUI(company){
-      const isT = company === 'GMS TEXTILES LTD';
-      const txt = isT ? '🏭 TEXTILES' : '🏢 COMPOSITE';
-      const cls = isT ? '' : 'composite';
-      ['badgeTop','badgeDash','badgeEntry','badgeRep','badgeNdl'].forEach(id=>{
-        const el = document.getElementById(id);
-        if(el){ el.innerHTML = txt; el.className = 'companyBadge '+cls; }
-      });
-      document.getElementById('btnTextile').classList.toggle('active', isT);
-      document.getElementById('btnComposite').classList.toggle('active', !isT);
-      document.getElementById('dashTextile').style.display = isT ? 'block' : 'none';
-      document.getElementById('dashComposite').style.display = isT ? 'none' : 'block';
-    }
-  </script>
-
-  <!-- FIREBASE & LOGIC MODULE -->
-  <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-app.js";
-    import { getFirestore, collection, getDocs } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-firestore.js";
-
-    const cfg = { apiKey:"AIzaSyD-wBCF5eeWMHobLFOhBzKW7aB2pagz9-w", authDomain:"gms-warehouse-tracker-7f57e.firebaseapp.com", projectId:"gms-warehouse-tracker-7f57e", storageBucket:"gms-warehouse-tracker-7f57e.firebasestorage.app", messagingSenderId:"992250313291", appId:"1:992250313291:web:ee3bceae76d4d53bc26bce" };
-    const app = initializeApp(cfg);
-    const db = getFirestore(app);
-
-    // Safe User Parse
-    const userStr = localStorage.getItem('gmsUser');
-    let user = null;
-    try { user = userStr ? JSON.parse(userStr) : null; } catch(e) { user = null; }
-    if(!user) { window.location.href = 'login.html'; }
-
-    // 🔐 COMPANY ACCESS CONTROL
-    let userCompanies = user.userCompanies || [];
-    if(!Array.isArray(userCompanies) || userCompanies.length===0) userCompanies.push('GMS TEXTILES LTD');
-    const canT = userCompanies.includes('GMS TEXTILES LTD');
-    const canC = userCompanies.includes('GMS COMPOSITE KNITTING');
-    window.currentCompany = canT ? 'GMS TEXTILES LTD' : 'GMS COMPOSITE KNITTING';
-    localStorage.setItem('gmsSelectedCompany', window.currentCompany);
-
-    // Init UI
-    function initSystem() {
-      document.getElementById('loginInfo').innerText = `${user.name||'User'} • ${(user.role||'user').toUpperCase()}`;
-      const sw = document.getElementById('companySwitch');
-      sw.style.display = (canT && canC) ? 'flex' : 'none';
-      document.getElementById('btnTextile').style.display = canT ? 'block' : 'none';
-      document.getElementById('btnComposite').style.display = canC ? 'block' : 'none';
-
-      // Role Restrictions
-      if(!['admin','full'].includes(user.role)) {
-        document.getElementById('navAdmin').style.display = 'none';
-        document.getElementById('navBackup').style.display = 'none';
-      }
-      if(!user.needleAccess && !['admin','full'].includes(user.role)) document.getElementById('navNeedle').style.display = 'none';
-      if(!user.manpowerAccess && !['admin','full'].includes(user.role)) document.getElementById('navManpower').style.display = 'none';
-
-      // Populate Dropdowns
-      let opts = '';
-      if(canT) opts += '<option value="GMS TEXTILES LTD">GMS TEXTILES LTD</option>';
-      if(canC) opts += '<option value="GMS COMPOSITE KNITTING">GMS COMPOSITE KNITTING</option>';
-      ['selEntryComp','selRepComp'].forEach(id=>document.getElementById(id).innerHTML=opts);
-      
-      const mcds = ['ACCESSORIES MCD','GREY FABRIC MCD','BILLING SECTION','SHIPMENT MCD','OUTER WEAR MCD','YARN MCD','PRINTING MCD','JHUT MCD','GENERAL MCD','LEFTOVER MCD','FINISH FABRIC MCD','YARN DYEING MCD','CHEMICAL MCD','GENERAL TECHNICAL MCD'];
-      const allowed = (user.role==='admin'||user.role==='full') ? mcds : (user.mcdAccess||[]);
-      const mcdOpts = allowed.map(m=>`<option>${m}</option>`).join('');
-      ['selEntryMcd','selRepMcd'].forEach(id=>document.getElementById(id).innerHTML=mcdOpts);
-
-      updateCompanyUI(window.currentCompany);
-      window.loadDashboardStock();
-      loadNotice();
-      setTimeout(()=>document.getElementById('loader').classList.add('hidden'), 600);
+    if(userC.length===0){
+      toast("⛔ আপনার কোনো কোম্পানি অ্যাসাইন করা হয়নি। এডমিনে যোগাযোগ করুন।",'error');
+      setTimeout(()=>{localStorage.removeItem('gmsUser');location.href='login.html'},2000);
+      return;
     }
 
-    // Dashboard Loader
-    let charts = {};
-    function destroyChart(id){ if(charts[id]){ charts[id].destroy(); delete charts[id]; } }
+    const canT = userC.includes('GMS TEXTILES LTD');
+    const canC = userC.includes('GMS COMPOSITE KNITTING');
+    window.curCmp = canT ? 'GMS TEXTILES LTD' : 'GMS COMPOSITE KNITTING';
+    localStorage.setItem('gmsSelectedCompany', window.curCmp);
 
-    window.loadDashboardStock = async () => {
-      if(window.currentCompany === 'GMS COMPOSITE KNITTING') return;
+    function boot(){
+      document.getElementById('uInfo').innerText=`${user.name||'User'} • ${(user.role||'user').toUpperCase()}`;
+      document.getElementById('cmpSw').style.display=(canT&&canC)?'flex':'none';
+      document.getElementById('btnT').style.display=canT?'block':'none';
+      document.getElementById('btnC').style.display=canC?'block':'none';
+
+      if(!['admin','full'].includes(user.role)){document.getElementById('nAdm').style.display='none';document.getElementById('nBak').style.display='none'}
+      if(!user.needleAccess && !['admin','full'].includes(user.role)) document.getElementById('nNdl').style.display='none';
+      if(!user.manpowerAccess && !['admin','full'].includes(user.role)) document.getElementById('nMan').style.display='none';
+
+      let opts='';if(canT)opts+='<option value="GMS TEXTILES LTD">GMS TEXTILES LTD</option>';if(canC)opts+='<option value="GMS COMPOSITE KNITTING">GMS COMPOSITE KNITTING</option>';
+      ['sEntC','sRepC'].forEach(x=>document.getElementById(x).innerHTML=opts);
+      const mcds=['ACCESSORIES MCD','GREY FABRIC MCD','BILLING SECTION','SHIPMENT MCD','OUTER WEAR MCD','YARN MCD','PRINTING MCD','JHUT MCD','GENERAL MCD','LEFTOVER MCD','FINISH FABRIC MCD','YARN DYEING MCD','CHEMICAL MCD','GENERAL TECHNICAL MCD'];
+      const allowed=(user.role==='admin'||user.role==='full')?mcds:(user.mcdAccess||[]);
+      const mO=allowed.map(m=>`<option>${m}</option>`).join('');
+      ['sEntM','sRepM'].forEach(x=>document.getElementById(x).innerHTML=mO);
+
+      updB(window.curCmp);loadDash();setTimeout(()=>document.getElementById('loader').classList.add('hidden'),400);
+    }
+
+    window.loadDash=async()=>{
+      // 🔒 STRICT ISOLATION GUARDS
+      if(window.curCmp==='GMS COMPOSITE KNITTING') return;
       if(!canT) return;
-
-      // Simulate loading (Replace with your real Firebase calls)
-      document.getElementById('valAcc').innerText = '0';
-      document.getElementById('valSew').innerText = '0';
-      document.getElementById('valTwi').innerText = '0';
-      document.getElementById('valNdl').innerText = '0';
-      document.getElementById('mcdList').innerHTML = '<div class="mcdBox"><h3>✅ System Ready</h3><p style="color:var(--muted);font-size:12px;margin-top:4px;">Data sync active. Charts will update on fetch.</p></div>';
-
-      // Example Chart Init (Safe)
-      destroyChart('acc');
-      charts.acc = new Chart(document.getElementById('chartAcc'), { type:'bar', data:{ labels:['Thread','Twill','Sample'], datasets:[{ data:[120,85,45], backgroundColor:['#3b82f6','#10b981','#f59e0b'], borderRadius:8 }] }, options:{responsive:true, plugins:{legend:{display:false}}, scales:{y:{beginAtZero:true, ticks:{color:'var(--muted)'}}, x:{ticks:{color:'var(--muted)'}}}} });
-    };
-
-    window.loadEntryCards = () => {
-      const c = document.getElementById('selEntryComp').value;
-      const g = document.getElementById('entryGrid');
-      if(c === 'GMS COMPOSITE KNITTING') {
-        g.innerHTML = `<div class="dataCard" onclick="go('gate-plan.html')"><i class="fas fa-truck"></i> Gate Plan Entry</div><div class="dataCard" onclick="go('challan-entry.html')"><i class="fas fa-file-invoice"></i> Challan Entry</div><div class="dataCard" onclick="go('challan-report.html')"><i class="fas fa-file-alt"></i> Challan Report</div>`;
-        return;
-      }
-      g.innerHTML = `<div class="dataCard"><i class="fas fa-edit"></i> Daily Entry</div><div class="dataCard" onclick="go('gate-plan.html')"><i class="fas fa-truck"></i> Gate Plan</div><div class="dataCard" onclick="go('challan-entry.html')"><i class="fas fa-file-invoice"></i> Challan</div>`;
-    };
-
-    window.loadReportCards = () => {
-      const c = document.getElementById('selRepComp').value;
-      const g = document.getElementById('reportGrid');
-      if(c === 'GMS COMPOSITE KNITTING') {
-        g.innerHTML = `<div class="dataCard" onclick="go('gate-plan-report.html')"><i class="fas fa-truck"></i> Gate Plan Report</div><div class="dataCard" onclick="go('challan-report.html')"><i class="fas fa-file-invoice"></i> Challan Report</div>`;
-        return;
-      }
-      g.innerHTML = `<div class="dataCard"><i class="fas fa-table"></i> Daily Report</div><div class="dataCard" onclick="go('gate-plan-report.html')"><i class="fas fa-truck"></i> Gate Plan</div>`;
-    };
-
-    function loadNotice() {
-      // Replace with Firebase fetch
-      document.getElementById('noticeBar').innerText = '📢 Welcome to GMS ERP System • Live Data Sync Active • Stay Updated';
+      
+      document.getElementById('vAcc').innerText='0';document.getElementById('vSew').innerText='0';
+      document.getElementById('vTwi').innerText='0';document.getElementById('vNdl').innerText='0';
+      document.getElementById('mcdL').innerHTML='<div class="mBox"><h3>✅ Ready</h3><p style="color:var(--muted);font-size:11px;margin-top:4px">Data sync active.</p></div>';
+      
+      // ⬇️ এখানে আপনার আগের Firebase getDocs() চার্ট লোডিং কোড বসান
+      killC('a');
+      charts.a=new Chart(document.getElementById('chAcc'),{type:'bar',data:{labels:['Thread','Twill','Sample'],datasets:[{data:[120,85,45],backgroundColor:['#3b82f6','#10b981','#f59e0b'],borderRadius:6}]},options:{responsive:true,plugins:{legend:{display:false}},scales:{y:{beginAtZero:true,ticks:{color:'var(--muted)'}},x:{ticks:{color:'var(--muted)'}}}}});
     }
-
-    // Boot
-    document.addEventListener('DOMContentLoaded', initSystem);
-  </script>
+    window.loadEnt=()=>{const c=document.getElementById('sEntC').value;const g=document.getElementById('gEnt');g.innerHTML=c==='GMS COMPOSITE KNITTING'?`<div class="dCard" onclick="go('gate-plan.html')"><i class="fas fa-truck"></i>Gate Plan</div><div class="dCard" onclick="go('challan-entry.html')"><i class="fas fa-file"></i>Challan</div>`:`<div class="dCard"><i class="fas fa-edit"></i>Daily Entry</div><div class="dCard" onclick="go('gate-plan.html')"><i class="fas fa-truck"></i>Gate Plan</div>`};
+    window.loadRep=()=>{const c=document.getElementById('sRepC').value;const g=document.getElementById('gRep');g.innerHTML=c==='GMS COMPOSITE KNITTING'?`<div class="dCard" onclick="go('gate-plan-report.html')"><i class="fas fa-chart"></i>Gate Plan</div><div class="dCard" onclick="go('challan-report.html')"><i class="fas fa-file"></i>Challan</div>`:`<div class="dCard"><i class="fas fa-table"></i>Daily Report</div>`};
+    
+    boot();
+  })();
+</script>
 </body>
 </html>
