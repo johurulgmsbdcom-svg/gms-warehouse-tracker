@@ -25,7 +25,7 @@ select,input[type="date"],input[type="text"]{padding:5px;border-radius:5px;borde
 #summaryTable{width:100%;max-width:100%;margin:auto;text-align:center;border-collapse:collapse;table-layout:fixed;background:white;color:black}
 #summaryTable th,#summaryTable td{border:1px solid #000;padding:2px;font-size:10px}
 
-/* 🔴 Negative Stock Highlight */
+/* 🔴 Negative Stock Highlight - শুধুমাত্র < 0 এর জন্য */
 .negative-row{background:#fecaca!important}
 .negative-row td{color:#991b1b;font-weight:bold}
 
@@ -120,7 +120,7 @@ Floor:
 </div>
 </div>
 
-<!-- 🔴 Negative Stock Popup Modal -->
+<!-- 🔴 Negative Stock Popup Modal - শুধুমাত্র < 0 এর জন্য -->
 <div id="negativePopup">
   <div class="popup-content">
     <span class="popup-close" onclick="closePopup()">❌</span>
@@ -417,9 +417,9 @@ function calc(i){
   let present = p+r-d;
   document.getElementById("b"+i).innerText = present;
   
-  // 🔴 Real-time visual highlight
+  // 🔴 Real-time visual highlight: শুধুমাত্র < 0 হলে লাল
   let row = document.getElementById("row"+i);
-  if(present <= 0){
+  if(present < 0){
     row.classList.add("negative-row");
   } else {
     row.classList.remove("negative-row");
@@ -449,33 +449,32 @@ function updateTotal(){
   document.getElementById("totalBN").innerText=tbn;
 }
 
-// 🔴 Check for negative stock and show popup
+// 🔴 Check for negative stock (< 0 only) and show popup
 function checkNegativeStock(){
   let items = getItems();
   let floor = document.getElementById("floor").value;
   let operator = document.getElementById("operatorName").value.trim() || "Unknown";
   
-  // Find first negative or zero stock row
   for(let i=0; i<items.length; i++){
     let present = Number(document.getElementById("b"+i)?.innerText) || 0;
     
-    // 🔴 Visual highlight for all negative rows
+    // 🔴 Visual highlight: শুধুমাত্র নেগেটিভ (< 0) হলে লাল
     let row = document.getElementById("row"+i);
-    if(present <= 0){
+    if(present < 0){
       row.classList.add("negative-row");
     } else {
       row.classList.remove("negative-row");
     }
     
-    // 🔴 Show popup for first negative found
-    if(present <= 0){
+    // 🔴 Popup: শুধুমাত্র নেগেটিভ (< 0) হলেই আসবে
+    if(present < 0){
       negativeRowIndex = i;
       showNegativePopup(floor, operator, items[i][0], items[i][1], items[i][2], present);
       return; // Stop at first negative
     }
   }
   
-  // 🔴 If no negatives found, close popup
+  // 🔴 কোনো নেগেটিভ না থাকলে পপআপ বন্ধ
   negativeRowIndex = -1;
   closePopup();
 }
