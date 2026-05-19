@@ -121,6 +121,11 @@ body.light .companySwitch button{color:#475569;}
   color:#f1f5f9;
 }
 body.light .companySwitch button:hover:not(.active){color:#1e293b;}
+.companySwitch button.disabled{
+  opacity:0.3;
+  cursor:not-allowed;
+  pointer-events:none;
+}
 
 .sidebarNav{
   flex:1;
@@ -1021,6 +1026,32 @@ body.light .creditFooter{background:var(--card);border-color:#cbd5e1;}
   max-width:400px;
   margin:0 auto;
 }
+
+/* ===== NO ACCESS MESSAGE ===== */
+.noAccessMessage {
+  text-align: center;
+  padding: 60px 20px;
+  background: var(--card);
+  border-radius: 16px;
+  border: 2px solid var(--red);
+  margin: 20px 0;
+}
+.noAccessMessage i {
+  font-size: 64px;
+  color: var(--red);
+  margin-bottom: 20px;
+}
+.noAccessMessage h3 {
+  color: var(--red);
+  font-size: 24px;
+  margin-bottom: 10px;
+}
+.noAccessMessage p {
+  color: var(--muted);
+  font-size: 14px;
+  max-width: 500px;
+  margin: 0 auto;
+}
 </style>
 </head>
 
@@ -1119,6 +1150,13 @@ body.light .creditFooter{background:var(--card);border-color:#cbd5e1;}
         <div class="liveDot"></div>
         <span class="liveText">LIVE</span>
       </div>
+    </div>
+
+    <!-- ===== NO ACCESS MESSAGE ===== -->
+    <div id="noAccessMessage" class="noAccessMessage" style="display:none;">
+      <i class="fas fa-lock"></i>
+      <h3>⚠️ Access Denied</h3>
+      <p>আপনার এই কোম্পানির ডাটা দেখার পারমিশন নেই।<br>অ্যাডমিনের সাথে যোগাযোগ করুন।</p>
     </div>
 
     <!-- ===== TEXTILE DASHBOARD (Only for GMS TEXTILES) ===== -->
@@ -1507,45 +1545,34 @@ body.light .creditFooter{background:var(--card);border-color:#cbd5e1;}
 
 <!-- ===== GLOBAL NAVIGATION FUNCTIONS ===== -->
 <script>
-// ===== COMPANY SWITCH SYSTEM =====
-window.getCurrentCompany = function() {
-  return localStorage.getItem('gmsSelectedCompany') || 'GMS TEXTILES LTD';
-};
+// ===== COMPANY PERMISSION SYSTEM =====
+let userAllowedCompanies = []; // ['GMS TEXTILES LTD'] or ['GMS COMPOSITE KNITTING'] or both
+let currentCompany = 'GMS TEXTILES LTD';
 
+// ✅ Check if user can access company
+function canUserSeeCompany(companyName) {
+  if(userRole === "admin" || userRole === "full") return true;
+  return userAllowedCompanies.includes(companyName);
+}
+
+// 🔄 Switch company
 window.switchCompany = function(company) {
+  if(!canUserSeeCompany(company)) {
+    showToast(`❌ You don't have access to ${company}`, 'error');
+    return;
+  }
+  
+  currentCompany = company;
   localStorage.setItem('gmsSelectedCompany', company);
   
   // Update UI buttons
   document.getElementById('btnTextile').classList.toggle('active', company === 'GMS TEXTILES LTD');
   document.getElementById('btnComposite').classList.toggle('active', company === 'GMS COMPOSITE KNITTING');
   
-  // Update badges
-  const badgeText = company === 'GMS TEXTILES LTD' ? '🏭 TEXTILES' : '🏢 COMPOSITE';
-  const badgeClass = company === 'GMS TEXTILES LTD' ? '' : 'composite';
+  // Update badges and dropdowns
+  updateCompanyUI(company);
   
-  document.getElementById('companyBadge').innerHTML = badgeText;
-  document.getElementById('companyBadge').className = 'companyBadge ' + badgeClass;
-  document.getElementById('dashCompanyBadge').innerHTML = badgeText;
-  document.getElementById('dashCompanyBadge').className = 'companyBadge ' + badgeClass;
-  document.getElementById('entryCompanyBadge').innerHTML = badgeText;
-  document.getElementById('entryCompanyBadge').className = 'companyBadge ' + badgeClass;
-  document.getElementById('reportCompanyBadge').innerHTML = badgeText;
-  document.getElementById('reportCompanyBadge').className = 'companyBadge ' + badgeClass;
-  document.getElementById('needleCompanyBadge').innerHTML = badgeText;
-  document.getElementById('needleCompanyBadge').className = 'companyBadge ' + badgeClass;
-  document.getElementById('backupCompanyBadge').innerHTML = badgeText;
-  document.getElementById('backupCompanyBadge').className = 'companyBadge ' + badgeClass;
-  
-  // Update dropdowns
-  document.getElementById('entryCompany').value = company;
-  document.getElementById('reportCompany').value = company;
-  
-  // Show/hide dashboard sections
-  const isTextile = company === 'GMS TEXTILES LTD';
-  document.getElementById('textileDashboard').style.display = isTextile ? 'block' : 'none';
-  document.getElementById('compositeDashboard').style.display = isTextile ? 'none' : 'block';
-  
-  // Reload dashboard data
+  // Reload dashboard if on home page
   if(document.getElementById('home').classList.contains('activePage')) {
     loadDashboardStock();
   }
@@ -1560,6 +1587,111 @@ window.switchCompany = function(company) {
   
   showToast(`🔄 Switched to ${company}`);
 };
+
+// 🎨 Update UI elements
+function updateCompanyUI(company) {
+  const badgeText = company === 'GMS TEXTILES LTD' ? '🏭 TEXTILES' : '🏢 COMPOSITE';
+  const badgeClass = company === 'GMS TEXTILES LTD' ? '' : 'composite';
+  
+  // Update all badges
+  ['companyBadge', 'dashCompanyBadge', 'entryCompanyBadge', 'reportCompanyBadge', 'needleCompanyBadge', 'backupCompanyBadge'].forEach(id => {
+    const el = document.getElementById(id);
+    if(el) {
+      el.innerHTML = badgeText;
+      el.className = 'companyBadge ' + badgeClass;
+    }
+  });
+  
+  // Update dropdowns
+  if(document.getElementById('entryCompany')) document.getElementById('entryCompany').value = company;
+  if(document.getElementById('reportCompany')) document.getElementById('reportCompany').value = company;
+  
+  // Show/hide dashboard sections
+  const textileEl = document.getElementById('textileDashboard');
+  const compositeEl = document.getElementById('compositeDashboard');
+  const noAccessEl = document.getElementById('noAccessMessage');
+  
+  if(company === 'GMS TEXTILES LTD') {
+    if(textileEl) textileEl.style.display = 'block';
+    if(compositeEl) compositeEl.style.display = 'none';
+  } else {
+    if(textileEl) textileEl.style.display = 'none';
+    if(compositeEl) compositeEl.style.display = 'block';
+  }
+  
+  if(noAccessEl) noAccessEl.style.display = 'none';
+}
+
+// 🔐 Setup company permissions
+function setupCompanyPermissions() {
+  // Load user's allowed companies
+  userAllowedCompanies = Array.isArray(user.userCompanies) ? user.userCompanies : [];
+  
+  // Set default company based on permission
+  if(userAllowedCompanies.length === 1) {
+    currentCompany = userAllowedCompanies[0];
+  } else if(userAllowedCompanies.includes('GMS COMPOSITE KNITTING') && !userAllowedCompanies.includes('GMS TEXTILES LTD')) {
+    currentCompany = 'GMS COMPOSITE KNITTING';
+  } else {
+    currentCompany = 'GMS TEXTILES LTD';
+  }
+  
+  localStorage.setItem('gmsSelectedCompany', currentCompany);
+  
+  // Update UI buttons
+  document.getElementById('btnTextile').classList.toggle('active', currentCompany === 'GMS TEXTILES LTD');
+  document.getElementById('btnComposite').classList.toggle('active', currentCompany === 'GMS COMPOSITE KNITTING');
+  
+  // Disable/hide buttons if no permission
+  if(!canUserSeeCompany('GMS TEXTILES LTD')) {
+    document.getElementById('btnTextile').classList.add('disabled');
+    document.getElementById('btnTextile').disabled = true;
+  }
+  if(!canUserSeeCompany('GMS COMPOSITE KNITTING')) {
+    document.getElementById('btnComposite').classList.add('disabled');
+    document.getElementById('btnComposite').disabled = true;
+  }
+  
+  // Populate company dropdowns based on permissions
+  populateCompanyDropdowns();
+  
+  // Update UI
+  updateCompanyUI(currentCompany);
+}
+
+// 📋 Populate company dropdowns
+function populateCompanyDropdowns() {
+  const entrySelect = document.getElementById('entryCompany');
+  const reportSelect = document.getElementById('reportCompany');
+  
+  // Clear existing options
+  if(entrySelect) entrySelect.innerHTML = '';
+  if(reportSelect) reportSelect.innerHTML = '';
+  
+  // Add options based on permissions
+  userAllowedCompanies.forEach(company => {
+    if(entrySelect) {
+      const option1 = document.createElement('option');
+      option1.value = company;
+      option1.text = company;
+      entrySelect.appendChild(option1);
+    }
+    if(reportSelect) {
+      const option2 = document.createElement('option');
+      option2.value = company;
+      option2.text = company;
+      reportSelect.appendChild(option2);
+    }
+  });
+  
+  // Set default selection
+  if(entrySelect && userAllowedCompanies.length > 0) {
+    entrySelect.value = currentCompany;
+  }
+  if(reportSelect && userAllowedCompanies.length > 0) {
+    reportSelect.value = currentCompany;
+  }
+}
 
 window.urlCompanyName = function(company){
   if(company==="GMS COMPOSITE KNITTING") return "GMS COMPOSITE KNITTING IND LTD.";
@@ -1682,37 +1814,6 @@ const FLOOR_OPENING={
 let accessoriesChart=null,needleChart=null,greyChart=null,billingChart=null,needleIssueChart=null;
 let selectedBackupData=null;
 
-// Initialize company switch UI
-function initCompanySwitch() {
-  const company = window.getCurrentCompany();
-  document.getElementById('btnTextile').classList.toggle('active', company === 'GMS TEXTILES LTD');
-  document.getElementById('btnComposite').classList.toggle('active', company === 'GMS COMPOSITE KNITTING');
-  
-  const badgeText = company === 'GMS TEXTILES LTD' ? '🏭 TEXTILES' : '🏢 COMPOSITE';
-  const badgeClass = company === 'GMS TEXTILES LTD' ? '' : 'composite';
-  
-  document.getElementById('companyBadge').innerHTML = badgeText;
-  document.getElementById('companyBadge').className = 'companyBadge ' + badgeClass;
-  document.getElementById('dashCompanyBadge').innerHTML = badgeText;
-  document.getElementById('dashCompanyBadge').className = 'companyBadge ' + badgeClass;
-  document.getElementById('entryCompanyBadge').innerHTML = badgeText;
-  document.getElementById('entryCompanyBadge').className = 'companyBadge ' + badgeClass;
-  document.getElementById('reportCompanyBadge').innerHTML = badgeText;
-  document.getElementById('reportCompanyBadge').className = 'companyBadge ' + badgeClass;
-  document.getElementById('needleCompanyBadge').innerHTML = badgeText;
-  document.getElementById('needleCompanyBadge').className = 'companyBadge ' + badgeClass;
-  document.getElementById('backupCompanyBadge').innerHTML = badgeText;
-  document.getElementById('backupCompanyBadge').className = 'companyBadge ' + badgeClass;
-  
-  document.getElementById('entryCompany').value = company;
-  document.getElementById('reportCompany').value = company;
-  
-  // Show correct dashboard
-  const isTextile = company === 'GMS TEXTILES LTD';
-  document.getElementById('textileDashboard').style.display = isTextile ? 'block' : 'none';
-  document.getElementById('compositeDashboard').style.display = isTextile ? 'none' : 'block';
-}
-
 document.getElementById("loginInfo").innerText=`${user.name||"User"} • ${userRole.toUpperCase()} ${userRole==="user"?"• "+userMCDs.join(", "):""}`;
 
 // ===== OFFLINE SYNC & QUOTA SYSTEM =====
@@ -1738,7 +1839,7 @@ window.saveDataOffline = function(collectionName, data, serialPrefix = "") {
     let serial = serialPrefix ? `${serialPrefix}-${String(counters[serialPrefix]).padStart(3,'0')}` : id;
 
     queue.push({
-        id, collection: collectionName, serial, data: {...data, serialNumber: serial, company: window.getCurrentCompany()},
+        id, collection: collectionName, serial, data: {...data, serialNumber: serial, company: currentCompany},
         user: user.name || user.email || "System",
         time: new Date().toLocaleString(),
         status: "pending"
@@ -2299,16 +2400,35 @@ async function loadNotices(){
 async function updateLastActive(){if(user.id){try{await updateDoc(doc(db,"users",user.id),{lastActive:new Date().toISOString()});}catch(e){}}}
 
 async function loadDashboardStock(){
-  const company = window.getCurrentCompany();
-  
-  // Composite: Show empty dashboard, no data loading
-  if(company === "GMS COMPOSITE KNITTING") {
+  // 🔐 পারমিশন চেক - ইউজারের এই কোম্পানি এক্সেস আছে কিনা
+  if(!canUserSeeCompany(currentCompany)) {
+    // ❌ এক্সেস নেই - সব হাইড করুন
     document.getElementById('textileDashboard').style.display = 'none';
-    document.getElementById('compositeDashboard').style.display = 'block';
+    document.getElementById('compositeDashboard').style.display = 'none';
+    
+    // এরর মেসেজ দেখান
+    const noAccessEl = document.getElementById('noAccessMessage');
+    if(noAccessEl) {
+      noAccessEl.style.display = 'block';
+    } else {
+      alert('⚠️ আপনার এই কোম্পানির এক্সেস নেই। Admin থেকে permission নিন।');
+    }
     return;
   }
   
-  // Textile: Load all data
+  // ✅ এক্সেস আছে - নো অ্যাক্সেস মেসেজ হাইড
+  const noAccessEl = document.getElementById('noAccessMessage');
+  if(noAccessEl) noAccessEl.style.display = 'none';
+  
+  // Composite: শুধু কম্পোজিট ড্যাশবোর্ড শো, টেক্সটাইল লোড করবে না
+  if(currentCompany === 'GMS COMPOSITE KNITTING') {
+    document.getElementById('textileDashboard').style.display = 'none';
+    document.getElementById('compositeDashboard').style.display = 'block';
+    // ⚠️ Composite-এ কোনো ডাটা লোড করবে না (শুধু "Under Development" মেসেজ)
+    return;
+  }
+  
+  // ✅ Textile: সব ডাটা লোড করবে
   document.getElementById('textileDashboard').style.display = 'block';
   document.getElementById('compositeDashboard').style.display = 'none';
   
@@ -2457,7 +2577,7 @@ window.removeRestoredMonth=async function(){
 
 // ===== INITIALIZATION =====
 setupRoleUI();
-initCompanySwitch(); // Initialize company switch
+setupCompanyPermissions(); // 🔐 Setup company permissions
 loadDashboardStock();
 loadNotices();
 updateLastActive();
