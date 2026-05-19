@@ -4,74 +4,49 @@
 <meta charset="UTF-8">
 <title>GMS Admin Panel</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
-
 <style>
-:root{
-  --bg:#07111f;--card:#101b2d;--card2:#14233a;
-  --text:#fff;--muted:#9fb0c7;--border:#263855;
-  --blue:#2563eb;--green:#22c55e;--red:#ef4444;--orange:#f59e0b;--purple:#8b5cf6;
-}
-body.light{
-  --bg:#eef3f9;--card:#fff;--card2:#f8fafc;
-  --text:#0f172a;--muted:#64748b;--border:#cbd5e1;
-}
+:root{--bg:#07111f;--card:#101b2d;--card2:#14233a;--text:#fff;--muted:#9fb0c7;--border:#263855;--blue:#2563eb;--green:#22c55e;--red:#ef4444;--orange:#f59e0b;--purple:#8b5cf6;}
+body.light{--bg:#eef3f9;--card:#fff;--card2:#f8fafc;--text:#0f172a;--muted:#64748b;--border:#cbd5e1;}
 body{margin:0;background:var(--bg);color:var(--text);font-family:Segoe UI,Arial,sans-serif;}
 .header{display:flex;justify-content:space-between;align-items:center;padding:15px 22px;background:var(--card);border-bottom:1px solid var(--border);position:sticky;top:0;z-index:100;}
-.logoArea{display:flex;align-items:center;gap:10px}
-.logoArea img{width:42px;height:42px;object-fit:contain;border-radius:8px}
+.logoArea{display:flex;align-items:center;gap:10px}.logoArea img{width:42px;height:42px;object-fit:contain;border-radius:8px}
 .logo{font-size:22px;font-weight:900}.sub{font-size:12px;color:var(--muted)}
-.btn{border:0;border-radius:10px;padding:10px 15px;background:var(--blue);color:white;font-weight:900;cursor:pointer;margin:3px;transition:all 0.2s;}
-.btn:hover{transform:translateY(-2px);box-shadow:0 4px 12px rgba(0,0,0,0.3);}
+.btn{border:0;border-radius:10px;padding:10px 15px;background:var(--blue);color:#fff;font-weight:900;cursor:pointer;margin:3px;transition:all .2s;}
+.btn:hover{transform:translateY(-2px);box-shadow:0 4px 12px rgba(0,0,0,.3);}
 .btn.red{background:var(--red)}.btn.green{background:var(--green)}.btn.orange{background:var(--orange)}.btn.purple{background:var(--purple)}
-.page{padding:18px}
-.grid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:16px;}
+.page{padding:18px}.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:14px;margin-bottom:16px;}
 .card{background:linear-gradient(135deg,var(--card),var(--card2));border:1px solid var(--border);border-radius:16px;padding:16px;box-shadow:0 8px 20px rgba(0,0,0,.18);}
-.label{font-size:12px;color:var(--muted);font-weight:900}
-.num{font-size:26px;color:var(--green);font-weight:900;margin-top:6px}
-.formGrid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;}
+.label{font-size:12px;color:var(--muted);font-weight:900}.num{font-size:26px;color:var(--green);font-weight:900;margin-top:6px;}
+.formGrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:12px;}
 input,select{width:100%;box-sizing:border-box;padding:12px;border-radius:10px;border:1px solid var(--border);background:var(--card);color:var(--text);font-size:14px;}
-input:focus,select:focus{outline:none;border-color:var(--blue);box-shadow:0 0 0 3px rgba(37,99,235,0.2);}
-
-/* Company Selection */
-.companySelect{display:flex;gap:8px;margin-bottom:12px;}
-.companySelect label{flex:1;padding:10px;border:2px solid var(--border);border-radius:10px;text-align:center;cursor:pointer;font-size:13px;font-weight:700;transition:all 0.2s;background:var(--card2);}
-.companySelect label:hover{border-color:var(--blue);}
-.companySelect input[type="radio"]{display:none;}
-.companySelect label.active{border-color:var(--blue);background:rgba(37,99,235,0.15);color:var(--blue);}
-.companySelect label.textile.active{border-color:var(--green);background:rgba(34,197,94,0.15);color:var(--green);}
-.companySelect label.composite.active{border-color:var(--purple);background:rgba(139,92,246,0.15);color:var(--purple);}
-
-.mcdBox{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:10px;max-height:200px;overflow-y:auto;padding:4px;}
+input:focus,select:focus{outline:none;border-color:var(--blue);box-shadow:0 0 0 3px rgba(37,99,235,.2);}
+.companyWrap{display:flex;gap:12px;margin:10px 0;}
+.companyWrap label{flex:1;padding:10px;border:2px solid var(--border);border-radius:10px;background:var(--card2);display:flex;align-items:center;gap:8px;cursor:pointer;transition:all .2s;}
+.companyWrap label:hover{border-color:var(--blue);}
+.companyWrap input{width:auto;margin:0;}
+.companyWrap label.active-textile{border-color:var(--green);background:rgba(34,197,94,.12);color:var(--green);}
+.companyWrap label.active-composite{border-color:var(--purple);background:rgba(139,92,246,.12);color:var(--purple);}
+.mcdBox{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:8px;margin-top:10px;max-height:180px;overflow-y:auto;padding:4px;}
 .checkItem{background:rgba(255,255,255,.04);border:1px solid var(--border);border-radius:10px;padding:8px;font-size:12px;font-weight:800;display:flex;align-items:center;gap:6px;}
-.checkItem input{width:auto;margin:0;}.checkItem:hover{background:rgba(255,255,255,0.08);}
-
-.smallNote{color:var(--muted);font-size:12px;font-weight:800;margin-top:6px;padding:8px;background:rgba(245,158,11,0.1);border-radius:8px;border-left:3px solid var(--orange);}
-
+.checkItem:hover{background:rgba(255,255,255,.08);}
+.smallNote{color:var(--muted);font-size:12px;font-weight:800;margin-top:6px;padding:8px;background:rgba(245,158,11,.1);border-radius:8px;border-left:3px solid var(--orange);}
 table{width:100%;border-collapse:collapse;margin-top:16px;background:var(--card);font-size:12px;}
 th,td{border:1px solid var(--border);padding:9px;text-align:center;}
 th{background:var(--card2);font-weight:900;color:var(--muted)}
 .roleAdmin{color:var(--green);font-weight:900}.roleFull{color:var(--orange);font-weight:900}.roleUser{color:var(--blue);font-weight:900}
-
-.companyBadge{display:inline-block;padding:3px 10px;border-radius:12px;font-size:11px;font-weight:700;}
-.companyBadge.textile{background:rgba(34,197,94,0.15);color:var(--green);}
-.companyBadge.composite{background:rgba(139,92,246,0.15);color:var(--purple);}
-
-.toast{position:fixed;right:18px;bottom:18px;background:var(--green);color:white;padding:13px 20px;border-radius:12px;font-weight:900;display:none;z-index:1000;box-shadow:0 4px 20px rgba(0,0,0,0.3);animation:slideIn 0.3s ease;}
-@keyframes slideIn{from{transform:translateX(100px);opacity:0;}to{transform:translateX(0);opacity:1;}}
-
-@media(max-width:900px){.grid,.formGrid,.mcdBox{grid-template-columns:1fr}.header{display:block;text-align:center}.companySelect{flex-direction:column;}}
+.compBadge{display:inline-block;padding:3px 8px;border-radius:12px;font-size:11px;font-weight:700;margin:2px;}
+.compBadge.t{background:rgba(34,197,94,.15);color:var(--green)}.compBadge.c{background:rgba(139,92,246,.15);color:var(--purple);}
+.toast{position:fixed;right:18px;bottom:18px;background:var(--green);color:#fff;padding:13px 20px;border-radius:12px;font-weight:900;display:none;z-index:1000;box-shadow:0 4px 20px rgba(0,0,0,.3);animation:slideIn .3s;}
+@keyframes slideIn{from{transform:translateX(100px);opacity:0}to{transform:translateX(0);opacity:1}}
+@media(max-width:768px){.grid,.formGrid,.companyWrap,.mcdBox{grid-template-columns:1fr}.header{flex-direction:column;text-align:center;gap:10px}}
 </style>
 </head>
-
 <body>
 
 <div class="header">
   <div class="logoArea">
     <img src="logo.png" onerror="this.style.display='none'">
-    <div>
-      <div class="logo">👑 GMS ADMIN PANEL</div>
-      <div class="sub">Company • User • MCD • Needle • Manpower Control</div>
-    </div>
+    <div><div class="logo">👑 GMS ADMIN PANEL</div><div class="sub">Company • User • MCD • Needle • Manpower</div></div>
   </div>
   <div>
     <button class="btn" onclick="location.href='index.html'">🏠 Dashboard</button>
@@ -92,22 +67,14 @@ th{background:var(--card2);font-weight:900;color:var(--muted)}
     <h2 id="formTitle">➕ Add User</h2>
     <input type="hidden" id="editId">
 
-    <!-- Company Selection - MASTER FILTER -->
+    <!-- ✅ Company Checkboxes (1 or Both) -->
     <div style="margin-bottom:16px;">
-      <label class="label" style="margin-bottom:8px;display:block;">🏢 Select Company for User (MASTER FILTER)</label>
-      <div class="companySelect">
-        <label class="textile active" id="lblTextile" onclick="selectCompany('GMS TEXTILES LTD')">
-          <input type="radio" name="userCompany" value="GMS TEXTILES LTD" id="cmpTextile" checked>
-          <span>🏭 GMS TEXTILES LTD</span>
-        </label>
-        <label class="composite" id="lblComposite" onclick="selectCompany('GMS COMPOSITE KNITTING')">
-          <input type="radio" name="userCompany" value="GMS COMPOSITE KNITTING" id="cmpComposite">
-          <span>🏢 GMS COMPOSITE KNITTING</span>
-        </label>
+      <label class="label">🏢 Assign Company (Select 1 or Both)</label>
+      <div class="companyWrap">
+        <label id="lblTextile"><input type="checkbox" id="cmpTextile" value="GMS TEXTILES LTD" onchange="updateCompanyUI()"> 🏭 GMS TEXTILES LTD</label>
+        <label id="lblComposite"><input type="checkbox" id="cmpComposite" value="GMS COMPOSITE KNITTING" onchange="updateCompanyUI()"> 🏢 GMS COMPOSITE KNITTING</label>
       </div>
-      <div class="smallNote" id="companyNote">
-        🔐 <b>Company হলো MASTER FILTER:</b> ইউজার শুধু সিলেক্টেড কোম্পানির ডাটা এক্সেস পাবে। অন্য কোম্পানির MCD টিক থাকলেও কাজ করবে না।
-      </div>
+      <div class="smallNote" id="companyNote">🔐 ইউজার শুধু সিলেক্টেড কোম্পানির ডাটা পাবে। টেক্সটাইল না দিলে টেক্সটাইল ড্যাশবোর্ড/ডাটা সম্পূর্ণ হাইড থাকবে।</div>
     </div>
 
     <div class="formGrid">
@@ -116,55 +83,48 @@ th{background:var(--card2);font-weight:900;color:var(--muted)}
       <input id="password" placeholder="🔐 Password" type="password">
       <select id="role">
         <option value="user">📂 Normal User</option>
-        <option value="full">🌍 Full Access User</option>
+        <option value="full">🌍 Full Access</option>
         <option value="admin">👑 Admin</option>
       </select>
       <select id="needleAccess">
-        <option value="no">🪡 Needle Access: No</option>
-        <option value="yes">🪡 Needle Access: Yes</option>
+        <option value="no">🪡 Needle: No</option>
+        <option value="yes">🪡 Needle: Yes</option>
       </select>
-      <select id="manpowerAccess" onchange="updateManpowerNote()">
-        <option value="none">👨‍ Manpower: None</option>
+    </div>
+
+    <!-- ✅ Manpower Control -->
+    <div style="margin-top:14px;">
+      <select id="manpowerAccess" onchange="toggleManpowerMCD()">
+        <option value="none">👨‍ Manpower: None (No Access)</option>
         <option value="all">👨‍ Manpower: All MCD</option>
         <option value="selected">👨‍ Manpower: Selected MCD</option>
       </select>
-      <button class="btn green" onclick="saveUser()">💾 Save User</button>
+      <div id="manpowerMCDSection" style="display:none; margin-top:10px;">
+        <div class="smallNote">👨‍ Manpower Access এর জন্য MCD টিক দিন:</div>
+        <div id="manpowerMcdChecks" class="mcdBox"></div>
+      </div>
     </div>
 
-    <div class="smallNote" id="manpowerNote">Manpower None দিলে user manpower পাবে না।</div>
-
-    <h3 style="margin-top:20px;">📂 Select MCD Access <span id="mcdCompanyBadge" class="companyBadge textile">🏭 TEXTILES</span></h3>
-    <div class="smallNote">
-      ⚠️ <b>গুরুত্বপূর্ণ:</b> টিক করা MCD শুধু <b>উপরে সিলেক্টেড কোম্পানির</b> জন্য কাজ করবে। অন্য কোম্পানির MCD টিক থাকলেও এক্সেস পাবে না।
-    </div>
+    <!-- ✅ General MCD Access -->
+    <h3 style="margin-top:18px;">📂 General MCD Access (Dashboard & Reports)</h3>
+    <div class="smallNote">টিক করা MCD শুধু সিলেক্টেড কোম্পানির জন্য কাজ করবে।</div>
     <div id="mcdChecks" class="mcdBox"></div>
-    <button class="btn orange" onclick="clearForm()" style="margin-top:12px;">🧹 Clear Form</button>
+
+    <button class="btn green" onclick="saveUser()" style="margin-top:14px;width:100%;">💾 Save User</button>
+    <button class="btn orange" onclick="clearForm()" style="margin-top:8px;width:100%;">🧹 Clear Form</button>
   </div>
 
   <div class="card" style="margin-top:16px">
     <h2>👥 User List</h2>
     <div style="margin-bottom:12px;display:flex;gap:8px;flex-wrap:wrap;">
       <button class="btn" onclick="filterUsers('all')">All</button>
-      <button class="btn green" onclick="filterUsers('GMS TEXTILES LTD')">🏭 Textiles</button>
-      <button class="btn purple" onclick="filterUsers('GMS COMPOSITE KNITTING')">🏢 Composite</button>
+      <button class="btn green" onclick="filterUsers('textile')">🏭 Textiles</button>
+      <button class="btn purple" onclick="filterUsers('composite')">🏢 Composite</button>
       <button class="btn orange" onclick="filterUsers('admin')">👑 Admin Only</button>
     </div>
     <div style="overflow-x:auto;">
-      <table>
-        <thead>
-          <tr>
-            <th>Name</th>
-            <th>Company</th>
-            <th>Email</th>
-            <th>Role</th>
-            <th>MCD Access</th>
-            <th>🪡 Needle</th>
-            <th>👨‍ Manpower</th>
-            <th>Action</th>
-          </tr>
-        </thead>
-        <tbody id="userTable"></tbody>
-      </table>
+      <table><thead><tr><th>Name</th><th>Company</th><th>Email</th><th>Role</th><th>MCD</th><th>🪡</th><th>👨‍ Manpower</th><th>Action</th></tr></thead>
+      <tbody id="userTable"></tbody></table>
     </div>
   </div>
 </div>
@@ -176,196 +136,135 @@ import { initializeApp } from "https://www.gstatic.com/firebasejs/12.12.1/fireba
 import { getFirestore, collection, addDoc, getDocs, deleteDoc, doc, updateDoc } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-firestore.js";
 
 const firebaseConfig = {
-  apiKey: "AIzaSyD-wBCF5eeWMHobLFOhBzKW7aB2pagz9-w",
-  authDomain: "gms-warehouse-tracker-7f57e.firebaseapp.com",
-  projectId: "gms-warehouse-tracker-7f57e",
-  storageBucket: "gms-warehouse-tracker-7f57e.firebasestorage.app",
-  messagingSenderId: "992250313291",
-  appId: "1:992250313291:web:ee3bceae76d4d53bc26bce"
+  apiKey:"AIzaSyD-wBCF5eeWMHobLFOhBzKW7aB2pagz9-w",
+  authDomain:"gms-warehouse-tracker-7f57e.firebaseapp.com",
+  projectId:"gms-warehouse-tracker-7f57e",
+  storageBucket:"gms-warehouse-tracker-7f57e.firebasestorage.app",
+  messagingSenderId:"992250313291",
+  appId:"1:992250313291:web:ee3bceae76d4d53bc26bce"
 };
-const app = initializeApp(firebaseConfig);
-const db = getFirestore(app);
+const app=initializeApp(firebaseConfig), db=getFirestore(app);
+const MCD=["GREY FABRIC MCD","SHIPMENT MCD","BILLING SECTION","OUTER WEAR MCD","YARN MCD","PRINTING MCD","JHUT MCD","GENERAL MCD","ACCESSORIES MCD","LEFTOVER MCD","FINISH FABRIC MCD","YARN DYEING MCD","CHEMICAL MCD","GENERAL TECHNICAL MCD"];
+let allUsers=[], currentFilter="all";
 
-const MCD_LIST = ["GREY FABRIC MCD","SHIPMENT MCD","BILLING SECTION","OUTER WEAR MCD","YARN MCD","PRINTING MCD","JHUT MCD","GENERAL MCD","ACCESSORIES MCD","LEFTOVER MCD","FINISH FABRIC MCD","YARN DYEING MCD","CHEMICAL MCD","GENERAL TECHNICAL MCD"];
-const COMPANIES = ["GMS TEXTILES LTD", "GMS COMPOSITE KNITTING"];
+window.toggleTheme=()=>{document.body.classList.toggle("light");localStorage.setItem("adminTheme",document.body.classList.contains("light")?"light":"dark");};
+if(localStorage.getItem("adminTheme")==="light") document.body.classList.add("light");
+window.logout=()=>{localStorage.removeItem("gmsUser");window.location.href="login.html";};
+const toast=m=>{const t=document.getElementById("toast");t.innerText=m;t.style.display="block";setTimeout(()=>t.style.display="none",1800);};
 
-let allUsers = [];
-let currentFilter = "all";
-let selectedCompany = "GMS TEXTILES LTD";
-
-// ===== THEME & LOGOUT =====
-window.toggleTheme=function(){document.body.classList.toggle("light");localStorage.setItem("adminTheme",document.body.classList.contains("light") ? "light" : "dark");};
-if(localStorage.getItem("adminTheme")==="light"){document.body.classList.add("light");}
-window.logout=function(){localStorage.removeItem("gmsUser");localStorage.removeItem("userMCD");window.location.href="login.html";};
-
-// ===== TOAST =====
-function toast(msg){let t=document.getElementById("toast");t.innerText=msg;t.style.display="block";setTimeout(()=>t.style.display="none",1800);}
-
-// ===== COMPANY SELECTION (MASTER FILTER) =====
-window.selectCompany = function(company){
-  selectedCompany = company;
-  document.getElementById('lblTextile').classList.toggle('active', company === 'GMS TEXTILES LTD');
-  document.getElementById('lblComposite').classList.toggle('active', company === 'GMS COMPOSITE KNITTING');
-  document.getElementById('cmpTextile').checked = company === 'GMS TEXTILES LTD';
-  document.getElementById('cmpComposite').checked = company === 'GMS COMPOSITE KNITTING';
-  
-  const badge = document.getElementById('mcdCompanyBadge');
-  badge.innerHTML = company === 'GMS TEXTILES LTD' ? '🏭 TEXTILES' : '🏢 COMPOSITE';
-  badge.className = 'companyBadge ' + (company === 'GMS TEXTILES LTD' ? 'textile' : 'composite');
-  
-  document.getElementById('companyNote').innerHTML = 
-    `🔐 <b>Company হলো MASTER FILTER:</b> ইউজার শুধু <b>${company}</b> এর ডাটা এক্সেস পাবে। অন্য কোম্পানির MCD টিক থাকলেও কাজ করবে না।`;
-  
-  let currentSelected = getSelectedMCD();
-  renderMcdChecks(currentSelected);
-  updateManpowerNote();
+window.updateCompanyUI=()=>{
+  const t=document.getElementById("cmpTextile"), c=document.getElementById("cmpComposite");
+  document.getElementById("lblTextile").classList.toggle("active-textile",t.checked);
+  document.getElementById("lblComposite").classList.toggle("active-composite",c.checked);
+  if(!t.checked && !c.checked) document.getElementById("companyNote").innerHTML="⚠️ অন্তত ১টা কোম্পানি সিলেক্ট করুন!";
+  else document.getElementById("companyNote").innerHTML="✅ ইউজার শুধু সিলেক্টেড কোম্পানির ডাটা পাবে। অন্য কোম্পানির ডাটা হাইড থাকবে।";
 };
 
-// ===== MANPOWER NOTE =====
-window.updateManpowerNote=function(){
-  let v=document.getElementById("manpowerAccess").value;
-  let note=document.getElementById("manpowerNote");
-  let cmp = selectedCompany;
-  if(v==="none"){note.innerHTML = `❌ <b>${cmp}</b>: Manpower None দিলে ${cmp} এর কোন manpower ডাটা পাবে না।`;}
-  else if(v==="all"){note.innerHTML = `✅ <b>${cmp}</b>: Manpower All দিলে ${cmp} এর সব MCD manpower পাবে।`;}
-  else{note.innerHTML = `🎯 <b>${cmp}</b>: Manpower Selected দিলে নিচে টিক করা ${cmp} এর MCD manpower পাবে। <br><small style="color:var(--red)">⚠️ অন্য কোম্পানির MCD টিক থাকলেও এক্সেস পাবে না</small>`;}
+window.toggleManpowerMCD=()=>{
+  const sec=document.getElementById("manpowerMCDSection");
+  sec.style.display=document.getElementById("manpowerAccess").value==="selected"?"block":"none";
 };
 
-// ===== MCD CHECKBOXES =====
-function renderMcdChecks(selected=[]){
-  let html="";
-  MCD_LIST.forEach(mcd=>{
-    let checked = selected.includes(mcd) ? "checked" : "";
-    html += `<label class="checkItem"><input type="checkbox" class="mcdCheck" value="${mcd}" ${checked}>${mcd}</label>`;
-  });
-  document.getElementById("mcdChecks").innerHTML=html;
+function renderMCD(containerId, selected=[]){
+  document.getElementById(containerId).innerHTML=MCD.map(m=>`<label class="checkItem"><input type="checkbox" class="mcd-cb" data-target="${containerId}" value="${m}" ${selected.includes(m)?'checked':''}>${m}</label>`).join('');
 }
-function getSelectedMCD(){let arr=[];document.querySelectorAll(".mcdCheck:checked").forEach(c=>{arr.push(c.value);});return arr;}
+function getMCD(containerId){return [...document.querySelectorAll(`.mcd-cb[data-target="${containerId}"]:checked`)].map(c=>c.value);}
 
-// ===== MANPOWER NORMALIZATION =====
-function normalizeManpowerAccess(u){
-  if(u.manpowerAccess==="all" || u.manpowerAccess==="selected" || u.manpowerAccess==="none"){return u.manpowerAccess;}
-  if(u.manpowerAccess===true){if(u.role==="admin" || u.role==="full"){return "all";}return "selected";}
-  return "none";
-}
-function manpowerText(u){
-  let access=normalizeManpowerAccess(u);
-  let cmp = u.userCompany || "GMS TEXTILES LTD";
-  let cmpBadge = cmp === "GMS TEXTILES LTD" ? '<span class="companyBadge textile">🏭</span>' : '<span class="companyBadge composite">🏢</span>';
-  if(access==="none"){return `${cmpBadge} ❌ None`;}
-  if(access==="all"){return `${cmpBadge} ✅ All MCD`;}
-  let list=[];if(Array.isArray(u.manpowerMcdAccess)){list=u.manpowerMcdAccess;}else if(Array.isArray(u.mcdAccess)){list=u.mcdAccess;}
-  return `${cmpBadge} ✅ Selected: ` + (list.length ? list.slice(0,2).join(", ") + (list.length>2?"...":"") : "No MCD");
-}
-
-// ===== FORM FUNCTIONS =====
-window.clearForm=function(){
+window.clearForm=()=>{
   document.getElementById("formTitle").innerText="➕ Add User";
   document.getElementById("editId").value="";
-  document.getElementById("name").value="";document.getElementById("email").value="";document.getElementById("password").value="";
-  document.getElementById("role").value="user";document.getElementById("needleAccess").value="no";document.getElementById("manpowerAccess").value="none";
-  selectCompany("GMS TEXTILES LTD");updateManpowerNote();renderMcdChecks([]);window.scrollTo({top:0,behavior:"smooth"});
+  ["name","email","password"].forEach(i=>document.getElementById(i).value="");
+  document.getElementById("role").value="user";
+  document.getElementById("needleAccess").value="no";
+  document.getElementById("manpowerAccess").value="none";
+  document.getElementById("cmpTextile").checked=false;
+  document.getElementById("cmpComposite").checked=false;
+  updateCompanyUI(); toggleManpowerMCD();
+  renderMCD("mcdChecks",[]); renderMCD("manpowerMcdChecks",[]);
+  window.scrollTo({top:0,behavior:"smooth"});
 };
 
-window.saveUser=async function(){
-  let editId=document.getElementById("editId").value;
-  let name=document.getElementById("name").value.trim();
-  let email=document.getElementById("email").value.trim();
-  let password=document.getElementById("password").value.trim();
-  let role=document.getElementById("role").value;
-  let mcdAccess=getSelectedMCD();
-  let needleAccess=document.getElementById("needleAccess").value==="yes";
-  let manpowerAccess=document.getElementById("manpowerAccess").value;
-  let userCompany = selectedCompany;
+window.saveUser=async()=>{
+  const cmps=[...document.querySelectorAll("#cmpTextile:checked,#cmpComposite:checked")].map(c=>c.value);
+  if(cmps.length===0){alert("অন্তত ১টা কোম্পানি সিলেক্ট করুন!");return;}
+  const name=document.getElementById("name").value.trim(), email=document.getElementById("email").value.trim(), pass=document.getElementById("password").value.trim();
+  if(!name||!email||!pass){alert("Name, Email, Password লাগবে");return;}
+  const mAccess=document.getElementById("manpowerAccess").value;
+  if(mAccess==="selected" && getMCD("manpowerMcdChecks").length===0){alert("Manpower Selected দিলে অন্তত ১টা MCD টিক করুন");return;}
 
-  if(!name || !email || !password){alert("Name, Email, Password লাগবে");return;}
-  if(manpowerAccess==="selected" && mcdAccess.length===0){alert("Manpower Selected দিলে অন্তত ১টা MCD tick করতে হবে");return;}
-
-  let userData={
-    name:name,email:email,password:password,role:role,
-    userCompany:userCompany, // 🔐 MASTER FILTER: Company
-    mcdAccess:mcdAccess, // MCD access within selected company only
-    needleAccess:needleAccess, // Needle access within selected company only
-    manpowerAccess:manpowerAccess,
-    manpowerMcdAccess: manpowerAccess==="selected" ? mcdAccess : [],
+  const data={
+    name,email,password:pass,role:document.getElementById("role").value,
+    userCompanies:cmps, // 🔐 Master Filter Array
+    mcdAccess:getMCD("mcdChecks"),
+    needleAccess:document.getElementById("needleAccess").value==="yes",
+    manpowerAccess:mAccess,
+    manpowerMcdAccess:mAccess==="selected"?getMCD("manpowerMcdChecks"):[],
     updatedAt:new Date().toISOString()
   };
 
-  if(editId){await updateDoc(doc(db,"users",editId),userData);toast("User Updated ✅");}
-  else{userData.createdAt=new Date().toISOString();await addDoc(collection(db,"users"),userData);toast("User Saved ✅");}
-  clearForm();loadUsers();
+  const eid=document.getElementById("editId").value;
+  if(eid){await updateDoc(doc(db,"users",eid),data);toast("User Updated ✅");}
+  else{data.createdAt=new Date().toISOString();await addDoc(collection(db,"users"),data);toast("User Saved ✅");}
+  clearForm(); loadUsers();
 };
 
-window.editUser=function(id){
-  let found=allUsers.find(x=>x.id===id);if(!found) return;
-  let u=found.data;let access=normalizeManpowerAccess(u);
-  let userCompany = u.userCompany || "GMS TEXTILES LTD";
-
+window.editUser=id=>{
+  const u=allUsers.find(x=>x.id===id)?.data; if(!u) return;
   document.getElementById("formTitle").innerText="✏️ Edit User";
   document.getElementById("editId").value=id;
-  document.getElementById("name").value=u.name || "";document.getElementById("email").value=u.email || "";document.getElementById("password").value=u.password || "";
-  document.getElementById("role").value=u.role || "user";
-  document.getElementById("needleAccess").value=u.needleAccess ? "yes" : "no";
-  document.getElementById("manpowerAccess").value=access;
+  document.getElementById("name").value=u.name||"";
+  document.getElementById("email").value=u.email||"";
+  document.getElementById("password").value=u.password||"";
+  document.getElementById("role").value=u.role||"user";
+  document.getElementById("needleAccess").value=u.needleAccess?"yes":"no";
+  document.getElementById("manpowerAccess").value=u.manpowerAccess||"none";
+  toggleManpowerMCD();
   
-  selectCompany(userCompany);updateManpowerNote();
-  let selected = [];if(access==="selected" && Array.isArray(u.manpowerMcdAccess)){selected = u.manpowerMcdAccess;}else if(Array.isArray(u.mcdAccess)){selected = u.mcdAccess;}else if(u.mcd){selected = [u.mcd];}
-  renderMcdChecks(selected);window.scrollTo({top:0,behavior:"smooth"});
+  document.getElementById("cmpTextile").checked=(u.userCompanies||[]).includes("GMS TEXTILES LTD");
+  document.getElementById("cmpComposite").checked=(u.userCompanies||[]).includes("GMS COMPOSITE KNITTING");
+  updateCompanyUI();
+  
+  renderMCD("mcdChecks", Array.isArray(u.mcdAccess)?u.mcdAccess:[]);
+  renderMCD("manpowerMcdChecks", Array.isArray(u.manpowerMcdAccess)?u.manpowerMcdAccess:[]);
+  window.scrollTo({top:0,behavior:"smooth"});
 };
 
-window.deleteUser=async function(id){if(confirm("Delete this user?")){await deleteDoc(doc(db,"users",id));toast("User Deleted ✅");loadUsers();}};
+window.deleteUser=async id=>{if(confirm("Delete user?")){await deleteDoc(doc(db,"users",id));toast("Deleted ✅");loadUsers();}};
+window.filterUsers=f=>{currentFilter=f;loadUsers();};
 
-// ===== FILTER USERS =====
-window.filterUsers = function(filter){currentFilter = filter;loadUsers();};
-
-// ===== LOAD USERS =====
 async function loadUsers(){
-  let snap=await getDocs(collection(db,"users"));
-  let html="";let total=0,admin=0,full=0,normal=0,textile=0,composite=0;allUsers=[];
-
+  const snap=await getDocs(collection(db,"users")); allUsers=[];
+  let t=0,a=0,tx=0,cx=0, html="";
   snap.forEach(d=>{
-    let u=d.data();allUsers.push({id:d.id,data:u});total++;
-    if(u.role==="admin") admin++;else if(u.role==="full") full++;else normal++;
-    let cmp = u.userCompany || "GMS TEXTILES LTD";
-    if(cmp === "GMS TEXTILES LTD") textile++;else composite++;
-
-    if(currentFilter !== "all"){
-      if(currentFilter === "admin" && u.role !== "admin") return;
-      if(currentFilter === "GMS TEXTILES LTD" && cmp !== "GMS TEXTILES LTD") return;
-      if(currentFilter === "GMS COMPOSITE KNITTING" && cmp !== "GMS COMPOSITE KNITTING") return;
+    const u=d.data(), id=d.id;
+    allUsers.push({id,data:u}); t++;
+    if(u.role==="admin")a++; if(u.role==="full")a++; // Admin+Full count together for stat
+    const cmps=u.userCompanies||[];
+    if(cmps.includes("GMS TEXTILES LTD"))tx++;
+    if(cmps.includes("GMS COMPOSITE KNITTING"))cx++;
+    
+    if(currentFilter!=="all"){
+      if(currentFilter==="admin"&&u.role!=="admin")return;
+      if(currentFilter==="textile"&&!cmps.includes("GMS TEXTILES LTD"))return;
+      if(currentFilter==="composite"&&!cmps.includes("GMS COMPOSITE KNITTING"))return;
     }
 
-    let roleClass = u.role==="admin" ? "roleAdmin" : u.role==="full" ? "roleFull" : "roleUser";
-    let cmpBadge = cmp === "GMS TEXTILES LTD" ? '<span class="companyBadge textile">🏭 Textiles</span>' : '<span class="companyBadge composite">🏢 Composite</span>';
-    let mcdText="";if(Array.isArray(u.mcdAccess)){mcdText = u.mcdAccess.slice(0,2).join(", ") + (u.mcdAccess.length>2?"...":"");}else{mcdText = u.mcd || "";}
+    const rc=u.role==="admin"?"roleAdmin":u.role==="full"?"roleFull":"roleUser";
+    const badges=cmps.map(c=>`<span class="compBadge ${c==='GMS TEXTILES LTD'?'t':'c'}">${c==='GMS TEXTILES LTD'?'🏭':'🏢'}</span>`).join('');
+    const mcdTxt=Array.isArray(u.mcdAccess)?u.mcdAccess.slice(0,2).join(', ')+(u.mcdAccess.length>2?'+':''):'';
+    const mpTxt=u.manpowerAccess==="all"?"✅ All":u.manpowerAccess==="selected"?`✅ ${u.manpowerMcdAccess?.length||0} MCD`:"❌ None";
 
-    html+=`<tr>
-      <td><b>${u.name || ""}</b></td>
-      <td>${cmpBadge}</td>
-      <td>${u.email || ""}</td>
-      <td class="${roleClass}">${u.role || ""}</td>
-      <td style="text-align:left;padding-left:12px;">${mcdText || "—"}</td>
-      <td>${u.needleAccess ? "✅ Yes" : "❌ No"}</td>
-      <td style="text-align:left;padding-left:12px;">${manpowerText(u)}</td>
-      <td>
-        <button class="btn orange" onclick="editUser('${d.id}')" style="padding:6px 10px;font-size:11px;">✏️</button>
-        <button class="btn red" onclick="deleteUser('${d.id}')" style="padding:6px 10px;font-size:11px;">🗑</button>
-      </td>
-    </tr>`;
+    html+=`<tr><td><b>${u.name||''}</b></td><td>${badges}</td><td>${u.email||''}</td><td class="${rc}">${u.role||''}</td><td style="text-align:left">${mcdTxt||'—'}</td><td>${u.needleAccess?'✅':'❌'}</td><td>${mpTxt}</td><td><button class="btn orange" onclick="editUser('${id}')" style="padding:4px 8px;font-size:11px">✏️</button><button class="btn red" onclick="deleteUser('${id}')" style="padding:4px 8px;font-size:11px">🗑</button></td></tr>`;
   });
-
-  document.getElementById("userTable").innerHTML=html || '<tr><td colspan="8" style="padding:20px;color:var(--muted);">No users found</td></tr>';
-  document.getElementById("totalUsers").innerText=total;
-  document.getElementById("totalAdmin").innerText=admin;
-  document.getElementById("totalTextile").innerText=textile;
-  document.getElementById("totalComposite").innerText=composite;
+  document.getElementById("userTable").innerHTML=html||'<tr><td colspan="8" style="padding:20px;color:var(--muted)">No users</td></tr>';
+  document.getElementById("totalUsers").innerText=t;
+  document.getElementById("totalAdmin").innerText=a;
+  document.getElementById("totalTextile").innerText=tx;
+  document.getElementById("totalComposite").innerText=cx;
 }
 
-// ===== INIT =====
-renderMcdChecks([]);updateManpowerNote();loadUsers();
-window.saveUser = saveUser;window.editUser = editUser;window.deleteUser = deleteUser;
-window.clearForm = clearForm;window.selectCompany = selectCompany;
-window.updateManpowerNote = updateManpowerNote;window.filterUsers = filterUsers;
+// Init
+renderMCD("mcdChecks",[]); renderMCD("manpowerMcdChecks",[]); updateCompanyUI(); toggleManpowerMCD(); loadUsers();
 </script>
 </body>
 </html>
