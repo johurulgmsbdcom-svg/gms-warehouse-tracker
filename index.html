@@ -1354,115 +1354,97 @@ const userCompanyAccess = user.companyAccess || (user.role === 'admin' || user.r
 window.userCompanyAccess = userCompanyAccess;
 window.currentCompany = localStorage.getItem('currentCompany') || userCompanyAccess[0];
 
-// ✅ NEW FINAL COMPANY FILTER
-function normalizeCompanyName(name=""){
-  return String(name)
-    .replace(/IND LTD\.?/gi,'')
-    .replace(/LIMITED/gi,'LTD')
-    .replace(/TEXTILES/gi,'TEXTILE')
-    .replace(/\s+/g,' ')
-    .trim()
-    .toUpperCase();
-}
-
-function filterByCompany(docs, company) {
-  if(!company) return docs;
-  const selected = normalizeCompanyName(company);
-  return docs.filter(d => {
-    const raw = d.company || d.data?.company || d.Company || "";
-    if(!raw) return false;
-    const docCompany = normalizeCompanyName(raw);
-    return (
-      docCompany.includes(selected) ||
-      selected.includes(docCompany)
-    );
+function setupCompanyDropdowns() {
+  const opts = userCompanyAccess.map(c => `<option value="${c}" ${c===window.currentCompany?'selected':''}>${c}</option>`).join('');
+  const els = ['entryCompany', 'reportCompany', 'companySwitcher'];
+  els.forEach(id => {
+    const el = document.getElementById(id);
+    if(el) {
+      el.innerHTML = opts;
+      el.value = window.currentCompany;
+    }
   });
 }
 
-// ✅ NEW FINAL MCD SYSTEM
-function getCompanyMCD(company){
-  if(company === "GMS COMPOSITE KNITTING"){
-    return [
-      "GREY FABRIC MCD",
-      "YARN MCD",
-      "CHEMICAL MCD",
-      "YARN DYEING MCD",
-      "GENERAL TECHNICAL MCD",
-      "PRINTING MCD",
-      "FINISH FABRIC MCD",
-      "LEFTOVER MCD"
-    ];
-  }
-  return [
-    "ACCESSORIES MCD",
-    "SHIPMENT MCD",
-    "OUTER WEAR MCD",
-    "BILLING SECTION",
-    "GENERAL MCD",
-    "JHUT MCD"
-  ];
+// 🔥 Enhanced Company Filter - সব ডাটা ফিল্টার করবে
+function filterByCompany(docs, company) {
+  if(!company) return docs;
+  return docs.filter(d => {
+    const docCompany = d?.company || d?.data?.company || d?.Company || "";
+    return docCompany === company || docCompany === "" || !docCompany;
+  });
 }
 
-const ALL_MCD = [
-  ...getCompanyMCD("GMS TEXTILES LTD"),
-  ...getCompanyMCD("GMS COMPOSITE KNITTING")
-];
-
-function setupCompanyDropdowns() {
-  const opts = userCompanyAccess.map(c => `<option value="${c}" ${c===window.currentCompany?'selected':''}>${c}</option>`).join('');
-  document.getElementById('entryCompany').innerHTML = opts;
-  document.getElementById('reportCompany').innerHTML = opts;
-  document.getElementById('companySwitcher').innerHTML = opts;
-  document.getElementById('companySwitcher').value = window.currentCompany;
+// 🔥 Chart Data Fallback - ডাটা না থাকলে 0 দেখাবে
+function prepareChartData(rawData, defaultValue = 0) {
+  if(!rawData || !rawData.length) return { labels: ["No Data"], data: [defaultValue] };
+  return rawData;
 }
 
-// ✅ FINAL switchCompany() REPLACE
+// ✅ FIXED: Proper company switch with full reload
 window.switchCompany = function(company) {
+  console.log(`🔄 Switching to company: ${company}`);
   window.currentCompany = company;
   localStorage.setItem('currentCompany', company);
+  
+  // 🔥 Update all dropdowns
   setupCompanyDropdowns();
-
-  // Clear all charts
-  if(window.accessoriesChart){ window.accessoriesChart.destroy(); window.accessoriesChart = null; }
-  if(window.needleChart){ window.needleChart.destroy(); window.needleChart = null; }
-  if(window.greyChart){ window.greyChart.destroy(); window.greyChart = null; }
-  if(window.billingChart){ window.billingChart.destroy(); window.billingChart = null; }
-  if(window.needleIssueChart){ window.needleIssueChart.destroy(); window.needleIssueChart = null; }
-
-  const isComposite = company === "GMS COMPOSITE KNITTING";
-
-  // Hide/Show Accessories Section for Composite
-  const accSection = document.getElementById("accessoriesSummary");
-  if(accSection){ accSection.style.display = isComposite ? "none" : "grid"; }
-
-  const accChart = document.getElementById("accessoriesChartBox");
-  if(accChart){ accChart.style.display = isComposite ? "none" : "block"; }
-
-  // Hide Billing Chart for Composite
-  const billingChart = document.getElementById("billingChartBox");
-  if(billingChart){ billingChart.style.display = isComposite ? "none" : "block"; }
-
-  // Grey Chart always visible
-  const greyChart = document.getElementById("greyChartBox");
-  if(greyChart){ greyChart.style.display = "block"; }
-
-  // Reload dashboard data
+  
+  // 🔥 Destroy ALL chart instances to prevent mixed data
+  const charts = ['accessoriesChart','needleChart','greyChart','billingChart','needleIssueChart'];
+  charts.forEach(name => {
+    if(window[name]) {
+      try { window[name].destroy(); } catch(e) {}
+      window[name] = null;
+    }
+  });
+  
+  // 🔥 Clear MCD dashboard content
+  const mcdDash = document.getElementById('mcdDashboard');
+  if(mcdDash) mcdDash.innerHTML = '<div style="text-align:center;padding:20px;color:var(--muted);">🔄 Loading company data...</div>';
+  
+  // 🔥 Reset stats to loading state
+  const statIds = ['sumAccessories','sumSewing','sumTwill','needleToday','attTotal','attPresent','attLeave','attAbsent'];
+  statIds.forEach(id => {
+    const el = document.getElementById(id);
+    if(el) el.innerText = '...';
+  });
+  
+  // 🔥 Reload dashboard with new company
   loadDashboardStock();
   loadNotices(company);
-
-  // Update Entry/Report dropdowns
-  if(document.getElementById('entryCompany')){
+  
+  // 🔥 Update Entry/Report pages if visible
+  if(document.getElementById('entryCompany')) {
     document.getElementById('entryCompany').value = company;
-    loadEntry();
+    if(document.getElementById('entry').classList.contains('activePage')) {
+      loadEntry();
+    }
   }
-  if(document.getElementById('reportCompany')){
+  if(document.getElementById('reportCompany')) {
     document.getElementById('reportCompany').value = company;
-    loadReport();
+    if(document.getElementById('reports').classList.contains('activePage')) {
+      loadReport();
+    }
   }
-
+  
+  // 🔥 Show toast notification
   showToast(`🏭 Switched to ${company}`);
+  
+  // 🔥 Force re-render after short delay
+  setTimeout(() => {
+    if(document.getElementById('home').classList.contains('activePage')) {
+      loadDashboardStock();
+    }
+  }, 300);
 };
 
+const ALL_MCD=[
+  "GREY FABRIC MCD","SHIPMENT MCD","BILLING SECTION","OUTER WEAR MCD",
+  "YARN MCD","PRINTING MCD","JHUT MCD","GENERAL MCD","ACCESSORIES MCD",
+  "LEFTOVER MCD","FINISH FABRIC MCD","YARN DYEING MCD","CHEMICAL MCD",
+  "GENERAL TECHNICAL MCD"
+];
 const FLOOR_OPENING={
   "Kadom R":618,"Kadom N":443,"Poddo R":1889,"Poddo N":401,
   "Shapla R":1171,"Shapla N":573,"Sample R":1138,"Sample N":251,
@@ -1768,6 +1750,7 @@ window.loadReport=function(){
   box.innerHTML=`<div class="reportCard">📑 ${mcd} Report</div><div class="reportCard" onclick="location.href='billing-manpower-report.html'"><i class="fas fa-users"></i> Billing Manpower</div>${common}`;
 };
 
+// 🔥 Company Filter সহ ডাটা ফেচিং ফাংশনগুলো
 async function getLatestPresent(collectionName, openingStock, company){
   let snap=await getDocs(collection(db,collectionName));
   let rows=[];snap.forEach(d=>{let x=d.data();if(x.date)rows.push(x);});
@@ -1931,6 +1914,7 @@ function barOptions(titleText){
   };
 }
 
+// 🔥 Chart Rendering - ডাটা না থাকলে 0 দেখাবে, চার্ট খালি থাকবে না
 function renderCharts(sewing,accessories,twill,floorStocks,grey,billing,needleIssue){
   if(isAccessoriesAllowed()){
     if(accessoriesChart)accessoriesChart.destroy();
@@ -2029,15 +2013,12 @@ async function loadNotices(company){
 }
 async function updateLastActive(){if(user.id){try{await updateDoc(doc(db,"users",user.id),{lastActive:new Date().toISOString()});}catch(e){}}}
 
-// ✅ FINAL loadDashboardStock() WITH ALL FIXES
+// 🔥 Main Dashboard Loader - Company Wise + Fallback Values
 async function loadDashboardStock(){
   try{
     const company = window.currentCompany;
     
-    // ✅ ADD: Company type check & MCD list
-    const isComposite = company === "GMS COMPOSITE KNITTING";
-    const COMPANY_MCD = getCompanyMCD(company);
-
+    // 🔥 সব ফাংশনে company পাস করুন
     let sewing=await getLatestPresent("sewingThread",133322, company);
     let twill=await getLatestPresent("twillTape",171255, company);
     let accessories=await getLatestPresent("accessoriesSample",21514393, company);
@@ -2050,6 +2031,7 @@ async function loadDashboardStock(){
     let manpower=manpowerData.map;
     let allowed=allowedMCDList();
     
+    // 🔥 Billing stats with fallback
     if(isBillingAllowed()){
       document.getElementById("attTotal").innerText=fmt(billing?.total||0);
       document.getElementById("attLeave").innerText=fmt(billing?.leave||0);
@@ -2059,26 +2041,22 @@ async function loadDashboardStock(){
     
     updateLimitBox(firebase);
     
-    // ✅ Accessories 0 FIX for Composite
-    if(isComposite){
-      document.getElementById("sumAccessories").innerText = 0;
-      document.getElementById("sumSewing").innerText = 0;
-      document.getElementById("sumTwill").innerText = 0;
-    }
-    
+    // 🔥 Accessories stats with fallback
     if(isAccessoriesAllowed()){
       document.getElementById("sumAccessories").innerText=fmt(accessories||0);
       document.getElementById("sumSewing").innerText=fmt(sewing||0);
       document.getElementById("sumTwill").innerText=fmt(twill||0);
     }
     
+    // 🔥 Needle stats with fallback
     if(isNeedleAllowed())document.getElementById("needleToday").innerText=fmt(needleData?.total||0);
     
+    // 🔥 Charts render with fallback values
     renderCharts(sewing,accessories,twill,needleData?.floorStocks||{},grey||{labels:[],data:[],total:0},billing||{total:0,leave:0,absent:0,present:0},needleIssue||{broken:0,missing:0,change:0});
     
-    // ✅ MCD Dashboard - USE COMPANY_MCD instead of ALL_MCD
+    // 🔥 MCD Dashboard - সবসময় লিস্ট দেখাবে, ভ্যালু 0 হতে পারে
     let html="";
-    COMPANY_MCD.forEach(mcd=>{
+    ALL_MCD.forEach(mcd=>{
       if(!allowed.includes(mcd))return;
       let mp=manpower[mcd]||{count:0,salary:0};
       
@@ -2098,11 +2076,9 @@ async function loadDashboardStock(){
     
     loadNotices(company);
   }catch(e){
-    console.log(e);
+    console.log("Dashboard load error:",e);
     const allowed = allowedMCDList();
-    const company = window.currentCompany;
-    const COMPANY_MCD = getCompanyMCD(company);
-    document.getElementById("mcdDashboard").innerHTML = COMPANY_MCD.filter(m => allowed.includes(m))
+    document.getElementById("mcdDashboard").innerHTML = ALL_MCD.filter(m => allowed.includes(m))
       .map(mcd => `<div class="mcdBox"><h3>📂 ${mcd}</h3><div class="miniRow"><span>📊 Data</span><span class="miniValue" style="color:var(--yellow)">0</span></div></div>`).join("") 
       || "<div class='mcdBox'><h3>❌ No Access</h3></div>";
   }
@@ -2229,14 +2205,6 @@ document.addEventListener("DOMContentLoaded", () => {
       window.autoSyncQueue();
     }
   });
-});
-
-// ✅ FINAL AUTO LOAD FIX
-window.addEventListener("load",()=>{
-  setupCompanyDropdowns();
-  setTimeout(()=>{
-    switchCompany(window.currentCompany);
-  },300);
 });
 </script>
 </body>
