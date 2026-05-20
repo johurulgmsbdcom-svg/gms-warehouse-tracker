@@ -4,13 +4,14 @@
 <meta charset="UTF-8">
 <title>Delivery Challan Entry</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 <style>
 *{box-sizing:border-box}body{margin:0;background:#07111f;color:#fff;font-family:Arial,Helvetica,sans-serif}
 .wrap{max-width:1500px;margin:auto;padding:14px}.title{text-align:center;margin:10px 0 16px}.title h1{margin:0;font-size:34px}.title h2{margin:4px 0;font-size:25px}.note{color:#facc15;font-weight:900}
 .panel{background:#101827;border:1px solid #263855;border-radius:14px;padding:13px;margin:12px 0}
 .grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}.grid2{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}
 label{display:block;font-weight:900;color:#b7c5da;margin-bottom:4px}input,select,textarea{width:100%;padding:10px;border-radius:8px;border:1px solid #94a3b8;font-size:15px}textarea{min-height:70px}
-button{border:0;border-radius:9px;padding:11px 16px;color:#fff;font-weight:900;cursor:pointer;margin:4px}.green{background:#16a34a}.blue{background:#2563eb}.orange{background:#f59e0b}.purple{background:#7c3aed}.gray{background:#64748b}.red{background:#dc2626}
+button{border:0;border-radius:9px;padding:11px 16px;color:#fff;font-weight:900;cursor:pointer;margin:4px}.green{background:#16a34a}.blue{background:#2563eb}.orange{background:#f59e0b}.purple{background:#7c3aed}.gray{background:#64748b}.red{background:#dc2626}.print{background:#000;border:2px solid #fff}
 .tableWrap{overflow-x:auto;background:#fff}table{width:100%;min-width:1250px;border-collapse:collapse;background:#fff;color:#000}th,td{border:1px solid #111;padding:5px;text-align:center}th{background:#e5e7eb}td input{border:0;border-radius:0;text-align:center;padding:7px}
 .totalLine{background:#e5e7eb;color:#000;font-size:18px;font-weight:900;text-align:center;padding:10px}.btns{text-align:center;margin:12px 0}
 #toast{position:fixed;right:18px;top:18px;background:#16a34a;color:#fff;padding:14px 22px;border-radius:12px;font-weight:900;display:none;z-index:9999}
@@ -83,7 +84,13 @@ FAX : +88-02-...........................</textarea></div>
   <div class="totalLine">Grand Total Qty: <span id="grandTotal">0</span> | Total Pkgs/Rolls: <span id="totalPkg">0</span> | Total Bag/Mal: <span id="totalBag">0</span></div>
   </div>
 
-  <div class="btns"><button class="green" onclick="saveData()">💾 Save</button><button class="purple" onclick="goReport()">📄 Report</button><button class="blue" onclick="location.href='challan-entry.html'">🆕 New</button><button class="gray" onclick="location.href='index.html'">🏠 Home</button></div>
+  <div class="btns">
+    <button class="green" onclick="saveData()">💾 Save</button>
+    <button class="print" id="printOfflineBtn" onclick="printLastOffline()" style="display:none">🖨 Print Offline Data</button>
+    <button class="purple" onclick="goReport()">📄 Report</button>
+    <button class="blue" onclick="location.href='challan-entry.html'">🆕 New</button>
+    <button class="gray" onclick="location.href='index.html'">🏠 Home</button>
+  </div>
 </div>
 
 <script type="module">
@@ -102,7 +109,6 @@ const firebaseConfig={
 const app=initializeApp(firebaseConfig), db=getFirestore(app), $=id=>document.getElementById(id);
 let editMode=false;
 
-// 🔥 Device ID for tracking
 function getDeviceId(){
   let did=localStorage.getItem("gms_device_id");
   if(!did){ did="D"+Math.random().toString(36).substr(2,9).toUpperCase(); localStorage.setItem("gms_device_id",did); }
@@ -114,12 +120,10 @@ function today(){return new Date().toISOString().slice(0,10)}
 function yy(){return new Date($("date").value||new Date()).getFullYear()} 
 function pad(n){return String(n).padStart(4,"0")}
 
-// 🔥 TIME-BASED ID for fallback (guaranteed unique)
-function generateTimeBasedId(){
+function generateOfflineId(){
   const now=new Date();
-  const timeStr = String(now.getHours()).padStart(2,'0') + String(now.getMinutes()).padStart(2,'0') + String(now.getSeconds()).padStart(2,'0') + String(now.getMilliseconds()).padStart(3,'0');
-  const rand = Math.floor(Math.random()*90)+10;
-  return `CH-${yy()}-${timeStr}${rand}`;
+  const timeStr = String(now.getHours()).padStart(2,'0') + String(now.getMinutes()).padStart(2,'0') + String(now.getSeconds()).padStart(2,'0');
+  return `CH-${yy()}-OFF-${timeStr}`;
 }
 
 function companyName(){return $("company").value==="OTHER FACTORY"?$("companyManual").value.trim():$("company").value}
@@ -130,16 +134,13 @@ window.toCompanyChange=()=>{let o=$("toCompany").value==="OTHER FACTORY";$("toCo
 function syncTo(){let n=toCompanyName();$("fromMillTo").value=n;if(!$("gateMs").value||$("gateMs").dataset.auto!=="0"){$("gateMs").value=n;$("gateMs").dataset.auto="1"}}
 $("companyManual").addEventListener("input",updateTitle);$("toCompanyManual").addEventListener("input",syncTo);$("gateMs").addEventListener("input",()=>$("gateMs").dataset.auto="0");
 
-// 🔥 Get next sequential number from Firebase (READ ONLY - don't increment yet)
 async function getNextSequentialNumber(){
   try{
     const y=yy(), ref=doc(db,"serialCounters","challan_"+y);
     const s=await getDoc(ref);
     const last = s.exists() ? Number(s.data().last || 0) : 0;
-    return { ch:`CH-${y}-${pad(last+1)}`, gp:`GP-${y}-${pad(last+1)}`, num:last+1, source:"firebase" };
-  }catch(e){
-    return null; // Firebase unavailable
-  }
+    return { ch:`CH-${y}-${pad(last+1)}`, gp:`GP-${y}-${pad(last+1)}`, num:last+1 };
+  }catch(e){ return null; }
 }
 
 async function loadNextNumberToBox(){
@@ -151,7 +152,7 @@ async function loadNextNumberToBox(){
     window.currentChallanNum = data.num;
     window.currentSource = "firebase";
   }else{
-    let ch = generateTimeBasedId();
+    let ch = generateOfflineId();
     $("challanNo").value = ch;
     $("gatePassNo").value = ch.replace("CH","GP");
     window.currentSource = "offline";
@@ -167,153 +168,158 @@ function getRows(){let a=[];document.querySelectorAll("#rows tr").forEach(tr=>{l
 window.calcTotals=()=>{let r=getRows();$("grandTotal").innerText=r.reduce((a,b)=>a+b.qty,0);$("totalPkg").innerText=r.reduce((a,b)=>a+b.pkg,0);$("totalBag").innerText=r.reduce((a,b)=>a+b.bag,0)}
 function dataObj(){let rows=getRows();return {mcd:$("mcd").value,date:$("date").value,challanNo:$("challanNo").value,gatePassNo:$("gatePassNo").value,company:companyName(),companyType:$("company").value,companyManual:$("companyManual").value.trim(),companyAddress:$("companyAddress").value,toCompany:toCompanyName(),toCompanyType:$("toCompany").value,toCompanyManual:$("toCompanyManual").value.trim(),toAddress:$("toAddress").value,buyer:$("buyer").value.trim(),orderNo:$("orderNo").value.trim(),transportNo:$("transportNo").value.trim(),driverName:$("driverName").value.trim(),vehicleNo:$("vehicleNo").value.trim(),gateMs:$("gateMs").value.trim(),goodsBy:$("goodsBy").value.trim(),fromMillTo:$("fromMillTo").value.trim(),yarnCount:$("yarnCount").value.trim(),brand:$("brand").value.trim(),cardCombed:$("cardCombed").value.trim(),lotNo:$("lotNo").value.trim(),rows,grandTotalQty:rows.reduce((a,b)=>a+b.qty,0),totalPkg:rows.reduce((a,b)=>a+b.pkg,0),totalBag:rows.reduce((a,b)=>a+b.bag,0),deviceId:getDeviceId(),updatedAt:new Date().toISOString(),createdAt:editMode?undefined:new Date().toISOString()}}
 
-// 🔥 AUTO-SYNC: Try to sync ALL offline data from ALL devices
-async function autoSyncAllOffline(){
-  let totalSynced=0;
-  
-  // Scan ALL localStorage keys for offline queues
-  for(let i=0;i<localStorage.length;i++){
-    const key=localStorage.key(i);
-    if(key && key.startsWith("GMS_CHALLAN_OFFLINE_")){
-      try{
-        const queue=JSON.parse(localStorage.getItem(key)||"[]");
-        const pending=queue.filter(x=>x.status==="pending");
-        
-        for(let item of pending){
-          try{
-            // Try to save to Firebase
-            await setDoc(doc(db,"challanGatePass",item.id),item.data,{merge:true});
-            
-            // Update counter if sequential number
-            if(item.data.challanNo && item.data.challanNo.match(/CH-\d{4}-\d{4}/)){
-              const year = item.data.challanNo.split("-")[1];
-              const num = parseInt(item.data.challanNo.split("-")[2]);
-              await setDoc(doc(db,"serialCounters","challan_"+year),{
-                last:num, year:year, updatedAt:new Date().toISOString()
-              },{merge:true});
-            }
-            
-            item.status="synced";
-            item.syncedAt=new Date().toISOString();
-            totalSynced++;
-          }catch(e){
-            // Firebase still full - keep it pending for next retry
-          }
-        }
-        localStorage.setItem(key,JSON.stringify(queue));
-      }catch(e){}
-    }
-  }
-  
-  if(totalSynced>0){
-    console.log(`✅ Auto-synced ${totalSynced} offline challan(s)`);
-  }
-  return totalSynced;
-}
-
-// 🔥 FIXED SAVE: Always try Firebase first, fallback to offline ONLY if limit reached
+// 🔥 SAVE DATA: Works Online & Offline
 window.saveData=async()=>{
   try{
     let d=dataObj(); 
     if(!d.rows.length){toast("Minimum 1 row লাগবে","#dc2626");return}
     
-    const challanNo = d.challanNo;
-    
-    // 🔥 ALWAYS try Firebase first
+    // If no number generated yet, generate one
+    if(!d.challanNo) {
+       let data = await getNextSequentialNumber();
+       if(data) { d.challanNo = data.ch; d.gatePassNo = data.gp; window.currentChallanNum = data.num; }
+       else { d.challanNo = generateOfflineId(); d.gatePassNo = d.challanNo.replace("CH","GP"); }
+    }
+
+    // Try Firebase
     try{
-      await setDoc(doc(db,"challanGatePass",challanNo),d,{merge:true});
-      
-      // Update counter if using sequential number
+      await setDoc(doc(db,"challanGatePass",d.challanNo),d,{merge:true});
       if(window.currentSource === "firebase" && window.currentChallanNum){
-        const year = yy();
-        await setDoc(doc(db,"serialCounters","challan_"+year),{
-          last:window.currentChallanNum, year:year, updatedAt:new Date().toISOString()
-        },{merge:true});
+         await setDoc(doc(db,"serialCounters","challan_"+yy()),{last:window.currentChallanNum,year:yy(),updatedAt:new Date().toISOString()},{merge:true});
       }
-      
-      toast("✅ Saved to Firebase: "+challanNo);
-      
+      toast("✅ Saved to Firebase: "+d.challanNo);
+      $("printOfflineBtn").style.display="none"; // Hide print offline button if saved to firebase
     }catch(e){
-      // 🔥 Firebase failed - save to offline queue (temporary)
-      console.log("Firebase failed, saving offline:",e.message);
-      
+      // Firebase Failed -> Save Offline
       const deviceId=getDeviceId();
       const queueKey="GMS_CHALLAN_OFFLINE_"+deviceId;
       let queue=JSON.parse(localStorage.getItem(queueKey)||"[]");
       
-      // Generate unique offline ID to avoid conflicts
-      const offlineId = generateTimeBasedId();
-      d.challanNo = offlineId;
-      d.gatePassNo = offlineId.replace("CH","GP");
+      // Ensure unique ID for offline
+      if(queue.find(x=>x.id===d.challanNo)) d.challanNo = generateOfflineId(); 
+      d.gatePassNo = d.challanNo.replace("CH","GP");
       d.status = "pending";
-      d.deviceId = deviceId;
       
-      queue.push({
-        id:offlineId, data:d, status:"pending",
-        createdAt:new Date().toISOString(), deviceId:deviceId
-      });
-      
+      queue.push({ id:d.challanNo, data:d, status:"pending", createdAt:new Date().toISOString() });
       localStorage.setItem(queueKey,JSON.stringify(queue));
-      toast("⏳ Saved temporarily (will auto-sync when Firebase available): "+offlineId);
       
-      // 🔥 IMMEDIATELY try to sync this item + all others
-      await autoSyncAllOffline();
+      toast("⏳ Saved Offline (Limit Full): "+d.challanNo);
+      $("printOfflineBtn").style.display="inline-block"; // Show Print Button
     }
     
-    // 🔥 Prepare for NEXT entry
+    // Store last data for printing
+    window.lastSavedData = d;
+
+    // Prepare for next
     if(!editMode){
       ["buyer","orderNo","transportNo","driverName","vehicleNo","yarnCount","brand","cardCombed","lotNo"].forEach(id=>$(id).value="");
       $("rows").innerHTML="";
-      addBlankRows();
-      calcTotals();
-      syncTo();
+      addBlankRows(); calcTotals(); syncTo();
       await loadNextNumberToBox();
-    }else{
-      editMode=false;
-      toast("✅ Updated Successfully");
-    }
+    }else{ editMode=false; toast("✅ Updated"); }
 
-  }catch(e){
-    console.error(e);
-    toast("❌ Error: "+e.message,"#dc2626")
-  }
+  }catch(e){ console.error(e); toast("❌ Error: "+e.message,"#dc2626") }
 };
 
-// 🔥 Run auto-sync frequently: every 60 seconds + on page load + after every save
-setInterval(autoSyncAllOffline, 60000);
-setTimeout(autoSyncAllOffline, 2000);
+// 🔥 PRINT OFFLINE DATA (Generates QR locally)
+window.printLastOffline=()=>{
+  if(!window.lastSavedData) return alert("No data to print");
+  printChallan(window.lastSavedData);
+}
+
+function printChallan(x){
+  let rows=x.rows||[];
+  let tq=rows.reduce((a,b)=>a+(Number(b.qty)||0),0);
+  let tp=rows.reduce((a,b)=>a+(Number(b.pkg)||0),0);
+  
+  let rowHtml=rows.map((r,i)=>`<tr><td>${r.item||r.qty||r.pkg?i+1:""}</td><td>${r.item}</td><td>${r.color}</td><td>${r.mcDia}</td><td>${r.finDia}</td><td>${r.unit}</td><td>${r.qty?r.qty:""}</td><td>${r.pkg?r.pkg:""}</td><td>${r.remarks}</td></tr>`).join("");
+  
+  let html = `
+  <html><head><meta charset="UTF-8"><title>Print Challan</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"><\/script>
+  <style>
+    body{font-family:Arial;margin:0;padding:20px}
+    .page{width:210mm;min-height:297mm;padding:20px;margin:0 auto;border:1px solid #ccc}
+    .ctop{text-align:center;position:relative}
+    .challanTitle{display:inline-block;border:3px double #000;padding:5px 24px;font-size:26px;font-weight:900}
+    .companyBig{font-size:34px;font-weight:900;margin:10px 0}
+    .cno{position:absolute;right:30px;top:55px;font-weight:900;text-align:center}
+    .info{display:grid;grid-template-columns:1fr 1fr;gap:35px;margin-top:18px}
+    .line{display:grid;grid-template-columns:120px 1fr;gap:6px;margin:10px 0;font-size:16px}
+    .line span:last-child{border-bottom:2px solid #000;min-height:22px;font-weight:700}
+    .desc{border:2px solid #000;margin-top:18px}
+    .spec{display:grid;grid-template-columns:110px 1fr 70px 1fr 120px 1fr;gap:6px;padding:6px}
+    table{width:100%;border-collapse:collapse;font-size:13px}
+    th,td{border:2px solid #000;padding:5px;height:30px}
+    th{background:#eee}
+    .sign{display:grid;grid-template-columns:1fr 1fr 1fr;border:2px solid #000;border-top:0;height:95px;margin-top:20px}
+    .sign div{display:flex;align-items:end;justify-content:center;border-right:2px solid #000;font-weight:900}
+    .qr{width:80px;height:80px;margin:10px auto}
+    @media print{body{margin:0}.page{border:0}}
+  </style></head><body>
+  <div class="page">
+    <div class="ctop">
+      <div class="challanTitle">DELIVERY CHALLAN</div>
+      <div class="companyBig">${x.company}</div>
+      <div class="cno">Challan No<br><b>${x.challanNo}</b></div>
+      <div class="qr" id="qr"></div>
+    </div>
+    <div class="info">
+      <div>
+        <div class="line"><span>To</span><span>${x.toCompany}</span></div>
+        <div class="line"><span>Address</span><span>${x.toAddress}</span></div>
+        <div class="line"><span>Buyer</span><span>${x.buyer}</span></div>
+      </div>
+      <div>
+        <div class="line"><span>Date</span><span>${x.date}</span></div>
+        <div class="line"><span>Gate Pass</span><span>${x.gatePassNo}</span></div>
+        <div class="line"><span>Vehicle</span><span>${x.vehicleNo}</span></div>
+      </div>
+    </div>
+    <div class="desc">
+      <div class="spec">
+        <div>Yarn Count</div><div>${x.yarnCount}</div>
+        <div>Brand</div><div>${x.brand}</div>
+        <div>Lot No.</div><div>${x.lotNo}</div>
+      </div>
+      <table>
+        <thead><tr><th>SL</th><th>Item</th><th>Color</th><th>Unit</th><th>Qty</th><th>Pkgs</th><th>Remarks</th></tr></thead>
+        <tbody>${rowHtml}</tbody>
+        <tfoot><tr><td colspan="4" style="text-align:right;font-weight:900">Total:</td><td>${tq}</td><td>${tp}</td><td></td></tr></tfoot>
+      </table>
+    </div>
+    <div class="sign"><div>Prepared By</div><div>Checked By</div><div>Authorized By</div></div>
+  </div>
+  <script>
+    new QRCode(document.getElementById("qr"), {text:"${location.origin+location.pathname}?challanNo=${x.challanNo}", width:80, height:80});
+    setTimeout(()=>window.print(), 500);
+  <\/script>
+  </body></html>`;
+  
+  let w=window.open("","_blank");
+  w.document.write(html);
+  w.document.close();
+}
 
 window.goReport=()=>{location.href="challan-report.html"}
-
 async function loadEdit(){
   let no=new URLSearchParams(location.search).get("challanNo"); 
   if(!no)return false; 
   try{
     let s=await getDoc(doc(db,"challanGatePass",no)); 
     if(s.exists()){
-      editMode=true;
-      let d=s.data();
+      editMode=true;let d=s.data();
       ["mcd","date","challanNo","gatePassNo","company","companyManual","companyAddress","toCompany","toCompanyManual","toAddress","buyer","orderNo","transportNo","driverName","vehicleNo","gateMs","goodsBy","fromMillTo","yarnCount","brand","cardCombed","lotNo"].forEach(id=>{if($(id)&&d[id]!=null)$(id).value=d[id]}); 
-      if(d.companyType)$("company").value=d.companyType;
-      if(d.toCompanyType)$("toCompany").value=d.toCompanyType;
-      companyChange(); toCompanyChange();
-      $("rows").innerHTML=""; (d.rows||[]).forEach(addRow);
-      if(!(d.rows||[]).length)addBlankRows(); calcTotals();
-      return true;
+      if(d.companyType)$("company").value=d.companyType; if(d.toCompanyType)$("toCompany").value=d.toCompanyType;
+      companyChange(); toCompanyChange(); $("rows").innerHTML=""; (d.rows||[]).forEach(addRow); if(!(d.rows||[]).length)addBlankRows(); calcTotals(); return true;
     }
   }catch(e){}
   alert("Not found"); return false;
 }
-
 async function init(){
   $("date").value=today();
   let e=await loadEdit();
-  if(!e){
-    await loadNextNumberToBox();
-    addBlankRows(); syncTo(); updateTitle();
-    // Start aggressive auto-sync
-    autoSyncAllOffline();
-  }
+  if(!e){ await loadNextNumberToBox(); addBlankRows(); syncTo(); updateTitle(); }
 }
 init();
 </script>
