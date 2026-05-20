@@ -219,7 +219,18 @@ window.saveUser = async () => {
   if(!name || !email || !pass) { alert("⚠️ Name, Email, Password সব ফিল্ড পূরণ করুন!"); return; }
   const mAccess = document.getElementById("manpowerAccess").value;
   if(mAccess === "selected" && getMCD("manpowerMcdChecks").length === 0) { alert("⚠️ Manpower Selected দিলে অন্তত ১টা MCD টিক করুন!"); return; }
-  const data = { name, email, password: pass, role: document.getElementById("role").value, userCompanies: cmps, mcdAccess: getMCD("mcdChecks"), needleAccess: document.getElementById("needleAccess").value === "yes", manpowerAccess: mAccess, manpowerMcdAccess: mAccess === "selected" ? getMCD("manpowerMcdChecks") : [], updatedAt: new Date().toISOString() };
+  
+  const data = { 
+    name, email, password: pass, 
+    role: document.getElementById("role").value, 
+    userCompanies: cmps, 
+    mcdAccess: getMCD("mcdChecks"), 
+    needleAccess: document.getElementById("needleAccess").value === "yes", 
+    manpowerAccess: mAccess, 
+    manpowerMcdAccess: mAccess === "selected" ? getMCD("manpowerMcdChecks") : [], 
+    updatedAt: new Date().toISOString() 
+  };
+  
   const eid = document.getElementById("editId").value;
   try {
     if(eid) { await updateDoc(doc(db, "users", eid), data); toast("User Updated ✅"); }
