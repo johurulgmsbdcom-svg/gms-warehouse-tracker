@@ -208,6 +208,10 @@ th,td{
   .greySign{margin-top:34mm!important;gap:12px!important}
   .greySign div{font-size:8px!important}
 }
+
+/* 🔥 OFFLINE BADGE STYLES */
+.offlineBadge{background:#f59e0b!important;color:#000!important;padding:2px 6px!important;border-radius:4px!important;font-size:10px!important;font-weight:900!important;margin-left:4px!important}
+.syncedBadge{background:#22c55e!important;color:#fff!important;padding:2px 6px!important;border-radius:4px!important;font-size:10px!important;font-weight:900!important;margin-left:4px!important}
 </style>
 </head>
 <body>
@@ -251,6 +255,10 @@ th,td{
   <br>
   <button class="search" onclick="showReport()">🔍 Search</button>
   <button class="clear" onclick="clearFilters()">♻ Clear Filter</button>
+  <!-- 🔥 NEW BUTTONS ADDED HERE -->
+  <button class="edit" onclick="loadOfflineData()">📦 Load Offline Data</button>
+  <button class="excel" onclick="syncAllOffline()">📤 Sync All to Firebase</button>
+  
   <button class="excel" onclick="exportExcel()">📊 Excel</button>
   <button class="print" onclick="window.print()">🖨 PDF / Print</button>
   <button class="new" onclick="location.href='gate-plan.html'">➕ New Gate Plan</button>
@@ -262,7 +270,7 @@ th,td{
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-app.js";
-import { getFirestore, collection, getDocs, doc, deleteDoc } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-firestore.js";
+import { getFirestore, collection, getDocs, doc, setDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-firestore.js";
 
 const firebaseConfig={
   apiKey:"AIzaSyD-wBCF5eeWMHobLFOhBzKW7aB2pagz9-w",
@@ -288,7 +296,7 @@ function renderQRCodes(){
   document.querySelectorAll("[data-qr-no]").forEach(el=>{
     const no=el.getAttribute("data-qr-no")||"";
     el.innerHTML="";
-    new QRCode(el,{text:reportLink(no),width:70,height:70,correctLevel:QRCode.CorrectLevel.M});
+    try{ new QRCode(el,{text:reportLink(no),width:70,height:70,correctLevel:QRCode.CorrectLevel.M}); }catch(e){}
   });
 }
 
@@ -297,14 +305,14 @@ async function loadPlans(){
   try{
     const snap=await getDocs(collection(db,"gatePlans"));
     snap.forEach(d=>{
-      const p={...d.data(),_id:d.id};
+      const p={...d.data(),_id:d.id,_source:"firebase"};
       const no=planNo(p)||d.id;
       map[no]=p;
     });
   }catch(e){console.log(e)}
   try{
     const local=JSON.parse(localStorage.getItem("gatePlans")||"[]");
-    local.forEach(p=>{const no=planNo(p); if(no&&!map[no])map[no]=p});
+    local.forEach(p=>{const no=planNo(p); if(no&&!map[no])map[no]={...p,_source:"offline"}});
   }catch(e){}
   allPlans=Object.values(map).sort((a,b)=>{
     const d=(b.date||"").localeCompare(a.date||"");
@@ -327,10 +335,14 @@ function normalHeader(p){
   <div class="qrCenter"><div class="qrMini" data-qr-no="${esc(planNo(p))}"></div></div>`;
 }
 
+// 🔥 UPDATED: Show offline/synced badge
 function renderNormal(p,i){
   let delivery=0,ctn=0;
   const rows=p.rows||[];
   rows.forEach(r=>{delivery+=num(r.deliveryQty);ctn+=num(r.ctnQty)});
+  const badge = p._source === "offline" 
+    ? `<span class="offlineBadge">📦 Offline</span>` 
+    : `<span class="syncedBadge">📡 Synced</span>`;
   const body=rows.map((r,idx)=>`
   <tr>
     <td>${idx+1}</td><td>${esc(r.buyerName)}</td><td>${esc(r.srGtNo)}</td>
@@ -341,7 +353,7 @@ function renderNormal(p,i){
   return `
   <div class="reportCard">
     ${normalHeader(p)}
-    <div class="companyLine">${esc(p.company||"GMS Textiles Ltd.")} To ${esc(p.toCompany||"")}</div>
+    <div class="companyLine">${esc(p.company||"GMS Textiles Ltd.")} To ${esc(p.toCompany||"")}${badge}</div>
     <div class="meta">
       <div>Gate Plan No: ${esc(planNo(p))}</div><div>Date: ${esc(p.date)}</div><div>Time: ${esc(p.time)}</div>
       <div>MCD: ${esc(p.mcd)}</div><div>Prepared By: ${esc(p.preparedBy)}</div>
@@ -349,7 +361,7 @@ function renderNormal(p,i){
     <div class="actionBar noPrint">
       <button class="print" onclick="printSingle(${i})">🖨 Print This</button>
       <button class="edit" onclick="editPlan('${esc(planNo(p))}')">✏ Edit</button>
-      <button class="delete" onclick="deletePlan('${esc(planNo(p))}')">🗑 Delete</button>
+      <button class="delete" onclick="deletePlan('${esc(planNo(p))}','${p._source||"firebase"}')">🗑 Delete</button>
     </div>
     <div class="tableWrap">
       <table>
@@ -373,6 +385,9 @@ function renderNormal(p,i){
 function renderGrey(p,i){
   const rows=p.rows||[], r=rows[0]||{};
   let qty=0; rows.forEach(x=>qty+=num(x.deliveryQty));
+  const badge = p._source === "offline" 
+    ? `<span class="offlineBadge">📦 Offline</span>` 
+    : `<span class="syncedBadge">📡 Synced</span>`;
   return `
   <div class="greyCard">
     <div class="greyHeader">
@@ -383,7 +398,7 @@ function renderGrey(p,i){
     <div class="actionBar noPrint">
       <button class="print" onclick="printSingle(${i})">🖨 Print This</button>
       <button class="edit" onclick="editPlan('${esc(planNo(p))}')">✏ Edit</button>
-      <button class="delete" onclick="deletePlan('${esc(planNo(p))}')">🗑 Delete</button>
+      <button class="delete" onclick="deletePlan('${esc(planNo(p))}','${p._source||"firebase"}')">🗑 Delete</button>
     </div>
     <table class="greyTable">
       <thead><tr><th>Date</th><th>Company Name</th><th>Delivery Reason</th><th>Total Qty</th><th>Remarks</th></tr></thead>
@@ -414,6 +429,104 @@ function filtered(){
     return true;
   });
 }
+
+// 🔥 FUNCTION 1: LOAD OFFLINE DATA
+window.loadOfflineData=function(){
+  let offlineCount=0;
+  for(let i=0;i<localStorage.length;i++){
+    const key=localStorage.key(i);
+    if(key && key.startsWith("GMS_GATEPLAN_OFFLINE_")){
+      try{
+        const queue=JSON.parse(localStorage.getItem(key)||"[]");
+        const pending=queue.filter(x=>x.status!=="synced");
+        pending.forEach(item=>{
+          const no=planNo(item.data);
+          if(no && !allPlans.find(a=>planNo(a)===no)){
+            let c=item.data; c._source="offline"; c._status=item.status||"pending";
+            allPlans.push(c); offlineCount++;
+          }
+        });
+      }catch(e){}
+    }
+  }
+  if(offlineCount>0){
+    allPlans.sort((a,b)=>{
+      const d=(b.date||"").localeCompare(a.date||"");
+      if(d!==0)return d;
+      const t=(b.time||"").localeCompare(a.time||"");
+      if(t!==0)return t;
+      return planNo(b).localeCompare(planNo(a));
+    });
+    const list=filtered();
+    const area=document.getElementById("reportArea");
+    if(list.length===0){area.innerHTML='<div class="noData">No saved Gate Plan found</div>';return}
+    area.innerHTML=list.map((p,i)=>p.mcd==="GREY FABRIC MCD"?renderGrey(p,i):renderNormal(p,i)).join("");
+    setTimeout(renderQRCodes,100);
+    alert("✅ Loaded "+offlineCount+" offline gate plan(s)");
+  }else{ alert("📦 No offline data found"); }
+}
+
+// 🔥 FUNCTION 2: SYNC ALL TO FIREBASE
+window.syncAllOffline=async function(){
+  let synced=0,failed=0;
+  for(let i=0;i<localStorage.length;i++){
+    const key=localStorage.key(i);
+    if(key && key.startsWith("GMS_GATEPLAN_OFFLINE_")){
+      try{
+        const queue=JSON.parse(localStorage.getItem(key)||"[]");
+        const pending=queue.filter(x=>x.status==="pending");
+        for(let item of pending){
+          try{
+            await setDoc(doc(db,"gatePlans",item.id),item.data,{merge:true});
+            item.status="synced"; item.syncedAt=new Date().toISOString(); synced++;
+          }catch(e){ failed++; }
+        }
+        localStorage.setItem(key,JSON.stringify(queue));
+      }catch(e){}
+    }
+  }
+  if(synced>0 || failed>0){
+    alert("✅ Synced: "+synced+" | ❌ Failed: "+failed);
+    await loadPlans();
+    const list=filtered();
+    const area=document.getElementById("reportArea");
+    if(list.length===0){area.innerHTML='<div class="noData">No saved Gate Plan found</div>';return}
+    area.innerHTML=list.map((p,i)=>p.mcd==="GREY FABRIC MCD"?renderGrey(p,i):renderNormal(p,i)).join("");
+    setTimeout(renderQRCodes,100);
+  }else{ alert("✅ No pending offline data"); }
+}
+
+// 🔥 AUTO SYNC EVERY 60 SECONDS
+async function autoSyncReport(){
+  let synced=0;
+  for(let i=0;i<localStorage.length;i++){
+    const key=localStorage.key(i);
+    if(key && key.startsWith("GMS_GATEPLAN_OFFLINE_")){
+      try{
+        const queue=JSON.parse(localStorage.getItem(key)||"[]");
+        const pending=queue.filter(x=>x.status==="pending");
+        for(let item of pending){
+          try{
+            await setDoc(doc(db,"gatePlans",item.id),item.data,{merge:true});
+            item.status="synced"; synced++;
+          }catch(e){}
+        }
+        localStorage.setItem(key,JSON.stringify(queue));
+      }catch(e){}
+    }
+  }
+  if(synced>0){ 
+    console.log("🔄 Auto-synced "+synced+" gate plan(s)"); 
+    await loadPlans();
+    const list=filtered();
+    const area=document.getElementById("reportArea");
+    if(list.length===0){area.innerHTML='<div class="noData">No saved Gate Plan found</div>';return}
+    area.innerHTML=list.map((p,i)=>p.mcd==="GREY FABRIC MCD"?renderGrey(p,i):renderNormal(p,i)).join("");
+    setTimeout(renderQRCodes,100);
+  }
+}
+setInterval(autoSyncReport, 60000);
+setTimeout(autoSyncReport, 3000);
 
 window.showReport=async function(){
   await loadPlans();
@@ -447,7 +560,7 @@ window.printSingle=function(i){
     document.querySelectorAll("[data-qr-no]").forEach(el=>{
       const no=el.getAttribute("data-qr-no")||"";
       el.innerHTML="";
-      new QRCode(el,{text:reportLink(no),width:70,height:70,correctLevel:QRCode.CorrectLevel.M});
+      try{ new QRCode(el,{text:reportLink(no),width:70,height:70,correctLevel:QRCode.CorrectLevel.M}); }catch(e){}
     });
     setTimeout(()=>window.print(),600);
   <\/script></body></html>`);
@@ -459,14 +572,20 @@ window.editPlan=function(no){
   location.href="gate-plan.html?edit="+encodeURIComponent(no);
 };
 
-window.deletePlan=async function(no){
+window.deletePlan=async function(no,source){
   if(!confirm("Delete this Gate Plan?"))return;
-  try{await deleteDoc(doc(db,"gatePlans",makeId(no)))}catch(e){console.log(e)}
-  try{
-    let local=JSON.parse(localStorage.getItem("gatePlans")||"[]");
-    local=local.filter(p=>planNo(p)!==no);
-    localStorage.setItem("gatePlans",JSON.stringify(local));
-  }catch(e){}
+  if(source==="offline"){
+    for(let i=0;i<localStorage.length;i++){
+      const key=localStorage.key(i);
+      if(key&&key.startsWith("GMS_GATEPLAN_OFFLINE_")){
+        const queue=JSON.parse(localStorage.getItem(key)||"[]");
+        const idx=queue.findIndex(x=>planNo(x.data)===no);
+        if(idx!==-1){queue.splice(idx,1);localStorage.setItem(key,JSON.stringify(queue));break}
+      }
+    }
+  }else{
+    try{await deleteDoc(doc(db,"gatePlans",makeId(no)))}catch(e){console.log(e)}
+  }
   showReport();
 };
 
