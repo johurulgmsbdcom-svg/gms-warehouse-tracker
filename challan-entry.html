@@ -88,7 +88,8 @@ FAX : +88-02-...........................</textarea></div>
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-app.js";
-import { getFirestore, doc, setDoc, getDoc, collection, getDocs } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-firestore.js";
+import { getFirestore, doc, setDoc, getDoc, collection } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-firestore.js";
+
 const firebaseConfig={
   apiKey:"AIzaSyD-wBCF5eeWMHobLFOhBzKW7aB2pagz9-w",
   authDomain:"gms-warehouse-tracker-7f57e.firebaseapp.com",
@@ -97,26 +98,40 @@ const firebaseConfig={
   messagingSenderId:"992250313291",
   appId:"1:992250313291:web:ee3bceae76d4d53bc26bce"
 };
+
 const app=initializeApp(firebaseConfig), db=getFirestore(app), $=id=>document.getElementById(id);
 let editMode=false;
 
-// 🔥 GLOBAL: Local counter for unique serial generation
-let localSerialCounter = parseInt(localStorage.getItem("challanLocalCounter") || "0");
+// 🔥 MULTI-USER SUPPORT: Generate unique device ID
+function getDeviceId(){
+  let did=localStorage.getItem("gms_device_id");
+  if(!did){
+    did="D"+Math.random().toString(36).substr(2,9).toUpperCase();
+    localStorage.setItem("gms_device_id",did);
+  }
+  return did;
+}
+
+// 🔥 GLOBAL: Local counter for this device
+let localSerialCounter = parseInt(localStorage.getItem("challanCounter_"+getDeviceId()) || "0");
 
 function toast(m,c="#16a34a"){const t=$("toast");t.innerText=m;t.style.background=c;t.style.display="block";setTimeout(()=>t.style.display="none",2500)}
 function today(){return new Date().toISOString().slice(0,10)} 
 function yy(){return new Date($("date").value||new Date()).getFullYear()} 
 function pad(n){return String(n).padStart(4,"0")}
 
-// 🔥 FIXED: Generate UNIQUE serial locally (Timestamp + Random + Counter)
-function generateLocalChallanNo(){
+// 🔥 MULTI-USER UNIQUE SERIAL: Timestamp + Random + DeviceID + Counter
+function generateUniqueChallanNo(){
   let year=yy();
-  let timestamp=Date.now().toString().slice(-6);
-  let randomNum=Math.floor(Math.random()*900)+100;
-  localSerialCounter=(localSerialCounter+1)%1000;
-  localStorage.setItem("challanLocalCounter", localSerialCounter.toString());
-  let uniquePart=`${timestamp}${randomNum}${String(localSerialCounter).padStart(3,"0")}`;
-  return "CH-"+year+"-"+uniquePart.slice(0,8).toUpperCase();
+  let timestamp=Date.now().toString().slice(-6); // Last 6 digits
+  let randomNum=Math.floor(Math.random()*90)+10; // 10-99
+  let deviceId=getDeviceId().substr(1,3); // First 3 chars of device ID
+  localSerialCounter=(localSerialCounter+1)%100;
+  localStorage.setItem("challanCounter_"+getDeviceId(), localSerialCounter.toString());
+  
+  // Format: CH-2026-123456AB12C3
+  let uniquePart=`${timestamp}${randomNum}${deviceId}${String(localSerialCounter).padStart(2,"0")}`;
+  return "CH-"+year+"-"+uniquePart.toUpperCase();
 }
 
 function companyName(){return $("company").value==="OTHER FACTORY"?$("companyManual").value.trim():$("company").value}
@@ -127,31 +142,32 @@ window.toCompanyChange=()=>{let o=$("toCompany").value==="OTHER FACTORY";$("toCo
 function syncTo(){let n=toCompanyName();$("fromMillTo").value=n;if(!$("gateMs").value||$("gateMs").dataset.auto!=="0"){$("gateMs").value=n;$("gateMs").dataset.auto="1"}}
 $("companyManual").addEventListener("input",updateTitle);$("toCompanyManual").addEventListener("input",syncTo);$("gateMs").addEventListener("input",()=>$("gateMs").dataset.auto="0");
 
-// 🔥 FIXED: Get next number from Firebase OR generate locally
+// 🔥 Try Firebase first, fallback to local unique ID
 async function getNextChallanNumber(){
   try{
-    const y=yy(), ref=doc(db,"serialCounters","challanGatePass_"+y);
+    const y=yy(), ref=doc(db,"serialCounters","challan_"+y);
     const s=await getDoc(ref);
     const next=s.exists()?Number(s.data().last||0)+1:1;
-    // Update counter in Firebase
     await setDoc(ref,{last:next,year:y,updatedAt:new Date().toISOString()},{merge:true});
-    return {ch:`CH-${y}-${pad(next)}`,gp:`GP-${y}-${pad(next)}`};
+    return {ch:`CH-${y}-${pad(next)}`,gp:`GP-${y}-${pad(next)}`,source:"firebase"};
   }catch(e){
-    console.log("Firebase number generation failed, using local:",e);
-    // Fallback to local generation
-    let ch=generateLocalChallanNo();
-    return {ch:ch,gp:ch.replace("CH","GP")};
+    console.log("Firebase unavailable, using local unique ID");
+    // Fallback to multi-user safe local generation
+    let ch=generateUniqueChallanNo();
+    return {ch:ch,gp:ch.replace("CH","GP"),source:"local"};
   }
 }
 
-// 🔥 FIXED: Preview next number on page load
 async function previewNextNumber(){
   if($("challanNo").value && $("gatePassNo").value && !editMode) return;
-  if(editMode) return; // Don't change number in edit mode
+  if(editMode) return;
   
   let numbers=await getNextChallanNumber();
   $("challanNo").value=numbers.ch;
   $("gatePassNo").value=numbers.gp;
+  if(numbers.source==="local"){
+    console.log("📦 Using offline serial (Firebase quota full)");
+  }
 }
 
 function rowHtml(d={}){return `<tr><td class="sl"></td><td><input class="item" value="${d.item||""}"></td><td><input class="color" value="${d.color||""}"></td><td><input class="mcDia" value="${d.mcDia||""}"></td><td><input class="finDia" value="${d.finDia||""}"></td><td><input class="unit" value="${d.unit||""}"></td><td><input class="qty" type="number" value="${d.qty||""}" oninput="calcTotals()"></td><td><input class="pkg" type="number" value="${d.pkg||""}" oninput="calcTotals()"></td><td><input class="remarks" value="${d.remarks||""}"></td><td><input class="bag" type="number" value="${d.bag||""}" oninput="calcTotals()"></td><td><input class="purpose" value="${d.purpose||""}"></td><td><button class="red" onclick="delRow(this)">X</button></td></tr>`}
@@ -161,83 +177,134 @@ window.delRow=b=>{b.closest("tr").remove();resetSl();calcTotals()}
 function resetSl(){document.querySelectorAll("#rows tr").forEach((tr,i)=>tr.querySelector(".sl").innerText=i+1)}
 function getRows(){let a=[];document.querySelectorAll("#rows tr").forEach(tr=>{let x={item:tr.querySelector(".item").value.trim(),color:tr.querySelector(".color").value.trim(),mcDia:tr.querySelector(".mcDia").value.trim(),finDia:tr.querySelector(".finDia").value.trim(),unit:tr.querySelector(".unit").value.trim(),qty:Number(tr.querySelector(".qty").value)||0,pkg:Number(tr.querySelector(".pkg").value)||0,remarks:tr.querySelector(".remarks").value.trim(),bag:Number(tr.querySelector(".bag").value)||0,purpose:tr.querySelector(".purpose").value.trim()}; if(x.item||x.qty||x.pkg||x.bag)a.push(x)});return a}
 window.calcTotals=()=>{let r=getRows();$("grandTotal").innerText=r.reduce((a,b)=>a+b.qty,0);$("totalPkg").innerText=r.reduce((a,b)=>a+b.pkg,0);$("totalBag").innerText=r.reduce((a,b)=>a+b.bag,0)}
-function dataObj(){let rows=getRows();return {mcd:$("mcd").value,date:$("date").value,challanNo:$("challanNo").value,gatePassNo:$("gatePassNo").value,company:companyName(),companyType:$("company").value,companyManual:$("companyManual").value.trim(),companyAddress:$("companyAddress").value,toCompany:toCompanyName(),toCompanyType:$("toCompany").value,toCompanyManual:$("toCompanyManual").value.trim(),toAddress:$("toAddress").value,buyer:$("buyer").value.trim(),orderNo:$("orderNo").value.trim(),transportNo:$("transportNo").value.trim(),driverName:$("driverName").value.trim(),vehicleNo:$("vehicleNo").value.trim(),gateMs:$("gateMs").value.trim(),goodsBy:$("goodsBy").value.trim(),fromMillTo:$("fromMillTo").value.trim(),yarnCount:$("yarnCount").value.trim(),brand:$("brand").value.trim(),cardCombed:$("cardCombed").value.trim(),lotNo:$("lotNo").value.trim(),rows,grandTotalQty:rows.reduce((a,b)=>a+b.qty,0),totalPkg:rows.reduce((a,b)=>a+b.pkg,0),totalBag:rows.reduce((a,b)=>a+b.bag,0),updatedAt:new Date().toISOString(),createdAt:editMode?undefined:new Date().toISOString()}}
+function dataObj(){let rows=getRows();return {mcd:$("mcd").value,date:$("date").value,challanNo:$("challanNo").value,gatePassNo:$("gatePassNo").value,company:companyName(),companyType:$("company").value,companyManual:$("companyManual").value.trim(),companyAddress:$("companyAddress").value,toCompany:toCompanyName(),toCompanyType:$("toCompany").value,toCompanyManual:$("toCompanyManual").value.trim(),toAddress:$("toAddress").value,buyer:$("buyer").value.trim(),orderNo:$("orderNo").value.trim(),transportNo:$("transportNo").value.trim(),driverName:$("driverName").value.trim(),vehicleNo:$("vehicleNo").value.trim(),gateMs:$("gateMs").value.trim(),goodsBy:$("goodsBy").value.trim(),fromMillTo:$("fromMillTo").value.trim(),yarnCount:$("yarnCount").value.trim(),brand:$("brand").value.trim(),cardCombed:$("cardCombed").value.trim(),lotNo:$("lotNo").value.trim(),rows,grandTotalQty:rows.reduce((a,b)=>a+b.qty,0),totalPkg:rows.reduce((a,b)=>a+b.pkg,0),totalBag:rows.reduce((a,b)=>a+b.bag,0),deviceId:getDeviceId(),updatedAt:new Date().toISOString(),createdAt:editMode?undefined:new Date().toISOString()}}
 
-// 🔥 FIXED: Save with Offline Support + Auto Increment
+// 🔥 MULTI-USER SAVE: Always works (Firebase or Local)
 window.saveData=async()=>{
   try{
+    if(!$("challanNo").value || !$("gatePassNo").value){
+      let numbers=await getNextChallanNumber();
+      $("challanNo").value=numbers.ch;
+      $("gatePassNo").value=numbers.gp;
+    }
+
     let d=dataObj(); 
     if(!d.rows.length){toast("Minimum 1 row লাগবে","#dc2626");return}
     
-    // 🔥 Save Data (Offline Queue or Direct)
-    if(typeof window.saveDataOffline==="function"){
-      // Use offline queue - works even when quota exceeded
-      window.saveDataOffline("challanGatePass", d, "CHL");
-      toast("Saved to Offline Queue ✅");
-    }else{
-      // Fallback: direct save
+    // 🔥 Try Firebase first
+    try{
       await setDoc(doc(db,"challanGatePass",d.challanNo),d,{merge:true});
-      toast("Saved to Firebase ✅");
+      toast("✅ Saved to Firebase");
+      localStorage.setItem("challanGatePassLast",JSON.stringify(d));
+    }catch(e){
+      // 🔥 Firebase failed - save to device-specific offline queue
+      console.log("Firebase failed, saving offline:",e);
+      
+      const deviceId=getDeviceId();
+      const queueKey="GMS_CHALLAN_OFFLINE_"+deviceId;
+      let queue=JSON.parse(localStorage.getItem(queueKey)||"[]");
+      
+      queue.push({
+        id:d.challanNo,
+        data:d,
+        status:"pending",
+        createdAt:new Date().toISOString(),
+        deviceId:deviceId
+      });
+      
+      localStorage.setItem(queueKey,JSON.stringify(queue));
+      toast("📦 Saved Offline (will sync when Firebase available)");
     }
     
-    localStorage.setItem("challanGatePassLast",JSON.stringify(d));
-    
-    // 🔥 IMPORTANT: Generate NEXT number for next entry (ONLY if not in edit mode)
+    // 🔥 Prepare for next entry (only if not edit mode)
     if(!editMode){
-      // Clear form
       ["buyer","orderNo","transportNo","driverName","vehicleNo","yarnCount","brand","cardCombed","lotNo"].forEach(id=>$(id).value="");
       $("rows").innerHTML="";
       addBlankRows();
       calcTotals();
       syncTo();
       
-      // 🔥 Generate and show NEXT number
       let numbers=await getNextChallanNumber();
       $("challanNo").value=numbers.ch;
       $("gatePassNo").value=numbers.gp;
-      
-      toast("Ready for next entry: "+numbers.ch);
     }else{
-      // Edit mode: just show success
-      toast("Updated Successfully ✅");
       editMode=false;
+      toast("✅ Updated Successfully");
     }
 
   }catch(e){
     console.error(e);
-    toast("Save failed: "+e.message,"#dc2626")
+    toast("❌ Save failed: "+e.message,"#dc2626")
+  }
+};
+
+// 🔥 AUTO-SYNC: Check every 5 minutes and sync offline data
+async function autoSyncOfflineData(){
+  const deviceId=getDeviceId();
+  const queueKey="GMS_CHALLAN_OFFLINE_"+deviceId;
+  let queue=JSON.parse(localStorage.getItem(queueKey)||"[]");
+  
+  const pending=queue.filter(x=>x.status==="pending");
+  if(pending.length===0) return;
+  
+  console.log(`🔄 Auto-syncing ${pending.length} offline challan(s)...`);
+  
+  let synced=0;
+  for(let item of pending){
+    try{
+      await setDoc(doc(db,"challanGatePass",item.id),item.data,{merge:true});
+      item.status="synced";
+      item.syncedAt=new Date().toISOString();
+      synced++;
+    }catch(e){
+      console.log("Sync failed for",item.id);
+    }
+  }
+  
+  if(synced>0){
+    localStorage.setItem(queueKey,JSON.stringify(queue));
+    toast(`🔄 Synced ${synced} offline challan(s) to Firebase`);
+    console.log(`✅ Synced ${synced} items`);
   }
 }
 
-window.goReport=()=>{
-  location.href="challan-report.html"+($("challanNo").value?("?challanNo="+encodeURIComponent($("challanNo").value)):"")
-}
+// Run auto-sync every 5 minutes
+setInterval(autoSyncOfflineData, 300000);
+// Run once on page load
+setTimeout(autoSyncOfflineData, 3000);
+
+window.goReport=()=>{location.href="challan-report.html"}
 
 async function loadEdit(){
   let no=new URLSearchParams(location.search).get("challanNo"); 
   if(!no)return false; 
   
-  // Search in Firebase first
-  let s=await getDoc(doc(db,"challanGatePass",no)); 
-  if(s.exists()){
-    editMode=true;
-    let d=s.data();
-    ["mcd","date","challanNo","gatePassNo","company","companyManual","companyAddress","toCompany","toCompanyManual","toAddress","buyer","orderNo","transportNo","driverName","vehicleNo","gateMs","goodsBy","fromMillTo","yarnCount","brand","cardCombed","lotNo"].forEach(id=>{if($(id)&&d[id]!=null)$(id).value=d[id]}); 
-    if(d.companyType)$("company").value=d.companyType;
-    if(d.toCompanyType)$("toCompany").value=d.toCompanyType;
-    companyChange();
-    toCompanyChange();
-    $("rows").innerHTML="";
-    (d.rows||[]).forEach(addRow);
-    if(!(d.rows||[]).length)addBlankRows();
-    calcTotals();
-    return true;
-  }
-  
-  // If not in Firebase, search in offline queue (localStorage)
+  // Try Firebase first
   try{
-    let queue=JSON.parse(localStorage.getItem("GMS_STEALTH_QUEUE")||"[]");
-    let offlineItem=queue.find(x=>x.collection==="challanGatePass" && (x.data.challanNo===no || x.serial===no));
+    let s=await getDoc(doc(db,"challanGatePass",no)); 
+    if(s.exists()){
+      editMode=true;
+      let d=s.data();
+      ["mcd","date","challanNo","gatePassNo","company","companyManual","companyAddress","toCompany","toCompanyManual","toAddress","buyer","orderNo","transportNo","driverName","vehicleNo","gateMs","goodsBy","fromMillTo","yarnCount","brand","cardCombed","lotNo"].forEach(id=>{if($(id)&&d[id]!=null)$(id).value=d[id]}); 
+      if(d.companyType)$("company").value=d.companyType;
+      if(d.toCompanyType)$("toCompany").value=d.toCompanyType;
+      companyChange();
+      toCompanyChange();
+      $("rows").innerHTML="";
+      (d.rows||[]).forEach(addRow);
+      if(!(d.rows||[]).length)addBlankRows();
+      calcTotals();
+      return true;
+    }
+  }catch(e){}
+  
+  // Try offline queue
+  try{
+    const deviceId=getDeviceId();
+    const queueKey="GMS_CHALLAN_OFFLINE_"+deviceId;
+    let queue=JSON.parse(localStorage.getItem(queueKey)||"[]");
+    let offlineItem=queue.find(x=>x.id===no);
+    
     if(offlineItem){
       editMode=true;
       let d=offlineItem.data;
@@ -250,14 +317,12 @@ async function loadEdit(){
       (d.rows||[]).forEach(addRow);
       if(!(d.rows||[]).length)addBlankRows();
       calcTotals();
-      toast("Loaded from Offline Queue 📦");
+      toast("📦 Loaded from Offline");
       return true;
     }
-  }catch(e){
-    console.log("Offline search error:",e);
-  }
+  }catch(e){}
   
-  alert("Edit data not found");
+  alert("Not found");
   return false;
 }
 
@@ -268,7 +333,9 @@ async function init(){
     await previewNextNumber();
     addBlankRows();
     syncTo();
-    updateTitle()
+    updateTitle();
+    // Start auto-sync
+    autoSyncOfflineData();
   }
 }
 init();
