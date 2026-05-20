@@ -2,151 +2,137 @@
 <html>
 <head>
 <meta charset="UTF-8">
-<title>GMS Admin Panel</title>
+<title>Manpower - GMS</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <style>
 :root{
-  --bg:#07111f;--card:#101b2d;--card2:#14233a;--text:#fff;--muted:#9fb0c7;
-  --border:#263855;--blue:#2563eb;--green:#22c55e;--red:#ef4444;
-  --orange:#f59e0b;--purple:#8b5cf6;--input-bg:#0a1424;
+  --bg:#0a1628;--card:#1e293b;--text:#f1f5f9;--muted:#cbd5e1;
+  --border:#475569;--blue:#3b82f6;--green:#10b981;--red:#ef4444;
 }
 body.light{
-  --bg:#f1f5f9;--card:#ffffff;--card2:#f8fafc;--text:#1e293b;
-  --muted:#64748b;--border:#cbd5e1;--input-bg:#ffffff;
+  --bg:#f8fafc;--card:#ffffff;--text:#1e293b;--muted:#64748b;--border:#cbd5e1;
 }
-body{margin:0;background:var(--bg);color:var(--text);font-family:Segoe UI,Arial,sans-serif;transition:background .3s,color .3s;}
-.header{display:flex;justify-content:space-between;align-items:center;padding:15px 22px;background:var(--card);border-bottom:1px solid var(--border);position:sticky;top:0;z-index:100;box-shadow:0 2px 10px rgba(0,0,0,.1);}
-.logoArea{display:flex;align-items:center;gap:10px}
-.logoArea img{width:42px;height:42px;object-fit:contain;border-radius:8px;background:var(--card2)}
-.logo{font-size:22px;font-weight:900}.sub{font-size:12px;color:var(--muted)}
-.btn{border:0;border-radius:10px;padding:10px 15px;background:var(--blue);color:#fff;font-weight:900;cursor:pointer;margin:3px;transition:all .2s;}
-.btn:hover{transform:translateY(-2px);box-shadow:0 4px 12px rgba(0,0,0,.3);}
-.btn.red{background:var(--red)}.btn.green{background:var(--green)}.btn.orange{background:var(--orange)}.btn.purple{background:var(--purple)}
-.page{padding:18px;max-width:1400px;margin:0 auto}
-.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:14px;margin-bottom:16px;}
-.card{background:linear-gradient(135deg,var(--card),var(--card2));border:1px solid var(--border);border-radius:16px;padding:16px;box-shadow:0 8px 20px rgba(0,0,0,.18);}
-.label{font-size:12px;color:var(--muted);font-weight:900;text-transform:uppercase;letter-spacing:.5px}
-.num{font-size:26px;color:var(--green);font-weight:900;margin-top:6px;}
-.formGrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:12px;}
-input,select{width:100%;box-sizing:border-box;padding:12px;border-radius:10px;border:1px solid var(--border);background:var(--input-bg);color:var(--text);font-size:14px;transition:border .2s,box-shadow .2s;}
-input::placeholder{color:var(--muted)}
-input:focus,select:focus{outline:none;border-color:var(--blue);box-shadow:0 0 0 3px rgba(37,99,235,.2);}
-.companyWrap{display:flex;gap:12px;margin:10px 0;flex-wrap:wrap;}
-.companyWrap label{flex:1;min-width:200px;padding:12px;border:2px solid var(--border);border-radius:10px;background:var(--input-bg);display:flex;align-items:center;gap:8px;cursor:pointer;transition:all .2s;font-weight:600;}
-.companyWrap label:hover{border-color:var(--blue);transform:translateY(-2px)}
-.companyWrap input{width:auto;margin:0;}
-.companyWrap label.active-textile{border-color:var(--green);background:rgba(34,197,94,.12);color:var(--green);}
-.companyWrap label.active-composite{border-color:var(--purple);background:rgba(139,92,246,.12);color:var(--purple);}
-.mcdBox{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:8px;margin-top:10px;max-height:180px;overflow-y:auto;padding:4px;background:var(--card2);border-radius:10px;padding:10px;}
-.checkItem{background:var(--input-bg);border:1px solid var(--border);border-radius:10px;padding:8px;font-size:12px;font-weight:800;display:flex;align-items:center;gap:6px;cursor:pointer;}
-.checkItem:hover{background:rgba(255,255,255,.08);border-color:var(--blue)}
-.checkItem input{width:auto;margin:0}
-.smallNote{color:var(--muted);font-size:12px;font-weight:800;margin-top:6px;padding:10px;background:rgba(245,158,11,.12);border-radius:8px;border-left:3px solid var(--orange);}
-table{width:100%;border-collapse:collapse;margin-top:16px;background:var(--card);font-size:12px;}
-th,td{border:1px solid var(--border);padding:9px;text-align:center;}
-th{background:var(--card2);font-weight:900;color:var(--muted)}
-.roleAdmin{color:var(--green);font-weight:900}.roleFull{color:var(--orange);font-weight:900}.roleUser{color:var(--blue);font-weight:900}
-.compBadge{display:inline-block;padding:3px 8px;border-radius:12px;font-size:11px;font-weight:700;margin:2px;}
-.compBadge.t{background:rgba(34,197,94,.15);color:var(--green)}.compBadge.c{background:rgba(139,92,246,.15);color:var(--purple);}
-.toast{position:fixed;right:18px;bottom:18px;background:var(--green);color:#fff;padding:13px 20px;border-radius:12px;font-weight:900;display:none;z-index:1000;box-shadow:0 4px 20px rgba(0,0,0,.3);animation:slideIn .3s;}
-@keyframes slideIn{from{transform:translateX(100px);opacity:0}to{transform:translateX(0);opacity:1}}
-.emptyState{text-align:center;padding:30px;color:var(--muted);background:var(--card2);border-radius:12px;margin:10px 0;}
-@media(max-width:768px){.grid,.formGrid,.companyWrap,.mcdBox{grid-template-columns:1fr}.header{flex-direction:column;text-align:center;gap:10px}.companyWrap label{min-width:100%}}
-body.light .card,body.light .mcdBox,body.light input,body.light select,body.light .checkItem{background:var(--card)!important;border-color:var(--border)!important;color:var(--text)!important;}
-body.light .checkItem:hover{background:var(--card2)!important;}
+body{margin:0;background:var(--bg);color:var(--text);font-family:'Poppins',sans-serif;}
+.header{
+  background:var(--card);padding:15px 20px;border-bottom:1px solid var(--border);
+  display:flex;justify-content:space-between;align-items:center;
+}
+.logo{font-size:20px;font-weight:700}
+.btn{
+  background:var(--blue);color:#fff;border:none;padding:8px 16px;
+  border-radius:8px;cursor:pointer;font-weight:600;margin-left:10px;
+}
+.btn.red{background:var(--red)}
+.container{padding:20px;max-width:1200px;margin:0 auto;}
+.card{
+  background:var(--card);border:1px solid var(--border);
+  border-radius:12px;padding:20px;margin-bottom:20px;
+}
+h2{margin:0 0 15px 0;font-size:20px;}
+.formGroup{margin-bottom:15px;}
+.formGroup label{display:block;margin-bottom:5px;font-weight:600;color:var(--muted);}
+.formGroup input,.formGroup select{
+  width:100%;padding:10px;border:1px solid var(--border);
+  border-radius:8px;background:var(--bg);color:var(--text);
+}
+.btn-save{
+  background:var(--green);color:#fff;border:none;padding:12px 24px;
+  border-radius:8px;cursor:pointer;font-weight:700;font-size:16px;width:100%;
+}
 </style>
 </head>
 <body>
 
+<!-- 🔐 PERMISSION CHECK - MUST BE AT TOP -->
+<script>
+const mpUser = JSON.parse(localStorage.getItem("gmsUser") || "null");
+if(!mpUser){window.location.href="login.html";}
+
+const userRole = mpUser.role || "user";
+const manpowerAccess = mpUser.manpowerAccess || "none";
+const userCompanies = mpUser.userCompanies || [];
+
+// ✅ FIXED PERMISSION LOGIC
+const isAdmin = (userRole === "admin");
+const isFull = (userRole === "full");
+const hasManpowerAll = (manpowerAccess === "all");
+const hasManpowerSelected = (manpowerAccess === "selected");
+
+// Block if no permission
+if(!isAdmin && !isFull && !hasManpowerAll && !hasManpowerSelected){
+  alert("Manpower Access nai. Admin theke permission nite hobe.");
+  window.location.href = "index.html";
+}
+</script>
+
 <div class="header">
-  <div class="logoArea">
-    <img src="logo.png" onerror="this.style.display='none';this.parentElement.innerHTML='👑'">
-    <div><div class="logo">👑 GMS ADMIN PANEL</div><div class="sub">Company • User • MCD • Needle • Manpower</div></div>
-  </div>
+  <div class="logo">👨‍💼 Manpower Management</div>
   <div>
+    <span id="userInfo" style="color:var(--muted);margin-right:10px;"></span>
     <button class="btn" onclick="location.href='index.html'">🏠 Dashboard</button>
-    <button class="btn purple" onclick="toggleTheme()">🌙 / ☀️</button>
     <button class="btn red" onclick="logout()">🚪 Logout</button>
   </div>
 </div>
 
-<div class="page">
-  <div class="grid">
-    <div class="card"><div class="label">👤 Total Users</div><div class="num" id="totalUsers">0</div></div>
-    <div class="card"><div class="label">👑 Admin+Full</div><div class="num" id="totalAdmin">0</div></div>
-    <div class="card"><div class="label">🏭 Textiles Users</div><div class="num" id="totalTextile" style="color:var(--green)">0</div></div>
-    <div class="card"><div class="label">🏢 Composite Users</div><div class="num" id="totalComposite" style="color:var(--purple)">0</div></div>
-  </div>
-
+<div class="container">
   <div class="card">
-    <h2 id="formTitle">➕ Add User</h2>
-    <input type="hidden" id="editId">
-
-    <div style="margin-bottom:16px;">
-      <label class="label">🏢 Assign Company (Select 1 or Both)</label>
-      <div class="companyWrap">
-        <label id="lblTextile"><input type="checkbox" id="cmpTextile" value="GMS TEXTILES LTD" onchange="updateCompanyUI()"> 🏭 GMS TEXTILES LTD</label>
-        <label id="lblComposite"><input type="checkbox" id="cmpComposite" value="GMS COMPOSITE KNITTING" onchange="updateCompanyUI()"> 🏢 GMS COMPOSITE KNITTING</label>
-      </div>
-      <div class="smallNote" id="companyNote">🔐 ইউজার শুধু সিলেক্টেড কোম্পানির ডাটা পাবে।</div>
-    </div>
-
-    <div class="formGrid">
-      <input id="name" placeholder="👤 User Name">
-      <input id="email" placeholder="📧 Email">
-      <input id="password" placeholder="🔐 Password" type="password">
-      <select id="role">
-        <option value="user">📂 Normal User</option>
-        <option value="full">🌍 Full Access</option>
-        <option value="admin">👑 Admin</option>
-      </select>
-      <select id="needleAccess">
-        <option value="no">🪡 Needle: No</option>
-        <option value="yes">🪡 Needle: Yes</option>
+    <h2>➕ Add Manpower Entry</h2>
+    
+    <div class="formGroup">
+      <label>🏢 Company</label>
+      <select id="company">
+        <option value="GMS TEXTILES LTD">GMS TEXTILES LTD</option>
+        <option value="GMS COMPOSITE KNITTING">GMS COMPOSITE KNITTING</option>
       </select>
     </div>
 
-    <div style="margin-top:14px;">
-      <label class="label">👨 Manpower Access</label>
-      <select id="manpowerAccess" onchange="toggleManpowerMCD()">
-        <option value="none">❌ None (No Access)</option>
-        <option value="all">✅ All MCD</option>
-        <option value="selected">🎯 Selected MCD</option>
+    <div class="formGroup">
+      <label>📂 MCD / Department</label>
+      <select id="mcd">
+        <option value="ACCESSORIES MCD">ACCESSORIES MCD</option>
+        <option value="GREY FABRIC MCD">GREY FABRIC MCD</option>
+        <option value="BILLING SECTION">BILLING SECTION</option>
+        <option value="SHIPMENT MCD">SHIPMENT MCD</option>
+        <option value="OUTER WEAR MCD">OUTER WEAR MCD</option>
+        <option value="YARN MCD">YARN MCD</option>
+        <option value="PRINTING MCD">PRINTING MCD</option>
+        <option value="JHUT MCD">JHUT MCD</option>
+        <option value="GENERAL MCD">GENERAL MCD</option>
+        <option value="LEFTOVER MCD">LEFTOVER MCD</option>
+        <option value="FINISH FABRIC MCD">FINISH FABRIC MCD</option>
+        <option value="YARN DYEING MCD">YARN DYEING MCD</option>
+        <option value="CHEMICAL MCD">CHEMICAL MCD</option>
+        <option value="GENERAL TECHNICAL MCD">GENERAL TECHNICAL MCD</option>
       </select>
-      <div id="manpowerMCDSection" style="display:none; margin-top:10px;">
-        <div class="smallNote">👨‍ Manpower Access এর জন্য MCD টিক দিন:</div>
-        <div id="manpowerMcdChecks" class="mcdBox"></div>
-      </div>
     </div>
 
-    <h3 style="margin-top:18px;">📂 General MCD Access (Dashboard & Reports)</h3>
-    <div class="smallNote">✅ টিক করা MCD শুধু সিলেক্টেড কোম্পানির জন্য কাজ করবে।</div>
-    <div id="mcdChecks" class="mcdBox"></div>
-
-    <button class="btn green" onclick="saveUser()" style="margin-top:14px;width:100%;">💾 Save User</button>
-    <button class="btn orange" onclick="clearForm()" style="margin-top:8px;width:100%;">🧹 Clear Form</button>
-  </div>
-
-  <div class="card" style="margin-top:16px">
-    <h2>👥 User List</h2>
-    <div style="margin-bottom:12px;display:flex;gap:8px;flex-wrap:wrap;">
-      <button class="btn" onclick="filterUsers('all')">All</button>
-      <button class="btn green" onclick="filterUsers('textile')">🏭 Textiles</button>
-      <button class="btn purple" onclick="filterUsers('composite')">🏢 Composite</button>
-      <button class="btn orange" onclick="filterUsers('admin')">👑 Admin Only</button>
+    <div class="formGroup">
+      <label>👤 Employee Name</label>
+      <input type="text" id="empName" placeholder="Enter employee name">
     </div>
-    <div style="overflow-x:auto;">
-      <table><thead><tr><th>Name</th><th>Company</th><th>Email</th><th>Role</th><th>MCD</th><th>🪡</th><th>👨 Manpower</th><th>Action</th></tr></thead>
-      <tbody id="userTable"></tbody></table>
+
+    <div class="formGroup">
+      <label> Employee ID</label>
+      <input type="text" id="empId" placeholder="Enter employee ID">
     </div>
+
+    <div class="formGroup">
+      <label>💰 Salary</label>
+      <input type="number" id="salary" placeholder="Enter salary">
+    </div>
+
+    <div class="formGroup">
+      <label>📅 Date</label>
+      <input type="date" id="entryDate">
+    </div>
+
+    <button class="btn-save" onclick="saveManpower()">💾 Save Entry</button>
   </div>
 </div>
 
-<div id="toast" class="toast">Saved ✅</div>
-
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-app.js";
-import { getFirestore, collection, addDoc, getDocs, deleteDoc, doc, updateDoc } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-firestore.js";
+import { getFirestore, collection, addDoc, getDocs } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-firestore.js";
 
 const firebaseConfig = {
   apiKey:"AIzaSyD-wBCF5eeWMHobLFOhBzKW7aB2pagz9-w",
@@ -156,127 +142,115 @@ const firebaseConfig = {
   messagingSenderId:"992250313291",
   appId:"1:992250313291:web:ee3bceae76d4d53bc26bce"
 };
-const app = initializeApp(firebaseConfig), db = getFirestore(app);
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
 
-const MCD_COMPANY_MAP = {
-  "GREY FABRIC MCD": "textile", "YARN MCD": "textile",
-  "SHIPMENT MCD": "composite", "BILLING SECTION": "composite", "OUTER WEAR MCD": "composite",
-  "PRINTING MCD": "both", "JHUT MCD": "both", "GENERAL MCD": "both", "ACCESSORIES MCD": "both",
-  "LEFTOVER MCD": "both", "FINISH FABRIC MCD": "both", "YARN DYEING MCD": "both", "CHEMICAL MCD": "both", "GENERAL TECHNICAL MCD": "both"
-};
-const MCD = Object.keys(MCD_COMPANY_MAP);
-let allUsers = [], currentFilter = "all";
+// Set today's date
+document.getElementById('entryDate').valueAsDate = new Date();
 
-window.toggleTheme = () => { document.body.classList.toggle("light"); localStorage.setItem("adminTheme", document.body.classList.contains("light") ? "light" : "dark"); };
-if(localStorage.getItem("adminTheme") === "light") document.body.classList.add("light");
-window.logout = () => { localStorage.removeItem("gmsUser"); window.location.href = "login.html"; };
-const toast = (msg) => { const t = document.getElementById("toast"); t.innerText = msg; t.style.display = "block"; setTimeout(() => t.style.display = "none", 1800); };
+// Show user info
+const mpUser = JSON.parse(localStorage.getItem("gmsUser"));
+document.getElementById('userInfo').innerText = `${mpUser.name} (${mpUser.role})`;
 
-window.updateCompanyUI = () => {
-  const t = document.getElementById("cmpTextile"), c = document.getElementById("cmpComposite");
-  document.getElementById("lblTextile").classList.toggle("active-textile", t.checked);
-  document.getElementById("lblComposite").classList.toggle("active-composite", c.checked);
-  const note = document.getElementById("companyNote");
-  if(!t.checked && !c.checked) { note.innerHTML = "⚠️ অন্তত ১টা কোম্পানি সিলেক্ট করুন!"; note.style.borderColor = "var(--red)"; }
-  else { note.innerHTML = "✅ ইউজার শুধু সিলেক্টেড কোম্পানির ডাটা পাবে।"; note.style.borderColor = "var(--orange)"; }
-  const selectedCompanies = [];
-  if(t.checked) selectedCompanies.push("GMS TEXTILES LTD");
-  if(c.checked) selectedCompanies.push("GMS COMPOSITE KNITTING");
-  renderMCD("mcdChecks", getMCD("mcdChecks"), selectedCompanies);
-  renderMCD("manpowerMcdChecks", getMCD("manpowerMcdChecks"), selectedCompanies);
-};
+// Filter MCD based on company permission
+const userCompanies = mpUser.userCompanies || [];
+const mcdSelect = document.getElementById('mcd');
+const companySelect = document.getElementById('company');
 
-window.toggleManpowerMCD = () => { document.getElementById("manpowerMCDSection").style.display = document.getElementById("manpowerAccess").value === "selected" ? "block" : "none"; };
-
-function renderMCD(containerId, selected = [], allowedCompanies = []) {
-  const container = document.getElementById(containerId); if(!container) return;
-  const filteredMCDs = MCD.filter(mcd => {
-    const type = MCD_COMPANY_MAP[mcd] || "both";
-    if(type === "both") return true;
-    if(allowedCompanies.includes("GMS TEXTILES LTD") && type === "textile") return true;
-    if(allowedCompanies.includes("GMS COMPOSITE KNITTING") && type === "composite") return true;
-    return false;
-  });
-  if(filteredMCDs.length === 0) { container.innerHTML = `<div class="emptyState">📭 No MCD available</div>`; return; }
-  container.innerHTML = filteredMCDs.map(m => `<label class="checkItem"><input type="checkbox" class="mcd-cb" data-target="${containerId}" value="${m}" ${selected.includes(m) ? 'checked' : ''}>${m}</label>`).join('');
+// If user has only one company, set it as default and disable selection
+if(userCompanies.length === 1){
+  companySelect.value = userCompanies[0];
+  companySelect.disabled = true;
+} else if(userCompanies.length === 0){
+  // No company access
+  alert("No company access!");
+  window.location.href = "index.html";
 }
 
-function getMCD(containerId) { return [...document.querySelectorAll(`.mcd-cb[data-target="${containerId}"]:checked`)].map(c => c.value); }
-
-window.clearForm = () => {
-  document.getElementById("formTitle").innerText = "➕ Add User"; document.getElementById("editId").value = "";
-  ["name", "email", "password"].forEach(i => document.getElementById(i).value = "");
-  document.getElementById("role").value = "user"; document.getElementById("needleAccess").value = "no";
-  document.getElementById("manpowerAccess").value = "none";
-  document.getElementById("cmpTextile").checked = false; document.getElementById("cmpComposite").checked = false;
-  updateCompanyUI(); toggleManpowerMCD(); window.scrollTo({top: 0, behavior: "smooth"});
-};
-
-window.saveUser = async () => {
-  const cmps = [...document.querySelectorAll("#cmpTextile:checked,#cmpComposite:checked")].map(c => c.value);
-  if(cmps.length === 0) { alert("⚠️ অন্তত ১টা কোম্পানি সিলেক্ট করুন!"); return; }
-  const name = document.getElementById("name").value.trim(), email = document.getElementById("email").value.trim(), pass = document.getElementById("password").value.trim();
-  if(!name || !email || !pass) { alert("⚠️ Name, Email, Password সব ফিল্ড পূরণ করুন!"); return; }
-  const mAccess = document.getElementById("manpowerAccess").value;
-  if(mAccess === "selected" && getMCD("manpowerMcdChecks").length === 0) { alert("⚠️ Manpower Selected দিলে অন্তত ১টা MCD টিক করুন!"); return; }
-  
-  const data = { 
-    name, email, password: pass, 
-    role: document.getElementById("role").value, 
-    userCompanies: cmps, 
-    mcdAccess: getMCD("mcdChecks"), 
-    needleAccess: document.getElementById("needleAccess").value === "yes", 
-    manpowerAccess: mAccess, 
-    manpowerMcdAccess: mAccess === "selected" ? getMCD("manpowerMcdChecks") : [], 
-    updatedAt: new Date().toISOString() 
+// Filter MCDs based on company
+function filterMCDsByCompany(company){
+  const mcdCompanyMap = {
+    "GREY FABRIC MCD": "textile",
+    "YARN MCD": "textile",
+    "SHIPMENT MCD": "composite",
+    "BILLING SECTION": "composite",
+    "OUTER WEAR MCD": "composite",
+    "PRINTING MCD": "both",
+    "JHUT MCD": "both",
+    "GENERAL MCD": "both",
+    "ACCESSORIES MCD": "both",
+    "LEFTOVER MCD": "both",
+    "FINISH FABRIC MCD": "both",
+    "YARN DYEING MCD": "both",
+    "CHEMICAL MCD": "both",
+    "GENERAL TECHNICAL MCD": "both"
   };
+
+  const allOptions = Array.from(mcdSelect.options);
+  allOptions.forEach(opt => {
+    const mcdType = mcdCompanyMap[opt.value] || "both";
+    const isTextile = company.includes("TEXTILES");
+    const isComposite = company.includes("COMPOSITE");
+    
+    if(mcdType === "both" || 
+       (isTextile && mcdType === "textile") || 
+       (isComposite && mcdType === "composite")){
+      opt.style.display = "block";
+    } else {
+      opt.style.display = "none";
+    }
+  });
   
-  const eid = document.getElementById("editId").value;
-  try {
-    if(eid) { await updateDoc(doc(db, "users", eid), data); toast("User Updated ✅"); }
-    else { data.createdAt = new Date().toISOString(); await addDoc(collection(db, "users"), data); toast("User Saved ✅"); }
-    clearForm(); loadUsers();
-  } catch(err) { console.error(err); alert("❌ Error: " + err.message); }
-};
-
-window.editUser = (id) => {
-  const u = allUsers.find(x => x.id === id)?.data; if(!u) return;
-  document.getElementById("formTitle").innerText = "✏️ Edit User"; document.getElementById("editId").value = id;
-  document.getElementById("name").value = u.name || ""; document.getElementById("email").value = u.email || ""; document.getElementById("password").value = u.password || "";
-  document.getElementById("role").value = u.role || "user"; document.getElementById("needleAccess").value = u.needleAccess ? "yes" : "no";
-  document.getElementById("manpowerAccess").value = u.manpowerAccess || "none"; toggleManpowerMCD();
-  const companies = u.userCompanies || [];
-  document.getElementById("cmpTextile").checked = companies.includes("GMS TEXTILES LTD");
-  document.getElementById("cmpComposite").checked = companies.includes("GMS COMPOSITE KNITTING");
-  updateCompanyUI();
-  setTimeout(() => { renderMCD("mcdChecks", Array.isArray(u.mcdAccess) ? u.mcdAccess : [], companies); renderMCD("manpowerMcdChecks", Array.isArray(u.manpowerMcdAccess) ? u.manpowerMcdAccess : [], companies); }, 50);
-  window.scrollTo({top: 0, behavior: "smooth"});
-};
-
-window.deleteUser = async (id) => { if(confirm("🗑️ এই ইউজার ডিলিট করবেন?")) { try { await deleteDoc(doc(db, "users", id)); toast("Deleted ✅"); loadUsers(); } catch(err) { alert("❌ Error: " + err.message); } } };
-window.filterUsers = (f) => { currentFilter = f; loadUsers(); };
-
-async function loadUsers() {
-  try {
-    const snap = await getDocs(collection(db, "users")); allUsers = []; let t = 0, a = 0, tx = 0, cx = 0, html = "";
-    snap.forEach(d => {
-      const u = d.data(), id = d.id; allUsers.push({id, data: u}); t++;
-      if(u.role === "admin" || u.role === "full") a++;
-      const cmps = u.userCompanies || [];
-      if(cmps.includes("GMS TEXTILES LTD")) tx++; if(cmps.includes("GMS COMPOSITE KNITTING")) cx++;
-      if(currentFilter !== "all") { if(currentFilter === "admin" && u.role !== "admin") return; if(currentFilter === "textile" && !cmps.includes("GMS TEXTILES LTD")) return; if(currentFilter === "composite" && !cmps.includes("GMS COMPOSITE KNITTING")) return; }
-      const rc = u.role === "admin" ? "roleAdmin" : u.role === "full" ? "roleFull" : "roleUser";
-      const badges = cmps.map(c => `<span class="compBadge ${c === 'GMS TEXTILES LTD' ? 't' : 'c'}">${c === 'GMS TEXTILES LTD' ? '🏭' : '🏢'} ${c.split(' ')[0]}</span>`).join('');
-      const mcdTxt = Array.isArray(u.mcdAccess) ? u.mcdAccess.slice(0, 2).join(', ') + (u.mcdAccess.length > 2 ? ' +...' : '') : '—';
-      const mpTxt = u.manpowerAccess === "all" ? "✅ All" : u.manpowerAccess === "selected" ? `✅ ${u.manpowerMcdAccess?.length || 0} MCD` : "❌ None";
-      html += `<tr><td><b>${u.name || ''}</b></td><td>${badges || '—'}</td><td>${u.email || ''}</td><td class="${rc}">${u.role || ''}</td><td style="text-align:left">${mcdTxt}</td><td>${u.needleAccess ? '✅' : '❌'}</td><td>${mpTxt}</td><td><button class="btn orange" onclick="editUser('${id}')" style="padding:4px 8px;font-size:11px">✏️</button><button class="btn red" onclick="deleteUser('${id}')" style="padding:4px 8px;font-size:11px">🗑</button></td></tr>`;
-    });
-    document.getElementById("userTable").innerHTML = html || '<tr><td colspan="8" style="padding:20px;color:var(--muted)">📭 No users found</td></tr>';
-    document.getElementById("totalUsers").innerText = t; document.getElementById("totalAdmin").innerText = a; document.getElementById("totalTextile").innerText = tx; document.getElementById("totalComposite").innerText = cx;
-  } catch(err) { console.error("Load error:", err); document.getElementById("userTable").innerHTML = `<tr><td colspan="8" style="padding:20px;color:var(--red)">❌ Error loading users</td></tr>`; }
+  // Select first visible option
+  const visibleOptions = Array.from(mcdSelect.options).filter(opt => opt.style.display !== "none");
+  if(visibleOptions.length > 0){
+    mcdSelect.value = visibleOptions[0].value;
+  }
 }
 
-renderMCD("mcdChecks", [], []); renderMCD("manpowerMcdChecks", [], []); updateCompanyUI(); toggleManpowerMCD(); loadUsers();
+companySelect.addEventListener('change', () => filterMCDsByCompany(companySelect.value));
+filterMCDsByCompany(companySelect.value);
+
+window.saveManpower = async () => {
+  const company = companySelect.value;
+  const mcd = mcdSelect.value;
+  const empName = document.getElementById('empName').value.trim();
+  const empId = document.getElementById('empId').value.trim();
+  const salary = document.getElementById('salary').value;
+  const entryDate = document.getElementById('entryDate').value;
+
+  if(!empName || !empId || !salary || !entryDate){
+    alert("সব ফিল্ড পূরণ করুন!");
+    return;
+  }
+
+  try {
+    await addDoc(collection(db, "manpower"), {
+      company,
+      mcd,
+      empName,
+      empId,
+      salary: parseFloat(salary),
+      entryDate,
+      createdAt: new Date().toISOString(),
+      createdBy: mpUser.email || mpUser.name
+    });
+    
+    alert("✅ Manpower entry saved successfully!");
+    document.getElementById('empName').value = '';
+    document.getElementById('empId').value = '';
+    document.getElementById('salary').value = '';
+  } catch(err) {
+    console.error(err);
+    alert("❌ Error: " + err.message);
+  }
+};
+
+window.logout = () => {
+  localStorage.removeItem("gmsUser");
+  window.location.href = "login.html";
+};
 </script>
+
 </body>
 </html>
