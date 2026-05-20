@@ -121,6 +121,11 @@ body.light .companySwitch button{color:#475569;}
   color:#f1f5f9;
 }
 body.light .companySwitch button:hover:not(.active){color:#1e293b;}
+.companySwitch button.disabled{
+  opacity:0.3;
+  cursor:not-allowed;
+  pointer-events:none;
+}
 
 .sidebarNav{
   flex:1;
@@ -1021,6 +1026,32 @@ body.light .creditFooter{background:var(--card);border-color:#cbd5e1;}
   max-width:400px;
   margin:0 auto;
 }
+
+/* ===== NO ACCESS MESSAGE ===== */
+.noAccessMessage {
+  text-align: center;
+  padding: 60px 20px;
+  background: var(--card);
+  border-radius: 16px;
+  border: 2px solid var(--red);
+  margin: 20px 0;
+}
+.noAccessMessage i {
+  font-size: 64px;
+  color: var(--red);
+  margin-bottom: 20px;
+}
+.noAccessMessage h3 {
+  color: var(--red);
+  font-size: 24px;
+  margin-bottom: 10px;
+}
+.noAccessMessage p {
+  color: var(--muted);
+  font-size: 14px;
+  max-width: 500px;
+  margin: 0 auto;
+}
 </style>
 </head>
 
@@ -1049,12 +1080,12 @@ body.light .creditFooter{background:var(--card);border-color:#cbd5e1;}
     <button id="manpowerNav" onclick="location.href='manpower.html'">👨‍ Manpower</button>
     <button onclick="location.href='notice.html'">📢 Notice</button>
     <button onclick="location.href='online-users.html'">🟢 Online</button>
-    <button onclick="location.href='audit-history.html'">📜 Audit</button>
+    <button onclick="location.href='audit-history.html'"> Audit</button>
     <button id="backupNav" onclick="openPage('backup',this)">☁ Backup</button>
     <button onclick="location.href='change-password.html'">🔐 Password</button>
   </div>
   <div class="sidebarFooter">
-    <button class="themeBtn" onclick="toggleTheme()">🌙 / ☀️ Theme</button>
+    <button class="themeBtn" onclick="toggleTheme()">🌙 / ️ Theme</button>
     <button class="logoutBtn" onclick="logout()">🚪 Logout</button>
   </div>
 </div>
@@ -1091,7 +1122,7 @@ body.light .creditFooter{background:var(--card);border-color:#cbd5e1;}
   </div>
   
   <div id="backupWarningBanner" class="backupWarningBanner" style="display:none">🔴 BACKUP NEEDED</div>
-  <div class="noticeBar"><div class="noticeMove" id="noticeMove">📢 Loading live notice...</div></div>
+  <div class="noticeBar"><div class="noticeMove" id="noticeMove"> Loading live notice...</div></div>
 
   <div id="home" class="page activePage">
     <div class="dashTitle">📊 Dashboard Overview <span id="dashCompanyBadge" class="companyBadge">🏭 TEXTILES</span></div>
@@ -1119,6 +1150,13 @@ body.light .creditFooter{background:var(--card);border-color:#cbd5e1;}
         <div class="liveDot"></div>
         <span class="liveText">LIVE</span>
       </div>
+    </div>
+
+    <!-- ===== NO ACCESS MESSAGE ===== -->
+    <div id="noAccessMessage" class="noAccessMessage" style="display:none;">
+      <i class="fas fa-lock"></i>
+      <h3>⚠️ Access Denied</h3>
+      <p>আপনার এই কোম্পানির ডাটা দেখার পারমিশন নেই।<br>অ্যাডমিনের সাথে যোগাযোগ করুন।</p>
     </div>
 
     <!-- ===== TEXTILE DASHBOARD (Only for GMS TEXTILES) ===== -->
@@ -1155,22 +1193,22 @@ body.light .creditFooter{background:var(--card);border-color:#cbd5e1;}
         </div>
       </div>
 
-      <!-- 📊 BAR CHARTS -->
+      <!--  BAR CHARTS -->
       <div class="chartGrid" style="margin-bottom:20px;">
         <div class="chartBox" id="accessoriesChartBox">
-          <h3>📈 Accessories Stock Chart</h3>
+          <h3> Accessories Stock Chart</h3>
           <canvas id="accessoriesChart"></canvas>
         </div>
         <div class="chartBox" id="needleChartBox">
-          <h3>🏭 Needle Floor Wise Stock</h3>
+          <h3> Needle Floor Wise Stock</h3>
           <canvas id="needleChart"></canvas>
         </div>
         <div class="chartBox" id="greyChartBox">
-          <h3>🏭 Grey Fabric Present Stock</h3>
+          <h3> Grey Fabric Present Stock</h3>
           <canvas id="greyChart"></canvas>
         </div>
         <div class="chartBox" id="needleIssueChartBox">
-          <h3>🪡 Needle Broken / Missing / Change</h3>
+          <h3> Needle Broken / Missing / Change</h3>
           <canvas id="needleIssueChart"></canvas>
         </div>
       </div>
@@ -1209,7 +1247,7 @@ body.light .creditFooter{background:var(--card);border-color:#cbd5e1;}
     <div id="compositeDashboard" style="display:none;">
       <div class="compositeEmpty">
         <i class="fas fa-building"></i>
-        <h3>🏢 GMS COMPOSITE KNITTING</h3>
+        <h3> GMS COMPOSITE KNITTING</h3>
         <p>Composite module is under development. Currently only <b>Gate Plan</b> and <b>Challan/Gate Pass</b> features are available.</p>
         <p style="margin-top:12px;color:var(--blue);font-weight:600;">Go to New Entry → Select MCD → Use Gate Plan / Challan</p>
       </div>
@@ -1507,45 +1545,35 @@ body.light .creditFooter{background:var(--card);border-color:#cbd5e1;}
 
 <!-- ===== GLOBAL NAVIGATION FUNCTIONS ===== -->
 <script>
-// ===== COMPANY SWITCH SYSTEM =====
-window.getCurrentCompany = function() {
-  return localStorage.getItem('gmsSelectedCompany') || 'GMS TEXTILES LTD';
-};
+// 🔐 GLOBAL VARIABLES (Window scope for module access)
+window.userAllowedCompanies = [];
+window.currentCompany = 'GMS TEXTILES LTD';
+window.userRole = 'user';
 
+// ✅ Check if user can access company
+function canUserSeeCompany(companyName) {
+  if(window.userRole === "admin" || window.userRole === "full") return true;
+  return window.userAllowedCompanies.includes(companyName);
+}
+
+// 🔄 Switch company
 window.switchCompany = function(company) {
+  if(!canUserSeeCompany(company)) {
+    showToast(` You don't have access to ${company}`, 'error');
+    return;
+  }
+  
+  window.currentCompany = company;
   localStorage.setItem('gmsSelectedCompany', company);
   
   // Update UI buttons
   document.getElementById('btnTextile').classList.toggle('active', company === 'GMS TEXTILES LTD');
   document.getElementById('btnComposite').classList.toggle('active', company === 'GMS COMPOSITE KNITTING');
   
-  // Update badges
-  const badgeText = company === 'GMS TEXTILES LTD' ? '🏭 TEXTILES' : '🏢 COMPOSITE';
-  const badgeClass = company === 'GMS TEXTILES LTD' ? '' : 'composite';
+  // Update badges and dropdowns
+  updateCompanyUI(company);
   
-  document.getElementById('companyBadge').innerHTML = badgeText;
-  document.getElementById('companyBadge').className = 'companyBadge ' + badgeClass;
-  document.getElementById('dashCompanyBadge').innerHTML = badgeText;
-  document.getElementById('dashCompanyBadge').className = 'companyBadge ' + badgeClass;
-  document.getElementById('entryCompanyBadge').innerHTML = badgeText;
-  document.getElementById('entryCompanyBadge').className = 'companyBadge ' + badgeClass;
-  document.getElementById('reportCompanyBadge').innerHTML = badgeText;
-  document.getElementById('reportCompanyBadge').className = 'companyBadge ' + badgeClass;
-  document.getElementById('needleCompanyBadge').innerHTML = badgeText;
-  document.getElementById('needleCompanyBadge').className = 'companyBadge ' + badgeClass;
-  document.getElementById('backupCompanyBadge').innerHTML = badgeText;
-  document.getElementById('backupCompanyBadge').className = 'companyBadge ' + badgeClass;
-  
-  // Update dropdowns
-  document.getElementById('entryCompany').value = company;
-  document.getElementById('reportCompany').value = company;
-  
-  // Show/hide dashboard sections
-  const isTextile = company === 'GMS TEXTILES LTD';
-  document.getElementById('textileDashboard').style.display = isTextile ? 'block' : 'none';
-  document.getElementById('compositeDashboard').style.display = isTextile ? 'none' : 'block';
-  
-  // Reload dashboard data
+  // Reload dashboard if on home page
   if(document.getElementById('home').classList.contains('activePage')) {
     loadDashboardStock();
   }
@@ -1560,6 +1588,111 @@ window.switchCompany = function(company) {
   
   showToast(`🔄 Switched to ${company}`);
 };
+
+// 🎨 Update UI elements
+function updateCompanyUI(company) {
+  const badgeText = company === 'GMS TEXTILES LTD' ? '🏭 TEXTILES' : '🏢 COMPOSITE';
+  const badgeClass = company === 'GMS TEXTILES LTD' ? '' : 'composite';
+  
+  // Update all badges
+  ['companyBadge', 'dashCompanyBadge', 'entryCompanyBadge', 'reportCompanyBadge', 'needleCompanyBadge', 'backupCompanyBadge'].forEach(id => {
+    const el = document.getElementById(id);
+    if(el) {
+      el.innerHTML = badgeText;
+      el.className = 'companyBadge ' + badgeClass;
+    }
+  });
+  
+  // Update dropdowns
+  if(document.getElementById('entryCompany')) document.getElementById('entryCompany').value = company;
+  if(document.getElementById('reportCompany')) document.getElementById('reportCompany').value = company;
+  
+  // Show/hide dashboard sections
+  const textileEl = document.getElementById('textileDashboard');
+  const compositeEl = document.getElementById('compositeDashboard');
+  const noAccessEl = document.getElementById('noAccessMessage');
+  
+  if(company === 'GMS TEXTILES LTD') {
+    if(textileEl) textileEl.style.display = 'block';
+    if(compositeEl) compositeEl.style.display = 'none';
+  } else {
+    if(textileEl) textileEl.style.display = 'none';
+    if(compositeEl) compositeEl.style.display = 'block';
+  }
+  
+  if(noAccessEl) noAccessEl.style.display = 'none';
+}
+
+// 🔐 Setup company permissions
+function setupCompanyPermissions() {
+  // Load user's allowed companies
+  window.userAllowedCompanies = Array.isArray(window.user.userCompanies) ? window.user.userCompanies : [];
+  
+  // Set default company based on permission
+  if(window.userAllowedCompanies.length === 1) {
+    window.currentCompany = window.userAllowedCompanies[0];
+  } else if(window.userAllowedCompanies.includes('GMS COMPOSITE KNITTING') && !window.userAllowedCompanies.includes('GMS TEXTILES LTD')) {
+    window.currentCompany = 'GMS COMPOSITE KNITTING';
+  } else {
+    window.currentCompany = 'GMS TEXTILES LTD';
+  }
+  
+  localStorage.setItem('gmsSelectedCompany', window.currentCompany);
+  
+  // Update UI buttons
+  document.getElementById('btnTextile').classList.toggle('active', window.currentCompany === 'GMS TEXTILES LTD');
+  document.getElementById('btnComposite').classList.toggle('active', window.currentCompany === 'GMS COMPOSITE KNITTING');
+  
+  // Disable/hide buttons if no permission
+  if(!canUserSeeCompany('GMS TEXTILES LTD')) {
+    document.getElementById('btnTextile').classList.add('disabled');
+    document.getElementById('btnTextile').disabled = true;
+  }
+  if(!canUserSeeCompany('GMS COMPOSITE KNITTING')) {
+    document.getElementById('btnComposite').classList.add('disabled');
+    document.getElementById('btnComposite').disabled = true;
+  }
+  
+  // Populate company dropdowns based on permissions
+  populateCompanyDropdowns();
+  
+  // Update UI
+  updateCompanyUI(window.currentCompany);
+}
+
+// 📋 Populate company dropdowns
+function populateCompanyDropdowns() {
+  const entrySelect = document.getElementById('entryCompany');
+  const reportSelect = document.getElementById('reportCompany');
+  
+  // Clear existing options
+  if(entrySelect) entrySelect.innerHTML = '';
+  if(reportSelect) reportSelect.innerHTML = '';
+  
+  // Add options based on permissions
+  window.userAllowedCompanies.forEach(company => {
+    if(entrySelect) {
+      const option1 = document.createElement('option');
+      option1.value = company;
+      option1.text = company;
+      entrySelect.appendChild(option1);
+    }
+    if(reportSelect) {
+      const option2 = document.createElement('option');
+      option2.value = company;
+      option2.text = company;
+      reportSelect.appendChild(option2);
+    }
+  });
+  
+  // Set default selection
+  if(entrySelect && window.userAllowedCompanies.length > 0) {
+    entrySelect.value = window.currentCompany;
+  }
+  if(reportSelect && window.userAllowedCompanies.length > 0) {
+    reportSelect.value = window.currentCompany;
+  }
+}
 
 window.urlCompanyName = function(company){
   if(company==="GMS COMPOSITE KNITTING") return "GMS COMPOSITE KNITTING IND LTD.";
@@ -1661,10 +1794,12 @@ const db=getFirestore(app);
 const user=JSON.parse(localStorage.getItem("gmsUser")||"null");
 if(!user){window.location.href="login.html";}
 
-const userRole=user.role||"user";
-const userMCDs=Array.isArray(user.mcdAccess)?user.mcdAccess:(user.mcd?[user.mcd]:[]);
-const needleAccess=user.needleAccess||false;
-const manpowerAccess=user.manpowerAccess||false;
+// 🔐 Sync user data to window scope
+window.user = user;
+window.userRole = user.role || "user";
+const userMCDs = Array.isArray(user.mcdAccess) ? user.mcdAccess : (user.mcd ? [user.mcd] : []);
+const needleAccess = user.needleAccess || false;
+const manpowerAccess = user.manpowerAccess || false;
 
 const ALL_MCD=[
   "GREY FABRIC MCD","SHIPMENT MCD","BILLING SECTION","OUTER WEAR MCD",
@@ -1682,38 +1817,7 @@ const FLOOR_OPENING={
 let accessoriesChart=null,needleChart=null,greyChart=null,billingChart=null,needleIssueChart=null;
 let selectedBackupData=null;
 
-// Initialize company switch UI
-function initCompanySwitch() {
-  const company = window.getCurrentCompany();
-  document.getElementById('btnTextile').classList.toggle('active', company === 'GMS TEXTILES LTD');
-  document.getElementById('btnComposite').classList.toggle('active', company === 'GMS COMPOSITE KNITTING');
-  
-  const badgeText = company === 'GMS TEXTILES LTD' ? '🏭 TEXTILES' : '🏢 COMPOSITE';
-  const badgeClass = company === 'GMS TEXTILES LTD' ? '' : 'composite';
-  
-  document.getElementById('companyBadge').innerHTML = badgeText;
-  document.getElementById('companyBadge').className = 'companyBadge ' + badgeClass;
-  document.getElementById('dashCompanyBadge').innerHTML = badgeText;
-  document.getElementById('dashCompanyBadge').className = 'companyBadge ' + badgeClass;
-  document.getElementById('entryCompanyBadge').innerHTML = badgeText;
-  document.getElementById('entryCompanyBadge').className = 'companyBadge ' + badgeClass;
-  document.getElementById('reportCompanyBadge').innerHTML = badgeText;
-  document.getElementById('reportCompanyBadge').className = 'companyBadge ' + badgeClass;
-  document.getElementById('needleCompanyBadge').innerHTML = badgeText;
-  document.getElementById('needleCompanyBadge').className = 'companyBadge ' + badgeClass;
-  document.getElementById('backupCompanyBadge').innerHTML = badgeText;
-  document.getElementById('backupCompanyBadge').className = 'companyBadge ' + badgeClass;
-  
-  document.getElementById('entryCompany').value = company;
-  document.getElementById('reportCompany').value = company;
-  
-  // Show correct dashboard
-  const isTextile = company === 'GMS TEXTILES LTD';
-  document.getElementById('textileDashboard').style.display = isTextile ? 'block' : 'none';
-  document.getElementById('compositeDashboard').style.display = isTextile ? 'none' : 'block';
-}
-
-document.getElementById("loginInfo").innerText=`${user.name||"User"} • ${userRole.toUpperCase()} ${userRole==="user"?"• "+userMCDs.join(", "):""}`;
+document.getElementById("loginInfo").innerText=`${user.name||"User"} • ${window.userRole.toUpperCase()} ${window.userRole==="user"?"• "+userMCDs.join(", "):""}`;
 
 // ===== OFFLINE SYNC & QUOTA SYSTEM =====
 const SYNC_QUEUE_KEY = "GMS_STEALTH_QUEUE";
@@ -1738,7 +1842,7 @@ window.saveDataOffline = function(collectionName, data, serialPrefix = "") {
     let serial = serialPrefix ? `${serialPrefix}-${String(counters[serialPrefix]).padStart(3,'0')}` : id;
 
     queue.push({
-        id, collection: collectionName, serial, data: {...data, serialNumber: serial, company: window.getCurrentCompany()},
+        id, collection: collectionName, serial, data: {...data, serialNumber: serial, company: window.currentCompany},
         user: user.name || user.email || "System",
         time: new Date().toLocaleString(),
         status: "pending"
@@ -1747,7 +1851,7 @@ window.saveDataOffline = function(collectionName, data, serialPrefix = "") {
 
     showToast("✅ Saved Successfully");
     updateLocalUI(collectionName, data);
-    if(userRole === "admin" || userRole === "full") renderAdminSyncTable();
+    if(window.userRole === "admin" || window.userRole === "full") renderAdminSyncTable();
 };
 
 // 2. Auto-Sync (প্রতি ৫ মিনিট)
@@ -1780,7 +1884,7 @@ window.autoSyncQueue = async function() {
             );
             setQueue(newQueue);
             
-            if(userRole === "admin" || userRole === "full") {
+            if(window.userRole === "admin" || window.userRole === "full") {
                 renderAdminSyncTable();
                 showToast(`☁️ ${syncedIds.length} items synced automatically`);
             }
@@ -1854,7 +1958,7 @@ function updateLocalUI(col, data) {
 
 // 6. এডমিন কোটা অ্যালার্ট
 window.triggerQuotaAlert = function(type, details = "") {
-    if(userRole !== "admin" && userRole !== "full") return;
+    if(window.userRole !== "admin" && window.userRole !== "full") return;
     let alerts = getQuotaAlerts();
     if(!alerts[type]) {
         alerts[type] = { msg: details || `${type.toUpperCase()} LIMIT EXHAUSTED`, time: new Date().toLocaleString() };
@@ -1876,7 +1980,7 @@ function renderQuotaAlerts() {
     panel.style.display = "block";
     list.innerHTML = keys.map(k => `
         <div class="quota-alert-item">
-            <div><span class="msg">🔴 ${k}</span><div style="color:var(--muted);font-size:11px;margin-top:2px;">${alerts[k].msg}</div></div>
+            <div><span class="msg"> ${k}</span><div style="color:var(--muted);font-size:11px;margin-top:2px;">${alerts[k].msg}</div></div>
             <span class="time">${alerts[k].time}</span>
         </div>
     `).join('');
@@ -1903,16 +2007,16 @@ function dailyQuotaReset() {
 function today(){return new Date().toISOString().slice(0,10);}
 function parseNum(v){return Number(String(v||0).replace(/,/g,""))||0;}
 function fmt(v){return parseNum(v).toLocaleString("en-US");}
-function allowedMCDList(){return (userRole==="admin"||userRole==="full")?ALL_MCD:userMCDs;}
-function canAccess(mcd){return userRole==="admin"||userRole==="full"||userMCDs.includes(mcd);}
-function isNeedleAllowed(){return userRole==="admin"||userRole==="full"||needleAccess===true;}
-function isAccessoriesAllowed(){return userRole==="admin"||userRole==="full"||userMCDs.includes("ACCESSORIES MCD");}
-function isGreyAllowed(){return userRole==="admin"||userRole==="full"||userMCDs.includes("GREY FABRIC MCD");}
-function isBillingAllowed(){return userRole==="admin"||userRole==="full"||userMCDs.includes("BILLING SECTION");}
-function isManpowerAllowed(){return userRole==="admin"||userRole==="full"||manpowerAccess===true||manpowerAccess==="all"||manpowerAccess==="selected";}
+function allowedMCDList(){return (window.userRole==="admin"||window.userRole==="full")?ALL_MCD:userMCDs;}
+function canAccess(mcd){return window.userRole==="admin"||window.userRole==="full"||userMCDs.includes(mcd);}
+function isNeedleAllowed(){return window.userRole==="admin"||window.userRole==="full"||needleAccess===true;}
+function isAccessoriesAllowed(){return window.userRole==="admin"||window.userRole==="full"||userMCDs.includes("ACCESSORIES MCD");}
+function isGreyAllowed(){return window.userRole==="admin"||window.userRole==="full"||userMCDs.includes("GREY FABRIC MCD");}
+function isBillingAllowed(){return window.userRole==="admin"||window.userRole==="full"||userMCDs.includes("BILLING SECTION");}
+function isManpowerAllowed(){return window.userRole==="admin"||window.userRole==="full"||manpowerAccess===true||manpowerAccess==="all"||manpowerAccess==="selected";}
 
 function setupRoleUI(){
-  if(userRole!=="admin"){
+  if(window.userRole!=="admin"){
     document.getElementById("adminNav").style.display="none";
     document.getElementById("backupNav").style.display="none";
   }
@@ -2154,7 +2258,7 @@ function updateLimitBox(firebase){
   else{signal.className="statusSignal stop";signal.innerHTML='<i class="fas fa-circle" style="font-size:10px"></i> DANGER';}
   
   // 🔴 কোটা অ্যালার্ট ট্রিগার
-  if(userRole === "admin" || userRole === "full") {
+  if(window.userRole === "admin" || window.userRole === "full") {
     if(pct >= 95) triggerQuotaAlert("Storage", `Firestore storage at ${pct.toFixed(1)}%. Backup & clear recommended.`);
     else if(pct >= 85) triggerQuotaAlert("Storage Warning", `Storage at ${pct.toFixed(1)}%. Monitor closely.`);
   }
@@ -2292,23 +2396,42 @@ async function loadNotices(){
     document.getElementById("noticeMove").innerText=rows.length?rows.slice(0,5).map(n=>`📢 ${n.user||"User"}: ${n.text||""}`).join("      "):"📢 No live notice found";
   }catch(e){
     console.log("Notice error:",e);
-    document.getElementById("noticeMove").innerText="📢 Notice loading problem";
+    document.getElementById("noticeMove").innerText=" Notice loading problem";
   }
 }
 
 async function updateLastActive(){if(user.id){try{await updateDoc(doc(db,"users",user.id),{lastActive:new Date().toISOString()});}catch(e){}}}
 
 async function loadDashboardStock(){
-  const company = window.getCurrentCompany();
-  
-  // Composite: Show empty dashboard, no data loading
-  if(company === "GMS COMPOSITE KNITTING") {
+  //  পারমিশন চেক - ইউজারের এই কোম্পানি এক্সেস আছে কিনা
+  if(!canUserSeeCompany(window.currentCompany)) {
+    // ❌ এক্সেস নেই - সব হাইড করুন
     document.getElementById('textileDashboard').style.display = 'none';
-    document.getElementById('compositeDashboard').style.display = 'block';
+    document.getElementById('compositeDashboard').style.display = 'none';
+    
+    // এরর মেসেজ দেখান
+    const noAccessEl = document.getElementById('noAccessMessage');
+    if(noAccessEl) {
+      noAccessEl.style.display = 'block';
+    } else {
+      alert('⚠️ আপনার এই কোম্পানির এক্সেস নেই। Admin থেকে permission নিন।');
+    }
     return;
   }
   
-  // Textile: Load all data
+  // ✅ এক্সেস আছে - নো অ্যাক্সেস মেসেজ হাইড
+  const noAccessEl = document.getElementById('noAccessMessage');
+  if(noAccessEl) noAccessEl.style.display = 'none';
+  
+  // Composite: শুধু কম্পোজিট ড্যাশবোর্ড শো, টেক্সটাইল লোড করবে না
+  if(window.currentCompany === 'GMS COMPOSITE KNITTING') {
+    document.getElementById('textileDashboard').style.display = 'none';
+    document.getElementById('compositeDashboard').style.display = 'block';
+    // ⚠️ Composite-এ কোনো ডাটা লোড করবে না (শুধু "Under Development" মেসেজ)
+    return;
+  }
+  
+  // ✅ Textile: সব ডাটা লোড করবে
   document.getElementById('textileDashboard').style.display = 'block';
   document.getElementById('compositeDashboard').style.display = 'none';
   
@@ -2349,9 +2472,9 @@ async function loadDashboardStock(){
       if(mcd==="ACCESSORIES MCD"){
         html+=`<div class="mcdBox"><h3>📦 ACCESSORIES MCD</h3><div class="miniRow"><span>📦 Accessories With Sample</span><span class="miniValue">${fmt(accessories)}</span></div><div class="miniRow"><span>🧵 Sewing Thread</span><span class="miniValue">${fmt(sewing)}</span></div><div class="miniRow"><span>📏 Twill Tape</span><span class="miniValue">${fmt(twill)}</span></div><div class="miniChart"><div class="miniFill"></div></div></div>`;
       }else if(mcd==="GREY FABRIC MCD"){
-        html+=`<div class="mcdBox"><h3>🏭 GREY FABRIC MCD</h3><div class="miniRow"><span>📦 Today Closing Balance</span><span class="miniValue">${fmt(grey.total)}</span></div><div class="miniRow"><span>📊 Closing Chart</span><span class="miniValue">LIVE</span></div><div class="miniChart"><div class="miniFill" style="width:65%"></div></div></div>`;
+        html+=`<div class="mcdBox"><h3>🏭 GREY FABRIC MCD</h3><div class="miniRow"><span>📦 Today Closing Balance</span><span class="miniValue">${fmt(grey.total)}</span></div><div class="miniRow"><span> Closing Chart</span><span class="miniValue">LIVE</span></div><div class="miniChart"><div class="miniFill" style="width:65%"></div></div></div>`;
       }else if(mcd==="BILLING SECTION"){
-        html+=`<div class="mcdBox"><h3>👨‍ BILLING SECTION</h3><div class="miniRow"><span>👨‍ Total Manpower</span><span class="miniValue">${fmt(billing.total)}</span></div><div class="miniRow"><span>🏖 Leave</span><span class="miniValue">${fmt(billing.leave)}</span></div><div class="miniRow"><span>❌ Absent</span><span class="miniValue">${fmt(billing.absent)}</span></div><div class="miniRow"><span>✅ Today Present</span><span class="miniValue">${fmt(billing.present)}</span></div><div class="miniChart"><div class="miniFill" style="width:55%"></div></div></div>`;
+        html+=`<div class="mcdBox"><h3>👨‍ BILLING SECTION</h3><div class="miniRow"><span>‍ Total Manpower</span><span class="miniValue">${fmt(billing.total)}</span></div><div class="miniRow"><span>🏖 Leave</span><span class="miniValue">${fmt(billing.leave)}</span></div><div class="miniRow"><span>❌ Absent</span><span class="miniValue">${fmt(billing.absent)}</span></div><div class="miniRow"><span>✅ Today Present</span><span class="miniValue">${fmt(billing.present)}</span></div><div class="miniChart"><div class="miniFill" style="width:55%"></div></div></div>`;
       }else{
         html+=`<div class="mcdBox"><h3>📂 ${mcd}</h3>${isManpowerAllowed()?`<div class="miniRow"><span>👨‍ Manpower</span><span class="miniValue">${fmt(mp.count)}</span></div><div class="miniRow"><span>💰 Salary</span><span class="miniValue">${fmt(mp.salary)}</span></div>`:""}<div class="miniRow"><span>📊 Stock / Report</span><span class="miniValue">Pending</span></div><div class="miniChart"><div class="miniFill" style="width:35%"></div></div></div>`;
       }
@@ -2378,7 +2501,7 @@ function getRowMonth(row){let dt=row.date||row.postingDate||row.entryDate||(row.
 function backupDocId(row){return row._docId||row.id||row.challanNo||row.gatePlanNo||row.gatePassNo||(row.date||"no-date")+"-"+Date.now()+"-"+Math.floor(Math.random()*999999);}
 
 window.backupAllData=async function(){
-  if(userRole!=="admin"){alert("Admin only");return;}
+  if(window.userRole!=="admin"){alert("Admin only");return;}
   try{
     let backup={date:new Date().toISOString(),backupMonths:[],data:{}};
     const cols=["greyFabricStock","accessoriesInventory","billingManpowerReport","dailyPosting","sewingThread","twillTape","accessoriesSample","liveNotices","manpower","needleDailyReport","gatePlans","challanGatePass"];
@@ -2395,7 +2518,7 @@ window.backupAllData=async function(){
 };
 
 window.loadRestoreFile=function(event){
-  if(userRole!=="admin"){alert("Admin only");return;}
+  if(window.userRole!=="admin"){alert("Admin only");return;}
   let file=event.target.files[0];if(!file)return;
   let reader=new FileReader();
   reader.onload=function(e){
@@ -2413,7 +2536,7 @@ window.loadRestoreFile=function(event){
 };
 
 window.restoreSelectedMonth=async function(){
-  if(userRole!=="admin"){alert("Admin only");return;}
+  if(window.userRole!=="admin"){alert("Admin only");return;}
   if(!selectedBackupData){alert("Please select backup JSON file first");return;}
   let month=document.getElementById("restoreMonthSelect").value;if(!month){alert("Please select month");return;}
   if(!confirm("Restore data for month: "+month+" ?"))return;
@@ -2428,7 +2551,7 @@ window.restoreSelectedMonth=async function(){
 };
 
 window.clearOldData=async function(){
-  if(userRole!=="admin"){alert("Admin only");return;}
+  if(window.userRole!=="admin"){alert("Admin only");return;}
   let backupStatus=localStorage.getItem("backupStatus")||"";
   if(backupStatus!=="DONE"&&!backupStatus.startsWith("RESTORED")){alert("আগে Backup Now করে JSON download নিন। Backup DONE না হলে data clear হবে না।");return;}
   let now=new Date();let currentMonth=now.getFullYear()+"-"+String(now.getMonth()+1).padStart(2,"0");
@@ -2444,7 +2567,7 @@ window.clearOldData=async function(){
 };
 
 window.removeRestoredMonth=async function(){
-  if(userRole!=="admin"){alert("Admin only");return;}
+  if(window.userRole!=="admin"){alert("Admin only");return;}
   let month=localStorage.getItem("lastRestoredMonth")||"";if(!month){alert("No restored month found.");return;}
   if(!confirm("Remove restored month data: "+month+" ?"))return;
   const cols=["greyFabricStock","accessoriesInventory","billingManpowerReport","dailyPosting","sewingThread","twillTape","accessoriesSample","liveNotices","needleDailyReport","gatePlans","challanGatePass"];
@@ -2457,7 +2580,7 @@ window.removeRestoredMonth=async function(){
 
 // ===== INITIALIZATION =====
 setupRoleUI();
-initCompanySwitch(); // Initialize company switch
+setupCompanyPermissions(); // 🔐 Setup company permissions
 loadDashboardStock();
 loadNotices();
 updateLastActive();
@@ -2469,7 +2592,7 @@ setInterval(loadNotices,60000);
 // Offline Sync Init
 document.addEventListener("DOMContentLoaded", () => {
   dailyQuotaReset();
-  if(userRole === "admin" || userRole === "full") {
+  if(window.userRole === "admin" || window.userRole === "full") {
     renderQuotaAlerts();
     renderAdminSyncTable();
   }
@@ -2481,7 +2604,7 @@ document.addEventListener("DOMContentLoaded", () => {
   document.addEventListener("visibilitychange", () => {
     if(document.visibilityState === "visible") {
       dailyQuotaReset();
-      if(userRole === "admin" || userRole === "full") {
+      if(window.userRole === "admin" || window.userRole === "full") {
         renderQuotaAlerts();
         renderAdminSyncTable();
       }
