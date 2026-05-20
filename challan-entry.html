@@ -32,8 +32,8 @@ button{border:0;border-radius:9px;padding:11px 16px;color:#fff;font-weight:900;c
         <option>ACCESSORIES MCD</option><option>GREY FABRIC MCD</option><option>SHIPMENT MCD</option><option>BILLING SECTION</option><option>NEEDLE MCD</option><option>OUTER WEAR MCD</option><option>YARN MCD</option><option>PRINTING MCD</option><option>JHUT MCD</option><option>GENERAL MCD</option><option>LEFTOVER MCD</option><option>FINISH FABRIC MCD</option><option>YARN DYEING MCD</option><option>CHEMICAL MCD</option><option>GENERAL TECHNICAL MCD</option>
       </select></div>
       <div><label>Date</label><input id="date" type="date"></div>
-      <div><label>Challan No</label><input id="challanNo" readonly placeholder="Loading..."></div>
-      <div><label>Gate Pass No</label><input id="gatePassNo" readonly placeholder="Loading..."></div>
+      <div><label>Challan No</label><input id="challanNo" readonly placeholder="Auto generated"></div>
+      <div><label>Gate Pass No</label><input id="gatePassNo" readonly placeholder="Auto generated"></div>
     </div>
   </div>
 
@@ -88,7 +88,7 @@ FAX : +88-02-...........................</textarea></div>
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-app.js";
-import { getFirestore, doc, setDoc, getDoc, collection, runTransaction } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-firestore.js";
+import { getFirestore, doc, setDoc, getDoc, collection } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-firestore.js";
 
 const firebaseConfig={
   apiKey:"AIzaSyD-wBCF5eeWMHobLFOhBzKW7aB2pagz9-w",
@@ -102,7 +102,7 @@ const firebaseConfig={
 const app=initializeApp(firebaseConfig), db=getFirestore(app), $=id=>document.getElementById(id);
 let editMode=false;
 
-// 🔥 Device ID for offline tracking
+// 🔥 Device ID
 function getDeviceId(){
   let did=localStorage.getItem("gms_device_id");
   if(!did){ did="D"+Math.random().toString(36).substr(2,9).toUpperCase(); localStorage.setItem("gms_device_id",did); }
@@ -114,11 +114,10 @@ function today(){return new Date().toISOString().slice(0,10)}
 function yy(){return new Date($("date").value||new Date()).getFullYear()} 
 function pad(n){return String(n).padStart(4,"0")}
 
-// 🔥 TIME-BASED ID GENERATOR (For Offline/Limit Mode)
-// Format: CH-2026-15453099 (HourMinSec + Random)
+// 🔥 TIME-BASED ID for offline
 function generateTimeBasedId(){
   const now=new Date();
-  const timeStr = String(now.getHours()).padStart(2,'0') + String(now.getMinutes()).padStart(2,'0') + String(now.getSeconds()).padStart(2,'0');
+  const timeStr = String(now.getHours()).padStart(2,'0') + String(now.getMinutes()).padStart(2,'0') + String(now.getSeconds()).padStart(2,'0') + String(now.getMilliseconds()).padStart(3,'0');
   const rand = Math.floor(Math.random()*90)+10;
   return `CH-${yy()}-${timeStr}${rand}`;
 }
@@ -131,40 +130,36 @@ window.toCompanyChange=()=>{let o=$("toCompany").value==="OTHER FACTORY";$("toCo
 function syncTo(){let n=toCompanyName();$("fromMillTo").value=n;if(!$("gateMs").value||$("gateMs").dataset.auto!=="0"){$("gateMs").value=n;$("gateMs").dataset.auto="1"}}
 $("companyManual").addEventListener("input",updateTitle);$("toCompanyManual").addEventListener("input",syncTo);$("gateMs").addEventListener("input",()=>$("gateMs").dataset.auto="0");
 
-// 🔥 CRITICAL FIX: Read Last Number (DO NOT INCREMENT YET)
-// This ensures reload doesn't skip numbers.
-async function getNextAvailableNumber(){
+// 🔥 Get next sequential number from Firebase
+async function getNextSequentialNumber(){
   try{
     const y=yy(), ref=doc(db,"serialCounters","challan_"+y);
     const s=await getDoc(ref);
-    
-    // If exists, take last + 1. If not, start at 1.
     const last = s.exists() ? Number(s.data().last || 0) : 0;
-    const nextNum = last + 1;
-    
-    return {
-      ch: `CH-${y}-${pad(nextNum)}`,
-      gp: `GP-${y}-${pad(nextNum)}`,
-      num: nextNum,
-      source: "firebase"
-    };
+    return { ch:`CH-${y}-${pad(last+1)}`, gp:`GP-${y}-${pad(last+1)}`, num:last+1, source:"firebase" };
   }catch(e){
-    console.log("Firebase read failed (Limit?), using Time-Based ID");
-    let ch = generateTimeBasedId();
-    return { ch: ch, gp: ch.replace("CH","GP"), num: 0, source: "offline" };
+    return null; // Firebase unavailable
   }
 }
 
-// 🔥 Update the input box with the calculated number
 async function loadNextNumberToBox(){
   if(editMode) return;
-  let data = await getNextAvailableNumber();
-  $("challanNo").value = data.ch;
-  $("gatePassNo").value = data.gp;
   
-  // Store current number in a global variable for saving
-  window.currentChallanNum = data.num; 
-  window.currentChallanId = data.ch;
+  // Try Firebase first
+  let data = await getNextSequentialNumber();
+  
+  if(data){
+    $("challanNo").value = data.ch;
+    $("gatePassNo").value = data.gp;
+    window.currentChallanNum = data.num;
+    window.currentSource = "firebase";
+  }else{
+    // Fallback to time-based
+    let ch = generateTimeBasedId();
+    $("challanNo").value = ch;
+    $("gatePassNo").value = ch.replace("CH","GP");
+    window.currentSource = "offline";
+  }
 }
 
 function rowHtml(d={}){return `<tr><td class="sl"></td><td><input class="item" value="${d.item||""}"></td><td><input class="color" value="${d.color||""}"></td><td><input class="mcDia" value="${d.mcDia||""}"></td><td><input class="finDia" value="${d.finDia||""}"></td><td><input class="unit" value="${d.unit||""}"></td><td><input class="qty" type="number" value="${d.qty||""}" oninput="calcTotals()"></td><td><input class="pkg" type="number" value="${d.pkg||""}" oninput="calcTotals()"></td><td><input class="remarks" value="${d.remarks||""}"></td><td><input class="bag" type="number" value="${d.bag||""}" oninput="calcTotals()"></td><td><input class="purpose" value="${d.purpose||""}"></td><td><button class="red" onclick="delRow(this)">X</button></td></tr>`}
@@ -176,7 +171,7 @@ function getRows(){let a=[];document.querySelectorAll("#rows tr").forEach(tr=>{l
 window.calcTotals=()=>{let r=getRows();$("grandTotal").innerText=r.reduce((a,b)=>a+b.qty,0);$("totalPkg").innerText=r.reduce((a,b)=>a+b.pkg,0);$("totalBag").innerText=r.reduce((a,b)=>a+b.bag,0)}
 function dataObj(){let rows=getRows();return {mcd:$("mcd").value,date:$("date").value,challanNo:$("challanNo").value,gatePassNo:$("gatePassNo").value,company:companyName(),companyType:$("company").value,companyManual:$("companyManual").value.trim(),companyAddress:$("companyAddress").value,toCompany:toCompanyName(),toCompanyType:$("toCompany").value,toCompanyManual:$("toCompanyManual").value.trim(),toAddress:$("toAddress").value,buyer:$("buyer").value.trim(),orderNo:$("orderNo").value.trim(),transportNo:$("transportNo").value.trim(),driverName:$("driverName").value.trim(),vehicleNo:$("vehicleNo").value.trim(),gateMs:$("gateMs").value.trim(),goodsBy:$("goodsBy").value.trim(),fromMillTo:$("fromMillTo").value.trim(),yarnCount:$("yarnCount").value.trim(),brand:$("brand").value.trim(),cardCombed:$("cardCombed").value.trim(),lotNo:$("lotNo").value.trim(),rows,grandTotalQty:rows.reduce((a,b)=>a+b.qty,0),totalPkg:rows.reduce((a,b)=>a+b.pkg,0),totalBag:rows.reduce((a,b)=>a+b.bag,0),deviceId:getDeviceId(),updatedAt:new Date().toISOString(),createdAt:editMode?undefined:new Date().toISOString()}}
 
-// 🔥 FIXED SAVE LOGIC: Commit Counter ONLY on Success
+// 🔥 FIXED SAVE: Works Online & Offline
 window.saveData=async()=>{
   try{
     let d=dataObj(); 
@@ -185,65 +180,53 @@ window.saveData=async()=>{
     const challanNo = d.challanNo;
     const year = yy();
     
-    // 🔥 1. Try to Save Data & Update Counter in ONE Transaction (Safe for Multi-User)
+    // 🔥 Try Firebase First
     try{
-      const counterRef = doc(db,"serialCounters","challan_"+year);
+      await setDoc(doc(db,"challanGatePass",challanNo),d,{merge:true});
       
-      await runTransaction(db, async (transaction) => {
-        // Check if this challanNo already exists (prevent duplicates)
-        const challanRef = doc(db, "challanGatePass", challanNo);
-        const challanSnap = await transaction.get(challanRef);
-        if (challanSnap.exists()) {
-           throw "Error: Challan Number already exists!";
-        }
-
-        // Save the Data
-        transaction.set(challanRef, d);
-
-        // ONLY NOW Update the Counter (Increment Last)
-        // If Firebase is full, this transaction will fail and catch block will handle it
-        const counterSnap = await transaction.get(counterRef);
-        const currentLast = counterSnap.exists() ? counterSnap.data().last : 0;
-        
-        // We only update counter if we are using sequential numbers
-        if(d.source !== "offline"){
-             transaction.set(counterRef, { last: currentLast + 1, year: year, updatedAt: new Date().toISOString() }, {merge:true});
-        }
-      });
-
-      toast("✅ Saved to Firebase (Seq: " + challanNo + ")");
-
-    }catch(e){
-      // 🔥 2. Fallback: If Transaction Fails (Limit Reached or Duplicate)
-      console.log("Firebase Save Failed:", e);
-      
-      // If it failed because of duplicate number, generate new Time-Based ID and retry
-      if(String(e).includes("already exists")){
-         let newId = generateTimeBasedId();
-         d.challanNo = newId;
-         d.gatePassNo = newId.replace("CH","GP");
-         // Retry save without transaction counter update
-         await setDoc(doc(db,"challanGatePass",newId),d);
-         toast("⚠️ Number Taken! Saved as: " + newId);
-      } 
-      // If it failed because of Limit/Quota
-      else {
-         const deviceId=getDeviceId();
-         const queueKey="GMS_CHALLAN_OFFLINE_"+deviceId;
-         let queue=JSON.parse(localStorage.getItem(queueKey)||"[]");
-         
-         // Use Time-Based ID for offline to ensure uniqueness
-         d.challanNo = generateTimeBasedId();
-         d.gatePassNo = d.challanNo.replace("CH","GP");
-         d.status = "pending";
-
-         queue.push({ id:d.challanNo, data:d, status:"pending", createdAt:new Date().toISOString() });
-         localStorage.setItem(queueKey,JSON.stringify(queue));
-         toast("📦 Saved Offline (Limit Reached). ID: "+d.challanNo);
+      // Update counter if using sequential number
+      if(window.currentSource === "firebase" && window.currentChallanNum){
+        await setDoc(doc(db,"serialCounters","challan_"+year),{
+          last:window.currentChallanNum,
+          year:year,
+          updatedAt:new Date().toISOString()
+        },{merge:true});
       }
+      
+      toast("✅ Saved to Firebase: "+challanNo);
+      
+    }catch(e){
+      // 🔥 Firebase Failed - Save Offline
+      console.log("Firebase failed, saving offline:",e.message);
+      
+      const deviceId=getDeviceId();
+      const queueKey="GMS_CHALLAN_OFFLINE_"+deviceId;
+      let queue=JSON.parse(localStorage.getItem(queueKey)||"[]");
+      
+      // Generate unique offline ID
+      const offlineId = generateTimeBasedId();
+      d.challanNo = offlineId;
+      d.gatePassNo = offlineId.replace("CH","GP");
+      d.status = "pending";
+      d.deviceId = deviceId;
+      
+      queue.push({
+        id:offlineId,
+        data:d,
+        status:"pending",
+        createdAt:new Date().toISOString(),
+        deviceId:deviceId
+      });
+      
+      localStorage.setItem(queueKey,JSON.stringify(queue));
+      toast("📦 Saved Offline: "+offlineId+" (Device: "+deviceId+")");
+      
+      // Show offline count
+      const pendingCount = queue.filter(x=>x.status==="pending").length;
+      console.log(`📦 Total offline items: ${pendingCount}`);
     }
     
-    // 🔥 3. Prepare for NEXT Entry (Calculate Next Number AFTER Save)
+    // 🔥 Prepare for NEXT entry
     if(!editMode){
       ["buyer","orderNo","transportNo","driverName","vehicleNo","yarnCount","brand","cardCombed","lotNo"].forEach(id=>$(id).value="");
       $("rows").innerHTML="";
@@ -251,7 +234,6 @@ window.saveData=async()=>{
       calcTotals();
       syncTo();
       
-      // Load the NEXT number into the box
       await loadNextNumberToBox();
     }else{
       editMode=false;
@@ -260,37 +242,77 @@ window.saveData=async()=>{
 
   }catch(e){
     console.error(e);
-    toast("❌ Critical Error: "+e.message,"#dc2626")
+    toast("❌ Error: "+e.message,"#dc2626")
   }
 };
 
-// 🔥 AUTO-SYNC: Check every 5 minutes
+// 🔥 AUTO-SYNC: Sync offline data to Firebase when available
 async function autoSyncOfflineData(){
   const deviceId=getDeviceId();
   const queueKey="GMS_CHALLAN_OFFLINE_"+deviceId;
   let queue=JSON.parse(localStorage.getItem(queueKey)||"[]");
+  
   const pending=queue.filter(x=>x.status==="pending");
+  if(pending.length===0){
+    console.log("✅ No offline data to sync");
+    return;
+  }
   
-  if(pending.length===0) return;
+  console.log(`🔄 Starting sync of ${pending.length} offline items...`);
   
-  console.log(`🔄 Syncing ${pending.length} offline items...`);
-  let synced=0;
+  let syncedCount=0;
+  let failedCount=0;
+  
   for(let item of pending){
     try{
+      // Try to save to Firebase
       await setDoc(doc(db,"challanGatePass",item.id),item.data,{merge:true});
+      
+      // Update counter if it's a sequential number
+      if(item.data.challanNo && item.data.challanNo.match(/CH-\d{4}-\d{4}/)){
+        const year = item.data.challanNo.split("-")[1];
+        const num = parseInt(item.data.challanNo.split("-")[2]);
+        await setDoc(doc(db,"serialCounters","challan_"+year),{
+          last:num,
+          year:year,
+          updatedAt:new Date().toISOString()
+        },{merge:true});
+      }
+      
       item.status="synced";
-      synced++;
-    }catch(e){}
+      item.syncedAt=new Date().toISOString();
+      syncedCount++;
+      console.log(`✅ Synced: ${item.id}`);
+      
+    }catch(e){
+      console.log(`❌ Failed to sync ${item.id}:`,e.message);
+      failedCount++;
+    }
   }
-  if(synced>0) localStorage.setItem(queueKey,JSON.stringify(queue));
+  
+  // Update queue
+  localStorage.setItem(queueKey,JSON.stringify(queue));
+  
+  if(syncedCount>0){
+    toast(`🔄 Synced ${syncedCount} offline challan(s) to Firebase!`);
+    console.log(`✅ Sync complete: ${syncedCount} synced, ${failedCount} failed`);
+  }
+  
+  return {synced:syncedCount, failed:failedCount};
 }
-setInterval(autoSyncOfflineData, 300000);
+
+// Run auto-sync every 3 minutes (180000ms)
+setInterval(autoSyncOfflineData, 180000);
+
+// Also sync on page load
+setTimeout(autoSyncOfflineData, 2000);
 
 window.goReport=()=>{location.href="challan-report.html"}
 
 async function loadEdit(){
   let no=new URLSearchParams(location.search).get("challanNo"); 
   if(!no)return false; 
+  
   try{
     let s=await getDoc(doc(db,"challanGatePass",no)); 
     if(s.exists()){
@@ -305,6 +327,7 @@ async function loadEdit(){
       return true;
     }
   }catch(e){}
+  
   alert("Not found"); return false;
 }
 
@@ -312,8 +335,10 @@ async function init(){
   $("date").value=today();
   let e=await loadEdit();
   if(!e){
-    await loadNextNumberToBox(); // Load Initial Number
+    await loadNextNumberToBox();
     addBlankRows(); syncTo(); updateTitle();
+    // Start sync
+    setTimeout(autoSyncOfflineData, 2000);
   }
 }
 init();
