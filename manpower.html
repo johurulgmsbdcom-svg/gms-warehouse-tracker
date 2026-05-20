@@ -179,7 +179,7 @@ button{
 <div class="top">
 
 Company:
-<select id="company">
+<select id="company" onchange="startRealtime()">
 <option>GMS TEXTILES LTD</option>
 <option>GMS COMPOSITE KNITTING</option>
 </select>
@@ -682,10 +682,11 @@ function filterSearch(){
   render(filtered);
 }
 
-// 🔥 FIXED: লোড হওয়ার আগে এক্সেস চেক করবে
+// 🔥 FIXED: কোম্পানি + MCD দুটোই ফিল্টার করবে
 function startRealtime(){
 
   let mcd = document.getElementById("mcd").value;
+  let company = document.getElementById("company").value; // 🔥 FIX
 
   document.getElementById("mcdTitle").innerText = mcd;
 
@@ -718,7 +719,8 @@ function startRealtime(){
 
         let x = docSnap.data();
 
-        if(x.mcd===mcd && canAccessManpower(mcd)){
+        // 🔥 FIX: শুধু সিলেক্টেড কোম্পানি এবং MCD এর ডাটাই দেখাবে
+        if(x.company===company && x.mcd===mcd && canAccessManpower(mcd)){
           rows.push(x);
         }
       });
