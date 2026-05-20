@@ -99,7 +99,9 @@ const firebaseConfig={
 };
 const app=initializeApp(firebaseConfig), db=getFirestore(app), $=id=>document.getElementById(id);
 let editMode=false;
-let localSerialCounter = 0; // 🔥 Local counter for unique IDs
+
+// 🔥 GLOBAL: Local counter for unique serial generation
+let localSerialCounter = 0;
 
 function toast(m,c="#16a34a"){const t=$("toast");t.innerText=m;t.style.background=c;t.style.display="block";setTimeout(()=>t.style.display="none",2500)}
 function today(){return new Date().toISOString().slice(0,10)} 
@@ -119,32 +121,12 @@ function generateLocalChallanNo(){
 function companyName(){return $("company").value==="OTHER FACTORY"?$("companyManual").value.trim():$("company").value}
 function toCompanyName(){return $("toCompany").value==="OTHER FACTORY"?$("toCompanyManual").value.trim():$("toCompany").value}
 function updateTitle(){$("topCompanyTitle").innerText=companyName()||"GMS TEXTILES LTD."}
+window.companyChange=()=>{let o=$("company").value==="OTHER FACTORY";$("companyManual").disabled=!o;if(!o)$("companyManual").value="";updateTitle()}
+window.toCompanyChange=()=>{let o=$("toCompany").value==="OTHER FACTORY";$("toCompanyManual").disabled=!o;if(!o)$("toCompanyManual").value="";syncTo()}
+function syncTo(){let n=toCompanyName();$("fromMillTo").value=n;if(!$("gateMs").value||$("gateMs").dataset.auto!=="0"){$("gateMs").value=n;$("gateMs").dataset.auto="1"}}
+$("companyManual").addEventListener("input",updateTitle);$("toCompanyManual").addEventListener("input",syncTo);$("gateMs").addEventListener("input",()=>$("gateMs").dataset.auto="0");
 
-window.companyChange=()=>{
-  let o=$("company").value==="OTHER FACTORY";
-  $("companyManual").disabled=!o;
-  if(!o)$("companyManual").value="";
-  updateTitle()
-}
-window.toCompanyChange=()=>{
-  let o=$("toCompany").value==="OTHER FACTORY";
-  $("toCompanyManual").disabled=!o;
-  if(!o)$("toCompanyManual").value="";
-  syncTo()
-}
-function syncTo(){
-  let n=toCompanyName();
-  $("fromMillTo").value=n;
-  if(!$("gateMs").value||$("gateMs").dataset.auto!=="0"){
-    $("gateMs").value=n;
-    $("gateMs").dataset.auto="1"
-  }
-}
-$("companyManual").addEventListener("input",updateTitle);
-$("toCompanyManual").addEventListener("input",syncTo);
-$("gateMs").addEventListener("input",()=>$("gateMs").dataset.auto="0");
-
-// 🔥 FIXED: Preview number (tries DB, fallbacks to local)
+// 🔥 FIXED: Preview number with local fallback
 async function previewNextNumber(){
   if($("challanNo").value && $("gatePassNo").value) return;
   try{
@@ -156,16 +138,21 @@ async function previewNextNumber(){
   }catch(e){
     console.log("preview number error (quota?):",e);
     // Fallback to local generation
-    let no = generateLocalChallanNo();
+    let no=generateLocalChallanNo();
     $("challanNo").value=no;
-    $("gatePassNo").value=no.replace("CH", "GP");
+    $("gatePassNo").value=no.replace("CH","GP");
   }
 }
 
-// 🔥 Transaction for DB counter (only if online/quota available)
+// 🔥 FIXED: Generate numbers with local fallback (no blocking)
 async function createNumbersIfNeeded(){
-  if(editMode) return; // Don't change number on edit
   const y=yy(), ref=doc(db,"serialCounters","challanGatePass_"+y);
+  const currentCh=$("challanNo").value;
+  const currentGp=$("gatePassNo").value;
+
+  // edit mode: keep old number
+  if(editMode && currentCh && currentGp) return;
+
   try{
     await runTransaction(db,async(tx)=>{
       const s=await tx.get(ref);
@@ -179,26 +166,27 @@ async function createNumbersIfNeeded(){
   }catch(e){
     console.log("Transaction failed, using local unique ID",e);
     // Fallback to local unique ID
-    let no = generateLocalChallanNo();
+    let no=generateLocalChallanNo();
     $("challanNo").value=no;
-    $("gatePassNo").value=no.replace("CH", "GP");
+    $("gatePassNo").value=no.replace("CH","GP");
   }
 }
 
 function rowHtml(d={}){return `<tr><td class="sl"></td><td><input class="item" value="${d.item||""}"></td><td><input class="color" value="${d.color||""}"></td><td><input class="mcDia" value="${d.mcDia||""}"></td><td><input class="finDia" value="${d.finDia||""}"></td><td><input class="unit" value="${d.unit||""}"></td><td><input class="qty" type="number" value="${d.qty||""}" oninput="calcTotals()"></td><td><input class="pkg" type="number" value="${d.pkg||""}" oninput="calcTotals()"></td><td><input class="remarks" value="${d.remarks||""}"></td><td><input class="bag" type="number" value="${d.bag||""}" oninput="calcTotals()"></td><td><input class="purpose" value="${d.purpose||""}"></td><td><button class="red" onclick="delRow(this)">X</button></td></tr>`}
-window.addRow=(d={})=>{$("rows").insertAdjacentHTML("beforeend",rowHtml(d));resetSl();calcTotals()}; window.addBlankRows=()=>{for(let i=0;i<5;i++)addRow()}; window.delRow=b=>{b.closest("tr").remove();resetSl();calcTotals()}
+window.addRow=(d={})=>{$("rows").insertAdjacentHTML("beforeend",rowHtml(d));resetSl();calcTotals()}; 
+window.addBlankRows=()=>{for(let i=0;i<5;i++)addRow()}; 
+window.delRow=b=>{b.closest("tr").remove();resetSl();calcTotals()}
 function resetSl(){document.querySelectorAll("#rows tr").forEach((tr,i)=>tr.querySelector(".sl").innerText=i+1)}
 function getRows(){let a=[];document.querySelectorAll("#rows tr").forEach(tr=>{let x={item:tr.querySelector(".item").value.trim(),color:tr.querySelector(".color").value.trim(),mcDia:tr.querySelector(".mcDia").value.trim(),finDia:tr.querySelector(".finDia").value.trim(),unit:tr.querySelector(".unit").value.trim(),qty:Number(tr.querySelector(".qty").value)||0,pkg:Number(tr.querySelector(".pkg").value)||0,remarks:tr.querySelector(".remarks").value.trim(),bag:Number(tr.querySelector(".bag").value)||0,purpose:tr.querySelector(".purpose").value.trim()}; if(x.item||x.qty||x.pkg||x.bag)a.push(x)});return a}
 window.calcTotals=()=>{let r=getRows();$("grandTotal").innerText=r.reduce((a,b)=>a+b.qty,0);$("totalPkg").innerText=r.reduce((a,b)=>a+b.pkg,0);$("totalBag").innerText=r.reduce((a,b)=>a+b.bag,0)}
 function dataObj(){let rows=getRows();return {mcd:$("mcd").value,date:$("date").value,challanNo:$("challanNo").value,gatePassNo:$("gatePassNo").value,company:companyName(),companyType:$("company").value,companyManual:$("companyManual").value.trim(),companyAddress:$("companyAddress").value,toCompany:toCompanyName(),toCompanyType:$("toCompany").value,toCompanyManual:$("toCompanyManual").value.trim(),toAddress:$("toAddress").value,buyer:$("buyer").value.trim(),orderNo:$("orderNo").value.trim(),transportNo:$("transportNo").value.trim(),driverName:$("driverName").value.trim(),vehicleNo:$("vehicleNo").value.trim(),gateMs:$("gateMs").value.trim(),goodsBy:$("goodsBy").value.trim(),fromMillTo:$("fromMillTo").value.trim(),yarnCount:$("yarnCount").value.trim(),brand:$("brand").value.trim(),cardCombed:$("cardCombed").value.trim(),lotNo:$("lotNo").value.trim(),rows,grandTotalQty:rows.reduce((a,b)=>a+b.qty,0),totalPkg:rows.reduce((a,b)=>a+b.pkg,0),totalBag:rows.reduce((a,b)=>a+b.bag,0),updatedAt:new Date().toISOString(),createdAt:editMode?undefined:new Date().toISOString()}}
 
-// 🔥 FIXED: Save with Offline Support & Unique ID logic
+// 🔥 FIXED: Save with Offline Support + Auto Serial + Search Ready
 window.saveData=async()=>{
   try{
     // 1. Generate Number if not set (Edit mode keeps old number)
     if(!$("challanNo").value || !$("gatePassNo").value){
-      await createNumbersIfNeeded(); 
-      // Note: createNumbersIfNeeded sets the field values now
+      await createNumbersIfNeeded();
     }
 
     let d=dataObj(); 
@@ -206,9 +194,11 @@ window.saveData=async()=>{
     
     // 2. Save Data (Offline Queue or Direct)
     if(typeof window.saveDataOffline==="function"){
+      // 🔥 Use offline queue - works even when quota exceeded
       window.saveDataOffline("challanGatePass", d, "CHL");
       toast("Challan Saved (Offline Queue) ✅");
     }else{
+      // Fallback: direct save
       await setDoc(doc(db,"challanGatePass",d.challanNo),d,{merge:true});
       toast("Challan Saved Firebase ✅");
     }
@@ -217,15 +207,17 @@ window.saveData=async()=>{
     
     // 3. Clear form for next entry ONLY if not in edit mode
     if(!editMode){
-      // Generate NEW number for next entry
-      await previewNextNumber(); 
+      // 🔥 Generate NEXT unique number for next entry
+      let nextNo=generateLocalChallanNo();
+      $("challanNo").value=nextNo;
+      $("gatePassNo").value=nextNo.replace("CH","GP");
       
       // Clear inputs
       ["buyer","orderNo","transportNo","driverName","vehicleNo","yarnCount","brand","cardCombed","lotNo"].forEach(id=>$(id).value="");
       $("rows").innerHTML="";
       addBlankRows();
       calcTotals();
-      syncTo(); // Reset Company logic
+      syncTo();
     }
 
   }catch(e){
@@ -241,20 +233,49 @@ window.goReport=()=>{
 async function loadEdit(){
   let no=new URLSearchParams(location.search).get("challanNo"); 
   if(!no)return false; 
+  
+  // 🔥 Search in Firebase first
   let s=await getDoc(doc(db,"challanGatePass",no)); 
-  if(!s.exists())return false; 
-  editMode=true;
-  let d=s.data();
-  ["mcd","date","challanNo","gatePassNo","company","companyManual","companyAddress","toCompany","toCompanyManual","toAddress","buyer","orderNo","transportNo","driverName","vehicleNo","gateMs","goodsBy","fromMillTo","yarnCount","brand","cardCombed","lotNo"].forEach(id=>{if($(id)&&d[id]!=null)$(id).value=d[id]}); 
-  if(d.companyType)$("company").value=d.companyType;
-  if(d.toCompanyType)$("toCompany").value=d.toCompanyType;
-  companyChange();
-  toCompanyChange();
-  $("rows").innerHTML="";
-  (d.rows||[]).forEach(addRow);
-  if(!(d.rows||[]).length)addBlankRows();
-  calcTotals();
-  return true
+  if(s.exists()){
+    editMode=true;
+    let d=s.data();
+    ["mcd","date","challanNo","gatePassNo","company","companyManual","companyAddress","toCompany","toCompanyManual","toAddress","buyer","orderNo","transportNo","driverName","vehicleNo","gateMs","goodsBy","fromMillTo","yarnCount","brand","cardCombed","lotNo"].forEach(id=>{if($(id)&&d[id]!=null)$(id).value=d[id]}); 
+    if(d.companyType)$("company").value=d.companyType;
+    if(d.toCompanyType)$("toCompany").value=d.toCompanyType;
+    companyChange();
+    toCompanyChange();
+    $("rows").innerHTML="";
+    (d.rows||[]).forEach(addRow);
+    if(!(d.rows||[]).length)addBlankRows();
+    calcTotals();
+    return true;
+  }
+  
+  // 🔥 If not in Firebase, search in offline queue (localStorage)
+  try{
+    let queue=JSON.parse(localStorage.getItem("GMS_STEALTH_QUEUE")||"[]");
+    let offlineItem=queue.find(x=>x.collection==="challanGatePass" && (x.data.challanNo===no || x.serial===no));
+    if(offlineItem){
+      editMode=true;
+      let d=offlineItem.data;
+      ["mcd","date","challanNo","gatePassNo","company","companyManual","companyAddress","toCompany","toCompanyManual","toAddress","buyer","orderNo","transportNo","driverName","vehicleNo","gateMs","goodsBy","fromMillTo","yarnCount","brand","cardCombed","lotNo"].forEach(id=>{if($(id)&&d[id]!=null)$(id).value=d[id]}); 
+      if(d.companyType)$("company").value=d.companyType;
+      if(d.toCompanyType)$("toCompany").value=d.toCompanyType;
+      companyChange();
+      toCompanyChange();
+      $("rows").innerHTML="";
+      (d.rows||[]).forEach(addRow);
+      if(!(d.rows||[]).length)addBlankRows();
+      calcTotals();
+      toast("Loaded from Offline Queue 📦");
+      return true;
+    }
+  }catch(e){
+    console.log("Offline search error:",e);
+  }
+  
+  alert("Edit data not found");
+  return false;
 }
 
 async function init(){
