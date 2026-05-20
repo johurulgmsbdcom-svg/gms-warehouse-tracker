@@ -180,26 +180,10 @@ button{
 
 Company:
 <select id="company" onchange="startRealtime()">
-<option>GMS TEXTILES LTD</option>
-<option>GMS COMPOSITE KNITTING</option>
 </select>
 
 MCD:
 <select id="mcd" onchange="startRealtime()">
-<option>GREY FABRIC MCD</option>
-<option>SHIPMENT MCD</option>
-<option>BILLING SECTION</option>
-<option>OUTER WEAR MCD</option>
-<option>YARN MCD</option>
-<option>PRINTING MCD</option>
-<option>JHUT MCD</option>
-<option>GENERAL MCD</option>
-<option>ACCESSORIES MCD</option>
-<option>LEFTOVER MCD</option>
-<option>FINISH FABRIC MCD</option>
-<option>YARN DYEING MCD</option>
-<option>CHEMICAL MCD</option>
-<option>GENERAL TECHNICAL MCD</option>
 </select>
 
 <input
@@ -338,6 +322,7 @@ if(!user){
 
 const userRole = user.role || "user";
 
+const userCompanies = Array.isArray(user.userCompanies) ? user.userCompanies : [];
 const userMCDs = Array.isArray(user.mcdAccess)
 ? user.mcdAccess
 : (user.mcd ? [user.mcd] : []);
@@ -360,6 +345,7 @@ if(!hasAnyAccess){
   window.location.href="index.html";
 }
 
+const ALL_COMPANIES = ["GMS TEXTILES LTD", "GMS COMPOSITE KNITTING"];
 const ALL_MCD = [
 "GREY FABRIC MCD",
 "SHIPMENT MCD",
@@ -376,6 +362,18 @@ const ALL_MCD = [
 "CHEMICAL MCD",
 "GENERAL TECHNICAL MCD"
 ];
+
+// 🔥 FIXED: ইউজারের এক্সেস অনুযায়ী কোম্পানি ড্রপডাউন সেট করবে
+function setupCompanyDropdown(){
+  let allowedComps = (userRole==="admin" || userRole==="full")
+  ? ALL_COMPANIES
+  : userCompanies;
+
+  let compSelect = document.getElementById("company");
+  compSelect.innerHTML = allowedComps.map(c =>
+    `<option>${c}</option>`
+  ).join("");
+}
 
 function allowedMCDList(){
   return (userRole==="admin" || userRole==="full")
@@ -682,13 +680,13 @@ function filterSearch(){
   render(filtered);
 }
 
-// 🔥 FIXED: কোম্পানি + MCD দুটোই ফিল্টার করবে
+// 🔥 FIXED: কোম্পানি + MCD দুটোই সঠিকভাবে ফিল্টার করবে
 function startRealtime(){
 
   let mcd = document.getElementById("mcd").value;
-  let company = document.getElementById("company").value; // 🔥 FIX
+  let company = document.getElementById("company").value;
 
-  document.getElementById("mcdTitle").innerText = mcd;
+  document.getElementById("mcdTitle").innerText = company + " - " + mcd;
 
   document.getElementById("searchBox").value = "";
 
@@ -765,7 +763,7 @@ function clearForm(){
 function exportExcel(){
 
   let title = `
-  <h2>GMS TEXTILES LTD</h2>
+  <h2>${document.getElementById("company").value}</h2>
   <h3>${document.getElementById("mcd").value}</h3>
   <h3>Manpower List</h3>
   <h3>Total Manpower:
@@ -809,6 +807,7 @@ window.filterSearch = filterSearch;
 window.exportExcel = exportExcel;
 window.exportPDF = exportPDF;
 
+setupCompanyDropdown();
 setupMcdDropdown();
 startRealtime();
 
