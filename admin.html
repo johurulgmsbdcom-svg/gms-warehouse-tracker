@@ -192,7 +192,6 @@ th{background:var(--card2);font-weight:900;color:var(--muted)}
   .header{flex-direction:column;text-align:center;gap:10px}
   .companyWrap label{min-width:100%}
 }
-/* 🔧 WHITE BOX FIX FOR LIGHT MODE */
 body.light .card,
 body.light .mcdBox,
 body.light input,
@@ -219,7 +218,7 @@ body.light .checkItem:hover {
   </div>
   <div>
     <button class="btn" onclick="location.href='index.html'">🏠 Dashboard</button>
-    <button class="btn purple" onclick="toggleTheme()">🌙 / ️</button>
+    <button class="btn purple" onclick="toggleTheme()">🌙 / ☀️</button>
     <button class="btn red" onclick="logout()">🚪 Logout</button>
   </div>
 </div>
@@ -252,7 +251,7 @@ body.light .checkItem:hover {
 
     <!-- Company Selection -->
     <div style="margin-bottom:16px;">
-      <label class="label">🏢 Assign Company (Select 1 or Both)</label>
+      <label class="label">🏢 ASSIGN COMPANY (SELECT 1 OR BOTH)</label>
       <div class="companyWrap">
         <label id="lblTextile">
           <input type="checkbox" id="cmpTextile" value="GMS TEXTILES LTD" onchange="updateCompanyUI()">
@@ -263,7 +262,7 @@ body.light .checkItem:hover {
           🏢 GMS COMPOSITE KNITTING
         </label>
       </div>
-      <div class="smallNote" id="companyNote">🔐 ইউজার শুধু সিলেক্টেড কোম্পানির ডাটা পাবে। টেক্সটাইল না দিলে টেক্সটাইল ড্যাশবোর্ড/ডাটা সম্পূর্ণ হাইড থাকবে।</div>
+      <div class="smallNote" id="companyNote">🔐 ইউজার শুধু সিলেক্টেড কোম্পানির ডাটা পাবে। অন্য কোম্পানির ডাটা হাইড থাকবে।</div>
     </div>
 
     <!-- Basic Info Fields -->
@@ -284,10 +283,11 @@ body.light .checkItem:hover {
 
     <!-- Manpower Control -->
     <div style="margin-top:14px;">
+      <label class="label">👨‍ MANPOWER ACCESS</label>
       <select id="manpowerAccess" onchange="toggleManpowerMCD()">
-        <option value="none">👨‍ Manpower: None (No Access)</option>
-        <option value="all">👨‍ Manpower: All MCD</option>
-        <option value="selected">👨‍ Manpower: Selected MCD</option>
+        <option value="none">❌ None (No Access)</option>
+        <option value="all">✅ All MCD</option>
+        <option value="selected">🎯 Selected MCD</option>
       </select>
       <div id="manpowerMCDSection" style="display:none; margin-top:10px;">
         <div class="smallNote">👨‍ Manpower Access এর জন্য MCD টিক দিন:</div>
@@ -339,7 +339,6 @@ body.light .checkItem:hover {
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-app.js";
 import { getFirestore, collection, addDoc, getDocs, deleteDoc, doc, updateDoc } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-firestore.js";
 
-// 🔥 Firebase Config
 const firebaseConfig = {
   apiKey:"AIzaSyD-wBCF5eeWMHobLFOhBzKW7aB2pagz9-w",
   authDomain:"gms-warehouse-tracker-7f57e.firebaseapp.com",
@@ -350,16 +349,12 @@ const firebaseConfig = {
 };
 const app = initializeApp(firebaseConfig), db = getFirestore(app);
 
-// 🔐 MCD to Company Mapping (Master Configuration)
 const MCD_COMPANY_MAP = {
-  // 🏭 Textile Only
   "GREY FABRIC MCD": "textile",
   "YARN MCD": "textile",
-  // 🏢 Composite Only  
   "SHIPMENT MCD": "composite",
   "BILLING SECTION": "composite",
   "OUTER WEAR MCD": "composite",
-  // 🔄 Common (Both Companies)
   "PRINTING MCD": "both",
   "JHUT MCD": "both",
   "GENERAL MCD": "both",
@@ -371,24 +366,20 @@ const MCD_COMPANY_MAP = {
   "GENERAL TECHNICAL MCD": "both"
 };
 
-// All MCD List
 const MCD = Object.keys(MCD_COMPANY_MAP);
 let allUsers = [], currentFilter = "all";
 
-// 🌙/☀️ Theme Toggle
 window.toggleTheme = () => {
   document.body.classList.toggle("light");
   localStorage.setItem("adminTheme", document.body.classList.contains("light") ? "light" : "dark");
 };
 if(localStorage.getItem("adminTheme") === "light") document.body.classList.add("light");
 
-// 🚪 Logout
 window.logout = () => {
   localStorage.removeItem("gmsUser");
   window.location.href = "login.html";
 };
 
-// 🔔 Toast Notification
 const toast = (msg) => {
   const t = document.getElementById("toast");
   t.innerText = msg;
@@ -396,7 +387,6 @@ const toast = (msg) => {
   setTimeout(() => t.style.display = "none", 1800);
 };
 
-// 🏢 Update Company UI + Filter MCDs
 window.updateCompanyUI = () => {
   const t = document.getElementById("cmpTextile");
   const c = document.getElementById("cmpComposite");
@@ -409,7 +399,7 @@ window.updateCompanyUI = () => {
     note.innerHTML = "⚠️ অন্তত ১টা কোম্পানি সিলেক্ট করুন!";
     note.style.borderColor = "var(--red)";
   } else {
-    note.innerHTML = "✅ ইউজার শুধু সিলেক্টেড কোম্পানির ডাটা পাবে। অন্য কোম্পানির ডাটা হাইড থাকবে।";
+    note.innerHTML = "✅ ইউজার শুধু সিলেক্টেড কোম্পানির ডাটা পাবে।";
     note.style.borderColor = "var(--orange)";
   }
 
@@ -417,7 +407,6 @@ window.updateCompanyUI = () => {
   if(t.checked) selectedCompanies.push("GMS TEXTILES LTD");
   if(c.checked) selectedCompanies.push("GMS COMPOSITE KNITTING");
 
-  // Re-render MCD checkboxes with filter
   const currentMCD = getMCD("mcdChecks");
   const currentManpowerMCD = getMCD("manpowerMcdChecks");
   
@@ -425,13 +414,11 @@ window.updateCompanyUI = () => {
   renderMCD("manpowerMcdChecks", currentManpowerMCD, selectedCompanies);
 };
 
-// 👨‍ Toggle Manpower MCD Section
 window.toggleManpowerMCD = () => {
   const sec = document.getElementById("manpowerMCDSection");
   sec.style.display = document.getElementById("manpowerAccess").value === "selected" ? "block" : "none";
 };
 
-// ✅ Render MCD Checkboxes with Company Filter
 function renderMCD(containerId, selected = [], allowedCompanies = []) {
   const container = document.getElementById(containerId);
   if(!container) return;
@@ -445,7 +432,7 @@ function renderMCD(containerId, selected = [], allowedCompanies = []) {
   });
 
   if(filteredMCDs.length === 0) {
-    container.innerHTML = `<div class="emptyState">📭 No MCD available for selected company</div>`;
+    container.innerHTML = `<div class="emptyState">📭 No MCD available</div>`;
     return;
   }
 
@@ -457,12 +444,10 @@ function renderMCD(containerId, selected = [], allowedCompanies = []) {
   `).join('');
 }
 
-// Get Selected MCDs from Container
 function getMCD(containerId) {
   return [...document.querySelectorAll(`.mcd-cb[data-target="${containerId}"]:checked`)].map(c => c.value);
 }
 
-// 🧹 Clear Form
 window.clearForm = () => {
   document.getElementById("formTitle").innerText = "➕ Add User";
   document.getElementById("editId").value = "";
@@ -478,7 +463,6 @@ window.clearForm = () => {
   window.scrollTo({top: 0, behavior: "smooth"});
 };
 
-// 💾 Save User
 window.saveUser = async () => {
   const cmps = [...document.querySelectorAll("#cmpTextile:checked,#cmpComposite:checked")].map(c => c.value);
   if(cmps.length === 0) {
@@ -530,7 +514,6 @@ window.saveUser = async () => {
   }
 };
 
-// ✏️ Edit User
 window.editUser = (id) => {
   const u = allUsers.find(x => x.id === id)?.data;
   if(!u) return;
@@ -550,9 +533,8 @@ window.editUser = (id) => {
   document.getElementById("cmpTextile").checked = companies.includes("GMS TEXTILES LTD");
   document.getElementById("cmpComposite").checked = companies.includes("GMS COMPOSITE KNITTING");
   
-  updateCompanyUI(); // This will re-render MCDs with correct filter
+  updateCompanyUI();
   
-  // Restore selected MCDs after re-render
   setTimeout(() => {
     renderMCD("mcdChecks", Array.isArray(u.mcdAccess) ? u.mcdAccess : [], companies);
     renderMCD("manpowerMcdChecks", Array.isArray(u.manpowerMcdAccess) ? u.manpowerMcdAccess : [], companies);
@@ -561,7 +543,6 @@ window.editUser = (id) => {
   window.scrollTo({top: 0, behavior: "smooth"});
 };
 
-// 🗑 Delete User
 window.deleteUser = async (id) => {
   if(confirm("🗑️ এই ইউজার ডিলিট করবেন?")) {
     try {
@@ -574,13 +555,11 @@ window.deleteUser = async (id) => {
   }
 };
 
-// 🔍 Filter Users
 window.filterUsers = (f) => {
   currentFilter = f;
   loadUsers();
 };
 
-// 📊 Load Users from Firebase
 async function loadUsers() {
   try {
     const snap = await getDocs(collection(db, "users"));
@@ -598,7 +577,6 @@ async function loadUsers() {
       if(cmps.includes("GMS TEXTILES LTD")) tx++;
       if(cmps.includes("GMS COMPOSITE KNITTING")) cx++;
       
-      // Apply filter
       if(currentFilter !== "all") {
         if(currentFilter === "admin" && u.role !== "admin") return;
         if(currentFilter === "textile" && !cmps.includes("GMS TEXTILES LTD")) return;
@@ -650,7 +628,6 @@ async function loadUsers() {
   }
 }
 
-// 🚀 Initialize
 renderMCD("mcdChecks", [], []);
 renderMCD("manpowerMcdChecks", [], []);
 updateCompanyUI();
