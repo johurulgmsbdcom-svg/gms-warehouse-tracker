@@ -342,10 +342,21 @@ const userMCDs = Array.isArray(user.mcdAccess)
 ? user.mcdAccess
 : (user.mcd ? [user.mcd] : []);
 
-const manpowerAccess = user.manpowerAccess || false;
+// 🔥 FIXED: সঠিক ফিল্ড রিড এবং অ্যাক্সেস চেক
+const mpLevel = user.manpowerAccessLevel || (user.manpowerAccess === true ? "all" : "none");
+const mpMcdList = Array.isArray(user.manpowerMcdAccess) ? user.manpowerMcdAccess : [];
 
-if(!(userRole==="admin" || userRole==="full" || manpowerAccess===true)){
-  alert("Manpower Access nai. Admin theke permission nite hobe.");
+function canAccessManpower(targetMcd) {
+  if(userRole === "admin" || userRole === "full") return true;
+  if(mpLevel === "all") return true;
+  if(mpLevel === "selected") return mpMcdList.includes(targetMcd);
+  return false;
+}
+
+const hasAnyAccess = (userRole==="admin" || userRole==="full") || mpLevel === "all" || mpMcdList.length > 0;
+
+if(!hasAnyAccess){
+  alert("⚠️ Manpower Access nai. Admin theke 'Selected MCD' ba 'All MCD' permission nite hobe.");
   window.location.href="index.html";
 }
 
@@ -372,9 +383,10 @@ function allowedMCDList(){
   : userMCDs;
 }
 
+// 🔥 FIXED: শুধু যেই MCD তে এক্সেস আছে সেটাই ড্রপডাউনে দেখাবে
 function setupMcdDropdown(){
 
-  let list = allowedMCDList();
+  let list = allowedMCDList().filter(mcd => canAccessManpower(mcd));
 
   let mcdSelect = document.getElementById("mcd");
 
@@ -670,6 +682,7 @@ function filterSearch(){
   render(filtered);
 }
 
+// 🔥 FIXED: লোড হওয়ার আগে এক্সেস চেক করবে
 function startRealtime(){
 
   let mcd = document.getElementById("mcd").value;
@@ -677,6 +690,18 @@ function startRealtime(){
   document.getElementById("mcdTitle").innerText = mcd;
 
   document.getElementById("searchBox").value = "";
+
+  if(!canAccessManpower(mcd)){
+    document.getElementById("tableBody").innerHTML =
+    `<tr><td colspan="10" style="padding:20px; color:#ef4444; font-weight:bold; text-align:center;">
+    ⚠️ এই MCD-এর (<b>${mcd}</b>) Salary দেখার পারমিশন নেই।<br>
+    <span style="font-size:12px; color:#666;">Admin থেকে 'Selected MCD' এক্সেস নিন।</span>
+    </td></tr>`;
+    document.getElementById("totalManpower").innerText = "0";
+    document.getElementById("totalSalary").innerText = "0";
+    document.getElementById("mcdTotal").innerText = mcd + " - Access Denied";
+    return;
+  }
 
   if(unsubscribe) unsubscribe();
 
@@ -693,7 +718,7 @@ function startRealtime(){
 
         let x = docSnap.data();
 
-        if(x.mcd===mcd){
+        if(x.mcd===mcd && canAccessManpower(mcd)){
           rows.push(x);
         }
       });
