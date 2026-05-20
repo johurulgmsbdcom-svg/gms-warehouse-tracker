@@ -2,254 +2,520 @@
 <html>
 <head>
 <meta charset="UTF-8">
-<title>Manpower - GMS</title>
+<title>GMS Admin Panel</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
+
 <style>
 :root{
-  --bg:#0a1628;--card:#1e293b;--text:#f1f5f9;--muted:#cbd5e1;
-  --border:#475569;--blue:#3b82f6;--green:#10b981;--red:#ef4444;
+  --bg:#07111f;--card:#101b2d;--card2:#14233a;
+  --text:#fff;--muted:#9fb0c7;--border:#263855;
+  --blue:#2563eb;--green:#22c55e;--red:#ef4444;--orange:#f59e0b;
 }
 body.light{
-  --bg:#f8fafc;--card:#ffffff;--text:#1e293b;--muted:#64748b;--border:#cbd5e1;
+  --bg:#eef3f9;--card:#fff;--card2:#f8fafc;
+  --text:#0f172a;--muted:#64748b;--border:#cbd5e1;
 }
-body{margin:0;background:var(--bg);color:var(--text);font-family:'Poppins',sans-serif;}
+body{
+  margin:0;
+  background:var(--bg);
+  color:var(--text);
+  font-family:Segoe UI,Arial,sans-serif;
+}
 .header{
-  background:var(--card);padding:15px 20px;border-bottom:1px solid var(--border);
-  display:flex;justify-content:space-between;align-items:center;
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  padding:15px 22px;
+  background:var(--card);
+  border-bottom:1px solid var(--border);
 }
-.logo{font-size:20px;font-weight:700}
+.logoArea{display:flex;align-items:center;gap:10px}
+.logoArea img{width:42px;height:42px;object-fit:contain;border-radius:8px}
+.logo{font-size:22px;font-weight:900}
+.sub{font-size:12px;color:var(--muted)}
 .btn{
-  background:var(--blue);color:#fff;border:none;padding:8px 16px;
-  border-radius:8px;cursor:pointer;font-weight:600;margin-left:10px;
+  border:0;
+  border-radius:10px;
+  padding:10px 15px;
+  background:var(--blue);
+  color:white;
+  font-weight:900;
+  cursor:pointer;
+  margin:3px;
 }
 .btn.red{background:var(--red)}
-.container{padding:20px;max-width:1200px;margin:0 auto;}
+.btn.green{background:var(--green)}
+.btn.orange{background:var(--orange)}
+.page{padding:18px}
+.grid{
+  display:grid;
+  grid-template-columns:repeat(4,1fr);
+  gap:14px;
+  margin-bottom:16px;
+}
 .card{
-  background:var(--card);border:1px solid var(--border);
-  border-radius:12px;padding:20px;margin-bottom:20px;
+  background:linear-gradient(135deg,var(--card),var(--card2));
+  border:1px solid var(--border);
+  border-radius:16px;
+  padding:16px;
+  box-shadow:0 8px 20px rgba(0,0,0,.18);
 }
-h2{margin:0 0 15px 0;font-size:20px;}
-.formGroup{margin-bottom:15px;}
-.formGroup label{display:block;margin-bottom:5px;font-weight:600;color:var(--muted);}
-.formGroup input,.formGroup select{
-  width:100%;padding:10px;border:1px solid var(--border);
-  border-radius:8px;background:var(--bg);color:var(--text);
+.label{font-size:12px;color:var(--muted);font-weight:900}
+.num{font-size:26px;color:var(--green);font-weight:900;margin-top:6px}
+.formGrid{
+  display:grid;
+  grid-template-columns:repeat(3,1fr);
+  gap:12px;
 }
-.btn-save{
-  background:var(--green);color:#fff;border:none;padding:12px 24px;
-  border-radius:8px;cursor:pointer;font-weight:700;font-size:16px;width:100%;
+input,select{
+  width:100%;
+  box-sizing:border-box;
+  padding:12px;
+  border-radius:10px;
+  border:1px solid var(--border);
+  background:var(--card);
+  color:var(--text);
+  font-size:14px;
+}
+.mcdBox{
+  display:grid;
+  grid-template-columns:repeat(3,1fr);
+  gap:8px;
+  margin-top:10px;
+}
+.checkItem{
+  background:rgba(255,255,255,.04);
+  border:1px solid var(--border);
+  border-radius:10px;
+  padding:8px;
+  font-size:12px;
+  font-weight:800;
+}
+.checkItem input{
+  width:auto;
+  margin-right:6px;
+}
+.smallNote{
+  color:var(--muted);
+  font-size:12px;
+  font-weight:800;
+  margin-top:6px;
+}
+table{
+  width:100%;
+  border-collapse:collapse;
+  margin-top:16px;
+  background:var(--card);
+}
+th,td{
+  border:1px solid var(--border);
+  padding:9px;
+  text-align:center;
+  font-size:12px;
+}
+th{background:var(--card2)}
+.roleAdmin{color:var(--green);font-weight:900}
+.roleFull{color:var(--orange);font-weight:900}
+.roleUser{color:var(--blue);font-weight:900}
+.toast{
+  position:fixed;
+  right:18px;
+  bottom:18px;
+  background:var(--green);
+  color:white;
+  padding:13px 20px;
+  border-radius:12px;
+  font-weight:900;
+  display:none;
+}
+@media(max-width:900px){
+  .grid,.formGrid,.mcdBox{grid-template-columns:1fr}
+  .header{display:block;text-align:center}
 }
 </style>
 </head>
+
 <body>
 
-<!-- 🔐 PERMISSION CHECK - MUST BE AT TOP -->
-<script>
-const mpUser = JSON.parse(localStorage.getItem("gmsUser") || "null");
-if(!mpUser){window.location.href="login.html";}
-
-const userRole = mpUser.role || "user";
-const manpowerAccess = mpUser.manpowerAccess || "none";
-const userCompanies = mpUser.userCompanies || [];
-
-// ✅ FIXED PERMISSION LOGIC
-const isAdmin = (userRole === "admin");
-const isFull = (userRole === "full");
-const hasManpowerAll = (manpowerAccess === "all");
-const hasManpowerSelected = (manpowerAccess === "selected");
-
-// Block if no permission
-if(!isAdmin && !isFull && !hasManpowerAll && !hasManpowerSelected){
-  alert("Manpower Access nai. Admin theke permission nite hobe.");
-  window.location.href = "index.html";
-}
-</script>
-
 <div class="header">
-  <div class="logo">👨‍💼 Manpower Management</div>
+  <div class="logoArea">
+    <img src="logo.png" onerror="this.style.display='none'">
+    <div>
+      <div class="logo">👑 GMS ADMIN PANEL</div>
+      <div class="sub">Add • Edit • Delete • MCD Permission • Needle Access • Manpower Access</div>
+    </div>
+  </div>
+
   <div>
-    <span id="userInfo" style="color:var(--muted);margin-right:10px;"></span>
     <button class="btn" onclick="location.href='index.html'">🏠 Dashboard</button>
+    <button class="btn" onclick="toggleTheme()">🌙 / ☀️</button>
     <button class="btn red" onclick="logout()">🚪 Logout</button>
   </div>
 </div>
 
-<div class="container">
-  <div class="card">
-    <h2>➕ Add Manpower Entry</h2>
-    
-    <div class="formGroup">
-      <label>🏢 Company</label>
-      <select id="company">
-        <option value="GMS TEXTILES LTD">GMS TEXTILES LTD</option>
-        <option value="GMS COMPOSITE KNITTING">GMS COMPOSITE KNITTING</option>
-      </select>
-    </div>
+<div class="page">
 
-    <div class="formGroup">
-      <label>📂 MCD / Department</label>
-      <select id="mcd">
-        <option value="ACCESSORIES MCD">ACCESSORIES MCD</option>
-        <option value="GREY FABRIC MCD">GREY FABRIC MCD</option>
-        <option value="BILLING SECTION">BILLING SECTION</option>
-        <option value="SHIPMENT MCD">SHIPMENT MCD</option>
-        <option value="OUTER WEAR MCD">OUTER WEAR MCD</option>
-        <option value="YARN MCD">YARN MCD</option>
-        <option value="PRINTING MCD">PRINTING MCD</option>
-        <option value="JHUT MCD">JHUT MCD</option>
-        <option value="GENERAL MCD">GENERAL MCD</option>
-        <option value="LEFTOVER MCD">LEFTOVER MCD</option>
-        <option value="FINISH FABRIC MCD">FINISH FABRIC MCD</option>
-        <option value="YARN DYEING MCD">YARN DYEING MCD</option>
-        <option value="CHEMICAL MCD">CHEMICAL MCD</option>
-        <option value="GENERAL TECHNICAL MCD">GENERAL TECHNICAL MCD</option>
-      </select>
-    </div>
-
-    <div class="formGroup">
-      <label>👤 Employee Name</label>
-      <input type="text" id="empName" placeholder="Enter employee name">
-    </div>
-
-    <div class="formGroup">
-      <label> Employee ID</label>
-      <input type="text" id="empId" placeholder="Enter employee ID">
-    </div>
-
-    <div class="formGroup">
-      <label>💰 Salary</label>
-      <input type="number" id="salary" placeholder="Enter salary">
-    </div>
-
-    <div class="formGroup">
-      <label>📅 Date</label>
-      <input type="date" id="entryDate">
-    </div>
-
-    <button class="btn-save" onclick="saveManpower()">💾 Save Entry</button>
+  <div class="grid">
+    <div class="card"><div class="label">👤 Total Users</div><div class="num" id="totalUsers">0</div></div>
+    <div class="card"><div class="label">👑 Admin</div><div class="num" id="totalAdmin">0</div></div>
+    <div class="card"><div class="label">🌍 Full Access</div><div class="num" id="totalFull">0</div></div>
+    <div class="card"><div class="label">📂 Normal User</div><div class="num" id="totalNormal">0</div></div>
   </div>
+
+  <div class="card">
+    <h2 id="formTitle">➕ Add User</h2>
+
+    <input type="hidden" id="editId">
+
+    <div class="formGrid">
+      <input id="name" placeholder="User Name">
+      <input id="email" placeholder="Email">
+      <input id="password" placeholder="Password">
+
+      <select id="role">
+        <option value="user">Normal User</option>
+        <option value="full">Full Access User</option>
+        <option value="admin">Admin</option>
+      </select>
+
+      <select id="needleAccess">
+        <option value="no">Needle Access: No</option>
+        <option value="yes">Needle Access: Yes</option>
+      </select>
+
+      <select id="manpowerAccess" onchange="updateManpowerNote()">
+        <option value="none">Manpower: None</option>
+        <option value="all">Manpower: All MCD</option>
+        <option value="selected">Manpower: Selected MCD</option>
+      </select>
+
+      <button class="btn green" onclick="saveUser()">💾 Save User</button>
+    </div>
+
+    <div class="smallNote" id="manpowerNote">
+      Manpower None দিলে user manpower পাবে না।
+    </div>
+
+    <h3>📂 Select MCD Access</h3>
+    <div class="smallNote">
+      Normal MCD access + Manpower Selected দুটোতেই এই tick করা MCD কাজ করবে।
+    </div>
+    <div id="mcdChecks" class="mcdBox"></div>
+
+    <button class="btn orange" onclick="clearForm()">🧹 Clear Form</button>
+  </div>
+
+  <div class="card" style="margin-top:16px">
+    <h2>👥 User List</h2>
+
+    <table>
+      <thead>
+        <tr>
+          <th>Name</th>
+          <th>Email</th>
+          <th>Password</th>
+          <th>Role</th>
+          <th>MCD Access</th>
+          <th>Needle</th>
+          <th>Manpower</th>
+          <th>Action</th>
+        </tr>
+      </thead>
+      <tbody id="userTable"></tbody>
+    </table>
+  </div>
+
 </div>
+
+<div id="toast" class="toast">Saved ✅</div>
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-app.js";
-import { getFirestore, collection, addDoc, getDocs } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-firestore.js";
+import {
+  getFirestore,
+  collection,
+  addDoc,
+  getDocs,
+  deleteDoc,
+  doc,
+  updateDoc
+} from "https://www.gstatic.com/firebasejs/12.12.1/firebase-firestore.js";
 
 const firebaseConfig = {
-  apiKey:"AIzaSyD-wBCF5eeWMHobLFOhBzKW7aB2pagz9-w",
-  authDomain:"gms-warehouse-tracker-7f57e.firebaseapp.com",
-  projectId:"gms-warehouse-tracker-7f57e",
-  storageBucket:"gms-warehouse-tracker-7f57e.firebasestorage.app",
-  messagingSenderId:"992250313291",
-  appId:"1:992250313291:web:ee3bceae76d4d53bc26bce"
+  apiKey: "AIzaSyD-wBCF5eeWMHobLFOhBzKW7aB2pagz9-w",
+  authDomain: "gms-warehouse-tracker-7f57e.firebaseapp.com",
+  projectId: "gms-warehouse-tracker-7f57e",
+  storageBucket: "gms-warehouse-tracker-7f57e.firebasestorage.app",
+  messagingSenderId: "992250313291",
+  appId: "1:992250313291:web:ee3bceae76d4d53bc26bce"
 };
+
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
-// Set today's date
-document.getElementById('entryDate').valueAsDate = new Date();
+const MCD_LIST = [
+  "GREY FABRIC MCD",
+  "SHIPMENT MCD",
+  "BILLING SECTION",
+  "OUTER WEAR MCD",
+  "YARN MCD",
+  "PRINTING MCD",
+  "JHUT MCD",
+  "GENERAL MCD",
+  "ACCESSORIES MCD",
+  "LEFTOVER MCD",
+  "FINISH FABRIC MCD",
+  "YARN DYEING MCD",
+  "CHEMICAL MCD",
+  "GENERAL TECHNICAL MCD"
+];
 
-// Show user info
-const mpUser = JSON.parse(localStorage.getItem("gmsUser"));
-document.getElementById('userInfo').innerText = `${mpUser.name} (${mpUser.role})`;
+let allUsers = [];
 
-// Filter MCD based on company permission
-const userCompanies = mpUser.userCompanies || [];
-const mcdSelect = document.getElementById('mcd');
-const companySelect = document.getElementById('company');
+window.toggleTheme=function(){
+  document.body.classList.toggle("light");
+  localStorage.setItem("adminTheme",document.body.classList.contains("light") ? "light" : "dark");
+};
 
-// If user has only one company, set it as default and disable selection
-if(userCompanies.length === 1){
-  companySelect.value = userCompanies[0];
-  companySelect.disabled = true;
-} else if(userCompanies.length === 0){
-  // No company access
-  alert("No company access!");
-  window.location.href = "index.html";
+if(localStorage.getItem("adminTheme")==="light"){
+  document.body.classList.add("light");
 }
 
-// Filter MCDs based on company
-function filterMCDsByCompany(company){
-  const mcdCompanyMap = {
-    "GREY FABRIC MCD": "textile",
-    "YARN MCD": "textile",
-    "SHIPMENT MCD": "composite",
-    "BILLING SECTION": "composite",
-    "OUTER WEAR MCD": "composite",
-    "PRINTING MCD": "both",
-    "JHUT MCD": "both",
-    "GENERAL MCD": "both",
-    "ACCESSORIES MCD": "both",
-    "LEFTOVER MCD": "both",
-    "FINISH FABRIC MCD": "both",
-    "YARN DYEING MCD": "both",
-    "CHEMICAL MCD": "both",
-    "GENERAL TECHNICAL MCD": "both"
-  };
+window.logout=function(){
+  localStorage.removeItem("gmsUser");
+  localStorage.removeItem("userMCD");
+  window.location.href="login.html";
+};
 
-  const allOptions = Array.from(mcdSelect.options);
-  allOptions.forEach(opt => {
-    const mcdType = mcdCompanyMap[opt.value] || "both";
-    const isTextile = company.includes("TEXTILES");
-    const isComposite = company.includes("COMPOSITE");
-    
-    if(mcdType === "both" || 
-       (isTextile && mcdType === "textile") || 
-       (isComposite && mcdType === "composite")){
-      opt.style.display = "block";
-    } else {
-      opt.style.display = "none";
-    }
-  });
-  
-  // Select first visible option
-  const visibleOptions = Array.from(mcdSelect.options).filter(opt => opt.style.display !== "none");
-  if(visibleOptions.length > 0){
-    mcdSelect.value = visibleOptions[0].value;
+function toast(msg){
+  let t=document.getElementById("toast");
+  t.innerText=msg;
+  t.style.display="block";
+  setTimeout(()=>t.style.display="none",1800);
+}
+
+window.updateManpowerNote=function(){
+  let v=document.getElementById("manpowerAccess").value;
+  let note=document.getElementById("manpowerNote");
+
+  if(v==="none"){
+    note.innerText="Manpower None দিলে user manpower পাবে না।";
+  }else if(v==="all"){
+    note.innerText="Manpower All দিলে user সব MCD manpower পাবে।";
+  }else{
+    note.innerText="Manpower Selected দিলে নিচে tick করা MCD manpower পাবে।";
   }
+};
+
+function renderMcdChecks(selected=[]){
+  let html="";
+  MCD_LIST.forEach(mcd=>{
+    let checked = selected.includes(mcd) ? "checked" : "";
+    html += `
+      <label class="checkItem">
+        <input type="checkbox" class="mcdCheck" value="${mcd}" ${checked}>
+        ${mcd}
+      </label>
+    `;
+  });
+  document.getElementById("mcdChecks").innerHTML=html;
 }
 
-companySelect.addEventListener('change', () => filterMCDsByCompany(companySelect.value));
-filterMCDsByCompany(companySelect.value);
+function getSelectedMCD(){
+  let arr=[];
+  document.querySelectorAll(".mcdCheck:checked").forEach(c=>{
+    arr.push(c.value);
+  });
+  return arr;
+}
 
-window.saveManpower = async () => {
-  const company = companySelect.value;
-  const mcd = mcdSelect.value;
-  const empName = document.getElementById('empName').value.trim();
-  const empId = document.getElementById('empId').value.trim();
-  const salary = document.getElementById('salary').value;
-  const entryDate = document.getElementById('entryDate').value;
+function normalizeManpowerAccess(u){
+  if(u.manpowerAccess==="all" || u.manpowerAccess==="selected" || u.manpowerAccess==="none"){
+    return u.manpowerAccess;
+  }
+  if(u.manpowerAccess===true){
+    if(u.role==="admin" || u.role==="full"){
+      return "all";
+    }
+    return "selected";
+  }
+  return "none";
+}
 
-  if(!empName || !empId || !salary || !entryDate){
-    alert("সব ফিল্ড পূরণ করুন!");
+function manpowerText(u){
+  let access=normalizeManpowerAccess(u);
+  if(access==="none"){
+    return "❌ None";
+  }
+  if(access==="all"){
+    return "✅ All MCD";
+  }
+  let list=[];
+  if(Array.isArray(u.manpowerMcdAccess)){
+    list=u.manpowerMcdAccess;
+  }else if(Array.isArray(u.mcdAccess)){
+    list=u.mcdAccess;
+  }
+  return "✅ Selected: " + (list.length ? list.join(", ") : "No MCD Selected");
+}
+
+window.clearForm=function(){
+  document.getElementById("formTitle").innerText="➕ Add User";
+  document.getElementById("editId").value="";
+  document.getElementById("name").value="";
+  document.getElementById("email").value="";
+  document.getElementById("password").value="";
+  document.getElementById("role").value="user";
+  document.getElementById("needleAccess").value="no";
+  document.getElementById("manpowerAccess").value="none";
+  updateManpowerNote();
+  renderMcdChecks([]);
+};
+
+// 🔥 FIXED: Save User with Boolean manpowerAccess for manpower.html compatibility
+window.saveUser=async function(){
+  let editId=document.getElementById("editId").value;
+  let name=document.getElementById("name").value.trim();
+  let email=document.getElementById("email").value.trim();
+  let password=document.getElementById("password").value.trim();
+  let role=document.getElementById("role").value;
+  let mcdAccess=getSelectedMCD();
+  let needleAccess=document.getElementById("needleAccess").value==="yes";
+  let manpowerAccess=document.getElementById("manpowerAccess").value;
+
+  if(!name || !email || !password){
+    alert("Name, Email, Password lagbe");
     return;
   }
 
-  try {
-    await addDoc(collection(db, "manpower"), {
-      company,
-      mcd,
-      empName,
-      empId,
-      salary: parseFloat(salary),
-      entryDate,
-      createdAt: new Date().toISOString(),
-      createdBy: mpUser.email || mpUser.name
-    });
+  if(manpowerAccess==="selected" && mcdAccess.length===0){
+    alert("Manpower Selected দিলে অন্তত ১টা MCD tick করতে হবে");
+    return;
+  }
+
+  // 🔥 FIX: Convert string to boolean for manpower.html compatibility
+  let manpowerAccessBoolean = (manpowerAccess === "all" || manpowerAccess === "selected") ? true : false;
+
+  let userData={
+    name:name,
+    email:email,
+    password:password,
+    role:role,
+    mcdAccess:mcdAccess,
+    needleAccess:needleAccess,
     
-    alert("✅ Manpower entry saved successfully!");
-    document.getElementById('empName').value = '';
-    document.getElementById('empId').value = '';
-    document.getElementById('salary').value = '';
-  } catch(err) {
-    console.error(err);
-    alert("❌ Error: " + err.message);
+    // 🔥 Save BOTH: boolean for manpower.html + string for future
+    manpowerAccess: manpowerAccessBoolean,  // boolean: true/false (for manpower.html)
+    manpowerAccessLevel: manpowerAccess,    // string: "none"/"all"/"selected" (for display)
+    manpowerMcdAccess: manpowerAccess==="selected" ? mcdAccess : [],
+
+    updatedAt:new Date().toISOString()
+  };
+
+  if(editId){
+    await updateDoc(doc(db,"users",editId),userData);
+    toast("User Updated ✅");
+  }else{
+    userData.createdAt=new Date().toISOString();
+    await addDoc(collection(db,"users"),userData);
+    toast("User Saved ✅");
+  }
+
+  clearForm();
+  loadUsers();
+};
+
+window.editUser=function(id){
+  let found=allUsers.find(x=>x.id===id);
+  if(!found) return;
+
+  let u=found.data;
+  let access=normalizeManpowerAccess(u);
+
+  document.getElementById("formTitle").innerText="✏️ Edit User";
+  document.getElementById("editId").value=id;
+  document.getElementById("name").value=u.name || "";
+  document.getElementById("email").value=u.email || "";
+  document.getElementById("password").value=u.password || "";
+  document.getElementById("role").value=u.role || "user";
+  document.getElementById("needleAccess").value=u.needleAccess ? "yes" : "no";
+  
+  // 🔥 Show correct value in dropdown
+  document.getElementById("manpowerAccess").value = u.manpowerAccessLevel || access;
+  updateManpowerNote();
+
+  let selected = [];
+  if(access==="selected" && Array.isArray(u.manpowerMcdAccess)){
+    selected = u.manpowerMcdAccess;
+  }else if(Array.isArray(u.mcdAccess)){
+    selected = u.mcdAccess;
+  }else if(u.mcd){
+    selected = [u.mcd];
+  }
+
+  renderMcdChecks(selected);
+  window.scrollTo({top:0,behavior:"smooth"});
+};
+
+window.deleteUser=async function(id){
+  if(confirm("Delete this user?")){
+    await deleteDoc(doc(db,"users",id));
+    toast("User Deleted ✅");
+    loadUsers();
   }
 };
 
-window.logout = () => {
-  localStorage.removeItem("gmsUser");
-  window.location.href = "login.html";
-};
+async function loadUsers(){
+  let snap=await getDocs(collection(db,"users"));
+  let html="";
+  let total=0,admin=0,full=0,normal=0;
+  allUsers=[];
+
+  snap.forEach(d=>{
+    let u=d.data();
+    allUsers.push({id:d.id,data:u});
+    total++;
+
+    if(u.role==="admin") admin++;
+    else if(u.role==="full") full++;
+    else normal++;
+
+    let roleClass = u.role==="admin" ? "roleAdmin" : u.role==="full" ? "roleFull" : "roleUser";
+
+    let mcdText="";
+    if(Array.isArray(u.mcdAccess)){
+      mcdText = u.mcdAccess.join(", ");
+    }else{
+      mcdText = u.mcd || "";
+    }
+
+    html+=`
+      <tr>
+        <td>${u.name || ""}</td>
+        <td>${u.email || ""}</td>
+        <td>${u.password || ""}</td>
+        <td class="${roleClass}">${u.role || ""}</td>
+        <td>${mcdText}</td>
+        <td>${u.needleAccess ? "✅ Yes" : "❌ No"}</td>
+        <td>${manpowerText(u)}</td>
+        <td>
+          <button class="btn orange" onclick="editUser('${d.id}')">✏️ Edit</button>
+          <button class="btn red" onclick="deleteUser('${d.id}')">🗑 Delete</button>
+        </td>
+      </tr>
+    `;
+  });
+
+  document.getElementById("userTable").innerHTML=html;
+  document.getElementById("totalUsers").innerText=total;
+  document.getElementById("totalAdmin").innerText=admin;
+  document.getElementById("totalFull").innerText=full;
+  document.getElementById("totalNormal").innerText=normal;
+}
+
+renderMcdChecks([]);
+updateManpowerNote();
+loadUsers();
 </script>
 
 </body>
