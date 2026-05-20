@@ -4,6 +4,7 @@
 <meta charset="UTF-8">
 <title>Gate Plan Entry</title>
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 
 <style>
 body{
@@ -38,6 +39,7 @@ button{
 .home{background:#0f766e}
 .del{background:#dc2626}
 .print{background:#7c3aed}
+.offline-print{background:#000;border:2px solid #fff}
 input,select,textarea{
   font-size:15px;
   padding:7px;
@@ -382,7 +384,6 @@ td textarea{
     margin:0!important;
   }
 }
-
 </style>
 </head>
 
@@ -434,7 +435,8 @@ td textarea{
   <br>
 
   <button class="add" onclick="addRow()">➕ Add Row</button>
-  <button class="save" onclick="saveGatePlan()">💾 Save Firebase</button>
+  <button class="save" onclick="saveGatePlan()">💾 Save</button>
+  <button class="offline-print" id="printOfflineBtn" onclick="printLastOffline()" style="display:none">🖨 Print Offline Data</button>
   <button class="print" onclick="window.print()">🖨 PDF / Print</button>
   <button class="report" onclick="location.href='gate-plan-report.html'">📑 Report</button>
   <button class="home" onclick="location.href='index.html'">🏠 Home</button>
@@ -579,6 +581,13 @@ if(!user){location.href="login.html";}
 
 let editMode=false;
 
+// 🔥 Device ID for tracking
+function getDeviceId(){
+  let did=localStorage.getItem("gms_device_id");
+  if(!did){ did="D"+Math.random().toString(36).substr(2,9).toUpperCase(); localStorage.setItem("gms_device_id",did); }
+  return did;
+}
+
 function today(){
   return new Date().toISOString().slice(0,10);
 }
@@ -601,6 +610,13 @@ function toast(msg){
 
 function makeId(no){
   return String(no).replaceAll("/","-").replaceAll(" ","-");
+}
+
+// 🔥 Generate unique offline ID (Time-based to avoid conflicts)
+function generateOfflineId(){
+  const now=new Date();
+  const timeStr = String(now.getHours()).padStart(2,'0') + String(now.getMinutes()).padStart(2,'0') + String(now.getSeconds()).padStart(2,'0');
+  return `GP-${now.getFullYear()}-OFF-${timeStr}`;
 }
 
 async function nextGatePlanNo(){
@@ -889,6 +905,7 @@ window.calculateTotals=function(){
   }
 };
 
+// 🔥 FIXED SAVE: Works Online & Offline
 window.saveGatePlan=async function(){
   if(document.getElementById("mcdName").value==="GREY FABRIC MCD"){
     syncGreyInputs();
@@ -901,7 +918,18 @@ window.saveGatePlan=async function(){
     return;
   }
 
-  let planNo=document.getElementById("gatePlanNo").value || await nextGatePlanNo();
+  let planNo=document.getElementById("gatePlanNo").value;
+  
+  // If no number, generate one
+  if(!planNo){
+    try{
+      planNo = await nextGatePlanNo();
+      document.getElementById("gatePlanNo").value = planNo;
+    }catch(e){
+      planNo = generateOfflineId();
+      document.getElementById("gatePlanNo").value = planNo;
+    }
+  }
 
   let plan={
     gatePlanNo:planNo,
@@ -922,39 +950,158 @@ window.saveGatePlan=async function(){
   Object.keys(plan).forEach(k=>plan[k]===undefined && delete plan[k]);
 
   try{
+    // Try Firebase first
     await setDoc(doc(db,"gatePlans",makeId(planNo)),plan,{merge:true});
-
-    rows.forEach(r=>{
-      addOption("buyerList",r.buyerName);
-      addOption("srList",r.srGtNo);
-      addOption("styleList",r.styleName);
-      addOption("orderList",r.orderNo);
-      addOption("itemList",r.itemName);
-      addOption("colorList",r.color);
-      addOption("unitList",r.unit);
-      addOption("partyList",r.toParty);
-      addOption("vehicleList",r.vehicleNo);
-      addOption("remarksList",r.remarks);
-    });
-
     toast(editMode ? "Gate Plan Updated Firebase" : "Gate Plan Saved Firebase");
-
-    editMode=false;
-    localStorage.removeItem("editGatePlanNo");
-    history.replaceState(null,"","gate-plan.html");
-
-    document.getElementById("gateBody").innerHTML="";
-    document.getElementById("gatePlanNo").value=await nextGatePlanNo();
-    addRow();
-    calculateTotals();
-    updateHeader();
-
+    document.getElementById("printOfflineBtn").style.display="none";
+    
   }catch(e){
-    console.log(e);
-    alert("Firebase save error: "+e.message);
+    // Firebase failed - save offline
+    console.log("Firebase failed, saving offline:",e.message);
+    
+    const deviceId=getDeviceId();
+    const queueKey="GMS_GATEPLAN_OFFLINE_"+deviceId;
+    let queue=JSON.parse(localStorage.getItem(queueKey)||"[]");
+    
+    // Ensure unique ID for offline
+    if(queue.find(x=>x.id===planNo)) planNo = generateOfflineId();
+    plan.gatePlanNo = planNo;
+    plan.gatePassNo = planNo;
+    plan.status = "pending";
+    
+    queue.push({
+      id:planNo,
+      data:plan,
+      status:"pending",
+      createdAt:new Date().toISOString(),
+      deviceId:deviceId
+    });
+    
+    localStorage.setItem(queueKey,JSON.stringify(queue));
+    toast("⏳ Saved Offline: "+planNo);
+    document.getElementById("printOfflineBtn").style.display="inline-block";
   }
+  
+  // Store last data for printing
+  window.lastSavedGatePlan = plan;
+
+  editMode=false;
+  localStorage.removeItem("editGatePlanNo");
+  history.replaceState(null,"","gate-plan.html");
+
+  document.getElementById("gateBody").innerHTML="";
+  document.getElementById("gatePlanNo").value=await nextGatePlanNo();
+  addRow();
+  calculateTotals();
+  updateHeader();
 };
 
+// 🔥 PRINT OFFLINE DATA (Generates QR locally)
+window.printLastOffline=()=>{
+  if(!window.lastSavedGatePlan) return alert("No data to print");
+  printGatePlan(window.lastSavedGatePlan);
+}
+
+// 🔥 PRINT FUNCTION for Gate Plan (2 pages + QR)
+function printGatePlan(x){
+  let rows=x.rows||[];
+  let totalDelivery=rows.reduce((a,b)=>a+(Number(b.deliveryQty)||0),0);
+  let totalCtn=rows.reduce((a,b)=>a+(Number(b.ctnQty)||0),0);
+  
+  let rowHtml=rows.map((r,i)=>`<tr><td>${r.item||r.deliveryQty||r.ctnQty?i+1:""}</td><td>${r.buyerName}</td><td>${r.srGtNo}</td><td>${r.styleName}</td><td>${r.orderNo}</td><td>${r.itemName}</td><td>${r.color}</td><td>${r.unit}</td><td>${r.deliveryQty?r.deliveryQty:""}</td><td>${r.ctnQty?r.ctnQty:""}</td><td>${r.toParty}</td><td>${r.vehicleNo}</td><td>${r.remarks}</td></tr>`).join("");
+  
+  let isGrey = x.mcd === "GREY FABRIC MCD";
+  
+  let html = `
+  <html><head><meta charset="UTF-8"><title>Print Gate Plan ${x.gatePlanNo}</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"><\/script>
+  <style>
+    body{font-family:Arial;margin:0;padding:20px}
+    .page{width:297mm;min-height:210mm;padding:10mm;margin:0 auto;border:1px solid #ccc;page-break-after:always}
+    .header{text-align:center;margin-bottom:10px}
+    .header h2{margin:0;font-size:22px}
+    .header h4{margin:2px 0;font-size:12px}
+    .header h3{margin:4px 0;font-size:18px}
+    .box{border:2px solid #000;padding:10px}
+    .topLine{text-align:center;font-weight:bold;border-bottom:2px solid #000;padding:5px;font-size:16px}
+    .meta{display:grid;grid-template-columns:1fr 1fr 1fr;border-bottom:2px solid #000}
+    .meta div{border-right:2px solid #000;padding:5px;text-align:center;font-weight:bold}
+    table{width:100%;border-collapse:collapse;font-size:11px}
+    th,td{border:2px solid #000;padding:4px;text-align:center}
+    th{background:#eee}
+    .sign{display:grid;grid-template-columns:1fr 1fr 1fr 1fr 1fr 1fr 1fr 1fr;border:2px solid #000;border-top:0;height:80px;margin-top:20px}
+    .sign div{display:flex;align-items:end;justify-content:center;border-right:2px solid #000;font-weight:bold;font-size:10px}
+    .sign div:last-child{border-right:0}
+    .qr{width:60px;height:60px;margin:10px auto}
+    @media print{body{margin:0}.page{border:0}}
+  </style></head><body>
+  <div class="page">
+    <div class="header">
+      <h2>${x.company}</h2>
+      <h4>Tansutrapur, Kaliakair, Gazipur.</h4>
+      <h4>Daily Goods Delivery Plan</h4>
+      <h3>${x.mcd}</h3>
+    </div>
+    <div class="box">
+      <div class="topLine">${x.company} To ${x.toCompany}</div>
+      <div class="meta">
+        <div>Gate Plan No:<br><b>${x.gatePlanNo}</b></div>
+        <div>Date:<br><b>${x.date}</b></div>
+        <div>Time:<br><b>${x.time}</b></div>
+      </div>
+      <table>
+        <thead><tr><th>SL</th><th>Buyer</th><th>SR/GT</th><th>Style</th><th>Order</th><th>Item</th><th>Color</th><th>Unit</th><th>Qty</th><th>Pkgs</th><th>To Party</th><th>Vehicle</th><th>Remarks</th></tr></thead>
+        <tbody>${rowHtml}</tbody>
+        <tfoot><tr><td colspan="8" style="text-align:right;font-weight:bold">Total:</td><td>${totalDelivery}</td><td>${totalCtn}</td><td colspan="3"></td></tr></tfoot>
+      </table>
+      <div class="sign"><div>Prepared By</div><div>Security</div><div>Checked By</div><div>Asst. Mgr</div><div>AGM</div><div>Merchant</div><div>HR/Admin</div><div>Approved</div></div>
+    </div>
+    <div style="text-align:center;margin-top:20px"><div class="qr" id="qr"></div><div style="font-size:10px">Scan for details</div></div>
+  </div>
+  <script>
+    new QRCode(document.getElementById("qr"), {text:"${location.origin+location.pathname}?gatePlanNo=${x.gatePlanNo}", width:60, height:60});
+    setTimeout(()=>window.print(), 700);
+  <\/script>
+  </body></html>`;
+  
+  let w=window.open("","_blank");
+  w.document.write(html);
+  w.document.close();
+}
+
+// 🔥 AUTO-SYNC: Try to sync ALL offline data from ALL devices
+async function autoSyncOfflineGatePlans(){
+  let totalSynced=0;
+  
+  for(let i=0;i<localStorage.length;i++){
+    const key=localStorage.key(i);
+    if(key && key.startsWith("GMS_GATEPLAN_OFFLINE_")){
+      try{
+        const queue=JSON.parse(localStorage.getItem(key)||"[]");
+        const pending=queue.filter(x=>x.status==="pending");
+        
+        for(let item of pending){
+          try{
+            await setDoc(doc(db,"gatePlans",item.id),item.data,{merge:true});
+            item.status="synced";
+            item.syncedAt=new Date().toISOString();
+            totalSynced++;
+          }catch(e){}
+        }
+        localStorage.setItem(key,JSON.stringify(queue));
+      }catch(e){}
+    }
+  }
+  
+  if(totalSynced>0){
+    console.log(`✅ Auto-synced ${totalSynced} gate plan(s)`);
+  }
+  return totalSynced;
+}
+
+// Run auto-sync every 60 seconds + on page load
+setInterval(autoSyncOfflineGatePlans, 60000);
+setTimeout(autoSyncOfflineGatePlans, 2000);
 
 document.getElementById("toType").addEventListener("change",function(){
   updateToPartyFields(true);
