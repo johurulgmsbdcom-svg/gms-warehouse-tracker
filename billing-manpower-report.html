@@ -107,7 +107,7 @@ button:hover{
 
 .kpi{
   display:grid;
-  grid-template-columns:repeat(5,1fr);
+  grid-template-columns:repeat(6,1fr);
   gap:12px;
   margin:12px;
 }
@@ -131,7 +131,7 @@ button:hover{
 .kpiBox b{
   display:block;
   color:var(--green);
-  font-size:26px;
+  font-size:22px;
   margin-top:6px;
 }
 .chartBox{
@@ -236,6 +236,7 @@ body.light tr:nth-child(even){
 .personCard.leave{border-left:4px solid var(--orange)}
 .personCard.absent{border-left:4px solid var(--red)}
 .personCard.medical{border-left:4px solid var(--purple)}
+.personCard.offday{border-left:4px solid var(--blue)}
 .personHeader{
   display:flex;
   justify-content:space-between;
@@ -259,7 +260,7 @@ body.light tr:nth-child(even){
 }
 .personStats{
   display:grid;
-  grid-template-columns:repeat(3,1fr);
+  grid-template-columns:repeat(4,1fr);
   gap:8px;
   margin-top:8px;
 }
@@ -271,12 +272,13 @@ body.light tr:nth-child(even){
 }
 .statItem b{
   display:block;
-  font-size:20px;
+  font-size:18px;
   margin-top:4px;
 }
 .statItem.leave b{color:var(--orange)}
 .statItem.absent b{color:var(--red)}
 .statItem.medical b{color:var(--purple)}
+.statItem.offday b{color:var(--blue)}
 .statItem span{
   font-size:10px;
   color:var(--muted);
@@ -387,7 +389,7 @@ body.light tr:nth-child(even){
     grid-template-columns:1fr;
   }
   .kpi{
-    grid-template-columns:repeat(2,1fr);
+    grid-template-columns:repeat(3,1fr);
   }
   .personDetails{
     grid-template-columns:1fr;
@@ -398,7 +400,7 @@ body.light tr:nth-child(even){
 
 <body>
 
-<button class="themeToggle" onclick="toggleTheme()">🌙 / ️ Theme</button>
+<button class="themeToggle" onclick="toggleTheme()">🌙 / ☀️ Theme</button>
 
 <div class="header">
   <h2>🏭 GMS TEXTILES LTD</h2>
@@ -457,8 +459,13 @@ body.light tr:nth-child(even){
   </div>
 
   <div>
-    <label>🏥 Medical Leave</label>
+    <label>🏥 Medical</label>
     <input type="number" id="medicalQty" value="0" oninput="calculatePresent(); generateDetailBoxes('medical')">
+  </div>
+
+  <div>
+    <label>📅 Off Day</label>
+    <input type="number" id="offDayQty" value="0" oninput="calculatePresent(); generateDetailBoxes('offday')">
   </div>
 
   <div>
@@ -487,6 +494,11 @@ body.light tr:nth-child(even){
 <div id="medicalBox" class="detailBox">
   <h4>🏥 Medical Leave Details</h4>
   <div id="medicalDetails"></div>
+</div>
+
+<div id="offDayBox" class="detailBox">
+  <h4>📅 Off Day Details</h4>
+  <div id="offDayDetails"></div>
 </div>
 
 <!-- Report Filters -->
@@ -581,11 +593,12 @@ body.light tr:nth-child(even){
 </div>
 
 <div class="kpi">
-  <div class="kpiBox"><span>👥 Total Manpower</span><b id="kpiTotal">0</b></div>
+  <div class="kpiBox"><span>👥 Total</span><b id="kpiTotal">0</b></div>
   <div class="kpiBox"><span>🏖 Leave</span><b id="kpiLeave" style="color:var(--orange)">0</b></div>
   <div class="kpiBox"><span>❌ Absent</span><b id="kpiAbsent" style="color:var(--red)">0</b></div>
   <div class="kpiBox"><span>🏥 Medical</span><b id="kpiMedical" style="color:var(--purple)">0</b></div>
-  <div class="kpiBox"><span>✅ Today Present</span><b id="kpiPresent" style="color:var(--green)">0</b></div>
+  <div class="kpiBox"><span>📅 Off Day</span><b id="kpiOffDay" style="color:var(--blue)">0</b></div>
+  <div class="kpiBox"><span>✅ Present</span><b id="kpiPresent" style="color:var(--green)">0</b></div>
 </div>
 
 <div class="chartBox">
@@ -610,6 +623,7 @@ body.light tr:nth-child(even){
       <th>🏖 Leave</th>
       <th>❌ Absent</th>
       <th>🏥 Medical</th>
+      <th>📅 Off Day</th>
       <th>✅ Present</th>
       <th>👤 By</th>
       <th class="noPrint">⚡ Action</th>
@@ -623,6 +637,7 @@ body.light tr:nth-child(even){
       <td id="gtLeave">0</td>
       <td id="gtAbsent">0</td>
       <td id="gtMedical">0</td>
+      <td id="gtOffDay">0</td>
       <td id="gtPresent">0</td>
       <td></td>
       <td class="noPrint"></td>
@@ -686,8 +701,9 @@ window.toggleTheme=function(){
   let leave=Number(document.getElementById("kpiLeave").innerText)||0;
   let absent=Number(document.getElementById("kpiAbsent").innerText)||0;
   let medical=Number(document.getElementById("kpiMedical").innerText)||0;
+  let offday=Number(document.getElementById("kpiOffDay").innerText)||0;
   let present=Number(document.getElementById("kpiPresent").innerText)||0;
-  renderChart(total,leave,absent,medical,present);
+  renderChart(total,leave,absent,medical,offday,present);
 };
 
 if(localStorage.getItem("billingTheme")==="light"){
@@ -706,7 +722,8 @@ window.calculatePresent=function(){
   let leave=Number(document.getElementById("leaveQty").value)||0;
   let absent=Number(document.getElementById("absentQty").value)||0;
   let medical=Number(document.getElementById("medicalQty").value)||0;
-  let present=total-leave-absent-medical;
+  let offday=Number(document.getElementById("offDayQty").value)||0;
+  let present=total-leave-absent-medical-offday;
 
   if(present<0) present=0;
 
@@ -728,6 +745,10 @@ window.generateDetailBoxes=function(type){
     qty=Number(document.getElementById("medicalQty").value)||0;
     container=document.getElementById("medicalDetails");
     boxId="medicalBox";
+  }else if(type==='offday'){
+    qty=Number(document.getElementById("offDayQty").value)||0;
+    container=document.getElementById("offDayDetails");
+    boxId="offDayBox";
   }
 
   if(qty>0){
@@ -782,10 +803,11 @@ window.saveReport=async function(){
   let leave=Number(document.getElementById("leaveQty").value)||0;
   let absent=Number(document.getElementById("absentQty").value)||0;
   let medical=Number(document.getElementById("medicalQty").value)||0;
+  let offday=Number(document.getElementById("offDayQty").value)||0;
   let present=Number(document.getElementById("presentQty").value)||0;
 
   // Collect detail data
-  let leaveDetails=[], absentDetails=[], medicalDetails=[];
+  let leaveDetails=[], absentDetails=[], medicalDetails=[], offDayDetails=[];
   for(let i=1; i<=leave; i++){
     let name=document.getElementById("leaveName"+i)?.value||"";
     let idCard=document.getElementById("leaveId"+i)?.value||"";
@@ -801,6 +823,11 @@ window.saveReport=async function(){
     let idCard=document.getElementById("medicalId"+i)?.value||"";
     if(name || idCard) medicalDetails.push({name, idCard});
   }
+  for(let i=1; i<=offday; i++){
+    let name=document.getElementById("offdayName"+i)?.value||"";
+    let idCard=document.getElementById("offdayId"+i)?.value||"";
+    if(name || idCard) offDayDetails.push({name, idCard});
+  }
 
   await addDoc(collection(db,"billingManpowerReport"),{
     date:date,
@@ -810,10 +837,12 @@ window.saveReport=async function(){
     leave:leave,
     absent:absent,
     medical:medical,
+    offDay:offday,
     present:present,
     leaveDetails:leaveDetails,
     absentDetails:absentDetails,
     medicalDetails:medicalDetails,
+    offDayDetails:offDayDetails,
     reportedBy:user.name || user.email || "User",
     userId:user.id || "",
     createdAt:new Date().toISOString()
@@ -825,10 +854,12 @@ window.saveReport=async function(){
   document.getElementById("leaveQty").value=0;
   document.getElementById("absentQty").value=0;
   document.getElementById("medicalQty").value=0;
+  document.getElementById("offDayQty").value=0;
   document.getElementById("presentQty").value=0;
   document.getElementById("leaveBox").style.display="none";
   document.getElementById("absentBox").style.display="none";
   document.getElementById("medicalBox").style.display="none";
+  document.getElementById("offDayBox").style.display="none";
 
   loadReport();
 };
@@ -893,15 +924,10 @@ window.loadDetailedReport=async function(){
     // ID Card search - show all records for that person
     if(searchId){
       let found=false;
-      if(x.leaveDetails){
-        x.leaveDetails.forEach(dt=>{ if((dt.idCard||"").toLowerCase().includes(searchId)) found=true; });
-      }
-      if(x.absentDetails){
-        x.absentDetails.forEach(dt=>{ if((dt.idCard||"").toLowerCase().includes(searchId)) found=true; });
-      }
-      if(x.medicalDetails){
-        x.medicalDetails.forEach(dt=>{ if((dt.idCard||"").toLowerCase().includes(searchId)) found=true; });
-      }
+      if(x.leaveDetails){ x.leaveDetails.forEach(dt=>{ if((dt.idCard||"").toLowerCase().includes(searchId)) found=true; }); }
+      if(x.absentDetails){ x.absentDetails.forEach(dt=>{ if((dt.idCard||"").toLowerCase().includes(searchId)) found=true; }); }
+      if(x.medicalDetails){ x.medicalDetails.forEach(dt=>{ if((dt.idCard||"").toLowerCase().includes(searchId)) found=true; }); }
+      if(x.offDayDetails){ x.offDayDetails.forEach(dt=>{ if((dt.idCard||"").toLowerCase().includes(searchId)) found=true; }); }
       if(!found) return;
     }
     
@@ -912,12 +938,10 @@ window.loadDetailedReport=async function(){
   allRows=rows;
   
   if(searchId && !filterMcd){
-    // Show person-wise summary
     renderPersonDetails(rows);
     document.getElementById('personDetailsView').style.display='grid';
     document.getElementById('reportTable').style.display='none';
   }else{
-    // Show table view
     renderTable(rows);
     renderPersonDetails(rows);
     if(currentView==='person'){
@@ -929,13 +953,14 @@ window.loadDetailedReport=async function(){
 
 function renderTable(rows){
   let html="";
-  let gtTotal=0,gtLeave=0,gtAbsent=0,gtMedical=0,gtPresent=0;
+  let gtTotal=0,gtLeave=0,gtAbsent=0,gtMedical=0,gtOffDay=0,gtPresent=0;
 
   rows.forEach((r,i)=>{
     gtTotal+=Number(r.totalManpower)||0;
     gtLeave+=Number(r.leave)||0;
     gtAbsent+=Number(r.absent)||0;
     gtMedical+=Number(r.medical)||0;
+    gtOffDay+=Number(r.offDay)||0;
     gtPresent+=Number(r.present)||0;
 
     html+=`
@@ -948,6 +973,7 @@ function renderTable(rows){
         <td>${r.leave||0}</td>
         <td>${r.absent||0}</td>
         <td>${r.medical||0}</td>
+        <td>${r.offDay||0}</td>
         <td>${r.present||0}</td>
         <td>${r.reportedBy||""}</td>
         <td class="noPrint">
@@ -957,21 +983,23 @@ function renderTable(rows){
     `;
   });
 
-  document.getElementById("tbody").innerHTML=html || `<tr><td colspan="11">📭 No Data Found</td></tr>`;
+  document.getElementById("tbody").innerHTML=html || `<tr><td colspan="12">📭 No Data Found</td></tr>`;
 
   document.getElementById("gtTotal").innerText=gtTotal;
   document.getElementById("gtLeave").innerText=gtLeave;
   document.getElementById("gtAbsent").innerText=gtAbsent;
   document.getElementById("gtMedical").innerText=gtMedical;
+  document.getElementById("gtOffDay").innerText=gtOffDay;
   document.getElementById("gtPresent").innerText=gtPresent;
 
   document.getElementById("kpiTotal").innerText=gtTotal;
   document.getElementById("kpiLeave").innerText=gtLeave;
   document.getElementById("kpiAbsent").innerText=gtAbsent;
   document.getElementById("kpiMedical").innerText=gtMedical;
+  document.getElementById("kpiOffDay").innerText=gtOffDay;
   document.getElementById("kpiPresent").innerText=gtPresent;
 
-  renderChart(gtTotal,gtLeave,gtAbsent,gtMedical,gtPresent);
+  renderChart(gtTotal,gtLeave,gtAbsent,gtMedical,gtOffDay,gtPresent);
 }
 
 function renderPersonDetails(rows){
@@ -987,8 +1015,8 @@ function renderPersonDetails(rows){
           personData[key]={
             name:d.name||"Unknown",
             idCard:d.idCard||"Unknown",
-            leave:0,absent:0,medical:0,
-            leaveDates:[],absentDates:[],medicalDates:[]
+            leave:0,absent:0,medical:0,offday:0,
+            leaveDates:[],absentDates:[],medicalDates:[],offDayDates:[]
           };
         }
         personData[key].leave++;
@@ -1004,8 +1032,8 @@ function renderPersonDetails(rows){
           personData[key]={
             name:d.name||"Unknown",
             idCard:d.idCard||"Unknown",
-            leave:0,absent:0,medical:0,
-            leaveDates:[],absentDates:[],medicalDates:[]
+            leave:0,absent:0,medical:0,offday:0,
+            leaveDates:[],absentDates:[],medicalDates:[],offDayDates:[]
           };
         }
         personData[key].absent++;
@@ -1021,23 +1049,41 @@ function renderPersonDetails(rows){
           personData[key]={
             name:d.name||"Unknown",
             idCard:d.idCard||"Unknown",
-            leave:0,absent:0,medical:0,
-            leaveDates:[],absentDates:[],medicalDates:[]
+            leave:0,absent:0,medical:0,offday:0,
+            leaveDates:[],absentDates:[],medicalDates:[],offDayDates:[]
           };
         }
         personData[key].medical++;
         personData[key].medicalDates.push({date:r.date,mcd:r.mcd,company:r.company});
       });
     }
+    // Process Off Day
+    if(r.offDayDetails && r.offDayDetails.length>0){
+      r.offDayDetails.forEach(d=>{
+        let key=(d.idCard||d.name||"").toLowerCase();
+        if(!key) return;
+        if(!personData[key]){
+          personData[key]={
+            name:d.name||"Unknown",
+            idCard:d.idCard||"Unknown",
+            leave:0,absent:0,medical:0,offday:0,
+            leaveDates:[],absentDates:[],medicalDates:[],offDayDates:[]
+          };
+        }
+        personData[key].offday++;
+        personData[key].offDayDates.push({date:r.date,mcd:r.mcd,company:r.company});
+      });
+    }
   });
   
   let html="";
   Object.values(personData).forEach(p=>{
-    let totalDays=p.leave+p.absent+p.medical;
+    let totalDays=p.leave+p.absent+p.medical+p.offday;
     
     let leaveDatesHtml=p.leaveDates.map(d=>`<b>${d.date}</b> ${d.mcd} (${d.company})`).join('');
     let absentDatesHtml=p.absentDates.map(d=>`<b>${d.date}</b> ${d.mcd} (${d.company})`).join('');
     let medicalDatesHtml=p.medicalDates.map(d=>`<b>${d.date}</b> ${d.mcd} (${d.company})`).join('');
+    let offDayDatesHtml=p.offDayDates.map(d=>`<b>${d.date}</b> ${d.mcd} (${d.company})`).join('');
     
     html+=`
       <div class="personCard">
@@ -1058,6 +1104,10 @@ function renderPersonDetails(rows){
             <span>🏥 Medical</span>
             <b>${p.medical}</b>
           </div>
+          <div class="statItem offday">
+            <span>📅 Off Day</span>
+            <b>${p.offday}</b>
+          </div>
         </div>
         <div style="margin-top:10px;padding-top:10px;border-top:1px solid var(--border);text-align:center">
           <b style="color:var(--blue);font-size:18px">📅 Total Days: ${totalDays}</b>
@@ -1065,6 +1115,7 @@ function renderPersonDetails(rows){
         ${p.leave>0?`<div class="dateList"><b>🏖 Leave Dates:</b>${leaveDatesHtml}</div>`:''}
         ${p.absent>0?`<div class="dateList"><b>❌ Absent Dates:</b>${absentDatesHtml}</div>`:''}
         ${p.medical>0?`<div class="dateList"><b>🏥 Medical Dates:</b>${medicalDatesHtml}</div>`:''}
+        ${p.offday>0?`<div class="dateList"><b>📅 Off Day Dates:</b>${offDayDatesHtml}</div>`:''}
       </div>
     `;
   });
@@ -1072,7 +1123,7 @@ function renderPersonDetails(rows){
   document.getElementById("personDetailsView").innerHTML=html || '<div style="grid-column:1/-1;text-align:center;padding:40px;color:var(--muted)">📭 No Data Found</div>';
 }
 
-function renderChart(total,leave,absent,medical,present){
+function renderChart(total,leave,absent,medical,offday,present){
   if(chart) chart.destroy();
   
   const isLight=document.body.classList.contains("light");
@@ -1081,11 +1132,11 @@ function renderChart(total,leave,absent,medical,present){
   chart=new Chart(document.getElementById("manpowerChart"),{
     type:"bar",
     data:{
-      labels:["Total","Leave","Absent","Medical","Present"],
+      labels:["Total","Leave","Absent","Medical","Off Day","Present"],
       datasets:[{
         label:"Manpower",
-        data:[total,leave,absent,medical,present],
-        backgroundColor:["#3b82f6","#f59e0b","#ef4444","#8b5cf6","#22c55e"],
+        data:[total,leave,absent,medical,offday,present],
+        backgroundColor:["#3b82f6","#f59e0b","#ef4444","#8b5cf6","#6366f1","#22c55e"],
         borderWidth:1,
         borderRadius:10
       }]
