@@ -193,7 +193,7 @@ body.light tr:nth-child(even){
   to{transform:translateX(0);opacity:1}
 }
 
-/* New styles for dynamic boxes */
+/* Detail Boxes */
 .detailBox{
   background:linear-gradient(135deg,var(--card),var(--card2));
   border:1px solid var(--border);
@@ -218,6 +218,83 @@ body.light tr:nth-child(even){
   font-size:14px;
   padding:8px;
 }
+
+/* Person Detail Cards */
+.personDetails{
+  display:grid;
+  grid-template-columns:repeat(auto-fill,minmax(300px,1fr));
+  gap:12px;
+  margin:12px;
+}
+.personCard{
+  background:linear-gradient(135deg,var(--card),var(--card2));
+  border:2px solid var(--border);
+  border-radius:12px;
+  padding:14px;
+  box-shadow:var(--shadow);
+}
+.personCard.leave{border-left:4px solid var(--orange)}
+.personCard.absent{border-left:4px solid var(--red)}
+.personCard.medical{border-left:4px solid var(--purple)}
+.personHeader{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  margin-bottom:10px;
+  padding-bottom:8px;
+  border-bottom:1px solid var(--border);
+}
+.personName{
+  font-weight:700;
+  font-size:15px;
+  color:var(--blue);
+}
+.personId{
+  background:rgba(37,99,235,.2);
+  color:var(--blue);
+  padding:4px 8px;
+  border-radius:6px;
+  font-size:11px;
+  font-weight:700;
+}
+.personStats{
+  display:grid;
+  grid-template-columns:repeat(3,1fr);
+  gap:8px;
+  margin-top:8px;
+}
+.statItem{
+  text-align:center;
+  padding:8px;
+  border-radius:8px;
+  background:rgba(255,255,255,.05);
+}
+.statItem b{
+  display:block;
+  font-size:20px;
+  margin-top:4px;
+}
+.statItem.leave b{color:var(--orange)}
+.statItem.absent b{color:var(--red)}
+.statItem.medical b{color:var(--purple)}
+.statItem span{
+  font-size:10px;
+  color:var(--muted);
+  font-weight:700;
+}
+.dateList{
+  margin-top:8px;
+  font-size:11px;
+  color:var(--muted);
+  max-height:100px;
+  overflow-y:auto;
+}
+.dateList b{
+  color:var(--text);
+  display:block;
+  margin:4px 0;
+}
+
 .reportFilters{
   background:linear-gradient(135deg,var(--card),var(--card2));
   border:1px solid var(--border);
@@ -257,6 +334,27 @@ body.light tr:nth-child(even){
 .themeToggle:hover{
   transform:scale(1.1);
 }
+.viewToggle{
+  display:flex;
+  gap:10px;
+  justify-content:center;
+  margin:12px;
+}
+.viewBtn{
+  padding:10px 20px;
+  border-radius:8px;
+  border:2px solid var(--border);
+  background:var(--card);
+  color:var(--text);
+  cursor:pointer;
+  font-weight:700;
+  transition:all .3s;
+}
+.viewBtn.active{
+  background:var(--blue);
+  color:white;
+  border-color:var(--blue);
+}
 @page{
   size:A4 landscape;
   margin:8mm;
@@ -266,7 +364,7 @@ body.light tr:nth-child(even){
     background:white;
     color:black;
   }
-  .controls,.btnArea,.noPrint,.detailBox,.reportFilters,.smartChart,.themeToggle{
+  .controls,.btnArea,.noPrint,.detailBox,.reportFilters,.smartChart,.themeToggle,.personDetails,.viewToggle{
     display:none!important;
   }
   table{
@@ -285,11 +383,14 @@ body.light tr:nth-child(even){
   }
 }
 @media(max-width:900px){
-  .controls,.kpi,.reportFilters,.detailRow{
+  .controls,.kpi,.reportFilters,.detailRow,.personStats{
     grid-template-columns:1fr;
   }
   .kpi{
     grid-template-columns:repeat(2,1fr);
+  }
+  .personDetails{
+    grid-template-columns:1fr;
   }
 }
 </style>
@@ -297,7 +398,7 @@ body.light tr:nth-child(even){
 
 <body>
 
-<button class="themeToggle" onclick="toggleTheme()">🌙 / ☀️ Theme</button>
+<button class="themeToggle" onclick="toggleTheme()">🌙 / ️ Theme</button>
 
 <div class="header">
   <h2>🏭 GMS TEXTILES LTD</h2>
@@ -427,8 +528,8 @@ body.light tr:nth-child(even){
     </select>
   </div>
   <div>
-    <label>🔍 Search ID Card</label>
-    <input type="text" id="searchId" placeholder="Enter ID Card">
+    <label>🔍 Search by ID Card</label>
+    <input type="text" id="searchId" placeholder="Enter ID Card Number">
   </div>
   <div>
     <label>📅 Month</label>
@@ -462,6 +563,11 @@ body.light tr:nth-child(even){
   </div>
 </div>
 
+<div class="viewToggle noPrint">
+  <button class="viewBtn active" onclick="switchView('table')">📋 Table View</button>
+  <button class="viewBtn" onclick="switchView('person')">👤 Person Details</button>
+</div>
+
 <div class="btnArea" style="text-align:center">
   From:
   <input type="date" id="fromDate">
@@ -489,6 +595,9 @@ body.light tr:nth-child(even){
 <div id="smartChartBox" class="smartChart">
   <canvas id="smartChart" height="100"></canvas>
 </div>
+
+<!-- Person Details View -->
+<div id="personDetailsView" class="personDetails" style="display:none"></div>
 
 <table id="reportTable">
   <thead>
@@ -554,6 +663,8 @@ if(!user){
 }
 
 let chart, smartChart;
+let currentView='table';
+let allRows=[];
 
 function today(){
   return new Date().toISOString().slice(0,10);
@@ -646,6 +757,21 @@ window.toggleReportFilters=function(){
   }
 };
 
+window.switchView=function(view){
+  currentView=view;
+  document.querySelectorAll('.viewBtn').forEach(b=>b.classList.remove('active'));
+  event.target.classList.add('active');
+  
+  if(view==='table'){
+    document.getElementById('reportTable').style.display='table';
+    document.getElementById('personDetailsView').style.display='none';
+  }else{
+    document.getElementById('reportTable').style.display='none';
+    document.getElementById('personDetailsView').style.display='grid';
+    renderPersonDetails(allRows);
+  }
+};
+
 window.saveReport=async function(){
   calculatePresent();
 
@@ -729,7 +855,7 @@ window.loadRangeReport=async function(){
   });
 
   rows.sort((a,b)=>a.date.localeCompare(b.date));
-
+  allRows=rows;
   renderTable(rows);
 };
 
@@ -738,7 +864,7 @@ window.loadDetailedReport=async function(){
   let to=document.getElementById("filterTo").value;
   let filterComp=document.getElementById("filterCompany").value;
   let filterMcd=document.getElementById("filterMcd").value;
-  let searchId=document.getElementById("searchId").value.toLowerCase();
+  let searchId=document.getElementById("searchId").value.toLowerCase().trim();
   let filterMonth=document.getElementById("filterMonth").value;
   let filterYear=document.getElementById("filterYear").value;
 
@@ -764,17 +890,17 @@ window.loadDetailedReport=async function(){
     // Year filter
     if(filterYear && rowDate.substring(0,4)!==filterYear) return;
     
-    // ID Card search
+    // ID Card search - show all records for that person
     if(searchId){
       let found=false;
       if(x.leaveDetails){
-        x.leaveDetails.forEach(d=>{ if((d.idCard||"").toLowerCase().includes(searchId)) found=true; });
+        x.leaveDetails.forEach(dt=>{ if((dt.idCard||"").toLowerCase().includes(searchId)) found=true; });
       }
       if(x.absentDetails){
-        x.absentDetails.forEach(d=>{ if((d.idCard||"").toLowerCase().includes(searchId)) found=true; });
+        x.absentDetails.forEach(dt=>{ if((dt.idCard||"").toLowerCase().includes(searchId)) found=true; });
       }
       if(x.medicalDetails){
-        x.medicalDetails.forEach(d=>{ if((d.idCard||"").toLowerCase().includes(searchId)) found=true; });
+        x.medicalDetails.forEach(dt=>{ if((dt.idCard||"").toLowerCase().includes(searchId)) found=true; });
       }
       if(!found) return;
     }
@@ -783,9 +909,22 @@ window.loadDetailedReport=async function(){
   });
 
   rows.sort((a,b)=>a.date.localeCompare(b.date));
-
-  renderTable(rows);
-  renderSmartChart(rows);
+  allRows=rows;
+  
+  if(searchId && !filterMcd){
+    // Show person-wise summary
+    renderPersonDetails(rows);
+    document.getElementById('personDetailsView').style.display='grid';
+    document.getElementById('reportTable').style.display='none';
+  }else{
+    // Show table view
+    renderTable(rows);
+    renderPersonDetails(rows);
+    if(currentView==='person'){
+      document.getElementById('personDetailsView').style.display='grid';
+      document.getElementById('reportTable').style.display='none';
+    }
+  }
 };
 
 function renderTable(rows){
@@ -835,6 +974,104 @@ function renderTable(rows){
   renderChart(gtTotal,gtLeave,gtAbsent,gtMedical,gtPresent);
 }
 
+function renderPersonDetails(rows){
+  let personData={};
+  
+  rows.forEach(r=>{
+    // Process Leave
+    if(r.leaveDetails && r.leaveDetails.length>0){
+      r.leaveDetails.forEach(d=>{
+        let key=(d.idCard||d.name||"").toLowerCase();
+        if(!key) return;
+        if(!personData[key]){
+          personData[key]={
+            name:d.name||"Unknown",
+            idCard:d.idCard||"Unknown",
+            leave:0,absent:0,medical:0,
+            leaveDates:[],absentDates:[],medicalDates:[]
+          };
+        }
+        personData[key].leave++;
+        personData[key].leaveDates.push({date:r.date,mcd:r.mcd,company:r.company});
+      });
+    }
+    // Process Absent
+    if(r.absentDetails && r.absentDetails.length>0){
+      r.absentDetails.forEach(d=>{
+        let key=(d.idCard||d.name||"").toLowerCase();
+        if(!key) return;
+        if(!personData[key]){
+          personData[key]={
+            name:d.name||"Unknown",
+            idCard:d.idCard||"Unknown",
+            leave:0,absent:0,medical:0,
+            leaveDates:[],absentDates:[],medicalDates:[]
+          };
+        }
+        personData[key].absent++;
+        personData[key].absentDates.push({date:r.date,mcd:r.mcd,company:r.company});
+      });
+    }
+    // Process Medical
+    if(r.medicalDetails && r.medicalDetails.length>0){
+      r.medicalDetails.forEach(d=>{
+        let key=(d.idCard||d.name||"").toLowerCase();
+        if(!key) return;
+        if(!personData[key]){
+          personData[key]={
+            name:d.name||"Unknown",
+            idCard:d.idCard||"Unknown",
+            leave:0,absent:0,medical:0,
+            leaveDates:[],absentDates:[],medicalDates:[]
+          };
+        }
+        personData[key].medical++;
+        personData[key].medicalDates.push({date:r.date,mcd:r.mcd,company:r.company});
+      });
+    }
+  });
+  
+  let html="";
+  Object.values(personData).forEach(p=>{
+    let totalDays=p.leave+p.absent+p.medical;
+    
+    let leaveDatesHtml=p.leaveDates.map(d=>`<b>${d.date}</b> ${d.mcd} (${d.company})`).join('');
+    let absentDatesHtml=p.absentDates.map(d=>`<b>${d.date}</b> ${d.mcd} (${d.company})`).join('');
+    let medicalDatesHtml=p.medicalDates.map(d=>`<b>${d.date}</b> ${d.mcd} (${d.company})`).join('');
+    
+    html+=`
+      <div class="personCard">
+        <div class="personHeader">
+          <div class="personName">👤 ${p.name}</div>
+          <div class="personId">🆔 ${p.idCard}</div>
+        </div>
+        <div class="personStats">
+          <div class="statItem leave">
+            <span>🏖 Leave</span>
+            <b>${p.leave}</b>
+          </div>
+          <div class="statItem absent">
+            <span>❌ Absent</span>
+            <b>${p.absent}</b>
+          </div>
+          <div class="statItem medical">
+            <span>🏥 Medical</span>
+            <b>${p.medical}</b>
+          </div>
+        </div>
+        <div style="margin-top:10px;padding-top:10px;border-top:1px solid var(--border);text-align:center">
+          <b style="color:var(--blue);font-size:18px">📅 Total Days: ${totalDays}</b>
+        </div>
+        ${p.leave>0?`<div class="dateList"><b>🏖 Leave Dates:</b>${leaveDatesHtml}</div>`:''}
+        ${p.absent>0?`<div class="dateList"><b>❌ Absent Dates:</b>${absentDatesHtml}</div>`:''}
+        ${p.medical>0?`<div class="dateList"><b>🏥 Medical Dates:</b>${medicalDatesHtml}</div>`:''}
+      </div>
+    `;
+  });
+  
+  document.getElementById("personDetailsView").innerHTML=html || '<div style="grid-column:1/-1;text-align:center;padding:40px;color:var(--muted)">📭 No Data Found</div>';
+}
+
 function renderChart(total,leave,absent,medical,present){
   if(chart) chart.destroy();
   
@@ -876,109 +1113,6 @@ function renderChart(total,leave,absent,medical,present){
         }
       }
     }
-  });
-}
-
-function renderSmartChart(rows){
-  if(smartChart) smartChart.destroy();
-  
-  // Count total leave, absent, medical days per person
-  let personData={};
-  rows.forEach(r=>{
-    if(r.leaveDetails){
-      r.leaveDetails.forEach(d=>{
-        let key=d.idCard || d.name || "Unknown";
-        if(!personData[key]) personData[key]={leave:0,absent:0,medical:0,name:d.name,idCard:d.idCard};
-        personData[key].leave++;
-      });
-    }
-    if(r.absentDetails){
-      r.absentDetails.forEach(d=>{
-        let key=d.idCard || d.name || "Unknown";
-        if(!personData[key]) personData[key]={leave:0,absent:0,medical:0,name:d.name,idCard:d.idCard};
-        personData[key].absent++;
-      });
-    }
-    if(r.medicalDetails){
-      r.medicalDetails.forEach(d=>{
-        let key=d.idCard || d.name || "Unknown";
-        if(!personData[key]) personData[key]={leave:0,absent:0,medical:0,name:d.name,idCard:d.idCard};
-        personData[key].medical++;
-      });
-    }
-  });
-  
-  let labels=Object.keys(personData).map(k=>personData[k].name || personData[k].idCard || "Unknown");
-  let leaveData=Object.values(personData).map(p=>p.leave);
-  let absentData=Object.values(personData).map(p=>p.absent);
-  let medicalData=Object.values(personData).map(p=>p.medical);
-  
-  document.getElementById("smartChartBox").style.display="block";
-  
-  const isLight=document.body.classList.contains("light");
-  const textColor=isLight?"#1e293b":"#ffffff";
-  
-  smartChart=new Chart(document.getElementById("smartChart"),{
-    type:"bar",
-    data:{
-      labels:labels,
-      datasets:[
-        {label:"🏖 Leave", data:leaveData, backgroundColor:"#f59e0b", borderRadius:8},
-        {label:"❌ Absent", data:absentData, backgroundColor:"#ef4444", borderRadius:8},
-        {label:"🏥 Medical", data:medicalData, backgroundColor:"#8b5cf6", borderRadius:8}
-      ]
-    },
-    options:{
-      responsive:true,
-      plugins:{
-        legend:{display:true, position:"top", labels:{color:textColor,font:{weight:"600"}}},
-        title:{
-          display:true,
-          text:"📈 Individual Attendance Summary (Leave/Absent/Medical)",
-          color:textColor,
-          font:{size:16,weight:"700"}
-        },
-        datalabels:{
-          display:true,
-          color:"white",
-          font:{weight:"bold", size:11},
-          anchor:"center",
-          align:"center"
-        }
-      },
-      scales:{
-        y:{
-          beginAtZero:true,
-          ticks:{stepSize:1,color:textColor},
-          grid:{color:isLight?"rgba(0,0,0,.1)":"rgba(255,255,255,.1)"}
-        },
-        x:{
-          grid:{display:false},
-          ticks:{color:textColor}
-        }
-      }
-    },
-    plugins:[{
-      afterDatasetsDraw(chart){
-        const ctx=chart.ctx;
-        ctx.save();
-        ctx.font="bold 11px Arial";
-        ctx.textAlign="center";
-        ctx.textBaseline="middle";
-        ctx.fillStyle="white";
-        
-        chart.data.datasets.forEach((dataset, datasetIndex)=>{
-          const meta=chart.getDatasetMeta(datasetIndex);
-          meta.data.forEach((bar, index)=>{
-            const value=dataset.data[index];
-            if(value>0){
-              ctx.fillText(value, bar.x, bar.y - (value * chart.scales.y.height / chart.scales.y.max) / 2);
-            }
-          });
-        });
-        ctx.restore();
-      }
-    }]
   });
 }
 
