@@ -18,18 +18,38 @@
   --green:#22c55e;
   --red:#ef4444;
   --orange:#f59e0b;
+  --purple:#8b5cf6;
+  --shadow:0 10px 40px rgba(0,0,0,.4);
+}
+body.light{
+  --bg:#f8fafc;
+  --card:#ffffff;
+  --card2:#f1f5f9;
+  --text:#1e293b;
+  --muted:#64748b;
+  --border:#cbd5e1;
+  --shadow:0 10px 40px rgba(0,0,0,.1);
 }
 body{
   margin:0;
   background:var(--bg);
   color:var(--text);
   font-family:Segoe UI,Arial,sans-serif;
+  transition:all .3s ease;
 }
 .header{
   text-align:center;
   padding:14px;
+  background:linear-gradient(135deg,var(--card),var(--card2));
+  border-bottom:2px solid var(--blue);
+  box-shadow:var(--shadow);
 }
 .header h2,.header h3,.header h4{margin:2px}
+.header h2{
+  color:var(--blue);
+  font-size:24px;
+  text-shadow:0 0 20px rgba(37,99,235,.5);
+}
 .controls{
   background:linear-gradient(135deg,var(--card),var(--card2));
   border:1px solid var(--border);
@@ -39,6 +59,7 @@ body{
   display:grid;
   grid-template-columns:repeat(4,1fr);
   gap:10px;
+  box-shadow:var(--shadow);
 }
 label{
   font-size:12px;
@@ -50,10 +71,16 @@ input,select{
   padding:11px;
   border-radius:10px;
   border:1px solid var(--border);
-  background:#0b1220;
-  color:white;
+  background:var(--bg);
+  color:var(--text);
   font-size:16px;
   box-sizing:border-box;
+  transition:all .3s;
+}
+input:focus,select:focus{
+  outline:none;
+  border-color:var(--blue);
+  box-shadow:0 0 0 3px rgba(37,99,235,.1);
 }
 button{
   padding:11px 16px;
@@ -63,18 +90,24 @@ button{
   font-weight:900;
   cursor:pointer;
   margin:4px;
+  transition:all .3s;
 }
-.save{background:var(--green)}
-.show{background:var(--blue)}
-.excel{background:#059669}
-.print{background:#7c3aed}
-.home{background:#0f766e}
-.del{background:var(--red)}
-.add{background:var(--orange)}
+button:hover{
+  transform:translateY(-2px);
+  box-shadow:0 4px 12px rgba(0,0,0,.3);
+}
+.save{background:linear-gradient(135deg,var(--green),#059669)}
+.show{background:linear-gradient(135deg,var(--blue),#1d4ed8)}
+.excel{background:linear-gradient(135deg,#059669,#047857)}
+.print{background:linear-gradient(135deg,var(--purple),#7c3aed)}
+.home{background:linear-gradient(135deg,#0f766e,#115e59)}
+.del{background:linear-gradient(135deg,var(--red),#dc2626)}
+.add{background:linear-gradient(135deg,var(--orange),#d97706)}
+.theme{background:linear-gradient(135deg,#f59e0b,#d97706)}
 
 .kpi{
   display:grid;
-  grid-template-columns:repeat(4,1fr);
+  grid-template-columns:repeat(5,1fr);
   gap:12px;
   margin:12px;
 }
@@ -84,6 +117,11 @@ button{
   border-radius:16px;
   padding:14px;
   text-align:center;
+  box-shadow:var(--shadow);
+  transition:all .3s;
+}
+.kpiBox:hover{
+  transform:translateY(-5px);
 }
 .kpiBox span{
   color:var(--muted);
@@ -97,43 +135,127 @@ button{
   margin-top:6px;
 }
 .chartBox{
-  background:white;
-  color:black;
+  background:var(--card);
+  color:var(--text);
   border-radius:16px;
   padding:12px;
   margin:12px;
+  border:1px solid var(--border);
+  box-shadow:var(--shadow);
 }
 table{
   width:98%;
   margin:12px auto;
   border-collapse:collapse;
-  background:white;
-  color:black;
+  background:var(--card);
+  color:var(--text);
   font-size:13px;
+  box-shadow:var(--shadow);
+  border-radius:12px;
+  overflow:hidden;
 }
 th,td{
-  border:1px solid #000;
+  border:1px solid var(--border);
   padding:7px;
   text-align:center;
 }
 th{
-  background:#1f4e79;
+  background:linear-gradient(135deg,var(--blue),var(--purple));
   color:white;
+  font-weight:700;
+}
+tr:nth-child(even){
+  background:rgba(255,255,255,.05);
+}
+body.light tr:nth-child(even){
+  background:rgba(0,0,0,.02);
 }
 .totalRow{
-  background:#d9ead3;
+  background:linear-gradient(135deg,#16a34a,#059669);
+  color:white;
   font-weight:bold;
 }
 .toast{
   position:fixed;
   right:20px;
   bottom:20px;
-  background:#22c55e;
+  background:linear-gradient(135deg,var(--green),#059669);
   color:white;
   padding:12px 20px;
   border-radius:10px;
   font-weight:bold;
   display:none;
+  box-shadow:0 4px 12px rgba(0,0,0,.3);
+  animation:slideIn .3s ease;
+}
+@keyframes slideIn{
+  from{transform:translateX(400px);opacity:0}
+  to{transform:translateX(0);opacity:1}
+}
+
+/* New styles for dynamic boxes */
+.detailBox{
+  background:linear-gradient(135deg,var(--card),var(--card2));
+  border:1px solid var(--border);
+  border-radius:12px;
+  padding:12px;
+  margin:8px 12px;
+  display:none;
+  box-shadow:var(--shadow);
+}
+.detailBox h4{
+  margin:0 0 10px 0;
+  color:var(--blue);
+  font-size:14px;
+}
+.detailRow{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:10px;
+  margin-bottom:8px;
+}
+.detailRow input{
+  font-size:14px;
+  padding:8px;
+}
+.reportFilters{
+  background:linear-gradient(135deg,var(--card),var(--card2));
+  border:1px solid var(--border);
+  border-radius:18px;
+  padding:14px;
+  margin:12px;
+  display:none;
+  grid-template-columns:repeat(4,1fr);
+  gap:10px;
+  box-shadow:var(--shadow);
+}
+.smartChart{
+  background:var(--card);
+  color:var(--text);
+  border-radius:16px;
+  padding:12px;
+  margin:12px;
+  display:none;
+  border:1px solid var(--border);
+  box-shadow:var(--shadow);
+}
+.themeToggle{
+  position:fixed;
+  top:20px;
+  right:20px;
+  z-index:1000;
+  background:linear-gradient(135deg,var(--blue),var(--purple));
+  color:white;
+  border:none;
+  padding:10px 16px;
+  border-radius:50px;
+  cursor:pointer;
+  font-weight:700;
+  box-shadow:0 4px 12px rgba(0,0,0,.3);
+  transition:all .3s;
+}
+.themeToggle:hover{
+  transform:scale(1.1);
 }
 @page{
   size:A4 landscape;
@@ -144,21 +266,30 @@ th{
     background:white;
     color:black;
   }
-  .controls,.btnArea,.noPrint{
+  .controls,.btnArea,.noPrint,.detailBox,.reportFilters,.smartChart,.themeToggle{
     display:none!important;
   }
   table{
     width:100%;
     font-size:11px;
+    box-shadow:none;
   }
   .chartBox{
     width:100%;
     margin:8px 0;
+    box-shadow:none;
+  }
+  .header{
+    border:none;
+    box-shadow:none;
   }
 }
 @media(max-width:900px){
-  .controls,.kpi{
+  .controls,.kpi,.reportFilters,.detailRow{
     grid-template-columns:1fr;
+  }
+  .kpi{
+    grid-template-columns:repeat(2,1fr);
   }
 }
 </style>
@@ -166,21 +297,23 @@ th{
 
 <body>
 
+<button class="themeToggle" onclick="toggleTheme()">🌙 / ☀️ Theme</button>
+
 <div class="header">
-  <h2>GMS TEXTILES LTD</h2>
+  <h2>🏭 GMS TEXTILES LTD</h2>
   <h4>Tansutrapur, Kaliakair, Gazipur</h4>
   <h4>Billing Section</h4>
-  <h3>Daily Manpower Attendance Report</h3>
+  <h3>📊 Daily Manpower Attendance Report</h3>
 </div>
 
 <div class="controls noPrint">
   <div>
-    <label>Report Date</label>
+    <label>📅 Report Date</label>
     <input type="date" id="reportDate">
   </div>
 
   <div>
-    <label>Company</label>
+    <label>🏢 Company</label>
     <select id="company">
       <option>GMS TEXTILES LTD</option>
       <option>GMS COMPOSITE KNITTING</option>
@@ -188,7 +321,7 @@ th{
   </div>
 
   <div>
-    <label>MCD / Department</label>
+    <label>📂 MCD / Department</label>
     <select id="mcd">
       <option>GREY FABRIC MCD</option>
       <option>SHIPMENT MCD</option>
@@ -208,28 +341,124 @@ th{
   </div>
 
   <div>
-    <label>Total Manpower</label>
+    <label>👥 Total Manpower</label>
     <input type="number" id="totalManpower" value="0" oninput="calculatePresent()">
   </div>
 
   <div>
-    <label>Leave</label>
-    <input type="number" id="leaveQty" value="0" oninput="calculatePresent()">
+    <label>🏖 Leave</label>
+    <input type="number" id="leaveQty" value="0" oninput="calculatePresent(); generateDetailBoxes('leave')">
   </div>
 
   <div>
-    <label>Absent</label>
-    <input type="number" id="absentQty" value="0" oninput="calculatePresent()">
+    <label>❌ Absent</label>
+    <input type="number" id="absentQty" value="0" oninput="calculatePresent(); generateDetailBoxes('absent')">
   </div>
 
   <div>
-    <label>Today Present</label>
-    <input type="number" id="presentQty" value="0" readonly>
+    <label>🏥 Medical Leave</label>
+    <input type="number" id="medicalQty" value="0" oninput="calculatePresent(); generateDetailBoxes('medical')">
+  </div>
+
+  <div>
+    <label>✅ Today Present</label>
+    <input type="number" id="presentQty" value="0" readonly style="background:rgba(34,197,94,.2);border-color:var(--green);color:var(--green);font-weight:900">
   </div>
 
   <div style="display:flex;align-items:end;gap:5px;flex-wrap:wrap">
     <button class="save" onclick="saveReport()">💾 Save</button>
     <button class="show" onclick="loadReport()">🔍 Show</button>
+    <button class="show" onclick="toggleReportFilters()">📊 Report Filter</button>
+  </div>
+</div>
+
+<!-- Dynamic Detail Boxes -->
+<div id="leaveBox" class="detailBox">
+  <h4>🏖 Leave Details</h4>
+  <div id="leaveDetails"></div>
+</div>
+
+<div id="absentBox" class="detailBox">
+  <h4>❌ Absent Details</h4>
+  <div id="absentDetails"></div>
+</div>
+
+<div id="medicalBox" class="detailBox">
+  <h4>🏥 Medical Leave Details</h4>
+  <div id="medicalDetails"></div>
+</div>
+
+<!-- Report Filters -->
+<div id="reportFilters" class="reportFilters">
+  <div>
+    <label>From Date</label>
+    <input type="date" id="filterFrom">
+  </div>
+  <div>
+    <label>To Date</label>
+    <input type="date" id="filterTo">
+  </div>
+  <div>
+    <label>Company Filter</label>
+    <select id="filterCompany">
+      <option value="">All Companies</option>
+      <option>GMS TEXTILES LTD</option>
+      <option>GMS COMPOSITE KNITTING</option>
+    </select>
+  </div>
+  <div>
+    <label>MCD Filter</label>
+    <select id="filterMcd">
+      <option value="">All MCD</option>
+      <option>GREY FABRIC MCD</option>
+      <option>SHIPMENT MCD</option>
+      <option>BILLING SECTION</option>
+      <option>OUTER WEAR MCD</option>
+      <option>YARN MCD</option>
+      <option>PRINTING MCD</option>
+      <option>JHUT MCD</option>
+      <option>GENERAL MCD</option>
+      <option>ACCESSORIES MCD</option>
+      <option>LEFTOVER MCD</option>
+      <option>FINISH FABRIC MCD</option>
+      <option>YARN DYEING MCD</option>
+      <option>CHEMICAL MCD</option>
+      <option>GENERAL TECHNICAL MCD</option>
+    </select>
+  </div>
+  <div>
+    <label>🔍 Search ID Card</label>
+    <input type="text" id="searchId" placeholder="Enter ID Card">
+  </div>
+  <div>
+    <label>📅 Month</label>
+    <select id="filterMonth">
+      <option value="">All Months</option>
+      <option value="01">January</option>
+      <option value="02">February</option>
+      <option value="03">March</option>
+      <option value="04">April</option>
+      <option value="05">May</option>
+      <option value="06">June</option>
+      <option value="07">July</option>
+      <option value="08">August</option>
+      <option value="09">September</option>
+      <option value="10">October</option>
+      <option value="11">November</option>
+      <option value="12">December</option>
+    </select>
+  </div>
+  <div>
+    <label>📆 Year</label>
+    <select id="filterYear">
+      <option value="">All Years</option>
+      <option value="2024">2024</option>
+      <option value="2025">2025</option>
+      <option value="2026">2026</option>
+    </select>
+  </div>
+  <div style="display:flex;align-items:end;gap:5px">
+    <button class="show" onclick="loadDetailedReport()">🔍 Apply Filter</button>
   </div>
 </div>
 
@@ -246,38 +475,45 @@ th{
 </div>
 
 <div class="kpi">
-  <div class="kpiBox"><span>👨‍🏭 Total Manpower</span><b id="kpiTotal">0</b></div>
-  <div class="kpiBox"><span>🏖 Leave</span><b id="kpiLeave">0</b></div>
-  <div class="kpiBox"><span>❌ Absent</span><b id="kpiAbsent">0</b></div>
-  <div class="kpiBox"><span>✅ Today Present</span><b id="kpiPresent">0</b></div>
+  <div class="kpiBox"><span>👥 Total Manpower</span><b id="kpiTotal">0</b></div>
+  <div class="kpiBox"><span>🏖 Leave</span><b id="kpiLeave" style="color:var(--orange)">0</b></div>
+  <div class="kpiBox"><span>❌ Absent</span><b id="kpiAbsent" style="color:var(--red)">0</b></div>
+  <div class="kpiBox"><span>🏥 Medical</span><b id="kpiMedical" style="color:var(--purple)">0</b></div>
+  <div class="kpiBox"><span>✅ Today Present</span><b id="kpiPresent" style="color:var(--green)">0</b></div>
 </div>
 
 <div class="chartBox">
   <canvas id="manpowerChart" height="80"></canvas>
 </div>
 
+<div id="smartChartBox" class="smartChart">
+  <canvas id="smartChart" height="100"></canvas>
+</div>
+
 <table id="reportTable">
   <thead>
     <tr>
       <th>SL</th>
-      <th>Date</th>
-      <th>Company</th>
-      <th>MCD</th>
-      <th>Total Manpower</th>
-      <th>Leave</th>
-      <th>Absent</th>
-      <th>Today Present</th>
-      <th>Reported By</th>
-      <th class="noPrint">Action</th>
+      <th>📅 Date</th>
+      <th>🏢 Company</th>
+      <th>📂 MCD</th>
+      <th>👥 Total</th>
+      <th>🏖 Leave</th>
+      <th>❌ Absent</th>
+      <th>🏥 Medical</th>
+      <th>✅ Present</th>
+      <th>👤 By</th>
+      <th class="noPrint">⚡ Action</th>
     </tr>
   </thead>
   <tbody id="tbody"></tbody>
   <tfoot>
     <tr class="totalRow">
-      <td colspan="4">All MCD Total</td>
+      <td colspan="4">📊 All MCD Total</td>
       <td id="gtTotal">0</td>
       <td id="gtLeave">0</td>
       <td id="gtAbsent">0</td>
+      <td id="gtMedical">0</td>
       <td id="gtPresent">0</td>
       <td></td>
       <td class="noPrint"></td>
@@ -317,7 +553,7 @@ if(!user){
   window.location.href="login.html";
 }
 
-let chart;
+let chart, smartChart;
 
 function today(){
   return new Date().toISOString().slice(0,10);
@@ -326,6 +562,26 @@ function today(){
 document.getElementById("reportDate").value=today();
 document.getElementById("fromDate").value=today();
 document.getElementById("toDate").value=today();
+document.getElementById("filterFrom").value=today();
+document.getElementById("filterTo").value=today();
+
+// Theme Toggle
+window.toggleTheme=function(){
+  document.body.classList.toggle("light");
+  localStorage.setItem("billingTheme",document.body.classList.contains("light")?"light":"dark");
+  if(chart) chart.destroy();
+  if(smartChart) smartChart.destroy();
+  let total=Number(document.getElementById("kpiTotal").innerText)||0;
+  let leave=Number(document.getElementById("kpiLeave").innerText)||0;
+  let absent=Number(document.getElementById("kpiAbsent").innerText)||0;
+  let medical=Number(document.getElementById("kpiMedical").innerText)||0;
+  let present=Number(document.getElementById("kpiPresent").innerText)||0;
+  renderChart(total,leave,absent,medical,present);
+};
+
+if(localStorage.getItem("billingTheme")==="light"){
+  document.body.classList.add("light");
+}
 
 function toast(msg){
   let t=document.getElementById("toast");
@@ -338,11 +594,56 @@ window.calculatePresent=function(){
   let total=Number(document.getElementById("totalManpower").value)||0;
   let leave=Number(document.getElementById("leaveQty").value)||0;
   let absent=Number(document.getElementById("absentQty").value)||0;
-  let present=total-leave-absent;
+  let medical=Number(document.getElementById("medicalQty").value)||0;
+  let present=total-leave-absent-medical;
 
   if(present<0) present=0;
 
   document.getElementById("presentQty").value=present;
+};
+
+window.generateDetailBoxes=function(type){
+  let qty=0, container, boxId;
+  
+  if(type==='leave'){
+    qty=Number(document.getElementById("leaveQty").value)||0;
+    container=document.getElementById("leaveDetails");
+    boxId="leaveBox";
+  }else if(type==='absent'){
+    qty=Number(document.getElementById("absentQty").value)||0;
+    container=document.getElementById("absentDetails");
+    boxId="absentBox";
+  }else if(type==='medical'){
+    qty=Number(document.getElementById("medicalQty").value)||0;
+    container=document.getElementById("medicalDetails");
+    boxId="medicalBox";
+  }
+
+  if(qty>0){
+    document.getElementById(boxId).style.display="block";
+    let html="";
+    for(let i=1; i<=qty; i++){
+      html+=`
+        <div class="detailRow">
+          <input type="text" id="${type}Name${i}" placeholder="👤 Name ${i}">
+          <input type="text" id="${type}Id${i}" placeholder="🆔 ID Card ${i}">
+        </div>
+      `;
+    }
+    container.innerHTML=html;
+  }else{
+    document.getElementById(boxId).style.display="none";
+    container.innerHTML="";
+  }
+};
+
+window.toggleReportFilters=function(){
+  let filters=document.getElementById("reportFilters");
+  if(filters.style.display==="grid"){
+    filters.style.display="none";
+  }else{
+    filters.style.display="grid";
+  }
 };
 
 window.saveReport=async function(){
@@ -354,7 +655,26 @@ window.saveReport=async function(){
   let total=Number(document.getElementById("totalManpower").value)||0;
   let leave=Number(document.getElementById("leaveQty").value)||0;
   let absent=Number(document.getElementById("absentQty").value)||0;
+  let medical=Number(document.getElementById("medicalQty").value)||0;
   let present=Number(document.getElementById("presentQty").value)||0;
+
+  // Collect detail data
+  let leaveDetails=[], absentDetails=[], medicalDetails=[];
+  for(let i=1; i<=leave; i++){
+    let name=document.getElementById("leaveName"+i)?.value||"";
+    let idCard=document.getElementById("leaveId"+i)?.value||"";
+    if(name || idCard) leaveDetails.push({name, idCard});
+  }
+  for(let i=1; i<=absent; i++){
+    let name=document.getElementById("absentName"+i)?.value||"";
+    let idCard=document.getElementById("absentId"+i)?.value||"";
+    if(name || idCard) absentDetails.push({name, idCard});
+  }
+  for(let i=1; i<=medical; i++){
+    let name=document.getElementById("medicalName"+i)?.value||"";
+    let idCard=document.getElementById("medicalId"+i)?.value||"";
+    if(name || idCard) medicalDetails.push({name, idCard});
+  }
 
   await addDoc(collection(db,"billingManpowerReport"),{
     date:date,
@@ -363,7 +683,11 @@ window.saveReport=async function(){
     totalManpower:total,
     leave:leave,
     absent:absent,
+    medical:medical,
     present:present,
+    leaveDetails:leaveDetails,
+    absentDetails:absentDetails,
+    medicalDetails:medicalDetails,
     reportedBy:user.name || user.email || "User",
     userId:user.id || "",
     createdAt:new Date().toISOString()
@@ -374,7 +698,11 @@ window.saveReport=async function(){
   document.getElementById("totalManpower").value=0;
   document.getElementById("leaveQty").value=0;
   document.getElementById("absentQty").value=0;
+  document.getElementById("medicalQty").value=0;
   document.getElementById("presentQty").value=0;
+  document.getElementById("leaveBox").style.display="none";
+  document.getElementById("absentBox").style.display="none";
+  document.getElementById("medicalBox").style.display="none";
 
   loadReport();
 };
@@ -405,14 +733,70 @@ window.loadRangeReport=async function(){
   renderTable(rows);
 };
 
+window.loadDetailedReport=async function(){
+  let from=document.getElementById("filterFrom").value;
+  let to=document.getElementById("filterTo").value;
+  let filterComp=document.getElementById("filterCompany").value;
+  let filterMcd=document.getElementById("filterMcd").value;
+  let searchId=document.getElementById("searchId").value.toLowerCase();
+  let filterMonth=document.getElementById("filterMonth").value;
+  let filterYear=document.getElementById("filterYear").value;
+
+  let snap=await getDocs(collection(db,"billingManpowerReport"));
+  let rows=[];
+
+  snap.forEach(d=>{
+    let x=d.data();
+    let rowDate=x.date||"";
+    
+    // Date range filter
+    if(rowDate<from || rowDate>to) return;
+    
+    // Company filter
+    if(filterComp && x.company!==filterComp) return;
+    
+    // MCD filter
+    if(filterMcd && x.mcd!==filterMcd) return;
+    
+    // Month filter
+    if(filterMonth && rowDate.substring(5,7)!==filterMonth) return;
+    
+    // Year filter
+    if(filterYear && rowDate.substring(0,4)!==filterYear) return;
+    
+    // ID Card search
+    if(searchId){
+      let found=false;
+      if(x.leaveDetails){
+        x.leaveDetails.forEach(d=>{ if((d.idCard||"").toLowerCase().includes(searchId)) found=true; });
+      }
+      if(x.absentDetails){
+        x.absentDetails.forEach(d=>{ if((d.idCard||"").toLowerCase().includes(searchId)) found=true; });
+      }
+      if(x.medicalDetails){
+        x.medicalDetails.forEach(d=>{ if((d.idCard||"").toLowerCase().includes(searchId)) found=true; });
+      }
+      if(!found) return;
+    }
+    
+    rows.push({id:d.id,...x});
+  });
+
+  rows.sort((a,b)=>a.date.localeCompare(b.date));
+
+  renderTable(rows);
+  renderSmartChart(rows);
+};
+
 function renderTable(rows){
   let html="";
-  let gtTotal=0,gtLeave=0,gtAbsent=0,gtPresent=0;
+  let gtTotal=0,gtLeave=0,gtAbsent=0,gtMedical=0,gtPresent=0;
 
   rows.forEach((r,i)=>{
     gtTotal+=Number(r.totalManpower)||0;
     gtLeave+=Number(r.leave)||0;
     gtAbsent+=Number(r.absent)||0;
+    gtMedical+=Number(r.medical)||0;
     gtPresent+=Number(r.present)||0;
 
     html+=`
@@ -424,40 +808,47 @@ function renderTable(rows){
         <td>${r.totalManpower||0}</td>
         <td>${r.leave||0}</td>
         <td>${r.absent||0}</td>
+        <td>${r.medical||0}</td>
         <td>${r.present||0}</td>
         <td>${r.reportedBy||""}</td>
         <td class="noPrint">
-          <button class="del" onclick="deleteRow('${r.id}')">Delete</button>
+          <button class="del" onclick="deleteRow('${r.id}')">🗑 Delete</button>
         </td>
       </tr>
     `;
   });
 
-  document.getElementById("tbody").innerHTML=html || `<tr><td colspan="10">No Data Found</td></tr>`;
+  document.getElementById("tbody").innerHTML=html || `<tr><td colspan="11">📭 No Data Found</td></tr>`;
 
   document.getElementById("gtTotal").innerText=gtTotal;
   document.getElementById("gtLeave").innerText=gtLeave;
   document.getElementById("gtAbsent").innerText=gtAbsent;
+  document.getElementById("gtMedical").innerText=gtMedical;
   document.getElementById("gtPresent").innerText=gtPresent;
 
   document.getElementById("kpiTotal").innerText=gtTotal;
   document.getElementById("kpiLeave").innerText=gtLeave;
   document.getElementById("kpiAbsent").innerText=gtAbsent;
+  document.getElementById("kpiMedical").innerText=gtMedical;
   document.getElementById("kpiPresent").innerText=gtPresent;
 
-  renderChart(gtTotal,gtLeave,gtAbsent,gtPresent);
+  renderChart(gtTotal,gtLeave,gtAbsent,gtMedical,gtPresent);
 }
 
-function renderChart(total,leave,absent,present){
+function renderChart(total,leave,absent,medical,present){
   if(chart) chart.destroy();
+  
+  const isLight=document.body.classList.contains("light");
+  const textColor=isLight?"#1e293b":"#ffffff";
 
   chart=new Chart(document.getElementById("manpowerChart"),{
     type:"bar",
     data:{
-      labels:["Total","Leave","Absent","Present"],
+      labels:["Total","Leave","Absent","Medical","Present"],
       datasets:[{
         label:"Manpower",
-        data:[total,leave,absent,present],
+        data:[total,leave,absent,medical,present],
+        backgroundColor:["#3b82f6","#f59e0b","#ef4444","#8b5cf6","#22c55e"],
         borderWidth:1,
         borderRadius:10
       }]
@@ -468,19 +859,131 @@ function renderChart(total,leave,absent,present){
         legend:{display:false},
         title:{
           display:true,
-          text:"Billing Section Manpower Summary"
+          text:"📊 Billing Section Manpower Summary",
+          color:textColor,
+          font:{size:16,weight:"700"}
         }
       },
       scales:{
-        y:{beginAtZero:true},
-        x:{grid:{display:false}}
+        y:{
+          beginAtZero:true,
+          grid:{color:isLight?"rgba(0,0,0,.1)":"rgba(255,255,255,.1)"},
+          ticks:{color:textColor}
+        },
+        x:{
+          grid:{display:false},
+          ticks:{color:textColor}
+        }
       }
     }
   });
 }
 
+function renderSmartChart(rows){
+  if(smartChart) smartChart.destroy();
+  
+  // Count total leave, absent, medical days per person
+  let personData={};
+  rows.forEach(r=>{
+    if(r.leaveDetails){
+      r.leaveDetails.forEach(d=>{
+        let key=d.idCard || d.name || "Unknown";
+        if(!personData[key]) personData[key]={leave:0,absent:0,medical:0,name:d.name,idCard:d.idCard};
+        personData[key].leave++;
+      });
+    }
+    if(r.absentDetails){
+      r.absentDetails.forEach(d=>{
+        let key=d.idCard || d.name || "Unknown";
+        if(!personData[key]) personData[key]={leave:0,absent:0,medical:0,name:d.name,idCard:d.idCard};
+        personData[key].absent++;
+      });
+    }
+    if(r.medicalDetails){
+      r.medicalDetails.forEach(d=>{
+        let key=d.idCard || d.name || "Unknown";
+        if(!personData[key]) personData[key]={leave:0,absent:0,medical:0,name:d.name,idCard:d.idCard};
+        personData[key].medical++;
+      });
+    }
+  });
+  
+  let labels=Object.keys(personData).map(k=>personData[k].name || personData[k].idCard || "Unknown");
+  let leaveData=Object.values(personData).map(p=>p.leave);
+  let absentData=Object.values(personData).map(p=>p.absent);
+  let medicalData=Object.values(personData).map(p=>p.medical);
+  
+  document.getElementById("smartChartBox").style.display="block";
+  
+  const isLight=document.body.classList.contains("light");
+  const textColor=isLight?"#1e293b":"#ffffff";
+  
+  smartChart=new Chart(document.getElementById("smartChart"),{
+    type:"bar",
+    data:{
+      labels:labels,
+      datasets:[
+        {label:"🏖 Leave", data:leaveData, backgroundColor:"#f59e0b", borderRadius:8},
+        {label:"❌ Absent", data:absentData, backgroundColor:"#ef4444", borderRadius:8},
+        {label:"🏥 Medical", data:medicalData, backgroundColor:"#8b5cf6", borderRadius:8}
+      ]
+    },
+    options:{
+      responsive:true,
+      plugins:{
+        legend:{display:true, position:"top", labels:{color:textColor,font:{weight:"600"}}},
+        title:{
+          display:true,
+          text:"📈 Individual Attendance Summary (Leave/Absent/Medical)",
+          color:textColor,
+          font:{size:16,weight:"700"}
+        },
+        datalabels:{
+          display:true,
+          color:"white",
+          font:{weight:"bold", size:11},
+          anchor:"center",
+          align:"center"
+        }
+      },
+      scales:{
+        y:{
+          beginAtZero:true,
+          ticks:{stepSize:1,color:textColor},
+          grid:{color:isLight?"rgba(0,0,0,.1)":"rgba(255,255,255,.1)"}
+        },
+        x:{
+          grid:{display:false},
+          ticks:{color:textColor}
+        }
+      }
+    },
+    plugins:[{
+      afterDatasetsDraw(chart){
+        const ctx=chart.ctx;
+        ctx.save();
+        ctx.font="bold 11px Arial";
+        ctx.textAlign="center";
+        ctx.textBaseline="middle";
+        ctx.fillStyle="white";
+        
+        chart.data.datasets.forEach((dataset, datasetIndex)=>{
+          const meta=chart.getDatasetMeta(datasetIndex);
+          meta.data.forEach((bar, index)=>{
+            const value=dataset.data[index];
+            if(value>0){
+              ctx.fillText(value, bar.x, bar.y - (value * chart.scales.y.height / chart.scales.y.max) / 2);
+            }
+          });
+        });
+        ctx.restore();
+      }
+    }]
+  });
+}
+
 window.deleteRow=async function(id){
-  if(confirm("Delete this report?")){
+  if(confirm("🗑 Delete this report?")){
     await deleteDoc(doc(db,"billingManpowerReport",id));
     toast("Deleted ✅");
     loadRangeReport();
