@@ -397,7 +397,7 @@ window.updateCompanyUI=function(){
   renderMcdChecks("manpowerMcdChecks", getManpowerMCD(), selectedCompanies);
 };
 
-// ✅ Generic MCD Renderer (Works for both Normal & Manpower)
+// ✅ Generic MCD Renderer (Works for both Normal & Manpower) - 🔥 FIXED
 function renderMcdChecks(containerId, selected=[], allowedCompanies=[]){
   let box = document.getElementById(containerId);
   if(!box) return;
@@ -405,6 +405,8 @@ function renderMcdChecks(containerId, selected=[], allowedCompanies=[]){
   let html="";
   const filteredMCDs = MCD_LIST.filter(mcd => {
     const type = MCD_COMPANY_MAP[mcd] || "both";
+    // 🔥 FIX: যদি কোনো কোম্পানি সিলেক্ট না থাকে, সব ১৪টি MCD দেখাও
+    if(allowedCompanies.length === 0) return true;
     if(type === "both") return true;
     if(allowedCompanies.includes("GMS TEXTILES LTD") && type === "textile") return true;
     if(allowedCompanies.includes("GMS COMPOSITE KNITTING") && type === "composite") return true;
