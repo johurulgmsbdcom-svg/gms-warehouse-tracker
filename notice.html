@@ -46,7 +46,7 @@ body{
   transition:background 0.3s,color 0.3s;
 }
 
-/* ===== SIDEBAR (Same as Index) ===== */
+/* ===== SIDEBAR ===== */
 .sidebar{
   position:fixed;
   left:0;
@@ -626,7 +626,7 @@ body.light .noticeItem{background:#f8fafc;}
 /* ===== READ BY LIST (Admin Only) ===== */
 .readByList{
   margin-top:12px;
-  padding:10px;
+  padding:12px;
   background:rgba(59,130,246,0.1);
   border-radius:8px;
   border-left:3px solid var(--blue);
@@ -635,7 +635,7 @@ body.light .noticeItem{background:#f8fafc;}
   font-size:12px;
   font-weight:600;
   color:var(--blue);
-  margin:0 0 8px 0;
+  margin:0 0 10px 0;
   display:flex;
   align-items:center;
   gap:6px;
@@ -648,10 +648,17 @@ body.light .noticeItem{background:#f8fafc;}
 .readByName{
   background:var(--card2);
   color:var(--text);
-  padding:4px 10px;
+  padding:5px 12px;
   border-radius:12px;
   font-size:11px;
   font-weight:500;
+  display:flex;
+  align-items:center;
+  gap:4px;
+}
+.readByName i{
+  font-size:10px;
+  color:var(--green);
 }
 
 /* ===== TOAST ===== */
@@ -747,7 +754,7 @@ body.light .creditFooter{background:var(--card);border-color:#cbd5e1;}
     <button onclick="location.href='change-password.html'">🔐 Password</button>
   </div>
   <div class="sidebarFooter">
-    <button class="themeBtn" onclick="toggleTheme()">🌙 / ☀️ Theme</button>
+    <button class="themeBtn" onclick="toggleTheme()">🌙 / ️ Theme</button>
     <button class="logoutBtn" onclick="logout()">🚪 Logout</button>
   </div>
 </div>
@@ -860,26 +867,23 @@ window.userRole = user?.role || "user";
 window.userName = user?.name || "User";
 window.userId = user?.id || user?.uid || "anonymous";
 
-// 🔊 Audio Context for Notification Sound
+// 🔊 WhatsApp-like Notification Sound
 let audioCtx = null;
 let soundEnabled = true;
 
-function initAudio(){
+// WhatsApp notification sound effect
+function playWhatsAppSound(){
+  if(!soundEnabled) return;
+  
+  // Initialize audio context on first user interaction
   if(!audioCtx){
     try{
       audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-      console.log('Audio context initialized');
-    }catch(e){ 
-      console.log("Audio init failed:", e); 
+    }catch(e){
+      console.log("Audio init failed:", e);
+      return;
     }
   }
-}
-
-function playNotificationSound(){
-  if(!soundEnabled) return;
-  
-  if(!audioCtx) initAudio();
-  if(!audioCtx) return;
   
   try{
     const oscillator = audioCtx.createOscillator();
@@ -888,8 +892,11 @@ function playNotificationSound(){
     oscillator.connect(gainNode);
     gainNode.connect(audioCtx.destination);
     
-    oscillator.frequency.setValueAtTime(523.25, audioCtx.currentTime);
-    oscillator.frequency.exponentialRampToValueAtTime(1046.5, audioCtx.currentTime + 0.1);
+    // WhatsApp-like sound pattern (two beeps)
+    oscillator.frequency.setValueAtTime(800, audioCtx.currentTime);
+    oscillator.frequency.setValueAtTime(1200, audioCtx.currentTime + 0.1);
+    oscillator.frequency.setValueAtTime(800, audioCtx.currentTime + 0.2);
+    oscillator.frequency.setValueAtTime(1200, audioCtx.currentTime + 0.3);
     
     gainNode.gain.setValueAtTime(0.3, audioCtx.currentTime);
     gainNode.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.5);
@@ -897,13 +904,13 @@ function playNotificationSound(){
     oscillator.start(audioCtx.currentTime);
     oscillator.stop(audioCtx.currentTime + 0.5);
     
-    console.log('Notification sound played');
-  }catch(e){ 
-    console.log("Sound play failed:", e); 
+    console.log('WhatsApp notification sound played');
+  }catch(e){
+    console.log("Sound play failed:", e);
   }
 }
 
-// 🔔 Clear App Badge when opened
+// 🔔 Clear App Badge
 function clearAppBadge(){
   if('clearAppBadge' in navigator){
     navigator.clearAppBadge().catch(err => console.log('Badge clear failed:', err));
@@ -912,7 +919,7 @@ function clearAppBadge(){
   if(badge){ badge.style.display = "none"; }
 }
 
-// 🔔 Set App Badge
+// 🔔 Set App Badge (WhatsApp style)
 function updateAppBadge(count){
   if('setAppBadge' in navigator){
     if(count > 0){
@@ -926,7 +933,11 @@ function updateAppBadge(count){
 // 🔓 Unlock audio on first user interaction
 ['click','touchstart','keydown'].forEach(evt=>{
   window.addEventListener(evt, ()=>{ 
-    if(!audioCtx) initAudio(); 
+    if(!audioCtx && soundEnabled) {
+      try{
+        audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      }catch(e){}
+    }
   }, {once:true, passive:true});
 });
 
@@ -1063,7 +1074,7 @@ function updateBadge(){
     badge.style.display = "none";
   }
   
-  // Update app icon badge
+  // Update app icon badge (WhatsApp style)
   updateAppBadge(unread);
 }
 
@@ -1090,7 +1101,7 @@ let allNotices = [];
 // 👁️ Render "Read By" list for admin
 function renderReadBy(readByArray){
   if(!readByArray || readByArray.length === 0) return '';
-  const names = readByArray.map(r => `<span class="readByName">${r.userName || 'Unknown'}</span>`).join('');
+  const names = readByArray.map(r => `<span class="readByName"><i class="fas fa-check"></i> ${r.userName || 'Unknown'}</span>`).join('');
   return `
     <div class="readByList">
       <h4><i class="fas fa-eye"></i> Read by (${readByArray.length}):</h4>
@@ -1245,9 +1256,9 @@ onSnapshot(noticesQuery, (snapshot) => {
   renderNotices();
   updateBadge();
   
-  // 🔊 Play sound for new notice
-  if(hadNewNotice && typeof playNotificationSound === 'function'){
-    playNotificationSound();
+  // 🔊 Play WhatsApp sound for new notice
+  if(hadNewNotice && typeof playWhatsAppSound === 'function'){
+    playWhatsAppSound();
   }
 });
 
@@ -1256,8 +1267,8 @@ onMessage(messaging, (payload) => {
   console.log('[FCM] Foreground:', payload);
   const { title, body } = payload.notification || {};
   
-  // 🔊 Play sound
-  if(typeof playNotificationSound === 'function') playNotificationSound();
+  // 🔊 Play WhatsApp sound
+  if(typeof playWhatsAppSound === 'function') playWhatsAppSound();
   
   // 🔴 Update badge
   if(typeof updateBadge === 'function') {
@@ -1272,7 +1283,7 @@ onMessage(messaging, (payload) => {
   // 📱 Show toast
   showToast(`🔔 ${title || 'New Notice'}: ${body || ''}`, 'info');
   
-  // 🔔 Set app badge
+  // 🔔 Set app badge (WhatsApp style)
   if('setAppBadge' in navigator){
     navigator.setAppBadge(1).catch(console.error);
   }
