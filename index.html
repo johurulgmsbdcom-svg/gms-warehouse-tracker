@@ -1684,6 +1684,41 @@ function showToast(msg, type = 'success') {
   setTimeout(() => t.remove(), 2500);
 }
 
+// 🔊 NOTIFICATION SOUND (Web Audio API - Works in background/foreground)
+let audioCtx = null;
+function initAudio(){
+  if(!audioCtx){
+    try{
+      audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    }catch(e){ console.log("Audio init failed:", e); }
+  }
+}
+function playNotificationSound(){
+  if(!audioCtx) initAudio();
+  if(!audioCtx) return;
+  try{
+    const osc = audioCtx.createOscillator();
+    const gain = audioCtx.createGain();
+    osc.connect(gain);
+    gain.connect(audioCtx.destination);
+    osc.frequency.value = 880;
+    osc.type = 'sine';
+    gain.gain.value = 0.3;
+    osc.start();
+    setTimeout(()=>{ osc.stop(); }, 300);
+  }catch(e){ console.log("Sound play failed:", e); }
+}
+
+// 🔔 CLEAR APP BADGE when app is opened
+function clearAppBadge(){
+  if('clearAppBadge' in navigator){
+    navigator.clearAppBadge().catch(console.error);
+  }
+  // Also clear sidebar badge visually
+  const badge = document.getElementById("sidebarNoticeBadge");
+  if(badge){ badge.style.display = "none"; }
+}
+
 // ===== NOTICE BADGE UPDATE =====
 function updateSidebarNoticeBadge(notices){
   const badge=document.getElementById("sidebarNoticeBadge");
@@ -1744,6 +1779,7 @@ async function loadNotices(){
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-app.js";
 import { getFirestore, enableIndexedDbPersistence, collection, getDocs, doc, updateDoc, setDoc, deleteDoc, query, orderBy, limit, onSnapshot } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-firestore.js";
+import { getMessaging, onMessage, getToken } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-messaging.js";
 
 const firebaseConfig={
   apiKey:"AIzaSyD-wBCF5eeWMHobLFOhBzKW7aB2pagz9-w",
@@ -1755,6 +1791,7 @@ const firebaseConfig={
 };
 const app=initializeApp(firebaseConfig);
 const db=getFirestore(app);
+const messaging = getMessaging(app);
 
 // 🔥 OFFLINE PERSISTENCE ENABLED
 enableIndexedDbPersistence(db).catch((err) => {
@@ -2501,6 +2538,26 @@ onSnapshot(noticesRef, (snapshot) => {
   updateSidebarNoticeBadge(rows);
 });
 
+// 🔔 FOREGROUND MESSAGE HANDLER (Sound + Badge + Toast)
+onMessage(messaging, (payload) => {
+  console.log('[FCM] Foreground:', payload);
+  const { title, body } = payload.notification || {};
+  
+  // 🔊 Play sound
+  if(typeof playNotificationSound === 'function') playNotificationSound();
+  
+  // 🔴 Update badge
+  if(typeof updateSidebarNoticeBadge === 'function') loadNotices();
+  
+  // 📱 Show toast
+  showToast(`🔔 ${title || 'New Notice'}: ${body || ''}`, 'info');
+  
+  // 🔔 Set app badge (Android)
+  if('setAppBadge' in navigator){
+    navigator.setAppBadge(1).catch(console.error);
+  }
+});
+
 // ===== INITIALIZATION =====
 setupRoleUI();
 setupCompanyPermissions();
@@ -2509,6 +2566,19 @@ loadNotices();
 updateLastActive();
 renderBackupLog();
 loadProfilePic();
+
+// 🔊 Unlock audio on first user interaction
+['click','touchstart','keydown'].forEach(evt=>{
+  window.addEventListener(evt, ()=>{ if(!audioCtx) initAudio(); }, {once:true, passive:true});
+});
+
+// 🔔 Clear badge when app becomes visible
+document.addEventListener('visibilitychange', ()=>{
+  if(document.visibilityState === 'visible'){
+    clearAppBadge();
+  }
+});
+
 setInterval(updateLastActive,60000);
 setInterval(loadNotices,30000); // Notice auto refresh every 30 seconds
 setInterval(loadDashboardStock,60000);
