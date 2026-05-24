@@ -754,7 +754,7 @@ body.light .creditFooter{background:var(--card);border-color:#cbd5e1;}
     <button onclick="location.href='change-password.html'">🔐 Password</button>
   </div>
   <div class="sidebarFooter">
-    <button class="themeBtn" onclick="toggleTheme()">🌙 / ️ Theme</button>
+    <button class="themeBtn" onclick="toggleTheme()">🌙 / ☀️ Theme</button>
     <button class="logoutBtn" onclick="logout()">🚪 Logout</button>
   </div>
 </div>
@@ -831,8 +831,9 @@ body.light .creditFooter{background:var(--card);border-color:#cbd5e1;}
         <button class="filterBtn" onclick="filterNotices('today')">Today</button>
       </div>
       <div id="noticeList">
-        <div class="loadingSpinner">
-          <i class="fas fa-spinner"></i> Loading notices...
+        <div style="text-align:center;padding:40px;color:var(--muted);">
+          <i class="fas fa-spinner fa-spin" style="font-size:32px;margin-bottom:16px;"></i>
+          <div>Loading notices...</div>
         </div>
       </div>
     </div>
@@ -867,15 +868,15 @@ window.userRole = user?.role || "user";
 window.userName = user?.name || "User";
 window.userId = user?.id || user?.uid || "anonymous";
 
+console.log('User loaded:', window.userName, window.userRole);
+
 // 🔊 WhatsApp-like Notification Sound
 let audioCtx = null;
 let soundEnabled = true;
 
-// WhatsApp notification sound effect
 function playWhatsAppSound(){
   if(!soundEnabled) return;
   
-  // Initialize audio context on first user interaction
   if(!audioCtx){
     try{
       audioCtx = new (window.AudioContext || window.webkitAudioContext)();
@@ -892,7 +893,6 @@ function playWhatsAppSound(){
     oscillator.connect(gainNode);
     gainNode.connect(audioCtx.destination);
     
-    // WhatsApp-like sound pattern (two beeps)
     oscillator.frequency.setValueAtTime(800, audioCtx.currentTime);
     oscillator.frequency.setValueAtTime(1200, audioCtx.currentTime + 0.1);
     oscillator.frequency.setValueAtTime(800, audioCtx.currentTime + 0.2);
@@ -919,7 +919,7 @@ function clearAppBadge(){
   if(badge){ badge.style.display = "none"; }
 }
 
-// 🔔 Set App Badge (WhatsApp style)
+// 🔔 Set App Badge
 function updateAppBadge(count){
   if('setAppBadge' in navigator){
     if(count > 0){
@@ -967,6 +967,7 @@ async function markNoticeRead(noticeId){
             readAt: new Date().toISOString()
           });
           await updateDoc(noticeRef, { readBy: readBy });
+          console.log('Marked as read:', noticeId);
         }
       }
     }catch(e){ 
@@ -991,6 +992,7 @@ function setupUI(){
     document.getElementById("createCard").style.display = "none";
   } else {
     document.getElementById("createCard").classList.add("show");
+    console.log('Admin UI enabled');
   }
 
   const manpowerAccess = user?.manpowerAccessLevel || (user?.manpowerAccess === true ? "all" : "none");
@@ -1074,7 +1076,6 @@ function updateBadge(){
     badge.style.display = "none";
   }
   
-  // Update app icon badge (WhatsApp style)
   updateAppBadge(unread);
 }
 
@@ -1112,6 +1113,7 @@ function renderReadBy(readByArray){
 
 // Render notices
 function renderNotices(){
+  console.log('Rendering notices, count:', allNotices.length);
   const list = document.getElementById("noticeList");
   let notices = [...allNotices];
 
@@ -1170,7 +1172,7 @@ function renderNotices(){
           ${!isRead ? `<button class="actionBtn readBtn" onclick="markNoticeRead('${n.id}')"><i class="fas fa-check"></i> Mark as Read</button>` : ''}
           ${(window.userRole === "admin" || window.userRole === "full") ? `<button class="actionBtn deleteBtn" onclick="deleteNotice('${n.id}')"><i class="fas fa-trash"></i> Delete</button>` : ''}
         </div>
-        ${window.userRole === "admin" || window.userRole === "full" ? renderReadBy(n.readBy) : ''}
+        ${(window.userRole === "admin" || window.userRole === "full") ? renderReadBy(n.readBy) : ''}
       </div>
     `;
   });
@@ -1219,6 +1221,8 @@ const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 const messaging = getMessaging(app);
 
+console.log('Firebase initialized');
+
 // 🔥 OFFLINE PERSISTENCE ENABLED
 enableIndexedDbPersistence(db).catch((err) => {
   if (err.code == 'failed-precondition') {
@@ -1243,51 +1247,66 @@ const noticesQuery = query(noticesRef, orderBy("createdAt", "desc"));
 
 let lastNoticeCount = 0;
 
+// Start listening for notices
+console.log('Starting notice listener...');
 onSnapshot(noticesQuery, (snapshot) => {
+  console.log('Snapshot received, docs:', snapshot.size);
   const newNotices = [];
   snapshot.forEach(doc => {
-    newNotices.push({ id: doc.id, ...doc.data() });
+    const data = doc.data();
+    console.log('Notice doc:', doc.id, data);
+    newNotices.push({ id: doc.id, ...data });
   });
 
   const hadNewNotice = newNotices.length > lastNoticeCount && lastNoticeCount > 0;
   lastNoticeCount = newNotices.length;
 
-  allNotices = newNotices;
-  renderNotices();
-  updateBadge();
+  window.allNotices = newNotices;
+  console.log('Total notices:', window.allNotices.length);
+  
+  if(typeof renderNotices === 'function'){
+    renderNotices();
+  }
+  if(typeof updateBadge === 'function'){
+    updateBadge();
+  }
   
   // 🔊 Play WhatsApp sound for new notice
-  if(hadNewNotice && typeof playWhatsAppSound === 'function'){
-    playWhatsAppSound();
+  if(hadNewNotice && typeof window.playWhatsAppSound === 'function'){
+    window.playWhatsAppSound();
   }
+}, (error) => {
+  console.error('Error loading notices:', error);
+  document.getElementById("noticeList").innerHTML = `
+    <div class="emptyState">
+      <i class="fas fa-exclamation-triangle" style="color:var(--red);font-size:48px;margin-bottom:16px;"></i>
+      <h3>Error loading notices</h3>
+      <p>${error.message}</p>
+      <button onclick="location.reload()" style="margin-top:16px;padding:10px 20px;background:var(--blue);color:#fff;border:none;border-radius:8px;cursor:pointer;">Retry</button>
+    </div>
+  `;
 });
 
 // 🔔 FOREGROUND MESSAGE HANDLER
-onMessage(messaging, (payload) => {
-  console.log('[FCM] Foreground:', payload);
-  const { title, body } = payload.notification || {};
-  
-  // 🔊 Play WhatsApp sound
-  if(typeof playWhatsAppSound === 'function') playWhatsAppSound();
-  
-  // 🔴 Update badge
-  if(typeof updateBadge === 'function') {
-    onSnapshot(noticesQuery, (snapshot) => {
-      const rows = [];
-      snapshot.forEach(d => rows.push({ id: d.id, ...d.data() }));
-      allNotices = rows;
-      updateBadge();
-    });
-  }
-  
-  // 📱 Show toast
-  showToast(`🔔 ${title || 'New Notice'}: ${body || ''}`, 'info');
-  
-  // 🔔 Set app badge (WhatsApp style)
-  if('setAppBadge' in navigator){
-    navigator.setAppBadge(1).catch(console.error);
-  }
-});
+if(typeof onMessage === 'function'){
+  onMessage(messaging, (payload) => {
+    console.log('[FCM] Foreground:', payload);
+    const { title, body } = payload.notification || {};
+    
+    // 🔊 Play WhatsApp sound
+    if(typeof window.playWhatsAppSound === 'function') window.playWhatsAppSound();
+    
+    // 📱 Show toast
+    if(typeof showToast === 'function'){
+      showToast(`🔔 ${title || 'New Notice'}: ${body || ''}`, 'info');
+    }
+    
+    // 🔔 Set app badge
+    if('setAppBadge' in navigator){
+      navigator.setAppBadge(1).catch(console.error);
+    }
+  });
+}
 
 // ===== PUBLISH NOTICE (Admin) =====
 window.publishNotice = async function(){
@@ -1320,6 +1339,7 @@ window.publishNotice = async function(){
     };
 
     await addDoc(collection(db, "liveNotices"), noticeData);
+    console.log('Notice published:', noticeData);
 
     if(sendPush){
       try{
@@ -1382,13 +1402,13 @@ if("Notification" in window && Notification.permission === "default"){
 // 🔔 Clear badge when app becomes visible
 document.addEventListener('visibilitychange', ()=>{
   if(document.visibilityState === 'visible'){
-    clearAppBadge();
+    if(typeof clearAppBadge === 'function') clearAppBadge();
   }
 });
 
 // ===== INITIAL LOAD =====
-setupUI();
-updateBadge();
+if(typeof setupUI === 'function') setupUI();
+if(typeof updateBadge === 'function') updateBadge();
 </script>
 </body>
 </html>
