@@ -147,6 +147,7 @@ body.light .companySwitch button:hover:not(.active){color:#1e293b;}
   display:flex;
   align-items:center;
   gap:10px;
+  position:relative;
 }
 body.light .sidebarNav button{color:#475569;}
 .sidebarNav button:hover{
@@ -161,6 +162,28 @@ body.light .sidebarNav button:hover{color:#1e293b;}
   color:#fff!important;
   box-shadow:0 4px 20px rgba(59,130,246,.4);
   font-weight:600;
+}
+.notice-badge{
+  position:absolute;
+  right:10px;
+  top:50%;
+  transform:translateY(-50%);
+  background:var(--red);
+  color:#fff;
+  font-size:10px;
+  font-weight:700;
+  min-width:18px;
+  height:18px;
+  border-radius:9px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  padding:0 5px;
+  animation:pulseBadge 2s infinite;
+}
+@keyframes pulseBadge{
+  0%,100%{transform:translateY(-50%) scale(1);}
+  50%{transform:translateY(-50%) scale(1.2);}
 }
 .sidebarFooter{
   padding:16px;
@@ -320,6 +343,8 @@ body.light .systemNameBar{
 /* ===== NOTICE BAR ===== */
 .noticeBar{
   background:linear-gradient(90deg,#f59e0b 0%,#ef4444 50%,#3b82f6 100%);
+  background-size:300% 100%;
+  animation:gradientShift 5s ease infinite;
   color:#fff;
   padding:10px 0;
   font-weight:600;
@@ -328,19 +353,27 @@ body.light .systemNameBar{
   white-space:nowrap;
   width:100%;
   display:block;
+  position:relative;
 }
 .noticeMove{
   display:inline-block;
   padding-left:100%;
   animation:marquee 30s linear infinite;
   white-space:nowrap;
+  will-change:transform;
 }
 @keyframes marquee{
   0%{transform:translateX(0)}
   100%{transform:translateX(-100%)}
 }
+@keyframes gradientShift{
+  0%{background-position:0% 50%;}
+  50%{background-position:100% 50%;}
+  100%{background-position:0% 50%;}
+}
 @media(max-width:768px){
   .noticeBar{font-size:12px;padding:8px 0;}
+  .noticeMove{animation-duration:20s;}
 }
 
 /* ===== PAGE CONTENT ===== */
@@ -1038,16 +1071,6 @@ body.light .creditFooter{background:var(--card);border-color:#cbd5e1;}
   padding: 12px 20px;
   z-index: 99997;
 }
-
-/* ===== ADMIN NOTICE BUTTON ===== */
-#noticeBtn.admin-mode {
-  background: linear-gradient(135deg, rgba(245, 158, 11, 0.2), rgba(239, 68, 68, 0.2)) !important;
-  border: 1px solid rgba(245, 158, 11, 0.4) !important;
-  color: #f59e0b !important;
-}
-#noticeBtn.admin-mode:hover {
-  background: linear-gradient(135deg, rgba(245, 158, 11, 0.3), rgba(239, 68, 68, 0.3)) !important;
-}
 </style>
 
 <meta name="theme-color" content="#3b82f6">
@@ -1092,7 +1115,10 @@ body.light .creditFooter{background:var(--card);border-color:#cbd5e1;}
     <button id="needleNav" onclick="openPage('needle',this)">🪡 Needle</button>
     <button id="adminNav" onclick="location.href='admin.html'">👑 Admin</button>
     <button id="manpowerNav" onclick="location.href='manpower.html'">👨‍ Manpower</button>
-    <button id="noticeBtn" onclick="handleNoticeClick()">📢 Notice</button>
+    <button id="noticeBtn" onclick="location.href='notice.html'">
+      📢 Notice
+      <span class="notice-badge" id="sidebarNoticeBadge" style="display:none;">0</span>
+    </button>
     <button onclick="location.href='online-users.html'">🟢 Online</button>
     <button onclick="location.href='audit-history.html'">📜 Audit</button>
     <button id="backupNav" onclick="openPage('backup',this)">☁ Backup</button>
@@ -1657,12 +1683,67 @@ function showToast(msg, type = 'success') {
   document.body.appendChild(t);
   setTimeout(() => t.remove(), 2500);
 }
+
+// ===== NOTICE BADGE UPDATE =====
+function updateSidebarNoticeBadge(notices){
+  const badge=document.getElementById("sidebarNoticeBadge");
+  if(!badge) return;
+  
+  const userData=JSON.parse(localStorage.getItem("gmsUser")||"{}");
+  const userId=userData.id||userData.uid||"anonymous";
+  const readNotices=JSON.parse(localStorage.getItem("gmsReadNotices_"+userId)||"[]");
+  const unreadCount=notices.filter(n=>!readNotices.includes(n.id)).length;
+  
+  if(unreadCount>0){
+    badge.innerText=unreadCount>99?"99+":unreadCount;
+    badge.style.display="flex";
+  }else{
+    badge.style.display="none";
+  }
+}
+
+// ===== NOTICE LOAD FUNCTION =====
+async function loadNotices(){
+  try{
+    let snap=await getDocs(collection(db,"liveNotices"));
+    let rows=[];
+    snap.forEach(d=>rows.push({id:d.id,...d.data()}));
+    rows.sort((a,b)=>(b.createdAt||"").localeCompare(a.createdAt||""));
+    
+    let noticeText="📢 No live notice found";
+    if(rows.length>0){
+      noticeText=rows.slice(0,5).map(n=>`📢 ${n.user||"User"}: ${n.text||""}`).join("      ");
+    }
+    
+    // Update notice bar with animation reset
+    const noticeEl=document.getElementById("noticeMove");
+    if(noticeEl){
+      noticeEl.style.animation='none';
+      noticeEl.offsetHeight; /* trigger reflow */
+      noticeEl.innerText=noticeText;
+      noticeEl.style.animation='marquee 30s linear infinite';
+    }
+    
+    // Update sidebar badge
+    updateSidebarNoticeBadge(rows);
+    
+  }catch(e){ 
+    console.log("Notice error:",e); 
+    const noticeEl=document.getElementById("noticeMove");
+    if(noticeEl){
+      noticeEl.style.animation='none';
+      noticeEl.offsetHeight;
+      noticeEl.innerText="📢 Notice loading problem";
+      noticeEl.style.animation='marquee 30s linear infinite';
+    }
+  }
+}
 </script>
 
 <!-- ===== FIREBASE MODULE WITH OFFLINE SYNC ===== -->
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-app.js";
-import { getFirestore, collection, getDocs, doc, updateDoc, setDoc, deleteDoc, query, orderBy, limit } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-firestore.js";
+import { getFirestore, collection, getDocs, doc, updateDoc, setDoc, deleteDoc, query, orderBy, limit, onSnapshot } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-firestore.js";
 
 const firebaseConfig={
   apiKey:"AIzaSyD-wBCF5eeWMHobLFOhBzKW7aB2pagz9-w",
@@ -1896,10 +1977,8 @@ function setupRoleUI(){
   if (noticeBtn) {
     if (window.userRole === 'admin' || window.userRole === 'full') {
       noticeBtn.classList.add('admin-mode');
-      noticeBtn.innerHTML = '📢 Send Notice';
     } else {
       noticeBtn.classList.remove('admin-mode');
-      noticeBtn.innerHTML = '📢 Notice';
     }
   }
 
@@ -2200,10 +2279,36 @@ async function loadNotices(){
   try{
     let snap=await getDocs(collection(db,"liveNotices"));
     let rows=[];
-    snap.forEach(d=>rows.push(d.data()));
+    snap.forEach(d=>rows.push({id:d.id,...d.data()}));
     rows.sort((a,b)=>(b.createdAt||"").localeCompare(a.createdAt||""));
-    document.getElementById("noticeMove").innerText=rows.length?rows.slice(0,5).map(n=>`📢 ${n.user||"User"}: ${n.text||""}`).join("      "):"📢 No live notice found";
-  }catch(e){ console.log("Notice error:",e); document.getElementById("noticeMove").innerText="📢 Notice loading problem"; }
+    
+    let noticeText="📢 No live notice found";
+    if(rows.length>0){
+      noticeText=rows.slice(0,5).map(n=>`📢 ${n.user||"User"}: ${n.text||""}`).join("      ");
+    }
+    
+    // Update notice bar with animation reset
+    const noticeEl=document.getElementById("noticeMove");
+    if(noticeEl){
+      noticeEl.style.animation='none';
+      noticeEl.offsetHeight; /* trigger reflow */
+      noticeEl.innerText=noticeText;
+      noticeEl.style.animation='marquee 30s linear infinite';
+    }
+    
+    // Update sidebar badge
+    updateSidebarNoticeBadge(rows);
+    
+  }catch(e){ 
+    console.log("Notice error:",e); 
+    const noticeEl=document.getElementById("noticeMove");
+    if(noticeEl){
+      noticeEl.style.animation='none';
+      noticeEl.offsetHeight;
+      noticeEl.innerText="📢 Notice loading problem";
+      noticeEl.style.animation='marquee 30s linear infinite';
+    }
+  }
 }
 
 async function updateLastActive(){if(user.id){try{await updateDoc(doc(db,"users",user.id),{lastActive:new Date().toISOString()});}catch(e){}}}
@@ -2376,6 +2481,17 @@ window.removeRestoredMonth=async function(){
   }catch(e){console.log(e);alert("Remove Failed: "+e.message);}
 };
 
+// ===== REAL-TIME NOTICE LISTENER =====
+const noticesRef = collection(db, "liveNotices");
+onSnapshot(noticesRef, (snapshot) => {
+  const rows = [];
+  snapshot.forEach(doc => {
+    rows.push({id:doc.id,...doc.data()});
+  });
+  rows.sort((a,b)=>(b.createdAt||"").localeCompare(a.createdAt||""));
+  updateSidebarNoticeBadge(rows);
+});
+
 // ===== INITIALIZATION =====
 setupRoleUI();
 setupCompanyPermissions();
@@ -2385,7 +2501,8 @@ updateLastActive();
 renderBackupLog();
 loadProfilePic();
 setInterval(updateLastActive,60000);
-setInterval(loadNotices,60000);
+setInterval(loadNotices,30000); // Notice auto refresh every 30 seconds
+setInterval(loadDashboardStock,60000);
 
 // Offline Sync Init
 document.addEventListener("DOMContentLoaded", () => {
@@ -2678,16 +2795,4 @@ window.sendAdminNotice = async function() {
 initNotifications();
 </script>
 </body>
-</html
-// ===== NOTICE BUTTON HANDLER =====
-window.handleNoticeClick = function() {
-  if (window.userRole === 'admin' || window.userRole === 'full') {
-    // Admin can send notice
-    sendAdminNotice();
-  } else {
-    // User goes to notice page
-    location.href = 'notice.html';
-  }
-};
-
->
+</html>
