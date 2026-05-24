@@ -3,6 +3,8 @@
 <head>
 <title>Needle Daily Posting</title>
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<link rel="manifest" href="/manifest.json">
+<meta name="theme-color" content="#0f172a">
 <style>
 *{box-sizing:border-box}
 html,body{width:100%;max-width:100%;overflow-x:hidden;margin:0;padding:0;background:#0f172a;color:white;font-family:Arial,sans-serif;touch-action:manipulation}
@@ -43,6 +45,12 @@ select,input[type="date"],input[type="text"]{padding:5px;border-radius:5px;borde
 .popup-fix-btn:hover{background:#1d4ed8}
 .popup-footer{text-align:center;font-size:11px;color:#64748b;margin-top:8px}
 
+/* Offline Indicator */
+.offline-indicator{
+  position:fixed;top:0;left:0;right:0;background:#f59e0b;color:#000;padding:6px 12px;text-align:center;font-size:12px;font-weight:600;z-index:9999;display:none;
+}
+.offline-indicator.show{display:block;}
+
 @media(max-width:480px){
   body{padding:2px}h2{font-size:15px;margin:4px 0}.topControls{font-size:11px}
   button{padding:6px 7px;font-size:10px}
@@ -61,10 +69,14 @@ select,input[type="date"],input[type="text"]{padding:5px;border-radius:5px;borde
   #reportTable,#summaryTable{width:100%!important;max-width:100%!important;color:black!important;background:white!important}
   #reportTable th,#reportTable td{font-size:7px;padding:1px}
   #negativePopup{display:none!important}
+  .offline-indicator{display:none!important}
 }
 </style>
 </head>
 <body>
+
+<!-- Offline Indicator -->
+<div class="offline-indicator" id="offlineIndicator">📴 Offline Mode - Data saved locally</div>
 
 <h2 style="text-align:center;">Needle Daily Posting</h2>
 
@@ -133,7 +145,7 @@ Floor:
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-app.js";
-import { getFirestore, doc, setDoc, getDoc, deleteDoc, collection, getDocs, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-firestore.js";
+import { getFirestore, doc, setDoc, getDoc, deleteDoc, collection, getDocs, addDoc, serverTimestamp, enableIndexedDbPersistence } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-firestore.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyD-wBCF5eeWMHobLFOhBzKW7aB2pagz9-w",
@@ -146,6 +158,15 @@ const firebaseConfig = {
 
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
+
+// 🔥 OFFLINE PERSISTENCE ENABLED
+enableIndexedDbPersistence(db).catch((err) => {
+  if (err.code == 'failed-precondition') {
+    console.log('Multiple tabs open, persistence can only be enabled in one tab at a time.');
+  } else if (err.code == 'unimplemented') {
+    console.log('Browser does not support persistence.');
+  }
+});
 
 const floorData = {
 "Kadom R": [
@@ -374,6 +395,66 @@ const floorData = {
 // 🔴 Global variable to track negative row index
 let negativeRowIndex = -1;
 
+// ===== OFFLINE QUEUE SYSTEM =====
+const OFFLINE_QUEUE_KEY = "needle_posting_queue";
+function getOfflineQueue(){ return JSON.parse(localStorage.getItem(OFFLINE_QUEUE_KEY) || "[]"); }
+function setOfflineQueue(q){ localStorage.setItem(OFFLINE_QUEUE_KEY, JSON.stringify(q)); }
+
+function saveDataOffline(floor, date, operator, rows){
+  let queue = getOfflineQueue();
+  queue.push({
+    id: `${floor}_${date}_${Date.now()}`,
+    floor, date, operator, rows,
+    timestamp: new Date().toISOString(),
+    status: "pending"
+  });
+  setOfflineQueue(queue);
+  showToast("✅ Saved Offline - Will sync when online");
+}
+
+async function syncOfflineQueue(){
+  if(!navigator.onLine) return;
+  let queue = getOfflineQueue();
+  let synced = 0;
+  for(let i=0; i<queue.length; i++){
+    if(queue[i].status === "pending"){
+      try{
+        await setDoc(doc(db,"dailyPosting",queue[i].id), {
+          date: queue[i].date,
+          month: getMonth(queue[i].date),
+          floor: queue[i].floor,
+          rows: queue[i].rows,
+          operator: queue[i].operator,
+          updatedAt: serverTimestamp()
+        });
+        queue[i].status = "synced";
+        synced++;
+      }catch(e){ console.log("Sync failed:", e); }
+    }
+  }
+  if(synced > 0){
+    setOfflineQueue(queue);
+    showToast(`☁️ ${synced} items synced to Firebase`);
+  }
+}
+
+function showToast(msg){
+  let t = document.createElement("div");
+  t.style.cssText = "position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:#10b981;color:#fff;padding:10px 20px;border-radius:8px;font-weight:600;z-index:9999;animation:fadeIn 0.3s";
+  t.innerText = msg;
+  document.body.appendChild(t);
+  setTimeout(()=>t.remove(), 2500);
+}
+
+function updateOfflineIndicator(){
+  let ind = document.getElementById("offlineIndicator");
+  if(!navigator.onLine){ ind.classList.add("show"); }
+  else{ ind.classList.remove("show"); }
+}
+
+window.addEventListener("online", ()=>{ updateOfflineIndicator(); syncOfflineQueue(); });
+window.addEventListener("offline", ()=>{ updateOfflineIndicator(); });
+
 function getItems(){
   let floor=document.getElementById("floor").value;
   return floorData[floor] || [];
@@ -558,19 +639,29 @@ async function saveData(){
     details = {totalItems: rows.length, msg: "New posting"};
   }
 
-  await setDoc(docRef,{
-    date:date,month:getMonth(date),floor:floor,rows:rows,operator:operator,updatedAt: serverTimestamp()
-  });
-
-  try {
-    await addDoc(collection(db, "auditLogs"), {
-      action: action,floor: floor,date: date,operator: operator,timestamp: serverTimestamp(),details: details
-    });
-  } catch(e) { console.error("Audit log error:", e); }
+  // 🔥 OFFLINE-FIRST SAVE
+  if(navigator.onLine){
+    try{
+      await setDoc(docRef,{
+        date:date,month:getMonth(date),floor:floor,rows:rows,operator:operator,updatedAt: serverTimestamp()
+      });
+      try {
+        await addDoc(collection(db, "auditLogs"), {
+          action: action,floor: floor,date: date,operator: operator,timestamp: serverTimestamp(),details: details
+        });
+      } catch(e) { console.error("Audit log error:", e); }
+      showToast("✅ Saved to Firebase");
+    }catch(err){
+      console.log("Firebase save failed, saving offline:", err);
+      saveDataOffline(floor, date, operator, rows);
+    }
+  }else{
+    saveDataOffline(floor, date, operator, rows);
+  }
 
   localStorage.setItem("lastOperator", operator);
   await loadData();
-  alert("Saved Successfully");
+  syncOfflineQueue();
 }
 
 async function deleteData(){
@@ -711,6 +802,7 @@ window.loadTable=loadTable;window.calc=calc;window.updateTotal=updateTotal;
 window.saveData=saveData;window.deleteData=deleteData;window.loadData=loadData;
 window.exportExcel=exportExcel;window.exportPDF=exportPDF;
 window.checkNegativeStock=checkNegativeStock;window.closePopup=closePopup;window.fixNegativeRow=fixNegativeRow;
+window.syncOfflineQueue=syncOfflineQueue;window.updateOfflineIndicator=updateOfflineIndicator;
 
 // Enter/Tab navigation
 document.addEventListener("keydown", function(e){
@@ -727,7 +819,10 @@ document.addEventListener("keydown", function(e){
 });
 
 // Initialize
+updateOfflineIndicator();
 loadTable();
+// Auto sync on load
+setTimeout(syncOfflineQueue, 1000);
 </script>
 </body>
 </html>
