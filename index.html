@@ -1105,15 +1105,15 @@ body.light .creditFooter{background:var(--card);border-color:#cbd5e1;}
     <!-- Company Switch -->
     <div class="companySwitch">
       <button id="btnTextile" class="active" onclick="switchCompany('GMS TEXTILES LTD')">🏭 Textiles</button>
-      <button id="btnComposite" onclick="switchCompany('GMS COMPOSITE KNITTING')">🏢 Composite</button>
+      <button id="btnComposite" onclick="switchCompany('GMS COMPOSITE KNITTING')"> Composite</button>
     </div>
   </div>
   <div class="sidebarNav">
     <button class="active" onclick="openPage('home',this)">🏠 Dashboard</button>
     <button onclick="openPage('entry',this)">➕ New Entry</button>
     <button onclick="openPage('reports',this)">📑 Reports</button>
-    <button id="needleNav" onclick="openPage('needle',this)">🪡 Needle</button>
-    <button id="adminNav" onclick="location.href='admin.html'">👑 Admin</button>
+    <button id="needleNav" onclick="openPage('needle',this)"> Needle</button>
+    <button id="adminNav" onclick="location.href='admin.html'"> Admin</button>
     <button id="manpowerNav" onclick="location.href='manpower.html'">👨‍ Manpower</button>
     <button id="noticeBtn" onclick="location.href='notice.html'">
       📢 Notice
@@ -1156,7 +1156,7 @@ body.light .creditFooter{background:var(--card);border-color:#cbd5e1;}
       <div class="topBarRight">
         <span class="autoSave"><div style="width:8px;height:8px;background:var(--green);border-radius:50%;animation:pulse 2s infinite;"></div> Live</span>
         <span id="companyBadge" class="companyBadge">🏭 GMS TEXTILES</span>
-        <button class="profileBtnTop" onclick="openProfileModal()">👤 Profile</button>
+        <button class="profileBtnTop" onclick="openProfileModal()"> Profile</button>
       </div>
     </div>
   </div>
@@ -1201,11 +1201,11 @@ body.light .creditFooter{background:var(--card);border-color:#cbd5e1;}
 
     <!-- ===== TEXTILE DASHBOARD (Only for GMS TEXTILES) ===== -->
     <div id="textileDashboard">
-      <!-- 📦 STOCK CARDS -->
+      <!--  STOCK CARDS -->
       <div class="stat-row" id="accessoriesSummary">
         <div class="stat-card-new bg-blue">
           <div class="stat-info">
-            <p>📦 Accessories Stock</p>
+            <p> Accessories Stock</p>
             <h3 id="sumAccessories">0</h3>
           </div>
           <div class="stat-icon"><i class="fas fa-box"></i></div>
@@ -1255,7 +1255,7 @@ body.light .creditFooter{background:var(--card);border-color:#cbd5e1;}
 
       <!-- 👨‍ Attendance Manpower Chart -->
       <div class="chartBox" id="billingChartBox" style="margin-bottom:20px;">
-        <h3>👨‍ Attendance Manpower Chart</h3>
+        <h3>👨 Attendance Manpower Chart</h3>
         <div class="chartGrid">
           <div style="text-align:center;"><canvas id="billingChart"></canvas></div>
           <div style="display:flex;flex-direction:column;justify-content:center;gap:10px;">
@@ -1502,7 +1502,7 @@ body.light .creditFooter{background:var(--card);border-color:#cbd5e1;}
 window.userAllowedCompanies = [];
 window.currentCompany = 'GMS TEXTILES LTD';
 window.userRole = 'user';
-window.userManpowerMcdAccess = []; // 🔥 Manpower selected MCDs
+window.userManpowerMcdAccess = []; //  Manpower selected MCDs
 
 // ✅ Check if user can access company
 function canUserSeeCompany(companyName) {
@@ -1539,7 +1539,7 @@ window.switchCompany = function(company) {
 
 // 🎨 Update UI elements
 function updateCompanyUI(company) {
-  const badgeText = company === 'GMS TEXTILES LTD' ? '🏭 TEXTILES' : '🏢 COMPOSITE';
+  const badgeText = company === 'GMS TEXTILES LTD' ? '🏭 TEXTILES' : ' COMPOSITE';
   const badgeClass = company === 'GMS TEXTILES LTD' ? '' : 'composite';
   ['companyBadge', 'dashCompanyBadge', 'entryCompanyBadge', 'reportCompanyBadge', 'needleCompanyBadge', 'backupCompanyBadge'].forEach(id => {
     const el = document.getElementById(id);
@@ -1560,7 +1560,7 @@ function updateCompanyUI(company) {
   if(noAccessEl) noAccessEl.style.display = 'none';
 }
 
-// 🔐 Setup company permissions
+//  Setup company permissions
 function setupCompanyPermissions() {
   window.userAllowedCompanies = Array.isArray(window.user.userCompanies) ? window.user.userCompanies : [];
   window.userManpowerAccess = window.user.manpowerAccessLevel || (window.user.manpowerAccess === true ? "all" : "none");
@@ -1743,7 +1743,7 @@ async function loadNotices(){
 <!-- ===== FIREBASE MODULE WITH OFFLINE SYNC ===== -->
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-app.js";
-import { getFirestore, collection, getDocs, doc, updateDoc, setDoc, deleteDoc, query, orderBy, limit, onSnapshot } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-firestore.js";
+import { getFirestore, enableIndexedDbPersistence, collection, getDocs, doc, updateDoc, setDoc, deleteDoc, query, orderBy, limit, onSnapshot } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-firestore.js";
 
 const firebaseConfig={
   apiKey:"AIzaSyD-wBCF5eeWMHobLFOhBzKW7aB2pagz9-w",
@@ -1755,6 +1755,15 @@ const firebaseConfig={
 };
 const app=initializeApp(firebaseConfig);
 const db=getFirestore(app);
+
+// 🔥 OFFLINE PERSISTENCE ENABLED
+enableIndexedDbPersistence(db).catch((err) => {
+  if (err.code == 'failed-precondition') {
+    console.log('Multiple tabs open, persistence can only be enabled in one tab at a time.');
+  } else if (err.code == 'unimplemented') {
+    console.log('Browser does not support persistence.');
+  }
+});
 
 const user=JSON.parse(localStorage.getItem("gmsUser")||"null");
 if(!user){window.location.href="login.html";}
@@ -1850,7 +1859,7 @@ window.forceSyncNow = function() {
     let queue = getQueue();
     let pending = queue.filter(x => x.status === "pending");
     if(pending.length === 0) { showToast("✅ No pending data to sync"); return; }
-    showToast(`🔄 Syncing ${pending.length} items...`);
+    showToast(` Syncing ${pending.length} items...`);
     window.autoSyncQueue();
 };
 
@@ -2319,7 +2328,7 @@ async function loadDashboardStock(){
     document.getElementById('textileDashboard').style.display = 'none';
     document.getElementById('compositeDashboard').style.display = 'none';
     const noAccessEl = document.getElementById('noAccessMessage');
-    if(noAccessEl) { noAccessEl.style.display = 'block'; } else { alert('⚠️ আপনার এই কোম্পানির এক্সেস নেই। Admin থেকে permission নিন।'); }
+    if(noAccessEl) { noAccessEl.style.display = 'block'; } else { alert('️ আপনার এই কোম্পানির এক্সেস নেই। Admin থেকে permission নিন।'); }
     return;
   }
   const noAccessEl = document.getElementById('noAccessMessage');
@@ -2373,11 +2382,11 @@ async function loadDashboardStock(){
         mp = manpower[mcd];
       }
       if(mcd==="ACCESSORIES MCD"){
-        html+=`<div class="mcdBox"><h3>📦 ACCESSORIES MCD</h3><div class="miniRow"><span>📦 Accessories With Sample</span><span class="miniValue">${fmt(accessories)}</span></div><div class="miniRow"><span>🧵 Sewing Thread</span><span class="miniValue">${fmt(sewing)}</span></div><div class="miniRow"><span>📏 Twill Tape</span><span class="miniValue">${fmt(twill)}</span></div><div class="miniChart"><div class="miniFill"></div></div></div>`;
+        html+=`<div class="mcdBox"><h3> ACCESSORIES MCD</h3><div class="miniRow"><span>📦 Accessories With Sample</span><span class="miniValue">${fmt(accessories)}</span></div><div class="miniRow"><span>🧵 Sewing Thread</span><span class="miniValue">${fmt(sewing)}</span></div><div class="miniRow"><span>📏 Twill Tape</span><span class="miniValue">${fmt(twill)}</span></div><div class="miniChart"><div class="miniFill"></div></div></div>`;
       }else if(mcd==="GREY FABRIC MCD"){
-        html+=`<div class="mcdBox"><h3>🏭 GREY FABRIC MCD</h3><div class="miniRow"><span>📦 Today Closing Balance</span><span class="miniValue">${fmt(grey.total)}</span></div><div class="miniRow"><span>📊 Closing Chart</span><span class="miniValue">LIVE</span></div><div class="miniChart"><div class="miniFill" style="width:65%"></div></div></div>`;
+        html+=`<div class="mcdBox"><h3> GREY FABRIC MCD</h3><div class="miniRow"><span>📦 Today Closing Balance</span><span class="miniValue">${fmt(grey.total)}</span></div><div class="miniRow"><span>📊 Closing Chart</span><span class="miniValue">LIVE</span></div><div class="miniChart"><div class="miniFill" style="width:65%"></div></div></div>`;
       }else if(mcd==="BILLING SECTION"){
-        html+=`<div class="mcdBox"><h3>👨‍ BILLING SECTION</h3><div class="miniRow"><span>👨‍ Total Manpower</span><span class="miniValue">${fmt(billing.total)}</span></div><div class="miniRow"><span>🏖 Leave</span><span class="miniValue">${fmt(billing.leave)}</span></div><div class="miniRow"><span>❌ Absent</span><span class="miniValue">${fmt(billing.absent)}</span></div><div class="miniRow"><span>✅ Today Present</span><span class="miniValue">${fmt(billing.present)}</span></div><div class="miniChart"><div class="miniFill" style="width:55%"></div></div></div>`;
+        html+=`<div class="mcdBox"><h3>‍ BILLING SECTION</h3><div class="miniRow"><span>👨‍ Total Manpower</span><span class="miniValue">${fmt(billing.total)}</span></div><div class="miniRow"><span>🏖 Leave</span><span class="miniValue">${fmt(billing.leave)}</span></div><div class="miniRow"><span>❌ Absent</span><span class="miniValue">${fmt(billing.absent)}</span></div><div class="miniRow"><span>✅ Today Present</span><span class="miniValue">${fmt(billing.present)}</span></div><div class="miniChart"><div class="miniFill" style="width:55%"></div></div></div>`;
       }else{
         html+=`<div class="mcdBox"><h3>📂 ${mcd}</h3>${isManpowerAllowed() && (manpowerAccess==="all" || manpowerMcdAccess.includes(mcd))?`<div class="miniRow"><span>👨‍ Manpower</span><span class="miniValue">${fmt(mp.count)}</span></div><div class="miniRow"><span>💰 Salary</span><span class="miniValue">${fmt(mp.salary)}</span></div>`:""}<div class="miniRow"><span>📊 Stock / Report</span><span class="miniValue">Pending</span></div><div class="miniChart"><div class="miniFill" style="width:35%"></div></div></div>`;
       }
@@ -2577,7 +2586,7 @@ class GMS_PWA {
     if (isOnline) {
       bar.classList.add('pwa-online-bar');
       bar.querySelector('.pwa-offline-text').textContent = '🌐 Online - All features active';
-      bar.querySelector('.pwa-offline-icon').textContent = '🟢';
+      bar.querySelector('.pwa-offline-icon').textContent = '';
       const btn = document.getElementById('pwaSyncBtn');
       if(btn) btn.style.display = 'none';
       setTimeout(() => bar.classList.remove('show'), 3000);
@@ -2592,7 +2601,7 @@ class GMS_PWA {
   }
   async manualSync() {
     const btn = document.getElementById('pwaSyncBtn');
-    if (btn) { btn.disabled = true; btn.textContent = '⏳ Syncing...'; }
+    if (btn) { btn.disabled = true; btn.textContent = ' Syncing...'; }
     try {
       if (typeof window.forceSyncNow === 'function') await window.forceSyncNow();
       else if (typeof window.autoSyncQueue === 'function') await window.autoSyncQueue();
@@ -2739,7 +2748,7 @@ async function initNotifications() {
             <div style="font-size:12px;color:var(--muted,#cbd5e1);line-height:1.4;">${body || 'New notification'}</div>
             <div style="font-size:11px;color:var(--blue,#3b82f6);margin-top:6px;">Just now</div>
           </div>
-          <button style="background:transparent;border:none;color:var(--muted);font-size:16px;cursor:pointer;" onclick="this.parentElement.parentElement.remove();event.stopPropagation();">✕</button>
+          <button style="background:transparent;border:none;color:var(--muted);font-size:16px;cursor:pointer;" onclick="this.parentElement.parentElement.remove();event.stopPropagation();"></button>
         </div>
       `;
       toast.addEventListener('click', () => {
