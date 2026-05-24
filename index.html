@@ -1038,6 +1038,16 @@ body.light .creditFooter{background:var(--card);border-color:#cbd5e1;}
   padding: 12px 20px;
   z-index: 99997;
 }
+
+/* ===== ADMIN NOTICE BUTTON ===== */
+#noticeBtn.admin-mode {
+  background: linear-gradient(135deg, rgba(245, 158, 11, 0.2), rgba(239, 68, 68, 0.2)) !important;
+  border: 1px solid rgba(245, 158, 11, 0.4) !important;
+  color: #f59e0b !important;
+}
+#noticeBtn.admin-mode:hover {
+  background: linear-gradient(135deg, rgba(245, 158, 11, 0.3), rgba(239, 68, 68, 0.3)) !important;
+}
 </style>
 
 <meta name="theme-color" content="#3b82f6">
@@ -1082,7 +1092,7 @@ body.light .creditFooter{background:var(--card);border-color:#cbd5e1;}
     <button id="needleNav" onclick="openPage('needle',this)">🪡 Needle</button>
     <button id="adminNav" onclick="location.href='admin.html'">👑 Admin</button>
     <button id="manpowerNav" onclick="location.href='manpower.html'">👨‍ Manpower</button>
-    <button onclick="location.href='notice.html'">📢 Notice</button>
+    <button id="noticeBtn" onclick="handleNoticeClick()">📢 Notice</button>
     <button onclick="location.href='online-users.html'">🟢 Online</button>
     <button onclick="location.href='audit-history.html'">📜 Audit</button>
     <button id="backupNav" onclick="openPage('backup',this)">☁ Backup</button>
@@ -1881,6 +1891,18 @@ function setupRoleUI(){
   if(!isBillingAllowed()) document.getElementById("billingChartBox").style.display="none";
 
   let list=allowedMCDList();
+  // Update Notice button for admin
+  const noticeBtn = document.getElementById("noticeBtn");
+  if (noticeBtn) {
+    if (window.userRole === 'admin' || window.userRole === 'full') {
+      noticeBtn.classList.add('admin-mode');
+      noticeBtn.innerHTML = '📢 Send Notice';
+    } else {
+      noticeBtn.classList.remove('admin-mode');
+      noticeBtn.innerHTML = '📢 Notice';
+    }
+  }
+
   document.getElementById("entryMcd").innerHTML=list.map(x=>`<option>${x}</option>`).join("");
   document.getElementById("reportMcd").innerHTML=list.map(x=>`<option>${x}</option>`).join("");
 }
@@ -2656,4 +2678,16 @@ window.sendAdminNotice = async function() {
 initNotifications();
 </script>
 </body>
-</html>
+</html
+// ===== NOTICE BUTTON HANDLER =====
+window.handleNoticeClick = function() {
+  if (window.userRole === 'admin' || window.userRole === 'full') {
+    // Admin can send notice
+    sendAdminNotice();
+  } else {
+    // User goes to notice page
+    location.href = 'notice.html';
+  }
+};
+
+>
