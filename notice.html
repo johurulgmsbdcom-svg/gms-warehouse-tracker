@@ -294,7 +294,7 @@ body.light .systemNameBar{
   padding:24px;
   margin-bottom:24px;
   box-shadow:var(--shadow);
-  display:none; /* Hidden by default, shown for admin */
+  display:none;
 }
 .createCard.show{display:block;}
 .createCard h2{
@@ -862,37 +862,73 @@ window.userId = user?.id || user?.uid || "anonymous";
 
 // 🔊 Audio Context for Notification Sound
 let audioCtx = null;
+let soundEnabled = true;
+
 function initAudio(){
   if(!audioCtx){
     try{
       audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-    }catch(e){ console.log("Audio init failed:", e); }
+      console.log('Audio context initialized');
+    }catch(e){ 
+      console.log("Audio init failed:", e); 
+    }
   }
 }
+
 function playNotificationSound(){
+  if(!soundEnabled) return;
+  
   if(!audioCtx) initAudio();
   if(!audioCtx) return;
+  
   try{
-    const osc = audioCtx.createOscillator();
-    const gain = audioCtx.createGain();
-    osc.connect(gain);
-    gain.connect(audioCtx.destination);
-    osc.frequency.value = 880;
-    osc.type = 'sine';
-    gain.gain.value = 0.3;
-    osc.start();
-    setTimeout(()=>{ osc.stop(); }, 300);
-  }catch(e){ console.log("Sound play failed:", e); }
+    const oscillator = audioCtx.createOscillator();
+    const gainNode = audioCtx.createGain();
+    
+    oscillator.connect(gainNode);
+    gainNode.connect(audioCtx.destination);
+    
+    oscillator.frequency.setValueAtTime(523.25, audioCtx.currentTime);
+    oscillator.frequency.exponentialRampToValueAtTime(1046.5, audioCtx.currentTime + 0.1);
+    
+    gainNode.gain.setValueAtTime(0.3, audioCtx.currentTime);
+    gainNode.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.5);
+    
+    oscillator.start(audioCtx.currentTime);
+    oscillator.stop(audioCtx.currentTime + 0.5);
+    
+    console.log('Notification sound played');
+  }catch(e){ 
+    console.log("Sound play failed:", e); 
+  }
 }
 
 // 🔔 Clear App Badge when opened
 function clearAppBadge(){
   if('clearAppBadge' in navigator){
-    navigator.clearAppBadge().catch(console.error);
+    navigator.clearAppBadge().catch(err => console.log('Badge clear failed:', err));
   }
   const badge = document.getElementById("sidebarBadge");
   if(badge){ badge.style.display = "none"; }
 }
+
+// 🔔 Set App Badge
+function updateAppBadge(count){
+  if('setAppBadge' in navigator){
+    if(count > 0){
+      navigator.setAppBadge(count).catch(err => console.log('Badge set failed:', err));
+    }else{
+      navigator.clearAppBadge().catch(err => console.log('Badge clear failed:', err));
+    }
+  }
+}
+
+// 🔓 Unlock audio on first user interaction
+['click','touchstart','keydown'].forEach(evt=>{
+  window.addEventListener(evt, ()=>{ 
+    if(!audioCtx) initAudio(); 
+  }, {once:true, passive:true});
+});
 
 // Read tracking
 function getReadNotices(){
@@ -906,14 +942,12 @@ async function markNoticeRead(noticeId){
     read.push(noticeId);
     localStorage.setItem("gmsReadNotices_" + window.userId, JSON.stringify(read));
     
-    // 🔥 Save read status to Firebase for admin tracking
     try{
       const noticeRef = doc(db, "liveNotices", noticeId);
       const noticeSnap = await getDoc(noticeRef);
       if(noticeSnap.exists()){
         const noticeData = noticeSnap.data();
         let readBy = noticeData.readBy || [];
-        // Add user if not already in list
         if(!readBy.some(r => r.userId === window.userId)){
           readBy.push({
             userId: window.userId,
@@ -924,7 +958,9 @@ async function markNoticeRead(noticeId){
           await updateDoc(noticeRef, { readBy: readBy });
         }
       }
-    }catch(e){ console.log("Read tracking error:", e); }
+    }catch(e){ 
+      console.log("Read tracking error:", e); 
+    }
   }
   updateBadge();
   renderNotices();
@@ -1026,6 +1062,9 @@ function updateBadge(){
   } else {
     badge.style.display = "none";
   }
+  
+  // Update app icon badge
+  updateAppBadge(unread);
 }
 
 // Stats
@@ -1212,7 +1251,7 @@ onSnapshot(noticesQuery, (snapshot) => {
   }
 });
 
-// 🔔 FOREGROUND MESSAGE HANDLER (Sound + Badge + Toast)
+// 🔔 FOREGROUND MESSAGE HANDLER
 onMessage(messaging, (payload) => {
   console.log('[FCM] Foreground:', payload);
   const { title, body } = payload.notification || {};
@@ -1222,7 +1261,6 @@ onMessage(messaging, (payload) => {
   
   // 🔴 Update badge
   if(typeof updateBadge === 'function') {
-    // Reload notices to update badge
     onSnapshot(noticesQuery, (snapshot) => {
       const rows = [];
       snapshot.forEach(d => rows.push({ id: d.id, ...d.data() }));
@@ -1234,7 +1272,7 @@ onMessage(messaging, (payload) => {
   // 📱 Show toast
   showToast(`🔔 ${title || 'New Notice'}: ${body || ''}`, 'info');
   
-  // 🔔 Set app badge (Android)
+  // 🔔 Set app badge
   if('setAppBadge' in navigator){
     navigator.setAppBadge(1).catch(console.error);
   }
@@ -1261,19 +1299,17 @@ window.publishNotice = async function(){
   btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Sending...';
 
   try{
-    // Save to Firestore
     const noticeData = {
       text: text,
       pin: pin,
       user: window.userName,
       role: window.userRole,
       createdAt: new Date().toISOString(),
-      readBy: [] // Initialize empty readBy array
+      readBy: []
     };
 
     await addDoc(collection(db, "liveNotices"), noticeData);
 
-    // Send push notification via FCM if enabled
     if(sendPush){
       try{
         await addDoc(collection(db, "pushQueue"), {
@@ -1331,11 +1367,6 @@ if("Notification" in window && Notification.permission === "default"){
     }
   });
 }
-
-// 🔊 Unlock audio on first user interaction
-['click','touchstart','keydown'].forEach(evt=>{
-  window.addEventListener(evt, ()=>{ if(!audioCtx) initAudio(); }, {once:true, passive:true});
-});
 
 // 🔔 Clear badge when app becomes visible
 document.addEventListener('visibilitychange', ()=>{
