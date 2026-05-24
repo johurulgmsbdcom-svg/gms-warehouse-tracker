@@ -5,6 +5,8 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>📢 GMS Notice Board</title>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<link rel="manifest" href="/manifest.json">
+<meta name="theme-color" content="#3b82f6">
 
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800;900&display=swap');
@@ -44,7 +46,7 @@ body{
   transition:background 0.3s,color 0.3s;
 }
 
-/* ===== SIDEBAR ===== */
+/* ===== SIDEBAR (Same as Index) ===== */
 .sidebar{
   position:fixed;
   left:0;
@@ -292,7 +294,7 @@ body.light .systemNameBar{
   padding:24px;
   margin-bottom:24px;
   box-shadow:var(--shadow);
-  display:none;
+  display:none; /* Hidden by default, shown for admin */
 }
 .createCard.show{display:block;}
 .createCard h2{
@@ -647,49 +649,6 @@ body.light .noticeItem{background:#f8fafc;}
   to { opacity: 1; transform: translate(-50%, 0); }
 }
 
-/* ===== SOUND TOGGLE ===== */
-.soundToggle{
-  position:fixed;
-  bottom:20px;
-  right:20px;
-  background:var(--card);
-  border:1px solid var(--border);
-  border-radius:50%;
-  width:48px;
-  height:48px;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  cursor:pointer;
-  z-index:100;
-  transition:all 0.3s;
-  color:var(--muted);
-}
-.soundToggle:hover{
-  background:var(--blue);
-  color:#fff;
-  border-color:var(--blue);
-}
-.soundToggle.active{
-  background:var(--green);
-  color:#fff;
-  border-color:var(--green);
-}
-
-/* ===== LOADING ===== */
-.loadingSpinner{
-  display:flex;
-  justify-content:center;
-  align-items:center;
-  padding:40px;
-  gap:10px;
-  color:var(--muted);
-}
-.loadingSpinner i{
-  animation:spin 1s linear infinite;
-}
-@keyframes spin{to{transform:rotate(360deg);}}
-
 /* ===== FOOTER ===== */
 .creditFooter{
   position:fixed;
@@ -842,11 +801,6 @@ body.light .creditFooter{background:var(--card);border-color:#cbd5e1;}
   </div>
 </div>
 
-<!-- Sound Toggle -->
-<div class="soundToggle active" id="soundToggle" onclick="toggleSound()" title="Notification Sound">
-  <i class="fas fa-volume-up" id="soundIcon"></i>
-</div>
-
 <!-- Footer -->
 <div class="creditFooter">
   <div class="creditItem">
@@ -942,47 +896,6 @@ function showToast(msg, type = 'success'){
   t.innerHTML = type === 'error' ? '<i class="fas fa-exclamation-circle"></i> ' + msg : '<i class="fas fa-check-circle"></i> ' + msg;
   document.body.appendChild(t);
   setTimeout(() => t.remove(), 3000);
-}
-
-// Sound
-let soundEnabled = localStorage.getItem("noticeSound") !== "false";
-function updateSoundIcon(){
-  const icon = document.getElementById("soundIcon");
-  const btn = document.getElementById("soundToggle");
-  if(soundEnabled){
-    icon.className = "fas fa-volume-up";
-    btn.classList.add("active");
-  } else {
-    icon.className = "fas fa-volume-mute";
-    btn.classList.remove("active");
-  }
-}
-window.toggleSound = function(){
-  soundEnabled = !soundEnabled;
-  localStorage.setItem("noticeSound", soundEnabled);
-  updateSoundIcon();
-  showToast(soundEnabled ? "🔊 Sound ON" : "🔇 Sound OFF", "info");
-};
-updateSoundIcon();
-
-function playNoticeSound(){
-  if(!soundEnabled) return;
-  try{
-    // Simple beep using Web Audio API
-    const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-    const oscillator = audioCtx.createOscillator();
-    const gainNode = audioCtx.createGain();
-    oscillator.connect(gainNode);
-    gainNode.connect(audioCtx.destination);
-    oscillator.frequency.value = 800;
-    oscillator.type = 'sine';
-    gainNode.gain.value = 0.3;
-    oscillator.start();
-    setTimeout(() => {
-      oscillator.stop();
-      audioCtx.close();
-    }, 200);
-  }catch(e){ console.log("Sound error:", e); }
 }
 
 // Time ago function
@@ -1128,6 +1041,7 @@ function escapeHtml(text){
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-app.js";
 import { 
   getFirestore, 
+  enableIndexedDbPersistence,
   collection, 
   addDoc, 
   getDocs, 
@@ -1150,6 +1064,24 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
+// 🔥 OFFLINE PERSISTENCE ENABLED
+enableIndexedDbPersistence(db).catch((err) => {
+  if (err.code == 'failed-precondition') {
+    console.log('Multiple tabs open, persistence can only be enabled in one tab at a time.');
+  } else if (err.code == 'unimplemented') {
+    console.log('Browser does not support persistence.');
+  }
+});
+
+// Register Service Worker for Offline Support
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('/sw.js').then(reg => {
+    console.log('[Notice] SW Registered');
+  }).catch(err => {
+    console.log('[Notice] SW Registration Failed:', err);
+  });
+}
+
 // ===== REAL-TIME NOTICES =====
 const noticesRef = collection(db, "liveNotices");
 const noticesQuery = query(noticesRef, orderBy("createdAt", "desc"));
@@ -1168,25 +1100,6 @@ onSnapshot(noticesQuery, (snapshot) => {
   allNotices = newNotices;
   renderNotices();
   updateBadge();
-
-  // Sound alert for new notice
-  if(hadNewNotice){
-    const latest = newNotices[0];
-    const isNew = !isNoticeRead(latest.id);
-    if(isNew){
-      playNoticeSound();
-      // Browser notification
-      if(Notification.permission === "granted"){
-        new Notification("📢 GMS Notice", {
-          body: latest.text?.substring(0, 100) || "New notice received",
-          icon: "https://i.ibb.co/5hzT1VGk/IMG.jpg",
-          badge: "https://i.ibb.co/5hzT1VGk/IMG.jpg",
-          tag: latest.id,
-          requireInteraction: false
-        });
-      }
-    }
-  }
 });
 
 // ===== PUBLISH NOTICE (Admin) =====
@@ -1225,7 +1138,6 @@ window.publishNotice = async function(){
     // Send push notification via FCM if enabled
     if(sendPush){
       try{
-        // Save to pushQueue for cloud function processing
         await addDoc(collection(db, "pushQueue"), {
           title: "📢 GMS Notice",
           body: text.substring(0, 150) + (text.length > 150 ? "..." : ""),
