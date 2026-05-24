@@ -623,6 +623,37 @@ body.light .noticeItem{background:#f8fafc;}
   margin-bottom:8px;
 }
 
+/* ===== READ BY LIST (Admin Only) ===== */
+.readByList{
+  margin-top:12px;
+  padding:10px;
+  background:rgba(59,130,246,0.1);
+  border-radius:8px;
+  border-left:3px solid var(--blue);
+}
+.readByList h4{
+  font-size:12px;
+  font-weight:600;
+  color:var(--blue);
+  margin:0 0 8px 0;
+  display:flex;
+  align-items:center;
+  gap:6px;
+}
+.readByNames{
+  display:flex;
+  flex-wrap:wrap;
+  gap:6px;
+}
+.readByName{
+  background:var(--card2);
+  color:var(--text);
+  padding:4px 10px;
+  border-radius:12px;
+  font-size:11px;
+  font-weight:500;
+}
+
 /* ===== TOAST ===== */
 .toast {
   position: fixed;
@@ -829,19 +860,76 @@ window.userRole = user?.role || "user";
 window.userName = user?.name || "User";
 window.userId = user?.id || user?.uid || "anonymous";
 
+// 🔊 Audio Context for Notification Sound
+let audioCtx = null;
+function initAudio(){
+  if(!audioCtx){
+    try{
+      audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    }catch(e){ console.log("Audio init failed:", e); }
+  }
+}
+function playNotificationSound(){
+  if(!audioCtx) initAudio();
+  if(!audioCtx) return;
+  try{
+    const osc = audioCtx.createOscillator();
+    const gain = audioCtx.createGain();
+    osc.connect(gain);
+    gain.connect(audioCtx.destination);
+    osc.frequency.value = 880;
+    osc.type = 'sine';
+    gain.gain.value = 0.3;
+    osc.start();
+    setTimeout(()=>{ osc.stop(); }, 300);
+  }catch(e){ console.log("Sound play failed:", e); }
+}
+
+// 🔔 Clear App Badge when opened
+function clearAppBadge(){
+  if('clearAppBadge' in navigator){
+    navigator.clearAppBadge().catch(console.error);
+  }
+  const badge = document.getElementById("sidebarBadge");
+  if(badge){ badge.style.display = "none"; }
+}
+
 // Read tracking
 function getReadNotices(){
   return JSON.parse(localStorage.getItem("gmsReadNotices_" + window.userId) || "[]");
 }
-function markNoticeRead(noticeId){
+
+// 👁️ Mark notice as read + save to Firebase
+async function markNoticeRead(noticeId){
   let read = getReadNotices();
   if(!read.includes(noticeId)){
     read.push(noticeId);
     localStorage.setItem("gmsReadNotices_" + window.userId, JSON.stringify(read));
+    
+    // 🔥 Save read status to Firebase for admin tracking
+    try{
+      const noticeRef = doc(db, "liveNotices", noticeId);
+      const noticeSnap = await getDoc(noticeRef);
+      if(noticeSnap.exists()){
+        const noticeData = noticeSnap.data();
+        let readBy = noticeData.readBy || [];
+        // Add user if not already in list
+        if(!readBy.some(r => r.userId === window.userId)){
+          readBy.push({
+            userId: window.userId,
+            userName: window.userName,
+            userRole: window.userRole,
+            readAt: new Date().toISOString()
+          });
+          await updateDoc(noticeRef, { readBy: readBy });
+        }
+      }
+    }catch(e){ console.log("Read tracking error:", e); }
   }
   updateBadge();
   renderNotices();
 }
+
 function isNoticeRead(noticeId){
   return getReadNotices().includes(noticeId);
 }
@@ -960,6 +1048,18 @@ function updateStats(){
 // All notices array
 let allNotices = [];
 
+// 👁️ Render "Read By" list for admin
+function renderReadBy(readByArray){
+  if(!readByArray || readByArray.length === 0) return '';
+  const names = readByArray.map(r => `<span class="readByName">${r.userName || 'Unknown'}</span>`).join('');
+  return `
+    <div class="readByList">
+      <h4><i class="fas fa-eye"></i> Read by (${readByArray.length}):</h4>
+      <div class="readByNames">${names}</div>
+    </div>
+  `;
+}
+
 // Render notices
 function renderNotices(){
   const list = document.getElementById("noticeList");
@@ -1020,6 +1120,7 @@ function renderNotices(){
           ${!isRead ? `<button class="actionBtn readBtn" onclick="markNoticeRead('${n.id}')"><i class="fas fa-check"></i> Mark as Read</button>` : ''}
           ${(window.userRole === "admin" || window.userRole === "full") ? `<button class="actionBtn deleteBtn" onclick="deleteNotice('${n.id}')"><i class="fas fa-trash"></i> Delete</button>` : ''}
         </div>
+        ${window.userRole === "admin" || window.userRole === "full" ? renderReadBy(n.readBy) : ''}
       </div>
     `;
   });
@@ -1049,8 +1150,11 @@ import {
   doc,
   onSnapshot,
   query,
-  orderBy 
+  orderBy,
+  getDoc,
+  updateDoc
 } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-firestore.js";
+import { getMessaging, onMessage, getToken } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-messaging.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyD-wBCF5eeWMHobLFOhBzKW7aB2pagz9-w",
@@ -1063,6 +1167,7 @@ const firebaseConfig = {
 
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
+const messaging = getMessaging(app);
 
 // 🔥 OFFLINE PERSISTENCE ENABLED
 enableIndexedDbPersistence(db).catch((err) => {
@@ -1100,6 +1205,39 @@ onSnapshot(noticesQuery, (snapshot) => {
   allNotices = newNotices;
   renderNotices();
   updateBadge();
+  
+  // 🔊 Play sound for new notice
+  if(hadNewNotice && typeof playNotificationSound === 'function'){
+    playNotificationSound();
+  }
+});
+
+// 🔔 FOREGROUND MESSAGE HANDLER (Sound + Badge + Toast)
+onMessage(messaging, (payload) => {
+  console.log('[FCM] Foreground:', payload);
+  const { title, body } = payload.notification || {};
+  
+  // 🔊 Play sound
+  if(typeof playNotificationSound === 'function') playNotificationSound();
+  
+  // 🔴 Update badge
+  if(typeof updateBadge === 'function') {
+    // Reload notices to update badge
+    onSnapshot(noticesQuery, (snapshot) => {
+      const rows = [];
+      snapshot.forEach(d => rows.push({ id: d.id, ...d.data() }));
+      allNotices = rows;
+      updateBadge();
+    });
+  }
+  
+  // 📱 Show toast
+  showToast(`🔔 ${title || 'New Notice'}: ${body || ''}`, 'info');
+  
+  // 🔔 Set app badge (Android)
+  if('setAppBadge' in navigator){
+    navigator.setAppBadge(1).catch(console.error);
+  }
 });
 
 // ===== PUBLISH NOTICE (Admin) =====
@@ -1130,7 +1268,7 @@ window.publishNotice = async function(){
       user: window.userName,
       role: window.userRole,
       createdAt: new Date().toISOString(),
-      readBy: []
+      readBy: [] // Initialize empty readBy array
     };
 
     await addDoc(collection(db, "liveNotices"), noticeData);
@@ -1193,6 +1331,18 @@ if("Notification" in window && Notification.permission === "default"){
     }
   });
 }
+
+// 🔊 Unlock audio on first user interaction
+['click','touchstart','keydown'].forEach(evt=>{
+  window.addEventListener(evt, ()=>{ if(!audioCtx) initAudio(); }, {once:true, passive:true});
+});
+
+// 🔔 Clear badge when app becomes visible
+document.addEventListener('visibilitychange', ()=>{
+  if(document.visibilityState === 'visible'){
+    clearAppBadge();
+  }
+});
 
 // ===== INITIAL LOAD =====
 setupUI();
