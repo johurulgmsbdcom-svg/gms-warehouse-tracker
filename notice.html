@@ -743,13 +743,13 @@ body.light .creditFooter{background:var(--card);border-color:#cbd5e1;}
     <button onclick="location.href='index.html#reports'">📑 Reports</button>
     <button id="needleNav" onclick="location.href='index.html#needle'">🪡 Needle</button>
     <button id="adminNav" onclick="location.href='admin.html'">👑 Admin</button>
-    <button id="manpowerNav" onclick="location.href='manpower.html'">👨‍ Manpower</button>
+    <button id="manpowerNav" onclick="location.href='manpower.html'">‍ Manpower</button>
     <button class="active" onclick="location.href='notice.html'">
       📢 Notice
       <span class="notice-badge" id="sidebarBadge" style="display:none;">0</span>
     </button>
     <button onclick="location.href='online-users.html'">🟢 Online</button>
-    <button onclick="location.href='audit-history.html'">📜 Audit</button>
+    <button onclick="location.href='audit-history.html'"> Audit</button>
     <button id="backupNav" onclick="location.href='index.html#backup'">☁ Backup</button>
     <button onclick="location.href='change-password.html'">🔐 Password</button>
   </div>
@@ -770,7 +770,7 @@ body.light .creditFooter{background:var(--card);border-color:#cbd5e1;}
       <div class="systemSub">GMS MCD ERP SYSTEM</div>
     </div>
     <div class="topBarUpper">
-      <button class="menuToggle" onclick="toggleSidebar()">☰ Menu</button>
+      <button class="menuToggle" onclick="toggleSidebar()"> Menu</button>
       <div class="topBarRight">
         <button class="profileBtnTop" onclick="logout()">🚪 Logout</button>
       </div>
@@ -809,7 +809,7 @@ body.light .creditFooter{background:var(--card);border-color:#cbd5e1;}
       <div class="noticeOptions">
         <label>
           <input type="checkbox" id="pinNotice">
-          <span>📌 Pin this notice (top priority)</span>
+          <span> Pin this notice (top priority)</span>
         </label>
         <label>
           <input type="checkbox" id="pushNotice" checked>
@@ -1069,7 +1069,8 @@ window.filterNotices = function(filter){
 function updateBadge(){
   const badge = document.getElementById("sidebarBadge");
   if(!badge) return;
-  const unread = allNotices.filter(n => !isNoticeRead(n.id)).length;
+  // FIX: Read from window.allNotices
+  const unread = (window.allNotices || []).filter(n => !isNoticeRead(n.id)).length;
   if(unread > 0){
     badge.innerText = unread > 99 ? "99+" : unread;
     badge.style.display = "flex";
@@ -1083,10 +1084,11 @@ function updateBadge(){
 
 // Stats
 function updateStats(){
-  const total = allNotices.length;
-  const unread = allNotices.filter(n => !isNoticeRead(n.id)).length;
-  const pinned = allNotices.filter(n => n.pin).length;
-  const today = allNotices.filter(n => {
+  // FIX: Read from window.allNotices
+  const total = (window.allNotices || []).length;
+  const unread = (window.allNotices || []).filter(n => !isNoticeRead(n.id)).length;
+  const pinned = (window.allNotices || []).filter(n => n.pin).length;
+  const today = (window.allNotices || []).filter(n => {
     const d = new Date(n.createdAt);
     const now = new Date();
     return d.toDateString() === now.toDateString();
@@ -1098,8 +1100,8 @@ function updateStats(){
   document.getElementById("statToday").innerText = today;
 }
 
-// All notices array
-let allNotices = [];
+// FIX: Initialize window.allNotices
+window.allNotices = [];
 
 // 👁️ Render "Read By" list for admin
 function renderReadBy(readByArray){
@@ -1115,9 +1117,10 @@ function renderReadBy(readByArray){
 
 // Render notices
 function renderNotices(){
-  console.log('Rendering notices, count:', allNotices.length);
+  // FIX: Use window.allNotices
+  console.log('Rendering notices, count:', (window.allNotices || []).length);
   const list = document.getElementById("noticeList");
-  let notices = [...allNotices];
+  let notices = [...(window.allNotices || [])];
 
   // Sort: pinned first, then by date
   notices.sort((a, b) => {
@@ -1225,7 +1228,7 @@ const messaging = getMessaging(app);
 
 console.log('Firebase initialized');
 
-// 🔥 OFFLINE PERSISTENCE ENABLED
+//  OFFLINE PERSISTENCE ENABLED
 enableIndexedDbPersistence(db).catch((err) => {
   if (err.code == 'failed-precondition') {
     console.log('Multiple tabs open, persistence can only be enabled in one tab at a time.');
@@ -1263,6 +1266,7 @@ onSnapshot(noticesQuery, (snapshot) => {
   const hadNewNotice = newNotices.length > lastNoticeCount && lastNoticeCount > 0;
   lastNoticeCount = newNotices.length;
 
+  // FIX: Update window.allNotices
   window.allNotices = newNotices;
   console.log('Total notices:', window.allNotices.length);
   
@@ -1273,7 +1277,7 @@ onSnapshot(noticesQuery, (snapshot) => {
     updateBadge();
   }
   
-  // 🔊 Play WhatsApp sound for new notice
+  //  Play WhatsApp sound for new notice
   if(hadNewNotice && typeof window.playWhatsAppSound === 'function'){
     window.playWhatsAppSound();
   }
