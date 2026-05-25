@@ -740,10 +740,10 @@ body.light .creditFooter{background:var(--card);border-color:#cbd5e1;}
   <div class="sidebarNav">
     <button onclick="location.href='index.html'">🏠 Dashboard</button>
     <button onclick="location.href='index.html#entry'">➕ New Entry</button>
-    <button onclick="location.href='index.html#reports'">📑 Reports</button>
+    <button onclick="location.href='index.html#reports'"> Reports</button>
     <button id="needleNav" onclick="location.href='index.html#needle'">🪡 Needle</button>
     <button id="adminNav" onclick="location.href='admin.html'">👑 Admin</button>
-    <button id="manpowerNav" onclick="location.href='manpower.html'">‍ Manpower</button>
+    <button id="manpowerNav" onclick="location.href='manpower.html'"> Manpower</button>
     <button class="active" onclick="location.href='notice.html'">
       📢 Notice
       <span class="notice-badge" id="sidebarBadge" style="display:none;">0</span>
@@ -947,38 +947,6 @@ function getReadNotices(){
   return JSON.parse(localStorage.getItem("gmsReadNotices_" + window.userId) || "[]");
 }
 
-// 👁️ Mark notice as read + save to Firebase
-async function markNoticeRead(noticeId){
-  let read = getReadNotices();
-  if(!read.includes(noticeId)){
-    read.push(noticeId);
-    localStorage.setItem("gmsReadNotices_" + window.userId, JSON.stringify(read));
-    
-    try{
-      const noticeRef = doc(db, "liveNotices", noticeId);
-      const noticeSnap = await getDoc(noticeRef);
-      if(noticeSnap.exists()){
-        const noticeData = noticeSnap.data();
-        let readBy = noticeData.readBy || [];
-        if(!readBy.some(r => r.userId === window.userId)){
-          readBy.push({
-            userId: window.userId,
-            userName: window.userName,
-            userRole: window.userRole,
-            readAt: new Date().toISOString()
-          });
-          await updateDoc(noticeRef, { readBy: readBy });
-          console.log('Marked as read:', noticeId);
-        }
-      }
-    }catch(e){ 
-      console.log("Read tracking error:", e); 
-    }
-  }
-  updateBadge();
-  renderNotices();
-}
-
 function isNoticeRead(noticeId){
   return getReadNotices().includes(noticeId);
 }
@@ -1069,7 +1037,6 @@ window.filterNotices = function(filter){
 function updateBadge(){
   const badge = document.getElementById("sidebarBadge");
   if(!badge) return;
-  // FIX: Read from window.allNotices
   const unread = (window.allNotices || []).filter(n => !isNoticeRead(n.id)).length;
   if(unread > 0){
     badge.innerText = unread > 99 ? "99+" : unread;
@@ -1078,13 +1045,11 @@ function updateBadge(){
     badge.style.display = "none";
   }
   
-  // Update app icon badge (WhatsApp style)
   updateAppBadge(unread);
 }
 
 // Stats
 function updateStats(){
-  // FIX: Read from window.allNotices
   const total = (window.allNotices || []).length;
   const unread = (window.allNotices || []).filter(n => !isNoticeRead(n.id)).length;
   const pinned = (window.allNotices || []).filter(n => n.pin).length;
@@ -1100,7 +1065,7 @@ function updateStats(){
   document.getElementById("statToday").innerText = today;
 }
 
-// FIX: Initialize window.allNotices
+// Initialize window.allNotices
 window.allNotices = [];
 
 // 👁️ Render "Read By" list for admin
@@ -1117,7 +1082,6 @@ function renderReadBy(readByArray){
 
 // Render notices
 function renderNotices(){
-  // FIX: Use window.allNotices
   console.log('Rendering notices, count:', (window.allNotices || []).length);
   const list = document.getElementById("noticeList");
   let notices = [...(window.allNotices || [])];
@@ -1174,7 +1138,7 @@ function renderNotices(){
         <div class="noticeActions">
           ${isPinned ? '<span class="pinBadge"><i class="fas fa-thumbtack"></i> PINNED</span>' : ''}
           ${isRead ? '<span class="readBadge"><i class="fas fa-check-double"></i> Read</span>' : '<span class="unreadBadge"><i class="fas fa-circle"></i> New</span>'}
-          ${!isRead ? `<button class="actionBtn readBtn" onclick="markNoticeRead('${n.id}')"><i class="fas fa-check"></i> Mark as Read</button>` : ''}
+          ${!isRead ? `<button class="actionBtn readBtn" onclick="window.markNoticeRead('${n.id}')"><i class="fas fa-check"></i> Mark as Read</button>` : ''}
           ${(window.userRole === "admin" || window.userRole === "full") ? `<button class="actionBtn deleteBtn" onclick="deleteNotice('${n.id}')"><i class="fas fa-trash"></i> Delete</button>` : ''}
         </div>
         ${(window.userRole === "admin" || window.userRole === "full") ? renderReadBy(n.readBy) : ''}
@@ -1392,8 +1356,41 @@ window.deleteNotice = async function(id){
     await deleteDoc(doc(db, "liveNotices", id));
     showToast("✅ Notice deleted");
   }catch(err){
-    showToast("❌ Delete failed", "error");
+    showToast(" Delete failed", "error");
   }
+};
+
+// ===== MARK AS READ (FIXED: MOVED TO MODULE) =====
+window.markNoticeRead = async function(noticeId){
+  console.log('Marking as read:', noticeId);
+  let read = JSON.parse(localStorage.getItem("gmsReadNotices_" + window.userId) || "[]");
+  if(!read.includes(noticeId)){
+    read.push(noticeId);
+    localStorage.setItem("gmsReadNotices_" + window.userId, JSON.stringify(read));
+    
+    try{
+      const noticeRef = doc(db, "liveNotices", noticeId);
+      const noticeSnap = await getDoc(noticeRef);
+      if(noticeSnap.exists()){
+        const noticeData = noticeSnap.data();
+        let readBy = noticeData.readBy || [];
+        if(!readBy.some(r => r.userId === window.userId)){
+          readBy.push({
+            userId: window.userId,
+            userName: window.userName,
+            userRole: window.userRole,
+            readAt: new Date().toISOString()
+          });
+          await updateDoc(noticeRef, { readBy: readBy });
+          console.log('Read By Updated in Firebase');
+        }
+      }
+    }catch(e){ 
+      console.log("Read tracking error:", e); 
+    }
+  }
+  if(typeof updateBadge === 'function') updateBadge();
+  if(typeof renderNotices === 'function') renderNotices();
 };
 
 // ===== REQUEST NOTIFICATION PERMISSION =====
