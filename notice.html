@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>📢 GMS Notice Board</title>
+<title> GMS Notice Board</title>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 <link rel="manifest" href="/manifest.json">
 <meta name="theme-color" content="#3b82f6">
@@ -738,11 +738,11 @@ body.light .creditFooter{background:var(--card);border-color:#cbd5e1;}
     </div>
   </div>
   <div class="sidebarNav">
-    <button onclick="location.href='index.html'">🏠 Dashboard</button>
+    <button onclick="location.href='index.html'"> Dashboard</button>
     <button onclick="location.href='index.html#entry'">➕ New Entry</button>
     <button onclick="location.href='index.html#reports'"> Reports</button>
     <button id="needleNav" onclick="location.href='index.html#needle'">🪡 Needle</button>
-    <button id="adminNav" onclick="location.href='admin.html'">👑 Admin</button>
+    <button id="adminNav" onclick="location.href='admin.html'"> Admin</button>
     <button id="manpowerNav" onclick="location.href='manpower.html'"> Manpower</button>
     <button class="active" onclick="location.href='notice.html'">
       📢 Notice
@@ -1068,7 +1068,7 @@ function updateStats(){
 // Initialize window.allNotices
 window.allNotices = [];
 
-// 👁️ Render "Read By" list for admin
+// ️ Render "Read By" list for admin
 function renderReadBy(readByArray){
   if(!readByArray || readByArray.length === 0) return '';
   const names = readByArray.map(r => `<span class="readByName"><i class="fas fa-check"></i> ${r.userName || 'Unknown'}</span>`).join('');
@@ -1336,7 +1336,7 @@ window.publishNotice = async function(){
 
   }catch(err){
     console.error("Publish error:", err);
-    showToast("❌ Failed to publish: " + err.message, "error");
+    showToast(" Failed to publish: " + err.message, "error");
   }finally{
     btn.disabled = false;
     btn.innerHTML = '<i class="fas fa-paper-plane"></i> Publish Notice';
@@ -1374,6 +1374,8 @@ window.markNoticeRead = async function(noticeId){
       if(noticeSnap.exists()){
         const noticeData = noticeSnap.data();
         let readBy = noticeData.readBy || [];
+        
+        // FIX: Check if user ID is already in readBy array
         if(!readBy.some(r => r.userId === window.userId)){
           readBy.push({
             userId: window.userId,
@@ -1389,8 +1391,8 @@ window.markNoticeRead = async function(noticeId){
       console.log("Read tracking error:", e); 
     }
   }
-  if(typeof updateBadge === 'function') updateBadge();
-  if(typeof renderNotices === 'function') renderNotices();
+  // FIX: Removed manual renderNotices() call here. 
+  // The onSnapshot listener will automatically update window.allNotices and trigger renderNotices().
 };
 
 // ===== REQUEST NOTIFICATION PERMISSION =====
