@@ -738,23 +738,23 @@ body.light .creditFooter{background:var(--card);border-color:#cbd5e1;}
     </div>
   </div>
   <div class="sidebarNav">
-    <button onclick="location.href='index.html'"> Dashboard</button>
+    <button onclick="location.href='index.html'">🏠 Dashboard</button>
     <button onclick="location.href='index.html#entry'">➕ New Entry</button>
-    <button onclick="location.href='index.html#reports'"> Reports</button>
+    <button onclick="location.href='index.html#reports'">📑 Reports</button>
     <button id="needleNav" onclick="location.href='index.html#needle'">🪡 Needle</button>
-    <button id="adminNav" onclick="location.href='admin.html'"> Admin</button>
-    <button id="manpowerNav" onclick="location.href='manpower.html'"> Manpower</button>
+    <button id="adminNav" onclick="location.href='admin.html'">👑 Admin</button>
+    <button id="manpowerNav" onclick="location.href='manpower.html'">👨‍ Manpower</button>
     <button class="active" onclick="location.href='notice.html'">
       📢 Notice
       <span class="notice-badge" id="sidebarBadge" style="display:none;">0</span>
     </button>
     <button onclick="location.href='online-users.html'">🟢 Online</button>
-    <button onclick="location.href='audit-history.html'"> Audit</button>
+    <button onclick="location.href='audit-history.html'">📜 Audit</button>
     <button id="backupNav" onclick="location.href='index.html#backup'">☁ Backup</button>
     <button onclick="location.href='change-password.html'">🔐 Password</button>
   </div>
   <div class="sidebarFooter">
-    <button class="themeBtn" onclick="toggleTheme()">🌙 / ☀️ Theme</button>
+    <button class="themeBtn" onclick="toggleTheme()">🌙 / ️ Theme</button>
     <button class="logoutBtn" onclick="logout()">🚪 Logout</button>
   </div>
 </div>
@@ -770,7 +770,7 @@ body.light .creditFooter{background:var(--card);border-color:#cbd5e1;}
       <div class="systemSub">GMS MCD ERP SYSTEM</div>
     </div>
     <div class="topBarUpper">
-      <button class="menuToggle" onclick="toggleSidebar()"> Menu</button>
+      <button class="menuToggle" onclick="toggleSidebar()">☰ Menu</button>
       <div class="topBarRight">
         <button class="profileBtnTop" onclick="logout()">🚪 Logout</button>
       </div>
@@ -809,7 +809,7 @@ body.light .creditFooter{background:var(--card);border-color:#cbd5e1;}
       <div class="noticeOptions">
         <label>
           <input type="checkbox" id="pinNotice">
-          <span> Pin this notice (top priority)</span>
+          <span>📌 Pin this notice (top priority)</span>
         </label>
         <label>
           <input type="checkbox" id="pushNotice" checked>
@@ -831,7 +831,7 @@ body.light .creditFooter{background:var(--card);border-color:#cbd5e1;}
         <button class="filterBtn" onclick="filterNotices('today')">Today</button>
       </div>
       <div id="noticeList">
-        <div style="text-align:center;padding:40px;color:var(--muted);">
+        <div id="loadingSpinner" style="text-align:center;padding:40px;color:var(--muted);">
           <i class="fas fa-spinner fa-spin" style="font-size:32px;margin-bottom:16px;"></i>
           <div>Loading notices...</div>
         </div>
@@ -893,7 +893,6 @@ function playWhatsAppSound(){
     oscillator.connect(gainNode);
     gainNode.connect(audioCtx.destination);
     
-    // WhatsApp-like sound pattern (two beeps)
     oscillator.frequency.setValueAtTime(800, audioCtx.currentTime);
     oscillator.frequency.setValueAtTime(1200, audioCtx.currentTime + 0.1);
     oscillator.frequency.setValueAtTime(800, audioCtx.currentTime + 0.2);
@@ -911,12 +910,12 @@ function playWhatsAppSound(){
   }
 }
 
-// 🔔 Clear App Badge
+// 🔔 Clear App Badge (Taskbar/Home Screen)
 async function clearAppBadge(){
   if('clearAppBadge' in navigator){
     try{
       await navigator.clearAppBadge();
-      console.log('App badge cleared');
+      console.log('✅ App Badge cleared');
     }catch(err){
       console.log('Badge clear failed:', err);
     }
@@ -925,24 +924,27 @@ async function clearAppBadge(){
   if(badge){ badge.style.display = "none"; }
 }
 
-// 🔔 Set App Badge (WhatsApp style) - WITH FIREBASE SYNC
+// 🔔 Set App Badge (Taskbar/Home Screen)
 async function updateAppBadge(count){
-  console.log('Setting badge to:', count);
+  console.log('🔔 Setting App Badge to:', count);
+  
+  // Save to localStorage for cross-page sync
+  localStorage.setItem('gms_unread_count', count);
   
   if('setAppBadge' in navigator){
     try{
       if(count > 0){
         await navigator.setAppBadge(count);
-        console.log('✅ App badge set to:', count);
+        console.log('✅ App Badge set to:', count);
       }else{
         await navigator.clearAppBadge();
-        console.log('✅ App badge cleared');
+        console.log('✅ App Badge cleared');
       }
     }catch(err){
-      console.log(' Badge error:', err);
+      console.log('❌ Badge error:', err);
     }
   }else{
-    console.log(' Badge API not supported - using sidebar badge only');
+    console.log('⚠️ Badge API not supported - using sidebar badge only');
   }
   
   // Update sidebar badge
@@ -956,6 +958,13 @@ async function updateAppBadge(count){
     }
   }
 }
+
+// Cross-Page Badge Sync
+window.addEventListener('storage', (e) => {
+  if(e.key === 'gms_unread_count') {
+    updateAppBadge(parseInt(e.newValue || 0));
+  }
+});
 
 // 🔓 Unlock audio on first user interaction
 ['click','touchstart','keydown'].forEach(evt=>{
@@ -1097,6 +1106,10 @@ function renderNotices(){
   const list = document.getElementById("noticeList");
   let notices = [...(window.allNotices || [])];
 
+  // Hide loading
+  const loader = document.getElementById('loadingSpinner');
+  if(loader) loader.style.display = 'none';
+
   // Sort: pinned first, then by date
   notices.sort((a, b) => {
     if(a.pin && !b.pin) return -1;
@@ -1166,6 +1179,12 @@ function escapeHtml(text){
   div.innerText = text;
   return div.innerHTML;
 }
+
+// Loading fallback - hide after 3 seconds
+setTimeout(() => {
+  const loader = document.getElementById('loadingSpinner');
+  if(loader) loader.style.display = 'none';
+}, 3000);
 </script>
 
 <!-- ===== FIREBASE MODULE ===== -->
@@ -1244,18 +1263,20 @@ onSnapshot(noticesQuery, (snapshot) => {
   window.allNotices = newNotices;
   console.log('Total notices:', window.allNotices.length);
   
+  // Hide loading immediately
+  const loader = document.getElementById('loadingSpinner');
+  if(loader) loader.style.display = 'none';
+  
   if(typeof renderNotices === 'function'){
     renderNotices();
   }
   
-  // 🔔 UPDATE BADGE WITH FIREBASE DATA
+  // 🔔 UPDATE BADGE (Sidebar + App Icon) - From Firebase
+  const readNotices = JSON.parse(localStorage.getItem("gmsReadNotices_" + window.userId) || "[]");
+  const unreadCount = newNotices.filter(n => !readNotices.includes(n.id)).length;
+  
+  console.log('🔔 Calculated Unread Count:', unreadCount);
   if(typeof updateAppBadge === 'function'){
-    const unreadCount = (window.allNotices || []).filter(n => {
-      const readNotices = JSON.parse(localStorage.getItem("gmsReadNotices_" + window.userId) || "[]");
-      return !readNotices.includes(n.id);
-    }).length;
-    
-    console.log('Unread count for badge:', unreadCount);
     updateAppBadge(unreadCount);
   }
   
@@ -1374,7 +1395,7 @@ window.deleteNotice = async function(id){
     await deleteDoc(doc(db, "liveNotices", id));
     showToast("✅ Notice deleted");
   }catch(err){
-    showToast(" Delete failed", "error");
+    showToast("❌ Delete failed", "error");
   }
 };
 
@@ -1409,11 +1430,12 @@ window.markNoticeRead = async function(noticeId){
   }
   
   // 🔔 UPDATE BADGE AFTER MARKING AS READ
+  const unreadCount = (window.allNotices || []).filter(n => {
+    const readNotices = JSON.parse(localStorage.getItem("gmsReadNotices_" + window.userId) || "[]");
+    return !readNotices.includes(n.id);
+  }).length;
+  
   if(typeof updateAppBadge === 'function'){
-    const unreadCount = (window.allNotices || []).filter(n => {
-      const readNotices = JSON.parse(localStorage.getItem("gmsReadNotices_" + window.userId) || "[]");
-      return !readNotices.includes(n.id);
-    }).length;
     updateAppBadge(unreadCount);
   }
   
@@ -1442,10 +1464,8 @@ if(typeof setupUI === 'function') setupUI();
 // Set initial badge on page load
 setTimeout(async () => {
   if(typeof updateAppBadge === 'function' && window.allNotices){
-    const unreadCount = (window.allNotices || []).filter(n => {
-      const readNotices = JSON.parse(localStorage.getItem("gmsReadNotices_" + window.userId) || "[]");
-      return !readNotices.includes(n.id);
-    }).length;
+    const readNotices = JSON.parse(localStorage.getItem("gmsReadNotices_" + window.userId) || "[]");
+    const unreadCount = (window.allNotices || []).filter(n => !readNotices.includes(n.id)).length;
     await updateAppBadge(unreadCount);
   }
 }, 1000);
