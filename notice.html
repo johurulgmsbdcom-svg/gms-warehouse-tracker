@@ -738,23 +738,23 @@ body.light .creditFooter{background:var(--card);border-color:#cbd5e1;}
     </div>
   </div>
   <div class="sidebarNav">
-    <button onclick="location.href='index.html'">🏠 Dashboard</button>
+    <button onclick="location.href='index.html'"> Dashboard</button>
     <button onclick="location.href='index.html#entry'">➕ New Entry</button>
-    <button onclick="location.href='index.html#reports'">📑 Reports</button>
+    <button onclick="location.href='index.html#reports'"> Reports</button>
     <button id="needleNav" onclick="location.href='index.html#needle'">🪡 Needle</button>
-    <button id="adminNav" onclick="location.href='admin.html'">👑 Admin</button>
-    <button id="manpowerNav" onclick="location.href='manpower.html'">👨‍ Manpower</button>
+    <button id="adminNav" onclick="location.href='admin.html'"> Admin</button>
+    <button id="manpowerNav" onclick="location.href='manpower.html'"> Manpower</button>
     <button class="active" onclick="location.href='notice.html'">
       📢 Notice
       <span class="notice-badge" id="sidebarBadge" style="display:none;">0</span>
     </button>
     <button onclick="location.href='online-users.html'">🟢 Online</button>
-    <button onclick="location.href='audit-history.html'">📜 Audit</button>
+    <button onclick="location.href='audit-history.html'"> Audit</button>
     <button id="backupNav" onclick="location.href='index.html#backup'">☁ Backup</button>
     <button onclick="location.href='change-password.html'">🔐 Password</button>
   </div>
   <div class="sidebarFooter">
-    <button class="themeBtn" onclick="toggleTheme()">🌙 / ️ Theme</button>
+    <button class="themeBtn" onclick="toggleTheme()">🌙 / ☀️ Theme</button>
     <button class="logoutBtn" onclick="logout()">🚪 Logout</button>
   </div>
 </div>
@@ -809,7 +809,7 @@ body.light .creditFooter{background:var(--card);border-color:#cbd5e1;}
       <div class="noticeOptions">
         <label>
           <input type="checkbox" id="pinNotice">
-          <span>📌 Pin this notice (top priority)</span>
+          <span> Pin this notice (top priority)</span>
         </label>
         <label>
           <input type="checkbox" id="pushNotice" checked>
@@ -911,12 +911,12 @@ function playWhatsAppSound(){
   }
 }
 
-// 🔔 Clear App Badge (Taskbar/Home Screen)
+// 🔔 Clear App Badge
 async function clearAppBadge(){
   if('clearAppBadge' in navigator){
     try{
       await navigator.clearAppBadge();
-      console.log('✅ App Badge cleared');
+      console.log('App badge cleared');
     }catch(err){
       console.log('Badge clear failed:', err);
     }
@@ -925,24 +925,24 @@ async function clearAppBadge(){
   if(badge){ badge.style.display = "none"; }
 }
 
-// 🔔 Set App Badge (Taskbar/Home Screen)
+// 🔔 Set App Badge (WhatsApp style) - WITH FIREBASE SYNC
 async function updateAppBadge(count){
-  console.log('🔔 Setting App Badge to:', count);
+  console.log('Setting badge to:', count);
   
   if('setAppBadge' in navigator){
     try{
       if(count > 0){
         await navigator.setAppBadge(count);
-        console.log('✅ App Badge set to:', count);
+        console.log('✅ App badge set to:', count);
       }else{
         await navigator.clearAppBadge();
-        console.log('✅ App Badge cleared');
+        console.log('✅ App badge cleared');
       }
     }catch(err){
       console.log(' Badge error:', err);
     }
   }else{
-    console.log('️ Badge API not supported - using sidebar badge only');
+    console.log(' Badge API not supported - using sidebar badge only');
   }
   
   // Update sidebar badge
@@ -1012,7 +1012,7 @@ window.toggleSidebar = function(){
   const sidebar = document.getElementById("sidebar");
   const overlay = document.getElementById("sidebarOverlay");
   sidebar.classList.toggle("show");
-  overlay.style.display = sidebar.classList.contains("show') ? "block" : "none";
+  overlay.style.display = sidebar.classList.contains("show") ? "block" : "none";
 };
 
 // Logout
@@ -1248,14 +1248,14 @@ onSnapshot(noticesQuery, (snapshot) => {
     renderNotices();
   }
   
-  // 🔔 UPDATE BADGE (Sidebar + App Icon)
+  // 🔔 UPDATE BADGE WITH FIREBASE DATA
   if(typeof updateAppBadge === 'function'){
     const unreadCount = (window.allNotices || []).filter(n => {
       const readNotices = JSON.parse(localStorage.getItem("gmsReadNotices_" + window.userId) || "[]");
       return !readNotices.includes(n.id);
     }).length;
     
-    console.log('🔔 Calculated Unread Count:', unreadCount);
+    console.log('Unread count for badge:', unreadCount);
     updateAppBadge(unreadCount);
   }
   
@@ -1374,7 +1374,7 @@ window.deleteNotice = async function(id){
     await deleteDoc(doc(db, "liveNotices", id));
     showToast("✅ Notice deleted");
   }catch(err){
-    showToast("❌ Delete failed", "error");
+    showToast(" Delete failed", "error");
   }
 };
 
