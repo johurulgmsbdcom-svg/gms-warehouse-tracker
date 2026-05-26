@@ -326,6 +326,24 @@ body.light .systemNameBar{
   gap:10px;
   color:var(--blue);
 }
+
+/* Company Select Dropdown */
+.companySelect{
+  width:100%;
+  padding:12px;
+  border-radius:10px;
+  border:1px solid var(--border);
+  background:var(--bg);
+  color:var(--text);
+  font-size:13px;
+  font-weight:500;
+  margin-bottom:12px;
+}
+body.light .companySelect{
+  background:#f8fafc;
+  border-color:#cbd5e1;
+}
+
 .noticeInput{
   width:100%;
   min-height:120px;
@@ -349,24 +367,6 @@ body.light .noticeInput{
   background:#f8fafc;
   border-color:#cbd5e1;
 }
-
-/* Company Select */
-.companySelect{
-  width:100%;
-  padding:12px;
-  border-radius:10px;
-  border:1px solid var(--border);
-  background:var(--bg);
-  color:var(--text);
-  font-size:13px;
-  font-weight:500;
-  margin-bottom:12px;
-}
-body.light .companySelect{
-  background:#f8fafc;
-  border-color:#cbd5e1;
-}
-
 .noticeOptions{
   display:flex;
   align-items:center;
@@ -929,7 +929,7 @@ body.light .creditFooter{background:var(--card);border-color:#cbd5e1;}
     <div class="createCard" id="createCard">
       <h2><i class="fas fa-pen"></i> Send Notice to All</h2>
       
-      <!-- Company Selection -->
+      <!-- NEW: Company Selection -->
       <select class="companySelect" id="noticeCompany">
         <option value="GMS TEXTILES LTD">🏭 GMS TEXTILES LTD</option>
         <option value="GMS COMPOSITE KNITTING">🏭 GMS COMPOSITE KNITTING</option>
@@ -998,7 +998,7 @@ if(!user){ window.location.href = "login.html"; }
 window.userRole = user?.role || "user";
 window.userName = user?.name || "User";
 window.userId = user?.id || user?.uid || "anonymous";
-window.userCompany = user?.userCompanies?.[0] || "GMS TEXTILES LTD"; // Default to Textiles
+window.userCompany = user?.userCompanies?.[0] || "GMS TEXTILES LTD"; // Get user's company
 
 console.log('User loaded:', window.userName, window.userRole, window.userCompany);
 
@@ -1112,7 +1112,7 @@ async function markNoticeRead(noticeId){
   renderNotices();
 }
 
-// 💬 Send reply
+// 💬 NEW: Send reply function
 async function sendReply(noticeId, replyText){
   if(!replyText.trim()){
     showToast("❌ Please write a reply", "error");
@@ -1300,7 +1300,7 @@ function renderReadBy(readByArray){
   `;
 }
 
-// 💬 Render "Reply By" list for admin
+// 💬 NEW: Render "Reply By" list for admin
 function renderReplyBy(repliesArray){
   if(!repliesArray || repliesArray.length === 0) return '';
   const names = repliesArray.map(r => `<span class="replyByName"><i class="fas fa-comment"></i> ${r.userName || 'Unknown'} (${r.userCompany || 'N/A'})</span>`).join('');
@@ -1312,7 +1312,7 @@ function renderReplyBy(repliesArray){
   `;
 }
 
-// 💬 Render replies section
+// 💬 NEW: Render replies section
 function renderReplies(noticeId, repliesArray){
   if(!repliesArray) repliesArray = [];
   
@@ -1351,7 +1351,7 @@ function renderNotices(){
   console.log('Rendering notices, count:', allNotices.length);
   const list = document.getElementById("noticeList");
   
-  // Filter by user's company
+  // NEW: Filter by user's company
   let notices = allNotices.filter(n => {
     return n.company === "ALL" || n.company === window.userCompany;
   });
@@ -1560,7 +1560,7 @@ window.publishNotice = async function(){
   }
 
   const text = document.getElementById("noticeText").value.trim();
-  const company = document.getElementById("noticeCompany").value;
+  const company = document.getElementById("noticeCompany").value; // NEW: Get selected company
   const pin = document.getElementById("pinNotice").checked;
   const sendPush = document.getElementById("pushNotice").checked;
   const btn = document.getElementById("sendBtn");
@@ -1576,13 +1576,13 @@ window.publishNotice = async function(){
   try{
     const noticeData = {
       text: text,
-      company: company,
+      company: company, // NEW: Save company
       pin: pin,
       user: window.userName,
       role: window.userRole,
       createdAt: new Date().toISOString(),
       readBy: [],
-      replies: []
+      replies: [] // NEW: Initialize replies array
     };
 
     await addDoc(collection(db, "liveNotices"), noticeData);
