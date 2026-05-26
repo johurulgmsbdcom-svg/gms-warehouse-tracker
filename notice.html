@@ -738,18 +738,18 @@ body.light .creditFooter{background:var(--card);border-color:#cbd5e1;}
     </div>
   </div>
   <div class="sidebarNav">
-    <button onclick="location.href='index.html'">🏠 Dashboard</button>
+    <button onclick="location.href='index.html'"> Dashboard</button>
     <button onclick="location.href='index.html#entry'">➕ New Entry</button>
-    <button onclick="location.href='index.html#reports'">📑 Reports</button>
+    <button onclick="location.href='index.html#reports'"> Reports</button>
     <button id="needleNav" onclick="location.href='index.html#needle'">🪡 Needle</button>
-    <button id="adminNav" onclick="location.href='admin.html'">👑 Admin</button>
-    <button id="manpowerNav" onclick="location.href='manpower.html'">👨‍ Manpower</button>
+    <button id="adminNav" onclick="location.href='admin.html'"> Admin</button>
+    <button id="manpowerNav" onclick="location.href='manpower.html'"> Manpower</button>
     <button class="active" onclick="location.href='notice.html'">
       📢 Notice
       <span class="notice-badge" id="sidebarBadge" style="display:none;">0</span>
     </button>
     <button onclick="location.href='online-users.html'">🟢 Online</button>
-    <button onclick="location.href='audit-history.html'">📜 Audit</button>
+    <button onclick="location.href='audit-history.html'"> Audit</button>
     <button id="backupNav" onclick="location.href='index.html#backup'">☁ Backup</button>
     <button onclick="location.href='change-password.html'">🔐 Password</button>
   </div>
@@ -770,7 +770,7 @@ body.light .creditFooter{background:var(--card);border-color:#cbd5e1;}
       <div class="systemSub">GMS MCD ERP SYSTEM</div>
     </div>
     <div class="topBarUpper">
-      <button class="menuToggle" onclick="toggleSidebar()">☰ Menu</button>
+      <button class="menuToggle" onclick="toggleSidebar()"> Menu</button>
       <div class="topBarRight">
         <button class="profileBtnTop" onclick="logout()">🚪 Logout</button>
       </div>
@@ -809,7 +809,7 @@ body.light .creditFooter{background:var(--card);border-color:#cbd5e1;}
       <div class="noticeOptions">
         <label>
           <input type="checkbox" id="pinNotice">
-          <span>📌 Pin this notice (top priority)</span>
+          <span> Pin this notice (top priority)</span>
         </label>
         <label>
           <input type="checkbox" id="pushNotice" checked>
@@ -912,21 +912,47 @@ function playWhatsAppSound(){
 }
 
 // 🔔 Clear App Badge
-function clearAppBadge(){
+async function clearAppBadge(){
   if('clearAppBadge' in navigator){
-    navigator.clearAppBadge().catch(err => console.log('Badge clear failed:', err));
+    try{
+      await navigator.clearAppBadge();
+      console.log('App badge cleared');
+    }catch(err){
+      console.log('Badge clear failed:', err);
+    }
   }
   const badge = document.getElementById("sidebarBadge");
   if(badge){ badge.style.display = "none"; }
 }
 
-// 🔔 Set App Badge (WhatsApp style)
-function updateAppBadge(count){
+// 🔔 Set App Badge (WhatsApp style) - WITH FIREBASE SYNC
+async function updateAppBadge(count){
+  console.log('Setting badge to:', count);
+  
   if('setAppBadge' in navigator){
+    try{
+      if(count > 0){
+        await navigator.setAppBadge(count);
+        console.log('✅ App badge set to:', count);
+      }else{
+        await navigator.clearAppBadge();
+        console.log('✅ App badge cleared');
+      }
+    }catch(err){
+      console.log(' Badge error:', err);
+    }
+  }else{
+    console.log(' Badge API not supported - using sidebar badge only');
+  }
+  
+  // Update sidebar badge
+  const badge = document.getElementById("sidebarBadge");
+  if(badge){
     if(count > 0){
-      navigator.setAppBadge(count).catch(err => console.log('Badge set failed:', err));
+      badge.innerText = count > 99 ? "99+" : count;
+      badge.style.display = "flex";
     }else{
-      navigator.clearAppBadge().catch(err => console.log('Badge clear failed:', err));
+      badge.style.display = "none";
     }
   }
 }
@@ -945,39 +971,6 @@ function updateAppBadge(count){
 // Read tracking
 function getReadNotices(){
   return JSON.parse(localStorage.getItem("gmsReadNotices_" + window.userId) || "[]");
-}
-
-// 👁️ Mark notice as read + save to Firebase - FIXED: Use window.db
-async function markNoticeRead(noticeId){
-  let read = getReadNotices();
-  if(!read.includes(noticeId)){
-    read.push(noticeId);
-    localStorage.setItem("gmsReadNotices_" + window.userId, JSON.stringify(read));
-    
-    try{
-      // ✅ FIXED: Use window.db instead of db
-      const noticeRef = doc(window.db, "liveNotices", noticeId);
-      const noticeSnap = await getDoc(noticeRef);
-      if(noticeSnap.exists()){
-        const noticeData = noticeSnap.data();
-        let readBy = noticeData.readBy || [];
-        if(!readBy.some(r => r.userId === window.userId)){
-          readBy.push({
-            userId: window.userId,
-            userName: window.userName,
-            userRole: window.userRole,
-            readAt: new Date().toISOString()
-          });
-          await updateDoc(noticeRef, { readBy: readBy });
-          console.log('Marked as read:', noticeId);
-        }
-      }
-    }catch(e){ 
-      console.log("Read tracking error:", e); 
-    }
-  }
-  updateBadge();
-  renderNotices();
 }
 
 function isNoticeRead(noticeId){
@@ -1066,28 +1059,12 @@ window.filterNotices = function(filter){
   renderNotices();
 };
 
-// Badge update
-function updateBadge(){
-  const badge = document.getElementById("sidebarBadge");
-  if(!badge) return;
-  const unread = allNotices.filter(n => !isNoticeRead(n.id)).length;
-  if(unread > 0){
-    badge.innerText = unread > 99 ? "99+" : unread;
-    badge.style.display = "flex";
-  } else {
-    badge.style.display = "none";
-  }
-  
-  // Update app icon badge (WhatsApp style)
-  updateAppBadge(unread);
-}
-
 // Stats
 function updateStats(){
-  const total = allNotices.length;
-  const unread = allNotices.filter(n => !isNoticeRead(n.id)).length;
-  const pinned = allNotices.filter(n => n.pin).length;
-  const today = allNotices.filter(n => {
+  const total = (window.allNotices || []).length;
+  const unread = (window.allNotices || []).filter(n => !isNoticeRead(n.id)).length;
+  const pinned = (window.allNotices || []).filter(n => n.pin).length;
+  const today = (window.allNotices || []).filter(n => {
     const d = new Date(n.createdAt);
     const now = new Date();
     return d.toDateString() === now.toDateString();
@@ -1099,8 +1076,8 @@ function updateStats(){
   document.getElementById("statToday").innerText = today;
 }
 
-// All notices array
-let allNotices = [];
+// Initialize window.allNotices
+window.allNotices = [];
 
 // 👁️ Render "Read By" list for admin
 function renderReadBy(readByArray){
@@ -1116,9 +1093,9 @@ function renderReadBy(readByArray){
 
 // Render notices
 function renderNotices(){
-  console.log('Rendering notices, count:', allNotices.length);
+  console.log('Rendering notices, count:', (window.allNotices || []).length);
   const list = document.getElementById("noticeList");
-  let notices = [...allNotices];
+  let notices = [...(window.allNotices || [])];
 
   // Sort: pinned first, then by date
   notices.sort((a, b) => {
@@ -1172,7 +1149,7 @@ function renderNotices(){
         <div class="noticeActions">
           ${isPinned ? '<span class="pinBadge"><i class="fas fa-thumbtack"></i> PINNED</span>' : ''}
           ${isRead ? '<span class="readBadge"><i class="fas fa-check-double"></i> Read</span>' : '<span class="unreadBadge"><i class="fas fa-circle"></i> New</span>'}
-          ${!isRead ? `<button class="actionBtn readBtn" onclick="markNoticeRead('${n.id}')"><i class="fas fa-check"></i> Mark as Read</button>` : ''}
+          ${!isRead ? `<button class="actionBtn readBtn" onclick="window.markNoticeRead('${n.id}')"><i class="fas fa-check"></i> Mark as Read</button>` : ''}
           ${(window.userRole === "admin" || window.userRole === "full") ? `<button class="actionBtn deleteBtn" onclick="deleteNotice('${n.id}')"><i class="fas fa-trash"></i> Delete</button>` : ''}
         </div>
         ${(window.userRole === "admin" || window.userRole === "full") ? renderReadBy(n.readBy) : ''}
@@ -1182,7 +1159,6 @@ function renderNotices(){
 
   list.innerHTML = html;
   updateStats();
-  updateBadge();
 }
 
 function escapeHtml(text){
@@ -1224,9 +1200,6 @@ const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 const messaging = getMessaging(app);
 
-// ✅ FIXED: Make db globally accessible
-window.db = db;
-
 console.log('Firebase initialized');
 
 // 🔥 OFFLINE PERSISTENCE ENABLED
@@ -1267,14 +1240,23 @@ onSnapshot(noticesQuery, (snapshot) => {
   const hadNewNotice = newNotices.length > lastNoticeCount && lastNoticeCount > 0;
   lastNoticeCount = newNotices.length;
 
+  // FIX: Update window.allNotices
   window.allNotices = newNotices;
   console.log('Total notices:', window.allNotices.length);
   
   if(typeof renderNotices === 'function'){
     renderNotices();
   }
-  if(typeof updateBadge === 'function'){
-    updateBadge();
+  
+  // 🔔 UPDATE BADGE WITH FIREBASE DATA
+  if(typeof updateAppBadge === 'function'){
+    const unreadCount = (window.allNotices || []).filter(n => {
+      const readNotices = JSON.parse(localStorage.getItem("gmsReadNotices_" + window.userId) || "[]");
+      return !readNotices.includes(n.id);
+    }).length;
+    
+    console.log('Unread count for badge:', unreadCount);
+    updateAppBadge(unreadCount);
   }
   
   // 🔊 Play WhatsApp sound for new notice
@@ -1392,8 +1374,50 @@ window.deleteNotice = async function(id){
     await deleteDoc(doc(db, "liveNotices", id));
     showToast("✅ Notice deleted");
   }catch(err){
-    showToast("❌ Delete failed", "error");
+    showToast(" Delete failed", "error");
   }
+};
+
+// ===== MARK AS READ (FIXED: MOVED TO MODULE) =====
+window.markNoticeRead = async function(noticeId){
+  console.log('Marking as read:', noticeId);
+  let read = JSON.parse(localStorage.getItem("gmsReadNotices_" + window.userId) || "[]");
+  if(!read.includes(noticeId)){
+    read.push(noticeId);
+    localStorage.setItem("gmsReadNotices_" + window.userId, JSON.stringify(read));
+    
+    try{
+      const noticeRef = doc(db, "liveNotices", noticeId);
+      const noticeSnap = await getDoc(noticeRef);
+      if(noticeSnap.exists()){
+        const noticeData = noticeSnap.data();
+        let readBy = noticeData.readBy || [];
+        if(!readBy.some(r => r.userId === window.userId)){
+          readBy.push({
+            userId: window.userId,
+            userName: window.userName,
+            userRole: window.userRole,
+            readAt: new Date().toISOString()
+          });
+          await updateDoc(noticeRef, { readBy: readBy });
+          console.log('Read By Updated in Firebase');
+        }
+      }
+    }catch(e){ 
+      console.log("Read tracking error:", e); 
+    }
+  }
+  
+  // 🔔 UPDATE BADGE AFTER MARKING AS READ
+  if(typeof updateAppBadge === 'function'){
+    const unreadCount = (window.allNotices || []).filter(n => {
+      const readNotices = JSON.parse(localStorage.getItem("gmsReadNotices_" + window.userId) || "[]");
+      return !readNotices.includes(n.id);
+    }).length;
+    updateAppBadge(unreadCount);
+  }
+  
+  if(typeof renderNotices === 'function') renderNotices();
 };
 
 // ===== REQUEST NOTIFICATION PERMISSION =====
@@ -1406,15 +1430,25 @@ if("Notification" in window && Notification.permission === "default"){
 }
 
 // 🔔 Clear badge when app becomes visible
-document.addEventListener('visibilitychange', ()=>{
+document.addEventListener('visibilitychange', async ()=>{
   if(document.visibilityState === 'visible'){
-    if(typeof clearAppBadge === 'function') clearAppBadge();
+    if(typeof clearAppBadge === 'function') await clearAppBadge();
   }
 });
 
 // ===== INITIAL LOAD =====
 if(typeof setupUI === 'function') setupUI();
-if(typeof updateBadge === 'function') updateBadge();
+
+// Set initial badge on page load
+setTimeout(async () => {
+  if(typeof updateAppBadge === 'function' && window.allNotices){
+    const unreadCount = (window.allNotices || []).filter(n => {
+      const readNotices = JSON.parse(localStorage.getItem("gmsReadNotices_" + window.userId) || "[]");
+      return !readNotices.includes(n.id);
+    }).length;
+    await updateAppBadge(unreadCount);
+  }
+}, 1000);
 </script>
 </body>
 </html>
