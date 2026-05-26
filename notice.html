@@ -1346,15 +1346,14 @@ function renderReplies(noticeId, repliesArray){
   return html;
 }
 
-// Render notices
+// Render notices - FIXED: Show ALL notices (backward compatible)
 function renderNotices(){
   console.log('Rendering notices, count:', allNotices.length);
   const list = document.getElementById("noticeList");
   
-  // NEW: Filter by user's company
-  let notices = allNotices.filter(n => {
-    return n.company === "ALL" || n.company === window.userCompany;
-  });
+  // FIXED: Show ALL notices (no company filter for now)
+  // This ensures old notices without company field will show
+  let notices = [...allNotices];
   
   // Sort: pinned first, then by date
   notices.sort((a, b) => {
@@ -1400,7 +1399,7 @@ function renderNotices(){
             <div class="senderInfo">
               <div class="senderName">${n.user || "Admin"}</div>
               <div class="senderRole">${n.role || "Admin"}</div>
-              <div class="noticeCompany ${companyClass}">${companyIcon} ${n.company || 'ALL'}</div>
+              ${n.company ? `<div class="noticeCompany ${companyClass}">${companyIcon} ${n.company}</div>` : ''}
             </div>
           </div>
           <div class="noticeTime" title="${fullDate}">
