@@ -1289,44 +1289,6 @@ function renderReplies(noticeId, repliesArray){
   return html;
 }
 
-// 💬 NEW: Send reply function
-async function sendReply(noticeId, replyText){
-  if(!replyText.trim()){
-    showToast("❌ Please write a reply", "error");
-    return;
-  }
-  
-  try{
-    const noticeRef = doc(window.db, "liveNotices", noticeId);
-    const noticeSnap = await getDoc(noticeRef);
-    if(noticeSnap.exists()){
-      const noticeData = noticeSnap.data();
-      let replies = noticeData.replies || [];
-      
-      replies.push({
-        userId: window.userId,
-        userName: window.userName,
-        userRole: window.userRole,
-        userCompany: window.userCompany,
-        replyText: replyText.trim(),
-        repliedAt: new Date().toISOString()
-      });
-      
-      await updateDoc(noticeRef, { replies: replies });
-      showToast("✅ Reply sent successfully!");
-      
-      // Clear input
-      document.getElementById(`replyInput_${noticeId}`).value = "";
-      
-      // Re-render to show new reply
-      renderNotices();
-    }
-  }catch(e){
-    console.log("Reply error:", e);
-    showToast("❌ Failed to send reply", "error");
-  }
-}
-
 // Render notices - NEW: Filter by user's company
 function renderNotices(){
   console.log('Rendering notices, count:', (window.allNotices || []).length);
@@ -1675,6 +1637,45 @@ window.markNoticeRead = async function(noticeId){
   }
   
   if(typeof renderNotices === 'function') renderNotices();
+};
+
+// 💬 NEW: Send reply function (MOVED TO MODULE - FIXED)
+window.sendReply = async function(noticeId, replyText){
+  if(!replyText.trim()){
+    showToast("❌ Please write a reply", "error");
+    return;
+  }
+  
+  try{
+    const noticeRef = doc(db, "liveNotices", noticeId);
+    const noticeSnap = await getDoc(noticeRef);
+    if(noticeSnap.exists()){
+      const noticeData = noticeSnap.data();
+      let replies = noticeData.replies || [];
+      
+      replies.push({
+        userId: window.userId,
+        userName: window.userName,
+        userRole: window.userRole,
+        userCompany: window.userCompany,
+        replyText: replyText.trim(),
+        repliedAt: new Date().toISOString()
+      });
+      
+      await updateDoc(noticeRef, { replies: replies });
+      showToast("✅ Reply sent successfully!");
+      
+      // Clear input
+      const replyInput = document.getElementById(`replyInput_${noticeId}`);
+      if(replyInput) replyInput.value = "";
+      
+      // Re-render to show new reply
+      if(typeof renderNotices === 'function') renderNotices();
+    }
+  }catch(e){
+    console.error("Reply error:", e);
+    showToast("❌ Failed to send reply: " + e.message, "error");
+  }
 };
 
 // ===== REQUEST NOTIFICATION PERMISSION =====
