@@ -286,6 +286,26 @@ body.light .systemNameBar{
   font-weight:500;
 }
 
+/* ===== COMPANY BADGE ===== */
+.companyBadge{
+  display:inline-flex;
+  align-items:center;
+  gap:6px;
+  padding:6px 14px;
+  background:rgba(59,130,246,0.2);
+  border:1px solid rgba(59,130,246,0.3);
+  border-radius:20px;
+  font-size:12px;
+  font-weight:600;
+  color:var(--blue);
+  margin-left:10px;
+}
+.companyBadge.composite{
+  background:rgba(139,92,246,0.2);
+  border-color:rgba(139,92,246,0.3);
+  color:var(--purple);
+}
+
 /* ===== CREATE NOTICE CARD ===== */
 .createCard{
   background:var(--card);
@@ -306,6 +326,24 @@ body.light .systemNameBar{
   gap:10px;
   color:var(--blue);
 }
+
+/* NEW: Company Select Dropdown */
+.companySelect{
+  width:100%;
+  padding:12px;
+  border-radius:10px;
+  border:1px solid var(--border);
+  background:var(--bg);
+  color:var(--text);
+  font-size:13px;
+  font-weight:500;
+  margin-bottom:12px;
+}
+body.light .companySelect{
+  background:#f8fafc;
+  border-color:#cbd5e1;
+}
+
 .noticeInput{
   width:100%;
   min-height:120px;
@@ -516,6 +554,16 @@ body.light .noticeItem{background:#f8fafc;}
   color:var(--muted);
   font-weight:500;
 }
+/* NEW: Notice Company Badge */
+.noticeCompany{
+  font-size:10px;
+  color:var(--blue);
+  font-weight:600;
+  margin-top:2px;
+}
+.noticeCompany.composite{
+  color:var(--purple);
+}
 .noticeTime{
   display:flex;
   align-items:center;
@@ -532,6 +580,77 @@ body.light .noticeItem{background:#f8fafc;}
   white-space:pre-wrap;
   margin-bottom:14px;
 }
+
+/* ===== NEW: Reply Section ===== */
+.replySection{
+  margin-top:14px;
+  padding-top:14px;
+  border-top:1px solid var(--border);
+}
+.replySection h4{
+  font-size:12px;
+  font-weight:600;
+  color:var(--muted);
+  margin-bottom:10px;
+  display:flex;
+  align-items:center;
+  gap:6px;
+}
+.replyInput{
+  width:100%;
+  padding:10px;
+  border-radius:8px;
+  border:1px solid var(--border);
+  background:var(--bg);
+  color:var(--text);
+  font-size:13px;
+  font-family:'Poppins',sans-serif;
+  resize:none;
+  margin-bottom:8px;
+}
+.replyInput:focus{
+  outline:none;
+  border-color:var(--blue);
+}
+.replyBtn{
+  background:var(--blue);
+  color:#fff;
+  border:none;
+  padding:6px 14px;
+  border-radius:6px;
+  font-size:12px;
+  font-weight:600;
+  cursor:pointer;
+}
+.replyList{
+  margin-top:10px;
+  display:flex;
+  flex-direction:column;
+  gap:8px;
+}
+.replyItem{
+  background:rgba(59,130,246,0.1);
+  padding:10px;
+  border-radius:8px;
+  border-left:3px solid var(--blue);
+}
+.replyItem .replyUser{
+  font-size:12px;
+  font-weight:600;
+  color:var(--blue);
+  margin-bottom:4px;
+}
+.replyItem .replyText{
+  font-size:13px;
+  color:var(--text);
+  line-height:1.5;
+}
+.replyItem .replyTime{
+  font-size:10px;
+  color:var(--muted);
+  margin-top:4px;
+}
+
 .noticeActions{
   display:flex;
   gap:10px;
@@ -623,15 +742,15 @@ body.light .noticeItem{background:#f8fafc;}
   margin-bottom:8px;
 }
 
-/* ===== READ BY LIST (Admin Only) ===== */
-.readByList{
+/* ===== READ BY & REPLY BY LIST (Admin Only) ===== */
+.readByList, .replyByList{
   margin-top:12px;
   padding:12px;
   background:rgba(59,130,246,0.1);
   border-radius:8px;
   border-left:3px solid var(--blue);
 }
-.readByList h4{
+.readByList h4, .replyByList h4{
   font-size:12px;
   font-weight:600;
   color:var(--blue);
@@ -640,12 +759,12 @@ body.light .noticeItem{background:#f8fafc;}
   align-items:center;
   gap:6px;
 }
-.readByNames{
+.readByNames, .replyByNames{
   display:flex;
   flex-wrap:wrap;
   gap:6px;
 }
-.readByName{
+.readByName, .replyByName{
   background:var(--card2);
   color:var(--text);
   padding:5px 12px;
@@ -659,6 +778,10 @@ body.light .noticeItem{background:#f8fafc;}
 .readByName i{
   font-size:10px;
   color:var(--green);
+}
+.replyByName i{
+  font-size:10px;
+  color:var(--yellow);
 }
 
 /* ===== TOAST ===== */
@@ -738,18 +861,18 @@ body.light .creditFooter{background:var(--card);border-color:#cbd5e1;}
     </div>
   </div>
   <div class="sidebarNav">
-    <button onclick="location.href='index.html'"> Dashboard</button>
+    <button onclick="location.href='index.html'">🏠 Dashboard</button>
     <button onclick="location.href='index.html#entry'">➕ New Entry</button>
-    <button onclick="location.href='index.html#reports'"> Reports</button>
+    <button onclick="location.href='index.html#reports'">📑 Reports</button>
     <button id="needleNav" onclick="location.href='index.html#needle'">🪡 Needle</button>
-    <button id="adminNav" onclick="location.href='admin.html'"> Admin</button>
-    <button id="manpowerNav" onclick="location.href='manpower.html'"> Manpower</button>
+    <button id="adminNav" onclick="location.href='admin.html'">👑 Admin</button>
+    <button id="manpowerNav" onclick="location.href='manpower.html'">👨‍ Manpower</button>
     <button class="active" onclick="location.href='notice.html'">
       📢 Notice
       <span class="notice-badge" id="sidebarBadge" style="display:none;">0</span>
     </button>
     <button onclick="location.href='online-users.html'">🟢 Online</button>
-    <button onclick="location.href='audit-history.html'"> Audit</button>
+    <button onclick="location.href='audit-history.html'">📜 Audit</button>
     <button id="backupNav" onclick="location.href='index.html#backup'">☁ Backup</button>
     <button onclick="location.href='change-password.html'">🔐 Password</button>
   </div>
@@ -770,8 +893,10 @@ body.light .creditFooter{background:var(--card);border-color:#cbd5e1;}
       <div class="systemSub">GMS MCD ERP SYSTEM</div>
     </div>
     <div class="topBarUpper">
-      <button class="menuToggle" onclick="toggleSidebar()"> Menu</button>
+      <button class="menuToggle" onclick="toggleSidebar()">☰ Menu</button>
       <div class="topBarRight">
+        <!-- NEW: User Company Badge -->
+        <span id="userCompanyBadge" class="companyBadge">🏭 TEXTILES</span>
         <button class="profileBtnTop" onclick="logout()">🚪 Logout</button>
       </div>
     </div>
@@ -779,8 +904,9 @@ body.light .creditFooter{background:var(--card);border-color:#cbd5e1;}
 
   <!-- PAGE CONTENT -->
   <div class="pageContent">
-    <div class="pageTitle">📢 Notice Board</div>
-    <div class="pageSub">All company notices • Read/Unread tracking • Real-time updates</div>
+    <!-- NEW: Page Title with Company Badge -->
+    <div class="pageTitle">📢 Notice Board <span id="pageCompanyBadge" class="companyBadge">🏭 TEXTILES</span></div>
+    <div class="pageSub">Company-wise notices • Read/Reply tracking • Real-time updates</div>
 
     <!-- Stats -->
     <div class="statsBar">
@@ -805,11 +931,19 @@ body.light .creditFooter{background:var(--card);border-color:#cbd5e1;}
     <!-- Create Notice (Admin Only) -->
     <div class="createCard" id="createCard">
       <h2><i class="fas fa-pen"></i> Send Notice to All</h2>
+      
+      <!-- NEW: Company Selection Dropdown -->
+      <select class="companySelect" id="noticeCompany">
+        <option value="GMS TEXTILES LTD">🏭 GMS TEXTILES LTD</option>
+        <option value="GMS COMPOSITE KNITTING">🏭 GMS COMPOSITE KNITTING</option>
+        <option value="ALL">🌍 ALL COMPANIES</option>
+      </select>
+      
       <textarea class="noticeInput" id="noticeText" placeholder="Write your notice here... All users will receive a push notification 📲"></textarea>
       <div class="noticeOptions">
         <label>
           <input type="checkbox" id="pinNotice">
-          <span> Pin this notice (top priority)</span>
+          <span>📌 Pin this notice (top priority)</span>
         </label>
         <label>
           <input type="checkbox" id="pushNotice" checked>
@@ -867,8 +1001,10 @@ if(!user){ window.location.href = "login.html"; }
 window.userRole = user?.role || "user";
 window.userName = user?.name || "User";
 window.userId = user?.id || user?.uid || "anonymous";
+// NEW: Get user's company from login data
+window.userCompany = user?.userCompanies?.[0] || "GMS TEXTILES LTD";
 
-console.log('User loaded:', window.userName, window.userRole);
+console.log('User loaded:', window.userName, window.userRole, window.userCompany);
 
 // 🔊 WhatsApp-like Notification Sound
 let audioCtx = null;
@@ -925,7 +1061,7 @@ async function clearAppBadge(){
   if(badge){ badge.style.display = "none"; }
 }
 
-// 🔔 Set App Badge (WhatsApp style) - WITH FIREBASE SYNC
+// 🔔 Set App Badge (WhatsApp style)
 async function updateAppBadge(count){
   console.log('Setting badge to:', count);
   
@@ -939,10 +1075,10 @@ async function updateAppBadge(count){
         console.log('✅ App badge cleared');
       }
     }catch(err){
-      console.log(' Badge error:', err);
+      console.log('🔴 Badge error:', err);
     }
   }else{
-    console.log(' Badge API not supported - using sidebar badge only');
+    console.log('ℹ️ Badge API not supported - using sidebar badge only');
   }
   
   // Update sidebar badge
@@ -980,6 +1116,22 @@ function isNoticeRead(noticeId){
 // UI Setup
 function setupUI(){
   document.getElementById("loginInfo").innerText = `${window.userName} • ${window.userRole.toUpperCase()}`;
+  
+  // NEW: Update company badges in UI
+  const badgeText = window.userCompany === "GMS COMPOSITE KNITTING" ? "🏭 COMPOSITE" : "🏭 TEXTILES";
+  const badgeClass = window.userCompany === "GMS COMPOSITE KNITTING" ? "composite" : "";
+  
+  const userBadge = document.getElementById("userCompanyBadge");
+  const pageBadge = document.getElementById("pageCompanyBadge");
+  
+  if(userBadge){
+    userBadge.innerHTML = badgeText;
+    userBadge.className = "companyBadge " + badgeClass;
+  }
+  if(pageBadge){
+    pageBadge.innerHTML = badgeText;
+    pageBadge.className = "companyBadge " + badgeClass;
+  }
 
   if(window.userRole !== "admin" && window.userRole !== "full"){
     document.getElementById("adminNav").style.display = "none";
@@ -1091,11 +1243,100 @@ function renderReadBy(readByArray){
   `;
 }
 
-// Render notices
+// 💬 NEW: Render "Reply By" list for admin
+function renderReplyBy(repliesArray){
+  if(!repliesArray || repliesArray.length === 0) return '';
+  const names = repliesArray.map(r => `<span class="replyByName"><i class="fas fa-comment"></i> ${r.userName || 'Unknown'} (${r.userCompany || 'N/A'})</span>`).join('');
+  return `
+    <div class="replyByList">
+      <h4><i class="fas fa-comments"></i> Replied by (${repliesArray.length}):</h4>
+      <div class="replyByNames">${names}</div>
+    </div>
+  `;
+}
+
+// 💬 NEW: Render replies section for each notice
+function renderReplies(noticeId, repliesArray){
+  if(!repliesArray) repliesArray = [];
+  
+  let html = `
+    <div class="replySection">
+      <h4><i class="fas fa-comments"></i> Replies (${repliesArray.length})</h4>
+      <div class="replyList">
+  `;
+  
+  repliesArray.forEach(reply => {
+    html += `
+      <div class="replyItem">
+        <div class="replyUser">${reply.userName || 'Unknown'} • ${reply.userCompany || 'N/A'}</div>
+        <div class="replyText">${escapeHtml(reply.replyText || '')}</div>
+        <div class="replyTime"><i class="fas fa-clock"></i> ${timeAgo(reply.repliedAt)}</div>
+      </div>
+    `;
+  });
+  
+  html += `</div>`;
+  
+  // Reply input (for all users)
+  html += `
+    <textarea class="replyInput" id="replyInput_${noticeId}" placeholder="Write your reply..." rows="2"></textarea>
+    <button class="replyBtn" onclick="sendReply('${noticeId}', document.getElementById('replyInput_${noticeId}').value)">
+      <i class="fas fa-reply"></i> Send Reply
+    </button>
+  </div>
+  `;
+  
+  return html;
+}
+
+// 💬 NEW: Send reply function
+async function sendReply(noticeId, replyText){
+  if(!replyText.trim()){
+    showToast("❌ Please write a reply", "error");
+    return;
+  }
+  
+  try{
+    const noticeRef = doc(window.db, "liveNotices", noticeId);
+    const noticeSnap = await getDoc(noticeRef);
+    if(noticeSnap.exists()){
+      const noticeData = noticeSnap.data();
+      let replies = noticeData.replies || [];
+      
+      replies.push({
+        userId: window.userId,
+        userName: window.userName,
+        userRole: window.userRole,
+        userCompany: window.userCompany,
+        replyText: replyText.trim(),
+        repliedAt: new Date().toISOString()
+      });
+      
+      await updateDoc(noticeRef, { replies: replies });
+      showToast("✅ Reply sent successfully!");
+      
+      // Clear input
+      document.getElementById(`replyInput_${noticeId}`).value = "";
+      
+      // Re-render to show new reply
+      renderNotices();
+    }
+  }catch(e){
+    console.log("Reply error:", e);
+    showToast("❌ Failed to send reply", "error");
+  }
+}
+
+// Render notices - NEW: Filter by user's company
 function renderNotices(){
   console.log('Rendering notices, count:', (window.allNotices || []).length);
   const list = document.getElementById("noticeList");
   let notices = [...(window.allNotices || [])];
+  
+  // NEW: Filter notices by user's company
+  notices = notices.filter(n => {
+    return n.company === "ALL" || n.company === window.userCompany;
+  });
 
   // Sort: pinned first, then by date
   notices.sort((a, b) => {
@@ -1130,6 +1371,9 @@ function renderNotices(){
     const timeStr = timeAgo(n.createdAt);
     const fullDate = new Date(n.createdAt).toLocaleString();
     const senderInitial = (n.user || "A").charAt(0).toUpperCase();
+    // NEW: Company badge styling
+    const companyClass = n.company === "GMS COMPOSITE KNITTING" ? "composite" : "";
+    const companyIcon = n.company === "GMS COMPOSITE KNITTING" ? "🏭" : "🏭";
 
     html += `
       <div class="noticeItem ${isRead ? '' : 'unread'} ${isPinned ? 'pinned' : ''}" id="notice_${n.id}">
@@ -1139,6 +1383,7 @@ function renderNotices(){
             <div class="senderInfo">
               <div class="senderName">${n.user || "Admin"}</div>
               <div class="senderRole">${n.role || "Admin"}</div>
+              ${n.company ? `<div class="noticeCompany ${companyClass}">${companyIcon} ${n.company}</div>` : ''}
             </div>
           </div>
           <div class="noticeTime" title="${fullDate}">
@@ -1152,7 +1397,9 @@ function renderNotices(){
           ${!isRead ? `<button class="actionBtn readBtn" onclick="window.markNoticeRead('${n.id}')"><i class="fas fa-check"></i> Mark as Read</button>` : ''}
           ${(window.userRole === "admin" || window.userRole === "full") ? `<button class="actionBtn deleteBtn" onclick="deleteNotice('${n.id}')"><i class="fas fa-trash"></i> Delete</button>` : ''}
         </div>
+        ${renderReplies(n.id, n.replies)}
         ${(window.userRole === "admin" || window.userRole === "full") ? renderReadBy(n.readBy) : ''}
+        ${(window.userRole === "admin" || window.userRole === "full") ? renderReplyBy(n.replies) : ''}
       </div>
     `;
   });
@@ -1199,6 +1446,9 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 const messaging = getMessaging(app);
+
+// ✅ Make db globally accessible
+window.db = db;
 
 console.log('Firebase initialized');
 
@@ -1296,7 +1546,7 @@ if(typeof onMessage === 'function'){
   });
 }
 
-// ===== PUBLISH NOTICE (Admin) =====
+// ===== PUBLISH NOTICE (Admin) - NEW: Add company field =====
 window.publishNotice = async function(){
   if(window.userRole !== "admin" && window.userRole !== "full"){
     showToast("❌ Admin only", "error");
@@ -1304,6 +1554,8 @@ window.publishNotice = async function(){
   }
 
   const text = document.getElementById("noticeText").value.trim();
+  // NEW: Get selected company
+  const company = document.getElementById("noticeCompany").value;
   const pin = document.getElementById("pinNotice").checked;
   const sendPush = document.getElementById("pushNotice").checked;
   const btn = document.getElementById("sendBtn");
@@ -1319,11 +1571,15 @@ window.publishNotice = async function(){
   try{
     const noticeData = {
       text: text,
+      // NEW: Save company field
+      company: company,
       pin: pin,
       user: window.userName,
       role: window.userRole,
       createdAt: new Date().toISOString(),
-      readBy: []
+      readBy: [],
+      // NEW: Initialize replies array
+      replies: []
     };
 
     await addDoc(collection(db, "liveNotices"), noticeData);
@@ -1334,7 +1590,7 @@ window.publishNotice = async function(){
         await addDoc(collection(db, "pushQueue"), {
           title: "📢 GMS Notice",
           body: text.substring(0, 150) + (text.length > 150 ? "..." : ""),
-          target: "all",
+          target: company === "ALL" ? "all" : company,
           sender: window.userName,
           createdAt: new Date().toISOString(),
           status: "pending",
@@ -1374,7 +1630,7 @@ window.deleteNotice = async function(id){
     await deleteDoc(doc(db, "liveNotices", id));
     showToast("✅ Notice deleted");
   }catch(err){
-    showToast(" Delete failed", "error");
+    showToast("❌ Delete failed", "error");
   }
 };
 
@@ -1397,6 +1653,7 @@ window.markNoticeRead = async function(noticeId){
             userId: window.userId,
             userName: window.userName,
             userRole: window.userRole,
+            userCompany: window.userCompany,
             readAt: new Date().toISOString()
           });
           await updateDoc(noticeRef, { readBy: readBy });
