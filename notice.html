@@ -947,7 +947,7 @@ function getReadNotices(){
   return JSON.parse(localStorage.getItem("gmsReadNotices_" + window.userId) || "[]");
 }
 
-// 👁️ Mark notice as read + save to Firebase
+// 👁️ Mark notice as read + save to Firebase - FIXED: Use window.db
 async function markNoticeRead(noticeId){
   let read = getReadNotices();
   if(!read.includes(noticeId)){
@@ -955,7 +955,8 @@ async function markNoticeRead(noticeId){
     localStorage.setItem("gmsReadNotices_" + window.userId, JSON.stringify(read));
     
     try{
-      const noticeRef = doc(db, "liveNotices", noticeId);
+      // ✅ FIXED: Use window.db instead of db
+      const noticeRef = doc(window.db, "liveNotices", noticeId);
       const noticeSnap = await getDoc(noticeRef);
       if(noticeSnap.exists()){
         const noticeData = noticeSnap.data();
@@ -1222,6 +1223,9 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 const messaging = getMessaging(app);
+
+// ✅ FIXED: Make db globally accessible
+window.db = db;
 
 console.log('Firebase initialized');
 
