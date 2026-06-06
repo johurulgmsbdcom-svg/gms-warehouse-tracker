@@ -2097,6 +2097,84 @@ window.loadReport=function(){
   box.innerHTML=`<div class="reportCard">📑 ${mcd} Report</div><div class="reportCard" onclick="location.href='billing-manpower-report.html'"><i class="fas fa-users"></i> Billing Manpower</div>${common}`;
 };
 
+const chartPalette=["#38bdf8","#22c55e","#f59e0b","#a855f7","#ef4444","#14b8a6","#eab308","#6366f1","#ec4899","#84cc16","#06b6d4","#f97316"];
+function chartColors(count){return Array.from({length:count},(_,i)=>chartPalette[i%chartPalette.length]);}
+const valueLabelPlugin={
+  id:"valueLabelPlugin",
+  afterDatasetsDraw(chart){
+    const {ctx}=chart;
+    ctx.save();
+    ctx.font="600 12px Poppins";
+    ctx.fillStyle=document.body.classList.contains("light")?"#1e293b":"#f1f5f9";
+    ctx.textAlign="center";
+    chart.data.datasets.forEach((dataset,di)=>{
+      const meta=chart.getDatasetMeta(di);
+      meta.data.forEach((bar,i)=>{
+        const value=dataset.data[i];
+        if(value===undefined||value===null)return;
+        ctx.fillText(fmt(value),bar.x,bar.y-6);
+      });
+    });
+    ctx.restore();
+  }
+};
+function barOptions(titleText){
+  const isLight=document.body.classList.contains("light");
+  return{
+    responsive:true, maintainAspectRatio:false,
+    plugins:{
+      legend:{display:false},
+      title:{display:!!titleText,text:titleText,font:{size:14,weight:"600"},color:isLight?"#1e293b":"#f1f5f9"},
+      tooltip:{backgroundColor:"rgba(15,23,42,.95)",titleColor:"#fff",bodyColor:"#fff",titleFont:{size:13,weight:"600"},bodyFont:{size:12,weight:"500"}}
+    },
+    scales:{
+      y:{ beginAtZero:true, grid:{color:isLight?"rgba(0,0,0,.1)":"rgba(148,163,184,.2)"}, ticks:{font:{size:11,weight:"500"},color:isLight?"#475569":"#cbd5e1"} },
+      x:{ grid:{display:false}, ticks:{ font:{size:12,weight:"600"}, color:isLight?"#475569":"#cbd5e1", maxRotation:45, minRotation:0, autoSkip:false, padding:8 } }
+    }
+  };
+}
+
+function renderCharts(sewing,accessories,twill,floorStocks,grey,billing,needleIssue){
+  if(isAccessoriesAllowed()){
+    if(accessoriesChart)accessoriesChart.destroy();
+    accessoriesChart=new Chart(document.getElementById("accessoriesChart"),{
+      type:"bar",
+      data:{ labels:["Sewing Thread","Accessories Sample","Twill Tape"], datasets:[{data:[sewing,accessories,twill],backgroundColor:["#38bdf8","#22c55e","#f59e0b"],borderRadius:12,barPercentage:0.6}] },
+      options:barOptions("Accessories Stock Summary"), plugins:[valueLabelPlugin]
+    });
+  }
+  if(isNeedleAllowed()){
+    if(needleChart)needleChart.destroy();
+    needleChart=new Chart(document.getElementById("needleChart"),{
+      type:"bar",
+      data:{ labels:Object.keys(floorStocks), datasets:[{data:Object.values(floorStocks),backgroundColor:chartColors(Object.keys(floorStocks).length),borderRadius:10,barPercentage:0.6}] },
+      options:barOptions("Needle Floor Wise Stock"), plugins:[valueLabelPlugin]
+    });
+    if(needleIssueChart)needleIssueChart.destroy();
+    needleIssueChart=new Chart(document.getElementById("needleIssueChart"),{
+      type:"bar",
+      data:{ labels:["Broken","Missing","Change"], datasets:[{data:[needleIssue.broken,needleIssue.missing,needleIssue.change],backgroundColor:["#ef4444","#f59e0b","#22c55e"],borderRadius:10,barPercentage:0.6}] },
+      options:barOptions("Needle Issue Summary"), plugins:[valueLabelPlugin]
+    });
+  }
+  if(isGreyAllowed()){
+    if(greyChart)greyChart.destroy();
+    greyChart=new Chart(document.getElementById("greyChart"),{
+      type:"bar",
+      data:{ labels:grey.labels.length?grey.labels:["No Data"], datasets:[{data:grey.data.length?grey.data:[0],backgroundColor:chartColors((grey.data.length?grey.data:[0]).length),borderRadius:10,barPercentage:0.6}] },
+      options:barOptions("Grey Fabric Present Stock Summary"), plugins:[valueLabelPlugin]
+    });
+  }
+  if(isBillingAllowed()){
+    if(billingChart)billingChart.destroy();
+    billingChart=new Chart(document.getElementById("billingChart"),{
+      type:"doughnut",
+      data:{ labels:["Present","Leave","Absent"], datasets:[{data:[billing.present,billing.leave,billing.absent],backgroundColor:["#22c55e","#f59e0b","#ef4444"],borderWidth:3,borderColor:document.body.classList.contains("light")?"#ffffff":"#1e293b"}] },
+      options:{ responsive:true, maintainAspectRatio:false, plugins:{ legend:{ position:"bottom", labels:{font:{size:12,weight:"600",family:"Poppins"},color:document.body.classList.contains("light")?"#1e293b":"#f1f5f9",padding:16,usePointStyle:true,pointStyle:"circle"} } } }
+    });
+  }
+}
+
 // Real-time Stock Aggregate & Notice Optimization implementation
 let stockListenerUnsubscribe = null;
 
@@ -2160,10 +2238,6 @@ window.loadDashboardStock = async function() {
       document.getElementById("attAbsent").innerText=stocks.billingAbsent;
       document.getElementById("attPresent").innerText=stocks.billingPresent;
     }
-    
-    // Fallback static or lightweight count update
-    let firebase = await getFirebaseCounts();
-    updateLimitBox(firebase);
 
     if(isAccessoriesAllowed()){
       document.getElementById("sumAccessories").innerText=fmt(stocks.accessories);
@@ -2198,12 +2272,18 @@ window.loadDashboardStock = async function() {
         html+=`<div class="mcdBox"><h3>📂 ${mcd}</h3><div class="miniRow"><span>📊 Stock / Report</span><span class="miniValue">Active</span></div><div class="miniChart"><div class="miniFill" style="width:35%"></div></div></div>`;
       }
     });
-    document.getElementById("mcdDashboard").innerHTML=html||"<div class='mcdBox'><h3>❌ No Access</h3></div>";
+    const mcdDash = document.getElementById("mcdDashboard");
+    if(mcdDash) mcdDash.innerHTML=html||"<div class='mcdBox'><h3>❌ No Access</h3></div>";
 
   }, (e) => {
     console.log("Real-time summary document listener failed: ", e);
     document.getElementById("mcdDashboard").innerHTML="Real-time update stream error";
   });
+
+  // Load counts separately (Async) to prevent blocking snapshot UI updates
+  getFirebaseCounts().then(firebase => {
+    updateLimitBox(firebase);
+  }).catch(e => console.log("Count update failed: ", e));
 };
 
 // Optimized Notice Caching (1 read per user per reload/new notice)
