@@ -387,8 +387,11 @@ const floorData = {
 ]};
 
 let negativeRowIndex = -1;
+
+// 🔥 NEW: Dynamic opening stock from previous month's ending present
 let dynamicOpening = null;
 
+// 🔥 NEW: Helper function to get previous month string (e.g., "2026-06" -> "2026-05")
 function getPreviousMonth(monthStr){
   let parts = monthStr.split("-");
   let year = parseInt(parts[0]);
@@ -517,12 +520,7 @@ function getItems(){
 
 function getMonth(date){return date.slice(0,7);}
 
-// 🔥 NEW: Helper function to find row by SL in Firebase data
-function findRowBySL(rows, sl){
-  if(!rows) return null;
-  return rows.find(r => Number(r.sl) === Number(sl));
-}
-
+// 🔥 CHANGED: loadTable now uses dynamicOpening as default if available
 function loadTable(customPrevious=null){
   let items=getItems();
   let floor=document.getElementById("floor").value;
@@ -536,6 +534,7 @@ function loadTable(customPrevious=null){
     if(customPrevious && customPrevious[i] !== undefined){
       previous = customPrevious[i];
     } else if(dynamicOpening && dynamicOpening[i] !== undefined){
+      // 🔥 Use previous month's ending present as opening
       previous = dynamicOpening[i];
     } else {
       previous = item[3];
@@ -659,6 +658,7 @@ function fixNegativeRow(){
   }
 }
 
+// 🔥 CHANGED: saveData now uses dynamicOpening for the opening field
 async function saveData(){
   let date=document.getElementById("postDate").value;
   let floor=document.getElementById("floor").value;
@@ -669,6 +669,7 @@ async function saveData(){
 
   let rows=[];
   for(let i=0;i<items.length;i++){
+    // 🔥 Use dynamicOpening if available, otherwise fall back to hardcoded item[3]
     let openingVal = (dynamicOpening && dynamicOpening[i] !== undefined) ? dynamicOpening[i] : (Number(items[i][3]) || 0);
     
     rows.push({
@@ -759,14 +760,14 @@ async function deleteData(){
   alert("Deleted Successfully");
 }
 
-// 🔥 FIXED: loadData now uses SL-based matching instead of index-based
+// 🔥 CHANGED: loadData now fetches previous month data and uses last day's present as opening
 async function loadData(){
   let date=document.getElementById("postDate").value;
   let floor=document.getElementById("floor").value;
   let items=getItems();
 
   if(!date){
-    dynamicOpening = null;
+    dynamicOpening = null; // 🔥 Reset dynamic opening
     loadTable();
     showMonthlySummary(0,0,0,0,0);
     document.getElementById("operatorName").value = localStorage.getItem("lastOperator") || "";
@@ -774,11 +775,13 @@ async function loadData(){
   }
 
   let month=getMonth(date);
+  
+  // 🔥 NEW: Calculate previous month
   let prevMonth = getPreviousMonth(month);
   
   let snap=await getDocs(collection(db,"dailyPosting"));
   let monthRows=[];
-  let prevMonthRows=[];
+  let prevMonthRows=[]; // 🔥 NEW: Collect previous month data
 
   snap.forEach(docSnap=>{
     let data=docSnap.data();
@@ -786,29 +789,24 @@ async function loadData(){
       if(data.month===month && data.date<=date){
         monthRows.push(data);
       }
+      // 🔥 NEW: Also collect previous month data
       if(data.month===prevMonth){
         prevMonthRows.push(data);
       }
     }
   });
 
+  // 🔥 NEW: Find the last day of previous month to get opening stock
   prevMonthRows.sort((a,b)=>a.date.localeCompare(b.date));
   let lastDayOfPrevMonth = prevMonthRows.length > 0 ? prevMonthRows[prevMonthRows.length - 1] : null;
   
-  // 🔥 FIXED: Build dynamic opening using SL-based matching
+  // 🔥 NEW: Build dynamic opening array
+  // If previous month data exists, use last day's present values
+  // Otherwise, fall back to hardcoded floorData values
   dynamicOpening = [];
   for(let i=0; i<items.length; i++){
-    let currentSL = items[i][0];
-    
-    if(lastDayOfPrevMonth && lastDayOfPrevMonth.rows){
-      // 🔥 Find row by SL instead of index
-      let prevRow = findRowBySL(lastDayOfPrevMonth.rows, currentSL);
-      if(prevRow){
-        dynamicOpening[i] = Number(prevRow.present) || 0;
-      } else {
-        // If SL not found in previous month, use hardcoded value
-        dynamicOpening[i] = Number(items[i][3]) || 0;
-      }
+    if(lastDayOfPrevMonth && lastDayOfPrevMonth.rows && lastDayOfPrevMonth.rows[i]){
+      dynamicOpening[i] = Number(lastDayOfPrevMonth.rows[i].present) || 0;
     } else {
       dynamicOpening[i] = Number(items[i][3]) || 0;
     }
@@ -818,97 +816,66 @@ async function loadData(){
   let todayData=null;
   monthRows.forEach(row=>{if(row.date===date) todayData=row;});
 
-  // 🔥 FIXED: Use SL-based matching for monthly aggregation
-  let monthlyReceive={};
-  let monthlyDelivery={};
-  let monthlyBN={};
-  
-  // Initialize with 0 for all current items
-  items.forEach(item => {
-    let sl = item[0];
-    monthlyReceive[sl] = 0;
-    monthlyDelivery[sl] = 0;
-    monthlyBN[sl] = 0;
-  });
+  let monthlyReceive=Array(items.length).fill(0);
+  let monthlyDelivery=Array(items.length).fill(0);
+  let monthlyBN=Array(items.length).fill(0);
 
-  // 🔥 Aggregate by SL instead of index
   monthRows.forEach(day=>{
     if(day.rows){
-      day.rows.forEach(row=>{
-        let sl = row.sl;
-        if(monthlyReceive[sl] !== undefined){
-          monthlyReceive[sl] += Number(row.receive) || 0;
-          monthlyDelivery[sl] += Number(row.delivery) || 0;
-          monthlyBN[sl] += Number(row.bn) || 0;
-        }
+      day.rows.forEach((row,i)=>{
+        monthlyReceive[i]+=Number(row.receive)||0;
+        monthlyDelivery[i]+=Number(row.delivery)||0;
+        monthlyBN[i]+=Number(row.bn)||0;
       });
     }
   });
 
-  let todayReceive={};
-  let todayDelivery={};
-  let todayBN={};
-  
-  items.forEach(item => {
-    let sl = item[0];
-    todayReceive[sl] = 0;
-    todayDelivery[sl] = 0;
-    todayBN[sl] = 0;
-  });
+  let todayReceive=Array(items.length).fill(0);
+  let todayDelivery=Array(items.length).fill(0);
+  let todayBN=Array(items.length).fill(0);
 
   if(todayData && todayData.rows){
-    todayData.rows.forEach(row=>{
-      let sl = row.sl;
-      if(todayReceive[sl] !== undefined){
-        todayReceive[sl] = Number(row.receive) || 0;
-        todayDelivery[sl] = Number(row.delivery) || 0;
-        todayBN[sl] = Number(row.bn) || 0;
-      }
+    todayData.rows.forEach((row,i)=>{
+      todayReceive[i]=Number(row.receive)||0;
+      todayDelivery[i]=Number(row.delivery)||0;
+      todayBN[i]=Number(row.bn)||0;
     });
   }
 
   let previousList=[];
   for(let i=0;i<items.length;i++){
-    let sl = items[i][0];
+    // 🔥 CHANGED: Use dynamicOpening instead of hardcoded items[i][3]
     let opening = dynamicOpening[i];
-    let beforeReceive = monthlyReceive[sl] - todayReceive[sl];
-    let beforeDelivery = monthlyDelivery[sl] - todayDelivery[sl];
-    previousList[i] = opening + beforeReceive - beforeDelivery;
+    let beforeReceive=monthlyReceive[i]-todayReceive[i];
+    let beforeDelivery=monthlyDelivery[i]-todayDelivery[i];
+    previousList[i]=opening+beforeReceive-beforeDelivery;
   }
 
   loadTable(previousList);
   document.getElementById("operatorName").value = todayData?.operator || localStorage.getItem("lastOperator") || "";
 
   for(let i=0;i<items.length;i++){
-    let sl = items[i][0];
-    document.getElementById("r"+i).value = todayReceive[sl] || "";
-    document.getElementById("d"+i).value = todayDelivery[sl] || "";
-    document.getElementById("bn"+i).value = todayBN[sl] || "";
+    document.getElementById("r"+i).value = todayReceive[i] || "";
+    document.getElementById("d"+i).value = todayDelivery[i] || "";
+    document.getElementById("bn"+i).value = todayBN[i] || "";
     calc(i); 
   }
 
-  // 🔥 FIXED: Pass SL-based monthly data to summary
-  updateMonthlySummary(monthlyReceive,monthlyDelivery,monthlyBN,dynamicOpening,items);
+  // 🔥 CHANGED: Pass dynamicOpening to monthly summary
+  updateMonthlySummary(monthlyReceive,monthlyDelivery,monthlyBN,dynamicOpening);
   setTimeout(checkNegativeStock, 200);
 }
 
-// 🔥 FIXED: Accept SL-based monthly data
-function updateMonthlySummary(monthlyReceive,monthlyDelivery,monthlyBN,openingValues=null,items=null){
-  if(!items) items = getItems();
+// 🔥 CHANGED: Accept openingValues parameter and use it instead of hardcoded items[i][3]
+function updateMonthlySummary(monthlyReceive,monthlyDelivery,monthlyBN,openingValues=null){
+  let items=getItems();
   let opening=0, receive=0, delivery=0, present=0, bn=0;
-  
   for(let i=0;i<items.length;i++){
-    let sl = items[i][0];
+    // 🔥 Use dynamic opening if available, otherwise fall back to hardcoded
     let op = (openingValues && openingValues[i] !== undefined) ? Number(openingValues[i]) : (Number(items[i][3]) || 0);
-    let r = Number(monthlyReceive[sl]) || 0;
-    let d = Number(monthlyDelivery[sl]) || 0;
-    let b = Number(monthlyBN[sl]) || 0;
-    
-    opening += op;
-    receive += r;
-    delivery += d;
-    present += op + r - d;
-    bn += b;
+    let r=Number(monthlyReceive[i])||0;
+    let d=Number(monthlyDelivery[i])||0;
+    opening+=op;receive+=r;delivery+=d;present+=op+r-d;bn+=Number(monthlyBN[i])||0;
   }
   showMonthlySummary(opening,receive,delivery,present,bn);
 }
