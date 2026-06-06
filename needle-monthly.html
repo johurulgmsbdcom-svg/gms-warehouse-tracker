@@ -23,13 +23,53 @@ th{background:#9fc5e8;font-weight:bold}
 .floorTitle{background:#1e293b!important;color:white!important;font-size:15px}
 .totalRow{background:#d9ead3;font-weight:bold}
 .grandRow{background:#ffe599;font-weight:bold;font-size:14px}
-@page{size:A4 landscape;margin:5mm}
+
+/* Signature Section */
+.signatureSection{
+  margin-top:40px;
+  margin-bottom:20px;
+  display:none;
+  page-break-inside:avoid;
+}
+.signatureTable{
+  width:100%;
+  border-collapse:collapse;
+  margin-top:60px;
+}
+.signatureTable td{
+  width:33.33%;
+  text-align:center;
+  vertical-align:top;
+  padding:10px;
+  border:none;
+}
+.signatureLine{
+  border-top:1px solid #000;
+  width:80%;
+  margin:0 auto 8px auto;
+  height:40px;
+}
+.signatureLabel{
+  font-weight:bold;
+  font-size:12px;
+  text-transform:uppercase;
+}
+
+@page{
+  size:A4 portrait;
+  margin:10mm;
+}
+
 @media print{
   body{background:white;color:black}
   .controls,.kpi,.noPrint{display:none!important}
+  .signatureSection{display:block!important}
   table{width:100%;min-width:0;font-size:8px;margin:2px 0}
   th,td{padding:2px}
+  .tableWrap{margin-bottom:20px;page-break-after:auto}
+  .floorTitle{font-size:12px!important}
 }
+
 @media(max-width:700px){.kpi{grid-template-columns:1fr 1fr}}
 </style>
 </head>
@@ -78,6 +118,26 @@ th{background:#9fc5e8;font-weight:bold}
 
 <div id="reportArea"></div>
 
+<!-- Signature Section (Only visible in print) -->
+<div class="signatureSection noPrint">
+  <table class="signatureTable">
+    <tr>
+      <td>
+        <div class="signatureLine"></div>
+        <div class="signatureLabel">Prepared By</div>
+      </td>
+      <td>
+        <div class="signatureLine"></div>
+        <div class="signatureLabel">Checked By</div>
+      </td>
+      <td>
+        <div class="signatureLine"></div>
+        <div class="signatureLabel">Authorised By</div>
+      </td>
+    </tr>
+  </table>
+</div>
+
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-app.js";
 import { getFirestore, collection, getDocs } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-firestore.js";
@@ -103,6 +163,11 @@ const FLOORS=[
   "Belly R","Belly N"
 ];
 
+const monthNames = [
+  "January", "February", "March", "April", "May", "June",
+  "July", "August", "September", "October", "November", "December"
+];
+
 function ym(){return new Date().toISOString().slice(0,7)}
 document.getElementById("monthInput").value=ym();
 
@@ -116,6 +181,14 @@ function bnName(floor){
   return isR(floor) ? "BNR" : "BNF";
 }
 
+function formatMonth(monthStr){
+  // Convert "2026-05" to "May 2026"
+  if(!monthStr) return "";
+  const [year, month] = monthStr.split("-");
+  const monthIndex = parseInt(month) - 1;
+  return monthNames[monthIndex] + " " + year;
+}
+
 async function loadReport(){
   let month=document.getElementById("monthInput").value;
   let floorFilter=document.getElementById("floorFilter").value;
@@ -124,6 +197,8 @@ async function loadReport(){
     alert("Month select koro");
     return;
   }
+
+  let formattedMonth = formatMonth(month);
 
   let snap=await getDocs(collection(db,"dailyPosting"));
   let docs=[];
@@ -191,7 +266,7 @@ async function loadReport(){
     <div class="tableWrap">
     <table>
       <thead>
-        <tr><th colspan="8" class="floorTitle">${floor} Monthly Report</th></tr>
+        <tr><th colspan="8" class="floorTitle">${floor} Monthly Report - ${formattedMonth}</th></tr>
         <tr>
           <th>SL</th>
           <th>Needle Type</th>
@@ -249,11 +324,11 @@ async function loadReport(){
   <div class="tableWrap">
   <table>
     <tr class="grandRow">
-      <td>MONTHLY GRAND TOTAL</td>
+      <td colspan="3">MONTHLY GRAND TOTAL - ${formattedMonth}</td>
       <td>Total Receive: ${grandReceive}</td>
       <td>Total Delivery: ${grandDelivery}</td>
       <td>Present Stock: ${grandPresent}</td>
-      <td>Total BNR/BNF: ${grandBN}</td>
+      <td colspan="2">Total BNR/BNF: ${grandBN}</td>
     </tr>
   </table>
   </div>`;
@@ -271,18 +346,20 @@ window.loadReport=loadReport;
 
 window.exportExcel=function(){
   let html=document.getElementById("reportArea").innerHTML;
+  let monthVal=document.getElementById("monthInput").value;
+  let formattedMonth = formatMonth(monthVal);
   let file=new Blob([`
     <html><head><meta charset="UTF-8"></head>
     <body>
       <h2>GMS Textiles Ltd</h2>
-      <h3>Needle Monthly Report</h3>
+      <h3>Needle Monthly Report - ${formattedMonth}</h3>
       ${html}
     </body></html>
   `],{type:"application/vnd.ms-excel"});
 
   let a=document.createElement("a");
   a.href=URL.createObjectURL(file);
-  a.download="needle-monthly-report.xls";
+  a.download="needle-monthly-report-${monthVal}.xls";
   a.click();
 };
 
