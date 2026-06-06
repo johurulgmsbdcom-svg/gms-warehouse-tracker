@@ -27,11 +27,9 @@ select,input[type="date"],input[type="text"]{padding:5px;border-radius:5px;borde
 #summaryTable{width:100%;max-width:100%;margin:auto;text-align:center;border-collapse:collapse;table-layout:fixed;background:white;color:black}
 #summaryTable th,#summaryTable td{border:1px solid #000;padding:2px;font-size:10px}
 
-/* 🔴 Negative Stock Highlight - শুধুমাত্র < 0 এর জন্য */
 .negative-row{background:#fecaca!important}
 .negative-row td{color:#991b1b;font-weight:bold}
 
-/* 🎯 Popup Modal Styles */
 #negativePopup{display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.7);z-index:9999;justify-content:center;align-items:center}
 .popup-content{background:white;color:black;padding:16px;border-radius:10px;max-width:95%;width:400px;box-shadow:0 4px 20px rgba(0,0,0,0.3);position:relative}
 .popup-close{position:absolute;top:8px;right:12px;font-size:20px;cursor:pointer;color:#666;font-weight:bold}
@@ -45,7 +43,6 @@ select,input[type="date"],input[type="text"]{padding:5px;border-radius:5px;borde
 .popup-fix-btn:hover{background:#1d4ed8}
 .popup-footer{text-align:center;font-size:11px;color:#64748b;margin-top:8px}
 
-/* Offline Indicator */
 .offline-indicator{
   position:fixed;top:0;left:0;right:0;background:#f59e0b;color:#000;padding:6px 12px;text-align:center;font-size:12px;font-weight:600;z-index:9999;display:none;
 }
@@ -75,7 +72,6 @@ select,input[type="date"],input[type="text"]{padding:5px;border-radius:5px;borde
 </head>
 <body>
 
-<!-- Offline Indicator -->
 <div class="offline-indicator" id="offlineIndicator">📴 Offline Mode - Data saved locally</div>
 
 <h2 style="text-align:center;">Needle Daily Posting</h2>
@@ -132,7 +128,6 @@ Floor:
 </div>
 </div>
 
-<!-- 🔴 Negative Stock Popup Modal - শুধুমাত্র < 0 এর জন্য -->
 <div id="negativePopup">
   <div class="popup-content">
     <span class="popup-close" onclick="closePopup()">❌</span>
@@ -159,7 +154,6 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
-// 🔥 OFFLINE PERSISTENCE ENABLED
 enableIndexedDbPersistence(db).catch((err) => {
   if (err.code == 'failed-precondition') {
     console.log('Multiple tabs open, persistence can only be enabled in one tab at a time.');
@@ -392,15 +386,25 @@ const floorData = {
 [64,"UYX128-KK","8",0],[65,"UOX113","9SPD",0],[66,"UOX113","11SPI",0]
 ]};
 
-// 🔴 Global variable to track negative row index
 let negativeRowIndex = -1;
 
-// ===== OFFLINE QUEUE SYSTEM =====
+// 🔥 NEW: Dynamic opening stock from previous month's ending present
+let dynamicOpening = null;
+
+// 🔥 NEW: Helper function to get previous month string (e.g., "2026-06" -> "2026-05")
+function getPreviousMonth(monthStr){
+  let parts = monthStr.split("-");
+  let year = parseInt(parts[0]);
+  let mon = parseInt(parts[1]);
+  mon -= 1;
+  if(mon < 1){ mon = 12; year -= 1; }
+  return `${year}-${String(mon).padStart(2, '0')}`;
+}
+
 const OFFLINE_QUEUE_KEY = "needle_posting_queue";
 function getOfflineQueue(){ return JSON.parse(localStorage.getItem(OFFLINE_QUEUE_KEY) || "[]"); }
 function setOfflineQueue(q){ localStorage.setItem(OFFLINE_QUEUE_KEY, JSON.stringify(q)); }
 
-// 🔄 Centralized helper to update the single State document on Firestore
 async function updateDashboardNeedleState(floor, rows) {
   const company = localStorage.getItem('gmsSelectedCompany') || 'GMS TEXTILES LTD';
   const companyKey = company.replace(/\s+/g, "_");
@@ -421,12 +425,10 @@ async function updateDashboardNeedleState(floor, rows) {
     currentNeedleState.floorStocks = {};
   }
 
-  // Calculate total present from rows
   let totalPresentVal = 0;
   rows.forEach(r => totalPresentVal += Number(r.present) || 0);
   currentNeedleState.floorStocks[floor] = totalPresentVal;
 
-  // Recompute total of all floors
   let newGrandTotal = 0;
   const defaultFloors = ["Kadom R", "Kadom N", "Shapla R", "Shapla N", "Poddo R", "Poddo N", "Belly R", "Belly N", "Sample R", "Sample N", "EMBROIDERY R", "EMBROIDERY N"];
   defaultFloors.forEach(f => {
@@ -484,7 +486,6 @@ async function syncOfflineQueue(){
         queue[i].status = "synced";
         synced++;
         
-        // Update dashboard state for this synced floor
         await updateDashboardNeedleState(queue[i].floor, queue[i].rows);
       }catch(e){ console.log("Sync failed:", e); }
     }
@@ -519,6 +520,7 @@ function getItems(){
 
 function getMonth(date){return date.slice(0,7);}
 
+// 🔥 CHANGED: loadTable now uses dynamicOpening as default if available
 function loadTable(customPrevious=null){
   let items=getItems();
   let floor=document.getElementById("floor").value;
@@ -528,7 +530,16 @@ function loadTable(customPrevious=null){
   let html="";
 
   items.forEach((item,i)=>{
-    let previous = customPrevious && customPrevious[i] !== undefined ? customPrevious[i] : item[3];
+    let previous;
+    if(customPrevious && customPrevious[i] !== undefined){
+      previous = customPrevious[i];
+    } else if(dynamicOpening && dynamicOpening[i] !== undefined){
+      // 🔥 Use previous month's ending present as opening
+      previous = dynamicOpening[i];
+    } else {
+      previous = item[3];
+    }
+    
     html+=`
     <tr id="row${i}">
       <td class="col-sl">${item[0]}</td>
@@ -647,6 +658,7 @@ function fixNegativeRow(){
   }
 }
 
+// 🔥 CHANGED: saveData now uses dynamicOpening for the opening field
 async function saveData(){
   let date=document.getElementById("postDate").value;
   let floor=document.getElementById("floor").value;
@@ -657,11 +669,17 @@ async function saveData(){
 
   let rows=[];
   for(let i=0;i<items.length;i++){
+    // 🔥 Use dynamicOpening if available, otherwise fall back to hardcoded item[3]
+    let openingVal = (dynamicOpening && dynamicOpening[i] !== undefined) ? dynamicOpening[i] : (Number(items[i][3]) || 0);
+    
     rows.push({
       sl:items[i][0],needleType:items[i][1],size:items[i][2],
-      opening:Number(items[i][3])||0,previous:Number(document.getElementById("p"+i).innerText)||0,
-      receive:Number(document.getElementById("r"+i).value)||0,delivery:Number(document.getElementById("d"+i).value)||0,
-      present:Number(document.getElementById("b"+i).innerText)||0,bn:Number(document.getElementById("bn"+i).value)||0
+      opening:openingVal,
+      previous:Number(document.getElementById("p"+i).innerText)||0,
+      receive:Number(document.getElementById("r"+i).value)||0,
+      delivery:Number(document.getElementById("d"+i).value)||0,
+      present:Number(document.getElementById("b"+i).innerText)||0,
+      bn:Number(document.getElementById("bn"+i).value)||0
     });
   }
 
@@ -685,14 +703,12 @@ async function saveData(){
     details = {totalItems: rows.length, msg: "New posting"};
   }
 
-  // 🔥 OFFLINE-FIRST SAVE & ON-TIME DASHBOARD TRACKER UPDATE
   if(navigator.onLine){
     try{
       await setDoc(docRef,{
         date:date,month:getMonth(date),floor:floor,rows:rows,operator:operator,updatedAt: serverTimestamp()
       });
       
-      // Update central state tracker document in real-time
       await updateDashboardNeedleState(floor, rows);
 
       try {
@@ -736,7 +752,6 @@ async function deleteData(){
   
   await deleteDoc(docRef);
   
-  // Update dashboard tracker state after deletion by calculating original floorDefaults
   let items = getItems();
   let emptyRows = items.map(item => ({ present: item[3] }));
   await updateDashboardNeedleState(floor, emptyRows);
@@ -745,12 +760,14 @@ async function deleteData(){
   alert("Deleted Successfully");
 }
 
+// 🔥 CHANGED: loadData now fetches previous month data and uses last day's present as opening
 async function loadData(){
   let date=document.getElementById("postDate").value;
   let floor=document.getElementById("floor").value;
   let items=getItems();
 
   if(!date){
+    dynamicOpening = null; // 🔥 Reset dynamic opening
     loadTable();
     showMonthlySummary(0,0,0,0,0);
     document.getElementById("operatorName").value = localStorage.getItem("lastOperator") || "";
@@ -758,15 +775,42 @@ async function loadData(){
   }
 
   let month=getMonth(date);
+  
+  // 🔥 NEW: Calculate previous month
+  let prevMonth = getPreviousMonth(month);
+  
   let snap=await getDocs(collection(db,"dailyPosting"));
   let monthRows=[];
+  let prevMonthRows=[]; // 🔥 NEW: Collect previous month data
 
   snap.forEach(docSnap=>{
     let data=docSnap.data();
-    if(data.floor===floor && data.month===month && data.date<=date){
-      monthRows.push(data);
+    if(data.floor===floor){
+      if(data.month===month && data.date<=date){
+        monthRows.push(data);
+      }
+      // 🔥 NEW: Also collect previous month data
+      if(data.month===prevMonth){
+        prevMonthRows.push(data);
+      }
     }
   });
+
+  // 🔥 NEW: Find the last day of previous month to get opening stock
+  prevMonthRows.sort((a,b)=>a.date.localeCompare(b.date));
+  let lastDayOfPrevMonth = prevMonthRows.length > 0 ? prevMonthRows[prevMonthRows.length - 1] : null;
+  
+  // 🔥 NEW: Build dynamic opening array
+  // If previous month data exists, use last day's present values
+  // Otherwise, fall back to hardcoded floorData values
+  dynamicOpening = [];
+  for(let i=0; i<items.length; i++){
+    if(lastDayOfPrevMonth && lastDayOfPrevMonth.rows && lastDayOfPrevMonth.rows[i]){
+      dynamicOpening[i] = Number(lastDayOfPrevMonth.rows[i].present) || 0;
+    } else {
+      dynamicOpening[i] = Number(items[i][3]) || 0;
+    }
+  }
 
   monthRows.sort((a,b)=>a.date.localeCompare(b.date));
   let todayData=null;
@@ -800,7 +844,8 @@ async function loadData(){
 
   let previousList=[];
   for(let i=0;i<items.length;i++){
-    let opening=Number(items[i][3])||0;
+    // 🔥 CHANGED: Use dynamicOpening instead of hardcoded items[i][3]
+    let opening = dynamicOpening[i];
     let beforeReceive=monthlyReceive[i]-todayReceive[i];
     let beforeDelivery=monthlyDelivery[i]-todayDelivery[i];
     previousList[i]=opening+beforeReceive-beforeDelivery;
@@ -816,15 +861,18 @@ async function loadData(){
     calc(i); 
   }
 
-  updateMonthlySummary(monthlyReceive,monthlyDelivery,monthlyBN);
+  // 🔥 CHANGED: Pass dynamicOpening to monthly summary
+  updateMonthlySummary(monthlyReceive,monthlyDelivery,monthlyBN,dynamicOpening);
   setTimeout(checkNegativeStock, 200);
 }
 
-function updateMonthlySummary(monthlyReceive,monthlyDelivery,monthlyBN){
+// 🔥 CHANGED: Accept openingValues parameter and use it instead of hardcoded items[i][3]
+function updateMonthlySummary(monthlyReceive,monthlyDelivery,monthlyBN,openingValues=null){
   let items=getItems();
   let opening=0, receive=0, delivery=0, present=0, bn=0;
   for(let i=0;i<items.length;i++){
-    let op=Number(items[i][3])||0;
+    // 🔥 Use dynamic opening if available, otherwise fall back to hardcoded
+    let op = (openingValues && openingValues[i] !== undefined) ? Number(openingValues[i]) : (Number(items[i][3]) || 0);
     let r=Number(monthlyReceive[i])||0;
     let d=Number(monthlyDelivery[i])||0;
     opening+=op;receive+=r;delivery+=d;present+=op+r-d;bn+=Number(monthlyBN[i])||0;
@@ -852,14 +900,12 @@ function exportPDF(){window.print();}
 
 document.getElementById("postDate").addEventListener("change",loadData);
 
-// Make functions globally available
 window.loadTable=loadTable;window.calc=calc;window.updateTotal=updateTotal;
 window.saveData=saveData;window.deleteData=deleteData;window.loadData=loadData;
 window.exportExcel=exportExcel;window.exportPDF=exportPDF;
 window.checkNegativeStock=checkNegativeStock;window.closePopup=closePopup;window.fixNegativeRow=fixNegativeRow;
 window.syncOfflineQueue=syncOfflineQueue;window.updateOfflineIndicator=updateOfflineIndicator;
 
-// Enter/Tab navigation
 document.addEventListener("keydown", function(e){
   if(e.target.tagName !== "INPUT") return;
   if(!e.target.id.match(/^(r|d|bn)\d+$/)) return;
@@ -873,7 +919,6 @@ document.addEventListener("keydown", function(e){
   }
 });
 
-// Initialize
 updateOfflineIndicator();
 loadTable();
 setTimeout(syncOfflineQueue, 1000);
