@@ -130,17 +130,34 @@ async function loadSummary(){
   let snap=await getDocs(collection(db,"dailyPosting"));
   let map={};
 
+  // ১. প্রতিটি ফ্লোরের জন্য 'To Date'-এর সবচেয়ে কাছের সর্বশেষ ডকুমেন্ট বের করার ট্র্যাকার
+  let latestDatePerFloor = {}; 
+  let latestDocPerFloor = {};  
+
+  // প্রথম রান: ডেট রেঞ্জের মধ্যে ট্রানজেকশন (Receive/Delivery) হিসাব করা এবং লেটেস্ট শিট খুঁজে বের করা
   snap.forEach(d=>{
     let data=d.data();
-    if(!data.date || !Array.isArray(data.rows)) return;
-    if(from && data.date<from) return;
-    if(to && data.date>to) return;
+    if(!data.date || !data.floor || !Array.isArray(data.rows)) return;
+    
+    // To Date-এর পরের কোনো এন্ট্রি নেওয়া হবে না
+    if(to && data.date > to) return;
+
+    // প্রতিটি ফ্লোরের সর্বশেষ সক্রিয় এন্ট্রি শিট ট্র্যাক করা
+    let floor = data.floor;
+    let date = data.date;
+    if(!latestDatePerFloor[floor] || date > latestDatePerFloor[floor]){
+      latestDatePerFloor[floor] = date;
+      latestDocPerFloor[floor] = data;
+    }
+
+    // From Date থেকে To Date সীমানার ভেতর ট্রানজেকশন যোগ করা
+    if(from && data.date < from) return;
 
     data.rows.forEach(row=>{
       let needleType=row.needleType || "";
       let size=row.size || "";
 
-      // Grouping key normalization to merge duplicates with subtle spelling/spacing differences
+      // ডুপ্লিকেট স্পেলিং বা টাইপো এড়াতে নরমাল কী তৈরি করা
       let normType = needleType.toString().toUpperCase().replace(/[^A-Z0-9]/g, "");
       let normSize = size.toString().toUpperCase().replace(/[^A-Z0-9]/g, "");
       let key = normType + "___" + normSize;
@@ -151,8 +168,7 @@ async function loadSummary(){
           size: size,
           receive: 0,
           delivery: 0,
-          presentByFloor: {},
-          lastDateByFloor: {},
+          present: 0,
           lastDate: ""
         };
       }
@@ -160,30 +176,42 @@ async function loadSummary(){
       map[key].receive += n(row.receive);
       map[key].delivery += n(row.delivery);
 
-      let floor=data.floor || "";
-      let date=data.date || "";
-
-      // Maintain the latest corrected display name and size from the database
-      if(!map[key].lastDate || date >= map[key].lastDate){
+      // সর্বশেষ এন্ট্রির সঠিক নামটি রাখা
+      if(!map[key].lastDate || data.date >= map[key].lastDate){
         map[key].needleType = needleType;
         map[key].size = size;
-        map[key].lastDate = date;
-      }
-
-      if(!map[key].lastDateByFloor[floor] || date >= map[key].lastDateByFloor[floor]){
-        map[key].presentByFloor[floor]=n(row.present);
-        map[key].lastDateByFloor[floor]=date;
+        map[key].lastDate = data.date;
       }
     });
   });
 
-  let rows=Object.values(map).map(r=>{
-    let present=0;
-    Object.values(r.presentByFloor).forEach(v=>present+=n(v));
-    return {...r,present};
-  }).sort((a,b)=>{
-    let x=(a.needleType+a.size).localeCompare(b.needleType+b.size);
-    return x;
+  // দ্বিতীয় রান: শুধুমাত্র সর্বশেষ এন্ট্রি শিট (Latest Sheet) থেকে Present Stock হিসাব করা
+  Object.values(latestDocPerFloor).forEach(data => {
+    data.rows.forEach(row => {
+      let needleType = row.needleType || "";
+      let size = row.size || "";
+
+      let normType = needleType.toString().toUpperCase().replace(/[^A-Z0-9]/g, "");
+      let normSize = size.toString().toUpperCase().replace(/[^A-Z0-9]/g, "");
+      let key = normType + "___" + normSize;
+
+      if(!map[key]){
+        map[key]={
+          needleType: needleType,
+          size: size,
+          receive: 0,
+          delivery: 0,
+          present: 0,
+          lastDate: data.date
+        };
+      }
+
+      map[key].present += n(row.present);
+    });
+  });
+
+  let rows=Object.values(map).sort((a,b)=>{
+    return (a.needleType+a.size).localeCompare(b.needleType+b.size);
   });
 
   let html="";
