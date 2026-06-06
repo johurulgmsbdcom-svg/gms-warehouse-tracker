@@ -162,28 +162,43 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
-/*  GLOBAL STATE */
+/* GLOBAL STATE */
 let allItemsData = [];
 let currentCategory = 'all';
 let unsubscribe = null;
 
-/* 🔧 NORMALIZE FUNCTION (Fixes Kadom R spacing mismatch) */
+/* 🔧 NORMALIZE FUNCTION */
 function normalizeNeedleName(name){
   if(!name) return "";
-  return name.trim().replace(/\s*-\s*/g, '-').replace(/\s+/g, ' ').toUpperCase();
+  return name.trim().toUpperCase().replace(/\s*-\s*/g, '-').replace(/\s+/g, ' ');
 }
 
-/* 📡 LOAD DATA (Real-time) */
+/* 📡 LOAD DATA (Real-time and Chronologically Synchronized) */
 function loadReport(){
   if(unsubscribe) unsubscribe();
   
   unsubscribe = onSnapshot(collection(db, "dailyPosting"), (snap) => {
-    let rawMap = {};
+    let sortedDocs = [];
     
+    // ১. সকল ডকুমেন্টকে প্রথমে তারিখের ক্রমানুসারে সাজানো
     snap.forEach(doc => {
       let day = doc.data();
-      if(!day.date || !day.rows) return;
-      
+      if(day.date && day.floor && day.rows) {
+        sortedDocs.push(day);
+      }
+    });
+    sortedDocs.sort((a, b) => a.date.localeCompare(b.date));
+
+    // ২. প্রতিটি ফ্লোরের সর্বশেষ পোস্টিং শিট বা রানিং ডকুমেন্ট চিহ্নিত করা
+    let latestDocPerFloor = {};
+    sortedDocs.forEach(day => {
+      latestDocPerFloor[day.floor] = day;
+    });
+
+    let rawMap = {};
+
+    // ৩. শুধুমাত্র সর্বশেষ এন্ট্রি শিটে থাকা সক্রিয় আইটেম দিয়ে ম্যাপ ইনিশিয়ালাইজ করা (Ghost আইটেম প্রতিরোধ)
+    Object.values(latestDocPerFloor).forEach(day => {
       day.rows.forEach(row => {
         if(!row.needleType || !row.size) return;
         
@@ -191,24 +206,41 @@ function loadReport(){
         let nSize = normalizeNeedleName(row.size);
         let key = `${day.floor}_${nType}_${nSize}`;
         
-        if(!rawMap[key]){
-          rawMap[key] = {
-            floor: day.floor, sl: row.sl || "-", type: nType, size: nSize,
-            stock: 0, deliveryTotal: 0, deliveryDays: 0, history: []
-          };
-        }
-        
-        rawMap[key].stock = Number(row.present) || 0;
-        let d = Number(row.delivery) || 0;
-        if(d > 0){
-          rawMap[key].deliveryTotal += d;
-          rawMap[key].deliveryDays++;
-        }
-        rawMap[key].history.push(d);
+        rawMap[key] = {
+          floor: day.floor,
+          sl: row.sl || "-",
+          type: nType,
+          size: nSize,
+          stock: Number(row.present) || 0, // ১০০% সঠিক লাইভ স্টক
+          deliveryTotal: 0,
+          deliveryDays: 0,
+          history: [] // ক্রমানুসারে সাজানো ডেলিভারি হিস্ট্রি
+        };
       });
     });
 
-    // Process & Categorize
+    // ৪. ঐতিহাসিক ট্রানজেকশন ডাটা ক্রমানুসারে সক্রিয় আইটেমে ম্যাপিং করা
+    sortedDocs.forEach(day => {
+      day.rows.forEach(row => {
+        if(!row.needleType || !row.size) return;
+        
+        let nType = normalizeNeedleName(row.needleType);
+        let nSize = normalizeNeedleName(row.size);
+        let key = `${day.floor}_${nType}_${nSize}`;
+        
+        // যদি আইটেমটি বর্তমানে এই ফ্লোরে সক্রিয় থাকে তবেই হিস্ট্রি যোগ করা হবে
+        if(rawMap[key]){
+          let d = Number(row.delivery) || 0;
+          rawMap[key].history.push(d);
+          if(d > 0){
+            rawMap[key].deliveryTotal += d;
+            rawMap[key].deliveryDays++;
+          }
+        }
+      });
+    });
+
+    // ৫. ক্যাটাগরি এবং এজিং স্ট্যাটাস বিশ্লেষণ
     allItemsData = Object.values(rawMap).map(item => {
       let avg = item.deliveryDays ? item.deliveryTotal / item.deliveryDays : 0;
       let stockDays = avg > 0 ? item.stock / avg : 999;
@@ -219,7 +251,7 @@ function loadReport(){
         noDel++;
       }
 
-      // Mutually Exclusive Categories
+      // ক্যাটাগরি নির্ধারণ
       let category = 'running';
       if(item.stock > 0 && stockDays <= 5) category = 'critical';
       else if(noDel >= 30 || item.stock === 0) category = 'noDelivery';
@@ -232,7 +264,7 @@ function loadReport(){
   });
 }
 
-/*  APPLY FILTERS (Floor + Category) */
+/* APPLY FILTERS (Floor + Category) */
 function applyFilters(){
   let floor = document.getElementById("floorSelect").value;
   let filtered = allItemsData;
@@ -245,7 +277,7 @@ function applyFilters(){
 
 /* 🖥️ RENDER UI */
 function renderUI(data){
-  // 1. Dashboard Counts
+  // ১. ড্যাশবোর্ড কাউন্টস
   let counts = { total: data.length, running: 0, slow: 0, noDelivery: 0, critical: 0, grand: 0 };
   data.forEach(i => {
     counts[i.category]++;
@@ -259,7 +291,7 @@ function renderUI(data){
   document.getElementById("criticalItem").innerText = counts.critical;
   document.getElementById("grandTotal").innerText = counts.grand;
 
-  // 2. Tables
+  // ২. টেবিল রেন্ডারিং
   let mainHTML = "", criticalHTML = "";
   data.forEach(item => {
     let stockClass = item.stock === 0 ? "stock-empty" : (item.stockDays <= 5 ? "stock-warning" : "stock-normal");
@@ -288,7 +320,7 @@ function renderUI(data){
   document.getElementById("reportBody").innerHTML = mainHTML || `<tr><td colspan="9" style="padding:20px;">📭 No data found</td></tr>`;
   document.getElementById("criticalBody").innerHTML = criticalHTML || `<tr><td colspan="5" style="padding:15px;">✅ All stocks are healthy</td></tr>`;
 
-  // 3. Charts
+  // ৩. চার্টস
   drawCharts(data);
 }
 
@@ -299,7 +331,7 @@ function drawCharts(data){
     if(old) old.destroy();
   });
 
-  let labels = data.slice(0, 50).map(i => `${i.type}-${i.size}`); // Limit to 50 for readability
+  let labels = data.slice(0, 50).map(i => `${i.type}-${i.size}`); // রিডিবিলিটির জন্য ৫০টি লিমিট করা হয়েছে
   let stockVals = data.slice(0, 50).map(i => i.stock);
   let trendVals = data.slice(0, 50).map(i => i.deliveryTotal);
 
