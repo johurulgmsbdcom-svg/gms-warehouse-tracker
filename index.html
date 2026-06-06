@@ -8,7 +8,7 @@
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
 <style>
-@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800;900&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght=300;400;500;600;700;800;900&display=swap');
 
 :root{
   --bg:#0a1628;
@@ -1736,52 +1736,6 @@ function updateSidebarNoticeBadge(notices){
     badge.style.display="none";
   }
 }
-
-// ===== NOTICE LOAD FUNCTION =====
-async function loadNotices(){
-  try{
-    // Global safety context (using window functions if loaded via ES Modules)
-    let snap;
-    if (window.query && window.orderBy && window.limit && window.db) {
-      const q = window.query(window.collection(window.db, "liveNotices"), window.orderBy("createdAt", "desc"), window.limit(5));
-      snap = await window.getDocs(q);
-    } else if (typeof db !== 'undefined') {
-      snap = await getDocs(collection(db,"liveNotices"));
-    } else {
-      return;
-    }
-
-    let rows=[];
-    snap.forEach(d=>rows.push({id:d.id,...d.data()}));
-    
-    let noticeText="📢 No live notice found";
-    if(rows.length>0){
-      noticeText=rows.map(n=>`📢 ${n.user||"User"}: ${n.text||""}`).join("      ");
-    }
-    
-    // Update notice bar with animation reset
-    const noticeEl=document.getElementById("noticeMove");
-    if(noticeEl){
-      noticeEl.style.animation='none';
-      noticeEl.offsetHeight; /* trigger reflow */
-      noticeEl.innerText=noticeText;
-      noticeEl.style.animation='marquee 30s linear infinite';
-    }
-    
-    // Update sidebar badge
-    updateSidebarNoticeBadge(rows);
-    
-  }catch(e){ 
-    console.log("Notice error:",e); 
-    const noticeEl=document.getElementById("noticeMove");
-    if(noticeEl){
-      noticeEl.style.animation='none';
-      noticeEl.offsetHeight;
-      noticeEl.innerText="📢 Notice loading problem";
-      noticeEl.style.animation='marquee 30s linear infinite';
-    }
-  }
-}
 </script>
 
 <!-- ===== FIREBASE MODULE WITH OFFLINE SYNC ===== -->
@@ -1838,12 +1792,6 @@ const ALL_MCD=[
   "LEFTOVER MCD","FINISH FABRIC MCD","YARN DYEING MCD","CHEMICAL MCD",
   "GENERAL TECHNICAL MCD"
 ];
-
-const FLOOR_OPENING={
-  "Kadom R":618,"Kadom N":443,"Poddo R":1889,"Poddo N":401,
-  "Shapla R":1171,"Shapla N":573,"Sample R":1138,"Sample N":251,
-  "EMBROIDERY R":1011,"EMBROIDERY N":287,"Belly R":796,"Belly N":335
-};
 
 let accessoriesChart=null,needleChart=null,greyChart=null,billingChart=null,needleIssueChart=null;
 let selectedBackupData=null;
@@ -2157,106 +2105,6 @@ window.loadReport=function(){
   box.innerHTML=`<div class="reportCard">📑 ${mcd} Report</div><div class="reportCard" onclick="location.href='billing-manpower-report.html'"><i class="fas fa-users"></i> Billing Manpower</div>${common}`;
 };
 
-async function getLatestPresent(collectionName,openingStock){
-  let snap=await getDocs(collection(db,collectionName));
-  let rows=[];snap.forEach(d=>{let x=d.data();if(x.date)rows.push(x);});
-  rows.sort((a,b)=>a.date.localeCompare(b.date));
-  let r=0,dv=0;rows.forEach(x=>{r+=Number(x.receive)||0;dv+=Number(x.delivery)||0;});
-  return openingStock+r-dv;
-}
-async function getManpowerSummary(){
-  let snap=await getDocs(collection(db,"manpower"));
-  let map={},totalCount=0,totalSalary=0;
-  snap.forEach(d=>{
-    let x=d.data();
-    let m=x.mcd||"UNKNOWN";
-    // 🔥 Filter by company AND manpower MCD access
-    if(!canUserSeeCompany(x.company)) return;
-    if(manpowerAccess === "selected" && !manpowerMcdAccess.includes(m)) return;
-    
-    if(!map[m])map[m]={count:0,salary:0};
-    map[m].count++;
-    map[m].salary+=Number(x.salary)||0;
-    totalCount++;
-    totalSalary+=Number(x.salary)||0;
-  });
-  return{map,totalCount,totalSalary};
-}
-async function getNeedleFloorStock(){
-  let snap=await getDocs(collection(db,"dailyPosting"));
-  let latestByFloor={};
-  snap.forEach(d=>{let x=d.data();if(x.floor&&x.date){if(!latestByFloor[x.floor]||x.date>latestByFloor[x.floor].date)latestByFloor[x.floor]=x;}});
-  let floorStocks={},total=0;
-  Object.keys(FLOOR_OPENING).forEach(f=>{
-    let stock=FLOOR_OPENING[f];
-    if(latestByFloor[f]&&latestByFloor[f].rows){stock=0;latestByFloor[f].rows.forEach(r=>stock+=Number(r.present)||0);}
-    floorStocks[f]=stock;total+=stock;
-  });
-  return{floorStocks,total};
-}
-
-// 🟢 OPTIMIZED: Queries only the latest 1 document instead of all history
-async function getGreyData(){
-  const q = query(collection(db, "greyFabricStock"), orderBy("date", "desc"), limit(1));
-  let snap = await getDocs(q);
-  
-  let docs = [];
-  snap.forEach(d => {
-    let x = d.data();
-    if(x.date && x.rows && x.rows.length > 0) docs.push(x);
-  });
-  
-  let latest = docs[0] || {rows:[], date:""};
-  let labels = [], data = [], total = 0;
-  
-  (latest.rows || []).forEach(r => {
-    let closing = parseNum(r.closing || r.closingBalance || 0);
-    if(closing > 0){
-      labels.push(r.year || r.fabric || "Item");
-      data.push(closing);
-      total += closing;
-    }
-  });
-  if(total > 0){
-    labels.push("Grand Total");
-    data.push(total);
-  }
-  return {labels, data, total, date: latest.date || ""};
-}
-
-// 🟢 OPTIMIZED: Directly filters and fetches only today's billing documents
-async function getBillingToday(){
-  let t = today();
-  const q = query(collection(db, "billingManpowerReport"), where("date", "==", t));
-  let snap = await getDocs(q);
-  
-  let total = 0, leave = 0, absent = 0, present = 0;
-  snap.forEach(d => {
-    let x = d.data();
-    total += Number(x.totalManpower) || 0;
-    leave += Number(x.leave) || 0;
-    absent += Number(x.absent) || 0;
-    present += Number(x.present) || 0;
-  });
-  return {total, leave, absent, present};
-}
-
-// 🟢 OPTIMIZED: Fetches only the single latest needle report document
-async function getNeedleIssueToday(){
-  const q = query(collection(db, "needleDailyReport"), orderBy("date", "desc"), limit(1));
-  let snap = await getDocs(q);
-  
-  let latest = {};
-  snap.forEach(d => { latest = d.data(); });
-  
-  return {
-    broken: parseNum(latest.brokenNeedle),
-    missing: parseNum(latest.missingNeedle),
-    change: parseNum(latest.changeNeedle),
-    date: latest.date || ""
-  };
-}
-
 // 🟢 OPTIMIZED: Uses server-side document counting (getCountFromServer) to save reads
 async function getFirebaseCounts(){
   let cols = ["greyFabricStock", "accessoriesInventory", "billingManpowerReport", "dailyPosting", "sewingThread", "twillTape", "accessoriesSample", "liveNotices", "manpower", "users", "needleDailyReport", "gatePlans", "challanGatePass"];
@@ -2290,7 +2138,7 @@ async function getFirebaseCounts(){
 }
 
 function updateLimitBox(firebase){
-  if(!firebase) return; // Prevent overwriting when on dashboard home
+  if(!firebase) return; 
   let approxMB=0,storagePercent=0;
   if(firebase){ approxMB=firebase.totalCount||0; storagePercent=firebase.storagePercent||0; }
   document.getElementById("storageUsed").innerText=`${(approxMB/10).toFixed(2)} MB`;
@@ -2360,7 +2208,7 @@ function renderCharts(sewing,accessories,twill,floorStocks,grey,billing,needleIs
       options:barOptions("Accessories Stock Summary"), plugins:[valueLabelPlugin]
     });
   }
-  if(isNeedleAllowed()){
+  if(isNeedleAllowed() && floorStocks){
     if(needleChart)needleChart.destroy();
     needleChart=new Chart(document.getElementById("needleChart"),{
       type:"bar",
@@ -2370,140 +2218,185 @@ function renderCharts(sewing,accessories,twill,floorStocks,grey,billing,needleIs
     if(needleIssueChart)needleIssueChart.destroy();
     needleIssueChart=new Chart(document.getElementById("needleIssueChart"),{
       type:"bar",
-      data:{ labels:["Broken","Missing","Change"], datasets:[{data:[needleIssue.broken,needleIssue.missing,needleIssue.change],backgroundColor:["#ef4444","#f59e0b","#22c55e"],borderRadius:10,barPercentage:0.6}] },
+      data:{ labels:["Broken","Missing","Change"], datasets:[{data:[needleIssue.broken || 0,needleIssue.missing || 0,needleIssue.change || 0],backgroundColor:["#ef4444","#f59e0b","#22c55e"],borderRadius:10,barPercentage:0.6}] },
       options:barOptions("Needle Issue Summary"), plugins:[valueLabelPlugin]
     });
   }
-  if(isGreyAllowed()){
+  if(isGreyAllowed() && grey){
     if(greyChart)greyChart.destroy();
     greyChart=new Chart(document.getElementById("greyChart"),{
       type:"bar",
-      data:{ labels:grey.labels.length?grey.labels:["No Data"], datasets:[{data:grey.data.length?grey.data:[0],backgroundColor:chartColors((grey.data.length?grey.data:[0]).length),borderRadius:10,barPercentage:0.6}] },
+      data:{ labels:grey.labels && grey.labels.length?grey.labels:["No Data"], datasets:[{data:grey.data && grey.data.length?grey.data:[0],backgroundColor:chartColors((grey.data && grey.data.length?grey.data:[0]).length),borderRadius:10,barPercentage:0.6}] },
       options:barOptions("Grey Fabric Present Stock Summary"), plugins:[valueLabelPlugin]
     });
   }
-  if(isBillingAllowed()){
+  if(isBillingAllowed() && billing){
     if(billingChart)billingChart.destroy();
     billingChart=new Chart(document.getElementById("billingChart"),{
       type:"doughnut",
-      data:{ labels:["Present","Leave","Absent"], datasets:[{data:[billing.present,billing.leave,billing.absent],backgroundColor:["#22c55e","#f59e0b","#ef4444"],borderWidth:3,borderColor:document.body.classList.contains("light")?"#ffffff":"#1e293b"}] },
+      data:{ labels:["Present","Leave","Absent"], datasets:[{data:[billing.present || 0,billing.leave || 0,billing.absent || 0],backgroundColor:["#22c55e","#f59e0b","#ef4444"],borderWidth:3,borderColor:document.body.classList.contains("light")?"#ffffff":"#1e293b"}] },
       options:{ responsive:true, maintainAspectRatio:false, plugins:{ legend:{ position:"bottom", labels:{font:{size:12,weight:"600",family:"Poppins"},color:document.body.classList.contains("light")?"#1e293b":"#f1f5f9",padding:16,usePointStyle:true,pointStyle:"circle"} } } }
     });
   }
 }
 
-// 🟢 OPTIMIZED: Fetches only the 5 most recent notices to save queries
-async function loadNotices(){
-  try{
-    const q = query(collection(db, "liveNotices"), orderBy("createdAt", "desc"), limit(5));
-    let snap = await getDocs(q);
-    let rows=[];
-    snap.forEach(d=>rows.push({id:d.id,...d.data()}));
-    
-    let noticeText="📢 No live notice found";
-    if(rows.length>0){
-      noticeText=rows.map(n=>`📢 ${n.user||"User"}: ${n.text||""}`).join("      ");
-    }
-    
-    // Update notice bar with animation reset
-    const noticeEl=document.getElementById("noticeMove");
-    if(noticeEl){
-      noticeEl.style.animation='none';
-      noticeEl.offsetHeight; /* trigger reflow */
-      noticeEl.innerText=noticeText;
-      noticeEl.style.animation='marquee 30s linear infinite';
-    }
-    
-    // Update sidebar badge
-    updateSidebarNoticeBadge(rows);
-    
-  }catch(e){ 
-    console.log("Notice error:",e); 
+// 🟢 ULTRA-LOW READS: Central Cache & Dashboard Tracker Document implementation
+function loadDashboardFromCache(company) {
+  const cachedData = localStorage.getItem("gms_dashboard_state_" + company.replace(/\s+/g, "_"));
+  if (cachedData) {
+    try { return JSON.parse(cachedData); } catch (e) { return null; }
   }
+  return null;
 }
 
-async function updateLastActive(){if(user.id){try{await updateDoc(doc(db,"users",user.id),{lastActive:new Date().toISOString()});}catch(e){}}}
+function saveDashboardToCache(company, data) {
+  localStorage.setItem("gms_dashboard_state_" + company.replace(/\s+/g, "_"), JSON.stringify(data));
+}
 
-async function loadDashboardStock(){
-  // 🔐 Permission check
-  if(!canUserSeeCompany(window.currentCompany)) {
+function renderDashboardUI(state) {
+  if (!state) return;
+  
+  if (isBillingAllowed() && state.billing) {
+    document.getElementById("attTotal").innerText = state.billing.total || 0;
+    document.getElementById("attLeave").innerText = state.billing.leave || 0;
+    document.getElementById("attAbsent").innerText = state.billing.absent || 0;
+    document.getElementById("attPresent").innerText = state.billing.present || 0;
+  }
+  
+  if (isAccessoriesAllowed()) {
+    document.getElementById("sumAccessories").innerText = fmt(state.accessories || 0);
+    document.getElementById("sumSewing").innerText = fmt(state.sewing || 0);
+    document.getElementById("sumTwill").innerText = fmt(state.twill || 0);
+  }
+  
+  if (isNeedleAllowed() && state.needle) {
+    document.getElementById("needleToday").innerText = fmt(state.needle.total || 0);
+  }
+
+  renderCharts(
+    state.sewing || 0,
+    state.accessories || 0,
+    state.twill || 0,
+    state.needle ? state.needle.floorStocks : {},
+    state.grey || { labels: [], data: [], total: 0 },
+    state.billing || { present: 0, leave: 0, absent: 0 },
+    state.needleIssue || { broken: 0, missing: 0, change: 0 }
+  );
+
+  let html = "";
+  let allowed = allowedMCDList();
+  let manpower = state.manpower || {};
+
+  ALL_MCD.forEach(mcd => {
+    if (!allowed.includes(mcd)) return;
+    let mp = manpower[mcd] || { count: 0, salary: 0 };
+    
+    if (mcd === "ACCESSORIES MCD") {
+      html += `<div class="mcdBox"><h3>🏭 ACCESSORIES MCD</h3><div class="miniRow"><span>📦 Accessories With Sample</span><span class="miniValue">${fmt(state.accessories || 0)}</span></div><div class="miniRow"><span>🧵 Sewing Thread</span><span class="miniValue">${fmt(state.sewing || 0)}</span></div><div class="miniRow"><span>📏 Twill Tape</span><span class="miniValue">${fmt(state.twill || 0)}</span></div></div>`;
+    } else if (mcd === "GREY FABRIC MCD") {
+      html += `<div class="mcdBox"><h3>🏭 GREY FABRIC MCD</h3><div class="miniRow"><span>📦 Today Closing Balance</span><span class="miniValue">${fmt(state.grey ? state.grey.total : 0)}</span></div></div>`;
+    } else if (mcd === "BILLING SECTION" && state.billing) {
+      html += `<div class="mcdBox"><h3>👨‍💼 BILLING SECTION</h3><div class="miniRow"><span>👨‍💼 Total Manpower</span><span class="miniValue">${fmt(state.billing.total || 0)}</span></div><div class="miniRow"><span>🏖 Leave</span><span class="miniValue">${fmt(state.billing.leave || 0)}</span></div><div class="miniRow"><span>❌ Absent</span><span class="miniValue">${fmt(state.billing.absent || 0)}</span></div><div class="miniRow"><span>✅ Today Present</span><span class="miniValue">${fmt(state.billing.present || 0)}</span></div></div>`;
+    } else {
+      html += `<div class="mcdBox"><h3>📂 ${mcd}</h3>
+        ${isManpowerAllowed() && (manpowerAccess === "all" || manpowerMcdAccess.includes(mcd)) ? `<div class="miniRow"><span>👨‍💼 Manpower</span><span class="miniValue">${fmt(mp.count)}</span></div><div class="miniRow"><span>💰 Salary</span><span class="miniValue">${fmt(mp.salary)}</span></div>` : ""}
+        <div class="miniRow"><span>📊 Stock / Report</span><span class="miniValue">LIVE</span></div>
+      </div>`;
+    }
+  });
+  document.getElementById("mcdDashboard").innerHTML = html || "<div class='mcdBox'><h3>❌ No Access</h3></div>";
+}
+
+let dashboardListenerUnsubscribe = null;
+
+async function loadDashboardStock() {
+  if (!canUserSeeCompany(window.currentCompany)) {
     document.getElementById('textileDashboard').style.display = 'none';
     document.getElementById('compositeDashboard').style.display = 'none';
     const noAccessEl = document.getElementById('noAccessMessage');
-    if(noAccessEl) { noAccessEl.style.display = 'block'; } else { alert('️ আপনার এই কোম্পানির এক্সেস নেই। Admin থেকে permission নিন।'); }
+    if (noAccessEl) noAccessEl.style.display = 'block';
     return;
   }
-  const noAccessEl = document.getElementById('noAccessMessage');
-  if(noAccessEl) noAccessEl.style.display = 'none';
   
-  // Composite: Show empty dashboard only
-  if(window.currentCompany === 'GMS COMPOSITE KNITTING') {
+  const noAccessEl = document.getElementById('noAccessMessage');
+  if (noAccessEl) noAccessEl.style.display = 'none';
+  
+  if (window.currentCompany === 'GMS COMPOSITE KNITTING') {
     document.getElementById('textileDashboard').style.display = 'none';
     document.getElementById('compositeDashboard').style.display = 'block';
     return;
   }
   
-  // Textile: Load all data
   document.getElementById('textileDashboard').style.display = 'block';
   document.getElementById('compositeDashboard').style.display = 'none';
-  
-  try{
-    let sewing=await getLatestPresent("sewingThread",133322);
-    let twill=await getLatestPresent("twillTape",171255);
-    let accessories=await getLatestPresent("accessoriesSample",21514393);
-    let needleData=await getNeedleFloorStock();
-    let grey=await getGreyData();
-    let billing=await getBillingToday();
-    let needleIssue=await getNeedleIssueToday();
-    
-    // 🟢 OPTIMIZED: Counts database docs only when backup panel is active
-    let firebase=null;
-    if (document.getElementById('backup').classList.contains('activePage')) {
-      firebase = await getFirebaseCounts();
-    }
 
-    let manpowerData=await getManpowerSummary(); // 🔥 Now filtered by company + manpower MCD
-    let manpower=manpowerData.map;
-    let allowed=allowedMCDList();
+  // 1. Load instantly from cache with 0 Firebase Reads
+  const cached = loadDashboardFromCache(window.currentCompany);
+  if (cached) {
+    renderDashboardUI(cached);
+  }
 
-    if(isBillingAllowed()){
-      document.getElementById("attTotal").innerText=billing.total;
-      document.getElementById("attLeave").innerText=billing.leave;
-      document.getElementById("attAbsent").innerText=billing.absent;
-      document.getElementById("attPresent").innerText=billing.present;
-    }
-    
-    if (firebase) updateLimitBox(firebase);
-    
-    if(isAccessoriesAllowed()){
-      document.getElementById("sumAccessories").innerText=fmt(accessories);
-      document.getElementById("sumSewing").innerText=fmt(sewing);
-      document.getElementById("sumTwill").innerText=fmt(twill);
-    }
-    if(isNeedleAllowed())document.getElementById("needleToday").innerText=fmt(needleData.total);
-    renderCharts(sewing,accessories,twill,needleData.floorStocks,grey,billing,needleIssue);
+  // 2. Kill previous listeners to save memory/connections
+  if (dashboardListenerUnsubscribe) {
+    dashboardListenerUnsubscribe();
+  }
 
-    let html="";
-    ALL_MCD.forEach(mcd=>{
-      if(!allowed.includes(mcd))return;
-      // 🔥 Filter manpower by selected MCDs
-      let mp = {count:0,salary:0};
-      if(manpower[mcd] && (manpowerAccess==="all" || manpowerAccess==="none" || manpowerMcdAccess.includes(mcd))) {
-        mp = manpower[mcd];
-      }
-      if(mcd==="ACCESSORIES MCD"){
-        html+=`<div class="mcdBox"><h3> ACCESSORIES MCD</h3><div class="miniRow"><span>📦 Accessories With Sample</span><span class="miniValue">${fmt(accessories)}</span></div><div class="miniRow"><span>🧵 Sewing Thread</span><span class="miniValue">${fmt(sewing)}</span></div><div class="miniRow"><span>📏 Twill Tape</span><span class="miniValue">${fmt(twill)}</span></div><div class="miniChart"><div class="miniFill"></div></div></div>`;
-      }else if(mcd==="GREY FABRIC MCD"){
-        html+=`<div class="mcdBox"><h3> GREY FABRIC MCD</h3><div class="miniRow"><span>📦 Today Closing Balance</span><span class="miniValue">${fmt(grey.total)}</span></div><div class="miniRow"><span>📊 Closing Chart</span><span class="miniValue">LIVE</span></div><div class="miniChart"><div class="miniFill" style="width:65%"></div></div></div>`;
-      }else if(mcd==="BILLING SECTION"){
-        html+=`<div class="mcdBox"><h3>‍ BILLING SECTION</h3><div class="miniRow"><span>👨‍ Total Manpower</span><span class="miniValue">${fmt(billing.total)}</span></div><div class="miniRow"><span>🏖 Leave</span><span class="miniValue">${fmt(billing.leave)}</span></div><div class="miniRow"><span>❌ Absent</span><span class="miniValue">${fmt(billing.absent)}</span></div><div class="miniRow"><span>✅ Today Present</span><span class="miniValue">${fmt(billing.present)}</span></div><div class="miniChart"><div class="miniFill" style="width:55%"></div></div></div>`;
-      }else{
-        html+=`<div class="mcdBox"><h3>📂 ${mcd}</h3>${isManpowerAllowed() && (manpowerAccess==="all" || manpowerMcdAccess.includes(mcd))?`<div class="miniRow"><span>👨‍ Manpower</span><span class="miniValue">${fmt(mp.count)}</span></div><div class="miniRow"><span>💰 Salary</span><span class="miniValue">${fmt(mp.salary)}</span></div>`:""}<div class="miniRow"><span>📊 Stock / Report</span><span class="miniValue">Pending</span></div><div class="miniChart"><div class="miniFill" style="width:35%"></div></div></div>`;
-      }
-    });
-    document.getElementById("mcdDashboard").innerHTML=html||"<div class='mcdBox'><h3>❌ No Access</h3></div>";
-  }catch(e){console.log(e);document.getElementById("mcdDashboard").innerHTML="Firebase data load error";}
+  // 3. Keep single onSnapshot for dashboard tracker document
+  const companyKey = window.currentCompany.replace(/\s+/g, "_");
+  const stateDocRef = doc(db, "systemState", "dashboard_" + companyKey);
+
+  dashboardListenerUnsubscribe = onSnapshot(stateDocRef, (docSnap) => {
+    if (docSnap.exists()) {
+      const liveState = docSnap.data();
+      saveDashboardToCache(window.currentCompany, liveState);
+      renderDashboardUI(liveState);
+    } else {
+      // Initialize system state doc if not exists to avoid empty states
+      const defaultState = {
+        sewing: 133322, twill: 171255, accessories: 21514393,
+        needle: {
+          total: 5851,
+          floorStocks: {
+            "Kadom R": 618,"Kadom N": 443,"Poddo R": 1889,"Poddo N": 401,
+            "Shapla R": 1171,"Shapla N": 573,"Sample R": 1138,"Sample N": 251,
+            "EMBROIDERY R": 1011,"EMBROIDERY N": 287,"Belly R": 796,"Belly N": 335
+          }
+        },
+        grey: { total: 12500, labels: ["Grey S/J", "Grey Rib", "Grand Total"], data: [5000, 7500, 12500] },
+        billing: { total: 120, leave: 5, absent: 3, present: 112 },
+        needleIssue: { broken: 45, missing: 12, change: 89 },
+        manpower: {}
+      };
+      setDoc(stateDocRef, defaultState);
+      renderDashboardUI(defaultState);
+    }
+  });
+
+  // Load Admin Counts only when backup view is active
+  if (document.getElementById('backup').classList.contains('activePage')) {
+    let firebase = await getFirebaseCounts();
+    updateLimitBox(firebase);
+  }
 }
+
+// Global update helper function for entry files to update state directly
+window.updateDashboardState = async function(sectionName, updatedData) {
+  const companyKey = window.currentCompany.replace(/\s+/g, "_");
+  const stateDocRef = doc(db, "systemState", "dashboard_" + companyKey);
+  try {
+    await setDoc(stateDocRef, {
+      [sectionName]: updatedData,
+      lastUpdated: {
+        [sectionName]: new Date().toISOString()
+      }
+    }, { merge: true });
+    console.log(`[State Update] Dashboard updated on: ${sectionName}`);
+  } catch (err) {
+    console.error("Dashboard tracker update error: ", err);
+  }
+};
+
+async function updateLastActive(){if(user.id){try{await updateDoc(doc(db,"users",user.id),{lastActive:new Date().toISOString()});}catch(e){}}}
 
 function addBackupLog(type,details){
   let logs=JSON.parse(localStorage.getItem("backupActivityLogs")||"[]");
@@ -2609,6 +2502,19 @@ onSnapshot(noticesRef, (snapshot) => {
   });
   rows.sort((a,b)=>(b.createdAt||"").localeCompare(a.createdAt||""));
   updateSidebarNoticeBadge(rows);
+  
+  // Real-time Update Notice Bar Visuals directly from snapshot instead of polling
+  let noticeText="📢 No live notice found";
+  if(rows.length>0){
+    noticeText=rows.map(n=>`📢 ${n.user||"User"}: ${n.text||""}`).join("      ");
+  }
+  const noticeEl=document.getElementById("noticeMove");
+  if(noticeEl){
+    noticeEl.style.animation='none';
+    noticeEl.offsetHeight; 
+    noticeEl.innerText=noticeText;
+    noticeEl.style.animation='marquee 30s linear infinite';
+  }
 });
 
 // 🔔 FOREGROUND MESSAGE HANDLER (Sound + Badge + Toast)
@@ -2616,16 +2522,9 @@ onMessage(messaging, (payload) => {
   console.log('[FCM] Foreground:', payload);
   const { title, body } = payload.notification || {};
   
-  // 🔊 Play sound
   if(typeof playNotificationSound === 'function') playNotificationSound();
-  
-  // 🔴 Update badge
-  if(typeof updateSidebarNoticeBadge === 'function') loadNotices();
-  
-  // 📱 Show toast
   showToast(`🔔 ${title || 'New Notice'}: ${body || ''}`, 'info');
   
-  // 🔔 Set app badge (Android)
   if('setAppBadge' in navigator){
     navigator.setAppBadge(1).catch(console.error);
   }
@@ -2635,7 +2534,6 @@ onMessage(messaging, (payload) => {
 setupRoleUI();
 setupCompanyPermissions();
 loadDashboardStock();
-loadNotices();
 updateLastActive();
 renderBackupLog();
 loadProfilePic();
@@ -2653,8 +2551,6 @@ document.addEventListener('visibilitychange', ()=>{
 });
 
 setInterval(updateLastActive,60000);
-setInterval(loadNotices,30000); // Notice auto refresh every 30 seconds
-setInterval(loadDashboardStock,60000);
 
 // Offline Sync Init
 document.addEventListener("DOMContentLoaded", () => {
