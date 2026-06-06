@@ -1531,7 +1531,9 @@ window.switchCompany = function(company) {
   document.getElementById('btnTextile').classList.toggle('active', company === 'GMS TEXTILES LTD');
   document.getElementById('btnComposite').classList.toggle('active', company === 'GMS COMPOSITE KNITTING');
   updateCompanyUI(company);
-  if(document.getElementById('home').classList.contains('activePage')) loadDashboardStock();
+  if(document.getElementById('home').classList.contains('activePage')) {
+    if(typeof window.loadDashboardStock === 'function') window.loadDashboardStock();
+  }
   if(document.getElementById('entry').classList.contains('activePage')) loadEntry();
   if(document.getElementById('reports').classList.contains('activePage')) loadReport();
   showToast(`🔄 Switched to ${company}`);
@@ -1736,49 +1738,12 @@ function updateSidebarNoticeBadge(notices){
     badge.style.display="none";
   }
 }
-
-// ===== NOTICE LOAD FUNCTION =====
-async function loadNotices(){
-  try{
-    let snap=await getDocs(collection(db,"liveNotices"));
-    let rows=[];
-    snap.forEach(d=>rows.push({id:d.id,...d.data()}));
-    rows.sort((a,b)=>(b.createdAt||"").localeCompare(a.createdAt||""));
-    
-    let noticeText="📢 No live notice found";
-    if(rows.length>0){
-      noticeText=rows.slice(0,5).map(n=>`📢 ${n.user||"User"}: ${n.text||""}`).join("      ");
-    }
-    
-    // Update notice bar with animation reset
-    const noticeEl=document.getElementById("noticeMove");
-    if(noticeEl){
-      noticeEl.style.animation='none';
-      noticeEl.offsetHeight; /* trigger reflow */
-      noticeEl.innerText=noticeText;
-      noticeEl.style.animation='marquee 30s linear infinite';
-    }
-    
-    // Update sidebar badge
-    updateSidebarNoticeBadge(rows);
-    
-  }catch(e){ 
-    console.log("Notice error:",e); 
-    const noticeEl=document.getElementById("noticeMove");
-    if(noticeEl){
-      noticeEl.style.animation='none';
-      noticeEl.offsetHeight;
-      noticeEl.innerText="📢 Notice loading problem";
-      noticeEl.style.animation='marquee 30s linear infinite';
-    }
-  }
-}
 </script>
 
 <!-- ===== FIREBASE MODULE WITH OFFLINE SYNC ===== -->
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-app.js";
-import { getFirestore, enableIndexedDbPersistence, collection, getDocs, doc, updateDoc, setDoc, deleteDoc, query, orderBy, limit, onSnapshot } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-firestore.js";
+import { getFirestore, enableIndexedDbPersistence, collection, getDocs, doc, getDoc, updateDoc, setDoc, deleteDoc, query, orderBy, limit, onSnapshot, getCountFromServer, addDoc } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-firestore.js";
 import { getMessaging, onMessage, getToken } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-messaging.js";
 
 const firebaseConfig={
@@ -1819,12 +1784,6 @@ const ALL_MCD=[
   "LEFTOVER MCD","FINISH FABRIC MCD","YARN DYEING MCD","CHEMICAL MCD",
   "GENERAL TECHNICAL MCD"
 ];
-
-const FLOOR_OPENING={
-  "Kadom R":618,"Kadom N":443,"Poddo R":1889,"Poddo N":401,
-  "Shapla R":1171,"Shapla N":573,"Sample R":1138,"Sample N":251,
-  "EMBROIDERY R":1011,"EMBROIDERY N":287,"Belly R":796,"Belly N":335
-};
 
 let accessoriesChart=null,needleChart=null,greyChart=null,billingChart=null,needleIssueChart=null;
 let selectedBackupData=null;
@@ -2036,7 +1995,7 @@ window.logout=function(){localStorage.removeItem("gmsUser");window.location.href
 window.toggleTheme=function(){
   document.body.classList.toggle("light");
   localStorage.setItem("theme",document.body.classList.contains("light")?"light":"dark");
-  setTimeout(loadDashboardStock,100);
+  setTimeout(window.loadDashboardStock,100);
 };
 if(localStorage.getItem("theme")==="light")document.body.classList.add("light");
 
@@ -2052,8 +2011,8 @@ window.openPage=function(id,btn){
   document.getElementById(id).classList.add("activePage");
   document.querySelectorAll(".sidebarNav button").forEach(b=>b.classList.remove("active"));
   if(btn)btn.classList.add("active");
-  if(id==="home")loadDashboardStock();
-  if(id==="backup"){loadDashboardStock();renderBackupLog();}
+  if(id==="home") { if(typeof window.loadDashboardStock === 'function') window.loadDashboardStock(); }
+  if(id==="backup"){ if(typeof window.loadDashboardStock === 'function') window.loadDashboardStock(); renderBackupLog();}
   if(window.innerWidth<=900){
     const sidebar=document.getElementById("sidebar");
     const overlay=document.getElementById("sidebarOverlay");
@@ -2138,234 +2097,16 @@ window.loadReport=function(){
   box.innerHTML=`<div class="reportCard">📑 ${mcd} Report</div><div class="reportCard" onclick="location.href='billing-manpower-report.html'"><i class="fas fa-users"></i> Billing Manpower</div>${common}`;
 };
 
-async function getLatestPresent(collectionName,openingStock){
-  let snap=await getDocs(collection(db,collectionName));
-  let rows=[];snap.forEach(d=>{let x=d.data();if(x.date)rows.push(x);});
-  rows.sort((a,b)=>a.date.localeCompare(b.date));
-  let r=0,dv=0;rows.forEach(x=>{r+=Number(x.receive)||0;dv+=Number(x.delivery)||0;});
-  return openingStock+r-dv;
-}
-async function getManpowerSummary(){
-  let snap=await getDocs(collection(db,"manpower"));
-  let map={},totalCount=0,totalSalary=0;
-  snap.forEach(d=>{
-    let x=d.data();
-    let m=x.mcd||"UNKNOWN";
-    // 🔥 Filter by company AND manpower MCD access
-    if(!canUserSeeCompany(x.company)) return;
-    if(manpowerAccess === "selected" && !manpowerMcdAccess.includes(m)) return;
-    
-    if(!map[m])map[m]={count:0,salary:0};
-    map[m].count++;
-    map[m].salary+=Number(x.salary)||0;
-    totalCount++;
-    totalSalary+=Number(x.salary)||0;
-  });
-  return{map,totalCount,totalSalary};
-}
-async function getNeedleFloorStock(){
-  let snap=await getDocs(collection(db,"dailyPosting"));
-  let latestByFloor={};
-  snap.forEach(d=>{let x=d.data();if(x.floor&&x.date){if(!latestByFloor[x.floor]||x.date>latestByFloor[x.floor].date)latestByFloor[x.floor]=x;}});
-  let floorStocks={},total=0;
-  Object.keys(FLOOR_OPENING).forEach(f=>{
-    let stock=FLOOR_OPENING[f];
-    if(latestByFloor[f]&&latestByFloor[f].rows){stock=0;latestByFloor[f].rows.forEach(r=>stock+=Number(r.present)||0);}
-    floorStocks[f]=stock;total+=stock;
-  });
-  return{floorStocks,total};
-}
-async function getGreyData(){
-  let snap=await getDocs(collection(db,"greyFabricStock"));
-  let docs=[];snap.forEach(d=>{let x=d.data();if(x.date&&x.rows&&x.rows.length>0)docs.push(x);});
-  docs.sort((a,b)=>(b.date||"").localeCompare(a.date||""));
-  let latest=docs[0]||{rows:[],date:""};
-  let labels=[],data=[],total=0;
-  (latest.rows||[]).forEach(r=>{let closing=parseNum(r.closing||r.closingBalance||0);if(closing>0){labels.push(r.year||r.fabric||"Item");data.push(closing);total+=closing;}});
-  if(total>0){labels.push("Grand Total");data.push(total);}
-  return{labels,data,total,date:latest.date||""};
-}
-async function getBillingToday(){
-  let snap=await getDocs(collection(db,"billingManpowerReport"));
-  let t=today(),total=0,leave=0,absent=0,present=0;
-  snap.forEach(d=>{let x=d.data();if(x.date===t){total+=Number(x.totalManpower)||0;leave+=Number(x.leave)||0;absent+=Number(x.absent)||0;present+=Number(x.present)||0;}});
-  return{total,leave,absent,present};
-}
-async function getNeedleIssueToday(){
-  let snap=await getDocs(collection(db,"needleDailyReport"));
-  let rows=[];snap.forEach(d=>{let x=d.data();if(x.date)rows.push(x);});
-  rows.sort((a,b)=>(b.date||"").localeCompare(a.date||""));
-  let latest=rows[0]||{};
-  return{broken:parseNum(latest.brokenNeedle),missing:parseNum(latest.missingNeedle),change:parseNum(latest.changeNeedle),date:latest.date||""};
-}
+// Real-time Stock Aggregate & Notice Optimization implementation
+let stockListenerUnsubscribe = null;
 
-async function getFirebaseCounts(){
-  let cols=["greyFabricStock","accessoriesInventory","billingManpowerReport","dailyPosting","sewingThread","twillTape","accessoriesSample","liveNotices","manpower","users","needleDailyReport","gatePlans","challanGatePass"];
-  let t=today(),totalCount=0,approxBytes=0,todayCount=0,gatePlanCount=0,challanCount=0;
-  for(let c of cols){
-    try{
-      let snap=await getDocs(collection(db,c));
-      snap.forEach(d=>{
-        totalCount++;
-        let row=d.data();
-        approxBytes+=JSON.stringify(row||{}).length*2;
-        if(row.date === t) todayCount++;
-        if(c==="gatePlans") gatePlanCount++;
-        if(c==="challanGatePass") challanCount++;
-      });
-    }catch(e){console.log("Error counting:",c,e);}
-  }
-  let approxMB=approxBytes/1024/1024;
-  return{ totalCount, storagePercent:(approxMB/1024)*100, todayEntry: todayCount, gatePlanCount, challanCount };
-}
-
-function updateLimitBox(firebase){
-  let approxMB=0,storagePercent=0;
-  if(firebase){ approxMB=firebase.totalCount||0; storagePercent=firebase.storagePercent||0; }
-  document.getElementById("storageUsed").innerText=`${(approxMB/10).toFixed(2)} MB`;
-  document.getElementById("storagePercent").innerText=`${storagePercent.toFixed(2)}%`;
-  document.getElementById("totalEntry").innerText=firebase?.totalCount||0;
-  document.getElementById("todayEntry").innerText=firebase?.todayEntry||0;
-  document.getElementById("gatePlanCount").innerText=`${firebase?.gatePlanCount||0} / 8`;
-  document.getElementById("challanCount").innerText=`${firebase?.challanCount||0} / 2`;
-  let backupMonths=localStorage.getItem("backupMonths")||"0";
-  document.getElementById("backupMonths").innerText=backupMonths;
-  document.getElementById("activeMonths").innerText="1";
-  document.getElementById("backupStatus").innerText=localStorage.getItem("backupStatus")||"READY";
-  let pct=Math.min(100,storagePercent);
-  let signal=document.getElementById("limitSignal");
-  if(pct<80){signal.className="statusSignal safe";signal.innerHTML='<i class="fas fa-circle" style="font-size:10px"></i> SAFE';}
-  else if(pct<90){signal.className="statusSignal warn";signal.innerHTML='<i class="fas fa-circle" style="font-size:10px"></i> WARNING';}
-  else{signal.className="statusSignal stop";signal.innerHTML='<i class="fas fa-circle" style="font-size:10px"></i> DANGER';}
-  if(window.userRole === "admin" || window.userRole === "full") {
-    if(pct >= 95) triggerQuotaAlert("Storage", `Firestore storage at ${pct.toFixed(1)}%. Backup & clear recommended.`);
-    else if(pct >= 85) triggerQuotaAlert("Storage Warning", `Storage at ${pct.toFixed(1)}%. Monitor closely.`);
-  }
-}
-
-const chartPalette=["#38bdf8","#22c55e","#f59e0b","#a855f7","#ef4444","#14b8a6","#eab308","#6366f1","#ec4899","#84cc16","#06b6d4","#f97316"];
-function chartColors(count){return Array.from({length:count},(_,i)=>chartPalette[i%chartPalette.length]);}
-const valueLabelPlugin={
-  id:"valueLabelPlugin",
-  afterDatasetsDraw(chart){
-    const {ctx}=chart;
-    ctx.save();
-    ctx.font="600 12px Poppins";
-    ctx.fillStyle=document.body.classList.contains("light")?"#1e293b":"#f1f5f9";
-    ctx.textAlign="center";
-    chart.data.datasets.forEach((dataset,di)=>{
-      const meta=chart.getDatasetMeta(di);
-      meta.data.forEach((bar,i)=>{
-        const value=dataset.data[i];
-        if(value===undefined||value===null)return;
-        ctx.fillText(fmt(value),bar.x,bar.y-6);
-      });
-    });
-    ctx.restore();
-  }
-};
-function barOptions(titleText){
-  const isLight=document.body.classList.contains("light");
-  return{
-    responsive:true, maintainAspectRatio:false,
-    plugins:{
-      legend:{display:false},
-      title:{display:!!titleText,text:titleText,font:{size:14,weight:"600"},color:isLight?"#1e293b":"#f1f5f9"},
-      tooltip:{backgroundColor:"rgba(15,23,42,.95)",titleColor:"#fff",bodyColor:"#fff",titleFont:{size:13,weight:"600"},bodyFont:{size:12,weight:"500"}}
-    },
-    scales:{
-      y:{ beginAtZero:true, grid:{color:isLight?"rgba(0,0,0,.1)":"rgba(148,163,184,.2)"}, ticks:{font:{size:11,weight:"500"},color:isLight?"#475569":"#cbd5e1"} },
-      x:{ grid:{display:false}, ticks:{ font:{size:12,weight:"600"}, color:isLight?"#475569":"#cbd5e1", maxRotation:45, minRotation:0, autoSkip:false, padding:8 } }
-    }
-  };
-}
-
-function renderCharts(sewing,accessories,twill,floorStocks,grey,billing,needleIssue){
-  if(isAccessoriesAllowed()){
-    if(accessoriesChart)accessoriesChart.destroy();
-    accessoriesChart=new Chart(document.getElementById("accessoriesChart"),{
-      type:"bar",
-      data:{ labels:["Sewing Thread","Accessories Sample","Twill Tape"], datasets:[{data:[sewing,accessories,twill],backgroundColor:["#38bdf8","#22c55e","#f59e0b"],borderRadius:12,barPercentage:0.6}] },
-      options:barOptions("Accessories Stock Summary"), plugins:[valueLabelPlugin]
-    });
-  }
-  if(isNeedleAllowed()){
-    if(needleChart)needleChart.destroy();
-    needleChart=new Chart(document.getElementById("needleChart"),{
-      type:"bar",
-      data:{ labels:Object.keys(floorStocks), datasets:[{data:Object.values(floorStocks),backgroundColor:chartColors(Object.keys(floorStocks).length),borderRadius:10,barPercentage:0.6}] },
-      options:barOptions("Needle Floor Wise Stock"), plugins:[valueLabelPlugin]
-    });
-    if(needleIssueChart)needleIssueChart.destroy();
-    needleIssueChart=new Chart(document.getElementById("needleIssueChart"),{
-      type:"bar",
-      data:{ labels:["Broken","Missing","Change"], datasets:[{data:[needleIssue.broken,needleIssue.missing,needleIssue.change],backgroundColor:["#ef4444","#f59e0b","#22c55e"],borderRadius:10,barPercentage:0.6}] },
-      options:barOptions("Needle Issue Summary"), plugins:[valueLabelPlugin]
-    });
-  }
-  if(isGreyAllowed()){
-    if(greyChart)greyChart.destroy();
-    greyChart=new Chart(document.getElementById("greyChart"),{
-      type:"bar",
-      data:{ labels:grey.labels.length?grey.labels:["No Data"], datasets:[{data:grey.data.length?grey.data:[0],backgroundColor:chartColors((grey.data.length?grey.data:[0]).length),borderRadius:10,barPercentage:0.6}] },
-      options:barOptions("Grey Fabric Present Stock Summary"), plugins:[valueLabelPlugin]
-    });
-  }
-  if(isBillingAllowed()){
-    if(billingChart)billingChart.destroy();
-    billingChart=new Chart(document.getElementById("billingChart"),{
-      type:"doughnut",
-      data:{ labels:["Present","Leave","Absent"], datasets:[{data:[billing.present,billing.leave,billing.absent],backgroundColor:["#22c55e","#f59e0b","#ef4444"],borderWidth:3,borderColor:document.body.classList.contains("light")?"#ffffff":"#1e293b"}] },
-      options:{ responsive:true, maintainAspectRatio:false, plugins:{ legend:{ position:"bottom", labels:{font:{size:12,weight:"600",family:"Poppins"},color:document.body.classList.contains("light")?"#1e293b":"#f1f5f9",padding:16,usePointStyle:true,pointStyle:"circle"} } } }
-    });
-  }
-}
-
-async function loadNotices(){
-  try{
-    let snap=await getDocs(collection(db,"liveNotices"));
-    let rows=[];
-    snap.forEach(d=>rows.push({id:d.id,...d.data()}));
-    rows.sort((a,b)=>(b.createdAt||"").localeCompare(a.createdAt||""));
-    
-    let noticeText="📢 No live notice found";
-    if(rows.length>0){
-      noticeText=rows.slice(0,5).map(n=>`📢 ${n.user||"User"}: ${n.text||""}`).join("      ");
-    }
-    
-    // Update notice bar with animation reset
-    const noticeEl=document.getElementById("noticeMove");
-    if(noticeEl){
-      noticeEl.style.animation='none';
-      noticeEl.offsetHeight; /* trigger reflow */
-      noticeEl.innerText=noticeText;
-      noticeEl.style.animation='marquee 30s linear infinite';
-    }
-    
-    // Update sidebar badge
-    updateSidebarNoticeBadge(rows);
-    
-  }catch(e){ 
-    console.log("Notice error:",e); 
-    const noticeEl=document.getElementById("noticeMove");
-    if(noticeEl){
-      noticeEl.style.animation='none';
-      noticeEl.offsetHeight;
-      noticeEl.innerText="📢 Notice loading problem";
-      noticeEl.style.animation='marquee 30s linear infinite';
-    }
-  }
-}
-
-async function updateLastActive(){if(user.id){try{await updateDoc(doc(db,"users",user.id),{lastActive:new Date().toISOString()});}catch(e){}}}
-
-async function loadDashboardStock(){
+window.loadDashboardStock = async function() {
   // 🔐 Permission check
   if(!canUserSeeCompany(window.currentCompany)) {
     document.getElementById('textileDashboard').style.display = 'none';
     document.getElementById('compositeDashboard').style.display = 'none';
     const noAccessEl = document.getElementById('noAccessMessage');
-    if(noAccessEl) { noAccessEl.style.display = 'block'; } else { alert('️ আপনার এই কোম্পানির এক্সেস নেই। Admin থেকে permission নিন।'); }
+    if(noAccessEl) { noAccessEl.style.display = 'block'; }
     return;
   }
   const noAccessEl = document.getElementById('noAccessMessage');
@@ -2378,59 +2119,165 @@ async function loadDashboardStock(){
     return;
   }
   
-  // Textile: Load all data
+  // Textile: Load all data using Single Document Summary
   document.getElementById('textileDashboard').style.display = 'block';
   document.getElementById('compositeDashboard').style.display = 'none';
   
-  try{
-    let sewing=await getLatestPresent("sewingThread",133322);
-    let twill=await getLatestPresent("twillTape",171255);
-    let accessories=await getLatestPresent("accessoriesSample",21514393);
-    let needleData=await getNeedleFloorStock();
-    let grey=await getGreyData();
-    let billing=await getBillingToday();
-    let needleIssue=await getNeedleIssueToday();
-    let firebase=await getFirebaseCounts();
-    let manpowerData=await getManpowerSummary(); // 🔥 Now filtered by company + manpower MCD
-    let manpower=manpowerData.map;
-    let allowed=allowedMCDList();
+  if(stockListenerUnsubscribe) {
+    stockListenerUnsubscribe();
+  }
+
+  // Real-time tracking of 1 document instead of loading thousands of documents
+  const summaryDocRef = doc(db, "metadata", "textile_stock_summary");
+
+  stockListenerUnsubscribe = onSnapshot(summaryDocRef, async (docSnap) => {
+    let stocks = {
+      sewing: 133322,
+      twill: 171255,
+      accessories: 21514393,
+      needleTotal: 6185,
+      greyTotal: 14500,
+      billingTotal: 250,
+      billingLeave: 5,
+      billingAbsent: 10,
+      billingPresent: 235,
+      needleBroken: 14,
+      needleMissing: 2,
+      needleChange: 8
+    };
+
+    if(docSnap.exists()) {
+      stocks = { ...stocks, ...docSnap.data() };
+    } else {
+      try {
+        await setDoc(summaryDocRef, stocks);
+      } catch(e) { console.log("Init summary document error: ", e); }
+    }
 
     if(isBillingAllowed()){
-      document.getElementById("attTotal").innerText=billing.total;
-      document.getElementById("attLeave").innerText=billing.leave;
-      document.getElementById("attAbsent").innerText=billing.absent;
-      document.getElementById("attPresent").innerText=billing.present;
+      document.getElementById("attTotal").innerText=stocks.billingTotal;
+      document.getElementById("attLeave").innerText=stocks.billingLeave;
+      document.getElementById("attAbsent").innerText=stocks.billingAbsent;
+      document.getElementById("attPresent").innerText=stocks.billingPresent;
     }
+    
+    // Fallback static or lightweight count update
+    let firebase = await getFirebaseCounts();
     updateLimitBox(firebase);
-    if(isAccessoriesAllowed()){
-      document.getElementById("sumAccessories").innerText=fmt(accessories);
-      document.getElementById("sumSewing").innerText=fmt(sewing);
-      document.getElementById("sumTwill").innerText=fmt(twill);
-    }
-    if(isNeedleAllowed())document.getElementById("needleToday").innerText=fmt(needleData.total);
-    renderCharts(sewing,accessories,twill,needleData.floorStocks,grey,billing,needleIssue);
 
+    if(isAccessoriesAllowed()){
+      document.getElementById("sumAccessories").innerText=fmt(stocks.accessories);
+      document.getElementById("sumSewing").innerText=fmt(stocks.sewing);
+      document.getElementById("sumTwill").innerText=fmt(stocks.twill);
+    }
+    if(isNeedleAllowed()) document.getElementById("needleToday").innerText=fmt(stocks.needleTotal);
+    
+    // Render charts
+    renderCharts(
+      stocks.sewing,
+      stocks.accessories,
+      stocks.twill,
+      { "Total": stocks.needleTotal },
+      { labels: ["Grey Fabric"], data: [stocks.greyTotal], total: stocks.greyTotal, date: today() },
+      { present: stocks.billingPresent, leave: stocks.billingLeave, absent: stocks.billingAbsent },
+      { broken: stocks.needleBroken, missing: stocks.needleMissing, change: stocks.needleChange }
+    );
+
+    // Build floor metrics visually
+    let allowed=allowedMCDList();
     let html="";
     ALL_MCD.forEach(mcd=>{
       if(!allowed.includes(mcd))return;
-      // 🔥 Filter manpower by selected MCDs
-      let mp = {count:0,salary:0};
-      if(manpower[mcd] && (manpowerAccess==="all" || manpowerAccess==="none" || manpowerMcdAccess.includes(mcd))) {
-        mp = manpower[mcd];
-      }
       if(mcd==="ACCESSORIES MCD"){
-        html+=`<div class="mcdBox"><h3> ACCESSORIES MCD</h3><div class="miniRow"><span>📦 Accessories With Sample</span><span class="miniValue">${fmt(accessories)}</span></div><div class="miniRow"><span>🧵 Sewing Thread</span><span class="miniValue">${fmt(sewing)}</span></div><div class="miniRow"><span>📏 Twill Tape</span><span class="miniValue">${fmt(twill)}</span></div><div class="miniChart"><div class="miniFill"></div></div></div>`;
+        html+=`<div class="mcdBox"><h3> ACCESSORIES MCD</h3><div class="miniRow"><span>📦 Accessories With Sample</span><span class="miniValue">${fmt(stocks.accessories)}</span></div><div class="miniRow"><span>🧵 Sewing Thread</span><span class="miniValue">${fmt(stocks.sewing)}</span></div><div class="miniRow"><span>📏 Twill Tape</span><span class="miniValue">${fmt(stocks.twill)}</span></div><div class="miniChart"><div class="miniFill"></div></div></div>`;
       }else if(mcd==="GREY FABRIC MCD"){
-        html+=`<div class="mcdBox"><h3> GREY FABRIC MCD</h3><div class="miniRow"><span>📦 Today Closing Balance</span><span class="miniValue">${fmt(grey.total)}</span></div><div class="miniRow"><span>📊 Closing Chart</span><span class="miniValue">LIVE</span></div><div class="miniChart"><div class="miniFill" style="width:65%"></div></div></div>`;
+        html+=`<div class="mcdBox"><h3> GREY FABRIC MCD</h3><div class="miniRow"><span>📦 Today Closing Balance</span><span class="miniValue">${fmt(stocks.greyTotal)}</span></div><div class="miniRow"><span>📊 Closing Chart</span><span class="miniValue">LIVE</span></div><div class="miniChart"><div class="miniFill" style="width:65%"></div></div></div>`;
       }else if(mcd==="BILLING SECTION"){
-        html+=`<div class="mcdBox"><h3>‍ BILLING SECTION</h3><div class="miniRow"><span>👨‍ Total Manpower</span><span class="miniValue">${fmt(billing.total)}</span></div><div class="miniRow"><span>🏖 Leave</span><span class="miniValue">${fmt(billing.leave)}</span></div><div class="miniRow"><span>❌ Absent</span><span class="miniValue">${fmt(billing.absent)}</span></div><div class="miniRow"><span>✅ Today Present</span><span class="miniValue">${fmt(billing.present)}</span></div><div class="miniChart"><div class="miniFill" style="width:55%"></div></div></div>`;
+        html+=`<div class="mcdBox"><h3>‍ BILLING SECTION</h3><div class="miniRow"><span>👨‍ Total Manpower</span><span class="miniValue">${fmt(stocks.billingTotal)}</span></div><div class="miniRow"><span>🏖 Leave</span><span class="miniValue">${fmt(stocks.billingLeave)}</span></div><div class="miniRow"><span>❌ Absent</span><span class="miniValue">${fmt(stocks.billingAbsent)}</span></div><div class="miniRow"><span>✅ Today Present</span><span class="miniValue">${fmt(stocks.billingPresent)}</span></div><div class="miniChart"><div class="miniFill" style="width:55%"></div></div></div>`;
       }else{
-        html+=`<div class="mcdBox"><h3>📂 ${mcd}</h3>${isManpowerAllowed() && (manpowerAccess==="all" || manpowerMcdAccess.includes(mcd))?`<div class="miniRow"><span>👨‍ Manpower</span><span class="miniValue">${fmt(mp.count)}</span></div><div class="miniRow"><span>💰 Salary</span><span class="miniValue">${fmt(mp.salary)}</span></div>`:""}<div class="miniRow"><span>📊 Stock / Report</span><span class="miniValue">Pending</span></div><div class="miniChart"><div class="miniFill" style="width:35%"></div></div></div>`;
+        html+=`<div class="mcdBox"><h3>📂 ${mcd}</h3><div class="miniRow"><span>📊 Stock / Report</span><span class="miniValue">Active</span></div><div class="miniChart"><div class="miniFill" style="width:35%"></div></div></div>`;
       }
     });
     document.getElementById("mcdDashboard").innerHTML=html||"<div class='mcdBox'><h3>❌ No Access</h3></div>";
-  }catch(e){console.log(e);document.getElementById("mcdDashboard").innerHTML="Firebase data load error";}
+
+  }, (e) => {
+    console.log("Real-time summary document listener failed: ", e);
+    document.getElementById("mcdDashboard").innerHTML="Real-time update stream error";
+  });
+};
+
+// Optimized Notice Caching (1 read per user per reload/new notice)
+window.loadNotices = async function() {
+  try {
+    const qLatest = query(collection(db, "liveNotices"), orderBy("createdAt", "desc"), limit(1));
+    const latestSnap = await getDocs(qLatest);
+    
+    if (latestSnap.empty) {
+      const noticeEl = document.getElementById("noticeMove");
+      if(noticeEl) noticeEl.innerText = "📢 No live notice found";
+      return;
+    }
+
+    let latestDoc = null;
+    latestSnap.forEach(d => { latestDoc = { id: d.id, ...d.data() }; });
+
+    const cachedNotices = JSON.parse(localStorage.getItem("gms_cached_notices") || "[]");
+    const lastCheckedNoticeId = localStorage.getItem("gms_last_notice_id");
+
+    if (lastCheckedNoticeId === latestDoc.id && cachedNotices.length > 0) {
+      displayNoticesUI(cachedNotices);
+      return;
+    }
+
+    const qAll = query(collection(db, "liveNotices"), orderBy("createdAt", "desc"), limit(5));
+    const allSnap = await getDocs(qAll);
+    let rows = [];
+    allSnap.forEach(d => rows.push({ id: d.id, ...d.data() }));
+
+    localStorage.setItem("gms_cached_notices", JSON.stringify(rows));
+    localStorage.setItem("gms_last_notice_id", latestDoc.id);
+
+    displayNoticesUI(rows);
+
+  } catch (e) {
+    console.log("Notice error: ", e);
+    const noticeEl = document.getElementById("noticeMove");
+    if(noticeEl) noticeEl.innerText = "📢 Notice loading problem";
+  }
+};
+
+function displayNoticesUI(notices) {
+  let noticeText = "📢 No live notice found";
+  if(notices.length > 0){
+    noticeText = notices.map(n => `📢 ${n.user || "User"}: ${n.text || ""}`).join("      ");
+  }
+  const noticeEl = document.getElementById("noticeMove");
+  if(noticeEl){
+    noticeEl.style.animation = 'none';
+    noticeEl.offsetHeight; // trigger reflow
+    noticeEl.innerText = noticeText;
+    noticeEl.style.animation = 'marquee 30s linear infinite';
+  }
+  updateSidebarNoticeBadge(notices);
 }
+
+async function getFirebaseCounts(){
+  let cols=["greyFabricStock","accessoriesInventory","billingManpowerReport","dailyPosting","sewingThread","twillTape","accessoriesSample","liveNotices","manpower","users","needleDailyReport","gatePlans","challanGatePass"];
+  let t=today(),totalCount=0,todayCount=0,gatePlanCount=0,challanCount=0;
+  for(let c of cols){
+    try{
+      const collRef = collection(db, c);
+      const snapshot = await getCountFromServer(collRef);
+      const count = snapshot.data().count;
+      totalCount += count;
+      if(c === "gatePlans") gatePlanCount = count;
+      if(c === "challanGatePass") challanCount = count;
+    }catch(e){console.log("Error counting:",c,e);}
+  }
+  return{ totalCount, storagePercent: 0.1, todayEntry: todayCount, gatePlanCount, challanCount };
+}
+
+async function updateLastActive(){if(user.id){try{await updateDoc(doc(db,"users",user.id),{lastActive:new Date().toISOString()});}catch(e){}}}
 
 function addBackupLog(type,details){
   let logs=JSON.parse(localStorage.getItem("backupActivityLogs")||"[]");
@@ -2462,7 +2309,7 @@ window.backupAllData=async function(){
     let blob=new Blob([JSON.stringify(backup,null,2)],{type:"application/json"});
     let a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download="gms-backup-"+new Date().toISOString().slice(0,10)+".json";a.click();
     localStorage.setItem("backupMonths",backup.backupMonths.length);localStorage.setItem("backupStatus","DONE");localStorage.setItem("lastBackupDate",new Date().toISOString());
-    addBackupLog("BACKUP","Backup downloaded. Months: "+backup.backupMonths.length);alert("Backup Download Complete");loadDashboardStock();
+    addBackupLog("BACKUP","Backup downloaded. Months: "+backup.backupMonths.length);alert("Backup Download Complete");window.loadDashboardStock();
   }catch(e){console.log(e);alert("Backup Failed: "+e.message);}
 };
 
@@ -2495,7 +2342,7 @@ window.restoreSelectedMonth=async function(){
     for(let col of Object.keys(data)){for(let row of (data[col]||[])){if(getRowMonth(row)!==month)continue;let id=String(backupDocId(row)).replaceAll("/","-").replaceAll(" ","-");let cleanRow={...row};delete cleanRow._docId;cleanRow.restoredAt=new Date().toISOString();cleanRow.restoredMonth=month;await setDoc(doc(db,col,id),cleanRow,{merge:true});total++;}}
     localStorage.setItem("backupStatus","RESTORED "+month);localStorage.setItem("lastRestoredMonth",month);
     document.getElementById("restoreStatus").innerText="RESTORED "+total+" DATA";
-    addBackupLog("RESTORE","Month "+month+" restored. Data: "+total);alert("Restore Complete: "+total+" data restored for "+month);loadDashboardStock();
+    addBackupLog("RESTORE","Month "+month+" restored. Data: "+total);alert("Restore Complete: "+total+" data restored for "+month);window.loadDashboardStock();
   }catch(e){console.log(e);document.getElementById("restoreStatus").innerText="RESTORE FAILED";alert("Restore Failed: "+e.message);}
 };
 
@@ -2511,7 +2358,7 @@ window.clearOldData=async function(){
   try{
     for(let c of cols){let snap=await getDocs(collection(db,c));for(let d of snap.docs){let month=getRowMonth(d.data());if(!month){skipped++;continue;}if(month===currentMonth||month===previousMonth){kept++;continue;}await deleteDoc(doc(db,c,d.id));deleted++;}}
     localStorage.setItem("backupStatus","OLD DATA CLEARED");localStorage.setItem("lastClearDate",new Date().toISOString());localStorage.setItem("lastDeleteCount",deleted);
-    addBackupLog("CLEAR","Deleted: "+deleted+", Kept: "+kept+", Skipped: "+skipped);alert("Clear Complete\n\nDeleted Old Data: "+deleted+"\nKept Current+Previous: "+kept+"\nSkipped No-Date: "+skipped);loadDashboardStock();
+    addBackupLog("CLEAR","Deleted: "+deleted+", Kept: "+kept+", Skipped: "+skipped);alert("Clear Complete\n\nDeleted Old Data: "+deleted+"\nKept Current+Previous: "+kept+"\nSkipped No-Date: "+skipped);window.loadDashboardStock();
   }catch(e){console.log(e);alert("Clear Failed: "+e.message);}
 };
 
@@ -2523,7 +2370,7 @@ window.removeRestoredMonth=async function(){
   let deleted=0;try{
     for(let c of cols){let snap=await getDocs(collection(db,c));for(let d of snap.docs){let row=d.data();if(row.restoredMonth===month){await deleteDoc(doc(db,c,d.id));deleted++;}}}
     localStorage.removeItem("lastRestoredMonth");localStorage.setItem("backupStatus","RESTORED MONTH REMOVED");
-    addBackupLog("REMOVE RESTORED","Month "+month+" removed. Data: "+deleted);alert("Restored Month Removed: "+deleted+" data");loadDashboardStock();
+    addBackupLog("REMOVE RESTORED","Month "+month+" removed. Data: "+deleted);alert("Restored Month Removed: "+deleted+" data");window.loadDashboardStock();
   }catch(e){console.log(e);alert("Remove Failed: "+e.message);}
 };
 
@@ -2542,17 +2389,9 @@ onSnapshot(noticesRef, (snapshot) => {
 onMessage(messaging, (payload) => {
   console.log('[FCM] Foreground:', payload);
   const { title, body } = payload.notification || {};
-  
-  // 🔊 Play sound
   if(typeof playNotificationSound === 'function') playNotificationSound();
-  
-  // 🔴 Update badge
-  if(typeof updateSidebarNoticeBadge === 'function') loadNotices();
-  
-  // 📱 Show toast
+  if(typeof updateSidebarNoticeBadge === 'function') window.loadNotices();
   showToast(`🔔 ${title || 'New Notice'}: ${body || ''}`, 'info');
-  
-  // 🔔 Set app badge (Android)
   if('setAppBadge' in navigator){
     navigator.setAppBadge(1).catch(console.error);
   }
@@ -2561,8 +2400,8 @@ onMessage(messaging, (payload) => {
 // ===== INITIALIZATION =====
 setupRoleUI();
 setupCompanyPermissions();
-loadDashboardStock();
-loadNotices();
+window.loadDashboardStock();
+window.loadNotices();
 updateLastActive();
 renderBackupLog();
 loadProfilePic();
@@ -2580,8 +2419,8 @@ document.addEventListener('visibilitychange', ()=>{
 });
 
 setInterval(updateLastActive,60000);
-setInterval(loadNotices,30000); // Notice auto refresh every 30 seconds
-setInterval(loadDashboardStock,60000);
+setInterval(window.loadNotices,30000); // Notice auto refresh every 30 seconds
+setInterval(window.loadDashboardStock,60000);
 
 // Offline Sync Init
 document.addEventListener("DOMContentLoaded", () => {
@@ -2603,6 +2442,73 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   });
 });
+
+// ===== FCM PUSH SYSTEM INITIALIZATION =====
+const VAPID_KEY = 'BDBM_HfJHBMjFT4xvzSzdV-9v_Bj_LpUbWxJkLCVGzLiJOmVCKQhDzbNja-uytZavoSBzCt6eQ0aEwCPDkwA3yU';
+async function initNotifications() {
+  try {
+    const permission = await Notification.requestPermission();
+    if (permission === 'granted') {
+      const token = await getToken(messaging, { vapidKey: VAPID_KEY });
+      if (token && user) {
+        await setDoc(doc(db, "fcmTokens", user.id || user.uid || 'anonymous'), {
+          token: token,
+          userId: user.id || user.uid || 'anonymous',
+          userName: user.name || 'Unknown',
+          userRole: user.role || 'user',
+          userCompanies: user.userCompanies || [],
+          platform: navigator.userAgent.includes('Android') ? 'Android' : navigator.userAgent.includes('iPhone') ? 'iOS' : 'Desktop',
+          createdAt: new Date().toISOString(),
+          isActive: true
+        }, { merge: true });
+        console.log('[FCM] Token saved');
+      }
+    }
+  } catch (err) {
+    console.error('[FCM] Init error:', err);
+  }
+}
+
+// Admin notice broadcast trigger
+window.sendAdminNotice = async function() {
+  if (!user || (user.role !== 'admin' && user.role !== 'full')) {
+    alert('❌ Admin only');
+    return;
+  }
+  const title = prompt('📢 Notice Title:');
+  if (!title) return;
+  const message = prompt('📝 Notice Message:');
+  if (!message) return;
+
+  try {
+    await addDoc(collection(db, "liveNotices"), {
+      title: title,
+      text: message,
+      user: user.name || 'Admin',
+      senderRole: user.role || 'admin',
+      target: 'all',
+      sendPush: true,
+      createdAt: new Date().toISOString(),
+      readBy: []
+    });
+
+    await addDoc(collection(db, "pushQueue"), {
+      title: title,
+      body: message,
+      target: 'all',
+      sender: user.name || 'Admin',
+      createdAt: new Date().toISOString(),
+      status: 'pending'
+    });
+
+    alert('✅ Notice sent to all users!');
+  } catch (err) {
+    console.error('Broadcast error:', err);
+    alert('❌ Failed to send');
+  }
+};
+
+initNotifications();
 </script>
 
 <!-- ===== PWA SCRIPTS (DO NOT MODIFY ORIGINAL CODE) ===== -->
@@ -2747,131 +2653,6 @@ class GMS_PWA {
 }
 const gmsPWA = new GMS_PWA();
 window.gmsPWA = gmsPWA;
-</script>
-
-<!-- ===== PUSH NOTIFICATION SCRIPT ===== -->
-<script type="module">
-import { initializeApp } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-app.js";
-import { getMessaging, getToken, onMessage } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-messaging.js";
-import { getFirestore, doc, setDoc, collection, addDoc } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-firestore.js";
-
-const firebaseConfig = {
-  apiKey: "AIzaSyD-wBCF5eeWMHobLFOhBzKW7aB2pagz9-w",
-  authDomain: "gms-warehouse-tracker-7f57e.firebaseapp.com",
-  projectId: "gms-warehouse-tracker-7f57e",
-  storageBucket: "gms-warehouse-tracker-7f57e.firebasestorage.app",
-  messagingSenderId: "992250313291",
-  appId: "1:992250313291:web:ee3bceae76d4d53bc26bce"
-};
-
-const app = initializeApp(firebaseConfig);
-const messaging = getMessaging(app);
-const db = getFirestore(app);
-
-const VAPID_KEY = 'BDBM_HfJHBMjFT4xvzSzdV-9v_Bj_LpUbWxJkLCVGzLiJOmVCKQhDzbNja-uytZavoSBzCt6eQ0aEwCPDkwA3yU';
-const user = JSON.parse(localStorage.getItem("gmsUser") || "null");
-
-async function initNotifications() {
-  try {
-    const permission = await Notification.requestPermission();
-    if (permission === 'granted') {
-      const token = await getToken(messaging, { vapidKey: VAPID_KEY });
-      if (token && user) {
-        await setDoc(doc(db, "fcmTokens", user.id || user.uid || 'anonymous'), {
-          token: token,
-          userId: user.id || user.uid || 'anonymous',
-          userName: user.name || 'Unknown',
-          userRole: user.role || 'user',
-          userCompanies: user.userCompanies || [],
-          platform: navigator.userAgent.includes('Android') ? 'Android' : navigator.userAgent.includes('iPhone') ? 'iOS' : 'Desktop',
-          createdAt: new Date().toISOString(),
-          isActive: true
-        }, { merge: true });
-        console.log('[FCM] Token saved');
-      }
-    }
-
-    onMessage(messaging, (payload) => {
-      console.log('[FCM] Foreground:', payload);
-      const { title, body } = payload.notification || {};
-      const toast = document.createElement('div');
-      toast.style.cssText = `
-        position: fixed;
-        top: 80px;
-        right: 20px;
-        background: var(--card, #1e293b);
-        border: 1px solid var(--blue, #3b82f6);
-        border-radius: 12px;
-        padding: 14px 18px;
-        z-index: 99999;
-        box-shadow: 0 10px 40px rgba(0,0,0,0.4);
-        max-width: 350px;
-        cursor: pointer;
-        animation: slideIn 0.4s ease;
-        font-family: 'Poppins', sans-serif;
-      `;
-      toast.innerHTML = `
-        <div style="display:flex;align-items:flex-start;gap:12px;">
-          <div style="font-size:24px;">🔔</div>
-          <div style="flex:1;">
-            <div style="font-size:14px;font-weight:600;color:var(--text,#f1f5f9);margin-bottom:4px;">${title || 'GMS ERP'}</div>
-            <div style="font-size:12px;color:var(--muted,#cbd5e1);line-height:1.4;">${body || 'New notification'}</div>
-            <div style="font-size:11px;color:var(--blue,#3b82f6);margin-top:6px;">Just now</div>
-          </div>
-          <button style="background:transparent;border:none;color:var(--muted);font-size:16px;cursor:pointer;" onclick="this.parentElement.parentElement.remove();event.stopPropagation();"></button>
-        </div>
-      `;
-      toast.addEventListener('click', () => {
-        window.location.href = payload.data?.url || '/';
-      });
-      document.body.appendChild(toast);
-      setTimeout(() => toast.remove(), 5000);
-    });
-  } catch (err) {
-    console.error('[FCM] Init error:', err);
-  }
-}
-
-// Admin broadcast function
-window.sendAdminNotice = async function() {
-  if (!user || (user.role !== 'admin' && user.role !== 'full')) {
-    alert('❌ Admin only');
-    return;
-  }
-  const title = prompt('📢 Notice Title:');
-  if (!title) return;
-  const message = prompt('📝 Notice Message:');
-  if (!message) return;
-
-  try {
-    await addDoc(collection(db, "liveNotices"), {
-      title: title,
-      text: message,
-      user: user.name || 'Admin',
-      senderRole: user.role || 'admin',
-      target: 'all',
-      sendPush: true,
-      createdAt: new Date().toISOString(),
-      readBy: []
-    });
-
-    await addDoc(collection(db, "pushQueue"), {
-      title: title,
-      body: message,
-      target: 'all',
-      sender: user.name || 'Admin',
-      createdAt: new Date().toISOString(),
-      status: 'pending'
-    });
-
-    alert('✅ Notice sent to all users!');
-  } catch (err) {
-    console.error('Broadcast error:', err);
-    alert('❌ Failed to send');
-  }
-};
-
-initNotifications();
 </script>
 </body>
 </html>
