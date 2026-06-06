@@ -228,7 +228,7 @@ const floorData = {
 [45,"UYX128","14",68],[46,"UYX128 -NY2","14S",0],[47,"UY/UOX113","9",0],
 [48,"UY/UOX113","11",10],[49,"UY/UOX113","12",12],[50,"UY/UOX113","14",18],
 [51,"DVX57","14",39],[52,"DPX5","9",40],[53,"DVX57","12",42],[54,"DPX5","11",3],
-[55,"DPX5++","11SPD",0],[56,"DPX5","12",9],[57,"DPX5","12SPD",0],[58,"DPX5","14SPD",0],
+[55,"DPX5","11SPD",0],[56,"DPX5","12",9],[57,"DPX5","12SPD",0],[58,"DPX5","14SPD",0],
 [59,"DPX5","14",38],[60,"DPX17","9",4],[61,"DPX17","11",18],[62,"FLX118 -GCS","10",33],
 [63,"FLX118 -GCS","11",0],[64,"DBX1-SF","8LP",24],[65,"DBX1-SF","9LP",0],
 [66,"DBX1-SF","10LP",185],[67,"DBX1-SF","11LP",0],[68,"DCX1-SF","8LP",0],
@@ -400,6 +400,60 @@ const OFFLINE_QUEUE_KEY = "needle_posting_queue";
 function getOfflineQueue(){ return JSON.parse(localStorage.getItem(OFFLINE_QUEUE_KEY) || "[]"); }
 function setOfflineQueue(q){ localStorage.setItem(OFFLINE_QUEUE_KEY, JSON.stringify(q)); }
 
+// 🔄 Centralized helper to update the single State document on Firestore
+async function updateDashboardNeedleState(floor, rows) {
+  const company = localStorage.getItem('gmsSelectedCompany') || 'GMS TEXTILES LTD';
+  const companyKey = company.replace(/\s+/g, "_");
+  const stateDocRef = doc(db, "systemState", "dashboard_" + companyKey);
+  
+  let currentNeedleState = { total: 0, floorStocks: {} };
+  try {
+    const stateDocSnap = await getDoc(stateDocRef);
+    if (stateDocSnap.exists()) {
+      const stateData = stateDocSnap.data();
+      if (stateData.needle) {
+        currentNeedleState = stateData.needle;
+      }
+    }
+  } catch(e) { console.log("State fetch error:", e); }
+
+  if (!currentNeedleState.floorStocks) {
+    currentNeedleState.floorStocks = {};
+  }
+
+  // Calculate total present from rows
+  let totalPresentVal = 0;
+  rows.forEach(r => totalPresentVal += Number(r.present) || 0);
+  currentNeedleState.floorStocks[floor] = totalPresentVal;
+
+  // Recompute total of all floors
+  let newGrandTotal = 0;
+  const defaultFloors = ["Kadom R", "Kadom N", "Shapla R", "Shapla N", "Poddo R", "Poddo N", "Belly R", "Belly N", "Sample R", "Sample N", "EMBROIDERY R", "EMBROIDERY N"];
+  defaultFloors.forEach(f => {
+    if (currentNeedleState.floorStocks[f] === undefined) {
+      let opSum = 0;
+      if (floorData[f]) {
+        floorData[f].forEach(row => opSum += Number(row[3]) || 0);
+      }
+      currentNeedleState.floorStocks[f] = opSum;
+    }
+    newGrandTotal += currentNeedleState.floorStocks[f];
+  });
+  currentNeedleState.total = newGrandTotal;
+
+  try {
+    await setDoc(stateDocRef, {
+      needle: currentNeedleState,
+      lastUpdated: {
+        needle: new Date().toISOString()
+      }
+    }, { merge: true });
+    console.log("[State Update] Dashboard state tracker updated.");
+  } catch(e) {
+    console.error("Dashboard tracker state update failed:", e);
+  }
+}
+
 function saveDataOffline(floor, date, operator, rows){
   let queue = getOfflineQueue();
   queue.push({
@@ -429,6 +483,9 @@ async function syncOfflineQueue(){
         });
         queue[i].status = "synced";
         synced++;
+        
+        // Update dashboard state for this synced floor
+        await updateDashboardNeedleState(queue[i].floor, queue[i].rows);
       }catch(e){ console.log("Sync failed:", e); }
     }
   }
@@ -487,7 +544,6 @@ function loadTable(customPrevious=null){
 
   document.getElementById("tableBody").innerHTML=html;
   updateTotal();
-  // Initial check after table load
   setTimeout(checkNegativeStock, 100);
 }
 
@@ -498,7 +554,6 @@ function calc(i){
   let present = p+r-d;
   document.getElementById("b"+i).innerText = present;
   
-  // 🔴 Real-time visual highlight: শুধুমাত্র < 0 হলে লাল
   let row = document.getElementById("row"+i);
   if(present < 0){
     row.classList.add("negative-row");
@@ -507,7 +562,6 @@ function calc(i){
   }
   
   updateTotal();
-  // 🔴 Real-time negative check
   checkNegativeStock();
 }
 
@@ -530,7 +584,6 @@ function updateTotal(){
   document.getElementById("totalBN").innerText=tbn;
 }
 
-// 🔴 Check for negative stock (< 0 only) and show popup
 function checkNegativeStock(){
   let items = getItems();
   let floor = document.getElementById("floor").value;
@@ -539,7 +592,6 @@ function checkNegativeStock(){
   for(let i=0; i<items.length; i++){
     let present = Number(document.getElementById("b"+i)?.innerText) || 0;
     
-    // 🔴 Visual highlight: শুধুমাত্র নেগেটিভ (< 0) হলে লাল
     let row = document.getElementById("row"+i);
     if(present < 0){
       row.classList.add("negative-row");
@@ -547,20 +599,17 @@ function checkNegativeStock(){
       row.classList.remove("negative-row");
     }
     
-    // 🔴 Popup: শুধুমাত্র নেগেটিভ (< 0) হলেই আসবে
     if(present < 0){
       negativeRowIndex = i;
       showNegativePopup(floor, operator, items[i][0], items[i][1], items[i][2], present);
-      return; // Stop at first negative
+      return; 
     }
   }
   
-  // 🔴 কোনো নেগেটিভ না থাকলে পপআপ বন্ধ
   negativeRowIndex = -1;
   closePopup();
 }
 
-// 🔴 Show popup with details
 function showNegativePopup(floor, operator, sl, needleType, size, stockValue){
   let popup = document.getElementById("negativePopup");
   let details = document.getElementById("popupDetails");
@@ -577,18 +626,15 @@ function showNegativePopup(floor, operator, sl, needleType, size, stockValue){
   popup.style.display = "flex";
 }
 
-// 🔴 Close popup
 function closePopup(){
   document.getElementById("negativePopup").style.display = "none";
 }
 
-// 🔴 Fix button: scroll to row + focus delivery input
 function fixNegativeRow(){
   if(negativeRowIndex >= 0){
     let row = document.getElementById("row"+negativeRowIndex);
     if(row){
       row.scrollIntoView({behavior:"smooth", block:"center"});
-      // Highlight row temporarily
       row.style.boxShadow = "0 0 0 3px #dc2626";
       setTimeout(() => row.style.boxShadow = "", 2000);
     }
@@ -639,12 +685,16 @@ async function saveData(){
     details = {totalItems: rows.length, msg: "New posting"};
   }
 
-  // 🔥 OFFLINE-FIRST SAVE
+  // 🔥 OFFLINE-FIRST SAVE & ON-TIME DASHBOARD TRACKER UPDATE
   if(navigator.onLine){
     try{
       await setDoc(docRef,{
         date:date,month:getMonth(date),floor:floor,rows:rows,operator:operator,updatedAt: serverTimestamp()
       });
+      
+      // Update central state tracker document in real-time
+      await updateDashboardNeedleState(floor, rows);
+
       try {
         await addDoc(collection(db, "auditLogs"), {
           action: action,floor: floor,date: date,operator: operator,timestamp: serverTimestamp(),details: details
@@ -685,6 +735,12 @@ async function deleteData(){
   }
   
   await deleteDoc(docRef);
+  
+  // Update dashboard tracker state after deletion by calculating original floorDefaults
+  let items = getItems();
+  let emptyRows = items.map(item => ({ present: item[3] }));
+  await updateDashboardNeedleState(floor, emptyRows);
+
   await loadData();
   alert("Deleted Successfully");
 }
@@ -757,11 +813,10 @@ async function loadData(){
     document.getElementById("r"+i).value = todayReceive[i] || "";
     document.getElementById("d"+i).value = todayDelivery[i] || "";
     document.getElementById("bn"+i).value = todayBN[i] || "";
-    calc(i); // 🔴 This triggers checkNegativeStock
+    calc(i); 
   }
 
   updateMonthlySummary(monthlyReceive,monthlyDelivery,monthlyBN);
-  // 🔴 Final check after data load
   setTimeout(checkNegativeStock, 200);
 }
 
@@ -821,7 +876,6 @@ document.addEventListener("keydown", function(e){
 // Initialize
 updateOfflineIndicator();
 loadTable();
-// Auto sync on load
 setTimeout(syncOfflineQueue, 1000);
 </script>
 </body>
