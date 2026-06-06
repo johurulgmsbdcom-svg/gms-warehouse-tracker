@@ -16,8 +16,8 @@ input,select{font-size:16px;padding:8px;border-radius:6px;border:1px solid #999}
 .kpiBox{background:#101b2d;border:1px solid #263855;border-radius:14px;padding:12px;text-align:center}
 .kpiBox span{font-size:12px;color:#9fb0c7;font-weight:bold}
 .kpiBox b{display:block;color:#22c55e;font-size:24px;margin-top:5px}
-.tableWrap{overflow-x:auto;width:100%;margin-bottom:5px}
-table{min-width:1050px;width:98%;margin:5px auto;border-collapse:collapse;background:white;color:black;font-size:12px}
+.tableWrap{overflow-x:auto;width:100%}
+table{min-width:1050px;width:98%;margin:10px auto;border-collapse:collapse;background:white;color:black;font-size:12px}
 th,td{border:1px solid #000;padding:5px;text-align:center}
 th{background:#9fc5e8;font-weight:bold}
 .floorTitle{background:#1e293b!important;color:white!important;font-size:15px}
@@ -26,15 +26,15 @@ th{background:#9fc5e8;font-weight:bold}
 
 /* Signature Section */
 .signatureSection{
-  margin-top:15px;
-  margin-bottom:10px;
+  margin-top:30px;
+  margin-bottom:20px;
   display:none;
   page-break-inside:avoid;
 }
 .signatureTable{
   width:100%;
   border-collapse:collapse;
-  margin-top:5px;
+  margin-top:10px;
 }
 .signatureTable td{
   width:33.33%;
@@ -56,32 +56,19 @@ th{background:#9fc5e8;font-weight:bold}
   letter-spacing:1px;
 }
 
-/* Grand Total Section */
-.grandTotalWrap{
-  page-break-inside:avoid;
-  margin-top:5px;
-}
-
 @page{
   size:A4 portrait;
-  margin:8mm 10mm;
+  margin:10mm;
 }
 
 @media print{
-  *{margin:0;padding:0}
-  html,body{margin:0;padding:0;height:auto}
   body{background:white;color:black}
   .controls,.kpi,.noPrint{display:none!important}
-  .header{padding:5px;margin:0;text-align:center}
-  .header h2{margin:0;font-size:16px;line-height:1.2}
-  .header h3{margin:0;font-size:13px;line-height:1.2}
-  #reportArea{margin:0;padding:0;display:block}
-  .tableWrap{margin-bottom:3px;page-break-inside:avoid}
-  table{width:100%;min-width:0;font-size:7.5px;margin:2px 0}
+  .signatureSection{display:block!important}
+  table{width:100%;min-width:0;font-size:8px;margin:2px 0}
   th,td{padding:2px}
-  .floorTitle{font-size:11px!important}
-  .grandTotalWrap{page-break-inside:avoid}
-  .signatureSection{display:block!important;margin-top:10px;page-break-inside:avoid}
+  .tableWrap{margin-bottom:20px;page-break-after:auto}
+  .floorTitle{font-size:12px!important}
 }
 
 @media(max-width:700px){.kpi{grid-template-columns:1fr 1fr}}
@@ -116,18 +103,18 @@ th{background:#9fc5e8;font-weight:bold}
     <option>Belly N</option>
   </select>
 
-  <button class="show" onclick="loadReport()">🔍 Show</button>
+  <button class="show" onclick="loadReport()"> Show</button>
   <button class="excel" onclick="exportExcel()">📊 Excel</button>
   <button class="print" onclick="window.print()">🖨 PDF / Print</button>
-  <button class="home" onclick="location.href='needle.html'"> Entry</button>
-  <button class="home" onclick="location.href='index.html'"> Home</button>
+  <button class="home" onclick="location.href='needle.html'">🪡 Entry</button>
+  <button class="home" onclick="location.href='index.html'">🏠 Home</button>
 </div>
 
 <div class="kpi">
-  <div class="kpiBox"><span>📥 Total Receive</span><b id="kpiReceive">0</b></div>
+  <div class="kpiBox"><span> Total Receive</span><b id="kpiReceive">0</b></div>
   <div class="kpiBox"><span>📤 Total Delivery</span><b id="kpiDelivery">0</b></div>
   <div class="kpiBox"><span>📦 Present Stock</span><b id="kpiPresent">0</b></div>
-  <div class="kpiBox"><span> Total BNR/BNF</span><b id="kpiBN">0</b></div>
+  <div class="kpiBox"><span>📌 Total BNR/BNF</span><b id="kpiBN">0</b></div>
 </div>
 
 <div id="reportArea"></div>
@@ -334,7 +321,6 @@ async function loadReport(){
   });
 
   html+=`
-  <div class="grandTotalWrap">
   <div class="tableWrap">
   <table>
     <tr class="grandRow">
@@ -345,7 +331,6 @@ async function loadReport(){
       <td colspan="2">Total BNR/BNF: ${grandBN}</td>
     </tr>
   </table>
-  </div>
   </div>`;
 
   document.getElementById("reportArea").innerHTML =
