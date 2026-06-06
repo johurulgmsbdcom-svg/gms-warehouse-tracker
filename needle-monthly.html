@@ -26,32 +26,32 @@ th{background:#9fc5e8;font-weight:bold}
 
 /* Signature Section */
 .signatureSection{
-  margin-top:30px;
-  margin-bottom:20px;
+  margin-top:10px;
+  margin-bottom:15px;
   display:none;
   page-break-inside:avoid;
 }
 .signatureTable{
   width:100%;
   border-collapse:collapse;
-  margin-top:10px;
+  margin-top:0;
 }
 .signatureTable td{
   width:33.33%;
   text-align:center;
   vertical-align:top;
-  padding:5px;
+  padding:2px;
   border:none;
 }
 .signatureLine{
   border-top:2px solid #000;
   width:70%;
-  margin:0 auto 4px auto;
+  margin:0 auto 3px auto;
   height:0;
 }
 .signatureLabel{
   font-weight:bold;
-  font-size:11px;
+  font-size:10px;
   text-transform:uppercase;
   letter-spacing:1px;
 }
@@ -64,11 +64,12 @@ th{background:#9fc5e8;font-weight:bold}
 @media print{
   body{background:white;color:black}
   .controls,.kpi,.noPrint{display:none!important}
-  .signatureSection{display:block!important}
+  .signatureSection{display:block!important;margin-top:5px;margin-bottom:10px}
   table{width:100%;min-width:0;font-size:8px;margin:2px 0}
   th,td{padding:2px}
-  .tableWrap{margin-bottom:20px;page-break-after:auto}
+  .tableWrap{margin-bottom:10px;page-break-after:auto}
   .floorTitle{font-size:12px!important}
+  .grandRow{margin-bottom:5px}
 }
 
 @media(max-width:700px){.kpi{grid-template-columns:1fr 1fr}}
@@ -103,7 +104,7 @@ th{background:#9fc5e8;font-weight:bold}
     <option>Belly N</option>
   </select>
 
-  <button class="show" onclick="loadReport()"> Show</button>
+  <button class="show" onclick="loadReport()">🔍 Show</button>
   <button class="excel" onclick="exportExcel()">📊 Excel</button>
   <button class="print" onclick="window.print()">🖨 PDF / Print</button>
   <button class="home" onclick="location.href='needle.html'">🪡 Entry</button>
@@ -111,33 +112,13 @@ th{background:#9fc5e8;font-weight:bold}
 </div>
 
 <div class="kpi">
-  <div class="kpiBox"><span> Total Receive</span><b id="kpiReceive">0</b></div>
+  <div class="kpiBox"><span>📥 Total Receive</span><b id="kpiReceive">0</b></div>
   <div class="kpiBox"><span>📤 Total Delivery</span><b id="kpiDelivery">0</b></div>
   <div class="kpiBox"><span>📦 Present Stock</span><b id="kpiPresent">0</b></div>
   <div class="kpiBox"><span>📌 Total BNR/BNF</span><b id="kpiBN">0</b></div>
 </div>
 
 <div id="reportArea"></div>
-
-<!-- Signature Section (Only visible in print) -->
-<div class="signatureSection noPrint">
-  <table class="signatureTable">
-    <tr>
-      <td>
-        <div class="signatureLine"></div>
-        <div class="signatureLabel">Prepared By</div>
-      </td>
-      <td>
-        <div class="signatureLine"></div>
-        <div class="signatureLabel">Checked By</div>
-      </td>
-      <td>
-        <div class="signatureLine"></div>
-        <div class="signatureLabel">Authorised By</div>
-      </td>
-    </tr>
-  </table>
-</div>
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-app.js";
@@ -187,6 +168,28 @@ function formatMonth(monthStr){
   const [year, month] = monthStr.split("-");
   const monthIndex = parseInt(month) - 1;
   return monthNames[monthIndex] + " " + year;
+}
+
+function getSignatureHTML(){
+  return `
+  <div class="signatureSection noPrint">
+    <table class="signatureTable">
+      <tr>
+        <td>
+          <div class="signatureLine"></div>
+          <div class="signatureLabel">Prepared By</div>
+        </td>
+        <td>
+          <div class="signatureLine"></div>
+          <div class="signatureLabel">Checked By</div>
+        </td>
+        <td>
+          <div class="signatureLine"></div>
+          <div class="signatureLabel">Authorised By</div>
+        </td>
+      </tr>
+    </table>
+  </div>`;
 }
 
 async function loadReport(){
@@ -313,6 +316,9 @@ async function loadReport(){
       </tfoot>
     </table>
     </div>`;
+
+    // Add signature section after each floor table
+    html += getSignatureHTML();
 
     grandReceive+=floorReceive;
     grandDelivery+=floorDelivery;
