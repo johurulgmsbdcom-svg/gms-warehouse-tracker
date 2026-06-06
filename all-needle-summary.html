@@ -139,16 +139,21 @@ async function loadSummary(){
     data.rows.forEach(row=>{
       let needleType=row.needleType || "";
       let size=row.size || "";
-      let key=needleType+"___"+size;
+
+      // Grouping key normalization to merge duplicates with subtle spelling/spacing differences
+      let normType = needleType.toString().toUpperCase().replace(/[^A-Z0-9]/g, "");
+      let normSize = size.toString().toUpperCase().replace(/[^A-Z0-9]/g, "");
+      let key = normType + "___" + normSize;
 
       if(!map[key]){
         map[key]={
-          needleType:needleType,
-          size:size,
-          receive:0,
-          delivery:0,
-          presentByFloor:{},
-          lastDateByFloor:{}
+          needleType: needleType,
+          size: size,
+          receive: 0,
+          delivery: 0,
+          presentByFloor: {},
+          lastDateByFloor: {},
+          lastDate: ""
         };
       }
 
@@ -158,7 +163,14 @@ async function loadSummary(){
       let floor=data.floor || "";
       let date=data.date || "";
 
-      if(!map[key].lastDateByFloor[floor] || date>=map[key].lastDateByFloor[floor]){
+      // Maintain the latest corrected display name and size from the database
+      if(!map[key].lastDate || date >= map[key].lastDate){
+        map[key].needleType = needleType;
+        map[key].size = size;
+        map[key].lastDate = date;
+      }
+
+      if(!map[key].lastDateByFloor[floor] || date >= map[key].lastDateByFloor[floor]){
         map[key].presentByFloor[floor]=n(row.present);
         map[key].lastDateByFloor[floor]=date;
       }
