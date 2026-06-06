@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
 <title>Needle Monthly Report</title>
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
 
@@ -229,7 +230,8 @@ async function loadReport(){
 
     floorDocs.forEach(day=>{
       day.rows.forEach(row=>{
-        let key=(row.needleType||"")+"___"+(row.size||"");
+        // Group by SL (Serial Number) to prevent duplicates due to name/size updates
+        let key = row.sl || ((row.needleType||"")+"___"+(row.size||""));
 
         if(!itemMap[key]){
           itemMap[key]={
@@ -254,12 +256,16 @@ async function loadReport(){
         // যদি মাসের মাঝের কোনো ব্যাক-ডেট এন্ট্রি আগে চলে আসে, তবে সবচেয়ে আগের দিনের 'previous' স্টকটি লক করা হচ্ছে
         if(day.date < itemMap[key].firstDate){
           itemMap[key].previous = n(row.previous);
+          itemMap[key].opening = n(row.opening);
           itemMap[key].firstDate = day.date;
         }
 
         // মাসের সর্বশেষ পোস্টিংয়ের দিনের 'present' স্টকটি ক্লোজিং ব্যালেন্স হিসেবে নেওয়া হচ্ছে
+        // একই সাথে লেটেস্ট তারিখের সংশোধিত নাম ও সাইজ আপডেট করা হচ্ছে
         if(!itemMap[key].lastDate || day.date >= itemMap[key].lastDate){
           itemMap[key].present = n(row.present);
+          itemMap[key].needleType = row.needleType || "";
+          itemMap[key].size = row.size || "";
           itemMap[key].lastDate = day.date;
         }
       });
