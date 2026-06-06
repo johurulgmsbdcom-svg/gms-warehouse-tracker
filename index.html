@@ -1743,7 +1743,7 @@ function updateSidebarNoticeBadge(notices){
 <!-- ===== FIREBASE MODULE WITH OFFLINE SYNC ===== -->
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-app.js";
-import { getFirestore, enableIndexedDbPersistence, collection, getDocs, doc, getDoc, updateDoc, setDoc, deleteDoc, query, orderBy, limit, onSnapshot, getCountFromServer, addDoc } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-firestore.js";
+import { getFirestore, enableIndexedDbPersistence, collection, getDocs, doc, getDoc, updateDoc, setDoc, deleteDoc, query, orderBy, limit, onSnapshot, getCountFromServer, addDoc, where } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-firestore.js";
 import { getMessaging, onMessage, getToken } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-messaging.js";
 
 const firebaseConfig={
@@ -1784,6 +1784,12 @@ const ALL_MCD=[
   "LEFTOVER MCD","FINISH FABRIC MCD","YARN DYEING MCD","CHEMICAL MCD",
   "GENERAL TECHNICAL MCD"
 ];
+
+const FLOOR_OPENING={
+  "Kadom R":618,"Kadom N":443,"Poddo R":1889,"Poddo N":401,
+  "Shapla R":1171,"Shapla N":573,"Sample R":1138,"Sample N":251,
+  "EMBROIDERY R":1011,"EMBROIDERY N":287,"Belly R":796,"Belly N":335
+};
 
 let accessoriesChart=null,needleChart=null,greyChart=null,billingChart=null,needleIssueChart=null;
 let selectedBackupData=null;
@@ -2174,12 +2180,178 @@ function renderCharts(sewing,accessories,twill,floorStocks,grey,billing,needleIs
     });
   }
 }
+</script>
 
-// Real-time Stock Aggregate & Notice Optimization implementation
-let stockListenerUnsubscribe = null;
+<!-- ===== FIREBASE MODULE WITH OFFLINE SYNC ===== -->
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-app.js";
+import { getFirestore, enableIndexedDbPersistence, collection, getDocs, doc, getDoc, updateDoc, setDoc, deleteDoc, query, orderBy, limit, onSnapshot, getCountFromServer, addDoc, where } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-firestore.js";
+import { getMessaging, onMessage, getToken } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-messaging.js";
 
+const firebaseConfig={
+  apiKey:"AIzaSyD-wBCF5eeWMHobLFOhBzKW7aB2pagz9-w",
+  authDomain:"gms-warehouse-tracker-7f57e.firebaseapp.com",
+  projectId:"gms-warehouse-tracker-7f57e",
+  storageBucket:"gms-warehouse-tracker-7f57e.firebasestorage.app",
+  messagingSenderId:"992250313291",
+  appId:"1:992250313291:web:ee3bceae76d4d53bc26bce"
+};
+const app=initializeApp(firebaseConfig);
+const db=getFirestore(app);
+const messaging = getMessaging(app);
+
+// Enable persistence
+enableIndexedDbPersistence(db).catch(() => {});
+
+// Incremental Running Balance calculation (Calculates ONLY new entries, saving 99% reads)
+async function getIncrementalStock(collectionName, openingStock, cacheKey) {
+  let cache = JSON.parse(localStorage.getItem(cacheKey) || "null");
+  
+  if (!cache) {
+    // Initial fetch (Runs ONLY once per device lifetime, then caches)
+    let snap = await getDocs(collection(db, collectionName));
+    let r = 0, dv = 0;
+    let dates = [];
+    let processedIds = [];
+    
+    snap.forEach(d => {
+      let x = d.data();
+      r += Number(x.receive) || 0;
+      dv += Number(x.delivery) || 0;
+      processedIds.push(d.id);
+      if(x.date) dates.push(x.date);
+    });
+    
+    dates.sort();
+    let latestDate = dates[dates.length - 1] || today();
+    let balance = openingStock + r - dv;
+    
+    cache = { balance, lastDate: latestDate, processedIds };
+    localStorage.setItem(cacheKey, JSON.stringify(cache));
+    return balance;
+  }
+
+  // Fetch only updates on or after lastDate (Extremely fast, typically 0 or 1 reads)
+  let q = query(collection(db, collectionName), orderBy("date", "asc"));
+  if (cache.lastDate) {
+    q = query(collection(db, collectionName), where("date", ">=", cache.lastDate), orderBy("date", "asc"));
+  }
+  
+  let snap = await getDocs(q);
+  let r = 0, dv = 0;
+  let newIds = [];
+  let dates = [cache.lastDate];
+  
+  snap.forEach(d => {
+    if (!cache.processedIds.includes(d.id)) {
+      let x = d.data();
+      r += Number(x.receive) || 0;
+      dv += Number(x.delivery) || 0;
+      newIds.push(d.id);
+      if(x.date) dates.push(x.date);
+    }
+  });
+  
+  dates.sort();
+  let latestDate = dates[dates.length - 1];
+  let newBalance = cache.balance + r - dv;
+  
+  localStorage.setItem(cacheKey, JSON.stringify({
+    balance: newBalance,
+    lastDate: latestDate,
+    processedIds: [...cache.processedIds, ...newIds]
+  }));
+  
+  return newBalance;
+}
+
+// Highly Optimized Needle Stock calculation (Fetch only newest logs instead of full collection scans)
+async function getNeedleFloorStockOptimized() {
+  let q = query(collection(db, "dailyPosting"), orderBy("date", "desc"), limit(15));
+  let snap = await getDocs(q);
+  let latestByFloor = {};
+  
+  snap.forEach(d => {
+    let x = d.data();
+    if (x.floor && x.date) {
+      if (!latestByFloor[x.floor] || x.date > latestByFloor[x.floor].date) {
+        latestByFloor[x.floor] = x;
+      }
+    }
+  });
+  
+  let floorStocks = {}, total = 0;
+  Object.keys(FLOOR_OPENING).forEach(f => {
+    let stock = FLOOR_OPENING[f];
+    if (latestByFloor[f] && latestByFloor[f].rows) {
+      stock = 0;
+      latestByFloor[f].rows.forEach(r => stock += Number(r.present) || 0);
+    }
+    floorStocks[f] = stock;
+    total += stock;
+  });
+  
+  return { floorStocks, total };
+}
+
+// Highly Optimized Grey Fabric Stock (Reads EXACTLY 1 newest document)
+async function getGreyDataOptimized() {
+  let q = query(collection(db, "greyFabricStock"), orderBy("date", "desc"), limit(1));
+  let snap = await getDocs(q);
+  let latest = { rows: [], date: "" };
+  
+  snap.forEach(d => { latest = d.data(); });
+  
+  let labels = [], data = [], total = 0;
+  (latest.rows || []).forEach(r => {
+    let closing = parseNum(r.closing || r.closingBalance || 0);
+    if (closing > 0) {
+      labels.push(r.year || r.fabric || "Item");
+      data.push(closing);
+      total += closing;
+    }
+  });
+  
+  if (total > 0) {
+    labels.push("Grand Total");
+    data.push(total);
+  }
+  return { labels, data, total, date: latest.date || "" };
+}
+
+// Optimized Billing stats (Fetches only today's list, saving 99% reads)
+async function getBillingTodayOptimized() {
+  let t = today();
+  let q = query(collection(db, "billingManpowerReport"), where("date", "==", t));
+  let snap = await getDocs(q);
+  let total = 0, leave = 0, absent = 0, present = 0;
+  
+  snap.forEach(d => {
+    let x = d.data();
+    total += Number(x.totalManpower) || 0;
+    leave += Number(x.leave) || 0;
+    absent += Number(x.absent) || 0;
+    present += Number(x.present) || 0;
+  });
+  return { total, leave, absent, present };
+}
+
+// Optimized Needle Issue (Reads EXACTLY 1 newest document)
+async function getNeedleIssueTodayOptimized() {
+  let q = query(collection(db, "needleDailyReport"), orderBy("date", "desc"), limit(1));
+  let snap = await getDocs(q);
+  let latest = {};
+  snap.forEach(d => { latest = d.data(); });
+  return {
+    broken: parseNum(latest.brokenNeedle),
+    missing: parseNum(latest.missingNeedle),
+    change: parseNum(latest.changeNeedle),
+    date: latest.date || ""
+  };
+}
+
+// Load Dashboard dynamically with Incremental Calculation & low read footprint
 window.loadDashboardStock = async function() {
-  // 🔐 Permission check
   if(!canUserSeeCompany(window.currentCompany)) {
     document.getElementById('textileDashboard').style.display = 'none';
     document.getElementById('compositeDashboard').style.display = 'none';
@@ -2190,100 +2362,70 @@ window.loadDashboardStock = async function() {
   const noAccessEl = document.getElementById('noAccessMessage');
   if(noAccessEl) noAccessEl.style.display = 'none';
   
-  // Composite: Show empty dashboard only
   if(window.currentCompany === 'GMS COMPOSITE KNITTING') {
     document.getElementById('textileDashboard').style.display = 'none';
     document.getElementById('compositeDashboard').style.display = 'block';
     return;
   }
   
-  // Textile: Load all data using Single Document Summary
   document.getElementById('textileDashboard').style.display = 'block';
   document.getElementById('compositeDashboard').style.display = 'none';
   
-  if(stockListenerUnsubscribe) {
-    stockListenerUnsubscribe();
-  }
-
-  // Real-time tracking of 1 document instead of loading thousands of documents
-  const summaryDocRef = doc(db, "metadata", "textile_stock_summary");
-
-  stockListenerUnsubscribe = onSnapshot(summaryDocRef, async (docSnap) => {
-    let stocks = {
-      sewing: 133322,
-      twill: 171255,
-      accessories: 21514393,
-      needleTotal: 6185,
-      greyTotal: 14500,
-      billingTotal: 250,
-      billingLeave: 5,
-      billingAbsent: 10,
-      billingPresent: 235,
-      needleBroken: 14,
-      needleMissing: 2,
-      needleChange: 8
-    };
-
-    if(docSnap.exists()) {
-      stocks = { ...stocks, ...docSnap.data() };
-    } else {
-      try {
-        await setDoc(summaryDocRef, stocks);
-      } catch(e) { console.log("Init summary document error: ", e); }
-    }
+  try {
+    // 📊 Fetch dynamic stock metrics instantly with low-reads
+    let sewing = await getIncrementalStock("sewingThread", 133322, "gms_cache_sewing_balance");
+    let twill = await getIncrementalStock("twillTape", 171255, "gms_cache_twill_balance");
+    let accessories = await getIncrementalStock("accessoriesSample", 21514393, "gms_cache_accessories_balance");
+    
+    let needleData = await getNeedleFloorStockOptimized();
+    let grey = await getGreyDataOptimized();
+    let billing = await getBillingTodayOptimized();
+    let needleIssue = await getNeedleIssueTodayOptimized();
 
     if(isBillingAllowed()){
-      document.getElementById("attTotal").innerText=stocks.billingTotal;
-      document.getElementById("attLeave").innerText=stocks.billingLeave;
-      document.getElementById("attAbsent").innerText=stocks.billingAbsent;
-      document.getElementById("attPresent").innerText=stocks.billingPresent;
+      document.getElementById("attTotal").innerText=billing.total;
+      document.getElementById("attLeave").innerText=billing.leave;
+      document.getElementById("attAbsent").innerText=billing.absent;
+      document.getElementById("attPresent").innerText=billing.present;
     }
-
-    if(isAccessoriesAllowed()){
-      document.getElementById("sumAccessories").innerText=fmt(stocks.accessories);
-      document.getElementById("sumSewing").innerText=fmt(stocks.sewing);
-      document.getElementById("sumTwill").innerText=fmt(stocks.twill);
-    }
-    if(isNeedleAllowed()) document.getElementById("needleToday").innerText=fmt(stocks.needleTotal);
     
-    // Render charts
-    renderCharts(
-      stocks.sewing,
-      stocks.accessories,
-      stocks.twill,
-      { "Total": stocks.needleTotal },
-      { labels: ["Grey Fabric"], data: [stocks.greyTotal], total: stocks.greyTotal, date: today() },
-      { present: stocks.billingPresent, leave: stocks.billingLeave, absent: stocks.billingAbsent },
-      { broken: stocks.needleBroken, missing: stocks.needleMissing, change: stocks.needleChange }
-    );
+    if(isAccessoriesAllowed()){
+      document.getElementById("sumAccessories").innerText=fmt(accessories);
+      document.getElementById("sumSewing").innerText=fmt(sewing);
+      document.getElementById("sumTwill").innerText=fmt(twill);
+    }
+    
+    if(isNeedleAllowed()) document.getElementById("needleToday").innerText=fmt(needleData.total);
+    
+    renderCharts(sewing, accessories, twill, needleData.floorStocks, grey, billing, needleIssue);
 
-    // Build floor metrics visually
-    let allowed=allowedMCDList();
-    let html="";
-    ALL_MCD.forEach(mcd=>{
-      if(!allowed.includes(mcd))return;
-      if(mcd==="ACCESSORIES MCD"){
-        html+=`<div class="mcdBox"><h3> ACCESSORIES MCD</h3><div class="miniRow"><span>📦 Accessories With Sample</span><span class="miniValue">${fmt(stocks.accessories)}</span></div><div class="miniRow"><span>🧵 Sewing Thread</span><span class="miniValue">${fmt(stocks.sewing)}</span></div><div class="miniRow"><span>📏 Twill Tape</span><span class="miniValue">${fmt(stocks.twill)}</span></div><div class="miniChart"><div class="miniFill"></div></div></div>`;
-      }else if(mcd==="GREY FABRIC MCD"){
-        html+=`<div class="mcdBox"><h3> GREY FABRIC MCD</h3><div class="miniRow"><span>📦 Today Closing Balance</span><span class="miniValue">${fmt(stocks.greyTotal)}</span></div><div class="miniRow"><span>📊 Closing Chart</span><span class="miniValue">LIVE</span></div><div class="miniChart"><div class="miniFill" style="width:65%"></div></div></div>`;
-      }else if(mcd==="BILLING SECTION"){
-        html+=`<div class="mcdBox"><h3>‍ BILLING SECTION</h3><div class="miniRow"><span>👨‍ Total Manpower</span><span class="miniValue">${fmt(stocks.billingTotal)}</span></div><div class="miniRow"><span>🏖 Leave</span><span class="miniValue">${fmt(stocks.billingLeave)}</span></div><div class="miniRow"><span>❌ Absent</span><span class="miniValue">${fmt(stocks.billingAbsent)}</span></div><div class="miniRow"><span>✅ Today Present</span><span class="miniValue">${fmt(stocks.billingPresent)}</span></div><div class="miniChart"><div class="miniFill" style="width:55%"></div></div></div>`;
+    let allowed = allowedMCDList();
+    let html = "";
+    ALL_MCD.forEach(mcd => {
+      if(!allowed.includes(mcd)) return;
+      if(mcd === "ACCESSORIES MCD"){
+        html += `<div class="mcdBox"><h3> ACCESSORIES MCD</h3><div class="miniRow"><span>📦 Accessories With Sample</span><span class="miniValue">${fmt(accessories)}</span></div><div class="miniRow"><span>🧵 Sewing Thread</span><span class="miniValue">${fmt(sewing)}</span></div><div class="miniRow"><span>📏 Twill Tape</span><span class="miniValue">${fmt(twill)}</span></div><div class="miniChart"><div class="miniFill"></div></div></div>`;
+      }else if(mcd === "GREY FABRIC MCD"){
+        html += `<div class="mcdBox"><h3> GREY FABRIC MCD</h3><div class="miniRow"><span>📦 Today Closing Balance</span><span class="miniValue">${fmt(grey.total)}</span></div><div class="miniRow"><span>📊 Closing Chart</span><span class="miniValue">LIVE</span></div><div class="miniChart"><div class="miniFill" style="width:65%"></div></div></div>`;
+      }else if(mcd === "BILLING SECTION"){
+        html += `<div class="mcdBox"><h3>‍ BILLING SECTION</h3><div class="miniRow"><span>👨‍ Total Manpower</span><span class="miniValue">${fmt(billing.total)}</span></div><div class="miniRow"><span>🏖 Leave</span><span class="miniValue">${fmt(billing.leave)}</span></div><div class="miniRow"><span>❌ Absent</span><span class="miniValue">${fmt(billing.absent)}</span></div><div class="miniRow"><span>✅ Today Present</span><span class="miniValue">${fmt(billing.present)}</span></div><div class="miniChart"><div class="miniFill" style="width:55%"></div></div></div>`;
       }else{
-        html+=`<div class="mcdBox"><h3>📂 ${mcd}</h3><div class="miniRow"><span>📊 Stock / Report</span><span class="miniValue">Active</span></div><div class="miniChart"><div class="miniFill" style="width:35%"></div></div></div>`;
+        html += `<div class="mcdBox"><h3>📂 ${mcd}</h3><div class="miniRow"><span>📊 Stock / Report</span><span class="miniValue">Active</span></div><div class="miniChart"><div class="miniFill" style="width:35%"></div></div></div>`;
       }
     });
+    
     const mcdDash = document.getElementById("mcdDashboard");
-    if(mcdDash) mcdDash.innerHTML=html||"<div class='mcdBox'><h3>❌ No Access</h3></div>";
+    if(mcdDash) mcdDash.innerHTML = html || "<div class='mcdBox'><h3>❌ No Access</h3></div>";
 
-  }, (e) => {
-    console.log("Real-time summary document listener failed: ", e);
-    document.getElementById("mcdDashboard").innerHTML="Real-time update stream error";
-  });
+  } catch(e) {
+    console.log("Dashboard rendering failed: ", e);
+    document.getElementById("mcdDashboard").innerHTML = "Error rendering latest updates";
+  }
 
-  // Load counts separately (Async) to prevent blocking snapshot UI updates
+  // Load Firestore quota counts separately
   getFirebaseCounts().then(firebase => {
     updateLimitBox(firebase);
-  }).catch(e => console.log("Count update failed: ", e));
+  }).catch(e => console.log("Counting update failed: ", e));
 };
 
 // Optimized Notice Caching (1 read per user per reload/new notice)
