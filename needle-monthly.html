@@ -165,11 +165,26 @@ const FLOORS=[
   "Belly R","Belly N"
 ];
 
-// ✅ NEW: Helper function for case-insensitive floor matching
+// ✅ পরিবর্তন: আরও নমনীয় এবং উন্নত ফ্লোর ম্যাচিং ফাংশন
 function matchFloorName(savedFloor){
   if(!savedFloor) return null;
-  let cleanFloor = String(savedFloor).trim().toUpperCase();
-  return FLOORS.find(f => f.toUpperCase() === cleanFloor) || null;
+  
+  // ১. সব অতিরিক্ত স্পেস দূর করে একক স্পেস এবং আপারকেস করা হচ্ছে
+  let cleanFloor = String(savedFloor).trim().replace(/\s+/g, ' ').toUpperCase();
+  
+  // প্রথম চেষ্টা: সাধারণ স্পেস ফরম্যাটে মেলানো
+  let matched = FLOORS.find(f => f.toUpperCase().replace(/\s+/g, ' ') === cleanFloor);
+  if (matched) return matched;
+
+  // ২. দ্বিতীয় চেষ্টা: স্পেস ও অন্যান্য অবান্তর চিহ্ন সম্পূর্ণ বাদ দিয়ে মেলানো (যেমন: "BellyN" বা "Belly-N")
+  let flatSaved = cleanFloor.replace(/[^A-Z0-9]/g, "");
+  let flatMatched = FLOORS.find(f => f.toUpperCase().replace(/[^A-Z0-9]/g, "") === flatSaved);
+  
+  if (flatMatched) return flatMatched;
+  
+  // কোনো ম্যাচ না পাওয়া গেলে কনসোলে লগ রাখা হচ্ছে যেন ডাটাবেজের বানান চিহ্নিত করা সহজ হয়
+  console.warn("Unmatched Floor Name in Database:", savedFloor);
+  return null;
 }
 
 const monthNames = [
@@ -215,10 +230,10 @@ async function loadReport(){
     let x=d.data();
     if(!x.month && x.date) x.month=String(x.date).slice(0,7);
     if(x.month===month && Array.isArray(x.rows)){
-      // ✅ FIX: Case-insensitive floor matching
+      // ফ্লোরের নাম ম্যাচিং ও স্ট্যান্ডার্ডাইজ করা হচ্ছে
       let matchedFloor = matchFloorName(x.floor);
       if(matchedFloor){
-        x.floor = matchedFloor; // ✅ Standardize the floor name
+        x.floor = matchedFloor;
         if(!floorFilter || matchedFloor===floorFilter){
           docs.push(x);
         }
@@ -235,14 +250,12 @@ async function loadReport(){
     let floorDocs=docs.filter(d=>d.floor===floor);
     if(floorDocs.length===0) return;
 
-    // ক্রমানুসারে সর্টিং করা হচ্ছে যেন তারিখের ক্রম ঠিক থাকে
     floorDocs.sort((a,b)=>String(a.date).localeCompare(String(b.date)));
 
     let itemMap={};
 
     floorDocs.forEach(day=>{
       day.rows.forEach(row=>{
-        // Group by SL (Serial Number) to prevent duplicates due to name/size updates
         let key = row.sl || ((row.needleType||"")+"___"+(row.size||""));
 
         if(!itemMap[key]){
@@ -251,12 +264,12 @@ async function loadReport(){
             needleType:row.needleType||"",
             size:row.size||"",
             opening:n(row.opening),
-            previous:n(row.previous), // মাসের প্রথম রানিং প্রিভিয়াস ব্যালেন্স
+            previous:n(row.previous),
             receive:0,
             delivery:0,
             present:0,
             bn:0,
-            firstDate:day.date, // প্রথম পোস্টিংয়ের তারিখ ট্র্যাক করার জন্য
+            firstDate:day.date,
             lastDate:""
           };
         }
@@ -265,15 +278,12 @@ async function loadReport(){
         itemMap[key].delivery += n(row.delivery);
         itemMap[key].bn += n(row.bn);
 
-        // যদি মাসের মাঝের কোনো ব্যাক-ডেট এন্ট্রি আগে চলে আসে, তবে সবচেয়ে আগের দিনের 'previous' স্টকটি লক করা হচ্ছে
         if(day.date < itemMap[key].firstDate){
           itemMap[key].previous = n(row.previous);
           itemMap[key].opening = n(row.opening);
           itemMap[key].firstDate = day.date;
         }
 
-        // মাসের সর্বশেষ পোস্টিংয়ের দিনের 'present' স্টকটি ক্লোজিং ব্যালেন্স হিসেবে নেওয়া হচ্ছে
-        // একই সাথে লেটেস্ট তারিখের সংশোধিত নাম ও সাইজ আপডেট করা হচ্ছে
         if(!itemMap[key].lastDate || day.date >= itemMap[key].lastDate){
           itemMap[key].present = n(row.present);
           itemMap[key].needleType = row.needleType || "";
