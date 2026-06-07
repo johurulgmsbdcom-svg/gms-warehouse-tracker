@@ -99,7 +99,7 @@ Date:
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-app.js";
-import { getFirestore, doc, setDoc, getDoc, deleteDoc, collection, getDocs } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-firestore.js";
+import { getFirestore, doc, setDoc, deleteDoc, collection, getDocs } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-firestore.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyD-wBCF5eeWMHobLFOhBzKW7aB2pagz9-w",
@@ -116,6 +116,11 @@ const db = getFirestore(app);
 const openingStock = 133322;
 const collectionName = "sewingThread";
 
+// মাসিক হিসাবের জন্য গ্লোবাল ভেরিয়েবল
+window.monthStartBalance = openingStock;
+window.monthReceiveBeforeToday = 0;
+window.monthDeliveryBeforeToday = 0;
+
 function calc(){
   let p = Number(document.getElementById("previous").innerText) || 0;
   let r = Number(document.getElementById("receive").value) || 0;
@@ -127,6 +132,17 @@ function calc(){
   document.getElementById("totalReceive").innerText = r;
   document.getElementById("totalDelivery").innerText = d;
   document.getElementById("totalPresent").innerText = b;
+
+  // টাইপ করার সময় Monthly Summary ডাইনামিকভাবে আপডেট করা
+  let mOpen = window.monthStartBalance || 0;
+  let mRec = (window.monthReceiveBeforeToday || 0) + r;
+  let mDel = (window.monthDeliveryBeforeToday || 0) + d;
+  let mPres = mOpen + mRec - mDel;
+
+  document.getElementById("mOpening").innerText = mOpen;
+  document.getElementById("mReceive").innerText = mRec;
+  document.getElementById("mDelivery").innerText = mDel;
+  document.getElementById("mPresent").innerText = mPres;
 }
 
 async function saveData(){
@@ -173,52 +189,96 @@ async function deleteData(){
 async function loadData(){
   let date = document.getElementById("postDate").value;
   if(!date) return;
+  await calculateBalances();
+}
 
-  let todaySnap = await getDoc(doc(db, collectionName, date));
+// মূল ক্যালকুলেশন ফাংশন যা আগের দিনের Present Stock কে Previous Stock হিসেবে ধরে
+async function calculateBalances(){
+  let date = document.getElementById("postDate").value;
+  if(!date) return;
 
-  if(todaySnap.exists()){
-    let data = todaySnap.data();
-    document.getElementById("receive").value = data.receive || "";
-    document.getElementById("delivery").value = data.delivery || "";
-    document.getElementById("remarks").value = data.remarks || "";
-  }else{
+  let snap = await getDocs(collection(db, collectionName));
+  let allDocs = [];
+  snap.forEach(docSnap => {
+    allDocs.push(docSnap.data());
+  });
+
+  // তারিখ অনুযায়ী ছোট থেকে বড় ক্রমে সাজানো
+  allDocs.sort((a, b) => a.date.localeCompare(b.date));
+
+  let runningBalance = openingStock;
+  let dailyPrevious = openingStock;
+  let dailyPresent = openingStock;
+  let todayReceive = 0;
+  let todayDelivery = 0;
+  
+  let selectedMonth = date.slice(0, 7);
+  let monthStartBalance = openingStock;
+  let monthTotalReceive = 0;
+  let monthTotalDelivery = 0;
+  let enteredSelectedMonth = false;
+  let foundSelectedDate = false;
+
+  for (let doc of allDocs) {
+    if (!doc.date) continue;
+    let docMonth = doc.date.slice(0, 7);
+
+    // সিলেক্টেড তারিখের আগের সব ডেটা প্রসেস করা
+    if (doc.date < date) {
+      // নতুন মাসে প্রবেশ করলে আগের মাসের ব্যালেন্সকে Opening ধরা
+      if (docMonth === selectedMonth && !enteredSelectedMonth) {
+        monthStartBalance = runningBalance;
+        enteredSelectedMonth = true;
+      }
+      
+      if (docMonth === selectedMonth) {
+        monthTotalReceive += Number(doc.receive) || 0;
+        monthTotalDelivery += Number(doc.delivery) || 0;
+      }
+      
+      runningBalance += (Number(doc.receive) || 0) - (Number(doc.delivery) || 0);
+    } 
+    // সিলেক্টেড তারিখে পৌঁছালে
+    else if (doc.date === date) {
+      dailyPrevious = runningBalance; // আগের দিনের Present Stock ই হলো আজকের Previous
+      todayReceive = Number(doc.receive) || 0;
+      todayDelivery = Number(doc.delivery) || 0;
+      dailyPresent = dailyPrevious + todayReceive - todayDelivery;
+      
+      if (!enteredSelectedMonth) {
+        monthStartBalance = runningBalance;
+        enteredSelectedMonth = true;
+      }
+      
+      monthTotalReceive += todayReceive;
+      monthTotalDelivery += todayDelivery;
+      
+      document.getElementById("receive").value = todayReceive || "";
+      document.getElementById("delivery").value = todayDelivery || "";
+      document.getElementById("remarks").value = doc.remarks || "";
+      
+      foundSelectedDate = true;
+      break; 
+    }
+  }
+
+  // যদি সিলেক্টেড তারিখে কোনো ডেটা না থাকে
+  if (!foundSelectedDate) {
+    dailyPrevious = runningBalance;
+    dailyPresent = dailyPrevious; 
+    
+    if (!enteredSelectedMonth) {
+      monthStartBalance = runningBalance;
+    }
+    
     document.getElementById("receive").value = "";
     document.getElementById("delivery").value = "";
     document.getElementById("remarks").value = "";
   }
 
-  await loadMonthlySummary();
-}
+  let monthlyPresent = monthStartBalance + monthTotalReceive - monthTotalDelivery;
 
-async function loadMonthlySummary(){
-  let date = document.getElementById("postDate").value;
-  if(!date) return;
-
-  let month = date.slice(0,7);
-  let totalReceive = 0;
-  let totalDelivery = 0;
-
-  let snap = await getDocs(collection(db, collectionName));
-
-  snap.forEach(docSnap=>{
-    let data = docSnap.data();
-
-    if(data.date && data.date.slice(0,7) === month && data.date <= date){
-      totalReceive += Number(data.receive) || 0;
-      totalDelivery += Number(data.delivery) || 0;
-    }
-  });
-
-  let todayReceive = Number(document.getElementById("receive").value) || 0;
-  let todayDelivery = Number(document.getElementById("delivery").value) || 0;
-
-  let beforeTodayReceive = totalReceive - todayReceive;
-  let beforeTodayDelivery = totalDelivery - todayDelivery;
-
-  let dailyPrevious = openingStock + beforeTodayReceive - beforeTodayDelivery;
-  let dailyPresent = dailyPrevious + todayReceive - todayDelivery;
-  let monthlyPresent = openingStock + totalReceive - totalDelivery;
-
+  // UI ত ভ্যালু সেট করা
   document.getElementById("previous").innerText = dailyPrevious;
   document.getElementById("present").innerText = dailyPresent;
 
@@ -227,10 +287,15 @@ async function loadMonthlySummary(){
   document.getElementById("totalDelivery").innerText = todayDelivery;
   document.getElementById("totalPresent").innerText = dailyPresent;
 
-  document.getElementById("mOpening").innerText = openingStock;
-  document.getElementById("mReceive").innerText = totalReceive;
-  document.getElementById("mDelivery").innerText = totalDelivery;
+  document.getElementById("mOpening").innerText = monthStartBalance;
+  document.getElementById("mReceive").innerText = monthTotalReceive;
+  document.getElementById("mDelivery").innerText = monthTotalDelivery;
   document.getElementById("mPresent").innerText = monthlyPresent;
+
+  // calc() ফাংশনের জন্য ভ্যালুগুলো স্টোর করা
+  window.monthStartBalance = monthStartBalance;
+  window.monthReceiveBeforeToday = monthTotalReceive - todayReceive;
+  window.monthDeliveryBeforeToday = monthTotalDelivery - todayDelivery;
 }
 
 function exportExcel(){
@@ -266,7 +331,10 @@ window.deleteData = deleteData;
 window.exportExcel = exportExcel;
 window.exportPDF = exportPDF;
 
-calc();
+// পেজ লোড হওয়ার সাথে সাথে আজকের তারিখটি অটো সিলেক্ট এবং ডেটা লোড করা
+let today = new Date().toISOString().split('T')[0];
+document.getElementById("postDate").value = today;
+loadData();
 </script>
 
 </body>
