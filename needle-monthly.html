@@ -1,7 +1,6 @@
 <!DOCTYPE html>
 <html>
 <head>
-<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
 <title>Needle Monthly Report</title>
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
 
@@ -25,7 +24,6 @@ th{background:#9fc5e8;font-weight:bold}
 .totalRow{background:#d9ead3;font-weight:bold}
 .grandRow{background:#ffe599;font-weight:bold;font-size:14px}
 
-/* Signature Section */
 .signatureSection{
   margin-top:30px;
   margin-bottom:20px;
@@ -120,7 +118,6 @@ th{background:#9fc5e8;font-weight:bold}
 
 <div id="reportArea"></div>
 
-<!-- Signature Section (Only visible in print) -->
 <div class="signatureSection noPrint">
   <table class="signatureTable">
     <tr>
@@ -223,15 +220,13 @@ async function loadReport(){
     let floorDocs=docs.filter(d=>d.floor===floor);
     if(floorDocs.length===0) return;
 
-    // ক্রমানুসারে সর্টিং করা হচ্ছে যেন তারিখের ক্রম ঠিক থাকে
     floorDocs.sort((a,b)=>String(a.date).localeCompare(String(b.date)));
 
     let itemMap={};
 
     floorDocs.forEach(day=>{
       day.rows.forEach(row=>{
-        // Group by SL (Serial Number) to prevent duplicates due to name/size updates
-        let key = row.sl || ((row.needleType||"")+"___"+(row.size||""));
+        let key=(row.needleType||"")+"___"+(row.size||"");
 
         if(!itemMap[key]){
           itemMap[key]={
@@ -239,12 +234,11 @@ async function loadReport(){
             needleType:row.needleType||"",
             size:row.size||"",
             opening:n(row.opening),
-            previous:n(row.previous), // মাসের প্রথম রানিং প্রিভিয়াস ব্যালেন্স
+            previous:n(row.previous),
             receive:0,
             delivery:0,
             present:0,
             bn:0,
-            firstDate:day.date, // প্রথম পোস্টিংয়ের তারিখ ট্র্যাক করার জন্য
             lastDate:""
           };
         }
@@ -253,19 +247,9 @@ async function loadReport(){
         itemMap[key].delivery += n(row.delivery);
         itemMap[key].bn += n(row.bn);
 
-        // যদি মাসের মাঝের কোনো ব্যাক-ডেট এন্ট্রি আগে চলে আসে, তবে সবচেয়ে আগের দিনের 'previous' স্টকটি লক করা হচ্ছে
-        if(day.date < itemMap[key].firstDate){
-          itemMap[key].previous = n(row.previous);
-          itemMap[key].opening = n(row.opening);
-          itemMap[key].firstDate = day.date;
-        }
-
-        // মাসের সর্বশেষ পোস্টিংয়ের দিনের 'present' স্টকটি ক্লোজিং ব্যালেন্স হিসেবে নেওয়া হচ্ছে
-        // একই সাথে লেটেস্ট তারিখের সংশোধিত নাম ও সাইজ আপডেট করা হচ্ছে
         if(!itemMap[key].lastDate || day.date >= itemMap[key].lastDate){
+          itemMap[key].previous = n(row.previous);
           itemMap[key].present = n(row.present);
-          itemMap[key].needleType = row.needleType || "";
-          itemMap[key].size = row.size || "";
           itemMap[key].lastDate = day.date;
         }
       });
@@ -373,7 +357,7 @@ window.exportExcel=function(){
 
   let a=document.createElement("a");
   a.href=URL.createObjectURL(file);
-  a.download=`needle-monthly-report-${monthVal}.xls`;
+  a.download="needle-monthly-report-${monthVal}.xls";
   a.click();
 };
 
