@@ -882,15 +882,12 @@ body.light .creditFooter{background:var(--card);border-color:#cbd5e1;}
 <script>
 // ─────────────────────────────────────────────
 // 📦 SMART CACHE MANAGER
-// কোনো Entry না হলে = 0 reads
-// Entry হলে = সেই collection এর cache মুছে 1 read
 // ─────────────────────────────────────────────
 window.GMS_CACHE = {
   CACHE_KEY : 'GMS_SMART_CACHE',
   READ_COUNT_KEY : 'GMS_READ_COUNT_TODAY',
   READ_DATE_KEY  : 'GMS_READ_COUNT_DATE',
 
-  // আজকের read count (localStorage থেকে)
   getReadCount : function(){
     var today = new Date().toDateString();
     if(localStorage.getItem(this.READ_DATE_KEY) !== today){
@@ -900,7 +897,6 @@ window.GMS_CACHE = {
     return parseInt(localStorage.getItem(this.READ_COUNT_KEY)||'0');
   },
 
-  // read count বাড়াও
   incRead : function(n){
     n = n||1;
     var count = this.getReadCount() + n;
@@ -910,13 +906,11 @@ window.GMS_CACHE = {
     return count;
   },
 
-  // সব cache পড়ো
   _all : function(){
     try{ return JSON.parse(localStorage.getItem(this.CACHE_KEY)||'{}'); }
     catch(e){ return {}; }
   },
 
-  // cache সেট করো
   set : function(key, data){
     var all = this._all();
     all[key] = { data: data, savedAt: Date.now() };
@@ -924,7 +918,6 @@ window.GMS_CACHE = {
     catch(e){ console.warn('Cache set failed:', e); }
   },
 
-  // cache পড়ো — null মানে নেই
   get : function(key){
     var all = this._all();
     var entry = all[key];
@@ -932,7 +925,6 @@ window.GMS_CACHE = {
     return entry.data;
   },
 
-  // নির্দিষ্ট key বা keys এর cache মুছো
   invalidate : function(keys){
     var all = this._all();
     if(typeof keys === 'string') keys = [keys];
@@ -940,7 +932,6 @@ window.GMS_CACHE = {
     localStorage.setItem(this.CACHE_KEY, JSON.stringify(all));
   },
 
-  // সব cache মুছো
   clear : function(){
     localStorage.removeItem(this.CACHE_KEY);
     console.log('✅ All cache cleared');
@@ -949,13 +940,11 @@ window.GMS_CACHE = {
 
 // ─────────────────────────────────────────────
 // 📢 NOTICE CACHE MANAGER
-// শুধু lastNoticeId check করে (1 read)
-// নতুন notice এলে তখনই full load
 // ─────────────────────────────────────────────
 window.GMS_NOTICE_CACHE = {
-  KEY_NOTICE_IDS  : 'GMS_NOTICE_IDS_SEEN',   // দেখা notice IDs
-  KEY_NOTICE_TEXT : 'GMS_NOTICE_BAR_TEXT',    // marquee text cache
-  KEY_LAST_ID     : 'GMS_NOTICE_LAST_ID',     // সর্বশেষ notice ID
+  KEY_NOTICE_IDS  : 'GMS_NOTICE_IDS_SEEN',
+  KEY_NOTICE_TEXT : 'GMS_NOTICE_BAR_TEXT',
+  KEY_LAST_ID     : 'GMS_NOTICE_LAST_ID',
 
   getSeenIds : function(){
     var user = JSON.parse(localStorage.getItem('gmsUser')||'{}');
@@ -1140,7 +1129,7 @@ function clearAppBadge(){
 }
 
 // ─────────────────────────────────────────────
-// 📢 NOTICE BADGE UPDATE (cache-first)
+// 📢 NOTICE BADGE UPDATE
 // ─────────────────────────────────────────────
 function updateSidebarNoticeBadge(notices){
   var badge=document.getElementById('sidebarNoticeBadge'); if(!badge) return;
@@ -1288,7 +1277,7 @@ document.getElementById('loginInfo').innerText =
   `${user.name||'User'} • ${window.userRole.toUpperCase()} ${window.userRole==='user'?'• '+userMCDs.join(', '):''}`;
 
 // ─────────────────────────────────────────────────────────────────
-// 📦 OFFLINE SYNC QUEUE SYSTEM (unchanged)
+// 📦 OFFLINE SYNC QUEUE SYSTEM
 // ─────────────────────────────────────────────────────────────────
 const SYNC_QUEUE_KEY  = 'GMS_STEALTH_QUEUE';
 const COUNTER_KEY     = 'GMS_SERIAL_COUNTERS';
@@ -1299,8 +1288,7 @@ function getQuotaAlerts(){ return JSON.parse(localStorage.getItem(QUOTA_ALERT_KE
 function setQuotaAlerts(d){ localStorage.setItem(QUOTA_ALERT_KEY, JSON.stringify(d)); }
 
 // ─────────────────────────────────────────────────────────────────
-// 🔑 KEY CACHE INVALIDATION RULES
-// যখন কোনো collection এ entry হবে → সেই key invalidate হবে
+// 🔑 CACHE KEYS
 // ─────────────────────────────────────────────────────────────────
 const CACHE_KEYS = {
   sewingThread        : 'sewing_stock',
@@ -1314,7 +1302,6 @@ const CACHE_KEYS = {
   ALL_DASHBOARD       : ['sewing_stock','twill_stock','accessories_stock','needle_floor_stock','grey_stock','billing_today','needle_issue_today','manpower_summary','firebase_counts']
 };
 
-// Entry save হলে → সেই collection এর cache মুছো → dashboard update করো
 window.saveDataOffline = function(collectionName, data, serialPrefix){
   serialPrefix = serialPrefix||'';
   var queue = getQueue();
@@ -1333,16 +1320,16 @@ window.saveDataOffline = function(collectionName, data, serialPrefix){
   setQueue(queue);
   showToast('✅ Saved Successfully');
 
-  // ★ Cache invalidate করো এই collection এর জন্য
+  // Cache invalidate
   var cacheKey = CACHE_KEYS[collectionName];
   if(cacheKey){
     window.GMS_CACHE.invalidate(Array.isArray(cacheKey)?cacheKey:[cacheKey]);
     console.log('🗑️ Cache invalidated for:', collectionName);
   }
 
-  // ★ Dashboard auto-update (1 read হবে)
+  // Dashboard auto-update
   if(document.getElementById('home').classList.contains('activePage')){
-    loadDashboardStock(true); // force=true মানে cache skip করবে
+    loadDashboardStock(true);
   }
 
   updateLocalUI(collectionName, data);
@@ -1497,13 +1484,9 @@ if(localStorage.getItem('theme')==='light') document.body.classList.add('light')
 
 // ─────────────────────────────────────────────────────────────────
 // ★★★ SMART CACHE DATA FETCHERS ★★★
-// প্রতিটা fetcher:
-//   1. Cache আছে? → cache থেকে return (0 reads)
-//   2. Cache নেই? → Firebase থেকে fetch → cache সেট → return
 // ─────────────────────────────────────────────────────────────────
 
 async function cachedGetDocs(collectionName, cacheKey){
-  // Cache check
   var cached = window.GMS_CACHE.get(cacheKey);
   if(cached !== null){
     var el=document.getElementById('cacheStatusText');
@@ -1511,7 +1494,6 @@ async function cachedGetDocs(collectionName, cacheKey){
     console.log('📦 Cache hit:', cacheKey);
     return cached;
   }
-  // Firebase fetch
   console.log('🔥 Firebase read:', cacheKey);
   var el=document.getElementById('cacheStatusText');
   if(el) el.innerText='Firebase: '+cacheKey+' 🔥';
@@ -1597,7 +1579,6 @@ async function getNeedleIssueToday(){
 }
 
 async function getFirebaseCounts(){
-  // Firebase counts: cache আছে → cache। নেই → fetch।
   var cached = window.GMS_CACHE.get('firebase_counts');
   if(cached) return cached;
   var cols=['greyFabricStock','accessoriesInventory','billingManpowerReport','dailyPosting',
@@ -1625,14 +1606,9 @@ async function getFirebaseCounts(){
 
 // ─────────────────────────────────────────────────────────────────
 // ★★★ SMART NOTICE LOADER ★★★
-// Logic:
-//   1. Firestore এ শুধু সবচেয়ে নতুন 1টা doc এর ID পড়ো (1 read)
-//   2. এই ID === cached lastId? → 0 reads, cache text দেখাও
-//   3. Different ID? → full load করো, cache update করো
 // ─────────────────────────────────────────────────────────────────
 async function smartLoadNotices(){
   try{
-    // Step 1: শুধু latest 1 doc এর ID check করো
     var q = query(collection(db,'liveNotices'), orderBy('createdAt','desc'), limit(1));
     var snap = await getDocs(q);
     window.GMS_CACHE.incRead(1);
@@ -1645,7 +1621,6 @@ async function smartLoadNotices(){
     var latestId = snap.docs[0].id;
     var cachedLastId = window.GMS_NOTICE_CACHE.getLastId();
 
-    // Step 2: Same ID মানে notice change হয়নি → cache text দেখাও
     if(latestId === cachedLastId){
       var cachedText = window.GMS_NOTICE_CACHE.getCachedText();
       if(cachedText){
@@ -1655,7 +1630,6 @@ async function smartLoadNotices(){
       }
     }
 
-    // Step 3: New notice → full load করো
     console.log('🔥 Notice: new ID detected, full load');
     var allSnap = await getDocs(query(collection(db,'liveNotices'), orderBy('createdAt','desc'), limit(5)));
     window.GMS_CACHE.incRead(allSnap.size||1);
@@ -1668,12 +1642,9 @@ async function smartLoadNotices(){
       ? rows.map(function(n){return '📢 '+(n.user||'User')+': '+(n.text||'');}).join('      ')
       : '📢 No live notice';
 
-    // Cache করো
     window.GMS_NOTICE_CACHE.setLastId(latestId);
     window.GMS_NOTICE_CACHE.setCachedText(noticeText);
     setNoticeBar(noticeText);
-
-    // Badge update
     updateSidebarNoticeBadge(rows);
 
   }catch(e){
@@ -1687,17 +1658,12 @@ function setNoticeBar(text){
   var el=document.getElementById('noticeMove');
   if(!el) return;
   el.style.animation='none';
-  el.offsetHeight; // reflow
+  el.offsetHeight;
   el.innerText=text;
   el.style.animation='marquee 30s linear infinite';
 }
 
-// ─────────────────────────────────────────────────────────────────
-// ★★★ SMART NOTICE: onSnapshot শুধু latestId watch করে ★★★
-// শুধু 1 document listen → নতুন notice এলে তখনই full load
-// ─────────────────────────────────────────────────────────────────
 function setupNoticeListener(){
-  // Latest 1 doc এর ID watch করো
   var q = query(collection(db,'liveNotices'), orderBy('createdAt','desc'), limit(1));
   onSnapshot(q, function(snap){
     if(snap.empty) return;
@@ -1705,11 +1671,9 @@ function setupNoticeListener(){
     var cachedId = window.GMS_NOTICE_CACHE.getLastId();
     if(newId !== cachedId){
       console.log('🔔 New notice detected via snapshot');
-      // Cache invalidate করো
-      window.GMS_NOTICE_CACHE.setLastId(''); // force reload
+      window.GMS_NOTICE_CACHE.setLastId('');
       smartLoadNotices();
     }
-    // Badge update
     var rows=[];
     snap.forEach(function(d){rows.push({id:d.id,...d.data()});});
     updateSidebarNoticeBadge(rows);
@@ -1758,7 +1722,6 @@ function barOptions(titleText){
 }
 
 function renderCharts(sewing,accessories,twill,floorStocks,grey,billing,needleIssue){
-  // Save last data for theme toggle re-render
   window._lastChartData=[sewing,accessories,twill,floorStocks,grey,billing,needleIssue];
 
   if(isAccessoriesAllowed()){
@@ -1803,8 +1766,6 @@ function renderCharts(sewing,accessories,twill,floorStocks,grey,billing,needleIs
 
 // ─────────────────────────────────────────────────────────────────
 // ★★★ MAIN DASHBOARD LOADER ★★★
-// force=true → cache skip (entry এর পরে ডাকা হয়)
-// force=false/undefined → cache-first
 // ─────────────────────────────────────────────────────────────────
 window.loadDashboardStock = async function(force){
   if(!canUserSeeCompany(window.currentCompany)){
@@ -1823,7 +1784,6 @@ window.loadDashboardStock = async function(force){
   document.getElementById('textileDashboard').style.display='block';
   document.getElementById('compositeDashboard').style.display='none';
 
-  // force=true হলে সব cache মুছো
   if(force===true){
     window.GMS_CACHE.invalidate(CACHE_KEYS.ALL_DASHBOARD);
     console.log('🗑️ Force: all dashboard cache cleared');
@@ -1863,7 +1823,6 @@ window.loadDashboardStock = async function(force){
 
     renderCharts(sewing,accessories,twill,needleData.floorStocks,grey,billing,needleIssue);
 
-    // MCD Cards
     var html='';
     ALL_MCD.forEach(function(mcd){
       if(!allowed.includes(mcd)) return;
@@ -1909,7 +1868,6 @@ function updateLimitBox(firebase){
   if(pct<80){signal.className='statusSignal safe';signal.innerHTML='<i class="fas fa-circle" style="font-size:10px"></i> SAFE';}
   else if(pct<90){signal.className='statusSignal warn';signal.innerHTML='<i class="fas fa-circle" style="font-size:10px"></i> WARNING';}
   else{signal.className='statusSignal stop';signal.innerHTML='<i class="fas fa-circle" style="font-size:10px"></i> DANGER';}
-  // Backup page reads info
   var readCount = window.GMS_CACHE.getReadCount();
   document.getElementById('readsToday').innerText=readCount+' / 50,000';
   if(window.userRole==='admin'||window.userRole==='full'){
@@ -2007,7 +1965,6 @@ window.restoreSelectedMonth = async function(){
     localStorage.setItem('backupStatus','RESTORED '+month);
     localStorage.setItem('lastRestoredMonth',month);
     document.getElementById('restoreStatus').innerText='RESTORED '+total+' DATA';
-    // Restore এর পরে cache মুছো
     window.GMS_CACHE.clear();
     addBackupLog('RESTORE','Month '+month+' restored. Data: '+total);
     alert('Restore Complete: '+total+' data restored for '+month);
@@ -2038,7 +1995,6 @@ window.clearOldData = async function(){
     }
     localStorage.setItem('backupStatus','OLD DATA CLEARED');
     localStorage.setItem('lastClearDate',new Date().toISOString());
-    // Clear করার পরে সব cache মুছো
     window.GMS_CACHE.clear();
     addBackupLog('CLEAR','Deleted: '+deleted+', Kept: '+kept+', Skipped: '+skipped);
     alert('Clear Complete\nDeleted: '+deleted+'\nKept: '+kept+'\nSkipped: '+skipped);
@@ -2089,7 +2045,6 @@ onMessage(messaging, function(payload){
   if(typeof playNotificationSound==='function') playNotificationSound();
   showToast('🔔 '+(title||'New Notice')+': '+(body||''));
   if('setAppBadge' in navigator) navigator.setAppBadge(1).catch(function(){});
-  // New notice → cache invalidate → smart reload
   window.GMS_NOTICE_CACHE.setLastId('');
   smartLoadNotices();
 });
@@ -2099,9 +2054,9 @@ onMessage(messaging, function(payload){
 // ─────────────────────────────────────────────────────────────────
 setupRoleUI();
 setupCompanyPermissions();
-loadDashboardStock();       // First load (cache miss → Firebase)
-smartLoadNotices();         // Notice smart load
-setupNoticeListener();      // Notice snapshot listener (latest 1 doc only)
+loadDashboardStock();
+smartLoadNotices();
+setupNoticeListener();
 updateLastActive();
 renderBackupLog();
 loadProfilePic();
@@ -2111,16 +2066,23 @@ loadProfilePic();
   window.addEventListener(evt, function(){ if(!audioCtx) initAudio(); }, {once:true,passive:true});
 });
 
-// App visible হলে badge clear
+// ★★★ FIX: Page visible হলে cache clear করে fresh data load ★★★
+// এই code টাই মূল fix — entry page থেকে ফিরলে dashboard update হবে
 document.addEventListener('visibilitychange', function(){
-  if(document.visibilityState==='visible') clearAppBadge();
+  if(document.visibilityState === 'visible'){
+    clearAppBadge();
+    // Cache সম্পূর্ণ clear করো — entry page থেকে নতুন data এসে থাকতে পারে
+    localStorage.removeItem('GMS_SMART_CACHE');
+    console.log('🔄 Page visible — cache cleared, reloading dashboard...');
+    // Dashboard active থাকলে fresh load করো
+    if(document.getElementById('home').classList.contains('activePage')){
+      loadDashboardStock(true);
+    }
+  }
 });
 
-// lastActive update (কোনো polling নেই dashboard এ)
+// lastActive update
 setInterval(updateLastActive, 60000);
-
-// ★ NO setInterval for loadDashboardStock — এখন শুধু entry এর পরেই refresh হবে
-// ★ NO setInterval for loadNotices — এখন onSnapshot (1 doc) দিয়ে handle
 
 // DOMContentLoaded
 document.addEventListener('DOMContentLoaded', function(){
