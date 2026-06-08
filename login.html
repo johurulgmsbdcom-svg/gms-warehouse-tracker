@@ -419,7 +419,7 @@ footer a{color:rgba(79,142,247,0.9);text-decoration:none;}
           </div>
         </div>
 
-        <button class="btn" onclick="login()">🔐 LOGIN</button>
+        <button class="btn" id="loginBtn">🔐 LOGIN</button>
         <div id="msg"></div>
       </div>
 
@@ -434,11 +434,11 @@ footer a{color:rgba(79,142,247,0.9);text-decoration:none;}
 
 <!-- FOOTER -->
 <footer>
-  <span>© 2026 <strong>GMS Textiles</strong> · Tansutrapur, Kaliakoir, Gazipur</span>
+  <span>© 2025 <strong>GMS Textiles</strong> · Tansutrapur, Kaliakoir, Gazipur</span>
   <span>Powered by <strong>JOHURUL</strong> · <a href="tel:01925254746">01925254746</a></span>
 </footer>
 
-<script>
+<script type="module">
 /* ══════════════════════════════════════
    THREE.JS — LIGHT 3D BACKGROUND
    Floating glowing spheres + rotating
@@ -606,31 +606,79 @@ window.addEventListener('load',()=>{
   }, 3800);
 });
 
+/* FIREBASE INIT */
+import { initializeApp } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-app.js";
+import { getFirestore, collection, getDocs } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-firestore.js";
+
+const firebaseConfig = {
+  apiKey:"AIzaSyD-wBCF5eeWMHobLFOhBzKW7aB2pagz9-w",
+  authDomain:"gms-warehouse-tracker-7f57e.firebaseapp.com",
+  projectId:"gms-warehouse-tracker-7f57e",
+  storageBucket:"gms-warehouse-tracker-7f57e.firebasestorage.app",
+  messagingSenderId:"992250313291",
+  appId:"1:992250313291:web:ee3bceae76d4d53bc26bce"
+};
+const app = initializeApp(firebaseConfig);
+const db  = getFirestore(app);
+
 /* LOGIN */
 window.login = async function(){
-  const email = document.getElementById('email').value.trim();
+  const email    = document.getElementById('email').value.trim();
   const password = document.getElementById('password').value.trim();
-  const msg = document.getElementById('msg');
-  msg.innerHTML='';
-  if(!email||!password){
-    msg.style.color='#ef4444';
-    msg.innerHTML='⚠ Email ও Password দিন';
+  const msg      = document.getElementById('msg');
+  msg.innerHTML  = '';
+
+  if(!email || !password){
+    msg.style.color = '#ef4444';
+    msg.innerHTML   = '⚠ Email ও Password দিন';
     return;
   }
-  msg.style.color='#4f8ef7';
-  msg.innerHTML='🔄 Verifying...';
 
-  /* ── FIREBASE LOGIC এখানে বসান ── */
-  setTimeout(()=>{
-    const name = email.split('@')[0];
-    document.getElementById('loginForm').style.display='none';
-    document.getElementById('wName').textContent='Welcome, '+name+'!';
-    document.getElementById('postWelcome').style.display='block';
-    // location.href='index.html';
-  },1500);
+  msg.style.color = '#4f8ef7';
+  msg.innerHTML   = '🔄 Verifying...';
+
+  try{
+    const snap = await getDocs(collection(db, 'users'));
+    let found = null, id = '';
+
+    snap.forEach(d => {
+      const u = d.data();
+      if(
+        String(u.email   || '').trim().toLowerCase() === email.toLowerCase() &&
+        String(u.password|| '').trim()               === password
+      ){
+        found = u;
+        id    = d.id;
+      }
+    });
+
+    if(!found){
+      msg.style.color = '#ef4444';
+      msg.innerHTML   = '❌ Login Failed — email বা password ভুল';
+      return;
+    }
+
+    found.id = id;
+    localStorage.setItem('gmsUser', JSON.stringify(found));
+
+    /* success UI */
+    msg.style.color = '#00e5ff';
+    msg.innerHTML   = '✅ Login Successful!';
+    document.getElementById('loginForm').style.display = 'none';
+    document.getElementById('wName').textContent = 'Welcome, ' + (found.name || found.email) + '!';
+    document.getElementById('postWelcome').style.display = 'block';
+
+    setTimeout(() => { location.href = 'index.html'; }, 2000);
+
+  } catch(e){
+    console.error(e);
+    msg.style.color = '#ef4444';
+    msg.innerHTML   = '🔥 Firebase সমস্যা হয়েছে';
+  }
 };
 
-document.addEventListener('keydown',e=>{if(e.key==='Enter') window.login();});
+document.addEventListener('keydown', e => { if(e.key === 'Enter') window.login(); });
+document.getElementById('loginBtn').addEventListener('click', () => window.login());
 </script>
 </body>
 </html>
