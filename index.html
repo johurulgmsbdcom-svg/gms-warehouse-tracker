@@ -432,7 +432,7 @@ body.light .logItem{background:#f8fafc;}
 }
 @keyframes toastFade{from{opacity:0;transform:translate(-50%,20px);}to{opacity:1;transform:translate(-50%,0);}}
 
-/* ===== FOOTER ===== */
+ /* ===== FOOTER ===== */
 .creditFooter{
   position:fixed;bottom:10px;left:50%;transform:translateX(-50%);
   display:flex;align-items:center;gap:16px;
@@ -1821,12 +1821,6 @@ function renderCharts(sewing,accessories,twill,floorStocks,grey,billing,needleIs
 
 // ─────────────────────────────────────────────────────────────────
 // ★★★ MAIN DASHBOARD LOADER — SMART SELECTIVE CACHE ★★★
-//
-// কীভাবে কাজ করে:
-// 1. Firebase থেকে system_sync পড়ে (মাত্র 1 read)
-// 2. Local timestamps এর সাথে তুলনা করে
-// 3. শুধু পরিবর্তিত collection গুলো Firebase থেকে নেয়
-// 4. বাকিগুলো cache থেকে নেয় (0 read)
 // ─────────────────────────────────────────────────────────────────
 window.loadDashboardStock = async function(forceAll){
   if(!canUserSeeCompany(window.currentCompany)){
@@ -1961,13 +1955,11 @@ window.loadDashboardStock = async function(forceAll){
 };
 
 // ─────────────────────────────────────────────────────────────────
-// ★ NEW: REALTIME DASHBOARD SYNC — system_sync এ পরিবর্তন হলে
-// অন্য ব্যবহারকারীর entry-ও আপনার ড্যাশবোর্ডে দেখাবে
+// ★ NEW: REALTIME DASHBOARD SYNC
 // ─────────────────────────────────────────────────────────────────
 function setupRealtimeDashboardSync(){
   var syncCol = collection(db, 'system_sync');
   onSnapshot(syncCol, function(snapshot){
-    // Remote timestamps আপডেট হয়েছে — কোনটা বদলেছে দেখো
     var remoteTS = {};
     snapshot.forEach(function(d){ remoteTS[d.id] = d.data().lastUpdated||0; });
 
@@ -1978,9 +1970,8 @@ function setupRealtimeDashboardSync(){
 
     if(changed.length > 0){
       console.log('🔔 Realtime: changes detected in', changed);
-      // Dashboard active থাকলে selective reload
       if(document.getElementById('home').classList.contains('activePage')){
-        loadDashboardStock(false); // false = selective, শুধু changed গুলো load
+        loadDashboardStock(false);
       }
     }
   });
@@ -2012,7 +2003,7 @@ function updateLimitBox(firebase){
 }
 
 // ─────────────────────────────────────────────────────────────────
-// BACKUP FUNCTIONS (আগের মতো)
+// BACKUP FUNCTIONS
 // ─────────────────────────────────────────────────────────────────
 function addBackupLog(type,details){
   var logs=JSON.parse(localStorage.getItem('backupActivityLogs')||'[]');
@@ -2095,7 +2086,6 @@ window.restoreSelectedMonth = async function(){
         var cleanRow={...row}; delete cleanRow._docId;
         cleanRow.restoredAt=new Date().toISOString(); cleanRow.restoredMonth=month;
         await setDoc(doc(db,col,id),cleanRow,{merge:true}); total++;
-        // ★ NEW: Restore হলে timestamp আপডেট করো
         await updateCollectionTimestamp(col);
       }
     }
@@ -2190,14 +2180,29 @@ onMessage(messaging, function(payload){
 });
 
 // ─────────────────────────────────────────────────────────────────
-// ★★★ INITIALIZATION ★★★
+// ★★★ INITIALIZATION ★★★ — SMART LOGIN CHECK
 // ─────────────────────────────────────────────────────────────────
 setupRoleUI();
 setupCompanyPermissions();
-loadDashboardStock(true);    // ★ প্রথমবার: সব fresh load
+
+// === SMART LOGIN CHECK (প্রধান পরিবর্তন) ===
+(function(){
+  var today = new Date().toDateString();
+  var lastLogin = localStorage.getItem('GMS_LAST_FULL_LOAD');
+  
+  if(lastLogin !== today){
+    console.log('🔄 First login today → Full fresh load (forceAll=true)');
+    localStorage.setItem('GMS_LAST_FULL_LOAD', today);
+    loadDashboardStock(true);
+  } else {
+    console.log('📦 Already logged in today → Selective load (forceAll=false)');
+    loadDashboardStock(false);
+  }
+})();
+
 smartLoadNotices();
 setupNoticeListener();
-setupRealtimeDashboardSync(); // ★ NEW: realtime sync listener চালু
+setupRealtimeDashboardSync();
 updateLastActive();
 renderBackupLog();
 loadProfilePic();
@@ -2207,13 +2212,13 @@ loadProfilePic();
   window.addEventListener(evt, function(){ if(!audioCtx) initAudio(); }, {once:true,passive:true});
 });
 
-// ★★★ Page visible হলে selective load — entry থেকে ফিরলে শুধু পরিবর্তিত অংশ update ★★★
+// Page visible handler
 document.addEventListener('visibilitychange', function(){
   if(document.visibilityState === 'visible'){
     clearAppBadge();
     console.log('🔄 Page visible — selective dashboard check...');
     if(document.getElementById('home').classList.contains('activePage')){
-      loadDashboardStock(false); // ★ false = selective, force নয়
+      loadDashboardStock(false);
     }
   }
 });
@@ -2228,19 +2233,8 @@ document.addEventListener('DOMContentLoaded', function(){
     renderQuotaAlerts();
     renderAdminSyncTable();
   }
-  // Offline sync auto (5 minutes)
   setInterval(window.autoSyncQueue, 300000);
   setTimeout(window.autoSyncQueue, 2000);
-  document.addEventListener('visibilitychange', function(){
-    if(document.visibilityState==='visible'){
-      dailyQuotaReset();
-      if(window.userRole==='admin'||window.userRole==='full'){
-        renderQuotaAlerts();
-        renderAdminSyncTable();
-      }
-      window.autoSyncQueue();
-    }
-  });
 });
 </script>
 
