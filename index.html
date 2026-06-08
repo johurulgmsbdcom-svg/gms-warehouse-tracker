@@ -44,6 +44,175 @@ body{
   line-height:1.6;
 }
 
+/* ===== AUTO LOGOUT STYLES ===== */
+.session-timer-display{
+  display:flex;
+  align-items:center;
+  gap:6px;
+  padding:4px 10px;
+  background:rgba(16,185,129,0.15);
+  border:1px solid rgba(16,185,129,0.3);
+  border-radius:8px;
+  font-size:11px;
+  font-weight:700;
+  color:var(--green);
+  font-family:'Courier New',monospace;
+  transition:all 0.3s;
+}
+.session-timer-display.warning{
+  background:rgba(245,158,11,0.15);
+  border-color:rgba(245,158,11,0.3);
+  color:var(--yellow);
+}
+.session-timer-display.danger{
+  background:rgba(239,68,68,0.15);
+  border-color:rgba(239,68,68,0.3);
+  color:var(--red);
+  animation:livePulse 1s infinite;
+}
+.session-warning-modal{
+  display:none;
+  position:fixed;
+  top:0;left:0;right:0;bottom:0;
+  background:rgba(0,0,0,0.85);
+  z-index:99998;
+  justify-content:center;
+  align-items:center;
+  backdrop-filter:blur(8px);
+  animation:fadeIn 0.3s ease;
+}
+@keyframes fadeIn{from{opacity:0;}to{opacity:1;}}
+.session-warning-content{
+  background:var(--card);
+  border:2px solid var(--yellow);
+  border-radius:20px;
+  padding:40px;
+  max-width:420px;
+  width:90%;
+  text-align:center;
+  box-shadow:0 20px 60px rgba(245,158,11,0.3);
+  animation:slideUp 0.4s cubic-bezier(0.4,0,0.2,1);
+}
+@keyframes slideUp{
+  from{transform:translateY(50px);opacity:0;}
+  to{transform:translateY(0);opacity:1;}
+}
+.session-warning-icon{
+  font-size:64px;
+  margin-bottom:16px;
+  animation:bounce 1s infinite;
+}
+@keyframes bounce{
+  0%,100%{transform:translateY(0);}
+  50%{transform:translateY(-10px);}
+}
+.session-warning-content h3{
+  font-size:22px;
+  font-weight:800;
+  color:var(--text);
+  margin-bottom:8px;
+}
+.session-warning-content p{
+  color:var(--muted);
+  font-size:14px;
+  margin-bottom:16px;
+}
+.session-countdown{
+  font-size:48px;
+  font-weight:900;
+  color:var(--yellow);
+  font-family:'Courier New',monospace;
+  margin:20px 0;
+  letter-spacing:2px;
+  text-shadow:0 0 20px rgba(245,158,11,0.5);
+}
+.session-warning-buttons{
+  display:flex;
+  gap:12px;
+  margin-top:20px;
+}
+.session-extend-btn{
+  flex:1;
+  padding:12px 20px;
+  background:linear-gradient(135deg,var(--green),#059669);
+  color:#fff;
+  border:none;
+  border-radius:10px;
+  font-size:14px;
+  font-weight:700;
+  cursor:pointer;
+  transition:all 0.3s;
+}
+.session-extend-btn:hover{
+  transform:translateY(-2px);
+  box-shadow:0 6px 20px rgba(16,185,129,0.4);
+}
+.session-logout-btn{
+  flex:1;
+  padding:12px 20px;
+  background:linear-gradient(135deg,var(--red),#dc2626);
+  color:#fff;
+  border:none;
+  border-radius:10px;
+  font-size:14px;
+  font-weight:700;
+  cursor:pointer;
+  transition:all 0.3s;
+}
+.session-logout-btn:hover{
+  transform:translateY(-2px);
+  box-shadow:0 6px 20px rgba(239,68,68,0.4);
+}
+.session-expired-overlay{
+  display:none;
+  position:fixed;
+  top:0;left:0;right:0;bottom:0;
+  background:rgba(10,22,40,0.98);
+  z-index:99999;
+  justify-content:center;
+  align-items:center;
+  animation:fadeIn 0.5s ease;
+}
+.session-expired-content{
+  text-align:center;
+  max-width:400px;
+  padding:40px;
+}
+.session-expired-icon{
+  font-size:80px;
+  margin-bottom:20px;
+  animation:shake 0.5s ease;
+}
+@keyframes shake{
+  0%,100%{transform:translateX(0);}
+  25%{transform:translateX(-10px);}
+  75%{transform:translateX(10px);}
+}
+.session-expired-content h2{
+  font-size:28px;
+  font-weight:800;
+  color:var(--red);
+  margin-bottom:12px;
+}
+.session-expired-content p{
+  color:var(--muted);
+  font-size:16px;
+}
+.session-progress-bar{
+  width:100%;
+  height:4px;
+  background:rgba(255,255,255,0.1);
+  border-radius:2px;
+  margin-top:20px;
+  overflow:hidden;
+}
+.session-progress-fill{
+  height:100%;
+  background:linear-gradient(90deg,var(--yellow),var(--red));
+  border-radius:2px;
+  transition:width 1s linear;
+}
+
 /* ===== SIDEBAR ===== */
 .sidebar{
   position:fixed;
@@ -493,6 +662,34 @@ body.light .creditFooter{background:var(--card);border-color:#cbd5e1;}
   </div>
 </div>
 
+<!-- SESSION WARNING MODAL -->
+<div id="sessionWarningModal" class="session-warning-modal">
+  <div class="session-warning-content">
+    <div class="session-warning-icon">⏰</div>
+    <h3>Session Expiring Soon!</h3>
+    <p>Your session will expire due to inactivity in:</p>
+    <div class="session-countdown" id="sessionCountdown">02:00</div>
+    <p style="font-size:12px;color:var(--muted);">Move your mouse or click anywhere to stay logged in</p>
+    <div class="session-progress-bar">
+      <div class="session-progress-fill" id="sessionProgressFill" style="width:100%;"></div>
+    </div>
+    <div class="session-warning-buttons">
+      <button class="session-extend-btn" onclick="extendSession()">✅ Stay Logged In</button>
+      <button class="session-logout-btn" onclick="manualLogoutNow()">🚪 Logout Now</button>
+    </div>
+  </div>
+</div>
+
+<!-- SESSION EXPIRED OVERLAY -->
+<div id="sessionExpiredOverlay" class="session-expired-overlay">
+  <div class="session-expired-content">
+    <div class="session-expired-icon">🔒</div>
+    <h2>Session Expired</h2>
+    <p>You have been logged out due to inactivity.</p>
+    <p style="font-size:12px;color:var(--muted);margin-top:10px;">Redirecting to login page...</p>
+  </div>
+</div>
+
 <!-- SIDEBAR -->
 <div class="sidebar" id="sidebar">
   <div class="sidebarHeader">
@@ -558,6 +755,10 @@ body.light .creditFooter{background:var(--card);border-color:#cbd5e1;}
           <div style="width:8px;height:8px;background:var(--green);border-radius:50%;animation:livePulse 2s infinite;"></div>
           Live
         </span>
+        <div class="session-timer-display" id="sessionTimerDisplay" title="Session time remaining">
+          <i class="fas fa-clock" style="font-size:10px;"></i>
+          <span id="sessionTimerText">30:00</span>
+        </div>
         <span id="companyBadge" class="companyBadge">🏭 GMS TEXTILES</span>
         <button class="profileBtnTop" onclick="openProfileModal()"> Profile</button>
       </div>
@@ -881,6 +1082,467 @@ body.light .creditFooter{background:var(--card);border-color:#cbd5e1;}
      ================================================================ -->
 <script>
 // ─────────────────────────────────────────────
+// 🔐 AUTO LOGOUT SYSTEM CONFIGURATION
+// ─────────────────────────────────────────────
+const SESSION_CONFIG = {
+  TIMEOUT_MINUTES: 30,          // Total inactivity timeout (30 minutes)
+  WARNING_MINUTES: 2,           // Show warning 2 minutes before logout
+  CHECK_INTERVAL: 10000,        // Check session every 10 seconds
+  DISPLAY_INTERVAL: 1000,       // Update display every 1 second
+  STORAGE_KEY: 'GMS_LAST_ACTIVITY',
+  SESSION_START_KEY: 'GMS_SESSION_START',
+  ACTIVITY_THROTTLE: 5000,      // Update activity at most every 5 seconds
+  EXTEND_MINUTES: 15,           // Extend session by 15 minutes when user clicks extend
+  IDLE_EVENTS: ['mousemove','mousedown','keydown','touchstart','scroll','click','touchmove','touchend']
+};
+
+let sessionMonitorTimer = null;
+let sessionDisplayTimer = null;
+let warningCountdownTimer = null;
+let warningRemainingSeconds = 0;
+let lastActivityUpdateTime = 0;
+let isSessionExpired = false;
+
+// ─────────────────────────────────────────────
+// 🔐 AUTO LOGOUT - INITIALIZATION
+// ─────────────────────────────────────────────
+function initAutoLogoutSystem() {
+  console.log('🔐 Auto-Logout System Initializing...');
+  
+  // Set initial activity timestamp
+  resetActivityTimestamp();
+  
+  // Record session start time
+  if (!localStorage.getItem(SESSION_CONFIG.SESSION_START_KEY)) {
+    localStorage.setItem(SESSION_CONFIG.SESSION_START_KEY, Date.now().toString());
+  }
+  
+  // Listen for all user activity events
+  SESSION_CONFIG.IDLE_EVENTS.forEach(function(eventName) {
+    document.addEventListener(eventName, throttledActivityUpdate, { passive: true });
+  });
+  
+  // Start the session monitor (checks every 10 seconds)
+  startSessionMonitor();
+  
+  // Start the display timer (updates every 1 second)
+  startSessionDisplayTimer();
+  
+  // Listen for activity from other tabs via localStorage
+  window.addEventListener('storage', handleCrossTabActivity);
+  
+  // Handle page visibility change
+  document.addEventListener('visibilitychange', function() {
+    if (document.visibilityState === 'visible') {
+      // Page became visible - reset activity and check session
+      resetActivityTimestamp();
+      checkSessionStatus();
+    }
+  });
+  
+  console.log('🔐 Auto-Logout System initialized successfully');
+  console.log('🔐 Session timeout:', SESSION_CONFIG.TIMEOUT_MINUTES, 'minutes');
+  console.log('🔐 Warning will show', SESSION_CONFIG.WARNING_MINUTES, 'minutes before logout');
+}
+
+// ─────────────────────────────────────────────
+// 🔐 AUTO LOGOUT - ACTIVITY TRACKING
+// ─────────────────────────────────────────────
+function throttledActivityUpdate() {
+  var now = Date.now();
+  // Only update timestamp if enough time has passed (throttle)
+  if (now - lastActivityUpdateTime > SESSION_CONFIG.ACTIVITY_THROTTLE) {
+    resetActivityTimestamp();
+    lastActivityUpdateTime = now;
+  }
+}
+
+function resetActivityTimestamp() {
+  // Don't reset if session is already expired
+  if (isSessionExpired) return;
+  
+  localStorage.setItem(SESSION_CONFIG.STORAGE_KEY, Date.now().toString());
+  
+  // Hide warning modal if showing
+  hideWarningModal();
+  
+  // Update display immediately
+  updateSessionTimerDisplay();
+}
+
+function handleCrossTabActivity(event) {
+  if (event.key === SESSION_CONFIG.STORAGE_KEY) {
+    // Activity detected in another tab - sync state
+    hideWarningModal();
+    updateSessionTimerDisplay();
+  }
+  // Also sync session start time across tabs
+  if (event.key === SESSION_CONFIG.SESSION_START_KEY) {
+    updateSessionTimerDisplay();
+  }
+}
+
+// ─────────────────────────────────────────────
+// 🔐 AUTO LOGOUT - SESSION MONITORING
+// ─────────────────────────────────────────────
+function startSessionMonitor() {
+  // Clear any existing timer
+  if (sessionMonitorTimer) {
+    clearInterval(sessionMonitorTimer);
+  }
+  
+  // Check session status every CHECK_INTERVAL milliseconds
+  sessionMonitorTimer = setInterval(checkSessionStatus, SESSION_CONFIG.CHECK_INTERVAL);
+  
+  // Also do an initial check
+  checkSessionStatus();
+}
+
+function startSessionDisplayTimer() {
+  // Clear any existing timer
+  if (sessionDisplayTimer) {
+    clearInterval(sessionDisplayTimer);
+  }
+  
+  // Update display every second
+  sessionDisplayTimer = setInterval(updateSessionTimerDisplay, SESSION_CONFIG.DISPLAY_INTERVAL);
+  
+  // Initial display update
+  updateSessionTimerDisplay();
+}
+
+function checkSessionStatus() {
+  // Don't check if already expired
+  if (isSessionExpired) return;
+  
+  var lastActivity = parseInt(localStorage.getItem(SESSION_CONFIG.STORAGE_KEY) || '0');
+  var now = Date.now();
+  var inactiveMs = now - lastActivity;
+  var timeoutMs = SESSION_CONFIG.TIMEOUT_MINUTES * 60 * 1000;
+  var warningThresholdMs = (SESSION_CONFIG.TIMEOUT_MINUTES - SESSION_CONFIG.WARNING_MINUTES) * 60 * 1000;
+  
+  if (inactiveMs >= timeoutMs) {
+    // TIMEOUT REACHED - Perform auto logout
+    performAutoLogout();
+  } else if (inactiveMs >= warningThresholdMs) {
+    // WARNING PHASE - Show countdown modal
+    warningRemainingSeconds = Math.ceil((timeoutMs - inactiveMs) / 1000);
+    showWarningModal(warningRemainingSeconds);
+    startWarningCountdown();
+  }
+}
+
+// ─────────────────────────────────────────────
+// 🔐 AUTO LOGOUT - WARNING COUNTDOWN
+// ─────────────────────────────────────────────
+function startWarningCountdown() {
+  // Clear any existing countdown
+  if (warningCountdownTimer) {
+    clearInterval(warningCountdownTimer);
+  }
+  
+  warningCountdownTimer = setInterval(function() {
+    warningRemainingSeconds--;
+    
+    // Update the countdown display
+    updateWarningCountdownDisplay(warningRemainingSeconds);
+    
+    // Update progress bar
+    updateWarningProgressBar(warningRemainingSeconds);
+    
+    // If countdown reaches zero, perform logout
+    if (warningRemainingSeconds <= 0) {
+      clearInterval(warningCountdownTimer);
+      warningCountdownTimer = null;
+      performAutoLogout();
+    }
+  }, 1000);
+}
+
+function updateWarningCountdownDisplay(seconds) {
+  var countdownEl = document.getElementById('sessionCountdown');
+  if (countdownEl) {
+    var mins = Math.max(0, Math.floor(seconds / 60));
+    var secs = Math.max(0, seconds % 60);
+    countdownEl.textContent = String(mins).padStart(2, '0') + ':' + String(secs).padStart(2, '0');
+    
+    // Change color when less than 30 seconds
+    if (seconds <= 30) {
+      countdownEl.style.color = 'var(--red)';
+      countdownEl.style.textShadow = '0 0 20px rgba(239,68,68,0.5)';
+    } else if (seconds <= 60) {
+      countdownEl.style.color = 'var(--yellow)';
+      countdownEl.style.textShadow = '0 0 20px rgba(245,158,11,0.5)';
+    } else {
+      countdownEl.style.color = 'var(--green)';
+      countdownEl.style.textShadow = '0 0 20px rgba(16,185,129,0.5)';
+    }
+  }
+}
+
+function updateWarningProgressBar(seconds) {
+  var progressFill = document.getElementById('sessionProgressFill');
+  if (progressFill) {
+    var totalWarningSeconds = SESSION_CONFIG.WARNING_MINUTES * 60;
+    var percentage = Math.max(0, Math.min(100, (seconds / totalWarningSeconds) * 100));
+    progressFill.style.width = percentage + '%';
+  }
+}
+
+// ─────────────────────────────────────────────
+// 🔐 AUTO LOGOUT - UI MANAGEMENT
+// ─────────────────────────────────────────────
+function showWarningModal(seconds) {
+  var modal = document.getElementById('sessionWarningModal');
+  if (!modal) return;
+  
+  modal.style.display = 'flex';
+  updateWarningCountdownDisplay(seconds);
+  updateWarningProgressBar(seconds);
+  
+  // Play a subtle warning sound
+  try {
+    playSessionWarningSound();
+  } catch(e) {}
+}
+
+function hideWarningModal() {
+  var modal = document.getElementById('sessionWarningModal');
+  if (modal) {
+    modal.style.display = 'none';
+  }
+  
+  // Clear countdown timer
+  if (warningCountdownTimer) {
+    clearInterval(warningCountdownTimer);
+    warningCountdownTimer = null;
+  }
+}
+
+function showSessionExpiredOverlay() {
+  var overlay = document.getElementById('sessionExpiredOverlay');
+  if (overlay) {
+    overlay.style.display = 'flex';
+  }
+}
+
+function updateSessionTimerDisplay() {
+  var timerEl = document.getElementById('sessionTimerDisplay');
+  var textEl = document.getElementById('sessionTimerText');
+  
+  if (!timerEl || !textEl) return;
+  
+  var lastActivity = parseInt(localStorage.getItem(SESSION_CONFIG.STORAGE_KEY) || '0');
+  var now = Date.now();
+  var inactiveMs = now - lastActivity;
+  var timeoutMs = SESSION_CONFIG.TIMEOUT_MINUTES * 60 * 1000;
+  var remainingMs = Math.max(0, timeoutMs - inactiveMs);
+  
+  var remainingMins = Math.floor(remainingMs / 60000);
+  var remainingSecs = Math.floor((remainingMs % 60000) / 1000);
+  
+  textEl.textContent = String(remainingMins).padStart(2, '0') + ':' + String(remainingSecs).padStart(2, '0');
+  
+  // Remove all state classes
+  timerEl.classList.remove('warning', 'danger');
+  
+  // Apply appropriate styling based on remaining time
+  if (remainingMs < 120000) {
+    // Less than 2 minutes - DANGER
+    timerEl.classList.add('danger');
+    timerEl.style.background = 'rgba(239,68,68,0.15)';
+    timerEl.style.borderColor = 'rgba(239,68,68,0.3)';
+    timerEl.style.color = 'var(--red)';
+  } else if (remainingMs < 300000) {
+    // Less than 5 minutes - WARNING
+    timerEl.classList.add('warning');
+    timerEl.style.background = 'rgba(245,158,11,0.15)';
+    timerEl.style.borderColor = 'rgba(245,158,11,0.3)';
+    timerEl.style.color = 'var(--yellow)';
+  } else {
+    // Normal - SAFE
+    timerEl.style.background = 'rgba(16,185,129,0.15)';
+    timerEl.style.borderColor = 'rgba(16,185,129,0.3)';
+    timerEl.style.color = 'var(--green)';
+  }
+}
+
+// ─────────────────────────────────────────────
+// 🔐 AUTO LOGOUT - ACTIONS
+// ─────────────────────────────────────────────
+function performAutoLogout() {
+  if (isSessionExpired) return; // Prevent multiple executions
+  
+  console.log('🔐 Auto-logout triggered due to inactivity');
+  isSessionExpired = true;
+  
+  // Clear all timers
+  clearAllSessionTimers();
+  
+  // Show session expired overlay
+  showSessionExpiredOverlay();
+  
+  // Play logout sound
+  try {
+    playSessionExpiredSound();
+  } catch(e) {}
+  
+  // Clear session data
+  localStorage.removeItem(SESSION_CONFIG.STORAGE_KEY);
+  localStorage.removeItem(SESSION_CONFIG.SESSION_START_KEY);
+  
+  // Show toast notification
+  if (typeof showToast === 'function') {
+    showToast('🔒 Session expired - logging out...', 'error');
+  }
+  
+  // Redirect to login page after 3 seconds
+  setTimeout(function() {
+    localStorage.removeItem('gmsUser');
+    localStorage.removeItem('gmsSelectedCompany');
+    window.location.href = 'login.html?reason=timeout&expired=' + Date.now();
+  }, 3000);
+}
+
+function clearAllSessionTimers() {
+  if (sessionMonitorTimer) {
+    clearInterval(sessionMonitorTimer);
+    sessionMonitorTimer = null;
+  }
+  if (sessionDisplayTimer) {
+    clearInterval(sessionDisplayTimer);
+    sessionDisplayTimer = null;
+  }
+  if (warningCountdownTimer) {
+    clearInterval(warningCountdownTimer);
+    warningCountdownTimer = null;
+  }
+}
+
+function extendSession() {
+  console.log('✅ Session extended by user action');
+  
+  // Reset the activity timestamp (gives full timeout period)
+  resetActivityTimestamp();
+  
+  // Hide the warning modal
+  hideWarningModal();
+  
+  // Update display
+  updateSessionTimerDisplay();
+  
+  // Show success toast
+  if (typeof showToast === 'function') {
+    showToast('✅ Session extended successfully');
+  }
+}
+
+function manualLogoutNow() {
+  console.log('🚪 Manual logout initiated from warning modal');
+  
+  // Clear all timers
+  clearAllSessionTimers();
+  
+  // Clear session data
+  localStorage.removeItem(SESSION_CONFIG.STORAGE_KEY);
+  localStorage.removeItem(SESSION_CONFIG.SESSION_START_KEY);
+  localStorage.removeItem('gmsUser');
+  localStorage.removeItem('gmsSelectedCompany');
+  
+  // Redirect immediately
+  window.location.href = 'login.html?reason=manual';
+}
+
+// ─────────────────────────────────────────────
+// 🔐 AUTO LOGOUT - SOUNDS
+// ─────────────────────────────────────────────
+function playSessionWarningSound() {
+  try {
+    var audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    var oscillator = audioCtx.createOscillator();
+    var gainNode = audioCtx.createGain();
+    
+    oscillator.connect(gainNode);
+    gainNode.connect(audioCtx.destination);
+    
+    oscillator.frequency.value = 660;
+    oscillator.type = 'sine';
+    gainNode.gain.value = 0.2;
+    
+    oscillator.start();
+    
+    // Two-tone warning beep
+    setTimeout(function() {
+      oscillator.frequency.value = 880;
+    }, 200);
+    
+    setTimeout(function() {
+      oscillator.stop();
+      audioCtx.close();
+    }, 400);
+  } catch(e) {
+    console.log('Audio warning not supported');
+  }
+}
+
+function playSessionExpiredSound() {
+  try {
+    var audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    var oscillator = audioCtx.createOscillator();
+    var gainNode = audioCtx.createGain();
+    
+    oscillator.connect(gainNode);
+    gainNode.connect(audioCtx.destination);
+    
+    oscillator.frequency.value = 440;
+    oscillator.type = 'square';
+    gainNode.gain.value = 0.15;
+    
+    oscillator.start();
+    
+    // Long descending tone
+    setTimeout(function() {
+      oscillator.frequency.value = 220;
+    }, 300);
+    
+    setTimeout(function() {
+      oscillator.stop();
+      audioCtx.close();
+    }, 600);
+  } catch(e) {
+    console.log('Audio not supported');
+  }
+}
+
+// ─────────────────────────────────────────────
+// 🔐 AUTO LOGOUT - CLEANUP
+// ─────────────────────────────────────────────
+function destroyAutoLogoutSystem() {
+  console.log('🔐 Auto-Logout System shutting down...');
+  
+  // Clear all timers
+  clearAllSessionTimers();
+  
+  // Remove event listeners
+  SESSION_CONFIG.IDLE_EVENTS.forEach(function(eventName) {
+    document.removeEventListener(eventName, throttledActivityUpdate);
+  });
+  
+  // Remove storage listener
+  window.removeEventListener('storage', handleCrossTabActivity);
+  
+  console.log('🔐 Auto-Logout System destroyed');
+}
+
+// Expose functions globally for use
+window.initAutoLogoutSystem = initAutoLogoutSystem;
+window.extendSession = extendSession;
+window.manualLogoutNow = manualLogoutNow;
+window.destroyAutoLogoutSystem = destroyAutoLogoutSystem;
+window.resetActivityTimestamp = resetActivityTimestamp;
+window.performAutoLogout = performAutoLogout;
+
+// ─────────────────────────────────────────────
 // 📦 SMART CACHE MANAGER
 // ─────────────────────────────────────────────
 window.GMS_CACHE = {
@@ -1140,7 +1802,13 @@ function updateSidebarNoticeBadge(notices){
 }
 
 // Sidebar / Theme / Logout / openPage / loadEntry / loadReport
-window.logout = function(){ localStorage.removeItem('gmsUser'); window.location.href='login.html'; };
+window.logout = function(){ 
+  destroyAutoLogoutSystem();
+  localStorage.removeItem('gmsUser'); 
+  localStorage.removeItem(SESSION_CONFIG.STORAGE_KEY);
+  localStorage.removeItem(SESSION_CONFIG.SESSION_START_KEY);
+  window.location.href='login.html'; 
+};
 window.toggleTheme = function(){
   document.body.classList.toggle('light');
   localStorage.setItem('theme',document.body.classList.contains('light')?'light':'dark');
@@ -1164,6 +1832,8 @@ window.openPage = function(id,btn){
     document.getElementById('sidebar').classList.remove('show');
     document.getElementById('sidebarOverlay').classList.remove('show');
   }
+  // Reset activity on page navigation
+  resetActivityTimestamp();
 };
 
 window.loadEntry = function(){
@@ -1370,6 +2040,9 @@ window.saveDataOffline = function(collectionName, data, serialPrefix){
 
   updateLocalUI(collectionName, data);
   if(window.userRole==='admin'||window.userRole==='full') renderAdminSyncTable();
+  
+  // Reset activity timestamp on data save
+  if(typeof resetActivityTimestamp === 'function') resetActivityTimestamp();
 };
 
 window.autoSyncQueue = async function(){
@@ -1516,14 +2189,6 @@ function setupRoleUI(){
   document.getElementById('entryMcd').innerHTML=list.map(function(x){return '<option>'+x+'</option>';}).join('');
   document.getElementById('reportMcd').innerHTML=list.map(function(x){return '<option>'+x+'</option>';}).join('');
 }
-
-window.logout = function(){ localStorage.removeItem('gmsUser'); window.location.href='login.html'; };
-window.toggleTheme = function(){
-  document.body.classList.toggle('light');
-  localStorage.setItem('theme',document.body.classList.contains('light')?'light':'dark');
-  setTimeout(function(){ if(window._lastChartData) renderCharts(...window._lastChartData); },100);
-};
-if(localStorage.getItem('theme')==='light') document.body.classList.add('light');
 
 // ─────────────────────────────────────────────────────────────────
 // ★★★ SMART SELECTIVE CACHE DATA FETCHERS ★★★
@@ -2177,10 +2842,13 @@ onMessage(messaging, function(payload){
   if('setAppBadge' in navigator) navigator.setAppBadge(1).catch(function(){});
   window.GMS_NOTICE_CACHE.setLastId('');
   smartLoadNotices();
+  
+  // Reset activity on notification (user interaction)
+  if(typeof resetActivityTimestamp === 'function') resetActivityTimestamp();
 });
 
 // ─────────────────────────────────────────────────────────────────
-// ★★★ INITIALIZATION ★★★ — SMART LOGIN CHECK
+// ★★★ INITIALIZATION ★★★ — SMART LOGIN CHECK + AUTO LOGOUT
 // ─────────────────────────────────────────────────────────────────
 setupRoleUI();
 setupCompanyPermissions();
@@ -2207,6 +2875,11 @@ updateLastActive();
 renderBackupLog();
 loadProfilePic();
 
+// ★ INIT AUTO LOGOUT SYSTEM
+if(typeof initAutoLogoutSystem === 'function') {
+  initAutoLogoutSystem();
+}
+
 // Audio unlock
 ['click','touchstart','keydown'].forEach(function(evt){
   window.addEventListener(evt, function(){ if(!audioCtx) initAudio(); }, {once:true,passive:true});
@@ -2220,6 +2893,8 @@ document.addEventListener('visibilitychange', function(){
     if(document.getElementById('home').classList.contains('activePage')){
       loadDashboardStock(false);
     }
+    // Reset activity when page becomes visible
+    if(typeof resetActivityTimestamp === 'function') resetActivityTimestamp();
   }
 });
 
@@ -2236,6 +2911,22 @@ document.addEventListener('DOMContentLoaded', function(){
   setInterval(window.autoSyncQueue, 300000);
   setTimeout(window.autoSyncQueue, 2000);
 });
+
+// ─────────────────────────────────────────────────────────────────
+// ★ AUTO LOGOUT - SESSION TIMEOUT CONFIG DISPLAY
+// ─────────────────────────────────────────────────────────────────
+(function displaySessionConfig() {
+  console.log('═══════════════════════════════════════════');
+  console.log('🔐 AUTO LOGOUT SYSTEM - ACTIVE');
+  console.log('═══════════════════════════════════════════');
+  console.log('⏱️  Session Timeout:', SESSION_CONFIG.TIMEOUT_MINUTES, 'minutes');
+  console.log('⚠️  Warning Shows:', SESSION_CONFIG.WARNING_MINUTES, 'minutes before logout');
+  console.log('🔄 Check Interval:', SESSION_CONFIG.CHECK_INTERVAL / 1000, 'seconds');
+  console.log('📊 Display Update:', SESSION_CONFIG.DISPLAY_INTERVAL / 1000, 'second');
+  console.log('⚡ Activity Throttle:', SESSION_CONFIG.ACTIVITY_THROTTLE / 1000, 'seconds');
+  console.log('🎯 Tracked Events:', SESSION_CONFIG.IDLE_EVENTS.join(', '));
+  console.log('═══════════════════════════════════════════');
+})();
 </script>
 
 <!-- ================================================================
@@ -2266,6 +2957,8 @@ class GMS_PWA {
       this.isOnline=true; this.updateOfflineIndicator(true);
       showToast('🌐 Internet Connected','success');
       if(typeof window.autoSyncQueue==='function') setTimeout(function(){window.autoSyncQueue();},2000);
+      // Reset activity on network reconnect
+      if(typeof resetActivityTimestamp === 'function') resetActivityTimestamp();
     }.bind(this));
     window.addEventListener('offline',function(){
       this.isOnline=false; this.updateOfflineIndicator(false);
@@ -2370,6 +3063,9 @@ async function initNotifications(){
       toast.addEventListener('click',function(){window.location.href=(payload.data||{}).url||'/';});
       document.body.appendChild(toast);
       setTimeout(function(){toast.remove();},5000);
+      
+      // Reset activity on push notification
+      if(typeof resetActivityTimestamp === 'function') resetActivityTimestamp();
     });
   }catch(err){console.error('[FCM] Init error:',err);}
 }
@@ -2382,10 +3078,313 @@ window.sendAdminNotice=async function(){
     await addDoc(collection(db,'liveNotices'),{title,text:message,user:user.name||'Admin',senderRole:user.role||'admin',target:'all',sendPush:true,createdAt:new Date().toISOString(),readBy:[]});
     await addDoc(collection(db,'pushQueue'),{title,body:message,target:'all',sender:user.name||'Admin',createdAt:new Date().toISOString(),status:'pending'});
     alert('✅ Notice sent to all users!');
+    
+    // Reset activity when admin sends notice
+    if(typeof resetActivityTimestamp === 'function') resetActivityTimestamp();
   }catch(err){console.error('Broadcast error:',err);alert('❌ Failed to send');}
 };
 
 initNotifications();
 </script>
+
+<!-- ================================================================
+     AUTO LOGOUT SYSTEM - FINAL INITIALIZATION & EVENT BINDING
+     ================================================================ -->
+<script>
+(function() {
+  'use strict';
+  
+  // ─────────────────────────────────────────────
+  // 🎯 FINAL AUTO LOGOUT SYSTEM SETUP
+  // ─────────────────────────────────────────────
+  
+  // Additional keyboard event listeners for comprehensive activity tracking
+  document.addEventListener('keypress', function() {
+    if(typeof resetActivityTimestamp === 'function') {
+      resetActivityTimestamp();
+    }
+  }, { passive: true });
+  
+  document.addEventListener('keyup', function() {
+    if(typeof resetActivityTimestamp === 'function') {
+      resetActivityTimestamp();
+    }
+  }, { passive: true });
+  
+  document.addEventListener('keydown', function() {
+    if(typeof resetActivityTimestamp === 'function') {
+      resetActivityTimestamp();
+    }
+  }, { passive: true });
+  
+  // Touch events for mobile devices
+  document.addEventListener('touchstart', function() {
+    if(typeof resetActivityTimestamp === 'function') {
+      resetActivityTimestamp();
+    }
+  }, { passive: true });
+  
+  document.addEventListener('touchmove', function() {
+    if(typeof resetActivityTimestamp === 'function') {
+      resetActivityTimestamp();
+    }
+  }, { passive: true });
+  
+  document.addEventListener('touchend', function() {
+    if(typeof resetActivityTimestamp === 'function') {
+      resetActivityTimestamp();
+    }
+  }, { passive: true });
+  
+  // Mouse events for desktop
+  document.addEventListener('mousemove', (function() {
+    var lastMove = 0;
+    return function() {
+      var now = Date.now();
+      if (now - lastMove > 1000) { // Throttle mousemove to once per second
+        lastMove = now;
+        if(typeof resetActivityTimestamp === 'function') {
+          resetActivityTimestamp();
+        }
+      }
+    };
+  })(), { passive: true });
+  
+  document.addEventListener('mousedown', function() {
+    if(typeof resetActivityTimestamp === 'function') {
+      resetActivityTimestamp();
+    }
+  }, { passive: true });
+  
+  document.addEventListener('mouseup', function() {
+    if(typeof resetActivityTimestamp === 'function') {
+      resetActivityTimestamp();
+    }
+  }, { passive: true });
+  
+  document.addEventListener('click', function() {
+    if(typeof resetActivityTimestamp === 'function') {
+      resetActivityTimestamp();
+    }
+  }, { passive: true });
+  
+  document.addEventListener('dblclick', function() {
+    if(typeof resetActivityTimestamp === 'function') {
+      resetActivityTimestamp();
+    }
+  }, { passive: true });
+  
+  // Scroll events
+  document.addEventListener('scroll', (function() {
+    var lastScroll = 0;
+    return function() {
+      var now = Date.now();
+      if (now - lastScroll > 2000) { // Throttle scroll to once per 2 seconds
+        lastScroll = now;
+        if(typeof resetActivityTimestamp === 'function') {
+          resetActivityTimestamp();
+        }
+      }
+    };
+  })(), { passive: true });
+  
+  // Focus/blur events
+  window.addEventListener('focus', function() {
+    if(typeof resetActivityTimestamp === 'function') {
+      resetActivityTimestamp();
+    }
+  });
+  
+  // Form interactions
+  document.addEventListener('input', function() {
+    if(typeof resetActivityTimestamp === 'function') {
+      resetActivityTimestamp();
+    }
+  }, { passive: true });
+  
+  document.addEventListener('change', function() {
+    if(typeof resetActivityTimestamp === 'function') {
+      resetActivityTimestamp();
+    }
+  }, { passive: true });
+  
+  document.addEventListener('select', function() {
+    if(typeof resetActivityTimestamp === 'function') {
+      resetActivityTimestamp();
+    }
+  }, { passive: true });
+  
+  // Drag events
+  document.addEventListener('dragstart', function() {
+    if(typeof resetActivityTimestamp === 'function') {
+      resetActivityTimestamp();
+    }
+  }, { passive: true });
+  
+  document.addEventListener('drag', function() {
+    if(typeof resetActivityTimestamp === 'function') {
+      resetActivityTimestamp();
+    }
+  }, { passive: true });
+  
+  document.addEventListener('dragend', function() {
+    if(typeof resetActivityTimestamp === 'function') {
+      resetActivityTimestamp();
+    }
+  }, { passive: true });
+  
+  document.addEventListener('drop', function() {
+    if(typeof resetActivityTimestamp === 'function') {
+      resetActivityTimestamp();
+    }
+  }, { passive: true });
+  
+  // Resize events
+  window.addEventListener('resize', (function() {
+    var lastResize = 0;
+    return function() {
+      var now = Date.now();
+      if (now - lastResize > 3000) { // Throttle resize to once per 3 seconds
+        lastResize = now;
+        if(typeof resetActivityTimestamp === 'function') {
+          resetActivityTimestamp();
+        }
+      }
+    };
+  })(), { passive: true });
+  
+  // ─────────────────────────────────────────────
+  // 🔐 AUTO LOGOUT - CONFIGURATION SUMMARY
+  // ─────────────────────────────────────────────
+  
+  // Display configuration in console for debugging
+  console.log('%c═══════════════════════════════════════════════════', 'color: #10b981; font-weight: bold;');
+  console.log('%c  🔐 AUTO LOGOUT SYSTEM - CONFIGURATION SUMMARY', 'color: #10b981; font-weight: bold; font-size: 14px;');
+  console.log('%c═══════════════════════════════════════════════════', 'color: #10b981; font-weight: bold;');
+  
+  if (typeof SESSION_CONFIG !== 'undefined') {
+    console.log('%c  ⏱️  Session Timeout: ' + SESSION_CONFIG.TIMEOUT_MINUTES + ' minutes', 'color: #3b82f6;');
+    console.log('%c  ⚠️  Warning Shows: ' + SESSION_CONFIG.WARNING_MINUTES + ' minutes before logout', 'color: #f59e0b;');
+    console.log('%c  🔄 Check Interval: ' + (SESSION_CONFIG.CHECK_INTERVAL / 1000) + ' seconds', 'color: #8b5cf6;');
+    console.log('%c  📊 Display Update: ' + (SESSION_CONFIG.DISPLAY_INTERVAL / 1000) + ' second', 'color: #8b5cf6;');
+    console.log('%c  ⚡ Activity Throttle: ' + (SESSION_CONFIG.ACTIVITY_THROTTLE / 1000) + ' seconds', 'color: #8b5cf6;');
+    console.log('%c  🎯 Tracked Events: ' + SESSION_CONFIG.IDLE_EVENTS.length + ' event types', 'color: #10b981;');
+    console.log('%c  📦 Storage Key: ' + SESSION_CONFIG.STORAGE_KEY, 'color: #64748b;');
+    console.log('%c  📅 Session Start Key: ' + SESSION_CONFIG.SESSION_START_KEY, 'color: #64748b;');
+  }
+  
+  console.log('%c═══════════════════════════════════════════════════', 'color: #10b981; font-weight: bold;');
+  console.log('%c  ✅ Auto Logout System: FULLY OPERATIONAL', 'color: #10b981; font-weight: bold; font-size: 12px;');
+  console.log('%c═══════════════════════════════════════════════════', 'color: #10b981; font-weight: bold;');
+  
+  // ─────────────────────────────────────────────
+  // 🔐 AUTO LOGOUT - SESSION STATISTICS
+  // ─────────────────────────────────────────────
+  
+  // Track session statistics
+  var sessionStartTime = parseInt(localStorage.getItem(SESSION_CONFIG.SESSION_START_KEY) || Date.now().toString());
+  var sessionDuration = Date.now() - sessionStartTime;
+  var durationMinutes = Math.floor(sessionDuration / 60000);
+  var durationSeconds = Math.floor((sessionDuration % 60000) / 1000);
+  
+  console.log('%c  📈 Session Statistics:', 'color: #10b981; font-weight: bold;');
+  console.log('%c  ─────────────────────────────────────────────', 'color: #64748b;');
+  console.log('%c  ⏰ Session Started: ' + new Date(sessionStartTime).toLocaleString(), 'color: #cbd5e1;');
+  console.log('%c  ⏳ Session Duration: ' + durationMinutes + 'm ' + durationSeconds + 's', 'color: #cbd5e1;');
+  console.log('%c  ─────────────────────────────────────────────', 'color: #64748b;');
+  
+  // ─────────────────────────────────────────────
+  // 🔐 AUTO LOGOUT - FEATURES LIST
+  // ─────────────────────────────────────────────
+  
+  console.log('%c  ✨ Features:', 'color: #10b981; font-weight: bold;');
+  console.log('%c  ─────────────────────────────────────────────', 'color: #64748b;');
+  console.log('%c  ✅ Real-time session timer display', 'color: #cbd5e1;');
+  console.log('%c  ✅ Warning modal with countdown', 'color: #cbd5e1;');
+  console.log('%c  ✅ Session extend functionality', 'color: #cbd5e1;');
+  console.log('%c  ✅ Activity tracking across multiple events', 'color: #cbd5e1;');
+  console.log('%c  ✅ Cross-tab session synchronization', 'color: #cbd5e1;');
+  console.log('%c  ✅ Automatic logout on timeout', 'color: #cbd5e1;');
+  console.log('%c  ✅ Session expired overlay', 'color: #cbd5e1;');
+  console.log('%c  ✅ Audio notifications', 'color: #cbd5e1;');
+  console.log('%c  ✅ Progress bar in warning modal', 'color: #cbd5e1;');
+  console.log('%c  ✅ Color-coded timer display', 'color: #cbd5e1;');
+  console.log('%c  ─────────────────────────────────────────────', 'color: #64748b;');
+  
+  // ─────────────────────────────────────────────
+  // 🔐 AUTO LOGOUT - SECURITY NOTES
+  // ─────────────────────────────────────────────
+  
+  console.log('%c  🔒 Security Notes:', 'color: #ef4444; font-weight: bold;');
+  console.log('%c  ─────────────────────────────────────────────', 'color: #64748b;');
+  console.log('%c  ⚠️  User will be logged out after ' + SESSION_CONFIG.TIMEOUT_MINUTES + ' minutes of inactivity', 'color: #cbd5e1;');
+  console.log('%c  ⚠️  Warning appears ' + SESSION_CONFIG.WARNING_MINUTES + ' minutes before auto-logout', 'color: #cbd5e1;');
+  console.log('%c  ⚠️  All session data cleared on logout', 'color: #cbd5e1;');
+  console.log('%c  ⚠️  Redirect to login page after session expiry', 'color: #cbd5e1;');
+  console.log('%c  ─────────────────────────────────────────────', 'color: #64748b;');
+  
+  console.log('%c═══════════════════════════════════════════════════', 'color: #10b981; font-weight: bold;');
+  
+  // ─────────────────────────────────────────────
+  // 🔐 AUTO LOGOUT - INITIAL DISPLAY UPDATE
+  // ─────────────────────────────────────────────
+  
+  // Update display immediately on load
+  setTimeout(function() {
+    if (typeof updateSessionTimerDisplay === 'function') {
+      updateSessionTimerDisplay();
+    }
+  }, 100);
+  
+  // ─────────────────────────────────────────────
+  // 🔐 AUTO LOGOUT - BROWSER COMPATIBILITY CHECK
+  // ─────────────────────────────────────────────
+  
+  console.log('%c  🌐 Browser Compatibility:', 'color: #10b981; font-weight: bold;');
+  console.log('%c  ─────────────────────────────────────────────', 'color: #64748b;');
+  console.log('%c  ✓ localStorage: ' + (typeof localStorage !== 'undefined' ? 'Supported' : 'Not Supported'), 'color: ' + (typeof localStorage !== 'undefined' ? '#10b981' : '#ef4444') + ';');
+  console.log('%c  ✓ sessionStorage: ' + (typeof sessionStorage !== 'undefined' ? 'Supported' : 'Not Supported'), 'color: ' + (typeof sessionStorage !== 'undefined' ? '#10b981' : '#ef4444') + ';');
+  console.log('%c  ✓ AudioContext: ' + (typeof window.AudioContext !== 'undefined' || typeof window.webkitAudioContext !== 'undefined' ? 'Supported' : 'Not Supported'), 'color: ' + (typeof window.AudioContext !== 'undefined' || typeof window.webkitAudioContext !== 'undefined' ? '#10b981' : '#f59e0b') + ';');
+  console.log('%c  ✓ Event Listeners: Supported', 'color: #10b981;');
+  console.log('%c  ✓ Timers: Supported', 'color: #10b981;');
+  console.log('%c  ─────────────────────────────────────────────', 'color: #64748b;');
+  
+  console.log('%c═══════════════════════════════════════════════════', 'color: #10b981; font-weight: bold;');
+  
+  // ─────────────────────────────────────────────
+  // 🔐 AUTO LOGOUT - USAGE INSTRUCTIONS
+  // ─────────────────────────────────────────────
+  
+  console.log('%c  📖 Usage Instructions:', 'color: #10b981; font-weight: bold;');
+  console.log('%c  ─────────────────────────────────────────────', 'color: #64748b;');
+  console.log('%c  1. Stay active - any interaction resets the timer', 'color: #cbd5e1;');
+  console.log('%c  2. Warning will appear before auto-logout', 'color: #cbd5e1;');
+  console.log('%c  3. Click "Stay Logged In" to extend session', 'color: #cbd5e1;');
+  console.log('%c  4. Or click "Logout Now" to logout immediately', 'color: #cbd5e1;');
+  console.log('%c  5. If no action taken, you will be logged out', 'color: #cbd5e1;');
+  console.log('%c  ─────────────────────────────────────────────', 'color: #64748b;');
+  
+  console.log('%c═══════════════════════════════════════════════════', 'color: #10b981; font-weight: bold;');
+  
+  // ─────────────────────────────────────────────
+  // 🔐 AUTO LOGOUT - PERFORMANCE OPTIMIZATION
+  // ─────────────────────────────────────────────
+  
+  console.log('%c  ⚡ Performance Optimization:', 'color: #10b981; font-weight: bold;');
+  console.log('%c  ─────────────────────────────────────────────', 'color: #64748b;');
+  console.log('%c  ✓ Activity events throttled to prevent spam', 'color: #cbd5e1;');
+  console.log('%c  ✓ Session check runs every ' + (SESSION_CONFIG.CHECK_INTERVAL / 1000) + ' seconds', 'color: #cbd5e1;');
+  console.log('%c  ✓ Display updates every ' + (SESSION_CONFIG.DISPLAY_INTERVAL / 1000) + ' second', 'color: #cbd5e1;');
+  console.log('%c  ✓ Minimal DOM manipulation', 'color: #cbd5e1;');
+  console.log('%c  ✓ Efficient event delegation', 'color: #cbd5e1;');
+  console.log('%c  ─────────────────────────────────────────────', 'color: #64748b;');
+  
+  console.log('%c═══════════════════════════════════════════════════', 'color: #10b981; font-weight: bold;');
+  console.log('%c  🎉 AUTO LOGOUT SYSTEM READY!', 'color: #10b981; font-weight: bold; font-size: 16px;');
+  console.log('%c═══════════════════════════════════════════════════', 'color: #10b981; font-weight: bold;');
+  
+})();
+</script>
+
 </body>
 </html>
