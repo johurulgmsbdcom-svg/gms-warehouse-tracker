@@ -7,53 +7,6 @@
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   
-<!-- ==================== AUTO LOGOUT SESSION MANAGEMENT ==================== -->
-<script>
-  // ─────────────────────────────────────────────
-  // ✅ 1 ঘণ্টা Inactivity পর Auto Logout
-  // ─────────────────────────────────────────────
-  const SESSION_KEY = 'gmsUserLoggedIn';
-  const EXPIRY_KEY  = 'gmsSessionExpiry';
-  const TIMEOUT_MS  = 60 * 60 * 1000; // 1 ঘণ্টা
-
-  function isSessionValid() {
-    const loggedIn = localStorage.getItem(SESSION_KEY);
-    const expiry   = parseInt(localStorage.getItem(EXPIRY_KEY) || '0');
-    return loggedIn === 'true' && Date.now() < expiry;
-  }
-
-  function resetSessionTimer() {
-    localStorage.setItem(EXPIRY_KEY, Date.now() + TIMEOUT_MS);
-  }
-
-  function forceLogout() {
-    localStorage.removeItem(SESSION_KEY);
-    localStorage.removeItem(EXPIRY_KEY);
-    localStorage.removeItem('gmsUser');
-    window.location.href = 'login.html';
-  }
-
-  // Page load এ চেক করো
-  if (!isSessionValid()) {
-    forceLogout();
-  }
-
-  // কাজ করলে Timer Reset
-  const activityEvents = ['mousemove', 'keydown', 'click', 'scroll', 'touchstart', 'touchmove', 'keypress'];
-  activityEvents.forEach(evt => {
-    document.addEventListener(evt, resetSessionTimer, { passive: true });
-  });
-
-  // প্রতি ৩০ সেকেন্ডে চেক
-  setInterval(() => {
-    if (!isSessionValid()) {
-      forceLogout();
-    }
-  }, 30000);
-
-  window.forceLogout = forceLogout;
-</script>
-<!-- ==================== AUTO LOGOUT END ==================== -->
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800;900&display=swap');
 
