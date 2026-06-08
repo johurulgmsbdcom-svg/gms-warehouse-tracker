@@ -575,7 +575,7 @@ body.light .creditFooter{background:var(--card);border-color:#cbd5e1;}
   <!-- HOME PAGE -->
   <div id="home" class="page activePage">
     <div class="dashTitle">📊 Dashboard Overview <span id="dashCompanyBadge" class="companyBadge">🏭 TEXTILES</span></div>
-    <div class="dashSub">Role Based Dashboard • Smart Cache Active • Firebase Reads Minimized</div>
+    <div class="dashSub">Role Based Dashboard • Smart Selective Cache Active • Firebase Reads Minimized</div>
 
     <!-- Admin Quota Alerts -->
     <div id="adminQuotaAlerts" style="display:none;">
@@ -1219,7 +1219,7 @@ window.loadReport = function(){
 </script>
 
 <!-- ================================================================
-     FIREBASE MODULE — SMART CACHE + ENTRY-TRIGGERED REFRESH
+     FIREBASE MODULE — SMART SELECTIVE CACHE + TIMESTAMP SYSTEM
      ================================================================ -->
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-app.js";
@@ -1282,6 +1282,9 @@ document.getElementById('loginInfo').innerText =
 const SYNC_QUEUE_KEY  = 'GMS_STEALTH_QUEUE';
 const COUNTER_KEY     = 'GMS_SERIAL_COUNTERS';
 const QUOTA_ALERT_KEY = 'GMS_QUOTA_LIMIT_ALERTS';
+// ★ NEW: Local timestamps key for selective cache
+const LOCAL_TIMESTAMPS_KEY = 'GMS_LOCAL_TIMESTAMPS';
+
 function getQueue(){ return JSON.parse(localStorage.getItem(SYNC_QUEUE_KEY)||'[]'); }
 function setQueue(q){ localStorage.setItem(SYNC_QUEUE_KEY, JSON.stringify(q)); }
 function getQuotaAlerts(){ return JSON.parse(localStorage.getItem(QUOTA_ALERT_KEY)||'{}'); }
@@ -1302,6 +1305,34 @@ const CACHE_KEYS = {
   ALL_DASHBOARD       : ['sewing_stock','twill_stock','accessories_stock','needle_floor_stock','grey_stock','billing_today','needle_issue_today','manpower_summary','firebase_counts']
 };
 
+// ─────────────────────────────────────────────────────────────────
+// ★ NEW: TIMESTAMP HELPER — Firebase system_sync collection এ লেখে
+// ─────────────────────────────────────────────────────────────────
+async function updateCollectionTimestamp(collectionName){
+  try{
+    await setDoc(doc(db, 'system_sync', collectionName), { lastUpdated: Date.now() }, { merge: true });
+    console.log('🕐 Timestamp updated for:', collectionName);
+  }catch(e){
+    console.warn('Timestamp update failed:', e);
+  }
+}
+// Global-এ expose করো — entry page থেকেও call করা যাবে
+window.updateCollectionTimestamp = updateCollectionTimestamp;
+
+// ─────────────────────────────────────────────────────────────────
+// ★ NEW: shouldUpdate — Firebase vs local timestamp তুলনা
+// ─────────────────────────────────────────────────────────────────
+function buildShouldUpdate(remoteTimestamps, forceAll){
+  return function(col){
+    if(forceAll) return true;
+    var local = JSON.parse(localStorage.getItem(LOCAL_TIMESTAMPS_KEY)||'{}');
+    if(!local[col]) return true;              // লোকাল নেই → আপডেট দরকার
+    var remote = remoteTimestamps[col]||0;
+    return remote > local[col];              // Firebase নতুন → আপডেট দরকার
+  };
+}
+
+// ─────────────────────────────────────────────────────────────────
 window.saveDataOffline = function(collectionName, data, serialPrefix){
   serialPrefix = serialPrefix||'';
   var queue = getQueue();
@@ -1327,6 +1358,11 @@ window.saveDataOffline = function(collectionName, data, serialPrefix){
     console.log('🗑️ Cache invalidated for:', collectionName);
   }
 
+  // ★ NEW: লোকাল timestamp ও মুছে দাও — পরের লোডে fresh নেবে
+  var localTS = JSON.parse(localStorage.getItem(LOCAL_TIMESTAMPS_KEY)||'{}');
+  delete localTS[collectionName];
+  localStorage.setItem(LOCAL_TIMESTAMPS_KEY, JSON.stringify(localTS));
+
   // Dashboard auto-update
   if(document.getElementById('home').classList.contains('activePage')){
     loadDashboardStock(true);
@@ -1348,6 +1384,8 @@ window.autoSyncQueue = async function(){
         await setDoc(doc(db,item.collection,item.id), item.data, {merge:true});
         item.status='synced'; item.syncedAt=new Date().toLocaleString();
         syncedIds.push(item.id);
+        // ★ NEW: Sync হলে Firebase timestamp আপডেট করো
+        await updateCollectionTimestamp(item.collection);
       }catch(err){
         if(err.code==='resource-exhausted'||err.code==='permission-denied'){
           console.log('⏸️ Sync paused (quota). Retry later.');
@@ -1428,7 +1466,12 @@ window.resetQuotaAlerts = function(){ localStorage.removeItem(QUOTA_ALERT_KEY); 
 function dailyQuotaReset(){
   var lastReset=localStorage.getItem('GMS_QUOTA_LAST_RESET');
   var today=new Date().toDateString();
-  if(lastReset!==today){ localStorage.removeItem(QUOTA_ALERT_KEY); localStorage.setItem('GMS_QUOTA_LAST_RESET',today); }
+  if(lastReset!==today){
+    localStorage.removeItem(QUOTA_ALERT_KEY);
+    // ★ NEW: প্রতিদিন local timestamps ও reset — দিনের শুরুতে fresh data
+    localStorage.removeItem(LOCAL_TIMESTAMPS_KEY);
+    localStorage.setItem('GMS_QUOTA_LAST_RESET',today);
+  }
 }
 
 // ─────────────────────────────────────────────────────────────────
@@ -1483,20 +1526,32 @@ window.toggleTheme = function(){
 if(localStorage.getItem('theme')==='light') document.body.classList.add('light');
 
 // ─────────────────────────────────────────────────────────────────
-// ★★★ SMART CACHE DATA FETCHERS ★★★
+// ★★★ SMART SELECTIVE CACHE DATA FETCHERS ★★★
+// shouldUpdate=true হলে Firebase থেকে, false হলে cache থেকে
 // ─────────────────────────────────────────────────────────────────
 
-async function cachedGetDocs(collectionName, cacheKey){
-  var cached = window.GMS_CACHE.get(cacheKey);
-  if(cached !== null){
-    var el=document.getElementById('cacheStatusText');
-    if(el) el.innerText='Cache: '+cacheKey+' ✅';
-    console.log('📦 Cache hit:', cacheKey);
-    return cached;
+async function cachedGetDocs(collectionName, cacheKey, shouldUpdate){
+  // shouldUpdate=false মানে cache থেকে নাও
+  if(shouldUpdate === false){
+    var cached = window.GMS_CACHE.get(cacheKey);
+    if(cached !== null){
+      var el=document.getElementById('cacheStatusText');
+      if(el) el.innerText='Cache: '+cacheKey+' ✅ (no change)';
+      console.log('📦 Selective cache hit (no Firebase read):', cacheKey);
+      return cached;
+    }
   }
-  console.log('🔥 Firebase read:', cacheKey);
-  var el=document.getElementById('cacheStatusText');
-  if(el) el.innerText='Firebase: '+cacheKey+' 🔥';
+  // shouldUpdate=true বা cache নেই → Firebase read
+  var cached2 = window.GMS_CACHE.get(cacheKey);
+  if(cached2 !== null && shouldUpdate !== true){
+    var el2=document.getElementById('cacheStatusText');
+    if(el2) el2.innerText='Cache: '+cacheKey+' ✅';
+    console.log('📦 Cache hit:', cacheKey);
+    return cached2;
+  }
+  console.log('🔥 Firebase read (selective):', cacheKey);
+  var el3=document.getElementById('cacheStatusText');
+  if(el3) el3.innerText='Firebase: '+cacheKey+' 🔥';
   var snap = await getDocs(collection(db, collectionName));
   var rows = [];
   snap.forEach(function(d){ rows.push({...d.data(), _docId:d.id}); });
@@ -1505,9 +1560,9 @@ async function cachedGetDocs(collectionName, cacheKey){
   return rows;
 }
 
-async function getLatestPresent(collectionName, openingStock){
+async function getLatestPresent(collectionName, openingStock, shouldUpdate){
   var cacheKey = CACHE_KEYS[collectionName]||('stock_'+collectionName);
-  var rows = await cachedGetDocs(collectionName, cacheKey);
+  var rows = await cachedGetDocs(collectionName, cacheKey, shouldUpdate);
   rows = rows.filter(function(x){return !!x.date;});
   rows.sort(function(a,b){return a.date.localeCompare(b.date);});
   var r=0, dv=0;
@@ -1515,8 +1570,8 @@ async function getLatestPresent(collectionName, openingStock){
   return openingStock+r-dv;
 }
 
-async function getManpowerSummary(){
-  var rows = await cachedGetDocs('manpower', CACHE_KEYS.manpower);
+async function getManpowerSummary(shouldUpdate){
+  var rows = await cachedGetDocs('manpower', CACHE_KEYS.manpower, shouldUpdate);
   var map={}, totalCount=0, totalSalary=0;
   rows.forEach(function(x){
     var m=x.mcd||'UNKNOWN';
@@ -1529,8 +1584,8 @@ async function getManpowerSummary(){
   return{map,totalCount,totalSalary};
 }
 
-async function getNeedleFloorStock(){
-  var rows = await cachedGetDocs('dailyPosting', CACHE_KEYS.dailyPosting);
+async function getNeedleFloorStock(shouldUpdate){
+  var rows = await cachedGetDocs('dailyPosting', CACHE_KEYS.dailyPosting, shouldUpdate);
   var latestByFloor={};
   rows.forEach(function(x){
     if(x.floor&&x.date){
@@ -1548,8 +1603,8 @@ async function getNeedleFloorStock(){
   return{floorStocks,total};
 }
 
-async function getGreyData(){
-  var rows = await cachedGetDocs('greyFabricStock', CACHE_KEYS.greyFabricStock);
+async function getGreyData(shouldUpdate){
+  var rows = await cachedGetDocs('greyFabricStock', CACHE_KEYS.greyFabricStock, shouldUpdate);
   var docs = rows.filter(function(x){return x.date&&x.rows&&x.rows.length>0;});
   docs.sort(function(a,b){return (b.date||'').localeCompare(a.date||'');});
   var latest=docs[0]||{rows:[],date:''};
@@ -1562,8 +1617,8 @@ async function getGreyData(){
   return{labels,data,total,date:latest.date||''};
 }
 
-async function getBillingToday(){
-  var rows = await cachedGetDocs('billingManpowerReport', CACHE_KEYS.billingManpowerReport);
+async function getBillingToday(shouldUpdate){
+  var rows = await cachedGetDocs('billingManpowerReport', CACHE_KEYS.billingManpowerReport, shouldUpdate);
   var t=today(), total=0,leave=0,absent=0,present=0;
   rows.forEach(function(x){
     if(x.date===t){total+=Number(x.totalManpower)||0;leave+=Number(x.leave)||0;absent+=Number(x.absent)||0;present+=Number(x.present)||0;}
@@ -1571,8 +1626,8 @@ async function getBillingToday(){
   return{total,leave,absent,present};
 }
 
-async function getNeedleIssueToday(){
-  var rows = await cachedGetDocs('needleDailyReport', CACHE_KEYS.needleDailyReport);
+async function getNeedleIssueToday(shouldUpdate){
+  var rows = await cachedGetDocs('needleDailyReport', CACHE_KEYS.needleDailyReport, shouldUpdate);
   rows.sort(function(a,b){return (b.date||'').localeCompare(a.date||'');});
   var latest=rows[0]||{};
   return{broken:parseNum(latest.brokenNeedle),missing:parseNum(latest.missingNeedle),change:parseNum(latest.changeNeedle),date:latest.date||''};
@@ -1765,9 +1820,15 @@ function renderCharts(sewing,accessories,twill,floorStocks,grey,billing,needleIs
 }
 
 // ─────────────────────────────────────────────────────────────────
-// ★★★ MAIN DASHBOARD LOADER ★★★
+// ★★★ MAIN DASHBOARD LOADER — SMART SELECTIVE CACHE ★★★
+//
+// কীভাবে কাজ করে:
+// 1. Firebase থেকে system_sync পড়ে (মাত্র 1 read)
+// 2. Local timestamps এর সাথে তুলনা করে
+// 3. শুধু পরিবর্তিত collection গুলো Firebase থেকে নেয়
+// 4. বাকিগুলো cache থেকে নেয় (0 read)
 // ─────────────────────────────────────────────────────────────────
-window.loadDashboardStock = async function(force){
+window.loadDashboardStock = async function(forceAll){
   if(!canUserSeeCompany(window.currentCompany)){
     document.getElementById('textileDashboard').style.display='none';
     document.getElementById('compositeDashboard').style.display='none';
@@ -1784,29 +1845,77 @@ window.loadDashboardStock = async function(force){
   document.getElementById('textileDashboard').style.display='block';
   document.getElementById('compositeDashboard').style.display='none';
 
-  if(force===true){
+  // forceAll=true হলে সব cache clear করো
+  if(forceAll===true){
     window.GMS_CACHE.invalidate(CACHE_KEYS.ALL_DASHBOARD);
-    console.log('🗑️ Force: all dashboard cache cleared');
+    localStorage.removeItem(LOCAL_TIMESTAMPS_KEY);
+    console.log('🗑️ Force: all dashboard cache + timestamps cleared');
   }
 
   var statusEl=document.getElementById('cacheStatusText');
-  if(statusEl) statusEl.innerText='Loading dashboard...';
+  if(statusEl) statusEl.innerText='🔍 Checking updates...';
 
   try{
-    var sewing      = await getLatestPresent('sewingThread',133322);
-    var twill       = await getLatestPresent('twillTape',171255);
-    var accessories = await getLatestPresent('accessoriesSample',21514393);
-    var needleData  = await getNeedleFloorStock();
-    var grey        = await getGreyData();
-    var billing     = await getBillingToday();
-    var needleIssue = await getNeedleIssueToday();
+    // ★ STEP 1: Firebase থেকে system_sync পড়ো (মাত্র 1 read)
+    var remoteTimestamps = {};
+    try{
+      var syncSnap = await getDocs(collection(db, 'system_sync'));
+      window.GMS_CACHE.incRead(1);
+      syncSnap.forEach(function(d){ remoteTimestamps[d.id] = d.data().lastUpdated||0; });
+      console.log('🕐 Remote timestamps fetched:', Object.keys(remoteTimestamps).length, 'collections');
+    }catch(e){
+      console.warn('system_sync read failed, using full cache:', e);
+    }
+
+    // ★ STEP 2: shouldUpdate function তৈরি করো
+    var shouldUpdate = buildShouldUpdate(remoteTimestamps, forceAll===true);
+
+    // ★ STEP 3: Selective data fetch — শুধু পরিবর্তিত section গুলো Firebase থেকে
+    var sewingNeedsUpdate      = shouldUpdate('sewingThread');
+    var twillNeedsUpdate       = shouldUpdate('twillTape');
+    var accessoriesNeedsUpdate = shouldUpdate('accessoriesSample');
+    var needleNeedsUpdate      = shouldUpdate('dailyPosting');
+    var greyNeedsUpdate        = shouldUpdate('greyFabricStock');
+    var billingNeedsUpdate     = shouldUpdate('billingManpowerReport');
+    var needleIssueNeedsUpdate = shouldUpdate('needleDailyReport');
+    var manpowerNeedsUpdate    = shouldUpdate('manpower');
+
+    // Console log: কোনটা update হবে কোনটা cache থেকে
+    console.log('📊 Selective Load Plan:', {
+      sewingThread: sewingNeedsUpdate?'🔥Firebase':'📦Cache',
+      twillTape: twillNeedsUpdate?'🔥Firebase':'📦Cache',
+      accessoriesSample: accessoriesNeedsUpdate?'🔥Firebase':'📦Cache',
+      dailyPosting: needleNeedsUpdate?'🔥Firebase':'📦Cache',
+      greyFabricStock: greyNeedsUpdate?'🔥Firebase':'📦Cache',
+      billingManpowerReport: billingNeedsUpdate?'🔥Firebase':'📦Cache',
+      needleDailyReport: needleIssueNeedsUpdate?'🔥Firebase':'📦Cache',
+      manpower: manpowerNeedsUpdate?'🔥Firebase':'📦Cache',
+    });
+
+    if(statusEl) statusEl.innerText='⚡ Selective loading...';
+
+    var sewing      = await getLatestPresent('sewingThread',133322, sewingNeedsUpdate);
+    var twill       = await getLatestPresent('twillTape',171255, twillNeedsUpdate);
+    var accessories = await getLatestPresent('accessoriesSample',21514393, accessoriesNeedsUpdate);
+    var needleData  = await getNeedleFloorStock(needleNeedsUpdate);
+    var grey        = await getGreyData(greyNeedsUpdate);
+    var billing     = await getBillingToday(billingNeedsUpdate);
+    var needleIssue = await getNeedleIssueToday(needleIssueNeedsUpdate);
     var firebase    = await getFirebaseCounts();
-    var mpData      = await getManpowerSummary();
+    var mpData      = await getManpowerSummary(manpowerNeedsUpdate);
     var manpower    = mpData.map;
     var allowed     = allowedMCDList();
 
+    // ★ STEP 4: Local timestamps আপডেট করো — পরের বার comparison এর জন্য
+    var newLocalTS = JSON.parse(localStorage.getItem(LOCAL_TIMESTAMPS_KEY)||'{}');
+    Object.keys(remoteTimestamps).forEach(function(col){
+      newLocalTS[col] = remoteTimestamps[col];
+    });
+    localStorage.setItem(LOCAL_TIMESTAMPS_KEY, JSON.stringify(newLocalTS));
+
     if(statusEl) statusEl.innerText='Dashboard loaded ✅';
 
+    // UI Update
     if(isBillingAllowed()){
       document.getElementById('attTotal').innerText=billing.total;
       document.getElementById('attLeave').innerText=billing.leave;
@@ -1851,6 +1960,32 @@ window.loadDashboardStock = async function(force){
   }
 };
 
+// ─────────────────────────────────────────────────────────────────
+// ★ NEW: REALTIME DASHBOARD SYNC — system_sync এ পরিবর্তন হলে
+// অন্য ব্যবহারকারীর entry-ও আপনার ড্যাশবোর্ডে দেখাবে
+// ─────────────────────────────────────────────────────────────────
+function setupRealtimeDashboardSync(){
+  var syncCol = collection(db, 'system_sync');
+  onSnapshot(syncCol, function(snapshot){
+    // Remote timestamps আপডেট হয়েছে — কোনটা বদলেছে দেখো
+    var remoteTS = {};
+    snapshot.forEach(function(d){ remoteTS[d.id] = d.data().lastUpdated||0; });
+
+    var localTS = JSON.parse(localStorage.getItem(LOCAL_TIMESTAMPS_KEY)||'{}');
+    var changed = Object.keys(remoteTS).filter(function(col){
+      return !localTS[col] || remoteTS[col] > localTS[col];
+    });
+
+    if(changed.length > 0){
+      console.log('🔔 Realtime: changes detected in', changed);
+      // Dashboard active থাকলে selective reload
+      if(document.getElementById('home').classList.contains('activePage')){
+        loadDashboardStock(false); // false = selective, শুধু changed গুলো load
+      }
+    }
+  });
+}
+
 function updateLimitBox(firebase){
   var approxMB=0, storagePercent=0;
   if(firebase){approxMB=firebase.totalCount||0; storagePercent=firebase.storagePercent||0;}
@@ -1877,7 +2012,7 @@ function updateLimitBox(firebase){
 }
 
 // ─────────────────────────────────────────────────────────────────
-// BACKUP FUNCTIONS
+// BACKUP FUNCTIONS (আগের মতো)
 // ─────────────────────────────────────────────────────────────────
 function addBackupLog(type,details){
   var logs=JSON.parse(localStorage.getItem('backupActivityLogs')||'[]');
@@ -1960,12 +2095,15 @@ window.restoreSelectedMonth = async function(){
         var cleanRow={...row}; delete cleanRow._docId;
         cleanRow.restoredAt=new Date().toISOString(); cleanRow.restoredMonth=month;
         await setDoc(doc(db,col,id),cleanRow,{merge:true}); total++;
+        // ★ NEW: Restore হলে timestamp আপডেট করো
+        await updateCollectionTimestamp(col);
       }
     }
     localStorage.setItem('backupStatus','RESTORED '+month);
     localStorage.setItem('lastRestoredMonth',month);
     document.getElementById('restoreStatus').innerText='RESTORED '+total+' DATA';
     window.GMS_CACHE.clear();
+    localStorage.removeItem(LOCAL_TIMESTAMPS_KEY);
     addBackupLog('RESTORE','Month '+month+' restored. Data: '+total);
     alert('Restore Complete: '+total+' data restored for '+month);
     window.loadDashboardStock(true);
@@ -1996,6 +2134,7 @@ window.clearOldData = async function(){
     localStorage.setItem('backupStatus','OLD DATA CLEARED');
     localStorage.setItem('lastClearDate',new Date().toISOString());
     window.GMS_CACHE.clear();
+    localStorage.removeItem(LOCAL_TIMESTAMPS_KEY);
     addBackupLog('CLEAR','Deleted: '+deleted+', Kept: '+kept+', Skipped: '+skipped);
     alert('Clear Complete\nDeleted: '+deleted+'\nKept: '+kept+'\nSkipped: '+skipped);
     window.loadDashboardStock(true);
@@ -2019,6 +2158,7 @@ window.removeRestoredMonth = async function(){
     localStorage.removeItem('lastRestoredMonth');
     localStorage.setItem('backupStatus','RESTORED MONTH REMOVED');
     window.GMS_CACHE.clear();
+    localStorage.removeItem(LOCAL_TIMESTAMPS_KEY);
     addBackupLog('REMOVE RESTORED','Month '+month+' removed. Data: '+deleted);
     alert('Removed: '+deleted+' data');
     window.loadDashboardStock(true);
@@ -2054,9 +2194,10 @@ onMessage(messaging, function(payload){
 // ─────────────────────────────────────────────────────────────────
 setupRoleUI();
 setupCompanyPermissions();
-loadDashboardStock();
+loadDashboardStock(true);    // ★ প্রথমবার: সব fresh load
 smartLoadNotices();
 setupNoticeListener();
+setupRealtimeDashboardSync(); // ★ NEW: realtime sync listener চালু
 updateLastActive();
 renderBackupLog();
 loadProfilePic();
@@ -2066,17 +2207,13 @@ loadProfilePic();
   window.addEventListener(evt, function(){ if(!audioCtx) initAudio(); }, {once:true,passive:true});
 });
 
-// ★★★ FIX: Page visible হলে cache clear করে fresh data load ★★★
-// এই code টাই মূল fix — entry page থেকে ফিরলে dashboard update হবে
+// ★★★ Page visible হলে selective load — entry থেকে ফিরলে শুধু পরিবর্তিত অংশ update ★★★
 document.addEventListener('visibilitychange', function(){
   if(document.visibilityState === 'visible'){
     clearAppBadge();
-    // Cache সম্পূর্ণ clear করো — entry page থেকে নতুন data এসে থাকতে পারে
-    localStorage.removeItem('GMS_SMART_CACHE');
-    console.log('🔄 Page visible — cache cleared, reloading dashboard...');
-    // Dashboard active থাকলে fresh load করো
+    console.log('🔄 Page visible — selective dashboard check...');
     if(document.getElementById('home').classList.contains('activePage')){
-      loadDashboardStock(true);
+      loadDashboardStock(false); // ★ false = selective, force নয়
     }
   }
 });
