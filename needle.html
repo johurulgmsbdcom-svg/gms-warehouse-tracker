@@ -26,8 +26,10 @@ select,input[type="date"],input[type="text"]{padding:5px;border-radius:5px;borde
 .summaryWrap{width:100%;max-width:100%;overflow-x:hidden}
 #summaryTable{width:100%;max-width:100%;margin:auto;text-align:center;border-collapse:collapse;table-layout:fixed;background:white;color:black}
 #summaryTable th,#summaryTable td{border:1px solid #000;padding:2px;font-size:10px}
+
 .negative-row{background:#fecaca!important}
 .negative-row td{color:#991b1b;font-weight:bold}
+
 #negativePopup{display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.7);z-index:9999;justify-content:center;align-items:center}
 .popup-content{background:white;color:black;padding:16px;border-radius:10px;max-width:95%;width:400px;box-shadow:0 4px 20px rgba(0,0,0,0.3);position:relative}
 .popup-close{position:absolute;top:8px;right:12px;font-size:20px;cursor:pointer;color:#666;font-weight:bold}
@@ -40,8 +42,12 @@ select,input[type="date"],input[type="text"]{padding:5px;border-radius:5px;borde
 .popup-fix-btn{background:#2563eb;color:white;border:none;padding:8px 16px;border-radius:6px;font-weight:bold;cursor:pointer;width:100%;margin-top:12px;font-size:13px}
 .popup-fix-btn:hover{background:#1d4ed8}
 .popup-footer{text-align:center;font-size:11px;color:#64748b;margin-top:8px}
-.offline-indicator{position:fixed;top:0;left:0;right:0;background:#f59e0b;color:#000;padding:6px 12px;text-align:center;font-size:12px;font-weight:600;z-index:9999;display:none;}
+
+.offline-indicator{
+  position:fixed;top:0;left:0;right:0;background:#f59e0b;color:#000;padding:6px 12px;text-align:center;font-size:12px;font-weight:600;z-index:9999;display:none;
+}
 .offline-indicator.show{display:block;}
+
 @media(max-width:480px){
   body{padding:2px}h2{font-size:15px;margin:4px 0}.topControls{font-size:11px}
   button{padding:6px 7px;font-size:10px}
@@ -66,7 +72,7 @@ select,input[type="date"],input[type="text"]{padding:5px;border-radius:5px;borde
 </head>
 <body>
 
-<div class="offline-indicator" id="offlineIndicator">Offline Mode - Data saved locally</div>
+<div class="offline-indicator" id="offlineIndicator">📴 Offline Mode - Data saved locally</div>
 
 <h2 style="text-align:center;">Needle Daily Posting</h2>
 
@@ -81,7 +87,7 @@ Floor:
 <option>Sample R</option><option>Sample N</option><option>EMBROIDERY R</option><option>EMBROIDERY N</option>
 </select>
 <br><br>
-<button class="saveBtn" onclick="saveData()">Save Data</button>
+<button class="saveBtn" onclick="saveData()">💾 Save Data</button>
 <button class="deleteBtn" onclick="deleteData()">Delete Data</button>
 <button class="excelBtn" onclick="exportExcel()">Export Excel</button>
 <button class="pdfBtn" onclick="exportPDF()">PDF / Print</button>
@@ -124,11 +130,11 @@ Floor:
 
 <div id="negativePopup">
   <div class="popup-content">
-    <span class="popup-close" onclick="closePopup()">X</span>
-    <div class="popup-title">Negative Stock Detected!</div>
+    <span class="popup-close" onclick="closePopup()">❌</span>
+    <div class="popup-title">⚠️ Negative Stock Detected!</div>
     <div class="popup-details" id="popupDetails"></div>
-    <button class="popup-fix-btn" onclick="fixNegativeRow()">Fix Now</button>
-    <div class="popup-footer">Present Stock >= 0 korle popup auto bondho hobe</div>
+    <button class="popup-fix-btn" onclick="fixNegativeRow()">📍 Fix করুন</button>
+    <div class="popup-footer">Present Stock ≥ 0 করলে পপআপ অটো বন্ধ হবে</div>
   </div>
 </div>
 
@@ -149,7 +155,11 @@ const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
 enableIndexedDbPersistence(db).catch((err) => {
-  console.log('Persistence error:', err.code);
+  if (err.code == 'failed-precondition') {
+    console.log('Multiple tabs open, persistence can only be enabled in one tab at a time.');
+  } else if (err.code == 'unimplemented') {
+    console.log('Browser does not support persistence.');
+  }
 });
 
 const floorData = {
@@ -377,65 +387,56 @@ const floorData = {
 ]};
 
 let negativeRowIndex = -1;
+
+// 🔥 NEW: Dynamic opening stock from previous month's ending present
 let dynamicOpening = null;
 
-// =============================================
-// FIX 1: getPreviousMonth — Date object use kore
-// "2026-06" -> "2026-05", "2026-01" -> "2025-12"
-// =============================================
-function getPreviousMonth(monthStr) {
-  // monthStr format: "YYYY-MM"
-  const [year, mon] = monthStr.split("-").map(Number);
-  const d = new Date(year, mon - 1, 1); // 1st of current month
-  d.setMonth(d.getMonth() - 1);         // go back 1 month
-  const y = d.getFullYear();
-  const m = String(d.getMonth() + 1).padStart(2, "0");
-  return `${y}-${m}`;
-}
-
-function getMonth(dateStr) {
-  // dateStr format: "YYYY-MM-DD"
-  return dateStr.slice(0, 7);
-}
-
-// =============================================
-// FIX 2: Floor name exact match with trim()
-// Firebase-e space thakle o match hobe
-// =============================================
-function floorMatch(dataFloor, targetFloor) {
-  return (dataFloor || "").trim() === (targetFloor || "").trim();
+// 🔥 NEW: Helper function to get previous month string (e.g., "2026-06" -> "2026-05")
+function getPreviousMonth(monthStr){
+  let parts = monthStr.split("-");
+  let year = parseInt(parts[0]);
+  let mon = parseInt(parts[1]);
+  mon -= 1;
+  if(mon < 1){ mon = 12; year -= 1; }
+  return `${year}-${String(mon).padStart(2, '0')}`;
 }
 
 const OFFLINE_QUEUE_KEY = "needle_posting_queue";
-function getOfflineQueue() { return JSON.parse(localStorage.getItem(OFFLINE_QUEUE_KEY) || "[]"); }
-function setOfflineQueue(q) { localStorage.setItem(OFFLINE_QUEUE_KEY, JSON.stringify(q)); }
+function getOfflineQueue(){ return JSON.parse(localStorage.getItem(OFFLINE_QUEUE_KEY) || "[]"); }
+function setOfflineQueue(q){ localStorage.setItem(OFFLINE_QUEUE_KEY, JSON.stringify(q)); }
 
 async function updateDashboardNeedleState(floor, rows) {
   const company = localStorage.getItem('gmsSelectedCompany') || 'GMS TEXTILES LTD';
   const companyKey = company.replace(/\s+/g, "_");
   const stateDocRef = doc(db, "systemState", "dashboard_" + companyKey);
-
+  
   let currentNeedleState = { total: 0, floorStocks: {} };
   try {
     const stateDocSnap = await getDoc(stateDocRef);
     if (stateDocSnap.exists()) {
       const stateData = stateDocSnap.data();
-      if (stateData.needle) currentNeedleState = stateData.needle;
+      if (stateData.needle) {
+        currentNeedleState = stateData.needle;
+      }
     }
-  } catch (e) { console.log("State fetch error:", e); }
+  } catch(e) { console.log("State fetch error:", e); }
 
-  if (!currentNeedleState.floorStocks) currentNeedleState.floorStocks = {};
+  if (!currentNeedleState.floorStocks) {
+    currentNeedleState.floorStocks = {};
+  }
 
   let totalPresentVal = 0;
   rows.forEach(r => totalPresentVal += Number(r.present) || 0);
   currentNeedleState.floorStocks[floor] = totalPresentVal;
 
   let newGrandTotal = 0;
-  const defaultFloors = ["Kadom R","Kadom N","Shapla R","Shapla N","Poddo R","Poddo N","Belly R","Belly N","Sample R","Sample N","EMBROIDERY R","EMBROIDERY N"];
+  const defaultFloors = ["Kadom R", "Kadom N", "Shapla R", "Shapla N", "Poddo R", "Poddo N", "Belly R", "Belly N", "Sample R", "Sample N", "EMBROIDERY R", "EMBROIDERY N"];
   defaultFloors.forEach(f => {
     if (currentNeedleState.floorStocks[f] === undefined) {
       let opSum = 0;
-      if (floorData[f]) floorData[f].forEach(row => opSum += Number(row[3]) || 0);
+      if (floorData[f]) {
+        floorData[f].forEach(row => opSum += Number(row[3]) || 0);
+      }
       currentNeedleState.floorStocks[f] = opSum;
     }
     newGrandTotal += currentNeedleState.floorStocks[f];
@@ -445,79 +446,101 @@ async function updateDashboardNeedleState(floor, rows) {
   try {
     await setDoc(stateDocRef, {
       needle: currentNeedleState,
-      lastUpdated: { needle: new Date().toISOString() }
+      lastUpdated: {
+        needle: new Date().toISOString()
+      }
     }, { merge: true });
-  } catch (e) { console.error("Dashboard tracker state update failed:", e); }
+    console.log("[State Update] Dashboard state tracker updated.");
+  } catch(e) {
+    console.error("Dashboard tracker state update failed:", e);
+  }
 }
 
-function saveDataOffline(floor, date, operator, rows) {
+function saveDataOffline(floor, date, operator, rows){
   let queue = getOfflineQueue();
-  queue.push({ id: `${floor}_${date}_${Date.now()}`, floor, date, operator, rows, timestamp: new Date().toISOString(), status: "pending" });
+  queue.push({
+    id: `${floor}_${date}_${Date.now()}`,
+    floor, date, operator, rows,
+    timestamp: new Date().toISOString(),
+    status: "pending"
+  });
   setOfflineQueue(queue);
-  showToast("Saved Offline - Will sync when online");
+  showToast("✅ Saved Offline - Will sync when online");
 }
 
-async function syncOfflineQueue() {
-  if (!navigator.onLine) return;
+async function syncOfflineQueue(){
+  if(!navigator.onLine) return;
   let queue = getOfflineQueue();
   let synced = 0;
-  for (let i = 0; i < queue.length; i++) {
-    if (queue[i].status === "pending") {
-      try {
-        await setDoc(doc(db, "dailyPosting", queue[i].id), {
-          date: queue[i].date, month: getMonth(queue[i].date),
-          floor: queue[i].floor, rows: queue[i].rows,
-          operator: queue[i].operator, updatedAt: serverTimestamp()
+  for(let i=0; i<queue.length; i++){
+    if(queue[i].status === "pending"){
+      try{
+        await setDoc(doc(db,"dailyPosting",queue[i].id), {
+          date: queue[i].date,
+          month: getMonth(queue[i].date),
+          floor: queue[i].floor,
+          rows: queue[i].rows,
+          operator: queue[i].operator,
+          updatedAt: serverTimestamp()
         });
         queue[i].status = "synced";
         synced++;
+        
         await updateDashboardNeedleState(queue[i].floor, queue[i].rows);
-      } catch (e) { console.log("Sync failed:", e); }
+      }catch(e){ console.log("Sync failed:", e); }
     }
   }
-  if (synced > 0) { setOfflineQueue(queue); showToast(`${synced} items synced to Firebase`); }
+  if(synced > 0){
+    setOfflineQueue(queue);
+    showToast(`☁️ ${synced} items synced to Firebase`);
+  }
 }
 
-function showToast(msg) {
+function showToast(msg){
   let t = document.createElement("div");
-  t.style.cssText = "position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:#10b981;color:#fff;padding:10px 20px;border-radius:8px;font-weight:600;z-index:9999;";
+  t.style.cssText = "position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:#10b981;color:#fff;padding:10px 20px;border-radius:8px;font-weight:600;z-index:9999;animation:fadeIn 0.3s";
   t.innerText = msg;
   document.body.appendChild(t);
-  setTimeout(() => t.remove(), 2500);
+  setTimeout(()=>t.remove(), 2500);
 }
 
-function updateOfflineIndicator() {
+function updateOfflineIndicator(){
   let ind = document.getElementById("offlineIndicator");
-  if (!navigator.onLine) ind.classList.add("show");
-  else ind.classList.remove("show");
+  if(!navigator.onLine){ ind.classList.add("show"); }
+  else{ ind.classList.remove("show"); }
 }
 
-window.addEventListener("online", () => { updateOfflineIndicator(); syncOfflineQueue(); });
-window.addEventListener("offline", () => { updateOfflineIndicator(); });
+window.addEventListener("online", ()=>{ updateOfflineIndicator(); syncOfflineQueue(); });
+window.addEventListener("offline", ()=>{ updateOfflineIndicator(); });
 
-function getItems() {
-  return floorData[document.getElementById("floor").value] || [];
+function getItems(){
+  let floor=document.getElementById("floor").value;
+  return floorData[floor] || [];
 }
 
-function loadTable(customPrevious = null) {
-  let items = getItems();
-  let floor = document.getElementById("floor").value;
+function getMonth(date){return date.slice(0,7);}
+
+// 🔥 CHANGED: loadTable now uses dynamicOpening as default if available
+function loadTable(customPrevious=null){
+  let items=getItems();
+  let floor=document.getElementById("floor").value;
   let bnName = floor.includes("N") ? "BNF" : "BNR";
   document.getElementById("bnHeader").innerText = bnName;
   document.getElementById("monthBNHeader").innerText = "Total " + bnName;
-  let html = "";
+  let html="";
 
-  items.forEach((item, i) => {
+  items.forEach((item,i)=>{
     let previous;
-    if (customPrevious && customPrevious[i] !== undefined) {
+    if(customPrevious && customPrevious[i] !== undefined){
       previous = customPrevious[i];
-    } else if (dynamicOpening && dynamicOpening[i] !== undefined) {
+    } else if(dynamicOpening && dynamicOpening[i] !== undefined){
+      // 🔥 Use previous month's ending present as opening
       previous = dynamicOpening[i];
     } else {
       previous = item[3];
     }
-
-    html += `
+    
+    html+=`
     <tr id="row${i}">
       <td class="col-sl">${item[0]}</td>
       <td class="col-type">${item[1]}</td>
@@ -530,282 +553,175 @@ function loadTable(customPrevious = null) {
     </tr>`;
   });
 
-  document.getElementById("tableBody").innerHTML = html;
+  document.getElementById("tableBody").innerHTML=html;
   updateTotal();
   setTimeout(checkNegativeStock, 100);
 }
 
-function calc(i) {
-  let p = Number(document.getElementById("p" + i).innerText) || 0;
-  let r = Number(document.getElementById("r" + i).value) || 0;
-  let d = Number(document.getElementById("d" + i).value) || 0;
-  let present = p + r - d;
-  document.getElementById("b" + i).innerText = present;
-  let row = document.getElementById("row" + i);
-  if (present < 0) row.classList.add("negative-row");
-  else row.classList.remove("negative-row");
+function calc(i){
+  let p=Number(document.getElementById("p"+i).innerText)||0;
+  let r=Number(document.getElementById("r"+i).value)||0;
+  let d=Number(document.getElementById("d"+i).value)||0;
+  let present = p+r-d;
+  document.getElementById("b"+i).innerText = present;
+  
+  let row = document.getElementById("row"+i);
+  if(present < 0){
+    row.classList.add("negative-row");
+  } else {
+    row.classList.remove("negative-row");
+  }
+  
   updateTotal();
   checkNegativeStock();
 }
 
-function updateTotal() {
-  let items = getItems();
-  let tp = 0, tr = 0, td = 0, tb = 0, tbn = 0;
-  for (let i = 0; i < items.length; i++) {
-    tp += Number(document.getElementById("p" + i)?.innerText) || 0;
-    tr += Number(document.getElementById("r" + i)?.value) || 0;
-    td += Number(document.getElementById("d" + i)?.value) || 0;
-    tb += Number(document.getElementById("b" + i)?.innerText) || 0;
-    tbn += Number(document.getElementById("bn" + i)?.value) || 0;
+function updateTotal(){
+  let items=getItems();
+  let tp=0,tr=0,td=0,tb=0,tbn=0;
+
+  for(let i=0;i<items.length;i++){
+    tp+=Number(document.getElementById("p"+i)?.innerText)||0;
+    tr+=Number(document.getElementById("r"+i)?.value)||0;
+    td+=Number(document.getElementById("d"+i)?.value)||0;
+    tb+=Number(document.getElementById("b"+i)?.innerText)||0;
+    tbn+=Number(document.getElementById("bn"+i)?.value)||0;
   }
-  document.getElementById("totalPrevious").innerText = tp;
-  document.getElementById("totalReceive").innerText = tr;
-  document.getElementById("totalDelivery").innerText = td;
-  document.getElementById("totalPresent").innerText = tb;
-  document.getElementById("totalBN").innerText = tbn;
+
+  document.getElementById("totalPrevious").innerText=tp;
+  document.getElementById("totalReceive").innerText=tr;
+  document.getElementById("totalDelivery").innerText=td;
+  document.getElementById("totalPresent").innerText=tb;
+  document.getElementById("totalBN").innerText=tbn;
 }
 
-function checkNegativeStock() {
+function checkNegativeStock(){
   let items = getItems();
   let floor = document.getElementById("floor").value;
   let operator = document.getElementById("operatorName").value.trim() || "Unknown";
-  for (let i = 0; i < items.length; i++) {
-    let present = Number(document.getElementById("b" + i)?.innerText) || 0;
-    let row = document.getElementById("row" + i);
-    if (present < 0) {
+  
+  for(let i=0; i<items.length; i++){
+    let present = Number(document.getElementById("b"+i)?.innerText) || 0;
+    
+    let row = document.getElementById("row"+i);
+    if(present < 0){
       row.classList.add("negative-row");
-      negativeRowIndex = i;
-      showNegativePopup(floor, operator, items[i][0], items[i][1], items[i][2], present);
-      return;
     } else {
       row.classList.remove("negative-row");
     }
+    
+    if(present < 0){
+      negativeRowIndex = i;
+      showNegativePopup(floor, operator, items[i][0], items[i][1], items[i][2], present);
+      return; 
+    }
   }
+  
   negativeRowIndex = -1;
   closePopup();
 }
 
-function showNegativePopup(floor, operator, sl, needleType, size, stockValue) {
-  document.getElementById("popupDetails").innerHTML = `
+function showNegativePopup(floor, operator, sl, needleType, size, stockValue){
+  let popup = document.getElementById("negativePopup");
+  let details = document.getElementById("popupDetails");
+  
+  details.innerHTML = `
     <div><span class="label">Floor:</span><span class="value">${floor}</span></div>
     <div><span class="label">Operator:</span><span class="value">${operator}</span></div>
     <div><span class="label">SL:</span><span class="value">${sl}</span></div>
     <div><span class="label">Needle Type:</span><span class="value">${needleType}</span></div>
     <div><span class="label">Size:</span><span class="value">${size}</span></div>
-    <div><span class="label">Present Stock:</span><span class="value" style="color:#dc2626;font-weight:bold">${stockValue}</span></div>`;
-  document.getElementById("negativePopup").style.display = "flex";
+    <div><span class="label">Present Stock:</span><span class="value" style="color:#dc2626;font-weight:bold">${stockValue}</span></div>
+  `;
+  
+  popup.style.display = "flex";
 }
 
-function closePopup() { document.getElementById("negativePopup").style.display = "none"; }
-
-function fixNegativeRow() {
-  if (negativeRowIndex >= 0) {
-    let row = document.getElementById("row" + negativeRowIndex);
-    if (row) { row.scrollIntoView({ behavior: "smooth", block: "center" }); row.style.boxShadow = "0 0 0 3px #dc2626"; setTimeout(() => row.style.boxShadow = "", 2000); }
-    let deliveryInput = document.getElementById("d" + negativeRowIndex);
-    if (deliveryInput) { deliveryInput.focus(); deliveryInput.select(); }
-  }
+function closePopup(){
+  document.getElementById("negativePopup").style.display = "none";
 }
 
-// =============================================
-// MAIN FIX: loadData — previous month last day
-// correctly fetch kore opening set kora
-// =============================================
-async function loadData() {
-  let date = document.getElementById("postDate").value;
-  let floor = document.getElementById("floor").value;
-  let items = getItems();
-
-  if (!date) {
-    dynamicOpening = null;
-    loadTable();
-    showMonthlySummary(0, 0, 0, 0, 0);
-    document.getElementById("operatorName").value = localStorage.getItem("lastOperator") || "";
-    return;
-  }
-
-  let month = getMonth(date);
-  let prevMonth = getPreviousMonth(month); // FIX: Date object use kora
-
-  console.log(`[DEBUG] Floor: "${floor}", Month: ${month}, PrevMonth: ${prevMonth}`);
-
-  let snap = await getDocs(collection(db, "dailyPosting"));
-
-  let monthRows = [];
-  let prevMonthRows = [];
-
-  snap.forEach(docSnap => {
-    let data = docSnap.data();
-    // FIX: trim() diye floor match
-    if (floorMatch(data.floor, floor)) {
-      if (data.month === month && data.date <= date) {
-        monthRows.push(data);
-      }
-      if (data.month === prevMonth) {
-        prevMonthRows.push(data);
-        console.log(`[DEBUG] PrevMonth doc found: date=${data.date}, floor="${data.floor}"`);
-      }
+function fixNegativeRow(){
+  if(negativeRowIndex >= 0){
+    let row = document.getElementById("row"+negativeRowIndex);
+    if(row){
+      row.scrollIntoView({behavior:"smooth", block:"center"});
+      row.style.boxShadow = "0 0 0 3px #dc2626";
+      setTimeout(() => row.style.boxShadow = "", 2000);
     }
-  });
-
-  // FIX: date string sort — last day correctly pick hobe
-  prevMonthRows.sort((a, b) => (a.date || "").localeCompare(b.date || ""));
-  let lastDayOfPrevMonth = prevMonthRows.length > 0 ? prevMonthRows[prevMonthRows.length - 1] : null;
-
-  console.log(`[DEBUG] PrevMonth docs count: ${prevMonthRows.length}`);
-  if (lastDayOfPrevMonth) {
-    console.log(`[DEBUG] Last prev month doc date: ${lastDayOfPrevMonth.date}`);
-    let total = (lastDayOfPrevMonth.rows || []).reduce((s, r) => s + (Number(r.present) || 0), 0);
-    console.log(`[DEBUG] Last prev month total present: ${total}`);
-  } else {
-    console.log(`[DEBUG] No prev month data found — using hardcoded opening`);
-  }
-
-  // Build dynamicOpening array
-  dynamicOpening = [];
-  for (let i = 0; i < items.length; i++) {
-    if (lastDayOfPrevMonth && lastDayOfPrevMonth.rows && lastDayOfPrevMonth.rows[i] !== undefined) {
-      dynamicOpening[i] = Number(lastDayOfPrevMonth.rows[i].present) || 0;
-    } else {
-      // Fallback: hardcoded floorData opening
-      dynamicOpening[i] = Number(items[i][3]) || 0;
+    
+    let deliveryInput = document.getElementById("d"+negativeRowIndex);
+    if(deliveryInput){
+      deliveryInput.focus();
+      deliveryInput.select();
     }
   }
-
-  monthRows.sort((a, b) => (a.date || "").localeCompare(b.date || ""));
-  let todayData = null;
-  monthRows.forEach(row => { if (row.date === date) todayData = row; });
-
-  let monthlyReceive = Array(items.length).fill(0);
-  let monthlyDelivery = Array(items.length).fill(0);
-  let monthlyBN = Array(items.length).fill(0);
-
-  monthRows.forEach(day => {
-    if (day.rows) {
-      day.rows.forEach((row, i) => {
-        monthlyReceive[i] += Number(row.receive) || 0;
-        monthlyDelivery[i] += Number(row.delivery) || 0;
-        monthlyBN[i] += Number(row.bn) || 0;
-      });
-    }
-  });
-
-  let todayReceive = Array(items.length).fill(0);
-  let todayDelivery = Array(items.length).fill(0);
-  let todayBN = Array(items.length).fill(0);
-
-  if (todayData && todayData.rows) {
-    todayData.rows.forEach((row, i) => {
-      todayReceive[i] = Number(row.receive) || 0;
-      todayDelivery[i] = Number(row.delivery) || 0;
-      todayBN[i] = Number(row.bn) || 0;
-    });
-  }
-
-  // Previous column = opening + all receive before today - all delivery before today
-  let previousList = [];
-  for (let i = 0; i < items.length; i++) {
-    let opening = dynamicOpening[i];
-    let beforeReceive = monthlyReceive[i] - todayReceive[i];
-    let beforeDelivery = monthlyDelivery[i] - todayDelivery[i];
-    previousList[i] = opening + beforeReceive - beforeDelivery;
-  }
-
-  loadTable(previousList);
-  document.getElementById("operatorName").value = todayData?.operator || localStorage.getItem("lastOperator") || "";
-
-  for (let i = 0; i < items.length; i++) {
-    document.getElementById("r" + i).value = todayReceive[i] || "";
-    document.getElementById("d" + i).value = todayDelivery[i] || "";
-    document.getElementById("bn" + i).value = todayBN[i] || "";
-    calc(i);
-  }
-
-  updateMonthlySummary(monthlyReceive, monthlyDelivery, monthlyBN, dynamicOpening);
-  setTimeout(checkNegativeStock, 200);
 }
 
-function updateMonthlySummary(monthlyReceive, monthlyDelivery, monthlyBN, openingValues = null) {
-  let items = getItems();
-  let opening = 0, receive = 0, delivery = 0, present = 0, bn = 0;
-  for (let i = 0; i < items.length; i++) {
-    let op = (openingValues && openingValues[i] !== undefined) ? Number(openingValues[i]) : (Number(items[i][3]) || 0);
-    let r = Number(monthlyReceive[i]) || 0;
-    let d = Number(monthlyDelivery[i]) || 0;
-    opening += op; receive += r; delivery += d; present += op + r - d; bn += Number(monthlyBN[i]) || 0;
-  }
-  showMonthlySummary(opening, receive, delivery, present, bn);
-}
+// 🔥 CHANGED: saveData now uses dynamicOpening for the opening field
+async function saveData(){
+  let date=document.getElementById("postDate").value;
+  let floor=document.getElementById("floor").value;
+  let operator=document.getElementById("operatorName").value.trim() || localStorage.getItem("lastOperator") || "Unknown";
+  let items=getItems();
 
-function showMonthlySummary(opening, receive, delivery, present, bn) {
-  document.getElementById("monthOpening").innerText = opening;
-  document.getElementById("monthReceive").innerText = receive;
-  document.getElementById("monthDelivery").innerText = delivery;
-  document.getElementById("monthPresent").innerText = present;
-  document.getElementById("monthBN").innerText = bn;
-}
+  if(!date){alert("Date select koro");return;}
 
-async function saveData() {
-  let date = document.getElementById("postDate").value;
-  let floor = document.getElementById("floor").value;
-  let operator = document.getElementById("operatorName").value.trim() || localStorage.getItem("lastOperator") || "Unknown";
-  let items = getItems();
-
-  if (!date) { alert("Date select koro"); return; }
-
-  let rows = [];
-  for (let i = 0; i < items.length; i++) {
+  let rows=[];
+  for(let i=0;i<items.length;i++){
+    // 🔥 Use dynamicOpening if available, otherwise fall back to hardcoded item[3]
     let openingVal = (dynamicOpening && dynamicOpening[i] !== undefined) ? dynamicOpening[i] : (Number(items[i][3]) || 0);
+    
     rows.push({
-      sl: items[i][0], needleType: items[i][1], size: items[i][2],
-      opening: openingVal,
-      previous: Number(document.getElementById("p" + i).innerText) || 0,
-      receive: Number(document.getElementById("r" + i).value) || 0,
-      delivery: Number(document.getElementById("d" + i).value) || 0,
-      present: Number(document.getElementById("b" + i).innerText) || 0,
-      bn: Number(document.getElementById("bn" + i).value) || 0
+      sl:items[i][0],needleType:items[i][1],size:items[i][2],
+      opening:openingVal,
+      previous:Number(document.getElementById("p"+i).innerText)||0,
+      receive:Number(document.getElementById("r"+i).value)||0,
+      delivery:Number(document.getElementById("d"+i).value)||0,
+      present:Number(document.getElementById("b"+i).innerText)||0,
+      bn:Number(document.getElementById("bn"+i).value)||0
     });
   }
 
-  let docId = floor + "_" + date;
-  let docRef = doc(db, "dailyPosting", docId);
+  let docRef = doc(db,"dailyPosting",floor+"_"+date);
   let oldDoc = await getDoc(docRef);
   let action = oldDoc.exists() ? "UPDATE" : "CREATE";
   let details = {};
 
-  if (action === "UPDATE") {
+  if(action === "UPDATE"){
     let oldRows = oldDoc.data().rows || [];
     let changed = [];
-    for (let i = 0; i < rows.length; i++) {
+    for(let i=0; i<rows.length; i++){
       let old = oldRows[i] || {};
-      if (JSON.stringify(old) !== JSON.stringify(rows[i])) {
-        changed.push({ sl: rows[i].sl, type: rows[i].needleType, size: rows[i].size, oldRcv: old.receive, newRcv: rows[i].receive, oldDlv: old.delivery, newDlv: rows[i].delivery });
+      let neu = rows[i];
+      if(JSON.stringify(old) !== JSON.stringify(neu)){
+        changed.push({sl: neu.sl, type: neu.needleType, size: neu.size, oldRcv: old.receive, newRcv: neu.receive, oldDlv: old.delivery, newDlv: neu.delivery});
       }
     }
-    details = { changedItems: changed, count: changed.length };
+    details = {changedItems: changed, count: changed.length};
   } else {
-    details = { totalItems: rows.length, msg: "New posting" };
+    details = {totalItems: rows.length, msg: "New posting"};
   }
 
-  if (navigator.onLine) {
-    try {
-      await setDoc(docRef, {
-        date: date, month: getMonth(date), floor: floor,
-        rows: rows, operator: operator, updatedAt: serverTimestamp()
+  if(navigator.onLine){
+    try{
+      await setDoc(docRef,{
+        date:date,month:getMonth(date),floor:floor,rows:rows,operator:operator,updatedAt: serverTimestamp()
       });
+      
       await updateDashboardNeedleState(floor, rows);
+
       try {
         await addDoc(collection(db, "auditLogs"), {
-          action: action, floor: floor, date: date, operator: operator,
-          timestamp: serverTimestamp(), details: details
+          action: action,floor: floor,date: date,operator: operator,timestamp: serverTimestamp(),details: details
         });
-      } catch (e) { console.error("Audit log error:", e); }
-      showToast("Saved to Firebase");
-    } catch (err) {
+      } catch(e) { console.error("Audit log error:", e); }
+      showToast("✅ Saved to Firebase");
+    }catch(err){
       console.log("Firebase save failed, saving offline:", err);
       saveDataOffline(floor, date, operator, rows);
     }
-  } else {
+  }else{
     saveDataOffline(floor, date, operator, rows);
   }
 
@@ -814,60 +730,192 @@ async function saveData() {
   syncOfflineQueue();
 }
 
-async function deleteData() {
-  let date = document.getElementById("postDate").value;
-  let floor = document.getElementById("floor").value;
-  let operator = document.getElementById("operatorName").value.trim() || localStorage.getItem("lastOperator") || "Unknown";
+async function deleteData(){
+  let date=document.getElementById("postDate").value;
+  let floor=document.getElementById("floor").value;
+  let operator=document.getElementById("operatorName").value.trim() || localStorage.getItem("lastOperator") || "Unknown";
 
-  if (!date) { alert("Date select koro"); return; }
-  if (!confirm("Ei date er data delete korba?")) return;
+  if(!date){alert("Date select koro");return;}
+  if(!confirm("Ei date er data delete korba?")) return;
 
-  let docRef = doc(db, "dailyPosting", floor + "_" + date);
+  let docRef = doc(db,"dailyPosting",floor+"_"+date);
   let oldDoc = await getDoc(docRef);
-
-  if (oldDoc.exists()) {
+  
+  if(oldDoc.exists()){
     try {
       await addDoc(collection(db, "auditLogs"), {
-        action: "DELETE", floor: floor, date: date, operator: operator,
-        timestamp: serverTimestamp(),
+        action: "DELETE",floor: floor,date: date,operator: operator,timestamp: serverTimestamp(),
         details: { deletedFloor: floor, deletedDate: date, itemsCount: oldDoc.data().rows?.length || 0 }
       });
-    } catch (e) { console.error("Audit log error:", e); }
+    } catch(e) { console.error("Audit log error:", e); }
   }
-
+  
   await deleteDoc(docRef);
+  
   let items = getItems();
   let emptyRows = items.map(item => ({ present: item[3] }));
   await updateDashboardNeedleState(floor, emptyRows);
+
   await loadData();
   alert("Deleted Successfully");
 }
 
-function exportExcel() {
-  let title = `<h2>Needle Daily Posting</h2><h3>Floor: ${document.getElementById("floor").value}</h3><h3>Date: ${document.getElementById("postDate").value}</h3>`;
-  let file = new Blob([title + document.getElementById("reportTable").outerHTML + "<br>" + document.getElementById("summaryTable").outerHTML], { type: "application/vnd.ms-excel" });
-  let a = document.createElement("a"); a.href = URL.createObjectURL(file); a.download = "needle-report.xls"; a.click();
+// 🔥 CHANGED: loadData now fetches previous month data and uses last day's present as opening
+async function loadData(){
+  let date=document.getElementById("postDate").value;
+  let floor=document.getElementById("floor").value;
+  let items=getItems();
+
+  if(!date){
+    dynamicOpening = null; // 🔥 Reset dynamic opening
+    loadTable();
+    showMonthlySummary(0,0,0,0,0);
+    document.getElementById("operatorName").value = localStorage.getItem("lastOperator") || "";
+    return;
+  }
+
+  let month=getMonth(date);
+  
+  // 🔥 NEW: Calculate previous month
+  let prevMonth = getPreviousMonth(month);
+  
+  let snap=await getDocs(collection(db,"dailyPosting"));
+  let monthRows=[];
+  let prevMonthRows=[]; // 🔥 NEW: Collect previous month data
+
+  snap.forEach(docSnap=>{
+    let data=docSnap.data();
+    if(data.floor===floor){
+      if(data.month===month && data.date<=date){
+        monthRows.push(data);
+      }
+      // 🔥 NEW: Also collect previous month data
+      if(data.month===prevMonth){
+        prevMonthRows.push(data);
+      }
+    }
+  });
+
+  // 🔥 NEW: Find the last day of previous month to get opening stock
+  prevMonthRows.sort((a,b)=>a.date.localeCompare(b.date));
+  let lastDayOfPrevMonth = prevMonthRows.length > 0 ? prevMonthRows[prevMonthRows.length - 1] : null;
+  
+  // 🔥 NEW: Build dynamic opening array
+  // If previous month data exists, use last day's present values
+  // Otherwise, fall back to hardcoded floorData values
+  dynamicOpening = [];
+  for(let i=0; i<items.length; i++){
+    if(lastDayOfPrevMonth && lastDayOfPrevMonth.rows && lastDayOfPrevMonth.rows[i]){
+      dynamicOpening[i] = Number(lastDayOfPrevMonth.rows[i].present) || 0;
+    } else {
+      dynamicOpening[i] = Number(items[i][3]) || 0;
+    }
+  }
+
+  monthRows.sort((a,b)=>a.date.localeCompare(b.date));
+  let todayData=null;
+  monthRows.forEach(row=>{if(row.date===date) todayData=row;});
+
+  let monthlyReceive=Array(items.length).fill(0);
+  let monthlyDelivery=Array(items.length).fill(0);
+  let monthlyBN=Array(items.length).fill(0);
+
+  monthRows.forEach(day=>{
+    if(day.rows){
+      day.rows.forEach((row,i)=>{
+        monthlyReceive[i]+=Number(row.receive)||0;
+        monthlyDelivery[i]+=Number(row.delivery)||0;
+        monthlyBN[i]+=Number(row.bn)||0;
+      });
+    }
+  });
+
+  let todayReceive=Array(items.length).fill(0);
+  let todayDelivery=Array(items.length).fill(0);
+  let todayBN=Array(items.length).fill(0);
+
+  if(todayData && todayData.rows){
+    todayData.rows.forEach((row,i)=>{
+      todayReceive[i]=Number(row.receive)||0;
+      todayDelivery[i]=Number(row.delivery)||0;
+      todayBN[i]=Number(row.bn)||0;
+    });
+  }
+
+  let previousList=[];
+  for(let i=0;i<items.length;i++){
+    // 🔥 CHANGED: Use dynamicOpening instead of hardcoded items[i][3]
+    let opening = dynamicOpening[i];
+    let beforeReceive=monthlyReceive[i]-todayReceive[i];
+    let beforeDelivery=monthlyDelivery[i]-todayDelivery[i];
+    previousList[i]=opening+beforeReceive-beforeDelivery;
+  }
+
+  loadTable(previousList);
+  document.getElementById("operatorName").value = todayData?.operator || localStorage.getItem("lastOperator") || "";
+
+  for(let i=0;i<items.length;i++){
+    document.getElementById("r"+i).value = todayReceive[i] || "";
+    document.getElementById("d"+i).value = todayDelivery[i] || "";
+    document.getElementById("bn"+i).value = todayBN[i] || "";
+    calc(i); 
+  }
+
+  // 🔥 CHANGED: Pass dynamicOpening to monthly summary
+  updateMonthlySummary(monthlyReceive,monthlyDelivery,monthlyBN,dynamicOpening);
+  setTimeout(checkNegativeStock, 200);
 }
 
-function exportPDF() { window.print(); }
+// 🔥 CHANGED: Accept openingValues parameter and use it instead of hardcoded items[i][3]
+function updateMonthlySummary(monthlyReceive,monthlyDelivery,monthlyBN,openingValues=null){
+  let items=getItems();
+  let opening=0, receive=0, delivery=0, present=0, bn=0;
+  for(let i=0;i<items.length;i++){
+    // 🔥 Use dynamic opening if available, otherwise fall back to hardcoded
+    let op = (openingValues && openingValues[i] !== undefined) ? Number(openingValues[i]) : (Number(items[i][3]) || 0);
+    let r=Number(monthlyReceive[i])||0;
+    let d=Number(monthlyDelivery[i])||0;
+    opening+=op;receive+=r;delivery+=d;present+=op+r-d;bn+=Number(monthlyBN[i])||0;
+  }
+  showMonthlySummary(opening,receive,delivery,present,bn);
+}
 
-document.getElementById("postDate").addEventListener("change", loadData);
+function showMonthlySummary(opening,receive,delivery,present,bn){
+  document.getElementById("monthOpening").innerText=opening;
+  document.getElementById("monthReceive").innerText=receive;
+  document.getElementById("monthDelivery").innerText=delivery;
+  document.getElementById("monthPresent").innerText=present;
+  document.getElementById("monthBN").innerText=bn;
+}
 
-window.loadTable = loadTable; window.calc = calc; window.updateTotal = updateTotal;
-window.saveData = saveData; window.deleteData = deleteData; window.loadData = loadData;
-window.exportExcel = exportExcel; window.exportPDF = exportPDF;
-window.checkNegativeStock = checkNegativeStock; window.closePopup = closePopup; window.fixNegativeRow = fixNegativeRow;
+function exportExcel(){
+  let title=`<h2>Needle Daily Posting</h2><h3>Floor: ${document.getElementById("floor").value}</h3><h3>Date: ${document.getElementById("postDate").value}</h3>`;
+  let table1=document.getElementById("reportTable").outerHTML;
+  let table2=document.getElementById("summaryTable").outerHTML;
+  let file=new Blob([title+table1+"<br>"+table2],{type:"application/vnd.ms-excel"});
+  let a=document.createElement("a");a.href=URL.createObjectURL(file);a.download="needle-report.xls";a.click();
+}
 
-document.addEventListener("keydown", function (e) {
-  if (e.target.tagName !== "INPUT") return;
-  if (!e.target.id.match(/^(r|d|bn)\d+$/)) return;
-  if (e.key === "Tab") return;
-  if (e.key === "Enter") {
+function exportPDF(){window.print();}
+
+document.getElementById("postDate").addEventListener("change",loadData);
+
+window.loadTable=loadTable;window.calc=calc;window.updateTotal=updateTotal;
+window.saveData=saveData;window.deleteData=deleteData;window.loadData=loadData;
+window.exportExcel=exportExcel;window.exportPDF=exportPDF;
+window.checkNegativeStock=checkNegativeStock;window.closePopup=closePopup;window.fixNegativeRow=fixNegativeRow;
+window.syncOfflineQueue=syncOfflineQueue;window.updateOfflineIndicator=updateOfflineIndicator;
+
+document.addEventListener("keydown", function(e){
+  if(e.target.tagName !== "INPUT") return;
+  if(!e.target.id.match(/^(r|d|bn)\d+$/)) return;
+  if(e.key === "Tab") return;
+  if(e.key === "Enter"){
     e.preventDefault();
     let col = e.target.id.replace(/[0-9]/g, "");
     let row = Number(e.target.id.replace(/\D/g, ""));
     let next = document.getElementById(col + (row + 1));
-    if (next) { next.focus(); next.select(); }
+    if(next){next.focus();next.select();}
   }
 });
 
