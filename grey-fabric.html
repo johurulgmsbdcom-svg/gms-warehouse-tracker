@@ -37,7 +37,7 @@ td input{width:100%;box-sizing:border-box;border:0;text-align:center;font-size:1
 
 <div class="header">
   <h2>GMS Textiles Ltd</h2>
-  <h4>Tansutrapur, Kaliakoir, Gazipur</h4>
+  <h4>Tansutrapur, Kaliakair, Gazipur</h4>
   <h4>Grey Fabric MCD</h4>
   <h3>Grey Fabric Stock Report</h3>
 </div>
@@ -188,9 +188,11 @@ function calcRow(r,i){
     r.baseTotalDelivery=raw(r.totalDelivery);
   }
 
+  // প্রথম কোডের সেইম লজিক: টোটাল ডেলিভারি = বেস ডেলিভারি + আজকের ডেলিভারি
   let totalDelivery=raw(r.baseTotalDelivery)+delivery;
   r.totalDelivery=totalDelivery;
 
+  // ১ম ৯টি রো অটোমেটিক ফর্মুলা, বাকিগুলো ম্যানুয়াল এডিট
   if(!r.manualClosing){
     r.closing=previous+receive-totalDelivery;
   }
@@ -413,53 +415,59 @@ async function deleteDateOnly(date){
   }
 }
 
-/* 🔄 বিগত দিনের ডেটা খোঁজার ফাংশন */
-async function getPreviousData(date){
-  let snap=await getDocs(collection(db,"greyFabricStock"));
-  let all=[];
-
-  snap.forEach(d=>{
-    let x=d.data();
-    if(x.date < date && x.rows && x.rows.length){
-      all.push(x);
-    }
-  });
-
-  // ডেট অনুযায়ী ডিসেন্ডিং অর্ডার করে সবচেয়ে কাছের পূর্বের দিনের ডেটা নেওয়া হচ্ছে
-  all.sort((a,b)=>b.date.localeCompare(a.date));
-  return all||null;
+/* 🔍 ডেটাবেজ থেকে পূর্ববর্তী দিনের সর্বশেষ ডেটা খোঁজার ফাংশন */
+async function getPreviousData(currentDate) {
+  try {
+    let snap = await getDocs(collection(db, "greyFabricStock"));
+    let allRecords = [];
+    snap.forEach(d => {
+      let data = d.data();
+      if (data.date < currentDate && data.rows && data.rows.length) {
+        allRecords.push(data);
+      }
+    });
+    if (allRecords.length === 0) return null;
+    // ডেট অনুযায়ী শর্টিং করে সবচেয়ে লেটেস্ট আগের দিন বের করা হচ্ছে
+    allRecords.sort((a, b) => b.date.localeCompare(a.date));
+    return allRecords;
+  } catch (err) {
+    console.error("Error fetching previous data:", err);
+    return null;
+  }
 }
 
+/* 🔄 ডেটা লোড করার মূল ফাংশন */
 async function loadData(){
   let date=document.getElementById("reportDate").value;
 
+  // ১. যদি এই ডেটে অলরেডি কোনো ডেটা সেভ করা থাকে, তবে সেটাই হুবহু লোড হবে
   let q=query(collection(db,"greyFabricStock"),where("date","==",date));
   let snap=await getDocs(q);
 
-  // ১. যদি নির্দিষ্ট ডেটে অলরেডি কোনো সেভ করা ডেটা থাকে, তবে সেটাই লোড হবে
   if(!snap.empty){
     prepareRows(snap.docs.data().rows||[]);
     render();
     return;
   }
 
-  // ২. যদি নতুন ডেট হয়, তবে ডাটাবেজে এর পূর্বের কোনো রেকর্ড আছে কিনা চেক করবে
+  // ২. যদি সিলেক্ট করা ডেটে কোনো ডেটা না থাকে, তবে আগের যেকোনো দিনের লেটেস্ট ক্লোজিং ডেটা খুঁজবে
   let prevData = await getPreviousData(date);
 
   if(prevData && prevData.rows && prevData.rows.length){
-    // পূর্বের দিনের Closing Stock কে নতুন দিনের Previous Qty বানিয়ে সেট করা হচ্ছে
-    let carriedRows = prevData.rows.map(pr => {
+    // আগের দিনের ক্লোজিং স্টককে আজকের প্রিভিয়াস কোয়ান্টিটি বানিয়ে কলাম রেডি করা
+    let carriedRows = prevData.rows.map((pr, i) => {
+      let prevQty = pr.closing !== undefined && pr.closing !== "" ? pr.closing : "";
       return {
         year: pr.year || "",
         fabric: pr.fabric || "",
-        previous: pr.closing !== undefined && pr.closing !== "" ? pr.closing : "", // Closing Stock এখানে Previous Qty হবে
-        opening: "",        // নতুন দিনের জন্য রেডি, তাই খালি থাকবে
+        previous: prevQty, 
+        opening: "",        // নতুন দিনের এন্ট্রির জন্য খালি থাকবে
         lastDate: pr.lastDate || "",
-        delivery: "",       // নতুন দিনের জন্য রেডি, তাই খালি থাকবে
-        totalDelivery: pr.totalDelivery || "", // পূর্বের টোটাল ডেলিভারি বেস হিসেবে থাকবে
+        delivery: "",       // নতুন দিনের এন্ট্রির জন্য খালি থাকবে
+        totalDelivery: pr.totalDelivery || "", // আগের মোট ডেলিভারি বেস হিসেবে থাকবে
         baseTotalDelivery: pr.totalDelivery || "",
-        closing: pr.closing !== undefined && pr.closing !== "" ? pr.closing : "",
-        manualClosing: pr.manualClosing !== undefined ? pr.manualClosing : false
+        closing: prevQty,   // রিসিভ/ডেলিভারি না দেওয়া পর্যন্ত ক্লোজিং ও প্রিভিয়াস এক থাকবে
+        manualClosing: pr.manualClosing !== undefined ? pr.manualClosing : (i >= 9)
       };
     });
 
@@ -468,7 +476,7 @@ async function loadData(){
     return;
   }
 
-  // ৩. যদি কোনো পূর্বের ব্যাকআপ ডেটাও না পাওয়া যায়, তবে একদম ফ্রেশ বা ডিফল্ট স্ট্রাকচার লোড হবে
+  // ৩. যদি ডেটাবেজে একদমই কোনো পূর্বের ব্যাকআপ ডেটা না থাকে, তবেই শুধু ডিফল্ট পেজ আসবে
   prepareRows(JSON.parse(JSON.stringify(defaultRows)));
   render();
 }
