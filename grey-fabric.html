@@ -188,11 +188,10 @@ function calcRow(r,i){
     r.baseTotalDelivery=raw(r.totalDelivery);
   }
 
-  // প্রথম কোডের সেইম লজিক: টোটাল ডেলিভারি = বেস ডেলিভারি + আজকের ডেলিভারি
+  // আগের কোডের সেইম লজিক
   let totalDelivery=raw(r.baseTotalDelivery)+delivery;
   r.totalDelivery=totalDelivery;
 
-  // ১ম ৯টি রো অটোমেটিক ফর্মুলা, বাকিগুলো ম্যানুয়াল এডিট
   if(!r.manualClosing){
     r.closing=previous+receive-totalDelivery;
   }
@@ -415,59 +414,60 @@ async function deleteDateOnly(date){
   }
 }
 
-/* 🔍 ডেটাবেজ থেকে পূর্ববর্তী দিনের সর্বশেষ ডেটা খোঁজার ফাংশন */
-async function getPreviousData(currentDate) {
+/* 🔍 ডেটাবেজ থেকে পূর্ববর্তী দিনের সর্বশেষ সেভ করা ডেটা খোঁজার লজিক */
+async function getPreviousData(date){
   try {
-    let snap = await getDocs(collection(db, "greyFabricStock"));
-    let allRecords = [];
-    snap.forEach(d => {
-      let data = d.data();
-      if (data.date < currentDate && data.rows && data.rows.length) {
-        allRecords.push(data);
+    let snap=await getDocs(collection(db,"greyFabricStock"));
+    let all=[];
+
+    snap.forEach(d=>{
+      let x=d.data();
+      if(x.date < date && x.rows && x.rows.length){
+        all.push(x);
       }
     });
-    if (allRecords.length === 0) return null;
-    // ডেট অনুযায়ী শর্টিং করে সবচেয়ে লেটেস্ট আগের দিন বের করা হচ্ছে
-    allRecords.sort((a, b) => b.date.localeCompare(a.date));
-    return allRecords;
-  } catch (err) {
-    console.error("Error fetching previous data:", err);
+
+    if(all.length === 0) return null;
+    all.sort((a,b)=>b.date.localeCompare(a.date));
+    return all;
+  } catch (e) {
+    console.error("Error fetching previous data: ", e);
     return null;
   }
 }
 
-/* 🔄 ডেটা লোড করার মূল ফাংশন */
+/* 🔄 আপনার চাওয়া সেই ১টি লজিক পরিবর্তন এখানে করা হয়েছে */
 async function loadData(){
   let date=document.getElementById("reportDate").value;
 
-  // ১. যদি এই ডেটে অলরেডি কোনো ডেটা সেভ করা থাকে, তবে সেটাই হুবহু লোড হবে
   let q=query(collection(db,"greyFabricStock"),where("date","==",date));
   let snap=await getDocs(q);
 
+  // ১. সিলেক্ট করা ডেটে অলরেডি কোনো সেভ করা ডেটা থাকলে সেটাই আসবে
   if(!snap.empty){
     prepareRows(snap.docs.data().rows||[]);
     render();
     return;
   }
 
-  // ২. যদি সিলেক্ট করা ডেটে কোনো ডেটা না থাকে, তবে আগের যেকোনো দিনের লেটেস্ট ক্লোজিং ডেটা খুঁজবে
+  // ২. সিলেক্ট করা ডেটে কোনো ডেটা না থাকলে, আগের দিন বা তার আগের লেটেস্ট সেভ করা পেজটি চলে আসবে
   let prevData = await getPreviousData(date);
 
   if(prevData && prevData.rows && prevData.rows.length){
-    // আগের দিনের ক্লোজিং স্টককে আজকের প্রিভিয়াস কোয়ান্টিটি বানিয়ে কলাম রেডি করা
+    // আগের দিনের ক্লোজিং স্টককে আজকের প্রিভিয়াস কোয়ান্টিটি বানিয়ে ৩টি লাইনসহ পুরো পেজ ক্যারি করা
     let carriedRows = prevData.rows.map((pr, i) => {
-      let prevQty = pr.closing !== undefined && pr.closing !== "" ? pr.closing : "";
+      let prevValue = pr.closing !== undefined && pr.closing !== "" ? pr.closing : "";
       return {
         year: pr.year || "",
         fabric: pr.fabric || "",
-        previous: prevQty, 
-        opening: "",        // নতুন দিনের এন্ট্রির জন্য খালি থাকবে
+        previous: prevValue, 
+        opening: "",        // আজকের দিনের জন্য রেডি (ফাঁকা)
         lastDate: pr.lastDate || "",
-        delivery: "",       // নতুন দিনের এন্ট্রির জন্য খালি থাকবে
-        totalDelivery: pr.totalDelivery || "", // আগের মোট ডেলিভারি বেস হিসেবে থাকবে
+        delivery: "",       // আজকের দিনের জন্য রেডি (ফাঁকা)
+        totalDelivery: pr.totalDelivery || "", 
         baseTotalDelivery: pr.totalDelivery || "",
-        closing: prevQty,   // রিসিভ/ডেলিভারি না দেওয়া পর্যন্ত ক্লোজিং ও প্রিভিয়াস এক থাকবে
-        manualClosing: pr.manualClosing !== undefined ? pr.manualClosing : (i >= 9)
+        closing: prevValue,  
+        manualClosing: pr.manualClosing !== undefined ? pr.manualClosing : (i >= 9) // শেষের ৩টি রো ম্যানুয়ালই থাকবে
       };
     });
 
@@ -476,7 +476,7 @@ async function loadData(){
     return;
   }
 
-  // ৩. যদি ডেটাবেজে একদমই কোনো পূর্বের ব্যাকআপ ডেটা না থাকে, তবেই শুধু ডিফল্ট পেজ আসবে
+  // ৩. যদি কোনো ব্যাকআপ ডেটা না থাকে, তবেই ডিফল্ট ব্ল্যাঙ্ক পেজ লোড হবে
   prepareRows(JSON.parse(JSON.stringify(defaultRows)));
   render();
 }
