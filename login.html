@@ -292,7 +292,6 @@ footer a{color:#2563eb;text-decoration:none;}
 </head>
 <body>
 
-<!-- WELCOME SPLASH -->
 <div id="splash">
   <svg class="s-human" viewBox="0 0 120 160" xmlns="http://www.w3.org/2000/svg">
     <defs>
@@ -330,10 +329,8 @@ footer a{color:#2563eb;text-decoration:none;}
   <div class="pbar"><div class="pfill"></div></div>
 </div>
 
-<!-- THREE.JS CANVAS -->
 <canvas id="three-bg"></canvas>
 
-<!-- HEADER -->
 <header>
   <div class="hdr-left">
     <div class="brand-badge">G</div>
@@ -348,17 +345,14 @@ footer a{color:#2563eb;text-decoration:none;}
   </div>
 </header>
 
-<!-- MAIN -->
 <main>
   <div class="card">
-    <!-- LEFT -->
     <div class="left">
       <div class="dot-grid">
         <span></span><span></span><span></span><span></span><span></span><span></span>
         <span></span><span></span><span></span><span></span><span></span><span></span>
         <span></span><span></span><span></span><span></span><span></span><span></span>
       </div>
-      <!-- Waving human -->
       <svg class="human-svg" viewBox="0 0 120 170" xmlns="http://www.w3.org/2000/svg">
         <defs>
           <linearGradient id="lg1" x1="0%" y1="0%" x2="100%" y2="100%">
@@ -374,22 +368,14 @@ footer a{color:#2563eb;text-decoration:none;}
           .wave-arm{transform-origin:82px 68px;animation:waveA 1.2s ease-in-out infinite alternate;}
           @keyframes waveA{0%{transform:rotate(-15deg);}100%{transform:rotate(35deg);}}
         </style>
-        <!-- glow ring -->
         <circle cx="60" cy="72" r="58" fill="none" stroke="rgba(79,142,247,0.15)" stroke-width="1.5" stroke-dasharray="6 5"/>
-        <!-- head -->
         <circle cx="60" cy="28" r="20" fill="url(#lg1)"/>
-        <!-- eyes -->
         <circle cx="53" cy="25" r="3" fill="white" opacity=".95"/>
         <circle cx="67" cy="25" r="3" fill="white" opacity=".95"/>
-        <!-- smile -->
         <path d="M53 34 Q60 41 67 34" stroke="white" stroke-width="2" fill="none" stroke-linecap="round"/>
-        <!-- body -->
         <rect x="42" y="50" width="36" height="48" rx="14" fill="url(#lg1)"/>
-        <!-- left arm -->
         <rect x="22" y="54" width="20" height="10" rx="5" fill="url(#lg2)"/>
-        <!-- right arm (waving) -->
         <rect class="wave-arm" x="82" y="54" width="20" height="10" rx="5" fill="url(#lg2)"/>
-        <!-- legs -->
         <rect x="44" y="98" width="14" height="38" rx="7" fill="url(#lg1)"/>
         <rect x="62" y="98" width="14" height="38" rx="7" fill="url(#lg2)"/>
       </svg>
@@ -397,11 +383,10 @@ footer a{color:#2563eb;text-decoration:none;}
       <p>GMS Manufacturing Control Dashboard — login to manage your operations.</p>
     </div>
 
-    <!-- RIGHT -->
     <div class="right">
       <div id="loginForm">
         <div class="form-title">Sign In</div>
-        <div class="form-sub">Enter your credentials to continue</div>
+        <div class="form-sub" id="net-status">Enter your credentials to continue</div>
 
         <div class="field">
           <label>Email Address</label>
@@ -432,17 +417,78 @@ footer a{color:#2563eb;text-decoration:none;}
   </div>
 </main>
 
-<!-- FOOTER -->
 <footer>
-  <span>© 2025 <strong>GMS Textiles</strong> · Tansutrapur, Kaliakoir, Gazipur</span>
+  <span>©️ 2025 <strong>GMS Textiles</strong> · Tansutrapur, Kaliakoir, Gazipur</span>
   <span>Powered by <strong>JOHURUL</strong> · <a href="tel:01925254746">01925254746</a></span>
 </footer>
+
+<script>
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    // ব্লব ইউআরএল বা ডাইনামিক স্ক্রিপ্ট দিয়ে সার্ভিস ওয়ার্কার তৈরি করা হচ্ছে যেন আলাদা ফাইল না লাগে
+    const swCode = `
+      const CACHE_NAME = 'gms-erp-v1';
+      const ASSETS = [
+        '${window.location.pathname}',
+        'https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;600;700&family=Exo+2:wght@300;400;500;600&display=swap',
+        'https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js'
+      ];
+
+      self.addEventListener('install', e => {
+        e.waitUntil(
+          caches.open(CACHE_NAME).then(cache => cache.addAll(ASSETS)).then(() => self.skipWaiting())
+        );
+      });
+
+      self.addEventListener('activate', e => {
+        e.waitUntil(self.clients.claim());
+      });
+
+      self.addEventListener('fetch', e => {
+        // Firebase রিকোয়েস্ট ক্যাশ করা যাবে না, ওগুলো কোড হ্যান্ডেল করবে
+        if (e.request.url.includes('firebase') || e.request.url.includes('firestore')) {
+          return;
+        }
+        e.respondWith(
+          caches.match(e.request).then(cachedResponse => {
+            return cachedResponse || fetch(e.request).then(fetchResponse => {
+              return caches.open(CACHE_NAME).then(cache => {
+                cache.put(e.request, fetchResponse.clone());
+                return fetchResponse;
+              });
+            });
+          }).catch(() => caches.match('${window.location.pathname}'))
+        );
+      });
+    `;
+
+    const blob = new Blob([swCode], { type: 'application/javascript' });
+    const swUrl = URL.createObjectURL(blob);
+    
+    navigator.serviceWorker.register(swUrl)
+      .then(() => console.log('GMS Service Worker Registered Successfully.'))
+      .catch(err => console.log('Service Worker Failed:', err));
+  });
+}
+
+// নেটওয়ার্ক স্ট্যাটাস চেক ও রিয়েল-টাইম আপডেট
+function updateOnlineStatus() {
+  const statusEl = document.getElementById('net-status');
+  if (navigator.onLine) {
+    statusEl.innerHTML = "Enter your credentials to continue";
+    statusEl.style.color = "#64748b";
+  } else {
+    statusEl.innerHTML = "📶 Offline Mode Active (Using local backup)";
+    statusEl.style.color = "#ea580c";
+  }
+}
+window.addEventListener('online', updateOnlineStatus);
+window.addEventListener('offline', updateOnlineStatus);
+</script>
 
 <script type="module">
 /* ══════════════════════════════════════
    THREE.JS — LIGHT 3D BACKGROUND
-   Floating glowing spheres + rotating
-   torus wireframe + particle field
 ══════════════════════════════════════ */
 (function(){
   const canvas = document.getElementById('three-bg');
@@ -455,10 +501,8 @@ footer a{color:#2563eb;text-decoration:none;}
   const camera = new THREE.PerspectiveCamera(60, window.innerWidth/window.innerHeight, 0.1, 200);
   camera.position.z = 18;
 
-  // Fog for depth - light
   scene.fog = new THREE.FogExp2(0xe0e7ff, 0.022);
 
-  // ── Lights ──
   const ambient = new THREE.AmbientLight(0xdde8ff, 2.5);
   scene.add(ambient);
 
@@ -474,7 +518,6 @@ footer a{color:#2563eb;text-decoration:none;}
   light3.position.set(0, 8, -5);
   scene.add(light3);
 
-  // ── Big Glowing Torus (wireframe) ──
   const torusGeo = new THREE.TorusGeometry(7, 2.2, 18, 80);
   const torusMat = new THREE.MeshBasicMaterial({
     color:0x2563eb, wireframe:true, transparent:true, opacity:0.1
@@ -483,7 +526,6 @@ footer a{color:#2563eb;text-decoration:none;}
   torus.rotation.x = Math.PI/4;
   scene.add(torus);
 
-  // ── Inner torus ──
   const t2Geo = new THREE.TorusGeometry(4, 1, 12, 50);
   const t2Mat = new THREE.MeshBasicMaterial({
     color:0x7c3aed, wireframe:true, transparent:true, opacity:0.09
@@ -492,7 +534,6 @@ footer a{color:#2563eb;text-decoration:none;}
   torus2.rotation.y = Math.PI/3;
   scene.add(torus2);
 
-  // ── Glowing Spheres ──
   const sphereData = [
     {r:1.4, x:-7, y:3, z:-4, color:0x3b82f6, speed:0.8},
     {r:0.9, x:7, y:-3, z:-2, color:0x8b5cf6, speed:1.1},
@@ -514,7 +555,6 @@ footer a{color:#2563eb;text-decoration:none;}
     return m;
   });
 
-  // ── Icosahedron wireframe ──
   const icoGeo = new THREE.IcosahedronGeometry(5, 1);
   const icoMat = new THREE.MeshBasicMaterial({
     color:0x06b6d4, wireframe:true, transparent:true, opacity:0.07
@@ -523,7 +563,6 @@ footer a{color:#2563eb;text-decoration:none;}
   ico.position.set(6, -2, -6);
   scene.add(ico);
 
-  // ── Star particles ── (soft blue dots)
   const starCount = 600;
   const starGeo = new THREE.BufferGeometry();
   const starPos = new Float32Array(starCount*3);
@@ -532,7 +571,6 @@ footer a{color:#2563eb;text-decoration:none;}
   const starMat = new THREE.PointsMaterial({color:0x6366f1, size:0.1, transparent:true, opacity:0.4});
   scene.add(new THREE.Points(starGeo, starMat));
 
-  // ── Ring particles ──
   const ringCount = 300;
   const ringGeo = new THREE.BufferGeometry();
   const ringPos = new Float32Array(ringCount*3);
@@ -548,7 +586,6 @@ footer a{color:#2563eb;text-decoration:none;}
   const ringPts = new THREE.Points(ringGeo, ringMat);
   scene.add(ringPts);
 
-  // Mouse parallax
   let mx=0, my=0;
   document.addEventListener('mousemove', e=>{
     mx = (e.clientX/window.innerWidth - 0.5)*2;
@@ -573,7 +610,6 @@ footer a{color:#2563eb;text-decoration:none;}
       m.rotation.y += 0.01;
     });
 
-    // Animate lights
     light1.position.x = Math.sin(t*0.7)*10;
     light1.position.y = Math.cos(t*0.5)*6;
     light2.position.x = Math.cos(t*0.6)*10;
@@ -581,7 +617,6 @@ footer a{color:#2563eb;text-decoration:none;}
     light3.position.x = Math.sin(t*0.4)*8;
     light3.position.z = Math.cos(t*0.3)*8 - 5;
 
-    // Parallax
     camera.position.x += (mx*1.5 - camera.position.x)*0.04;
     camera.position.y += (-my*1.2 - camera.position.y)*0.04;
     camera.lookAt(scene.position);
@@ -601,9 +636,13 @@ footer a{color:#2563eb;text-decoration:none;}
 window.addEventListener('load',()=>{
   setTimeout(()=>{
     const sp = document.getElementById('splash');
-    sp.style.opacity='0';
-    setTimeout(()=>sp.remove(), 900);
+    if(sp) {
+      sp.style.opacity='0';
+      setTimeout(()=>sp.remove(), 900);
+    }
   }, 3800);
+  // লোড হওয়ার সাথে সাথে একবার স্ট্যাটাস রান করুন
+  if(typeof updateOnlineStatus === 'function') updateOnlineStatus();
 });
 
 /* FIREBASE INIT */
@@ -621,7 +660,7 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const db  = getFirestore(app);
 
-/* LOGIN */
+/* LOGIN (ONLINE + OFFLINE HYBRID LOGIC) */
 window.login = async function(){
   const email    = document.getElementById('email').value.trim();
   const password = document.getElementById('password').value.trim();
@@ -634,15 +673,40 @@ window.login = async function(){
     return;
   }
 
+  // ১. ইউজার যদি অফলাইনে থাকে (ইন্টারনেট না থাকে)
+  if (!navigator.onLine) {
+    msg.style.color = '#ea580c';
+    msg.innerHTML   = '🔄 Checking local cache...';
+
+    const localUsers = JSON.parse(localStorage.getItem('gms_cached_users') || '[]');
+    const matchingUser = localUsers.find(u => 
+      String(u.email || '').trim().toLowerCase() === email.toLowerCase() &&
+      String(u.password || '').trim() === password
+    );
+
+    if (matchingUser) {
+      handleSuccess(matchingUser, true);
+    } else {
+      msg.style.color = '#ef4444';
+      msg.innerHTML   = '❌ অফলাইন লগইন ব্যর্থ! পূর্বে এই পিসিতে এই আইডি দিয়ে অনলাইন লগইন করা থাকতে হবে।';
+    }
+    return;
+  }
+
+  // ২. ইউজার অনলাইনে থাকলে সাধারণ নিয়মে Firebase থেকে চেক হবে
   msg.style.color = '#4f8ef7';
-  msg.innerHTML   = '🔄 Verifying...';
+  msg.innerHTML   = '🔄 Verifying with Cloud...';
 
   try{
     const snap = await getDocs(collection(db, 'users'));
     let found = null, id = '';
+    let allUsersList = []; // অফলাইন ব্যাকআপের জন্য সব ইউজার লিস্টে নিচ্ছি
 
     snap.forEach(d => {
       const u = d.data();
+      u.id = d.id;
+      allUsersList.push(u); // ভবিষ্যতের অফলাইন ম্যাচিং এর জন্য
+
       if(
         String(u.email   || '').trim().toLowerCase() === email.toLowerCase() &&
         String(u.password|| '').trim()               === password
@@ -652,30 +716,51 @@ window.login = async function(){
       }
     });
 
+    // অনলাইনে সফলভাবে পুরো ডেটা আসলে লোকাল ক্যাশ ও ব্যাকআপ আপডেট করে রাখছি
+    if(allUsersList.length > 0) {
+      localStorage.setItem('gms_cached_users', JSON.stringify(allUsersList));
+    }
+
     if(!found){
       msg.style.color = '#ef4444';
       msg.innerHTML   = '❌ Login Failed — email বা password ভুল';
       return;
     }
 
-    found.id = id;
-    localStorage.setItem('gmsUser', JSON.stringify(found));
-
-    /* success UI */
-    msg.style.color = '#00e5ff';
-    msg.innerHTML   = '✅ Login Successful!';
-    document.getElementById('loginForm').style.display = 'none';
-    document.getElementById('wName').textContent = 'Welcome, ' + (found.name || found.email) + '!';
-    document.getElementById('postWelcome').style.display = 'block';
-
-    setTimeout(() => { location.href = 'index.html'; }, 2000);
+    handleSuccess(found, false);
 
   } catch(e){
     console.error(e);
-    msg.style.color = '#ef4444';
-    msg.innerHTML   = '🔥 Firebase সমস্যা হয়েছে';
+    // যদি কোনো কারণে ফায়ারবেস ফেইল করে (যেমন নেটওয়ার্ক ড্রপ), তখন লোকাল চেক করার শেষ চেষ্টা
+    const localUsers = JSON.parse(localStorage.getItem('gms_cached_users') || '[]');
+    const matchingUser = localUsers.find(u => 
+      String(u.email || '').trim().toLowerCase() === email.toLowerCase() &&
+      String(u.password || '').trim() === password
+    );
+
+    if(matchingUser) {
+      handleSuccess(matchingUser, true);
+    } else {
+      msg.style.color = '#ef4444';
+      msg.innerHTML   = '🔥 Firebase সমস্যা এবং কোনো লোকাল ব্যাকআপ পাওয়া যায়নি';
+    }
   }
 };
+
+// লগইন সফল হলে UI হ্যান্ডেল করার ফাংশন
+function handleSuccess(user, isOffline) {
+  const msg = document.getElementById('msg');
+  localStorage.setItem('gmsUser', JSON.stringify(user));
+
+  msg.style.color = '#00e5ff';
+  msg.innerHTML   = isOffline ? '✅ Offline Login Successful!' : '✅ Online Login Successful!';
+  
+  document.getElementById('loginForm').style.display = 'none';
+  document.getElementById('wName').textContent = 'Welcome, ' + (user.name || user.email) + '!';
+  document.getElementById('postWelcome').style.display = 'block';
+
+  setTimeout(() => { location.href = 'index.html'; }, 2000);
+}
 
 document.addEventListener('keydown', e => { if(e.key === 'Enter') window.login(); });
 document.getElementById('loginBtn').addEventListener('click', () => window.login());
