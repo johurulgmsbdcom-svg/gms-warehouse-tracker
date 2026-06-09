@@ -188,7 +188,6 @@ function calcRow(r,i){
     r.baseTotalDelivery=raw(r.totalDelivery);
   }
 
-  // ১ম কোডের মূল ফর্মুলা লজিক
   let totalDelivery=raw(r.baseTotalDelivery)+delivery;
   r.totalDelivery=totalDelivery;
 
@@ -199,38 +198,22 @@ function calcRow(r,i){
 
 function render(){
   let html="";
-
   rows.forEach((r,i)=>{
     calcRow(r,i);
-
     html+=`
       <tr>
         <td><input value="${r.year||""}" oninput="rows[${i}].year=this.value"></td>
         <td><input value="${r.fabric||""}" oninput="rows[${i}].fabric=this.value"></td>
-
-        <td><input type="text" value="${r.previous!==undefined?r.previous:""}"
-          oninput="rows[${i}].previous=this.value; calc();"></td>
-
-        <td><input type="text" value="${r.opening!==undefined?r.opening:""}"
-          oninput="rows[${i}].opening=this.value; calc();"></td>
-
-        <td><input type="date" value="${r.lastDate||""}"
-          oninput="rows[${i}].lastDate=this.value"></td>
-
-        <td><input type="text" value="${r.delivery!==undefined?r.delivery:""}"
-          oninput="rows[${i}].delivery=this.value; calc();"></td>
-
-        <td><input type="text" value="${format(r.totalDelivery)}"
-          oninput="rows[${i}].baseTotalDelivery=this.value; rows[${i}].totalDelivery=this.value; calc();"></td>
-
-        <td><input type="text" value="${format(r.closing)}"
-          oninput="rows[${i}].closing=this.value; rows[${i}].manualClosing=true; calcTotalsOnly(); renderChartOnly();"></td>
-
+        <td><input type="text" value="${r.previous!==undefined?r.previous:""}" oninput="rows[${i}].previous=this.value; calc();"></td>
+        <td><input type="text" value="${r.opening!==undefined?r.opening:""}" oninput="rows[${i}].opening=this.value; calc();"></td>
+        <td><input type="date" value="${r.lastDate||""}" oninput="rows[${i}].lastDate=this.value"></td>
+        <td><input type="text" value="${r.delivery!==undefined?r.delivery:""}" oninput="rows[${i}].delivery=this.value; calc();"></td>
+        <td><input type="text" value="${format(r.totalDelivery)}" oninput="rows[${i}].baseTotalDelivery=this.value; rows[${i}].totalDelivery=this.value; calc();"></td>
+        <td><input type="text" value="${format(r.closing)}" oninput="rows[${i}].closing=this.value; rows[${i}].manualClosing=true; calcTotalsOnly(); renderChartOnly();"></td>
         <td class="noPrint"><button class="del" onclick="removeRow(${i})">Delete</button></td>
       </tr>
     `;
   });
-
   document.getElementById("tbody").innerHTML=html;
   calcTotalsOnly();
   renderChartOnly();
@@ -242,8 +225,8 @@ function calc(){
   renderChartOnly();
 
   document.querySelectorAll("#tbody tr").forEach((tr,i)=>{
-    let totalInput=tr.children?.querySelector("input");
-    let closingInput=tr.children?.querySelector("input");
+    let totalInput=tr.children[6]?.querySelector("input");
+    let closingInput=tr.children[7]?.querySelector("input");
     if(totalInput) totalInput.value=format(rows[i].totalDelivery);
     if(closingInput && !document.activeElement.isSameNode(closingInput)) closingInput.value=format(rows[i].closing);
   });
@@ -255,37 +238,28 @@ function calcTotalsOnly(){
 
   document.querySelectorAll("#tbody tr").forEach((tr,i)=>{
     let inputs=tr.querySelectorAll("input");
-
-    let previous=raw(inputs?.value);
-    let receive=raw(inputs?.value);
-    let delivery=raw(inputs?.value);
-    let totalDelivery=raw(inputs?.value);
-    let closing=raw(inputs?.value);
+    let previous=raw(inputs[2]?.value);
+    let receive=raw(inputs[3]?.value);
+    let delivery=raw(inputs[5]?.value);
+    let totalDelivery=raw(inputs[6]?.value);
+    let closing=raw(inputs[7]?.value);
 
     if(rows[i]){
-      rows[i].previous=inputs?.value || "";
-      rows[i].opening=inputs?.value || "";
-      rows[i].lastDate=inputs?.value || "";
-      rows[i].delivery=inputs?.value || "";
-      rows[i].totalDelivery=inputs?.value || "";
-      rows[i].closing=inputs?.value || "";
-      rows[i].manualClosing=i>=9 ? true : rows[i].manualClosing;
+      rows[i].previous=inputs[2]?.value || "";
+      rows[i].opening=inputs[3]?.value || "";
+      rows[i].lastDate=inputs[4]?.value || "";
+      rows[i].delivery=inputs[5]?.value || "";
+      rows[i].totalDelivery=inputs[6]?.value || "";
+      rows[i].closing=inputs[7]?.value || "";
     }
 
     if(i<=8){
-      leftPrev+=previous;
-      leftReceive+=receive;
-      leftDelivery+=delivery;
-      leftTotalDelivery+=totalDelivery;
-      leftClosing+=closing;
+      leftPrev+=previous; leftReceive+=receive; leftDelivery+=delivery;
+      leftTotalDelivery+=totalDelivery; leftClosing+=closing;
     }
-
     if(i>=9){
-      extraPrev+=previous;
-      extraReceive+=receive;
-      extraDelivery+=delivery;
-      extraTotalDelivery+=totalDelivery;
-      extraClosing+=closing;
+      extraPrev+=previous; extraReceive+=receive; extraDelivery+=delivery;
+      extraTotalDelivery+=totalDelivery; extraClosing+=closing;
     }
   });
 
@@ -310,200 +284,117 @@ function calcTotalsOnly(){
 
 function renderChartOnly(){
   let gtClosing=0;
-
   let trs=document.querySelectorAll("#tbody tr");
   if(trs.length){
-    trs.forEach(tr=>{
-      let inputs=tr.querySelectorAll("input");
-      gtClosing+=raw(inputs?.value);
-    });
-  }else{
-    rows.forEach(r=>gtClosing+=raw(r.closing));
-  }
-
+    trs.forEach(tr=>{ gtClosing+=raw(tr.querySelectorAll("input")[7]?.value); });
+  } else { rows.forEach(r=>gtClosing+=raw(r.closing)); }
   renderChart(gtClosing);
 }
 
 function renderChart(grandTotal){
   let labels=rows.map(r=>r.year||r.fabric||"Item");
   let data=rows.map(r=>raw(r.closing));
-
   labels.push("Grand Total");
   data.push(grandTotal);
 
   if(chart) chart.destroy();
-
   const valuePlugin={
     id:"valuePlugin",
     afterDatasetsDraw(chart){
       const {ctx}=chart;
-      ctx.save();
-      ctx.textAlign="center";
-      ctx.fillStyle="#111";
-      ctx.font="bold 10px Arial";
-      chart.data.datasets.data.forEach((value,index)=>{
+      ctx.save(); ctx.textAlign="center"; ctx.fillStyle="#111"; ctx.font="bold 10px Arial";
+      chart.data.datasets[0].data.forEach((value,index)=>{
         const bar=chart.getDatasetMeta(0).data[index];
-        if(!bar) return;
-        ctx.fillText(Number(value||0).toLocaleString("en-US"),bar.x,bar.y-7);
+        if(bar) ctx.fillText(Number(value||0).toLocaleString("en-US"),bar.x,bar.y-7);
       });
       ctx.restore();
     }
   };
-
   chart=new Chart(document.getElementById("stockChart"),{
     type:"bar",
-    data:{
-      labels:labels,
-      datasets:[{
-        label:"Closing Stock",
-        data:data,
-        borderWidth:1,
-        borderRadius:4
-      }]
-    },
-    options:{
-      responsive:true,
-      plugins:{
-        legend:{display:false},
-        tooltip:{
-          callbacks:{
-            label:function(ctx){
-              return "Closing Stock: "+Number(ctx.raw||0).toLocaleString("en-US");
-            }
-          }
-        }
-      },
-      scales:{
-        y:{beginAtZero:true},
-        x:{ticks:{font:{size:9}}}
-      }
-    },
+    data:{ labels, datasets:[{ label:"Closing Stock", data, borderWidth:1, borderRadius:4 }] },
+    options:{ responsive:true, plugins:{ legend:{display:false} }, scales:{ y:{beginAtZero:true}, x:{ticks:{font:{size:9}}} } },
     plugins:[valuePlugin]
   });
 }
 
 window.addRow=function(){
-  rows.push({
-    year:"",
-    fabric:"",
-    previous:"",
-    opening:"",
-    lastDate:"",
-    delivery:"",
-    totalDelivery:"",
-    baseTotalDelivery:"",
-    closing:"",
-    manualClosing:true
-  });
+  rows.push({year:"",fabric:"",previous:"",opening:"",lastDate:"",delivery:"",totalDelivery:"",baseTotalDelivery:"",closing:"",manualClosing:true});
   render();
 };
 
 window.removeRow=function(i){
-  if(confirm("Delete this row?")){
-    rows.splice(i,1);
-    render();
-  }
+  if(confirm("Delete this row?")){ rows.splice(i,1); render(); }
 };
 
 async function deleteDateOnly(date){
   let q=query(collection(db,"greyFabricStock"),where("date","==",date));
   let snap=await getDocs(q);
-
-  for(let d of snap.docs){
-    await deleteDoc(doc(db,"greyFabricStock",d.id));
-  }
+  for(let d of snap.docs){ await deleteDoc(doc(db,"greyFabricStock",d.id)); }
 }
 
-/* 🔍 ডেটাবেজ থেকে সর্বশেষ সেভ করা যেকোনো দিনের ডেটা খোঁজার সহজ লজিক */
 async function getPreviousData(date){
-  try {
-    let snap=await getDocs(collection(db,"greyFabricStock"));
-    let all=[];
-
-    snap.forEach(d=>{
-      let x=d.data();
-      if(x.date < date && x.rows && x.rows.length){
-        all.push(x);
-      }
-    });
-
-    if(all.length === 0) return null;
-    all.sort((a,b)=>b.date.localeCompare(a.date));
-    return all;
-  } catch (e) {
-    console.error(e);
-    return null;
-  }
+  let snap=await getDocs(collection(db,"greyFabricStock"));
+  let all=[];
+  snap.forEach(d=>{
+    let x=d.data();
+    if(x.date < date && x.rows && x.rows.length) all.push(x);
+  });
+  all.sort((a,b)=>b.date.localeCompare(a.date));
+  return all[0]||null;
 }
 
-/* 🔄 মূল পরিবর্তন: ৯ তারিখের ডেটা হুবহু ১০ তারিখে কপি করে নিয়ে আসার লজিক */
 async function loadData(){
   let date=document.getElementById("reportDate").value;
 
+  // ১. বর্তমান তারিখের জন্য ডাটা আছে কি না চেক করি
   let q=query(collection(db,"greyFabricStock"),where("date","==",date));
   let snap=await getDocs(q);
 
-  // ১. যদি ১০ তারিখে অলরেডি কোনো কিছু সেভ করে রাখেন, তবে সেটাই স্ক্রিনে আসবে
   if(!snap.empty){
-    prepareRows(snap.docs.data().rows||[]);
+    prepareRows(snap.docs[0].data().rows||[]);
     render();
     return;
   }
 
-  // ২. যদি ১০ তারিখে কোনো ডেটা না থাকে, তবে আগের দিন (৯ তারিখ) যা ছিল হুবহু পুরো পেজ কপি হয়ে আসবে
+  // ২. আজ ডাটা না থাকলে, আগের যে কোনো দিনের লেটেস্ট ডাটা খুঁজি
   let prevData = await getPreviousData(date);
-
-  if(prevData && prevData.rows && prevData.rows.length){
-    // আগের দিনের পেজের সব ইনপুট ডেটা (৩টি ম্যানুয়াল রো-সহ) হুবহু নিয়ে আসা হচ্ছে
-    let carriedRows = prevData.rows.map((pr) => {
-      return {
-        year: pr.year || "",
-        fabric: pr.fabric || "",
-        previous: pr.previous || "", 
-        opening: pr.opening || "",        
-        lastDate: pr.lastDate || "",
-        delivery: pr.delivery || "",       
-        totalDelivery: pr.totalDelivery || "", 
-        baseTotalDelivery: pr.baseTotalDelivery || pr.totalDelivery || "",
-        closing: pr.closing || "",  
-        manualClosing: pr.manualClosing !== undefined ? pr.manualClosing : false
-      };
+  if(prevData && prevData.rows){
+    // আগের দিনের ডাটা হুবহু কপি করছি
+    let clonedRows = JSON.parse(JSON.stringify(prevData.rows));
+    
+    // শুধু আজকের রিসিভ এবং ডেলিভারি ইনপুটগুলো খালি করছি যাতে আজকের নতুন এন্ট্রি দেওয়া যায়, 
+    // কিন্তু প্রিভিয়াস এবং টোটাল ডেলিভারি আগের মতোই থাকছে।
+    clonedRows.forEach(r => {
+        r.opening = ""; 
+        r.delivery = ""; 
+        r.baseTotalDelivery = r.totalDelivery; 
     });
 
-    prepareRows(carriedRows);
+    prepareRows(clonedRows);
     render();
     return;
   }
 
-  // ৩. যদি একদম শুরুতে ডেটাবেজ পুরো ফাঁকা থাকে, তবেই ডিফল্ট পেজ ফরম্যাট আসবে
+  // ৩. একদম নতুন ডাটাবেজ হলে ডিফল্ট রো লোড হবে
   prepareRows(JSON.parse(JSON.stringify(defaultRows)));
   render();
 }
 
 window.saveData=async function(){
   let date=document.getElementById("reportDate").value;
-
   rows.forEach((r,i)=>calcRow(r,i));
   calcTotalsOnly();
-
   await deleteDateOnly(date);
-
-  await addDoc(collection(db,"greyFabricStock"),{
-    date:date,
-    rows:rows,
-    savedAt:new Date().toISOString()
-  });
-
+  await addDoc(collection(db,"greyFabricStock"),{ date, rows, savedAt:new Date().toISOString() });
   toast("Grey Fabric Saved ✅");
 };
 
 window.deleteDateData=async function(){
   let date=document.getElementById("reportDate").value;
-
   if(confirm("Delete this date data?")){
     await deleteDateOnly(date);
-    prepareRows(JSON.parse(JSON.stringify(defaultRows)));
-    render();
+    loadData(); // আগের দিনের ডাটা অটোমেটিক আবার নিয়ে আসবে
     toast("Deleted ✅");
   }
 };
@@ -511,22 +402,9 @@ window.deleteDateData=async function(){
 window.exportExcel=function(){
   let clone=document.getElementById("reportTable").cloneNode(true);
   clone.querySelectorAll(".noPrint").forEach(x=>x.remove());
-
-  let html=`
-  <html>
-  <head><meta charset="UTF-8"></head>
-  <body>
-  <h2>GMS Textiles Ltd</h2>
-  <h3>Grey Fabric Stock Report</h3>
-  ${clone.outerHTML}
-  </body>
-  </html>`;
-
+  let html=`<html><head><meta charset="UTF-8"></head><body><h2>GMS Textiles Ltd</h2><h3>Grey Fabric Stock Report</h3>${clone.outerHTML}</body></html>`;
   let file=new Blob([html],{type:"application/vnd.ms-excel"});
-  let a=document.createElement("a");
-  a.href=URL.createObjectURL(file);
-  a.download="grey-fabric-stock-report.xls";
-  a.click();
+  let a=document.createElement("a"); a.href=URL.createObjectURL(file); a.download="grey-fabric-stock-report.xls"; a.click();
 };
 
 document.getElementById("reportDate").addEventListener("change",loadData);
@@ -538,29 +416,15 @@ document.addEventListener("input",function(e){
 });
 
 document.addEventListener("keydown",function(e){
-  if(e.target.tagName!=="INPUT") return;
-
-  if(e.key==="Tab"){
-    return;
-  }
-
-  if(e.key==="Enter"){
-    e.preventDefault();
-
-    let td=e.target.closest("td");
-    let tr=e.target.closest("tr");
-    if(!td || !tr) return;
-
-    let colIndex=[...tr.children].indexOf(td);
-    let nextTr=tr.nextElementSibling;
-
-    if(nextTr){
-      let nextInput=nextTr.children[colIndex]?.querySelector("input");
-      if(nextInput){
-        nextInput.focus();
-        nextInput.select();
-      }
-    }
+  if(e.target.tagName!=="INPUT" || e.key!=="Enter") return;
+  e.preventDefault();
+  let td=e.target.closest("td"); let tr=e.target.closest("tr");
+  if(!td || !tr) return;
+  let colIndex=[...tr.children].indexOf(td);
+  let nextTr=tr.nextElementSibling;
+  if(nextTr){
+    let nextInput=nextTr.children[colIndex]?.querySelector("input");
+    if(nextInput){ nextInput.focus(); nextInput.select(); }
   }
 });
 
