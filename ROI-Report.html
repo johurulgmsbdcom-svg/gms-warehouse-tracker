@@ -6,184 +6,763 @@
 <title>GMS MCD ERP — Auto ROI Report</title>
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2"></script>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 <style>
 :root{
-  --bg:#0a1628;--card:#1e293b;--card2:#334155;
+  --bg:#0a1628;--bg2:#0f172a;--card:#1e293b;--card2:#334155;
   --text:#f1f5f9;--muted:#94a3b8;--border:#475569;
   --blue:#3b82f6;--green:#22c55e;--red:#ef4444;
-  --yellow:#f59e0b;--purple:#8b5cf6;--teal:#14b8a6;
+  --yellow:#f59e0b;--purple:#8b5cf6;--teal:#14b8a6;--pink:#ec4899;
+  --shadow:0 10px 40px rgba(0,0,0,.4);
+  --glow-blue:0 0 30px rgba(59,130,246,.3);
+  --glow-green:0 0 30px rgba(34,197,94,.3);
+  --glow-purple:0 0 30px rgba(139,92,246,.3);
 }
 body.light{
-  --bg:#f8fafc;--card:#ffffff;--card2:#f1f5f9;
+  --bg:#f8fafc;--bg2:#ffffff;--card:#ffffff;--card2:#f1f5f9;
   --text:#1e293b;--muted:#64748b;--border:#cbd5e1;
+  --shadow:0 10px 40px rgba(0,0,0,.08);
+  --glow-blue:0 0 30px rgba(59,130,246,.15);
+  --glow-green:0 0 30px rgba(34,197,94,.15);
+  --glow-purple:0 0 30px rgba(139,92,246,.15);
 }
 *{box-sizing:border-box;margin:0;padding:0}
-body{background:var(--bg);color:var(--text);font-family:'Segoe UI',Arial,sans-serif;padding:0 0 60px;transition:background .3s,color .3s}
-.header{background:linear-gradient(135deg,#0f172a,#1e293b);border-bottom:2px solid var(--blue);padding:20px 30px;text-align:center;position:relative;overflow:hidden}
-body.light .header{background:linear-gradient(135deg,#ffffff,#f1f5f9)}
-.header::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse at 30% 50%,rgba(59,130,246,.12),transparent 60%),radial-gradient(ellipse at 70% 50%,rgba(139,92,246,.10),transparent 60%)}
-.header h1{font-size:28px;font-weight:900;letter-spacing:1px;position:relative;background:linear-gradient(90deg,#3b82f6,#8b5cf6,#22c55e);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
-.header h3{font-size:13px;color:var(--muted);margin-top:4px;position:relative;letter-spacing:2px}
-.header h4{font-size:12px;color:var(--muted);position:relative;margin-top:2px}
-.autoBadge{display:inline-flex;align-items:center;gap:6px;background:rgba(34,197,94,.15);border:1px solid rgba(34,197,94,.3);padding:4px 12px;border-radius:20px;font-size:11px;font-weight:700;color:var(--green);margin-top:8px}
-.autoBadge .dot{width:8px;height:8px;background:var(--green);border-radius:50%;animation:pulse 1.5s infinite}
-@keyframes pulse{0%{box-shadow:0 0 0 0 rgba(34,197,94,.7)}70%{box-shadow:0 0 0 10px rgba(34,197,94,0)}100%{box-shadow:0 0 0 0 rgba(34,197,94,0)}}
-.themeToggle{position:absolute;top:20px;right:30px;background:rgba(59,130,246,.2);border:1px solid rgba(59,130,246,.3);padding:8px 14px;border-radius:10px;cursor:pointer;color:var(--blue);font-weight:700;font-size:13px;z-index:10;transition:all .3s}
-.themeToggle:hover{background:rgba(59,130,246,.3);transform:translateY(-2px)}
-.topBar{background:rgba(30,41,59,.95);border-bottom:1px solid var(--border);padding:12px 30px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px}
+body{
+  background:var(--bg);color:var(--text);
+  font-family:'Segoe UI',Arial,sans-serif;
+  padding:0 0 80px;transition:background .4s,color .4s;
+  min-height:100vh;
+}
+
+/* ===== ANIMATED BACKGROUND ===== */
+body::before{
+  content:'';position:fixed;inset:0;z-index:-1;
+  background:
+    radial-gradient(circle at 20% 30%,rgba(59,130,246,.08),transparent 40%),
+    radial-gradient(circle at 80% 70%,rgba(139,92,246,.08),transparent 40%),
+    radial-gradient(circle at 50% 50%,rgba(34,197,94,.05),transparent 50%);
+  animation:bgShift 20s ease infinite;
+}
+@keyframes bgShift{
+  0%,100%{transform:scale(1) rotate(0deg)}
+  50%{transform:scale(1.1) rotate(5deg)}
+}
+
+/* ===== HEADER ===== */
+.header{
+  background:linear-gradient(135deg,#0f172a 0%,#1e293b 50%,#0f172a 100%);
+  border-bottom:2px solid var(--blue);
+  padding:30px;text-align:center;position:relative;overflow:hidden;
+  box-shadow:0 10px 40px rgba(0,0,0,.3);
+}
+body.light .header{
+  background:linear-gradient(135deg,#ffffff 0%,#f1f5f9 50%,#ffffff 100%);
+  border-bottom-color:var(--blue);
+}
+.header::before{
+  content:'';position:absolute;inset:0;
+  background:
+    radial-gradient(ellipse at 30% 50%,rgba(59,130,246,.15),transparent 60%),
+    radial-gradient(ellipse at 70% 50%,rgba(139,92,246,.12),transparent 60%);
+  animation:headerGlow 8s ease infinite;
+}
+@keyframes headerGlow{
+  0%,100%{opacity:1}
+  50%{opacity:.6}
+}
+.header h1{
+  font-size:32px;font-weight:900;letter-spacing:2px;position:relative;
+  background:linear-gradient(90deg,#3b82f6,#8b5cf6,#22c55e,#3b82f6);
+  background-size:300% 100%;
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
+  animation:gradientText 4s ease infinite;
+}
+@keyframes gradientText{
+  0%,100%{background-position:0% 50%}
+  50%{background-position:100% 50%}
+}
+.header h3{font-size:14px;color:var(--muted);margin-top:6px;position:relative;letter-spacing:3px;font-weight:600}
+.header h4{font-size:12px;color:var(--muted);position:relative;margin-top:4px;font-weight:500}
+
+/* ===== AUTO BADGE ===== */
+.autoBadge{
+  display:inline-flex;align-items:center;gap:8px;
+  background:rgba(34,197,94,.15);backdrop-filter:blur(10px);
+  border:1px solid rgba(34,197,94,.3);
+  padding:6px 16px;border-radius:30px;
+  font-size:12px;font-weight:700;color:var(--green);
+  margin-top:12px;position:relative;
+  box-shadow:0 0 20px rgba(34,197,94,.2);
+}
+.autoBadge .dot{
+  width:10px;height:10px;background:var(--green);border-radius:50%;
+  animation:pulse 1.5s infinite;box-shadow:0 0 10px var(--green);
+}
+@keyframes pulse{
+  0%{box-shadow:0 0 0 0 rgba(34,197,94,.7)}
+  70%{box-shadow:0 0 0 15px rgba(34,197,94,0)}
+  100%{box-shadow:0 0 0 0 rgba(34,197,94,0)}
+}
+
+/* ===== THEME TOGGLE ===== */
+.themeToggle{
+  position:absolute;top:20px;right:20px;
+  background:rgba(59,130,246,.15);backdrop-filter:blur(10px);
+  border:1px solid rgba(59,130,246,.3);
+  padding:10px 18px;border-radius:12px;cursor:pointer;
+  color:var(--blue);font-weight:700;font-size:13px;
+  z-index:10;transition:all .3s;
+  display:flex;align-items:center;gap:8px;
+}
+.themeToggle:hover{
+  background:rgba(59,130,246,.25);transform:translateY(-2px);
+  box-shadow:var(--glow-blue);
+}
+
+/* ===== CACHE STATUS BAR ===== */
+.cacheStatus{
+  background:linear-gradient(90deg,rgba(30,41,59,.95),rgba(51,65,85,.95));
+  backdrop-filter:blur(10px);
+  border-bottom:1px solid var(--border);
+  padding:12px 24px;margin:0;
+  display:flex;justify-content:space-around;align-items:center;flex-wrap:wrap;gap:12px;
+  box-shadow:0 4px 20px rgba(0,0,0,.2);
+}
+body.light .cacheStatus{background:linear-gradient(90deg,rgba(255,255,255,.95),rgba(241,245,249,.95))}
+.cacheStatus .statusItem{
+  display:flex;align-items:center;gap:8px;
+  font-size:12px;font-weight:600;
+  padding:6px 14px;border-radius:20px;
+  background:rgba(255,255,255,.05);
+  border:1px solid rgba(255,255,255,.1);
+  transition:all .3s;
+}
+body.light .cacheStatus .statusItem{
+  background:rgba(0,0,0,.03);border-color:rgba(0,0,0,.1);
+}
+.cacheStatus .statusItem:hover{transform:translateY(-2px)}
+.cacheStatus .statusItem .dot{
+  width:8px;height:8px;border-radius:50%;
+  box-shadow:0 0 8px currentColor;
+}
+.cacheStatus .statusItem .dot.green{background:var(--green);color:var(--green)}
+.cacheStatus .statusItem .dot.blue{background:var(--blue);color:var(--blue)}
+.cacheStatus .statusItem .dot.yellow{background:var(--yellow);color:var(--yellow)}
+
+/* ===== TOP BAR ===== */
+.topBar{
+  background:rgba(30,41,59,.95);backdrop-filter:blur(10px);
+  border-bottom:1px solid var(--border);
+  padding:16px 24px;
+  display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;
+}
 body.light .topBar{background:rgba(255,255,255,.95)}
-.topBarLeft{display:flex;align-items:center;gap:16px;flex-wrap:wrap}
-.usageStat{display:flex;align-items:center;gap:8px;background:rgba(59,130,246,.15);border:1px solid rgba(59,130,246,.3);border-radius:10px;padding:8px 14px;transition:all .3s}
-.usageStat:hover{transform:translateY(-2px)}
-.usageStat .icon{font-size:20px}
+.topBarLeft{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.usageStat{
+  display:flex;align-items:center;gap:10px;
+  background:rgba(59,130,246,.1);backdrop-filter:blur(10px);
+  border:1px solid rgba(59,130,246,.2);
+  border-radius:14px;padding:10px 16px;
+  transition:all .3s;min-width:140px;
+}
+.usageStat:hover{
+  transform:translateY(-3px);
+  box-shadow:var(--glow-blue);
+  border-color:rgba(59,130,246,.4);
+}
+.usageStat .icon{
+  font-size:24px;
+  width:40px;height:40px;
+  display:flex;align-items:center;justify-content:center;
+  background:rgba(59,130,246,.15);border-radius:10px;
+}
 .usageStat .info{display:flex;flex-direction:column}
-.usageStat .info span{font-size:11px;color:var(--muted);font-weight:600}
-.usageStat .info b{font-size:18px;color:var(--blue);font-weight:900}
-.progressWrap{display:flex;align-items:center;gap:8px}
-.progressWrap span{font-size:12px;color:var(--muted)}
-.progressBar{width:120px;height:8px;background:rgba(255,255,255,.1);border-radius:4px;overflow:hidden}
-.progressFill{height:100%;border-radius:4px;transition:width 1s ease}
-.kpiGrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px;margin:0 20px 20px}
-.kpiBox{background:linear-gradient(135deg,var(--card),var(--card2));border:1px solid var(--border);border-radius:14px;padding:16px;text-align:center;transition:all .3s;box-shadow:0 10px 40px rgba(0,0,0,.2)}
-.kpiBox:hover{transform:translateY(-5px)}
-.kpiBox .label{font-size:11px;color:var(--muted);font-weight:700;text-transform:uppercase;letter-spacing:.8px}
-.kpiBox .value{font-size:26px;font-weight:900;margin-top:6px}
-.kpiBox .sub{font-size:11px;color:var(--muted);margin-top:3px}
-.green{color:var(--green)}.blue{color:var(--blue)}.yellow{color:var(--yellow)}.purple{color:var(--purple)}.teal{color:var(--teal)}
-.secTitle{display:flex;align-items:center;gap:10px;font-size:18px;font-weight:900;margin:20px 20px 12px;padding-bottom:8px;border-bottom:2px solid var(--border)}
-.chartGrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:14px;margin:0 20px 20px}
-.chartBox{background:linear-gradient(135deg,var(--card),var(--card2));border:1px solid var(--border);border-radius:14px;padding:16px;box-shadow:0 10px 40px rgba(0,0,0,.2);transition:all .3s}
-.chartBox:hover{transform:translateY(-3px)}
-.chartBox h3{font-size:14px;font-weight:700;color:var(--text);margin-bottom:12px}
-.chartBox canvas{max-height:280px!important}
-.tableWrap{overflow-x:auto;margin:0 20px 20px}
-table{width:100%;border-collapse:collapse;background:var(--card);border-radius:12px;overflow:hidden;font-size:13px;box-shadow:0 10px 40px rgba(0,0,0,.2)}
-th{background:linear-gradient(135deg,var(--blue),var(--purple));color:white;padding:10px 8px;text-align:center;font-weight:700;font-size:12px}
-td{border:1px solid var(--border);padding:9px 8px;text-align:center;color:var(--text)}
-tr:nth-child(even){background:rgba(255,255,255,.03)}
-body.light tr:nth-child(even){background:rgba(0,0,0,.02)}
-.totalRowTable{background:linear-gradient(135deg,rgba(34,197,94,.15),rgba(59,130,246,.15))!important;font-weight:900;font-size:14px}
+.usageStat .info span{font-size:10px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:.5px}
+.usageStat .info b{font-size:20px;color:var(--blue);font-weight:900;margin-top:2px}
+.progressWrap{display:flex;align-items:center;gap:10px}
+.progressWrap span{font-size:12px;color:var(--muted);font-weight:600}
+.progressBar{
+  width:140px;height:10px;background:rgba(255,255,255,.1);
+  border-radius:10px;overflow:hidden;
+  box-shadow:inset 0 2px 4px rgba(0,0,0,.2);
+}
+.progressFill{
+  height:100%;border-radius:10px;transition:width 1s ease;
+  background:linear-gradient(90deg,var(--blue),var(--purple),var(--pink));
+  background-size:200% 100%;
+  animation:progressGlow 3s ease infinite;
+  box-shadow:0 0 10px rgba(59,130,246,.5);
+}
+@keyframes progressGlow{
+  0%,100%{background-position:0% 50%}
+  50%{background-position:100% 50%}
+}
+
+/* ===== SECTION TITLE ===== */
+.secTitle{
+  display:flex;align-items:center;gap:12px;
+  font-size:20px;font-weight:800;
+  margin:28px 20px 16px;padding:12px 20px;
+  background:linear-gradient(90deg,rgba(59,130,246,.1),transparent);
+  border-left:4px solid var(--blue);
+  border-radius:0 12px 12px 0;
+  position:relative;
+}
+.secTitle::after{
+  content:'';position:absolute;bottom:-1px;left:0;right:0;height:1px;
+  background:linear-gradient(90deg,var(--blue),transparent);
+}
+
+/* ===== ASSUMPTIONS BOX ===== */
+.assumptBox{
+  background:linear-gradient(135deg,var(--card),var(--card2));
+  border:1px solid var(--border);border-radius:16px;
+  padding:20px;margin:0 20px 24px;
+  box-shadow:var(--shadow);
+  backdrop-filter:blur(10px);
+  position:relative;overflow:hidden;
+}
+.assumptBox::before{
+  content:'';position:absolute;top:0;left:0;right:0;height:3px;
+  background:linear-gradient(90deg,var(--blue),var(--purple),var(--green));
+}
+.assumptGrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px}
+.assumptItem{display:flex;flex-direction:column;gap:6px}
+.assumptItem label{
+  font-size:11px;color:var(--muted);font-weight:700;
+  text-transform:uppercase;letter-spacing:.5px;
+  display:flex;align-items:center;gap:6px;
+}
+.assumptItem label::before{
+  content:'';width:4px;height:4px;background:var(--blue);border-radius:50%;
+}
+.assumptItem input,.assumptItem select{
+  padding:10px 12px;border-radius:10px;
+  border:1px solid var(--border);
+  background:var(--bg);color:var(--text);
+  font-size:13px;font-weight:600;
+  transition:all .3s;
+}
+.assumptItem input:focus,.assumptItem select:focus{
+  outline:none;border-color:var(--blue);
+  box-shadow:0 0 0 3px rgba(59,130,246,.15);
+  transform:translateY(-1px);
+}
+
+/* ===== KPI GRID ===== */
+.kpiGrid{
+  display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));
+  gap:14px;margin:0 20px 24px;
+}
+.kpiBox{
+  background:linear-gradient(135deg,var(--card),var(--card2));
+  border:1px solid var(--border);border-radius:16px;
+  padding:18px;text-align:center;
+  transition:all .4s cubic-bezier(0.4,0,0.2,1);
+  box-shadow:var(--shadow);
+  position:relative;overflow:hidden;
+  cursor:default;
+}
+.kpiBox::before{
+  content:'';position:absolute;top:0;left:0;right:0;height:4px;
+  background:linear-gradient(90deg,var(--blue),var(--purple));
+  transform:scaleX(0);transform-origin:left;
+  transition:transform .4s;
+}
+.kpiBox:hover::before{transform:scaleX(1)}
+.kpiBox:hover{
+  transform:translateY(-6px);
+  box-shadow:0 20px 50px rgba(0,0,0,.3);
+}
+.kpiBox .icon{
+  font-size:32px;margin-bottom:8px;
+  display:inline-block;
+  animation:iconFloat 3s ease infinite;
+}
+@keyframes iconFloat{
+  0%,100%{transform:translateY(0)}
+  50%{transform:translateY(-5px)}
+}
+.kpiBox .label{
+  font-size:11px;color:var(--muted);font-weight:700;
+  text-transform:uppercase;letter-spacing:1px;
+}
+.kpiBox .value{
+  font-size:28px;font-weight:900;margin-top:8px;
+  background:linear-gradient(135deg,var(--blue),var(--purple));
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
+}
+.kpiBox .sub{font-size:11px;color:var(--muted);margin-top:4px;font-weight:500}
+.kpiBox.green .value{background:linear-gradient(135deg,var(--green),var(--teal));-webkit-background-clip:text;background-clip:text}
+.kpiBox.purple .value{background:linear-gradient(135deg,var(--purple),var(--pink));-webkit-background-clip:text;background-clip:text}
+.kpiBox.yellow .value{background:linear-gradient(135deg,var(--yellow),#f97316);-webkit-background-clip:text;background-clip:text}
+.kpiBox.teal .value{background:linear-gradient(135deg,var(--teal),var(--green));-webkit-background-clip:text;background-clip:text}
+
+/* ===== CHART GRID ===== */
+.chartGrid{
+  display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));
+  gap:16px;margin:0 20px 24px;
+}
+.chartBox{
+  background:linear-gradient(135deg,var(--card),var(--card2));
+  border:1px solid var(--border);border-radius:16px;
+  padding:20px;
+  box-shadow:var(--shadow);
+  transition:all .4s;
+  position:relative;overflow:hidden;
+}
+.chartBox::before{
+  content:'';position:absolute;top:-50%;left:-50%;width:200%;height:200%;
+  background:radial-gradient(circle,rgba(59,130,246,.05),transparent 70%);
+  opacity:0;transition:opacity .4s;
+}
+.chartBox:hover::before{opacity:1}
+.chartBox:hover{
+  transform:translateY(-4px);
+  box-shadow:0 20px 50px rgba(0,0,0,.3);
+  border-color:rgba(59,130,246,.3);
+}
+.chartBox h3{
+  font-size:15px;font-weight:700;color:var(--text);
+  margin-bottom:16px;
+  display:flex;align-items:center;gap:10px;
+  padding-bottom:12px;
+  border-bottom:1px solid var(--border);
+}
+.chartBox h3::before{
+  content:'';width:4px;height:20px;
+  background:linear-gradient(180deg,var(--blue),var(--purple));
+  border-radius:2px;
+}
+.chartBox canvas{max-height:300px!important}
+
+/* ===== USAGE TRACK BOX ===== */
+.usageTrackBox{
+  background:linear-gradient(135deg,var(--card),var(--card2));
+  border:1px solid var(--border);border-radius:16px;
+  padding:20px;margin:0 20px 24px;
+  box-shadow:var(--shadow);
+  position:relative;overflow:hidden;
+}
+.usageTrackBox::before{
+  content:'';position:absolute;top:0;left:0;right:0;height:3px;
+  background:linear-gradient(90deg,var(--teal),var(--blue),var(--purple));
+}
+.usageTrackGrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px}
+.usageTrackItem{
+  background:linear-gradient(135deg,rgba(59,130,246,.08),rgba(139,92,246,.08));
+  border:1px solid rgba(59,130,246,.2);
+  border-radius:12px;padding:14px;text-align:center;
+  transition:all .3s;
+  position:relative;overflow:hidden;
+}
+.usageTrackItem::before{
+  content:'';position:absolute;top:0;left:-100%;width:100%;height:100%;
+  background:linear-gradient(90deg,transparent,rgba(255,255,255,.1),transparent);
+  transition:left .6s;
+}
+.usageTrackItem:hover::before{left:100%}
+.usageTrackItem:hover{
+  transform:translateY(-3px);
+  border-color:rgba(59,130,246,.4);
+  box-shadow:var(--glow-blue);
+}
+.usageTrackItem .trackLabel{
+  font-size:11px;color:var(--muted);font-weight:700;
+  text-transform:uppercase;letter-spacing:.5px;
+}
+.usageTrackItem .trackValue{
+  font-size:22px;font-weight:900;color:var(--blue);margin-top:6px;
+  background:linear-gradient(135deg,var(--blue),var(--purple));
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
+}
+.usageTrackItem .trackSub{font-size:10px;color:var(--muted);margin-top:4px}
+
+/* ===== TABLE ===== */
+.tableWrap{overflow-x:auto;margin:0 20px 24px;border-radius:16px;box-shadow:var(--shadow)}
+table{
+  width:100%;border-collapse:collapse;
+  background:var(--card);
+  font-size:13px;
+}
+th{
+  background:linear-gradient(135deg,var(--blue),var(--purple));
+  color:white;padding:14px 10px;
+  text-align:center;font-weight:700;font-size:12px;
+  text-transform:uppercase;letter-spacing:.5px;
+  position:sticky;top:0;
+}
+td{
+  border-bottom:1px solid var(--border);
+  padding:12px 10px;text-align:center;color:var(--text);
+  transition:background .2s;
+}
+tr:hover td{background:rgba(59,130,246,.05)}
+tr:nth-child(even) td{background:rgba(255,255,255,.02)}
+body.light tr:nth-child(even) td{background:rgba(0,0,0,.02)}
+.totalRowTable td{
+  background:linear-gradient(135deg,rgba(34,197,94,.15),rgba(59,130,246,.15))!important;
+  font-weight:900;font-size:14px;
+  border-top:2px solid var(--blue);
+}
 .mcdName{text-align:left!important;font-weight:700}
-.mcdDesc{font-size:11px;color:var(--muted);font-weight:400}
-.usageBadge{display:inline-block;padding:3px 8px;border-radius:20px;font-size:11px;font-weight:900}
-.badge-high{background:rgba(34,197,94,.2);color:#86efac}
-.badge-mid{background:rgba(59,130,246,.2);color:#93c5fd}
-.badge-low{background:rgba(245,158,11,.2);color:#fcd34d}
-.badge-none{background:rgba(100,116,139,.2);color:#94a3b8}
-.cacheStatus{background:linear-gradient(135deg,var(--card),var(--card2));border:1px solid var(--border);border-radius:14px;padding:12px 20px;margin:0 20px 20px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;box-shadow:0 10px 40px rgba(0,0,0,.2)}
-.cacheStatus .statusItem{display:flex;align-items:center;gap:8px;font-size:12px;font-weight:600}
-.cacheStatus .statusItem .dot{width:8px;height:8px;border-radius:50%}
-.cacheStatus .statusItem .dot.green{background:var(--green)}
-.cacheStatus .statusItem .dot.blue{background:var(--blue)}
-.cacheStatus .statusItem .dot.yellow{background:var(--yellow)}
-.assumptBox{background:linear-gradient(135deg,var(--card),var(--card2));border:1px solid var(--border);border-radius:14px;padding:16px;margin:0 20px 20px;box-shadow:0 10px 40px rgba(0,0,0,.2)}
-.assumptGrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:10px}
-.assumptItem{display:flex;flex-direction:column;gap:4px}
-.assumptItem label{font-size:11px;color:var(--muted);font-weight:700}
-.assumptItem input{padding:8px;border-radius:8px;border:1px solid var(--border);background:var(--bg);color:var(--text);font-size:13px;font-weight:600;transition:all .3s}
-.assumptItem input:focus{outline:none;border-color:var(--blue)}
-.usageTrackBox{background:linear-gradient(135deg,var(--card),var(--card2));border:1px solid var(--border);border-radius:14px;padding:16px;margin:0 20px 20px;box-shadow:0 10px 40px rgba(0,0,0,.2)}
-.usageTrackGrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:10px}
-.usageTrackItem{background:rgba(59,130,246,.1);border:1px solid rgba(59,130,246,.2);border-radius:10px;padding:12px;text-align:center;transition:all .3s}
-.usageTrackItem:hover{transform:translateY(-2px)}
-.usageTrackItem .trackLabel{font-size:11px;color:var(--muted);font-weight:600}
-.usageTrackItem .trackValue{font-size:20px;font-weight:900;color:var(--blue);margin-top:4px}
-.usageTrackItem .trackSub{font-size:10px;color:var(--muted);margin-top:2px}
-.toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:var(--green);color:#fff;padding:12px 22px;border-radius:10px;font-weight:700;display:none;z-index:9999;font-size:14px;box-shadow:0 4px 20px rgba(34,197,94,.4);animation:slideUp .3s ease}
-@keyframes slideUp{from{transform:translate(-50%,20px);opacity:0}to{transform:translate(-50%,0);opacity:1}}
-@media print{body{background:white;color:black}.themeToggle,.assumptBox,.usageTrackBox,.cacheStatus{display:none!important}}
-@media(max-width:700px){.topBar{flex-direction:column}.header h1{font-size:20px}.secTitle{font-size:15px}.themeToggle{top:10px;right:10px;padding:6px 10px;font-size:11px}}
+.mcdDesc{font-size:11px;color:var(--muted);font-weight:400;margin-top:2px}
+
+/* ===== BADGES ===== */
+.usageBadge{
+  display:inline-block;padding:4px 10px;border-radius:20px;
+  font-size:11px;font-weight:800;
+  letter-spacing:.5px;
+}
+.badge-high{background:rgba(34,197,94,.2);color:#86efac;border:1px solid rgba(34,197,94,.3)}
+.badge-mid{background:rgba(59,130,246,.2);color:#93c5fd;border:1px solid rgba(59,130,246,.3)}
+.badge-low{background:rgba(245,158,11,.2);color:#fcd34d;border:1px solid rgba(245,158,11,.3)}
+.badge-none{background:rgba(100,116,139,.2);color:#94a3b8;border:1px solid rgba(100,116,139,.3)}
+
+/* ===== INFO BOX ===== */
+.infoBox{
+  background:linear-gradient(135deg,var(--card),var(--card2));
+  border:1px solid var(--border);border-radius:16px;
+  padding:20px;margin:0 20px 24px;
+  box-shadow:var(--shadow);
+  font-size:13px;color:var(--muted);line-height:2;
+  position:relative;overflow:hidden;
+}
+.infoBox::before{
+  content:'';position:absolute;top:0;left:0;right:0;height:3px;
+  background:linear-gradient(90deg,var(--green),var(--blue),var(--purple));
+}
+.infoBox b{color:var(--text);font-size:14px}
+.infoBox .checkItem{
+  display:flex;align-items:flex-start;gap:10px;
+  padding:6px 0;
+  border-bottom:1px dashed rgba(255,255,255,.05);
+}
+.infoBox .checkItem::before{
+  content:'✓';color:var(--green);font-weight:900;font-size:16px;
+  flex-shrink:0;
+}
+
+/* ===== TOAST ===== */
+.toast{
+  position:fixed;bottom:30px;left:50%;transform:translateX(-50%);
+  background:linear-gradient(135deg,var(--green),var(--teal));
+  color:#fff;padding:14px 28px;border-radius:14px;
+  font-weight:700;display:none;z-index:9999;font-size:14px;
+  box-shadow:0 10px 40px rgba(34,197,94,.4);
+  animation:slideUp .4s ease;
+  border:1px solid rgba(255,255,255,.2);
+}
+@keyframes slideUp{
+  from{transform:translate(-50%,30px);opacity:0}
+  to{transform:translate(-50%,0);opacity:1}
+}
+
+/* ===== PRINT BUTTON ===== */
+.printBtn{
+  background:linear-gradient(135deg,var(--purple),var(--pink));
+  color:white;border:none;padding:10px 18px;border-radius:10px;
+  font-weight:700;cursor:pointer;
+  transition:all .3s;
+  display:flex;align-items:center;gap:8px;
+  box-shadow:0 4px 15px rgba(139,92,246,.3);
+}
+.printBtn:hover{
+  transform:translateY(-2px);
+  box-shadow:0 8px 25px rgba(139,92,246,.5);
+}
+
+/* ===== RESET/SIMULATE BUTTONS ===== */
+.actionBtn{
+  padding:10px 20px;border-radius:10px;
+  font-weight:700;font-size:12px;
+  cursor:pointer;border:none;
+  transition:all .3s;
+  display:inline-flex;align-items:center;gap:8px;
+}
+.actionBtn:hover{transform:translateY(-2px)}
+.resetBtn{
+  background:linear-gradient(135deg,var(--red),#dc2626);
+  color:white;box-shadow:0 4px 15px rgba(239,68,68,.3);
+}
+.simulateBtn{
+  background:linear-gradient(135deg,var(--blue),var(--purple));
+  color:white;box-shadow:0 4px 15px rgba(59,130,246,.3);
+  margin-left:10px;
+}
+
+/* ===== RESPONSIVE ===== */
+@media(max-width:768px){
+  .header{padding:20px 15px}
+  .header h1{font-size:22px}
+  .header h3{font-size:11px;letter-spacing:2px}
+  .themeToggle{top:10px;right:10px;padding:8px 12px;font-size:11px}
+  .topBar{padding:12px;flex-direction:column}
+  .topBarLeft{width:100%;justify-content:center}
+  .usageStat{min-width:auto;flex:1;padding:8px 10px}
+  .usageStat .icon{width:32px;height:32px;font-size:18px}
+  .usageStat .info b{font-size:16px}
+  .secTitle{font-size:16px;margin:20px 12px 12px;padding:10px 14px}
+  .kpiGrid{grid-template-columns:repeat(2,1fr);gap:10px;margin:0 12px 20px}
+  .kpiBox{padding:14px}
+  .kpiBox .value{font-size:22px}
+  .chartGrid{grid-template-columns:1fr;margin:0 12px 20px}
+  .assumptBox,.usageTrackBox,.tableWrap,.infoBox{margin-left:12px;margin-right:12px}
+  .cacheStatus{padding:10px;gap:8px}
+  .cacheStatus .statusItem{font-size:10px;padding:4px 10px}
+}
+
+/* ===== PRINT ===== */
+@media print{
+  body{background:white!important;color:black!important}
+  body::before{display:none}
+  .themeToggle,.assumptBox,.usageTrackBox,.cacheStatus,.actionBtn,.printBtn{display:none!important}
+  .kpiBox,.chartBox,.tableWrap{page-break-inside:avoid;box-shadow:none;border:1px solid #ddd}
+  .header{background:white!important;border-bottom:2px solid #2563eb}
+  .header h1{-webkit-text-fill-color:#1e293b!important;background:none!important;color:#1e293b!important}
+  .header h3,.header h4{color:#64748b!important}
+  .secTitle{background:none;border-left-color:#2563eb}
+}
 </style>
 </head>
 <body>
 
+<!-- ===== HEADER ===== -->
 <div class="header">
-  <button class="themeToggle" onclick="toggleTheme()">🌙 Dark Mode</button>
-  <h1>GMS MCD ERP SYSTEM</h1>
+  <button class="themeToggle" onclick="toggleTheme()">
+    <i class="fas fa-moon"></i>
+    <span id="themeText">Dark Mode</span>
+  </button>
+  <h1><i class="fas fa-chart-line"></i> GMS MCD ERP SYSTEM</h1>
   <h3>🔥 AUTO ROI & USAGE ANALYSIS REPORT</h3>
-  <h4>GMS Textiles Ltd. · Tansutrapur, Kaliakoir, Gazipur</h4>
-  <div class="autoBadge"><div class="dot"></div><span>🤖 100% Auto — Smart Selective Cache Active</span></div>
+  <h4><i class="fas fa-industry"></i> GMS Textiles Ltd. · Tansutrapur, Kaliakoir, Gazipur</h4>
+  <div class="autoBadge">
+    <div class="dot"></div>
+    <span>🤖 100% Auto — Smart Selective Cache Active</span>
+  </div>
 </div>
 
-<!-- CACHE STATUS BAR -->
+<!-- ===== CACHE STATUS BAR ===== -->
 <div class="cacheStatus">
-  <div class="statusItem"><div class="dot green"></div><span>Cache Ready</span></div>
-  <div class="statusItem"><div class="dot blue"></div><span>Firebase Reads Today: <b id="firebaseReads">0</b></span></div>
-  <div class="statusItem"><div class="dot yellow"></div><span>Last Sync: <b id="lastSync">—</b></span></div>
-  <div class="statusItem"><span>🔥 Active MCDs: <b id="activeMcds">0</b>/15</span></div>
+  <div class="statusItem">
+    <div class="dot green"></div>
+    <span><i class="fas fa-database"></i> Cache Ready</span>
+  </div>
+  <div class="statusItem">
+    <div class="dot blue"></div>
+    <span><i class="fas fa-fire"></i> Firebase Reads Today: <b id="firebaseReads">0</b></span>
+  </div>
+  <div class="statusItem">
+    <div class="dot yellow"></div>
+    <span><i class="fas fa-sync"></i> Last Sync: <b id="lastSync">—</b></span>
+  </div>
+  <div class="statusItem">
+    <span><i class="fas fa-bolt"></i> 🔥 Active MCDs: <b id="activeMcds">0</b>/15</span>
+  </div>
 </div>
 
+<!-- ===== TOP BAR ===== -->
 <div class="topBar">
   <div class="topBarLeft">
-    <div class="usageStat"><div class="icon">👥</div><div class="info"><span>Total Users</span><b id="tbUsers">0</b></div></div>
-    <div class="usageStat" style="background:rgba(34,197,94,.12);border-color:rgba(34,197,94,.3)"><div class="icon">📑</div><div class="info"><span>Reports Used Today</span><b id="tbReports" style="color:var(--green)">0</b></div></div>
-    <div class="usageStat" style="background:rgba(245,158,11,.12);border-color:rgba(245,158,11,.3)"><div class="icon">⏱️</div><div class="info"><span>Time Saved Today</span><b id="tbTime" style="color:var(--yellow)">0 hrs</b></div></div>
-    <div class="usageStat" style="background:rgba(139,92,246,.12);border-color:rgba(139,92,246,.3)"><div class="icon">💰</div><div class="info"><span>Savings Today</span><b id="tbSavings" style="color:var(--purple)">৳0</b></div></div>
-    <div class="usageStat" style="background:rgba(20,184,166,.12);border-color:rgba(20,184,166,.3)"><div class="icon">🪡</div><div class="info"><span>Needle Reports</span><b id="tbNeedle" style="color:var(--teal)">0</b></div></div>
+    <div class="usageStat">
+      <div class="icon"><i class="fas fa-users"></i></div>
+      <div class="info"><span>Total Users</span><b id="tbUsers">0</b></div>
+    </div>
+    <div class="usageStat" style="background:rgba(34,197,94,.1);border-color:rgba(34,197,94,.2)">
+      <div class="icon" style="background:rgba(34,197,94,.15)"><i class="fas fa-file-alt"></i></div>
+      <div class="info"><span>Reports Today</span><b id="tbReports" style="color:var(--green)">0</b></div>
+    </div>
+    <div class="usageStat" style="background:rgba(245,158,11,.1);border-color:rgba(245,158,11,.2)">
+      <div class="icon" style="background:rgba(245,158,11,.15)"><i class="fas fa-clock"></i></div>
+      <div class="info"><span>Time Saved</span><b id="tbTime" style="color:var(--yellow)">0 hrs</b></div>
+    </div>
+    <div class="usageStat" style="background:rgba(139,92,246,.1);border-color:rgba(139,92,246,.2)">
+      <div class="icon" style="background:rgba(139,92,246,.15)"><i class="fas fa-coins"></i></div>
+      <div class="info"><span>Savings Today</span><b id="tbSavings" style="color:var(--purple)">৳0</b></div>
+    </div>
+    <div class="usageStat" style="background:rgba(20,184,166,.1);border-color:rgba(20,184,166,.2)">
+      <div class="icon" style="background:rgba(20,184,166,.15)"><i class="fas fa-syringe"></i></div>
+      <div class="info"><span>Needle Reports</span><b id="tbNeedle" style="color:var(--teal)">0</b></div>
+    </div>
   </div>
   <div class="progressWrap">
     <span>System Usage</span>
-    <div class="progressBar"><div class="progressFill" id="appUsageBar" style="width:0%;background:linear-gradient(90deg,var(--blue),var(--purple))"></div></div>
-    <span id="appUsagePct" style="color:var(--blue);font-weight:700">0%</span>
-    <button onclick="window.print()" style="background:var(--purple);color:white;border:none;padding:8px 14px;border-radius:8px;font-weight:700;cursor:pointer;margin-left:12px">🖨 Print</button>
+    <div class="progressBar">
+      <div class="progressFill" id="appUsageBar" style="width:0%"></div>
+    </div>
+    <span id="appUsagePct" style="color:var(--blue);font-weight:800">0%</span>
+    <button class="printBtn" onclick="window.print()">
+      <i class="fas fa-print"></i> Print
+    </button>
   </div>
 </div>
 
-<div class="secTitle">⚙️ Assumptions — পরিবর্তন করলে সব হিসাব আপডেট হবে</div>
+<!-- ===== ASSUMPTIONS ===== -->
+<div class="secTitle"><i class="fas fa-cogs"></i> Assumptions — পরিবর্তন করলে সব হিসাব আপডেট হবে</div>
 <div class="assumptBox">
   <div class="assumptGrid">
-    <div class="assumptItem"><label>Staff বেতন (৳/মাস)</label><input type="number" id="aStaff" value="18000" oninput="recalc()"></div>
-    <div class="assumptItem"><label>Manager বেতন (৳/মাস)</label><input type="number" id="aMgr" value="40000" oninput="recalc()"></div>
-    <div class="assumptItem"><label>ম্যানুয়াল রিপোর্ট (মিনিট)</label><input type="number" id="aManual" value="45" oninput="recalc()"></div>
-    <div class="assumptItem"><label>সফটওয়্যার রিপোর্ট (মিনিট)</label><input type="number" id="aSoft" value="5" oninput="recalc()"></div>
-    <div class="assumptItem"><label>কাগজ সাশ্রয় (৳/মাস/MCD)</label><input type="number" id="aPaper" value="4315" oninput="recalc()"></div>
-    <div class="assumptItem"><label>ভুল কমানো (৳/মাস/MCD)</label><input type="number" id="aError" value="1500" oninput="recalc()"></div>
-    <div class="assumptItem"><label>ব্যবহারের মাত্রা</label><select id="aUsage" onchange="recalc()"><option value="10">10% — শুরু</option><option value="20">20%</option><option value="30">30%</option><option value="50">50%</option><option value="75">75%</option><option value="100" selected>100% — সম্পূর্ণ</option></select></div>
-    <div class="assumptItem"><label>Total Users (Firebase)</label><input type="number" id="aUsers" value="12" oninput="recalc()"></div>
-    <div class="assumptItem"><label>Daily Active Users</label><input type="number" id="aActiveUsers" value="8" oninput="recalc()"></div>
+    <div class="assumptItem">
+      <label>Staff বেতন (৳/মাস)</label>
+      <input type="number" id="aStaff" value="18000" oninput="recalc()">
+    </div>
+    <div class="assumptItem">
+      <label>Manager বেতন (৳/মাস)</label>
+      <input type="number" id="aMgr" value="40000" oninput="recalc()">
+    </div>
+    <div class="assumptItem">
+      <label>ম্যানুয়াল রিপোর্ট (মিনিট)</label>
+      <input type="number" id="aManual" value="45" oninput="recalc()">
+    </div>
+    <div class="assumptItem">
+      <label>সফটওয়্যার রিপোর্ট (মিনিট)</label>
+      <input type="number" id="aSoft" value="5" oninput="recalc()">
+    </div>
+    <div class="assumptItem">
+      <label>কাগজ সাশ্রয় (৳/মাস/MCD)</label>
+      <input type="number" id="aPaper" value="4315" oninput="recalc()">
+    </div>
+    <div class="assumptItem">
+      <label>ভুল কমানো (৳/মাস/MCD)</label>
+      <input type="number" id="aError" value="1500" oninput="recalc()">
+    </div>
+    <div class="assumptItem">
+      <label>ব্যবহারের মাত্রা</label>
+      <select id="aUsage" onchange="recalc()">
+        <option value="10">10% — শুরু</option>
+        <option value="20">20%</option>
+        <option value="30">30%</option>
+        <option value="50">50%</option>
+        <option value="75">75%</option>
+        <option value="100" selected>100% — সম্পূর্ণ</option>
+      </select>
+    </div>
+    <div class="assumptItem">
+      <label>Total Users (Firebase)</label>
+      <input type="number" id="aUsers" value="12" oninput="recalc()">
+    </div>
+    <div class="assumptItem">
+      <label>Daily Active Users</label>
+      <input type="number" id="aActiveUsers" value="8" oninput="recalc()">
+    </div>
   </div>
 </div>
 
-<div class="secTitle">⏱️ Web Usage Tracking — প্রতিটি MCD কতক্ষণ ব্যবহার হচ্ছে (Auto)</div>
+<!-- ===== USAGE TRACKING ===== -->
+<div class="secTitle"><i class="fas fa-stopwatch"></i> Web Usage Tracking — প্রতিটি MCD কতক্ষণ ব্যবহার হচ্ছে (Auto)</div>
 <div class="usageTrackBox">
   <div class="usageTrackGrid" id="usageTrackGrid"></div>
-  <div style="margin-top:12px;text-align:center">
-    <button onclick="resetUsageTracking()" style="background:var(--red);color:white;border:none;padding:8px 16px;border-radius:8px;cursor:pointer;font-weight:700;font-size:12px">🔄 Reset Usage Data</button>
-    <button onclick="simulateUsage()" style="background:var(--blue);color:white;border:none;padding:8px 16px;border-radius:8px;cursor:pointer;font-weight:700;font-size:12px;margin-left:8px">🧪 Simulate Usage</button>
+  <div style="margin-top:16px;text-align:center;padding-top:16px;border-top:1px solid var(--border)">
+    <button class="actionBtn resetBtn" onclick="resetUsageTracking()">
+      <i class="fas fa-sync-alt"></i> Reset Usage Data
+    </button>
+    <button class="actionBtn simulateBtn" onclick="simulateUsage()">
+      <i class="fas fa-flask"></i> Simulate Usage
+    </button>
   </div>
 </div>
 
-<div class="secTitle">📊 সাশ্রয় সারসংক্ষেপ (Auto Calculated)</div>
+<!-- ===== KPI GRID ===== -->
+<div class="secTitle"><i class="fas fa-chart-pie"></i> সাশ্রয় সারসংক্ষেপ (Auto Calculated)</div>
 <div class="kpiGrid">
-  <div class="kpiBox"><div class="label">🏭 Total MCD</div><div class="value blue" id="kpiMcd">0</div><div class="sub">সক্রিয় বিভাগ (Needle সহ)</div></div>
-  <div class="kpiBox"><div class="label">📑 Total Reports</div><div class="value yellow" id="kpiRpt">0</div><div class="sub">সব MCD মিলিয়ে</div></div>
-  <div class="kpiBox"><div class="label">⏱️ সেভ সময়/দিন</div><div class="value teal" id="kpiTime">0</div><div class="sub">সব MCD মিলিয়ে</div></div>
-  <div class="kpiBox"><div class="label">💰 মাসিক সাশ্রয়</div><div class="value green" id="kpiMonthly">৳0</div><div class="sub" id="kpiAnnualSub">বার্ষিক ৳0</div></div>
-  <div class="kpiBox"><div class="label">📅 বার্ষিক সাশ্রয়</div><div class="value purple" id="kpiAnnual">৳0</div><div class="sub">খরচ: ০ টাকা</div></div>
-  <div class="kpiBox"><div class="label">👥 Active Users</div><div class="value blue" id="kpiActiveU">0</div><div class="sub" id="kpiUserPct">0% of total</div></div>
-  <div class="kpiBox"><div class="label">🗒️ Reporter সাশ্রয়</div><div class="value yellow" id="kpiRptSave">৳0</div><div class="sub">মাসে</div></div>
-  <div class="kpiBox"><div class="label">👔 Manager সাশ্রয়</div><div class="value teal" id="kpiMgrSave">৳0</div><div class="sub">মাসে</div></div>
-  <div class="kpiBox"><div class="label">📄 কাগজ ও Challan</div><div class="value purple" id="kpiPaper">৳0</div><div class="sub">মাসে</div></div>
-  <div class="kpiBox"><div class="label">✅ ভুল কমানো</div><div class="value green" id="kpiError">৳0</div><div class="sub">মাসে</div></div>
+  <div class="kpiBox">
+    <div class="icon">🏭</div>
+    <div class="label">Total MCD</div>
+    <div class="value" id="kpiMcd">0</div>
+    <div class="sub">সক্রিয় বিভাগ (Needle সহ)</div>
+  </div>
+  <div class="kpiBox yellow">
+    <div class="icon">📑</div>
+    <div class="label">Total Reports</div>
+    <div class="value" id="kpiRpt">0</div>
+    <div class="sub">সব MCD মিলিয়ে</div>
+  </div>
+  <div class="kpiBox teal">
+    <div class="icon">⏱️</div>
+    <div class="label">সেভ সময়/দিন</div>
+    <div class="value" id="kpiTime">0</div>
+    <div class="sub">সব MCD মিলিয়ে</div>
+  </div>
+  <div class="kpiBox green">
+    <div class="icon">💰</div>
+    <div class="label">মাসিক সাশ্রয়</div>
+    <div class="value" id="kpiMonthly">৳0</div>
+    <div class="sub" id="kpiAnnualSub">বার্ষিক ৳0</div>
+  </div>
+  <div class="kpiBox purple">
+    <div class="icon">📅</div>
+    <div class="label">বার্ষিক সাশ্রয়</div>
+    <div class="value" id="kpiAnnual">৳0</div>
+    <div class="sub">খরচ: ০ টাকা</div>
+  </div>
+  <div class="kpiBox">
+    <div class="icon">👥</div>
+    <div class="label">Active Users</div>
+    <div class="value" id="kpiActiveU">0</div>
+    <div class="sub" id="kpiUserPct">0% of total</div>
+  </div>
+  <div class="kpiBox yellow">
+    <div class="icon">🗒️</div>
+    <div class="label">Reporter সাশ্রয়</div>
+    <div class="value" id="kpiRptSave">৳0</div>
+    <div class="sub">মাসে</div>
+  </div>
+  <div class="kpiBox teal">
+    <div class="icon">👔</div>
+    <div class="label">Manager সাশ্রয়</div>
+    <div class="value" id="kpiMgrSave">৳0</div>
+    <div class="sub">মাসে</div>
+  </div>
+  <div class="kpiBox purple">
+    <div class="icon">📄</div>
+    <div class="label">কাগজ ও Challan</div>
+    <div class="value" id="kpiPaper">৳0</div>
+    <div class="sub">মাসে</div>
+  </div>
+  <div class="kpiBox green">
+    <div class="icon">✅</div>
+    <div class="label">ভুল কমানো</div>
+    <div class="value" id="kpiError">৳0</div>
+    <div class="sub">মাসে</div>
+  </div>
 </div>
 
-<div class="secTitle">📈 বিশ্লেষণ চার্ট (সংখ্যা সহ)</div>
+<!-- ===== CHARTS ===== -->
+<div class="secTitle"><i class="fas fa-chart-bar"></i> বিশ্লেষণ চার্ট (সংখ্যা সহ)</div>
 <div class="chartGrid">
-  <div class="chartBox"><h3>💰 মাসিক সাশ্রয়ের উৎস (৳)</h3><canvas id="savingsPieChart"></canvas></div>
-  <div class="chartBox"><h3>📊 MCD-ভিত্তিক মাসিক সাশ্রয় (৳)</h3><canvas id="mcdBarChart"></canvas></div>
-  <div class="chartBox"><h3>📈 ব্যবহার বৃদ্ধিতে বার্ষিক সাশ্রয় (৳)</h3><canvas id="growthChart"></canvas></div>
-  <div class="chartBox"><h3>👥 User Activity Overview</h3><canvas id="userChart"></canvas></div>
-  <div class="chartBox"><h3>⏱️ MCD ভিত্তিক Web Usage Time (মিনিট)</h3><canvas id="usageTimeChart"></canvas></div>
-  <div class="chartBox"><h3>📊 MCD Usage Percentage (%)</h3><canvas id="usagePctChart"></canvas></div>
+  <div class="chartBox">
+    <h3><i class="fas fa-coins"></i> মাসিক সাশ্রয়ের উৎস (৳)</h3>
+    <canvas id="savingsPieChart"></canvas>
+  </div>
+  <div class="chartBox">
+    <h3><i class="fas fa-building"></i> MCD-ভিত্তিক মাসিক সাশ্রয় (৳)</h3>
+    <canvas id="mcdBarChart"></canvas>
+  </div>
+  <div class="chartBox">
+    <h3><i class="fas fa-chart-line"></i> ব্যবহার বৃদ্ধিতে বার্ষিক সাশ্রয় (৳)</h3>
+    <canvas id="growthChart"></canvas>
+  </div>
+  <div class="chartBox">
+    <h3><i class="fas fa-users"></i> User Activity Overview</h3>
+    <canvas id="userChart"></canvas>
+  </div>
+  <div class="chartBox">
+    <h3><i class="fas fa-clock"></i> MCD ভিত্তিক Web Usage Time (মিনিট)</h3>
+    <canvas id="usageTimeChart"></canvas>
+  </div>
+  <div class="chartBox">
+    <h3><i class="fas fa-percentage"></i> MCD Usage Percentage (%)</h3>
+    <canvas id="usagePctChart"></canvas>
+  </div>
 </div>
 
-<div class="secTitle">📋 MCD-ভিত্তিক বিস্তারিত বিশ্লেষণ (Auto Populated)</div>
+<!-- ===== TABLE ===== -->
+<div class="secTitle"><i class="fas fa-table"></i> MCD-ভিত্তিক বিস্তারিত বিশ্লেষণ (Auto Populated)</div>
 <div class="tableWrap">
 <table id="mcdTable">
 <thead>
 <tr>
   <th>#</th>
-  <th style="text-align:left;min-width:200px">MCD নাম ও বিবরণ</th>
+  <th style="text-align:left;min-width:220px">MCD নাম ও বিবরণ</th>
   <th>Reports</th>
   <th>রিপোর্ট/দিন</th>
   <th>সেভ সময়/দিন</th>
@@ -196,7 +775,7 @@ body.light tr:nth-child(even){background:rgba(0,0,0,.02)}
 </thead>
 <tbody id="mcdTbody"></tbody>
 <tfoot><tr id="totalRow" class="totalRowTable">
-  <td colspan="3">মোট (সব MCD)</td>
+  <td colspan="3"><i class="fas fa-calculator"></i> মোট (সব MCD)</td>
   <td id="ftRpt">0</td>
   <td id="ftTime">0</td>
   <td id="ftOp">0</td>
@@ -208,25 +787,26 @@ body.light tr:nth-child(even){background:rgba(0,0,0,.02)}
 </table>
 </div>
 
-<div style="background:var(--card);border:1px solid var(--border);border-radius:14px;padding:16px;margin:0 20px 20px;font-size:12px;color:var(--muted);line-height:1.8;box-shadow:0 10px 40px rgba(0,0,0,.2)">
-  <b style="color:var(--text);font-size:13px">🤖 অটোমেটিক সিস্টেম কিভাবে কাজ করে:</b><br>
-  ✅ Index Page-এ নতুন Report বাটন যোগ করলে → অটোমেটিক ROI Report এ আসবে<br>
-  ✅ Needle Section অটোমেটিক ১৫তম MCD হিসেবে যোগ হবে (১০টি Report সহ)<br>
-  ✅ Needle Entry করলে → অটোমেটিক user count, report count, time save হিসাব হবে<br>
-  ✅ <b style="color:var(--green)">Smart Selective Cache:</b> শুধু পরিবর্তিত MCD Firebase থেকে পড়বে, বাকিটা local cache থেকে আসবে<br>
-  ✅ Sidebar-এ নতুন বাটন যোগ করলে → অটোমেটিক usage time track হবে<br>
-  ✅ <b style="color:var(--yellow)">Firebase Reads কমবে:</b> Outer Wear MCD-তে কাজ না হলে refresh করলেও Firebase read হবে না<br>
-  ✅ 🔐 ROI Button শুধু Admin দেখবে (index.html-এ admin check যোগ করুন)<br>
-  ✅ 💰 <b style="color:var(--purple)">Enhanced Savings:</b> Time + Paper + Error Reduction + User Activity = Total Savings
+<!-- ===== INFO BOX ===== -->
+<div class="infoBox">
+  <b><i class="fas fa-robot"></i> অটোমেটিক সিস্টেম কিভাবে কাজ করে:</b>
+  <div style="margin-top:12px">
+    <div class="checkItem">Index Page-এ নতুন Report বাটন যোগ করলে → অটোমেটিক ROI Report এ আসবে</div>
+    <div class="checkItem">Needle Section অটোমেটিক ১৫তম MCD হিসেবে যোগ হবে (১০টি Report সহ)</div>
+    <div class="checkItem">Needle Entry করলে → অটোমেটিক user count, report count, time save হিসাব হবে</div>
+    <div class="checkItem"><b style="color:var(--green)">Smart Selective Cache:</b> শুধু পরিবর্তিত MCD Firebase থেকে পড়বে, বাকিটা local cache থেকে আসবে</div>
+    <div class="checkItem">Sidebar-এ নতুন বাটন যোগ করলে → অটোমেটিক usage time track হবে</div>
+    <div class="checkItem"><b style="color:var(--yellow)">Firebase Reads কমবে:</b> Outer Wear MCD-তে কাজ না হলে refresh করলেও Firebase read হবে না</div>
+    <div class="checkItem">🔐 ROI Button শুধু Admin দেখবে (index.html-এ admin check যোগ করুন)</div>
+    <div class="checkItem"><b style="color:var(--purple)">Enhanced Savings:</b> Time + Paper + Error Reduction + User Activity = Total Savings</div>
+  </div>
 </div>
 
 <div id="toast" class="toast"></div>
 
 <script>
 // ============================================================
-// 🔥 SMART SELECTIVE CACHE SYSTEM
-// প্রতিটি MCD-এর আলাদা cache + timestamp
-// শুধু পরিবর্তিত MCD Firebase থেকে পড়বে
+// 🔥 STORAGE KEYS
 // ============================================================
 const ROI_CACHE_KEY = 'gms_roi_smart_cache';
 const ROI_TIMESTAMPS_KEY = 'gms_roi_cache_timestamps';
@@ -267,10 +847,7 @@ const ROICache = {
     n = n || 1;
     const today = new Date().toDateString();
     const stored = JSON.parse(localStorage.getItem(FIREBASE_READS_KEY) || '{"date":"","count":0}');
-    if(stored.date !== today){
-      stored.date = today;
-      stored.count = 0;
-    }
+    if(stored.date !== today){ stored.date = today; stored.count = 0; }
     stored.count += n;
     localStorage.setItem(FIREBASE_READS_KEY, JSON.stringify(stored));
     const el = document.getElementById('firebaseReads');
@@ -306,26 +883,18 @@ const DEFAULT_MCD = [
   {
     name:"Needle Section",
     desc:"🪡 Needle Daily Entry, Broken, Missing, Change — Auto Counted from needle.html",
-    rptDay:1,
-    users:10,
-    usage:100,
+    rptDay:1,users:10,usage:100,
     reports:[
-      "Needle Daily Entry",
-      "Floor Wise Dashboard",
-      "Ageing Report",
-      "Needle Monthly Report",
-      "All Needle BNR/BNF",
-      "All Needle Summary",
-      "Needle Issue Entry",
-      "Needle Issue Report",
-      "Month Wise Needle Stock Summary",
-      "Month Wise Floor Stock Report"
+      "Needle Daily Entry","Floor Wise Dashboard","Ageing Report",
+      "Needle Monthly Report","All Needle BNR/BNF","All Needle Summary",
+      "Needle Issue Entry","Needle Issue Report",
+      "Month Wise Needle Stock Summary","Month Wise Floor Stock Report"
     ]
   }
 ];
 
 // ============================================================
-// 🔥 AUTO LOAD — Index থেকে অটোমেটিক reports আনা + Smart Cache
+// 🔥 AUTO LOAD
 // ============================================================
 function loadAutoReports(){
   try{
@@ -359,7 +928,7 @@ function loadAutoReports(){
 }
 
 // ============================================================
-// 🔥 NEEDLE AUTO COUNT — needle.html থেকে অটোমেটিক count
+// 🔥 NEEDLE AUTO COUNT
 // ============================================================
 function getNeedleAutoData(){
   try{
@@ -420,8 +989,7 @@ function simulateUsage(){
 }
 
 setInterval(() => {
-  const activeMcd = 'General MCD';
-  trackUsage(activeMcd, 0.5);
+  trackUsage('General MCD', 0.5);
 }, 30000);
 
 // ============================================================
@@ -437,12 +1005,21 @@ function toggleTheme(){
   document.body.classList.toggle('light');
   const isLight = document.body.classList.contains('light');
   localStorage.setItem('roi_theme', isLight ? 'light' : 'dark');
-  document.querySelector('.themeToggle').innerText = isLight ? '☀️ Light Mode' : '🌙 Dark Mode';
+  const themeText = document.getElementById('themeText');
+  const themeIcon = document.querySelector('.themeToggle i');
+  if(isLight){
+    themeText.innerText = 'Light Mode';
+    themeIcon.className = 'fas fa-sun';
+  } else {
+    themeText.innerText = 'Dark Mode';
+    themeIcon.className = 'fas fa-moon';
+  }
   recalc();
 }
 if(localStorage.getItem('roi_theme') === 'light'){
   document.body.classList.add('light');
-  document.querySelector('.themeToggle').innerText = '☀️ Light Mode';
+  document.getElementById('themeText').innerText = 'Light Mode';
+  document.querySelector('.themeToggle i').className = 'fas fa-sun';
 }
 
 // ============================================================
@@ -472,7 +1049,7 @@ function getAssumptions(){
 }
 
 // ============================================================
-// 🔥 ENHANCED CALCULATIONS — Time + Paper + Error + User Activity
+// 🔥 ENHANCED CALCULATIONS
 // ============================================================
 function calcMcd(m, a){
   const saveMins = a.manual - a.soft;
@@ -480,39 +1057,17 @@ function calcMcd(m, a){
   const saveHrsDay = (saveMins * activeRpt * 26/60);
   const staffHrRate = a.staff / 208;
   
-  // 💰 Reporter Time Savings (based on users)
   const rptSave = saveHrsDay * staffHrRate * m.users;
-  
-  // 👔 Manager Time Savings
-  const mgrSave = (a.mgr / 15) * a.usage; // 15 MCDs
-  
-  // 📄 Paper/Challan Savings (per MCD)
+  const mgrSave = (a.mgr / 15) * a.usage;
   const paperSave = a.paper * a.usage;
-  
-  // ✅ Error Reduction Savings (per MCD)
   const errorSave = a.error * a.usage;
-  
-  // 📊 User Activity Bonus (more users = more savings)
   const userBonus = (m.users > 1) ? (m.users - 1) * 500 * a.usage : 0;
   
-  // 💎 Total Monthly Savings
   const monthly = rptSave + mgrSave + paperSave + errorSave + userBonus;
   const annual = monthly * 12;
-  
   const opSave = activeRpt > 0 ? saveHrsDay / 8 : 0;
   
-  return {
-    saveHrsDay, 
-    opSave, 
-    rptSave, 
-    mgrSave, 
-    paperSave, 
-    errorSave, 
-    userBonus,
-    monthly, 
-    annual, 
-    activeRpt
-  };
+  return {saveHrsDay, opSave, rptSave, mgrSave, paperSave, errorSave, userBonus, monthly, annual, activeRpt};
 }
 
 function badgeClass(usage){
@@ -523,13 +1078,12 @@ function badgeClass(usage){
 }
 
 // ============================================================
-// 🔥 MAIN RECALCULATE — AUTO + SMART CACHE + ENHANCED SAVINGS
+// 🔥 MAIN RECALCULATE
 // ============================================================
 function recalc(){
   const a = getAssumptions();
   const needleData = getNeedleAutoData();
   
-  // Update Needle Section with auto data
   const needleIdx = mcdData.findIndex(m => m.name === 'Needle Section');
   if(needleIdx >= 0){
     mcdData[needleIdx].users = Math.max(mcdData[needleIdx].users, needleData.uniqueUsers);
@@ -556,24 +1110,24 @@ function recalc(){
     totUserBonus += c.userBonus;
 
     const bClass = badgeClass(m.usage);
-    const rptList = (m.reports||[]).map(r=>`<span style="background:rgba(59,130,246,.15);color:#93c5fd;padding:2px 6px;border-radius:6px;font-size:10px;margin:1px;display:inline-block">${r}</span>`).join(" ");
+    const rptList = (m.reports||[]).map(r=>`<span style="background:rgba(59,130,246,.15);color:#93c5fd;padding:3px 8px;border-radius:8px;font-size:10px;margin:2px;display:inline-block;border:1px solid rgba(59,130,246,.2)">${r}</span>`).join(" ");
 
     const tr = document.createElement("tr");
     tr.innerHTML = `
-      <td>${i+1}</td>
+      <td><b>${i+1}</b></td>
       <td class="mcdName">
-        <div style="font-weight:700">${m.name}</div>
-        <div class="mcdDesc">${m.desc}</div>
-        <div style="margin-top:4px">${rptList}</div>
+        <div style="font-weight:800;font-size:14px">${m.name}</div>
+        <div class="mcdDesc"><i class="fas fa-info-circle"></i> ${m.desc}</div>
+        <div style="margin-top:6px">${rptList}</div>
       </td>
-      <td>${(m.reports||[]).length}</td>
-      <td>${m.rptDay}</td>
-      <td style="color:var(--teal)">${fmtH(c.saveHrsDay)}</td>
-      <td style="color:var(--yellow)">${fmtOp(c.opSave)}</td>
-      <td style="color:var(--blue)">${m.users}</td>
+      <td><b style="color:var(--blue)">${(m.reports||[]).length}</b></td>
+      <td><b>${m.rptDay}</b></td>
+      <td style="color:var(--teal);font-weight:700"><i class="fas fa-clock"></i> ${fmtH(c.saveHrsDay)}</td>
+      <td style="color:var(--yellow);font-weight:700"><i class="fas fa-user"></i> ${fmtOp(c.opSave)}</td>
+      <td style="color:var(--blue);font-weight:700">${m.users}</td>
       <td><span class="usageBadge ${bClass}">${m.usage}%</span></td>
-      <td style="color:var(--green);font-weight:700">${fmtBDT(c.monthly)}</td>
-      <td style="color:var(--purple);font-weight:700">${fmtBDT(c.annual)}</td>
+      <td style="color:var(--green);font-weight:800;font-size:14px">${fmtBDT(c.monthly)}</td>
+      <td style="color:var(--purple);font-weight:800;font-size:14px">${fmtBDT(c.annual)}</td>
     `;
     tbody.appendChild(tr);
   });
@@ -604,7 +1158,6 @@ function recalc(){
   document.getElementById("tbReports").innerText = totRpt;
   document.getElementById("tbTime").innerText = (totTime * a.usage).toFixed(1)+" hrs";
   
-  // 💰 Enhanced Savings Today = (Total Monthly / 26) + User Bonus
   const savingsToday = (totMonthly / 26) + (totUserBonus / 26);
   document.getElementById("tbSavings").innerText = fmtBDT(savingsToday);
   
@@ -630,21 +1183,24 @@ function updateUsageTrackingDisplay(){
   const grid = document.getElementById('usageTrackGrid');
   let totalMins = 0;
   let html = '';
+  
   mcdData.forEach(m => {
     const ud = usageData[m.name] || {totalMinutes:0, sessions:0};
     totalMins += ud.totalMinutes;
     const hrs = (ud.totalMinutes / 60).toFixed(1);
     html += `<div class="usageTrackItem">
-      <div class="trackLabel">${m.name.replace(' MCD','').replace(' Section','')}</div>
+      <div class="trackLabel"><i class="fas fa-building"></i> ${m.name.replace(' MCD','').replace(' Section','')}</div>
       <div class="trackValue">${fmtMin(ud.totalMinutes)}</div>
-      <div class="trackSub">${hrs} ঘণ্টা • ${ud.sessions} sessions</div>
+      <div class="trackSub"><i class="fas fa-clock"></i> ${hrs} ঘণ্টা • <i class="fas fa-bolt"></i> ${ud.sessions} sessions</div>
     </div>`;
   });
-  html += `<div class="usageTrackItem" style="background:rgba(34,197,94,.15);border-color:rgba(34,197,94,.3)">
-    <div class="trackLabel">📊 TOTAL USAGE</div>
-    <div class="trackValue" style="color:var(--green)">${fmtMin(totalMins)}</div>
-    <div class="trackSub">${(totalMins/60).toFixed(1)} ঘণ্টা মোট</div>
+  
+  html += `<div class="usageTrackItem" style="background:linear-gradient(135deg,rgba(34,197,94,.15),rgba(20,184,166,.15));border-color:rgba(34,197,94,.3)">
+    <div class="trackLabel"><i class="fas fa-chart-pie"></i> TOTAL USAGE</div>
+    <div class="trackValue" style="background:linear-gradient(135deg,var(--green),var(--teal));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text">${fmtMin(totalMins)}</div>
+    <div class="trackSub"><i class="fas fa-clock"></i> ${(totalMins/60).toFixed(1)} ঘণ্টা মোট</div>
   </div>`;
+  
   grid.innerHTML = html;
 }
 
@@ -662,33 +1218,70 @@ function updateCharts(rptSave, mgrSave, paper, error, a){
   if(charts.pie) charts.pie.destroy();
   charts.pie = new Chart(document.getElementById("savingsPieChart"),{
     type:"doughnut",
-    data:{labels:["Reporter সময়","Manager সময়","কাগজ/Challan","ভুল কমানো"],
-      datasets:[{data:[Math.round(rptSave),Math.round(mgrSave),Math.round(paper),Math.round(error)],
-        backgroundColor:["#3b82f6","#22c55e","#f59e0b","#8b5cf6"],borderColor:[borderColor],borderWidth:3}]},
-    options:{responsive:true,maintainAspectRatio:false,cutout:"60%",
-      plugins:{legend:{position:"bottom",labels:{color:textColor,font:{size:11,weight:'600'},padding:12}},
-        datalabels:{display:true,formatter:(value,ctx)=>{
-          if(value===0) return '';
-          const total = ctx.dataset.data.reduce((a,b)=>a+b,0);
-          const pct = ((value/total)*100).toFixed(1);
-          return `${Math.round(value).toLocaleString()}\n(${pct}%)`;
-        },color:'#fff',font:{size:11,weight:'bold'},textShadowColor:'rgba(0,0,0,0.5)',textShadowBlur:4}}}
+    data:{
+      labels:["Reporter সময়","Manager সময়","কাগজ/Challan","ভুল কমানো"],
+      datasets:[{
+        data:[Math.round(rptSave),Math.round(mgrSave),Math.round(paper),Math.round(error)],
+        backgroundColor:["#3b82f6","#22c55e","#f59e0b","#8b5cf6"],
+        borderColor:[borderColor],borderWidth:4,
+        hoverOffset:20
+      }]
+    },
+    options:{
+      responsive:true,maintainAspectRatio:false,cutout:"65%",
+      plugins:{
+        legend:{position:"bottom",labels:{color:textColor,font:{size:12,weight:'600'},padding:15,usePointStyle:true}},
+        datalabels:{
+          display:true,
+          formatter:(value,ctx)=>{
+            if(value===0) return '';
+            const total = ctx.dataset.data.reduce((a,b)=>a+b,0);
+            const pct = ((value/total)*100).toFixed(1);
+            return `৳${Math.round(value).toLocaleString()}\n(${pct}%)`;
+          },
+          color:'#fff',font:{size:11,weight:'bold'},
+          textShadowColor:'rgba(0,0,0,0.7)',textShadowBlur:6
+        }
+      }
+    }
   });
 
   // 2. MCD BAR
   if(charts.bar) charts.bar.destroy();
   const bLabels = mcdData.map(m=>m.name.replace(" MCD","").replace(" Section",""));
   const bData = mcdData.map(m=>Math.round(calcMcd(m,a).monthly));
+  const barColors = mcdData.map((_,i)=>{
+    const colors = ['#3b82f6','#22c55e','#f59e0b','#8b5cf6','#ef4444','#14b8a6','#ec4899','#6366f1','#f97316','#84cc16','#06b6d4','#eab308','#a855f7','#10b981','#f43f5e'];
+    return colors[i % colors.length];
+  });
   charts.bar = new Chart(document.getElementById("mcdBarChart"),{
     type:"bar",
-    data:{labels:bLabels,datasets:[{label:"মাসিক সাশ্রয় (৳)",data:bData,
-      backgroundColor:"rgba(59,130,246,.8)",borderColor:"#3b82f6",borderWidth:2,borderRadius:8}]},
-    options:{responsive:true,maintainAspectRatio:false,
-      plugins:{legend:{display:false},
-        datalabels:{display:true,anchor:'end',align:'top',color:textColor,font:{size:9,weight:'700'},
-          formatter:(value)=>'৳'+Math.round(value).toLocaleString(),rotation:-45}},
-      scales:{y:{beginAtZero:true,grid:{color:gridColor},ticks:{color:textColor,font:{size:10},callback:v=>"৳"+Math.round(v/1000)+"K"}},
-        x:{grid:{display:false},ticks:{color:textColor,font:{size:8},maxRotation:45}}}}
+    data:{
+      labels:bLabels,
+      datasets:[{
+        label:"মাসিক সাশ্রয় (৳)",
+        data:bData,
+        backgroundColor:barColors.map(c=>c+'cc'),
+        borderColor:barColors,
+        borderWidth:2,borderRadius:8
+      }]
+    },
+    options:{
+      responsive:true,maintainAspectRatio:false,
+      plugins:{
+        legend:{display:false},
+        datalabels:{
+          display:true,anchor:'end',align:'top',
+          color:textColor,font:{size:9,weight:'700'},
+          formatter:(value)=>'৳'+Math.round(value).toLocaleString(),
+          rotation:-45
+        }
+      },
+      scales:{
+        y:{beginAtZero:true,grid:{color:gridColor},ticks:{color:textColor,font:{size:10},callback:v=>"৳"+Math.round(v/1000)+"K"}},
+        x:{grid:{display:false},ticks:{color:textColor,font:{size:8},maxRotation:45}}
+      }
+    }
   });
 
   // 3. GROWTH LINE
@@ -701,31 +1294,74 @@ function updateCharts(rptSave, mgrSave, paper, error, a){
   });
   charts.growth = new Chart(document.getElementById("growthChart"),{
     type:"line",
-    data:{labels:usageSteps.map(u=>u+"%"),datasets:[{label:"বার্ষিক সাশ্রয় (৳)",data:growthData,
-      borderColor:"#22c55e",backgroundColor:"rgba(34,197,94,.2)",fill:true,tension:.4,pointRadius:6,pointBackgroundColor:"#22c55e",borderWidth:3}]},
-    options:{responsive:true,maintainAspectRatio:false,
-      plugins:{legend:{display:false},
-        datalabels:{display:true,anchor:'top',align:'top',color:textColor,font:{size:10,weight:'700'},
-          formatter:(value)=>'৳'+Math.round(value/1000)+"K"}},
-      scales:{y:{beginAtZero:true,grid:{color:gridColor},ticks:{color:textColor,callback:v=>"৳"+Math.round(v/1000)+"K"}},
-        x:{grid:{color:gridColor},ticks:{color:textColor,font:{size:11,weight:'600'}}}}}
+    data:{
+      labels:usageSteps.map(u=>u+"%"),
+      datasets:[{
+        label:"বার্ষিক সাশ্রয় (৳)",
+        data:growthData,
+        borderColor:"#22c55e",
+        backgroundColor:(ctx)=>{
+          const chart = ctx.chart;
+          const {ctx:c,chartArea} = chart;
+          if(!chartArea) return null;
+          const gradient = c.createLinearGradient(0,chartArea.top,0,chartArea.bottom);
+          gradient.addColorStop(0,'rgba(34,197,94,.4)');
+          gradient.addColorStop(1,'rgba(34,197,94,.05)');
+          return gradient;
+        },
+        fill:true,tension:.4,pointRadius:7,
+        pointBackgroundColor:"#22c55e",
+        pointBorderColor:"#fff",pointBorderWidth:2,
+        borderWidth:3
+      }]
+    },
+    options:{
+      responsive:true,maintainAspectRatio:false,
+      plugins:{
+        legend:{display:false},
+        datalabels:{
+          display:true,anchor:'top',align:'top',
+          color:textColor,font:{size:10,weight:'700'},
+          formatter:(value)=>'৳'+Math.round(value/1000)+"K"
+        }
+      },
+      scales:{
+        y:{beginAtZero:true,grid:{color:gridColor},ticks:{color:textColor,callback:v=>"৳"+Math.round(v/1000)+"K"}},
+        x:{grid:{color:gridColor},ticks:{color:textColor,font:{size:11,weight:'600'}}}
+      }
+    }
   });
 
   // 4. USER CHART
   if(charts.user) charts.user.destroy();
   charts.user = new Chart(document.getElementById("userChart"),{
     type:"doughnut",
-    data:{labels:["Active Users","Inactive Users"],
-      datasets:[{data:[a.activeUsers, Math.max(0,a.users-a.activeUsers)],
-        backgroundColor:["#3b82f6","#334155"],borderColor:[borderColor],borderWidth:3}]},
-    options:{responsive:true,maintainAspectRatio:false,cutout:"65%",
-      plugins:{legend:{position:"bottom",labels:{color:textColor,font:{size:11,weight:'600'},padding:12}},
-        datalabels:{display:true,formatter:(value,ctx)=>{
-          if(value===0) return '';
-          const total = ctx.dataset.data.reduce((a,b)=>a+b,0);
-          const pct = ((value/total)*100).toFixed(0);
-          return `${value} জন\n(${pct}%)`;
-        },color:'#fff',font:{size:12,weight:'bold'},textShadowColor:'rgba(0,0,0,0.5)',textShadowBlur:4}}}
+    data:{
+      labels:["Active Users","Inactive Users"],
+      datasets:[{
+        data:[a.activeUsers, Math.max(0,a.users-a.activeUsers)],
+        backgroundColor:["#3b82f6","#334155"],
+        borderColor:[borderColor],borderWidth:4,
+        hoverOffset:20
+      }]
+    },
+    options:{
+      responsive:true,maintainAspectRatio:false,cutout:"70%",
+      plugins:{
+        legend:{position:"bottom",labels:{color:textColor,font:{size:12,weight:'600'},padding:15,usePointStyle:true}},
+        datalabels:{
+          display:true,
+          formatter:(value,ctx)=>{
+            if(value===0) return '';
+            const total = ctx.dataset.data.reduce((a,b)=>a+b,0);
+            const pct = ((value/total)*100).toFixed(0);
+            return `${value} জন\n(${pct}%)`;
+          },
+          color:'#fff',font:{size:13,weight:'bold'},
+          textShadowColor:'rgba(0,0,0,0.7)',textShadowBlur:6
+        }
+      }
+    }
   });
 
   // 5. USAGE TIME CHART
@@ -742,14 +1378,31 @@ function updateCharts(rptSave, mgrSave, paper, error, a){
   });
   charts.usageTime = new Chart(document.getElementById("usageTimeChart"),{
     type:"bar",
-    data:{labels:usageLabels,datasets:[{label:"Web Usage Time (মিনিট)",data:usageMinutes,
-      backgroundColor:usageColors.map(c=>c+'cc'),borderColor:usageColors,borderWidth:2,borderRadius:8}]},
-    options:{responsive:true,maintainAspectRatio:false,
-      plugins:{legend:{display:false},
-        datalabels:{display:true,anchor:'end',align:'top',color:textColor,font:{size:9,weight:'700'},
-          formatter:(value)=>value>0?value+' মিনিট':'0',rotation:-45}},
-      scales:{y:{beginAtZero:true,grid:{color:gridColor},ticks:{color:textColor,font:{size:10},callback:v=>v+" মিনিট"}},
-        x:{grid:{display:false},ticks:{color:textColor,font:{size:8},maxRotation:45}}}}
+    data:{
+      labels:usageLabels,
+      datasets:[{
+        label:"Web Usage Time (মিনিট)",
+        data:usageMinutes,
+        backgroundColor:usageColors.map(c=>c+'cc'),
+        borderColor:usageColors,borderWidth:2,borderRadius:8
+      }]
+    },
+    options:{
+      responsive:true,maintainAspectRatio:false,
+      plugins:{
+        legend:{display:false},
+        datalabels:{
+          display:true,anchor:'end',align:'top',
+          color:textColor,font:{size:9,weight:'700'},
+          formatter:(value)=>value>0?value+' মিনিট':'0',
+          rotation:-45
+        }
+      },
+      scales:{
+        y:{beginAtZero:true,grid:{color:gridColor},ticks:{color:textColor,font:{size:10},callback:v=>v+" মিনিট"}},
+        x:{grid:{display:false},ticks:{color:textColor,font:{size:8},maxRotation:45}}
+      }
+    }
   });
 
   // 6. USAGE PERCENTAGE CHART
@@ -758,14 +1411,30 @@ function updateCharts(rptSave, mgrSave, paper, error, a){
   const usagePctData = usageMinutes.map(m=>Math.round((m/totalUsageMins)*100));
   charts.usagePct = new Chart(document.getElementById("usagePctChart"),{
     type:"doughnut",
-    data:{labels:usageLabels,
-      datasets:[{data:usagePctData,backgroundColor:usageColors,borderColor:[borderColor],borderWidth:2}]},
-    options:{responsive:true,maintainAspectRatio:false,cutout:"55%",
-      plugins:{legend:{position:"right",labels:{color:textColor,font:{size:10,weight:'600'},padding:8,boxWidth:12}},
-        datalabels:{display:true,formatter:(value,ctx)=>{
-          if(value<3) return '';
-          return value+'%';
-        },color:'#fff',font:{size:10,weight:'bold'},textShadowColor:'rgba(0,0,0,0.5)',textShadowBlur:3}}}
+    data:{
+      labels:usageLabels,
+      datasets:[{
+        data:usagePctData,
+        backgroundColor:usageColors,
+        borderColor:[borderColor],borderWidth:3,
+        hoverOffset:15
+      }]
+    },
+    options:{
+      responsive:true,maintainAspectRatio:false,cutout:"55%",
+      plugins:{
+        legend:{position:"right",labels:{color:textColor,font:{size:10,weight:'600'},padding:8,boxWidth:12,usePointStyle:true}},
+        datalabels:{
+          display:true,
+          formatter:(value,ctx)=>{
+            if(value<3) return '';
+            return value+'%';
+          },
+          color:'#fff',font:{size:10,weight:'bold'},
+          textShadowColor:'rgba(0,0,0,0.7)',textShadowBlur:4
+        }
+      }
+    }
   });
 }
 
@@ -774,16 +1443,18 @@ function updateCharts(rptSave, mgrSave, paper, error, a){
 // ============================================================
 function showToast(msg){
   const t = document.getElementById("toast");
-  t.innerText = msg;
+  t.innerHTML = `<i class="fas fa-check-circle"></i> ${msg}`;
   t.style.display="block";
   setTimeout(()=>t.style.display="none",2500);
 }
 
 // ============================================================
-// 🔥 INIT — AUTO LOAD + SMART CACHE CHECK
+// 🔥 INIT
 // ============================================================
 recalc();
-showToast('🤖 Auto System Active — '+mcdData.length+' MCD loaded (14 + Needle with 10 Reports)');
+setTimeout(()=>{
+  showToast('🤖 Auto System Active — '+mcdData.length+' MCD loaded (14 + Needle with 10 Reports)');
+}, 500);
 
 window.addEventListener('storage', (e) => {
   if(e.key === AUTO_REPORTS_KEY || e.key === NEEDLE_ACTIVITY_KEY || e.key === BUTTON_ACTIVITY_KEY){
