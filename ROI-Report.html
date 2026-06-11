@@ -5,19 +5,17 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
 <title>GMS MCD ERP — ROI Report</title>
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels"></script>
+<script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2"></script>
 <style>
 :root{
   --bg:#0a1628;--card:#1e293b;--card2:#334155;
   --text:#f1f5f9;--muted:#94a3b8;--border:#475569;
   --blue:#3b82f6;--green:#22c55e;--red:#ef4444;
   --yellow:#f59e0b;--purple:#8b5cf6;--teal:#14b8a6;
-  --shadow:0 10px 40px rgba(0,0,0,.4);
 }
 body.light{
   --bg:#f8fafc;--card:#ffffff;--card2:#f1f5f9;
   --text:#1e293b;--muted:#64748b;--border:#cbd5e1;
-  --shadow:0 10px 40px rgba(0,0,0,.1);
 }
 *{box-sizing:border-box;margin:0;padding:0}
 body{
@@ -25,8 +23,6 @@ body{
   font-family:'Segoe UI',Arial,sans-serif;
   padding:0 0 60px;transition:background .3s,color .3s;
 }
-
-/* HEADER */
 .header{
   background:linear-gradient(135deg,#0f172a,#1e293b);
   border-bottom:2px solid var(--blue);
@@ -35,7 +31,6 @@ body{
 }
 body.light .header{
   background:linear-gradient(135deg,#ffffff,#f1f5f9);
-  border-bottom-color:var(--blue);
 }
 .header::before{
   content:'';position:absolute;inset:0;
@@ -47,8 +42,6 @@ body.light .header{
   -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;}
 .header h3{font-size:13px;color:var(--muted);margin-top:4px;position:relative;letter-spacing:2px}
 .header h4{font-size:12px;color:var(--muted);position:relative;margin-top:2px}
-
-/* THEME TOGGLE */
 .themeToggle{
   position:absolute;top:20px;right:30px;
   background:rgba(59,130,246,.2);border:1px solid rgba(59,130,246,.3);
@@ -59,8 +52,6 @@ body.light .header{
 .themeToggle:hover{
   background:rgba(59,130,246,.3);transform:translateY(-2px);
 }
-
-/* TOP BAR */
 .topBar{
   background:rgba(30,41,59,.95);
   border-bottom:1px solid var(--border);
@@ -74,7 +65,7 @@ body.light .topBar{background:rgba(255,255,255,.95);}
   background:rgba(59,130,246,.15);border:1px solid rgba(59,130,246,.3);
   border-radius:10px;padding:8px 14px;transition:all .3s;
 }
-.usageStat:hover{transform:translateY(-2px);box-shadow:var(--shadow)}
+.usageStat:hover{transform:translateY(-2px)}
 .usageStat .icon{font-size:20px}
 .usageStat .info{display:flex;flex-direction:column}
 .usageStat .info span{font-size:11px;color:var(--muted);font-weight:600}
@@ -83,8 +74,6 @@ body.light .topBar{background:rgba(255,255,255,.95);}
 .progressWrap span{font-size:12px;color:var(--muted)}
 .progressBar{width:120px;height:8px;background:rgba(255,255,255,.1);border-radius:4px;overflow:hidden}
 .progressFill{height:100%;border-radius:4px;transition:width 1s ease}
-
-/* KPI GRID */
 .kpiGrid{
   display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));
   gap:12px;margin:0 20px 20px;
@@ -94,23 +83,19 @@ body.light .topBar{background:rgba(255,255,255,.95);}
   border:1px solid var(--border);border-radius:14px;
   padding:16px;text-align:center;
   transition:all .3s;cursor:default;
-  box-shadow:var(--shadow);
+  box-shadow:0 10px 40px rgba(0,0,0,.2);
 }
-.kpiBox:hover{transform:translateY(-5px);box-shadow:0 15px 50px rgba(0,0,0,.3)}
+.kpiBox:hover{transform:translateY(-5px)}
 .kpiBox .label{font-size:11px;color:var(--muted);font-weight:700;text-transform:uppercase;letter-spacing:.8px}
 .kpiBox .value{font-size:26px;font-weight:900;margin-top:6px}
 .kpiBox .sub{font-size:11px;color:var(--muted);margin-top:3px}
 .green{color:var(--green)}.blue{color:var(--blue)}.yellow{color:var(--yellow)}.purple{color:var(--purple)}.teal{color:var(--teal)}
-
-/* SECTION TITLE */
 .secTitle{
   display:flex;align-items:center;gap:10px;
   font-size:18px;font-weight:900;
   margin:20px 20px 12px;padding-bottom:8px;
   border-bottom:2px solid var(--border);
 }
-
-/* CHART GRID */
 .chartGrid{
   display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));
   gap:14px;margin:0 20px 20px;
@@ -118,15 +103,13 @@ body.light .topBar{background:rgba(255,255,255,.95);}
 .chartBox{
   background:linear-gradient(135deg,var(--card),var(--card2));
   border:1px solid var(--border);border-radius:14px;
-  padding:16px;box-shadow:var(--shadow);transition:all .3s;
+  padding:16px;box-shadow:0 10px 40px rgba(0,0,0,.2);transition:all .3s;
 }
 .chartBox:hover{transform:translateY(-3px)}
 .chartBox h3{font-size:14px;font-weight:700;color:var(--text);margin-bottom:12px}
-.chartBox canvas{max-height:250px!important}
-
-/* TABLE */
+.chartBox canvas{max-height:280px!important}
 .tableWrap{overflow-x:auto;margin:0 20px 20px}
-table{width:100%;border-collapse:collapse;background:var(--card);border-radius:12px;overflow:hidden;font-size:13px;box-shadow:var(--shadow)}
+table{width:100%;border-collapse:collapse;background:var(--card);border-radius:12px;overflow:hidden;font-size:13px;box-shadow:0 10px 40px rgba(0,0,0,.2)}
 th{background:linear-gradient(135deg,var(--blue),var(--purple));color:white;padding:10px 8px;text-align:center;font-weight:700;font-size:12px}
 td{border:1px solid var(--border);padding:9px 8px;text-align:center;color:var(--text)}
 tr:nth-child(even){background:rgba(255,255,255,.03)}
@@ -134,8 +117,6 @@ body.light tr:nth-child(even){background:rgba(0,0,0,.02)}
 .totalRowTable{background:linear-gradient(135deg,rgba(34,197,94,.15),rgba(59,130,246,.15))!important;font-weight:900;font-size:14px}
 .mcdName{text-align:left!important;font-weight:700}
 .mcdDesc{font-size:11px;color:var(--muted);font-weight:400}
-
-/* BADGE */
 .usageBadge{
   display:inline-block;padding:3px 8px;border-radius:20px;
   font-size:11px;font-weight:900;
@@ -144,12 +125,10 @@ body.light tr:nth-child(even){background:rgba(0,0,0,.02)}
 .badge-mid{background:rgba(59,130,246,.2);color:#93c5fd}
 .badge-low{background:rgba(245,158,11,.2);color:#fcd34d}
 .badge-none{background:rgba(100,116,139,.2);color:#94a3b8}
-
-/* FORM */
 .addReportBox{
   background:linear-gradient(135deg,var(--card),var(--card2));
   border:2px dashed var(--blue);border-radius:16px;
-  padding:20px;margin:0 20px 20px;box-shadow:var(--shadow);
+  padding:20px;margin:0 20px 20px;box-shadow:0 10px 40px rgba(0,0,0,.2);
 }
 .addReportBox h3{font-size:16px;font-weight:700;margin-bottom:14px;color:var(--blue)}
 .formRow{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:10px;margin-bottom:10px}
@@ -167,12 +146,10 @@ body.light tr:nth-child(even){background:rgba(0,0,0,.02)}
 .addBtn:hover{transform:translateY(-2px);box-shadow:0 6px 20px rgba(59,130,246,.5)}
 .delBtn{background:#dc2626;color:white;border:none;padding:5px 10px;border-radius:6px;cursor:pointer;font-size:11px;font-weight:700;transition:all .2s}
 .delBtn:hover{background:#b91c1c;transform:scale(1.1)}
-
-/* ASSUMPTIONS */
 .assumptBox{
   background:linear-gradient(135deg,var(--card),var(--card2));
   border:1px solid var(--border);border-radius:14px;
-  padding:16px;margin:0 20px 20px;box-shadow:var(--shadow);
+  padding:16px;margin:0 20px 20px;box-shadow:0 10px 40px rgba(0,0,0,.2);
 }
 .assumptGrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:10px}
 .assumptItem{display:flex;flex-direction:column;gap:4px}
@@ -182,8 +159,20 @@ body.light tr:nth-child(even){background:rgba(0,0,0,.02)}
   background:var(--bg);color:var(--text);font-size:13px;font-weight:600;transition:all .3s;
 }
 .assumptItem input:focus{outline:none;border-color:var(--blue)}
-
-/* TOAST */
+.usageTrackBox{
+  background:linear-gradient(135deg,var(--card),var(--card2));
+  border:1px solid var(--border);border-radius:14px;
+  padding:16px;margin:0 20px 20px;box-shadow:0 10px 40px rgba(0,0,0,.2);
+}
+.usageTrackGrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:10px}
+.usageTrackItem{
+  background:rgba(59,130,246,.1);border:1px solid rgba(59,130,246,.2);
+  border-radius:10px;padding:12px;text-align:center;transition:all .3s;
+}
+.usageTrackItem:hover{transform:translateY(-2px)}
+.usageTrackItem .trackLabel{font-size:11px;color:var(--muted);font-weight:600}
+.usageTrackItem .trackValue{font-size:20px;font-weight:900;color:var(--blue);margin-top:4px}
+.usageTrackItem .trackSub{font-size:10px;color:var(--muted);margin-top:2px}
 .toast{
   position:fixed;bottom:20px;left:50%;transform:translateX(-50%);
   background:var(--green);color:#fff;padding:12px 22px;border-radius:10px;
@@ -191,17 +180,14 @@ body.light tr:nth-child(even){background:rgba(0,0,0,.02)}
   box-shadow:0 4px 20px rgba(34,197,94,.4);animation:slideUp .3s ease;
 }
 @keyframes slideUp{from{transform:translate(-50%,20px);opacity:0}to{transform:translate(-50%,0);opacity:1}}
-
-/* PRINT */
 @page{size:A4 landscape;margin:8mm}
 @media print{
   body{background:white;color:black}
-  .controls,.addReportBox,.assumptBox,.themeToggle{display:none!important}
+  .controls,.addReportBox,.assumptBox,.themeToggle,.usageTrackBox{display:none!important}
   .kpiBox,.chartBox,.tableWrap{page-break-inside:avoid}
   .header{background:white;border-bottom:2px solid #2563eb}
   .header h1{-webkit-text-fill-color:#1e293b;background:none;color:#1e293b}
 }
-
 @media(max-width:700px){
   .topBar{flex-direction:column}
   .header h1{font-size:20px}
@@ -219,7 +205,6 @@ body.light tr:nth-child(even){background:rgba(0,0,0,.02)}
   <h4>GMS Textiles Ltd. · Tansutrapur, Kaliakoir, Gazipur</h4>
 </div>
 
-<!-- TOP BAR -->
 <div class="topBar">
   <div class="topBarLeft">
     <div class="usageStat">
@@ -249,7 +234,6 @@ body.light tr:nth-child(even){background:rgba(0,0,0,.02)}
   </div>
 </div>
 
-<!-- ASSUMPTIONS -->
 <div class="secTitle">⚙️ Assumptions — পরিবর্তন করলে সব হিসাব আপডেট হবে</div>
 <div class="assumptBox">
   <div class="assumptGrid">
@@ -275,11 +259,21 @@ body.light tr:nth-child(even){background:rgba(0,0,0,.02)}
   </div>
 </div>
 
-<!-- KPI GRID -->
+<div class="secTitle">⏱️ Web Usage Tracking — প্রতিটি MCD কতক্ষণ ব্যবহার হচ্ছে</div>
+<div class="usageTrackBox">
+  <div class="usageTrackGrid" id="usageTrackGrid">
+    <!-- Auto populated -->
+  </div>
+  <div style="margin-top:12px;text-align:center">
+    <button onclick="resetUsageTracking()" style="background:var(--red);color:white;border:none;padding:8px 16px;border-radius:8px;cursor:pointer;font-weight:700;font-size:12px;transition:all .3s">🔄 Reset Usage Data</button>
+    <button onclick="simulateUsage()" style="background:var(--blue);color:white;border:none;padding:8px 16px;border-radius:8px;cursor:pointer;font-weight:700;font-size:12px;margin-left:8px;transition:all .3s">🧪 Simulate Usage</button>
+  </div>
+</div>
+
 <div class="secTitle">📊 সাশ্রয় সারসংক্ষেপ</div>
 <div class="kpiGrid">
   <div class="kpiBox"><div class="label">🏭 Total MCD</div><div class="value blue" id="kpiMcd">14</div><div class="sub">সক্রিয় বিভাগ</div></div>
-  <div class="kpiBox"><div class="label">📑 রিপোর্ট/দিন</div><div class="value yellow" id="kpiRpt">0</div><div class="sub">10% ব্যবহারে</div></div>
+  <div class="kpiBox"><div class="label">📑 Total Reports</div><div class="value yellow" id="kpiRpt">0</div><div class="sub">সব MCD মিলিয়ে</div></div>
   <div class="kpiBox"><div class="label">⏱️ সেভ সময়/দিন</div><div class="value teal" id="kpiTime">0</div><div class="sub">১৪ MCD মিলিয়ে</div></div>
   <div class="kpiBox"><div class="label">💰 মাসিক সাশ্রয়</div><div class="value green" id="kpiMonthly">৳0</div><div class="sub" id="kpiUsagePctLabel">বার্ষিক ৳0</div></div>
   <div class="kpiBox"><div class="label">📅 বার্ষিক সাশ্রয়</div><div class="value purple" id="kpiAnnual">৳0</div><div class="sub">খরচ: ০ টাকা</div></div>
@@ -290,31 +284,37 @@ body.light tr:nth-child(even){background:rgba(0,0,0,.02)}
   <div class="kpiBox"><div class="label">✅ ভুল কমানো</div><div class="value green" id="kpiError">৳0</div><div class="sub">মাসে (১৪ MCD)</div></div>
 </div>
 
-<!-- CHARTS -->
-<div class="secTitle">📈 বিশ্লেষণ চার্ট</div>
+<div class="secTitle">📈 বিশ্লেষণ চার্ট (সংখ্যা সহ)</div>
 <div class="chartGrid">
   <div class="chartBox">
-    <h3>💰 মাসিক সাশ্রয়ের উৎস (৳)</h3>
+    <h3>💰 মাসিক সাশ্রয়ের উৎস (৳) — সংখ্যা সহ</h3>
     <canvas id="savingsPieChart"></canvas>
   </div>
   <div class="chartBox">
-    <h3>📊 MCD-ভিত্তিক মাসিক সাশ্রয় (৳)</h3>
+    <h3>📊 MCD-ভিত্তিক মাসিক সাশ্রয় (৳) — সংখ্যা সহ</h3>
     <canvas id="mcdBarChart"></canvas>
   </div>
   <div class="chartBox">
-    <h3>📈 ব্যবহার বৃদ্ধিতে বার্ষিক সাশ্রয় (৳)</h3>
+    <h3>📈 ব্যবহার বৃদ্ধিতে বার্ষিক সাশ্রয় (৳) — সংখ্যা সহ</h3>
     <canvas id="growthChart"></canvas>
   </div>
   <div class="chartBox">
-    <h3>👥 User Activity Overview</h3>
+    <h3>👥 User Activity Overview — সংখ্যা সহ</h3>
     <canvas id="userChart"></canvas>
+  </div>
+  <div class="chartBox">
+    <h3>⏱️ MCD ভিত্তিক Web Usage Time (মিনিট) — সংখ্যা সহ</h3>
+    <canvas id="usageTimeChart"></canvas>
+  </div>
+  <div class="chartBox">
+    <h3>📊 MCD Usage Percentage (%) — সংখ্যা সহ</h3>
+    <canvas id="usagePctChart"></canvas>
   </div>
 </div>
 
-<!-- ADD NEW REPORT -->
-<div class="secTitle">➕ নতুন Report / Module যোগ করুন</div>
+<div class="secTitle">➕ নতুন Report / Module যোগ করুন (Auto Index Update)</div>
 <div class="addReportBox">
-  <h3>নতুন Report যোগ করলে স্বয়ংক্রিয়ভাবে ROI আপডেট হবে</h3>
+  <h3>নতুন Report যোগ করলে স্বয়ংক্রিয়ভাবে ROI আপডেট + Index Page এ Report যোগ হবে</h3>
   <div class="formRow">
     <div><label style="font-size:11px;color:var(--muted);font-weight:700;display:block;margin-bottom:4px">MCD নাম</label>
     <select id="nMcd">
@@ -335,10 +335,10 @@ body.light tr:nth-child(even){background:rgba(0,0,0,.02)}
     <div><label style="font-size:11px;color:var(--muted);font-weight:700;display:block;margin-bottom:4px">ব্যবহার % (এই module)</label>
     <input type="number" id="nUsagePct" value="50" min="0" max="100"></div>
   </div>
-  <button class="addBtn" onclick="addReport()">➕ Report যোগ করুন</button>
+  <button class="addBtn" onclick="addReport()">➕ Report যোগ করুন (Auto Update)</button>
+  <button class="addBtn" onclick="syncToIndex()" style="background:linear-gradient(135deg,var(--green),var(--teal));margin-left:10px">🔄 Index Page এ Sync করুন</button>
 </div>
 
-<!-- TABLE -->
 <div class="secTitle">📋 MCD-ভিত্তিক বিস্তারিত বিশ্লেষণ</div>
 <div class="tableWrap">
 <table id="mcdTable">
@@ -372,10 +372,9 @@ body.light tr:nth-child(even){background:rgba(0,0,0,.02)}
 </table>
 </div>
 
-<!-- FORMULA -->
-<div style="background:var(--card);border:1px solid var(--border);border-radius:14px;padding:16px;margin:0 20px 20px;font-size:12px;color:var(--muted);line-height:1.8;box-shadow:var(--shadow)">
+<div style="background:var(--card);border:1px solid var(--border);border-radius:14px;padding:16px;margin:0 20px 20px;font-size:12px;color:var(--muted);line-height:1.8;box-shadow:0 10px 40px rgba(0,0,0,.2)">
   <b style="color:var(--text);font-size:13px">হিসাবের ভিত্তি</b><br>
-  সময় সাশ্রয় = (ম্যানুয়াল − সফটওয়্যার মিনিট) × সক্রিয় রিপোর্ট/দিন × ২৬ কর্মদিবস ÷ ৬০<br>
+  সময় সাশ্রয় = (ম্যানুয়াল − সফটওয়্যার মিনিট) × সক্রিয় রিপোর্ট/দিন × ২৬ কর্মদিবস ÷ ০<br>
   Reporter ঘণ্টার মূল্য = বেতন ÷ ২০৮ &nbsp;|&nbsp; Operator সাশ্রয় = সেভ ঘণ্টা/দিন ÷ ৮<br>
   মাসিক সাশ্রয় = Reporter সময় মূল্য + Manager সময় মূল্য + কাগজ + ভুল কমানো &nbsp;|&nbsp; × ব্যবহার%
 </div>
@@ -383,6 +382,64 @@ body.light tr:nth-child(even){background:rgba(0,0,0,.02)}
 <div id="toast" class="toast"></div>
 
 <script>
+// ============================================================
+// 🔥 USAGE TRACKING SYSTEM — প্রতিটি MCD কতক্ষণ ব্যবহার হচ্ছে
+// ============================================================
+const USAGE_STORAGE_KEY = 'gms_mcd_usage_tracking';
+
+function getUsageData(){
+  try{
+    return JSON.parse(localStorage.getItem(USAGE_STORAGE_KEY)) || {};
+  }catch(e){ return {}; }
+}
+
+function saveUsageData(data){
+  localStorage.setItem(USAGE_STORAGE_KEY, JSON.stringify(data));
+}
+
+function trackUsage(mcdName, minutes){
+  const data = getUsageData();
+  if(!data[mcdName]){
+    data[mcdName] = { totalMinutes: 0, sessions: 0, lastUsed: null, reports: [] };
+  }
+  data[mcdName].totalMinutes += minutes;
+  data[mcdName].sessions += 1;
+  data[mcdName].lastUsed = new Date().toISOString();
+  saveUsageData(data);
+}
+
+function resetUsageTracking(){
+  if(confirm('সব Usage Data মুছে ফেলবেন?')){
+    localStorage.removeItem(USAGE_STORAGE_KEY);
+    recalc();
+    showToast('🔄 Usage Data Reset হয়েছে');
+  }
+}
+
+function simulateUsage(){
+  const mcds = ['Accessories MCD','Grey Fabric MCD','Billing Section','Shipment MCD','Outer Wear MCD','Yarn MCD','Printing MCD','Jhut MCD','General MCD','Leftover MCD','Finish Fabric MCD','Yarn Dyeing MCD','Chemical MCD','General Technical MCD'];
+  const data = getUsageData();
+  mcds.forEach(mcd => {
+    const mins = Math.floor(Math.random() * 120) + 10;
+    if(!data[mcd]) data[mcd] = { totalMinutes: 0, sessions: 0, lastUsed: null, reports: [] };
+    data[mcd].totalMinutes += mins;
+    data[mcd].sessions += Math.floor(Math.random() * 5) + 1;
+    data[mcd].lastUsed = new Date().toISOString();
+  });
+  saveUsageData(data);
+  recalc();
+  showToast('🧪 Simulated Usage Data added');
+}
+
+// Track page usage every 30 seconds
+setInterval(() => {
+  const activeMcd = document.getElementById('nMcd')?.value || 'Accessories MCD';
+  trackUsage(activeMcd, 0.5); // 30 seconds = 0.5 minutes
+}, 30000);
+
+// ============================================================
+// DEFAULT MCD DATA
+// ============================================================
 const DEFAULT_MCD = [
   {name:"Accessories MCD",desc:"Inventory, challan, accessories stock",rptDay:1,users:3,usage:10,reports:["Accessories Inventory Report","Sewing Thread Daily","Twill Tape Daily","Gate Plan"]},
   {name:"Grey Fabric MCD",desc:"Daily stock, monthly report, delivery",rptDay:0,users:2,usage:10,reports:["Grey Fabric Daily Stock","Grey Fabric Monthly Report"]},
@@ -403,27 +460,35 @@ const DEFAULT_MCD = [
 let mcdData = JSON.parse(localStorage.getItem("gms_roi_mcd") || "null") || DEFAULT_MCD.map(x=>({...x}));
 let charts = {};
 
-// Theme toggle
+// ============================================================
+// THEME TOGGLE
+// ============================================================
 function toggleTheme(){
   document.body.classList.toggle('light');
   const isLight = document.body.classList.contains('light');
   localStorage.setItem('roi_theme', isLight ? 'light' : 'dark');
   const btn = document.querySelector('.themeToggle');
   btn.innerText = isLight ? '☀️ Light Mode' : '🌙 Dark Mode';
-  recalc(); // Redraw charts with new theme
+  recalc();
 }
 
-// Load saved theme
 if(localStorage.getItem('roi_theme') === 'light'){
   document.body.classList.add('light');
   document.querySelector('.themeToggle').innerText = '☀️ Light Mode';
 }
 
+// ============================================================
+// FORMATTERS
+// ============================================================
 function fmt(n){return Math.round(n).toLocaleString("en-US")}
 function fmtBDT(n){return "৳"+Math.round(n).toLocaleString("en-US")}
 function fmtH(n){return n.toFixed(2)+" ঘণ্টা"}
 function fmtOp(n){return n.toFixed(2)+" জন"}
+function fmtMin(n){return Math.round(n)+" মিনিট"}
 
+// ============================================================
+// ASSUMPTIONS
+// ============================================================
 function getAssumptions(){
   return {
     staff: +document.getElementById("aStaff").value||18000,
@@ -438,6 +503,9 @@ function getAssumptions(){
   };
 }
 
+// ============================================================
+// CALCULATIONS
+// ============================================================
 function calcMcd(m, a){
   const saveMins = a.manual - a.soft;
   const activeRpt = m.rptDay * a.usage;
@@ -459,6 +527,9 @@ function badgeClass(usage){
   return "badge-none";
 }
 
+// ============================================================
+// MAIN RECALCULATE
+// ============================================================
 function recalc(){
   const a = getAssumptions();
   let totRpt=0, totTime=0, totOp=0, totMonthly=0, totAnnual=0, totUsers=0;
@@ -534,16 +605,60 @@ function recalc(){
   document.getElementById("appUsageBar").style.width = appPct+"%";
   document.getElementById("appUsagePct").innerText = appPct+"%";
 
+  // Update usage tracking display
+  updateUsageTrackingDisplay();
+  
   updateCharts(totRptSave, totMgrSave, totPaper, totError, a);
   localStorage.setItem("gms_roi_mcd", JSON.stringify(mcdData));
 }
 
+// ============================================================
+// USAGE TRACKING DISPLAY
+// ============================================================
+function updateUsageTrackingDisplay(){
+  const usageData = getUsageData();
+  const grid = document.getElementById('usageTrackGrid');
+  let totalMins = 0;
+  
+  let html = '';
+  mcdData.forEach(m => {
+    const ud = usageData[m.name] || { totalMinutes: 0, sessions: 0 };
+    totalMins += ud.totalMinutes;
+    const hrs = (ud.totalMinutes / 60).toFixed(1);
+    html += `
+      <div class="usageTrackItem">
+        <div class="trackLabel">${m.name.replace(' MCD','')}</div>
+        <div class="trackValue">${fmtMin(ud.totalMinutes)}</div>
+        <div class="trackSub">${hrs} ঘণ্টা • ${ud.sessions} sessions</div>
+      </div>
+    `;
+  });
+  
+  // Total
+  html += `
+    <div class="usageTrackItem" style="background:rgba(34,197,94,.15);border-color:rgba(34,197,94,.3)">
+      <div class="trackLabel">📊 TOTAL USAGE</div>
+      <div class="trackValue" style="color:var(--green)">${fmtMin(totalMins)}</div>
+      <div class="trackSub">${(totalMins/60).toFixed(1)} ঘণ্টা মোট</div>
+    </div>
+  `;
+  
+  grid.innerHTML = html;
+}
+
+// ============================================================
+// CHARTS WITH DATA LABELS
+// ============================================================
 function updateCharts(rptSave, mgrSave, paper, error, a){
   const isLight = document.body.classList.contains('light');
-  const textColor = isLight ? '#1e293b' : '#94a3b8';
+  const textColor = isLight ? '#1e293b' : '#f1f5f9';
   const gridColor = isLight ? 'rgba(0,0,0,.1)' : 'rgba(255,255,255,.1)';
+  const borderColor = isLight ? '#ffffff' : '#1e293b';
 
-  // Savings Pie
+  // Register datalabels plugin
+  Chart.register(ChartDataLabels);
+
+  // 1. SAVINGS PIE CHART
   if(charts.pie) charts.pie.destroy();
   charts.pie = new Chart(document.getElementById("savingsPieChart"),{
     type:"doughnut",
@@ -551,19 +666,29 @@ function updateCharts(rptSave, mgrSave, paper, error, a){
       labels:["Reporter সময়","Manager সময়","কাগজ/Challan","ভুল কমানো"],
       datasets:[{data:[Math.round(rptSave),Math.round(mgrSave),Math.round(paper),Math.round(error)],
         backgroundColor:["#3b82f6","#22c55e","#f59e0b","#8b5cf6"],
-        borderColor:[isLight?"#ffffff":"#1e293b"],borderWidth:3}]
+        borderColor:[borderColor],borderWidth:3}]
     },
-    options:{responsive:true,maintainAspectRatio:false,cutout:"65%",
-      plugins:{legend:{position:"bottom",labels:{color:textColor,font:{size:11,weight:'600'},padding:15}},
-        datalabels:{display:true,formatter:(value,ctx)=>{
-          if(value===0) return '';
-          const total = ctx.dataset.data.reduce((a,b)=>a+b,0);
-          const pct = ((value/total)*100).toFixed(1);
-          return `৳${Math.round(value).toLocaleString()}\n(${pct}%)`;
-        },color:'#fff',font:{size:11,weight:'bold'}}}}
+    options:{responsive:true,maintainAspectRatio:false,cutout:"60%",
+      plugins:{
+        legend:{position:"bottom",labels:{color:textColor,font:{size:11,weight:'600'},padding:12}},
+        datalabels:{
+          display:true,
+          formatter:(value,ctx)=>{
+            if(value===0) return '';
+            const total = ctx.dataset.data.reduce((a,b)=>a+b,0);
+            const pct = ((value/total)*100).toFixed(1);
+            return `৳${Math.round(value).toLocaleString()}\n(${pct}%)`;
+          },
+          color:'#fff',
+          font:{size:11,weight:'bold'},
+          textShadowColor:'rgba(0,0,0,0.5)',
+          textShadowBlur:4
+        }
+      }
+    }
   });
 
-  // MCD Bar
+  // 2. MCD BAR CHART
   if(charts.bar) charts.bar.destroy();
   const bLabels = mcdData.map(m=>m.name.replace(" MCD","").replace(" Section",""));
   const bData = mcdData.map(m=>Math.round(calcMcd(m,a).monthly));
@@ -573,13 +698,14 @@ function updateCharts(rptSave, mgrSave, paper, error, a){
       backgroundColor:"rgba(59,130,246,.8)",borderColor:"#3b82f6",borderWidth:2,borderRadius:8}]},
     options:{responsive:true,maintainAspectRatio:false,
       plugins:{legend:{display:false},
-        datalabels:{display:true,anchor:'end',align:'top',color:textColor,font:{size:10,weight:'600'},
-          formatter:(value)=>'৳'+Math.round(value).toLocaleString()}},
+        datalabels:{display:true,anchor:'end',align:'top',color:textColor,font:{size:9,weight:'700'},
+          formatter:(value)=>'৳'+Math.round(value).toLocaleString(),
+          rotation:-45}},
       scales:{y:{beginAtZero:true,grid:{color:gridColor},ticks:{color:textColor,font:{size:10},callback:v=>"৳"+Math.round(v/1000)+"K"}},
-        x:{grid:{display:false},ticks:{color:textColor,font:{size:9},maxRotation:45}}}}
+        x:{grid:{display:false},ticks:{color:textColor,font:{size:8},maxRotation:45}}}}
   });
 
-  // Growth Line
+  // 3. GROWTH LINE CHART
   if(charts.growth) charts.growth.destroy();
   const usageSteps = [10,20,30,50,75,100];
   const aCopy = {...a};
@@ -593,13 +719,13 @@ function updateCharts(rptSave, mgrSave, paper, error, a){
       borderColor:"#22c55e",backgroundColor:"rgba(34,197,94,.2)",fill:true,tension:.4,pointRadius:6,pointBackgroundColor:"#22c55e",borderWidth:3}]},
     options:{responsive:true,maintainAspectRatio:false,
       plugins:{legend:{display:false},
-        datalabels:{display:true,anchor:'top',align:'top',color:textColor,font:{size:10,weight:'600'},
+        datalabels:{display:true,anchor:'top',align:'top',color:textColor,font:{size:10,weight:'700'},
           formatter:(value)=>'৳'+Math.round(value/1000)+"K"}},
       scales:{y:{beginAtZero:true,grid:{color:gridColor},ticks:{color:textColor,callback:v=>"৳"+Math.round(v/1000)+"K"}},
         x:{grid:{color:gridColor},ticks:{color:textColor,font:{size:11,weight:'600'}}}}}
   });
 
-  // User Chart
+  // 4. USER CHART
   if(charts.user) charts.user.destroy();
   charts.user = new Chart(document.getElementById("userChart"),{
     type:"doughnut",
@@ -607,19 +733,71 @@ function updateCharts(rptSave, mgrSave, paper, error, a){
       labels:["Active Users","Inactive Users"],
       datasets:[{data:[a.activeUsers, Math.max(0,a.users-a.activeUsers)],
         backgroundColor:["#3b82f6","#334155"],
-        borderColor:[isLight?"#ffffff":"#1e293b"],borderWidth:3}]
+        borderColor:[borderColor],borderWidth:3}]
     },
-    options:{responsive:true,maintainAspectRatio:false,cutout:"70%",
-      plugins:{legend:{position:"bottom",labels:{color:textColor,font:{size:11,weight:'600'},padding:15}},
+    options:{responsive:true,maintainAspectRatio:false,cutout:"65%",
+      plugins:{legend:{position:"bottom",labels:{color:textColor,font:{size:11,weight:'600'},padding:12}},
         datalabels:{display:true,formatter:(value,ctx)=>{
           if(value===0) return '';
           const total = ctx.dataset.data.reduce((a,b)=>a+b,0);
           const pct = ((value/total)*100).toFixed(0);
           return `${value} জন\n(${pct}%)`;
-        },color:'#fff',font:{size:12,weight:'bold'}}}}
+        },color:'#fff',font:{size:12,weight:'bold'},
+        textShadowColor:'rgba(0,0,0,0.5)',textShadowBlur:4}}}
+  });
+
+  // 5. USAGE TIME CHART (MCD ভিত্তিক Web Usage)
+  if(charts.usageTime) charts.usageTime.destroy();
+  const usageData = getUsageData();
+  const usageLabels = mcdData.map(m=>m.name.replace(" MCD","").replace(" Section",""));
+  const usageMinutes = mcdData.map(m=>{
+    const ud = usageData[m.name];
+    return ud ? Math.round(ud.totalMinutes) : 0;
+  });
+  const usageColors = mcdData.map((_,i)=>{
+    const colors = ['#3b82f6','#22c55e','#f59e0b','#8b5cf6','#ef4444','#14b8a6','#ec4899','#6366f1','#f97316','#84cc16','#06b6d4','#eab308','#a855f7','#10b981'];
+    return colors[i % colors.length];
+  });
+  
+  charts.usageTime = new Chart(document.getElementById("usageTimeChart"),{
+    type:"bar",
+    data:{labels:usageLabels,datasets:[{label:"Web Usage Time (মিনিট)",data:usageMinutes,
+      backgroundColor:usageColors.map(c=>c+'cc'),borderColor:usageColors,borderWidth:2,borderRadius:8}]},
+    options:{responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{display:false},
+        datalabels:{display:true,anchor:'end',align:'top',color:textColor,font:{size:9,weight:'700'},
+          formatter:(value)=>value>0?value+' মিনিট':'0',
+          rotation:-45}},
+      scales:{y:{beginAtZero:true,grid:{color:gridColor},ticks:{color:textColor,font:{size:10},callback:v=>v+" মিনিট"}},
+        x:{grid:{display:false},ticks:{color:textColor,font:{size:8},maxRotation:45}}}}
+  });
+
+  // 6. USAGE PERCENTAGE CHART
+  if(charts.usagePct) charts.usagePct.destroy();
+  const totalUsageMins = usageMinutes.reduce((a,b)=>a+b,0) || 1;
+  const usagePctData = usageMinutes.map(m=>Math.round((m/totalUsageMins)*100));
+  
+  charts.usagePct = new Chart(document.getElementById("usagePctChart"),{
+    type:"doughnut",
+    data:{
+      labels:usageLabels,
+      datasets:[{data:usagePctData,
+        backgroundColor:usageColors,
+        borderColor:[borderColor],borderWidth:2}]
+    },
+    options:{responsive:true,maintainAspectRatio:false,cutout:"55%",
+      plugins:{legend:{position:"right",labels:{color:textColor,font:{size:10,weight:'600'},padding:8,boxWidth:12}},
+        datalabels:{display:true,formatter:(value,ctx)=>{
+          if(value<3) return '';
+          return value+'%';
+        },color:'#fff',font:{size:10,weight:'bold'},
+        textShadowColor:'rgba(0,0,0,0.5)',textShadowBlur:3}}}
   });
 }
 
+// ============================================================
+// ADD REPORT — AUTO UPDATE INDEX
+// ============================================================
 window.addReport = function(){
   const mcd = document.getElementById("nMcd").value;
   const report = document.getElementById("nReport").value.trim();
@@ -640,18 +818,72 @@ window.addReport = function(){
     mcdData.push({name:mcd,desc:"Custom module",rptDay,users,usage:usagePct,reports:[report]});
   }
 
+  // Track usage for this MCD
+  trackUsage(mcd, 5); // Add 5 minutes for adding report
+
   document.getElementById("nReport").value="";
   recalc();
-  showToast("✅ '"+report+"' যোগ হয়েছে — ROI আপডেট হয়েছে!");
+  
+  // Auto sync to index
+  syncToIndex();
+  
+  showToast("✅ '"+report+"' যোগ হয়েছে — ROI + Index Auto Updated!");
 }
 
+// ============================================================
+// SYNC TO INDEX PAGE — Auto Update
+// ============================================================
+function syncToIndex(){
+  // Save to localStorage that index page can read
+  const indexData = {
+    lastSync: new Date().toISOString(),
+    reports: mcdData.map(m => ({
+      mcd: m.name,
+      reports: m.reports || [],
+      rptDay: m.rptDay,
+      users: m.users,
+      usage: m.usage
+    })),
+    totalMcd: mcdData.length,
+    totalReports: mcdData.reduce((sum, m) => sum + (m.reports || []).length, 0)
+  };
+  
+  localStorage.setItem('gms_roi_sync_data', JSON.stringify(indexData));
+  
+  // Also save individual report list for index page
+  const allReports = [];
+  mcdData.forEach(m => {
+    (m.reports || []).forEach(r => {
+      allReports.push({
+        mcd: m.name,
+        report: r,
+        rptDay: m.rptDay,
+        users: m.users,
+        usage: m.usage,
+        addedAt: new Date().toISOString()
+      });
+    });
+  });
+  localStorage.setItem('gms_all_reports', JSON.stringify(allReports));
+  
+  console.log('🔄 Index sync data saved:', indexData);
+  showToast('🔄 Index Page এ Sync হয়েছে!');
+}
+
+// ============================================================
+// REMOVE MCD
+// ============================================================
 window.removeMcd = function(i){
   if(!confirm("এই MCD থেকে custom entries মুছবেন?")) return;
   mcdData[i] = {...DEFAULT_MCD[i]};
   recalc();
+  syncToIndex();
   showToast("✅ MCD রিসেট করা হয়েছে");
 }
 
+// ============================================================
+// TOAST
+// ============================================================
 function showToast(msg){
   const t = document.getElementById("toast");
   t.innerText = msg;
@@ -659,7 +891,9 @@ function showToast(msg){
   setTimeout(()=>t.style.display="none",2500);
 }
 
-// Init
+// ============================================================
+// INIT
+// ============================================================
 recalc();
 </script>
 
