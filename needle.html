@@ -48,6 +48,13 @@ select,input[type="date"],input[type="text"]{padding:5px;border-radius:5px;borde
 }
 .offline-indicator.show{display:block;}
 
+/* 🔥 ROI Tracking Indicator */
+.roi-tracker-indicator{
+  position:fixed;bottom:10px;right:10px;background:rgba(16,185,129,0.9);color:#fff;padding:6px 12px;border-radius:20px;font-size:10px;font-weight:600;z-index:9998;display:flex;align-items:center;gap:6px;box-shadow:0 4px 12px rgba(0,0,0,0.3);
+}
+.roi-tracker-indicator .roi-dot{width:6px;height:6px;background:#fff;border-radius:50%;animation:roiPulse 1.5s infinite;}
+@keyframes roiPulse{0%,100%{opacity:1;}50%{opacity:0.3;}}
+
 @media(max-width:480px){
   body{padding:2px}h2{font-size:15px;margin:4px 0}.topControls{font-size:11px}
   button{padding:6px 7px;font-size:10px}
@@ -58,6 +65,7 @@ select,input[type="date"],input[type="text"]{padding:5px;border-radius:5px;borde
   .popup-content{width:95%;padding:12px}
   .popup-title{font-size:14px}
   .popup-details{font-size:11px}
+  .roi-tracker-indicator{font-size:9px;padding:4px 8px;bottom:5px;right:5px;}
 }
 @media print{
   html,body{background:white!important;color:black!important;overflow:visible!important}
@@ -67,12 +75,19 @@ select,input[type="date"],input[type="text"]{padding:5px;border-radius:5px;borde
   #reportTable th,#reportTable td{font-size:7px;padding:1px}
   #negativePopup{display:none!important}
   .offline-indicator{display:none!important}
+  .roi-tracker-indicator{display:none!important}
 }
 </style>
 </head>
 <body>
 
 <div class="offline-indicator" id="offlineIndicator">📴 Offline Mode - Data saved locally</div>
+
+<!-- 🔥 ROI Tracking Indicator -->
+<div class="roi-tracker-indicator" id="roiTrackerIndicator" title="ROI Tracking Active">
+  <div class="roi-dot"></div>
+  <span>ROI Tracking Active</span>
+</div>
 
 <h2 style="text-align:center;">Needle Daily Posting</h2>
 
@@ -161,6 +176,59 @@ enableIndexedDbPersistence(db).catch((err) => {
     console.log('Browser does not support persistence.');
   }
 });
+
+// ================================================================
+// 🔥 ROI ACTIVITY TRACKER — শুধু localStorage এ save (Firebase read/write নেই)
+// ================================================================
+function trackNeedleActivity(type, user, minutes, extraData){
+  try{
+    var activity = JSON.parse(localStorage.getItem('gms_needle_activity') || '[]');
+    
+    var floor = document.getElementById('floor') ? document.getElementById('floor').value : 'Unknown';
+    var date = new Date().toISOString().slice(0,10);
+    var company = localStorage.getItem('gmsSelectedCompany') || 'GMS TEXTILES LTD';
+    
+    activity.push({
+      type: type || 'entry',
+      user: user || 'Unknown',
+      floor: floor,
+      date: date,
+      minutes: minutes || 5,
+      timestamp: new Date().toISOString(),
+      company: company,
+      extra: extraData || {}
+    });
+    
+    // শুধু শেষ ১০০০টি entry রাখব (localStorage ভর্তি হওয়া ঠেকাতে)
+    if(activity.length > 1000){
+      activity = activity.slice(activity.length - 1000);
+    }
+    
+    localStorage.setItem('gms_needle_activity', JSON.stringify(activity));
+    console.log('🪡 Needle activity tracked:', type, user, 'floor:', floor);
+    
+    // ROI Report-কে notify করুন (যদি একই browser এ খোলা থাকে)
+    try{
+      window.dispatchEvent(new Event('storage'));
+    }catch(e){}
+    
+  }catch(e){
+    console.warn('trackNeedleActivity error:', e);
+  }
+}
+
+// Global-এ expose করুন
+window.trackNeedleActivity = trackNeedleActivity;
+
+// ================================================================
+// 🔥 PAGE LOAD TRACKING — Page ওপেন হলে track হবে
+// ================================================================
+(function(){
+  try{
+    var user = localStorage.getItem('lastOperator') || 'Unknown';
+    trackNeedleActivity('page_view', user, 1, {action: 'opened_needle_page'});
+  }catch(e){}
+})();
 
 const floorData = {
 "Kadom R": [
@@ -387,11 +455,8 @@ const floorData = {
 ]};
 
 let negativeRowIndex = -1;
-
-// 🔥 NEW: Dynamic opening stock from previous month's ending present
 let dynamicOpening = null;
 
-// 🔥 NEW: Helper function to get previous month string (e.g., "2026-06" -> "2026-05")
 function getPreviousMonth(monthStr){
   let parts = monthStr.split("-");
   let year = parseInt(parts[0]);
@@ -466,6 +531,13 @@ function saveDataOffline(floor, date, operator, rows){
   });
   setOfflineQueue(queue);
   showToast("✅ Saved Offline - Will sync when online");
+  
+  // 🔥 Offline save হলেও track হবে
+  trackNeedleActivity('save_offline', operator, 5, {
+    floor: floor,
+    date: date,
+    itemsCount: rows.length
+  });
 }
 
 async function syncOfflineQueue(){
@@ -487,6 +559,13 @@ async function syncOfflineQueue(){
         synced++;
         
         await updateDashboardNeedleState(queue[i].floor, queue[i].rows);
+        
+        // 🔥 Sync হলে track হবে
+        trackNeedleActivity('sync_offline', queue[i].operator, 2, {
+          floor: queue[i].floor,
+          date: queue[i].date,
+          itemsCount: queue[i].rows ? queue[i].rows.length : 0
+        });
       }catch(e){ console.log("Sync failed:", e); }
     }
   }
@@ -520,7 +599,6 @@ function getItems(){
 
 function getMonth(date){return date.slice(0,7);}
 
-// 🔥 CHANGED: loadTable now uses dynamicOpening as default if available
 function loadTable(customPrevious=null){
   let items=getItems();
   let floor=document.getElementById("floor").value;
@@ -534,7 +612,6 @@ function loadTable(customPrevious=null){
     if(customPrevious && customPrevious[i] !== undefined){
       previous = customPrevious[i];
     } else if(dynamicOpening && dynamicOpening[i] !== undefined){
-      // 🔥 Use previous month's ending present as opening
       previous = dynamicOpening[i];
     } else {
       previous = item[3];
@@ -658,7 +735,7 @@ function fixNegativeRow(){
   }
 }
 
-// 🔥 CHANGED: saveData now uses dynamicOpening for the opening field
+// 🔥 MAIN SAVE FUNCTION — Save হলে ROI tracking হবে
 async function saveData(){
   let date=document.getElementById("postDate").value;
   let floor=document.getElementById("floor").value;
@@ -669,7 +746,6 @@ async function saveData(){
 
   let rows=[];
   for(let i=0;i<items.length;i++){
-    // 🔥 Use dynamicOpening if available, otherwise fall back to hardcoded item[3]
     let openingVal = (dynamicOpening && dynamicOpening[i] !== undefined) ? dynamicOpening[i] : (Number(items[i][3]) || 0);
     
     rows.push({
@@ -717,6 +793,15 @@ async function saveData(){
         });
       } catch(e) { console.error("Audit log error:", e); }
       showToast("✅ Saved to Firebase");
+      
+      // 🔥 Firebase save হলে track হবে
+      trackNeedleActivity('save', operator, 5, {
+        floor: floor,
+        date: date,
+        action: action,
+        itemsCount: rows.length,
+        changedCount: details.count || 0
+      });
     }catch(err){
       console.log("Firebase save failed, saving offline:", err);
       saveDataOffline(floor, date, operator, rows);
@@ -756,18 +841,24 @@ async function deleteData(){
   let emptyRows = items.map(item => ({ present: item[3] }));
   await updateDashboardNeedleState(floor, emptyRows);
 
+  // 🔥 Delete হলে track হবে
+  trackNeedleActivity('delete', operator, 3, {
+    floor: floor,
+    date: date,
+    itemsCount: oldDoc.exists() ? (oldDoc.data().rows?.length || 0) : 0
+  });
+
   await loadData();
   alert("Deleted Successfully");
 }
 
-// 🔥 CHANGED: loadData now fetches previous month data and uses last day's present as opening
 async function loadData(){
   let date=document.getElementById("postDate").value;
   let floor=document.getElementById("floor").value;
   let items=getItems();
 
   if(!date){
-    dynamicOpening = null; // 🔥 Reset dynamic opening
+    dynamicOpening = null;
     loadTable();
     showMonthlySummary(0,0,0,0,0);
     document.getElementById("operatorName").value = localStorage.getItem("lastOperator") || "";
@@ -775,13 +866,11 @@ async function loadData(){
   }
 
   let month=getMonth(date);
-  
-  // 🔥 NEW: Calculate previous month
   let prevMonth = getPreviousMonth(month);
   
   let snap=await getDocs(collection(db,"dailyPosting"));
   let monthRows=[];
-  let prevMonthRows=[]; // 🔥 NEW: Collect previous month data
+  let prevMonthRows=[];
 
   snap.forEach(docSnap=>{
     let data=docSnap.data();
@@ -789,20 +878,15 @@ async function loadData(){
       if(data.month===month && data.date<=date){
         monthRows.push(data);
       }
-      // 🔥 NEW: Also collect previous month data
       if(data.month===prevMonth){
         prevMonthRows.push(data);
       }
     }
   });
 
-  // 🔥 NEW: Find the last day of previous month to get opening stock
   prevMonthRows.sort((a,b)=>a.date.localeCompare(b.date));
   let lastDayOfPrevMonth = prevMonthRows.length > 0 ? prevMonthRows[prevMonthRows.length - 1] : null;
   
-  // 🔥 NEW: Build dynamic opening array
-  // If previous month data exists, use last day's present values
-  // Otherwise, fall back to hardcoded floorData values
   dynamicOpening = [];
   for(let i=0; i<items.length; i++){
     if(lastDayOfPrevMonth && lastDayOfPrevMonth.rows && lastDayOfPrevMonth.rows[i]){
@@ -844,7 +928,6 @@ async function loadData(){
 
   let previousList=[];
   for(let i=0;i<items.length;i++){
-    // 🔥 CHANGED: Use dynamicOpening instead of hardcoded items[i][3]
     let opening = dynamicOpening[i];
     let beforeReceive=monthlyReceive[i]-todayReceive[i];
     let beforeDelivery=monthlyDelivery[i]-todayDelivery[i];
@@ -861,17 +944,14 @@ async function loadData(){
     calc(i); 
   }
 
-  // 🔥 CHANGED: Pass dynamicOpening to monthly summary
   updateMonthlySummary(monthlyReceive,monthlyDelivery,monthlyBN,dynamicOpening);
   setTimeout(checkNegativeStock, 200);
 }
 
-// 🔥 CHANGED: Accept openingValues parameter and use it instead of hardcoded items[i][3]
 function updateMonthlySummary(monthlyReceive,monthlyDelivery,monthlyBN,openingValues=null){
   let items=getItems();
   let opening=0, receive=0, delivery=0, present=0, bn=0;
   for(let i=0;i<items.length;i++){
-    // 🔥 Use dynamic opening if available, otherwise fall back to hardcoded
     let op = (openingValues && openingValues[i] !== undefined) ? Number(openingValues[i]) : (Number(items[i][3]) || 0);
     let r=Number(monthlyReceive[i])||0;
     let d=Number(monthlyDelivery[i])||0;
@@ -894,9 +974,23 @@ function exportExcel(){
   let table2=document.getElementById("summaryTable").outerHTML;
   let file=new Blob([title+table1+"<br>"+table2],{type:"application/vnd.ms-excel"});
   let a=document.createElement("a");a.href=URL.createObjectURL(file);a.download="needle-report.xls";a.click();
+  
+  // 🔥 Export হলে track হবে
+  trackNeedleActivity('export_excel', localStorage.getItem("lastOperator") || 'Unknown', 2, {
+    floor: document.getElementById("floor").value,
+    date: document.getElementById("postDate").value
+  });
 }
 
-function exportPDF(){window.print();}
+function exportPDF(){
+  window.print();
+  
+  // 🔥 Print হলে track হবে
+  trackNeedleActivity('export_pdf', localStorage.getItem("lastOperator") || 'Unknown', 2, {
+    floor: document.getElementById("floor").value,
+    date: document.getElementById("postDate").value
+  });
+}
 
 document.getElementById("postDate").addEventListener("change",loadData);
 
@@ -922,6 +1016,19 @@ document.addEventListener("keydown", function(e){
 updateOfflineIndicator();
 loadTable();
 setTimeout(syncOfflineQueue, 1000);
+
+// 🔥 ROI Tracker Status Update
+setInterval(function(){
+  try{
+    var activity = JSON.parse(localStorage.getItem('gms_needle_activity') || '[]');
+    var today = new Date().toISOString().slice(0,10);
+    var todayCount = activity.filter(a => a.date === today).length;
+    var indicator = document.getElementById('roiTrackerIndicator');
+    if(indicator){
+      indicator.title = `Today: ${todayCount} activities tracked | Total: ${activity.length}`;
+    }
+  }catch(e){}
+}, 5000);
 </script>
 </body>
 </html>
