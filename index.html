@@ -2271,37 +2271,37 @@ function isAccessoriesAllowed(){ return window.userRole==='admin'||window.userRo
 function isGreyAllowed(){ return window.userRole==='admin'||window.userRole==='full'||userMCDs.includes('GREY FABRIC MCD'); }
 function isBillingAllowed(){ return window.userRole==='admin'||window.userRole==='full'||userMCDs.includes('BILLING SECTION'); }
 function isManpowerAllowed(){
-  if(window.userRole==='admin'||window.userRole==='full') return true;
-  if(manpowerAccess==='all') return true;
-  if(manpowerAccess==='selected'&&manpowerMcdAccess.length>0) return true;
-  return false;
+if(window.userRole==='admin'||window.userRole==='full') return true;
+if(manpowerAccess==='all') return true;
+if(manpowerAccess==='selected'&&manpowerMcdAccess.length>0) return true;
+return false;
 }
-
+function setupRoleUI(){
 if(window.userRole!=='admin'){
-  document.getElementById('adminNav').style.display='none';
-  document.getElementById('backupNav').style.display='none';
+document.getElementById('adminNav').style.display='none';
+document.getElementById('backupNav').style.display='none';
 }
 // 🔐 ROI Button শুধু Admin দেখবে
 if(window.userRole==='admin'||window.userRole==='full'){
-  var roiBtn = document.getElementById('roiNav');
-  if(roiBtn) roiBtn.style.display='flex';
+var roiBtn = document.getElementById('roiNav');
+if(roiBtn) roiBtn.style.display='flex';
 }
-  if(!isManpowerAllowed()) document.getElementById('manpowerNav').style.display='none';
-  if(!isNeedleAllowed()){
-    document.getElementById('needleNav').style.display='none';
-    document.getElementById('needleSummary').style.display='none';
-    document.getElementById('needleChartBox').style.display='none';
-    document.getElementById('needleIssueChartBox').style.display='none';
-  }
-  if(!isAccessoriesAllowed()){
-    document.getElementById('accessoriesSummary').style.display='none';
-    document.getElementById('accessoriesChartBox').style.display='none';
-  }
-  if(!isGreyAllowed()) document.getElementById('greyChartBox').style.display='none';
-  if(!isBillingAllowed()) document.getElementById('billingChartBox').style.display='none';
-  var list=allowedMCDList();
-  document.getElementById('entryMcd').innerHTML=list.map(function(x){return '<option>'+x+'</option>';}).join('');
-  document.getElementById('reportMcd').innerHTML=list.map(function(x){return '<option>'+x+'</option>';}).join('');
+if(!isManpowerAllowed()) document.getElementById('manpowerNav').style.display='none';
+if(!isNeedleAllowed()){
+document.getElementById('needleNav').style.display='none';
+document.getElementById('needleSummary').style.display='none';
+document.getElementById('needleChartBox').style.display='none';
+document.getElementById('needleIssueChartBox').style.display='none';
+}
+if(!isAccessoriesAllowed()){
+document.getElementById('accessoriesSummary').style.display='none';
+document.getElementById('accessoriesChartBox').style.display='none';
+}
+if(!isGreyAllowed()) document.getElementById('greyChartBox').style.display='none';
+if(!isBillingAllowed()) document.getElementById('billingChartBox').style.display='none';
+var list=allowedMCDList();
+document.getElementById('entryMcd').innerHTML=list.map(function(x){return '<option>'+x+'</option>';}).join('');
+document.getElementById('reportMcd').innerHTML=list.map(function(x){return '<option>'+x+'</option>';}).join('');
 }
 
 // ─────────────────────────────────────────────────────────────────
