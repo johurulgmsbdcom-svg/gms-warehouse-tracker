@@ -5,18 +5,25 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
 <title>GMS MCD ERP — ROI Report</title>
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels"></script>
 <style>
 :root{
   --bg:#0a1628;--card:#1e293b;--card2:#334155;
   --text:#f1f5f9;--muted:#94a3b8;--border:#475569;
   --blue:#3b82f6;--green:#22c55e;--red:#ef4444;
   --yellow:#f59e0b;--purple:#8b5cf6;--teal:#14b8a6;
+  --shadow:0 10px 40px rgba(0,0,0,.4);
+}
+body.light{
+  --bg:#f8fafc;--card:#ffffff;--card2:#f1f5f9;
+  --text:#1e293b;--muted:#64748b;--border:#cbd5e1;
+  --shadow:0 10px 40px rgba(0,0,0,.1);
 }
 *{box-sizing:border-box;margin:0;padding:0}
 body{
   background:var(--bg);color:var(--text);
   font-family:'Segoe UI',Arial,sans-serif;
-  padding:0 0 60px;
+  padding:0 0 60px;transition:background .3s,color .3s;
 }
 
 /* HEADER */
@@ -25,6 +32,10 @@ body{
   border-bottom:2px solid var(--blue);
   padding:20px 30px;text-align:center;
   position:relative;overflow:hidden;
+}
+body.light .header{
+  background:linear-gradient(135deg,#ffffff,#f1f5f9);
+  border-bottom-color:var(--blue);
 }
 .header::before{
   content:'';position:absolute;inset:0;
@@ -37,6 +48,18 @@ body{
 .header h3{font-size:13px;color:var(--muted);margin-top:4px;position:relative;letter-spacing:2px}
 .header h4{font-size:12px;color:var(--muted);position:relative;margin-top:2px}
 
+/* THEME TOGGLE */
+.themeToggle{
+  position:absolute;top:20px;right:30px;
+  background:rgba(59,130,246,.2);border:1px solid rgba(59,130,246,.3);
+  padding:8px 14px;border-radius:10px;cursor:pointer;
+  color:var(--blue);font-weight:700;font-size:13px;
+  transition:all .3s;z-index:10;
+}
+.themeToggle:hover{
+  background:rgba(59,130,246,.3);transform:translateY(-2px);
+}
+
 /* TOP BAR */
 .topBar{
   background:rgba(30,41,59,.95);
@@ -44,12 +67,14 @@ body{
   padding:12px 30px;
   display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;
 }
+body.light .topBar{background:rgba(255,255,255,.95);}
 .topBarLeft{display:flex;align-items:center;gap:16px;flex-wrap:wrap}
 .usageStat{
   display:flex;align-items:center;gap:8px;
   background:rgba(59,130,246,.15);border:1px solid rgba(59,130,246,.3);
-  border-radius:10px;padding:8px 14px;
+  border-radius:10px;padding:8px 14px;transition:all .3s;
 }
+.usageStat:hover{transform:translateY(-2px);box-shadow:var(--shadow)}
 .usageStat .icon{font-size:20px}
 .usageStat .info{display:flex;flex-direction:column}
 .usageStat .info span{font-size:11px;color:var(--muted);font-weight:600}
@@ -58,21 +83,6 @@ body{
 .progressWrap span{font-size:12px;color:var(--muted)}
 .progressBar{width:120px;height:8px;background:rgba(255,255,255,.1);border-radius:4px;overflow:hidden}
 .progressFill{height:100%;border-radius:4px;transition:width 1s ease}
-
-/* CONTROLS */
-.controls{
-  background:linear-gradient(135deg,var(--card),var(--card2));
-  border:1px solid var(--border);border-radius:16px;
-  padding:18px;margin:16px 20px;
-  display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px;
-}
-.controls label{font-size:11px;color:var(--muted);font-weight:700;display:block;margin-bottom:4px}
-.controls input,.controls select{
-  width:100%;padding:10px;border-radius:8px;
-  border:1px solid var(--border);background:#0b1220;
-  color:var(--text);font-size:14px;font-weight:600;
-}
-.controls input:focus,.controls select:focus{outline:none;border-color:var(--blue)}
 
 /* KPI GRID */
 .kpiGrid{
@@ -83,9 +93,10 @@ body{
   background:linear-gradient(135deg,var(--card),var(--card2));
   border:1px solid var(--border);border-radius:14px;
   padding:16px;text-align:center;
-  transition:transform .2s;cursor:default;
+  transition:all .3s;cursor:default;
+  box-shadow:var(--shadow);
 }
-.kpiBox:hover{transform:translateY(-3px)}
+.kpiBox:hover{transform:translateY(-5px);box-shadow:0 15px 50px rgba(0,0,0,.3)}
 .kpiBox .label{font-size:11px;color:var(--muted);font-weight:700;text-transform:uppercase;letter-spacing:.8px}
 .kpiBox .value{font-size:26px;font-weight:900;margin-top:6px}
 .kpiBox .sub{font-size:11px;color:var(--muted);margin-top:3px}
@@ -107,22 +118,24 @@ body{
 .chartBox{
   background:linear-gradient(135deg,var(--card),var(--card2));
   border:1px solid var(--border);border-radius:14px;
-  padding:16px;
+  padding:16px;box-shadow:var(--shadow);transition:all .3s;
 }
+.chartBox:hover{transform:translateY(-3px)}
 .chartBox h3{font-size:14px;font-weight:700;color:var(--text);margin-bottom:12px}
-.chartBox canvas{max-height:220px!important}
+.chartBox canvas{max-height:250px!important}
 
-/* USAGE TABLE */
+/* TABLE */
 .tableWrap{overflow-x:auto;margin:0 20px 20px}
-table{width:100%;border-collapse:collapse;background:var(--card);border-radius:12px;overflow:hidden;font-size:13px}
+table{width:100%;border-collapse:collapse;background:var(--card);border-radius:12px;overflow:hidden;font-size:13px;box-shadow:var(--shadow)}
 th{background:linear-gradient(135deg,var(--blue),var(--purple));color:white;padding:10px 8px;text-align:center;font-weight:700;font-size:12px}
 td{border:1px solid var(--border);padding:9px 8px;text-align:center;color:var(--text)}
 tr:nth-child(even){background:rgba(255,255,255,.03)}
+body.light tr:nth-child(even){background:rgba(0,0,0,.02)}
 .totalRowTable{background:linear-gradient(135deg,rgba(34,197,94,.15),rgba(59,130,246,.15))!important;font-weight:900;font-size:14px}
 .mcdName{text-align:left!important;font-weight:700}
 .mcdDesc{font-size:11px;color:var(--muted);font-weight:400}
 
-/* USAGE BADGE */
+/* BADGE */
 .usageBadge{
   display:inline-block;padding:3px 8px;border-radius:20px;
   font-size:11px;font-weight:900;
@@ -132,54 +145,58 @@ tr:nth-child(even){background:rgba(255,255,255,.03)}
 .badge-low{background:rgba(245,158,11,.2);color:#fcd34d}
 .badge-none{background:rgba(100,116,139,.2);color:#94a3b8}
 
-/* REPORT ADD FORM */
+/* FORM */
 .addReportBox{
   background:linear-gradient(135deg,var(--card),var(--card2));
-  border:1px dashed var(--blue);border-radius:16px;
-  padding:20px;margin:0 20px 20px;
+  border:2px dashed var(--blue);border-radius:16px;
+  padding:20px;margin:0 20px 20px;box-shadow:var(--shadow);
 }
 .addReportBox h3{font-size:16px;font-weight:700;margin-bottom:14px;color:var(--blue)}
 .formRow{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:10px;margin-bottom:10px}
 .formRow input,.formRow select{
   padding:10px;border-radius:8px;border:1px solid var(--border);
-  background:#0b1220;color:var(--text);font-size:13px;width:100%;
+  background:var(--bg);color:var(--text);font-size:13px;width:100%;transition:all .3s;
 }
-.formRow input:focus,.formRow select:focus{outline:none;border-color:var(--blue)}
+.formRow input:focus,.formRow select:focus{outline:none;border-color:var(--blue);box-shadow:0 0 0 3px rgba(59,130,246,.1)}
 .addBtn{
   background:linear-gradient(135deg,var(--blue),var(--purple));
   color:white;border:none;padding:11px 22px;border-radius:10px;
   font-weight:700;cursor:pointer;margin-top:8px;
-  transition:all .2s;
+  transition:all .3s;box-shadow:0 4px 15px rgba(59,130,246,.3);
 }
-.addBtn:hover{transform:translateY(-2px);box-shadow:0 4px 14px rgba(59,130,246,.4)}
-.delBtn{background:#dc2626;color:white;border:none;padding:5px 10px;border-radius:6px;cursor:pointer;font-size:11px;font-weight:700}
+.addBtn:hover{transform:translateY(-2px);box-shadow:0 6px 20px rgba(59,130,246,.5)}
+.delBtn{background:#dc2626;color:white;border:none;padding:5px 10px;border-radius:6px;cursor:pointer;font-size:11px;font-weight:700;transition:all .2s}
+.delBtn:hover{background:#b91c1c;transform:scale(1.1)}
 
-/* ASSUMPTIONS BOX */
+/* ASSUMPTIONS */
 .assumptBox{
   background:linear-gradient(135deg,var(--card),var(--card2));
   border:1px solid var(--border);border-radius:14px;
-  padding:16px;margin:0 20px 20px;
+  padding:16px;margin:0 20px 20px;box-shadow:var(--shadow);
 }
 .assumptGrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:10px}
 .assumptItem{display:flex;flex-direction:column;gap:4px}
 .assumptItem label{font-size:11px;color:var(--muted);font-weight:700}
 .assumptItem input{
   padding:8px;border-radius:8px;border:1px solid var(--border);
-  background:#0b1220;color:var(--text);font-size:13px;font-weight:600;
+  background:var(--bg);color:var(--text);font-size:13px;font-weight:600;transition:all .3s;
 }
+.assumptItem input:focus{outline:none;border-color:var(--blue)}
 
 /* TOAST */
 .toast{
   position:fixed;bottom:20px;left:50%;transform:translateX(-50%);
   background:var(--green);color:#fff;padding:12px 22px;border-radius:10px;
-  font-weight:700;display:none;z-index:999;font-size:14px;
+  font-weight:700;display:none;z-index:9999;font-size:14px;
+  box-shadow:0 4px 20px rgba(34,197,94,.4);animation:slideUp .3s ease;
 }
+@keyframes slideUp{from{transform:translate(-50%,20px);opacity:0}to{transform:translate(-50%,0);opacity:1}}
 
 /* PRINT */
 @page{size:A4 landscape;margin:8mm}
 @media print{
   body{background:white;color:black}
-  .controls,.addReportBox,.assumptBox{display:none!important}
+  .controls,.addReportBox,.assumptBox,.themeToggle{display:none!important}
   .kpiBox,.chartBox,.tableWrap{page-break-inside:avoid}
   .header{background:white;border-bottom:2px solid #2563eb}
   .header h1{-webkit-text-fill-color:#1e293b;background:none;color:#1e293b}
@@ -189,18 +206,20 @@ tr:nth-child(even){background:rgba(255,255,255,.03)}
   .topBar{flex-direction:column}
   .header h1{font-size:20px}
   .secTitle{font-size:15px}
+  .themeToggle{top:10px;right:10px;padding:6px 10px;font-size:11px}
 }
 </style>
 </head>
 <body>
 
 <div class="header">
+  <button class="themeToggle" onclick="toggleTheme()">🌙 Dark Mode</button>
   <h1>GMS MCD ERP SYSTEM</h1>
   <h3>ROI & USAGE ANALYSIS REPORT</h3>
   <h4>GMS Textiles Ltd. · Tansutrapur, Kaliakoir, Gazipur</h4>
 </div>
 
-<!-- TOP BAR: LIVE USER & USAGE -->
+<!-- TOP BAR -->
 <div class="topBar">
   <div class="topBarLeft">
     <div class="usageStat">
@@ -226,7 +245,7 @@ tr:nth-child(even){background:rgba(255,255,255,.03)}
       <div class="progressFill" id="appUsageBar" style="width:0%;background:linear-gradient(90deg,var(--blue),var(--purple))"></div>
     </div>
     <span id="appUsagePct" style="color:var(--blue);font-weight:700">0%</span>
-    <button onclick="window.print()" style="background:var(--purple);color:white;border:none;padding:8px 14px;border-radius:8px;font-weight:700;cursor:pointer;margin-left:12px">🖨 Print</button>
+    <button onclick="window.print()" style="background:var(--purple);color:white;border:none;padding:8px 14px;border-radius:8px;font-weight:700;cursor:pointer;margin-left:12px;transition:all .3s">🖨 Print</button>
   </div>
 </div>
 
@@ -292,7 +311,7 @@ tr:nth-child(even){background:rgba(255,255,255,.03)}
   </div>
 </div>
 
-<!-- ADD NEW REPORT/MODULE -->
+<!-- ADD NEW REPORT -->
 <div class="secTitle">➕ নতুন Report / Module যোগ করুন</div>
 <div class="addReportBox">
   <h3>নতুন Report যোগ করলে স্বয়ংক্রিয়ভাবে ROI আপডেট হবে</h3>
@@ -319,7 +338,7 @@ tr:nth-child(even){background:rgba(255,255,255,.03)}
   <button class="addBtn" onclick="addReport()">➕ Report যোগ করুন</button>
 </div>
 
-<!-- MCD TABLE -->
+<!-- TABLE -->
 <div class="secTitle">📋 MCD-ভিত্তিক বিস্তারিত বিশ্লেষণ</div>
 <div class="tableWrap">
 <table id="mcdTable">
@@ -353,8 +372,8 @@ tr:nth-child(even){background:rgba(255,255,255,.03)}
 </table>
 </div>
 
-<!-- FORMULA BOX -->
-<div style="background:var(--card);border:1px solid var(--border);border-radius:14px;padding:16px;margin:0 20px 20px;font-size:12px;color:var(--muted);line-height:1.8">
+<!-- FORMULA -->
+<div style="background:var(--card);border:1px solid var(--border);border-radius:14px;padding:16px;margin:0 20px 20px;font-size:12px;color:var(--muted);line-height:1.8;box-shadow:var(--shadow)">
   <b style="color:var(--text);font-size:13px">হিসাবের ভিত্তি</b><br>
   সময় সাশ্রয় = (ম্যানুয়াল − সফটওয়্যার মিনিট) × সক্রিয় রিপোর্ট/দিন × ২৬ কর্মদিবস ÷ ৬০<br>
   Reporter ঘণ্টার মূল্য = বেতন ÷ ২০৮ &nbsp;|&nbsp; Operator সাশ্রয় = সেভ ঘণ্টা/দিন ÷ ৮<br>
@@ -382,8 +401,23 @@ const DEFAULT_MCD = [
 ];
 
 let mcdData = JSON.parse(localStorage.getItem("gms_roi_mcd") || "null") || DEFAULT_MCD.map(x=>({...x}));
-
 let charts = {};
+
+// Theme toggle
+function toggleTheme(){
+  document.body.classList.toggle('light');
+  const isLight = document.body.classList.contains('light');
+  localStorage.setItem('roi_theme', isLight ? 'light' : 'dark');
+  const btn = document.querySelector('.themeToggle');
+  btn.innerText = isLight ? '☀️ Light Mode' : '🌙 Dark Mode';
+  recalc(); // Redraw charts with new theme
+}
+
+// Load saved theme
+if(localStorage.getItem('roi_theme') === 'light'){
+  document.body.classList.add('light');
+  document.querySelector('.themeToggle').innerText = '☀️ Light Mode';
+}
 
 function fmt(n){return Math.round(n).toLocaleString("en-US")}
 function fmtBDT(n){return "৳"+Math.round(n).toLocaleString("en-US")}
@@ -409,7 +443,6 @@ function calcMcd(m, a){
   const activeRpt = m.rptDay * a.usage;
   const saveHrsDay = (saveMins * activeRpt * 26/60);
   const staffHrRate = a.staff / 208;
-  const mgrHrRate = a.mgr / 208;
   const rptSave = saveHrsDay * staffHrRate * 4;
   const mgrSave = (a.mgr / 14) * a.usage;
   const paperSave = a.paper * a.usage;
@@ -470,7 +503,6 @@ function recalc(){
     tbody.appendChild(tr);
   });
 
-  // Footer
   document.getElementById("ftRpt").innerText = totRpt;
   document.getElementById("ftTime").innerText = fmtH(totTime);
   document.getElementById("ftOp").innerText = fmtOp(totOp);
@@ -479,7 +511,6 @@ function recalc(){
   document.getElementById("ftMonthly").innerText = fmtBDT(totMonthly);
   document.getElementById("ftAnnual").innerText = fmtBDT(totAnnual);
 
-  // KPI
   document.getElementById("kpiMcd").innerText = mcdData.length;
   document.getElementById("kpiRpt").innerText = totRpt;
   document.getElementById("kpiTime").innerText = fmtH(totTime);
@@ -494,7 +525,6 @@ function recalc(){
   document.getElementById("kpiPaper").innerText = fmtBDT(totPaper);
   document.getElementById("kpiError").innerText = fmtBDT(totError);
 
-  // Top bar
   document.getElementById("tbUsers").innerText = a.users;
   const todayRpts = Math.round(totRpt * a.activeUsers);
   document.getElementById("tbReports").innerText = todayRpts;
@@ -509,6 +539,10 @@ function recalc(){
 }
 
 function updateCharts(rptSave, mgrSave, paper, error, a){
+  const isLight = document.body.classList.contains('light');
+  const textColor = isLight ? '#1e293b' : '#94a3b8';
+  const gridColor = isLight ? 'rgba(0,0,0,.1)' : 'rgba(255,255,255,.1)';
+
   // Savings Pie
   if(charts.pie) charts.pie.destroy();
   charts.pie = new Chart(document.getElementById("savingsPieChart"),{
@@ -517,10 +551,16 @@ function updateCharts(rptSave, mgrSave, paper, error, a){
       labels:["Reporter সময়","Manager সময়","কাগজ/Challan","ভুল কমানো"],
       datasets:[{data:[Math.round(rptSave),Math.round(mgrSave),Math.round(paper),Math.round(error)],
         backgroundColor:["#3b82f6","#22c55e","#f59e0b","#8b5cf6"],
-        borderColor:["#1e293b"],borderWidth:2}]
+        borderColor:[isLight?"#ffffff":"#1e293b"],borderWidth:3}]
     },
-    options:{responsive:true,maintainAspectRatio:false,cutout:"60%",
-      plugins:{legend:{position:"bottom",labels:{color:"#94a3b8",font:{size:11}}}}}
+    options:{responsive:true,maintainAspectRatio:false,cutout:"65%",
+      plugins:{legend:{position:"bottom",labels:{color:textColor,font:{size:11,weight:'600'},padding:15}},
+        datalabels:{display:true,formatter:(value,ctx)=>{
+          if(value===0) return '';
+          const total = ctx.dataset.data.reduce((a,b)=>a+b,0);
+          const pct = ((value/total)*100).toFixed(1);
+          return `৳${Math.round(value).toLocaleString()}\n(${pct}%)`;
+        },color:'#fff',font:{size:11,weight:'bold'}}}}
   });
 
   // MCD Bar
@@ -530,11 +570,13 @@ function updateCharts(rptSave, mgrSave, paper, error, a){
   charts.bar = new Chart(document.getElementById("mcdBarChart"),{
     type:"bar",
     data:{labels:bLabels,datasets:[{label:"মাসিক সাশ্রয় (৳)",data:bData,
-      backgroundColor:"rgba(59,130,246,.7)",borderColor:"#3b82f6",borderWidth:1,borderRadius:6}]},
+      backgroundColor:"rgba(59,130,246,.8)",borderColor:"#3b82f6",borderWidth:2,borderRadius:8}]},
     options:{responsive:true,maintainAspectRatio:false,
-      plugins:{legend:{display:false}},
-      scales:{y:{beginAtZero:true,ticks:{color:"#94a3b8",callback:v=>"৳"+Math.round(v/1000)+"K"}},
-        x:{ticks:{color:"#94a3b8",font:{size:9},maxRotation:40}}}}
+      plugins:{legend:{display:false},
+        datalabels:{display:true,anchor:'end',align:'top',color:textColor,font:{size:10,weight:'600'},
+          formatter:(value)=>'৳'+Math.round(value).toLocaleString()}},
+      scales:{y:{beginAtZero:true,grid:{color:gridColor},ticks:{color:textColor,font:{size:10},callback:v=>"৳"+Math.round(v/1000)+"K"}},
+        x:{grid:{display:false},ticks:{color:textColor,font:{size:9},maxRotation:45}}}}
   });
 
   // Growth Line
@@ -548,11 +590,13 @@ function updateCharts(rptSave, mgrSave, paper, error, a){
   charts.growth = new Chart(document.getElementById("growthChart"),{
     type:"line",
     data:{labels:usageSteps.map(u=>u+"%"),datasets:[{label:"বার্ষিক সাশ্রয় (৳)",data:growthData,
-      borderColor:"#22c55e",backgroundColor:"rgba(34,197,94,.1)",fill:true,tension:.4,pointRadius:5}]},
+      borderColor:"#22c55e",backgroundColor:"rgba(34,197,94,.2)",fill:true,tension:.4,pointRadius:6,pointBackgroundColor:"#22c55e",borderWidth:3}]},
     options:{responsive:true,maintainAspectRatio:false,
-      plugins:{legend:{display:false}},
-      scales:{y:{beginAtZero:true,ticks:{color:"#94a3b8",callback:v=>"৳"+Math.round(v/1000)+"K"}},
-        x:{ticks:{color:"#94a3b8"}}}}
+      plugins:{legend:{display:false},
+        datalabels:{display:true,anchor:'top',align:'top',color:textColor,font:{size:10,weight:'600'},
+          formatter:(value)=>'৳'+Math.round(value/1000)+"K"}},
+      scales:{y:{beginAtZero:true,grid:{color:gridColor},ticks:{color:textColor,callback:v=>"৳"+Math.round(v/1000)+"K"}},
+        x:{grid:{color:gridColor},ticks:{color:textColor,font:{size:11,weight:'600'}}}}}
   });
 
   // User Chart
@@ -563,11 +607,16 @@ function updateCharts(rptSave, mgrSave, paper, error, a){
       labels:["Active Users","Inactive Users"],
       datasets:[{data:[a.activeUsers, Math.max(0,a.users-a.activeUsers)],
         backgroundColor:["#3b82f6","#334155"],
-        borderColor:["#1e293b"],borderWidth:2}]
+        borderColor:[isLight?"#ffffff":"#1e293b"],borderWidth:3}]
     },
-    options:{responsive:true,maintainAspectRatio:false,cutout:"65%",
-      plugins:{legend:{position:"bottom",labels:{color:"#94a3b8",font:{size:11}}},
-        tooltip:{callbacks:{label:ctx=>`${ctx.label}: ${ctx.parsed} জন`}}}}
+    options:{responsive:true,maintainAspectRatio:false,cutout:"70%",
+      plugins:{legend:{position:"bottom",labels:{color:textColor,font:{size:11,weight:'600'},padding:15}},
+        datalabels:{display:true,formatter:(value,ctx)=>{
+          if(value===0) return '';
+          const total = ctx.dataset.data.reduce((a,b)=>a+b,0);
+          const pct = ((value/total)*100).toFixed(0);
+          return `${value} জন\n(${pct}%)`;
+        },color:'#fff',font:{size:12,weight:'bold'}}}}
   });
 }
 
@@ -578,7 +627,7 @@ window.addReport = function(){
   const users = +document.getElementById("nUsers").value||2;
   const usagePct = +document.getElementById("nUsagePct").value||50;
 
-  if(!report){toast("Report নাম দিন!");return}
+  if(!report){showToast("❌ Report নাম দিন!");return}
 
   const idx = mcdData.findIndex(m=>m.name===mcd);
   if(idx>=0){
@@ -600,7 +649,7 @@ window.removeMcd = function(i){
   if(!confirm("এই MCD থেকে custom entries মুছবেন?")) return;
   mcdData[i] = {...DEFAULT_MCD[i]};
   recalc();
-  showToast("MCD রিসেট করা হয়েছে");
+  showToast("✅ MCD রিসেট করা হয়েছে");
 }
 
 function showToast(msg){
