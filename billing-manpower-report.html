@@ -50,6 +50,47 @@ body{
   font-size:24px;
   text-shadow:0 0 20px rgba(37,99,235,.5);
 }
+
+/* ===== CACHE STATUS BAR ===== */
+.cacheStatusBar{
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap:10px;
+  padding:6px 12px;
+  font-size:11px;
+  font-weight:700;
+  background:linear-gradient(90deg,rgba(34,197,94,.1),rgba(59,130,246,.1));
+  border-bottom:1px solid var(--border);
+  color:var(--muted);
+  flex-wrap:wrap;
+}
+.cacheStatusBar .cacheDot{
+  width:8px;height:8px;border-radius:50%;
+  background:var(--green);
+  animation:livePulse 2s infinite;
+  box-shadow:0 0 8px var(--green);
+}
+@keyframes livePulse{
+  0%{box-shadow:0 0 0 0 rgba(34,197,94,.7);transform:scale(1)}
+  70%{box-shadow:0 0 0 8px rgba(34,197,94,0);transform:scale(1.1)}
+  100%{box-shadow:0 0 0 0 rgba(34,197,94,0);transform:scale(1)}
+}
+.cacheStatusBar .cacheReadCount{
+  color:var(--blue);font-weight:900;
+  padding:3px 10px;
+  background:rgba(37,99,235,.15);
+  border-radius:12px;
+  border:1px solid rgba(37,99,235,.3);
+}
+.cacheStatusBar .roiBadge{
+  color:var(--purple);font-weight:900;
+  padding:3px 10px;
+  background:rgba(139,92,246,.15);
+  border-radius:12px;
+  border:1px solid rgba(139,92,246,.3);
+}
+
 .controls{
   background:linear-gradient(135deg,var(--card),var(--card2));
   border:1px solid var(--border);
@@ -187,6 +228,7 @@ body.light tr:nth-child(even){
   display:none;
   box-shadow:0 4px 12px rgba(0,0,0,.3);
   animation:slideIn .3s ease;
+  z-index:9999;
 }
 @keyframes slideIn{
   from{transform:translateX(400px);opacity:0}
@@ -366,7 +408,7 @@ body.light tr:nth-child(even){
     background:white;
     color:black;
   }
-  .controls,.btnArea,.noPrint,.detailBox,.reportFilters,.smartChart,.themeToggle,.personDetails,.viewToggle{
+  .controls,.btnArea,.noPrint,.detailBox,.reportFilters,.smartChart,.themeToggle,.personDetails,.viewToggle,.cacheStatusBar{
     display:none!important;
   }
   table{
@@ -407,6 +449,14 @@ body.light tr:nth-child(even){
   <h4>Tansutrapur, Kaliakair, Gazipur</h4>
   <h4>Billing Section</h4>
   <h3>📊 Daily Manpower Attendance Report</h3>
+</div>
+
+<!-- ===== CACHE STATUS BAR (NEW) ===== -->
+<div class="cacheStatusBar">
+  <div class="cacheDot"></div>
+  <span id="cacheStatusText">📦 Cache Ready</span>
+  <span class="cacheReadCount"><i class="fas fa-fire"></i> Today Reads: <b id="readCounter">0</b></span>
+  <span class="roiBadge"><i class="fas fa-chart-line"></i> ROI Tracking: <b id="roiStatus">Active</b></span>
 </div>
 
 <div class="controls noPrint">
@@ -647,6 +697,9 @@ body.light tr:nth-child(even){
 
 <div id="toast" class="toast">Saved ✅</div>
 
+<!-- ================================================================
+🔥 FIREBASE MODULE + ROI TRACKING + SMART SELECTIVE CACHE
+================================================================ -->
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-app.js";
 import {
@@ -657,7 +710,9 @@ import {
   deleteDoc,
   doc,
   query,
-  where
+  where,
+  setDoc,
+  onSnapshot
 } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-firestore.js";
 
 const firebaseConfig = {
@@ -677,6 +732,211 @@ if(!user){
   window.location.href="login.html";
 }
 
+// ================================================================
+// 📦 SMART CACHE MANAGER — Firebase reads কমানোর জন্য
+// ================================================================
+window.GMS_CACHE = {
+  CACHE_KEY: 'GMS_SMART_CACHE',
+  READ_COUNT_KEY: 'GMS_READ_COUNT_TODAY',
+  READ_DATE_KEY: 'GMS_READ_COUNT_DATE',
+  
+  getReadCount: function(){
+    var today = new Date().toDateString();
+    if(localStorage.getItem(this.READ_DATE_KEY) !== today){
+      localStorage.setItem(this.READ_DATE_KEY, today);
+      localStorage.setItem(this.READ_COUNT_KEY, '0');
+    }
+    return parseInt(localStorage.getItem(this.READ_COUNT_KEY) || '0');
+  },
+  
+  incRead: function(n){
+    n = n || 1;
+    var count = this.getReadCount() + n;
+    localStorage.setItem(this.READ_COUNT_KEY, String(count));
+    var el = document.getElementById('readCounter');
+    if(el) el.innerText = count;
+    return count;
+  },
+  
+  _all: function(){
+    try{ return JSON.parse(localStorage.getItem(this.CACHE_KEY) || '{}'); }
+    catch(e){ return {}; }
+  },
+  
+  set: function(key, data){
+    var all = this._all();
+    all[key] = { data: data, savedAt: Date.now() };
+    try{ localStorage.setItem(this.CACHE_KEY, JSON.stringify(all)); }
+    catch(e){ console.warn('Cache set failed:', e); }
+  },
+  
+  get: function(key){
+    var all = this._all();
+    var entry = all[key];
+    if(!entry) return null;
+    return entry.data;
+  },
+  
+  invalidate: function(keys){
+    var all = this._all();
+    if(typeof keys === 'string') keys = [keys];
+    keys.forEach(function(k){ delete all[k]; });
+    localStorage.setItem(this.CACHE_KEY, JSON.stringify(all));
+  },
+  
+  clear: function(){
+    localStorage.removeItem(this.CACHE_KEY);
+  }
+};
+
+// ================================================================
+// 🔑 CACHE KEYS & TIMESTAMPS
+// ================================================================
+const CACHE_KEYS = {
+  billingManpowerReport: 'billing_mpd_cache'
+};
+const LOCAL_TIMESTAMPS_KEY = 'GMS_LOCAL_TIMESTAMPS';
+
+// ================================================================
+// 🕐 TIMESTAMP HELPER — Firebase system_sync collection এ লেখে
+// ================================================================
+async function updateCollectionTimestamp(collectionName){
+  try{
+    await setDoc(doc(db, 'system_sync', collectionName), { 
+      lastUpdated: Date.now() 
+    }, { merge: true });
+    console.log('🕐 Timestamp updated for:', collectionName);
+  }catch(e){
+    console.warn('Timestamp update failed:', e);
+  }
+}
+window.updateCollectionTimestamp = updateCollectionTimestamp;
+
+// ================================================================
+// 🔍 shouldUpdate — Firebase vs local timestamp তুলনা
+// ================================================================
+function buildShouldUpdate(remoteTimestamps, forceAll){
+  return function(col){
+    if(forceAll) return true;
+    var local = JSON.parse(localStorage.getItem(LOCAL_TIMESTAMPS_KEY) || '{}');
+    if(!local[col]) return true;
+    var remote = remoteTimestamps[col] || 0;
+    return remote > local[col];
+  };
+}
+
+// ================================================================
+// 📦 SMART SELECTIVE CACHE — শুধু পরিবর্তিত data Firebase থেকে
+// ================================================================
+async function cachedGetDocs(collectionName, cacheKey, shouldUpdate){
+  var statusEl = document.getElementById('cacheStatusText');
+  
+  // shouldUpdate=false → cache থেকে নাও (0 Firebase read!)
+  if(shouldUpdate === false){
+    var cached = window.GMS_CACHE.get(cacheKey);
+    if(cached !== null){
+      if(statusEl) statusEl.innerText = '📦 Cache: ' + collectionName + ' ✅ (no change)';
+      console.log('📦 Selective cache hit (0 Firebase read):', cacheKey);
+      return cached;
+    }
+  }
+  
+  // shouldUpdate=true বা cache নেই → Firebase read
+  var cached2 = window.GMS_CACHE.get(cacheKey);
+  if(cached2 !== null && shouldUpdate !== true){
+    if(statusEl) statusEl.innerText = '📦 Cache: ' + collectionName + ' ✅';
+    console.log('📦 Cache hit:', cacheKey);
+    return cached2;
+  }
+  
+  // 🔥 Firebase read
+  if(statusEl) statusEl.innerText = '🔥 Firebase: ' + collectionName + ' 🔥';
+  console.log('🔥 Firebase read (selective):', cacheKey);
+  
+  var snap = await getDocs(collection(db, collectionName));
+  var rows = [];
+  snap.forEach(function(d){ 
+    rows.push({...d.data(), _docId: d.id}); 
+  });
+  
+  window.GMS_CACHE.set(cacheKey, rows);
+  window.GMS_CACHE.incRead(snap.size || 1);
+  
+  return rows;
+}
+
+// ================================================================
+// 🔥 ROI TRACKING FUNCTIONS — index.html থেকে sync
+// ================================================================
+
+// 1. trackReportActivity — যখনই report load হবে (Reports Today এর জন্য)
+window.trackReportActivity = function(mcd, reportName){
+  try{
+    var activity = JSON.parse(localStorage.getItem('report_activity') || '[]');
+    activity.push({
+      mcd: mcd,
+      report: reportName,
+      user: user ? (user.name || 'Unknown') : 'Unknown',
+      date: new Date().toISOString().slice(0,10),
+      timestamp: new Date().toISOString(),
+      company: document.getElementById('company')?.value || 'GMS TEXTILES LTD'
+    });
+    if(activity.length > 1000) activity.splice(0, activity.length - 1000);
+    localStorage.setItem('report_activity', JSON.stringify(activity));
+    console.log('📊 Report activity tracked:', mcd, reportName);
+    
+    var roiStatus = document.getElementById('roiStatus');
+    if(roiStatus) roiStatus.innerText = 'Tracked ✅';
+    setTimeout(function(){ if(roiStatus) roiStatus.innerText = 'Active'; }, 2000);
+  }catch(e){
+    console.warn('trackReportActivity error:', e);
+  }
+};
+
+// 2. autoSaveToROI — Entry/Report load হলে auto save
+function autoSaveToROI(company, mcd){
+  try{
+    var autoReports = JSON.parse(localStorage.getItem('gms_all_reports') || '[]');
+    var exists = autoReports.find(function(r){
+      return r.mcd === mcd && r.company === company;
+    });
+    if(!exists){
+      autoReports.push({
+        mcd: mcd,
+        company: company,
+        report: 'Billing Manpower Report',
+        users: 1,
+        usagePct: 100,
+        addedAt: new Date().toISOString()
+      });
+      localStorage.setItem('gms_all_reports', JSON.stringify(autoReports));
+      console.log('🔄 Auto-saved to ROI:', mcd, company);
+    }
+  }catch(e){
+    console.warn('autoSaveToROI error:', e);
+  }
+}
+
+// 3. trackButtonUsage — button click track
+window.trackButtonUsage = function(buttonName, mcd){
+  try{
+    var activity = JSON.parse(localStorage.getItem('gms_button_activity') || '[]');
+    activity.push({
+      button: buttonName,
+      mcd: mcd || 'BILLING SECTION',
+      user: user ? (user.name || 'Unknown') : 'Unknown',
+      date: new Date().toISOString().slice(0,10),
+      timestamp: new Date().toISOString()
+    });
+    localStorage.setItem('gms_button_activity', JSON.stringify(activity));
+  }catch(e){
+    console.warn('trackButtonUsage error:', e);
+  }
+};
+
+// ================================================================
+// 📊 CHART & DATA VARS
+// ================================================================
 let chart, smartChart;
 let currentView='table';
 let allRows=[];
@@ -691,7 +951,9 @@ document.getElementById("toDate").value=today();
 document.getElementById("filterFrom").value=today();
 document.getElementById("filterTo").value=today();
 
-// Theme Toggle
+// ================================================================
+// 🎨 THEME TOGGLE
+// ================================================================
 window.toggleTheme=function(){
   document.body.classList.toggle("light");
   localStorage.setItem("billingTheme",document.body.classList.contains("light")?"light":"dark");
@@ -793,6 +1055,9 @@ window.switchView=function(view){
   }
 };
 
+// ================================================================
+// 💾 SAVE REPORT — Firebase write + Timestamp update + ROI tracking
+// ================================================================
 window.saveReport=async function(){
   calculatePresent();
 
@@ -848,6 +1113,22 @@ window.saveReport=async function(){
     createdAt:new Date().toISOString()
   });
 
+  // 🔥 NEW: Firebase timestamp update — পরের বার cache skip হবে
+  await updateCollectionTimestamp('billingManpowerReport');
+  
+  // 🔥 NEW: Local timestamp ও মুছে দাও — পরের বার fresh load হবে
+  var localTS = JSON.parse(localStorage.getItem(LOCAL_TIMESTAMPS_KEY) || '{}');
+  delete localTS['billingManpowerReport'];
+  localStorage.setItem(LOCAL_TIMESTAMPS_KEY, JSON.stringify(localTS));
+  
+  // 🔥 NEW: Cache invalidate — fresh data দরকার
+  window.GMS_CACHE.invalidate([CACHE_KEYS.billingManpowerReport]);
+
+  // 🔥 NEW: ROI Tracking — Reports Today count এর জন্য
+  window.trackReportActivity(mcd, 'Billing Manpower Report');
+  autoSaveToROI(company, mcd);
+  window.trackButtonUsage('Save Report', mcd);
+
   toast("Manpower Report Saved ✅");
 
   document.getElementById("totalManpower").value=0;
@@ -871,23 +1152,72 @@ window.loadReport=async function(){
   loadRangeReport();
 };
 
+// ================================================================
+// 🔥 SMART SELECTIVE LOAD — শুধু পরিবর্তিত data Firebase থেকে
+// ================================================================
 window.loadRangeReport=async function(){
   let from=document.getElementById("fromDate").value;
   let to=document.getElementById("toDate").value;
+  let statusEl = document.getElementById('cacheStatusText');
+  
+  if(statusEl) statusEl.innerText = '🔍 Checking updates...';
 
-  let snap=await getDocs(collection(db,"billingManpowerReport"));
-  let rows=[];
-
-  snap.forEach(d=>{
-    let x=d.data();
-    if(x.date>=from && x.date<=to){
-      rows.push({id:d.id,...x});
+  try{
+    // STEP 1: Firebase থেকে system_sync পড়ো (মাত্র 1 read)
+    var remoteTimestamps = {};
+    try{
+      var syncSnap = await getDocs(collection(db, 'system_sync'));
+      window.GMS_CACHE.incRead(1);
+      syncSnap.forEach(function(d){ 
+        remoteTimestamps[d.id] = d.data().lastUpdated || 0; 
+      });
+      console.log('🕐 Remote timestamps fetched:', Object.keys(remoteTimestamps).length, 'collections');
+    }catch(e){
+      console.warn('system_sync read failed, using full cache:', e);
     }
-  });
 
-  rows.sort((a,b)=>a.date.localeCompare(b.date));
-  allRows=rows;
-  renderTable(rows);
+    // STEP 2: shouldUpdate function তৈরি করো
+    var shouldUpdate = buildShouldUpdate(remoteTimestamps, false);
+    var billingNeedsUpdate = shouldUpdate('billingManpowerReport');
+    
+    console.log('📊 Selective Load Plan:', {
+      billingManpowerReport: billingNeedsUpdate ? '🔥Firebase' : '📦Cache'
+    });
+
+    // STEP 3: Smart cache থেকে data নাও
+    var rows = await cachedGetDocs(
+      'billingManpowerReport', 
+      CACHE_KEYS.billingManpowerReport, 
+      billingNeedsUpdate
+    );
+
+    // STEP 4: Local timestamps আপডেট করো
+    var newLocalTS = JSON.parse(localStorage.getItem(LOCAL_TIMESTAMPS_KEY) || '{}');
+    Object.keys(remoteTimestamps).forEach(function(col){
+      newLocalTS[col] = remoteTimestamps[col];
+    });
+    localStorage.setItem(LOCAL_TIMESTAMPS_KEY, JSON.stringify(newLocalTS));
+
+    // STEP 5: Date range filter apply করো
+    var filteredRows = [];
+    rows.forEach(function(r){
+      if(r.date >= from && r.date <= to){
+        filteredRows.push(r);
+      }
+    });
+
+    filteredRows.sort((a,b)=>a.date.localeCompare(b.date));
+    allRows = filteredRows;
+    
+    if(statusEl) statusEl.innerText = '✅ Report loaded ' + (billingNeedsUpdate ? '(Firebase 🔥)' : '(Cache 📦)');
+    
+    renderTable(filteredRows);
+    
+  }catch(e){
+    console.error('Load error:', e);
+    if(statusEl) statusEl.innerText = '❌ Load error';
+    toast('❌ Load failed: ' + e.message);
+  }
 };
 
 window.loadDetailedReport=async function(){
@@ -898,56 +1228,70 @@ window.loadDetailedReport=async function(){
   let searchId=document.getElementById("searchId").value.toLowerCase().trim();
   let filterMonth=document.getElementById("filterMonth").value;
   let filterYear=document.getElementById("filterYear").value;
-
-  let snap=await getDocs(collection(db,"billingManpowerReport"));
-  let rows=[];
-
-  snap.forEach(d=>{
-    let x=d.data();
-    let rowDate=x.date||"";
-    
-    // Date range filter
-    if(rowDate<from || rowDate>to) return;
-    
-    // Company filter
-    if(filterComp && x.company!==filterComp) return;
-    
-    // MCD filter
-    if(filterMcd && x.mcd!==filterMcd) return;
-    
-    // Month filter
-    if(filterMonth && rowDate.substring(5,7)!==filterMonth) return;
-    
-    // Year filter
-    if(filterYear && rowDate.substring(0,4)!==filterYear) return;
-    
-    // ID Card search - show all records for that person
-    if(searchId){
-      let found=false;
-      if(x.leaveDetails){ x.leaveDetails.forEach(dt=>{ if((dt.idCard||"").toLowerCase().includes(searchId)) found=true; }); }
-      if(x.absentDetails){ x.absentDetails.forEach(dt=>{ if((dt.idCard||"").toLowerCase().includes(searchId)) found=true; }); }
-      if(x.medicalDetails){ x.medicalDetails.forEach(dt=>{ if((dt.idCard||"").toLowerCase().includes(searchId)) found=true; }); }
-      if(x.offDayDetails){ x.offDayDetails.forEach(dt=>{ if((dt.idCard||"").toLowerCase().includes(searchId)) found=true; }); }
-      if(!found) return;
-    }
-    
-    rows.push({id:d.id,...x});
-  });
-
-  rows.sort((a,b)=>a.date.localeCompare(b.date));
-  allRows=rows;
+  let statusEl = document.getElementById('cacheStatusText');
   
-  if(searchId && !filterMcd){
-    renderPersonDetails(rows);
-    document.getElementById('personDetailsView').style.display='grid';
-    document.getElementById('reportTable').style.display='none';
-  }else{
-    renderTable(rows);
-    renderPersonDetails(rows);
-    if(currentView==='person'){
+  if(statusEl) statusEl.innerText = '🔍 Filtering...';
+
+  try{
+    // Smart cache থেকে data নাও
+    var rows = await cachedGetDocs(
+      'billingManpowerReport', 
+      CACHE_KEYS.billingManpowerReport, 
+      false
+    );
+
+    var filteredRows = [];
+    rows.forEach(function(r){
+      let rowDate=r.date||"";
+      
+      // Date range filter
+      if(rowDate<from || rowDate>to) return;
+      
+      // Company filter
+      if(filterComp && r.company!==filterComp) return;
+      
+      // MCD filter
+      if(filterMcd && r.mcd!==filterMcd) return;
+      
+      // Month filter
+      if(filterMonth && rowDate.substring(5,7)!==filterMonth) return;
+      
+      // Year filter
+      if(filterYear && rowDate.substring(0,4)!==filterYear) return;
+      
+      // ID Card search
+      if(searchId){
+        let found=false;
+        if(r.leaveDetails){ r.leaveDetails.forEach(dt=>{ if((dt.idCard||"").toLowerCase().includes(searchId)) found=true; }); }
+        if(r.absentDetails){ r.absentDetails.forEach(dt=>{ if((dt.idCard||"").toLowerCase().includes(searchId)) found=true; }); }
+        if(r.medicalDetails){ r.medicalDetails.forEach(dt=>{ if((dt.idCard||"").toLowerCase().includes(searchId)) found=true; }); }
+        if(r.offDayDetails){ r.offDayDetails.forEach(dt=>{ if((dt.idCard||"").toLowerCase().includes(searchId)) found=true; }); }
+        if(!found) return;
+      }
+      
+      filteredRows.push(r);
+    });
+
+    filteredRows.sort((a,b)=>a.date.localeCompare(b.date));
+    allRows = filteredRows;
+    
+    if(statusEl) statusEl.innerText = '✅ Filter applied (Cache 📦)';
+    
+    if(searchId && !filterMcd){
+      renderPersonDetails(filteredRows);
       document.getElementById('personDetailsView').style.display='grid';
       document.getElementById('reportTable').style.display='none';
+    }else{
+      renderTable(filteredRows);
+      renderPersonDetails(filteredRows);
+      if(currentView==='person'){
+        document.getElementById('personDetailsView').style.display='grid';
+        document.getElementById('reportTable').style.display='none';
+      }
     }
+  }catch(e){
+    console.error('Filter error:', e);
+    if(statusEl) statusEl.innerText = '❌ Filter error';
   }
 };
 
@@ -977,7 +1321,7 @@ function renderTable(rows){
         <td>${r.present||0}</td>
         <td>${r.reportedBy||""}</td>
         <td class="noPrint">
-          <button class="del" onclick="deleteRow('${r.id}')">🗑 Delete</button>
+          <button class="del" onclick="deleteRow('${r._docId || r.id}')">🗑 Delete</button>
         </td>
       </tr>
     `;
@@ -1006,7 +1350,6 @@ function renderPersonDetails(rows){
   let personData={};
   
   rows.forEach(r=>{
-    // Process Leave
     if(r.leaveDetails && r.leaveDetails.length>0){
       r.leaveDetails.forEach(d=>{
         let key=(d.idCard||d.name||"").toLowerCase();
@@ -1023,7 +1366,6 @@ function renderPersonDetails(rows){
         personData[key].leaveDates.push({date:r.date,mcd:r.mcd,company:r.company});
       });
     }
-    // Process Absent
     if(r.absentDetails && r.absentDetails.length>0){
       r.absentDetails.forEach(d=>{
         let key=(d.idCard||d.name||"").toLowerCase();
@@ -1040,7 +1382,6 @@ function renderPersonDetails(rows){
         personData[key].absentDates.push({date:r.date,mcd:r.mcd,company:r.company});
       });
     }
-    // Process Medical
     if(r.medicalDetails && r.medicalDetails.length>0){
       r.medicalDetails.forEach(d=>{
         let key=(d.idCard||d.name||"").toLowerCase();
@@ -1057,7 +1398,6 @@ function renderPersonDetails(rows){
         personData[key].medicalDates.push({date:r.date,mcd:r.mcd,company:r.company});
       });
     }
-    // Process Off Day
     if(r.offDayDetails && r.offDayDetails.length>0){
       r.offDayDetails.forEach(d=>{
         let key=(d.idCard||d.name||"").toLowerCase();
@@ -1167,9 +1507,20 @@ function renderChart(total,leave,absent,medical,offday,present){
   });
 }
 
+// ================================================================
+// 🗑 DELETE ROW — Firebase delete + Timestamp update + Cache invalidate
+// ================================================================
 window.deleteRow=async function(id){
   if(confirm("🗑 Delete this report?")){
     await deleteDoc(doc(db,"billingManpowerReport",id));
+    
+    // 🔥 NEW: Timestamp update + Cache invalidate
+    await updateCollectionTimestamp('billingManpowerReport');
+    var localTS = JSON.parse(localStorage.getItem(LOCAL_TIMESTAMPS_KEY) || '{}');
+    delete localTS['billingManpowerReport'];
+    localStorage.setItem(LOCAL_TIMESTAMPS_KEY, JSON.stringify(localTS));
+    window.GMS_CACHE.invalidate([CACHE_KEYS.billingManpowerReport]);
+    
     toast("Deleted ✅");
     loadRangeReport();
   }
@@ -1184,8 +1535,58 @@ window.exportExcel=function(){
   a.click();
 };
 
+// ================================================================
+// 🔄 REALTIME SYNC — অন্য কেউ data update করলে auto refresh
+// ================================================================
+function setupRealtimeSync(){
+  var syncCol = collection(db, 'system_sync');
+  onSnapshot(syncCol, function(snapshot){
+    var remoteTS = {};
+    snapshot.forEach(function(d){ 
+      remoteTS[d.id] = d.data().lastUpdated || 0; 
+    });
+    
+    var localTS = JSON.parse(localStorage.getItem(LOCAL_TIMESTAMPS_KEY) || '{}');
+    var changed = Object.keys(remoteTS).filter(function(col){
+      return !localTS[col] || remoteTS[col] > localTS[col];
+    });
+    
+    if(changed.length > 0 && changed.includes('billingManpowerReport')){
+      console.log('🔔 Realtime: billingManpowerReport changed, reloading...');
+      var statusEl = document.getElementById('cacheStatusText');
+      if(statusEl) statusEl.innerText = '🔔 Realtime update detected...';
+      loadRangeReport();
+    }
+  });
+}
+
+// ================================================================
+// 🎯 INITIALIZATION
+// ================================================================
 calculatePresent();
+
+// Read counter init
+(function(){
+  var c = window.GMS_CACHE.getReadCount();
+  var el = document.getElementById('readCounter');
+  if(el) el.innerText = c;
+})();
+
+// Smart load
 loadReport();
+
+// Realtime sync setup
+setupRealtimeSync();
+
+// Console log
+console.log('%c═══════════════════════════════════════════', 'color: #22c55e; font-weight: bold;');
+console.log('%c  📊 BILLING MANPOWER REPORT - READY', 'color: #22c55e; font-weight: bold; font-size: 14px;');
+console.log('%c═══════════════════════════════════════════', 'color: #22c55e; font-weight: bold;');
+console.log('%c  ✅ Smart Selective Cache: Active', 'color: #3b82f6;');
+console.log('%c  ✅ ROI Tracking: Active', 'color: #8b5cf6;');
+console.log('%c  ✅ Realtime Sync: Active', 'color: #22c55e;');
+console.log('%c  ✅ Firebase Reads Minimized: Yes', 'color: #f59e0b;');
+console.log('%c═══════════════════════════════════════════', 'color: #22c55e; font-weight: bold;');
 </script>
 
 </body>
