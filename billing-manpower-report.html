@@ -90,6 +90,13 @@ body{
   border-radius:12px;
   border:1px solid rgba(139,92,246,.3);
 }
+.cacheStatusBar .syncStatus{
+  color:var(--green);font-weight:900;
+  padding:3px 10px;
+  background:rgba(34,197,94,.15);
+  border-radius:12px;
+  border:1px solid rgba(34,197,94,.3);
+}
 
 .controls{
   background:linear-gradient(135deg,var(--card),var(--card2));
@@ -456,7 +463,8 @@ body.light tr:nth-child(even){
   <div class="cacheDot"></div>
   <span id="cacheStatusText">📦 Cache Ready</span>
   <span class="cacheReadCount"><i class="fas fa-fire"></i> Today Reads: <b id="readCounter">0</b></span>
-  <span class="roiBadge"><i class="fas fa-chart-line"></i> ROI Tracking: <b id="roiStatus">Active</b></span>
+  <span class="roiBadge"><i class="fas fa-chart-line"></i> ROI: <b id="roiStatus">Active</b></span>
+  <span class="syncStatus"><i class="fas fa-sync"></i> Sync: <b id="syncStatus">Active</b></span>
 </div>
 
 <div class="controls noPrint">
@@ -698,7 +706,7 @@ body.light tr:nth-child(even){
 <div id="toast" class="toast">Saved ✅</div>
 
 <!-- ================================================================
-🔥 FIREBASE MODULE + ROI TRACKING + SMART SELECTIVE CACHE
+🔥 FIREBASE MODULE + GATE PLAN LOGIC + ROI TRACKING + SMART CACHE
 ================================================================ -->
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-app.js";
@@ -733,12 +741,13 @@ if(!user){
 }
 
 // ================================================================
-// 📦 SMART CACHE MANAGER — Firebase reads কমানোর জন্য
+// 📦 SMART CACHE MANAGER — Gate Plan এর মতো
 // ================================================================
 window.GMS_CACHE = {
   CACHE_KEY: 'GMS_SMART_CACHE',
   READ_COUNT_KEY: 'GMS_READ_COUNT_TODAY',
   READ_DATE_KEY: 'GMS_READ_COUNT_DATE',
+  CACHE_EXPIRY_MS: 5 * 60 * 1000, // ★ 5 minutes cache expiry
   
   getReadCount: function(){
     var today = new Date().toDateString();
@@ -774,6 +783,14 @@ window.GMS_CACHE = {
     var all = this._all();
     var entry = all[key];
     if(!entry) return null;
+    
+    // ★ NEW: Check cache expiry (5 minutes)
+    var age = Date.now() - entry.savedAt;
+    if(age > this.CACHE_EXPIRY_MS){
+      console.log('⏰ Cache expired for:', key, 'Age:', Math.round(age/1000), 'seconds');
+      return null;
+    }
+    
     return entry.data;
   },
   
@@ -866,10 +883,8 @@ async function cachedGetDocs(collectionName, cacheKey, shouldUpdate){
 }
 
 // ================================================================
-// 🔥 ROI TRACKING FUNCTIONS — index.html থেকে sync
+// 🔥 ROI TRACKING FUNCTIONS
 // ================================================================
-
-// 1. trackReportActivity — যখনই report load হবে (Reports Today এর জন্য)
 window.trackReportActivity = function(mcd, reportName){
   try{
     var activity = JSON.parse(localStorage.getItem('report_activity') || '[]');
@@ -893,7 +908,6 @@ window.trackReportActivity = function(mcd, reportName){
   }
 };
 
-// 2. autoSaveToROI — Entry/Report load হলে auto save
 function autoSaveToROI(company, mcd){
   try{
     var autoReports = JSON.parse(localStorage.getItem('gms_all_reports') || '[]');
@@ -917,7 +931,6 @@ function autoSaveToROI(company, mcd){
   }
 }
 
-// 3. trackButtonUsage — button click track
 window.trackButtonUsage = function(buttonName, mcd){
   try{
     var activity = JSON.parse(localStorage.getItem('gms_button_activity') || '[]');
@@ -1071,7 +1084,6 @@ window.saveReport=async function(){
   let offday=Number(document.getElementById("offDayQty").value)||0;
   let present=Number(document.getElementById("presentQty").value)||0;
 
-  // Collect detail data
   let leaveDetails=[], absentDetails=[], medicalDetails=[], offDayDetails=[];
   for(let i=1; i<=leave; i++){
     let name=document.getElementById("leaveName"+i)?.value||"";
@@ -1113,18 +1125,18 @@ window.saveReport=async function(){
     createdAt:new Date().toISOString()
   });
 
-  // 🔥 NEW: Firebase timestamp update — পরের বার cache skip হবে
+  // 🔥 Timestamp update — পরের বার cache skip হবে
   await updateCollectionTimestamp('billingManpowerReport');
   
-  // 🔥 NEW: Local timestamp ও মুছে দাও — পরের বার fresh load হবে
+  // 🔥 Local timestamp মুছে দাও — পরের বার fresh load হবে
   var localTS = JSON.parse(localStorage.getItem(LOCAL_TIMESTAMPS_KEY) || '{}');
   delete localTS['billingManpowerReport'];
   localStorage.setItem(LOCAL_TIMESTAMPS_KEY, JSON.stringify(localTS));
   
-  // 🔥 NEW: Cache invalidate — fresh data দরকার
+  // 🔥 Cache invalidate — fresh data দরকার
   window.GMS_CACHE.invalidate([CACHE_KEYS.billingManpowerReport]);
 
-  // 🔥 NEW: ROI Tracking — Reports Today count এর জন্য
+  // 🔥 ROI Tracking
   window.trackReportActivity(mcd, 'Billing Manpower Report');
   autoSaveToROI(company, mcd);
   window.trackButtonUsage('Save Report', mcd);
@@ -1153,7 +1165,7 @@ window.loadReport=async function(){
 };
 
 // ================================================================
-// 🔥 SMART SELECTIVE LOAD — শুধু পরিবর্তিত data Firebase থেকে
+// 🔥 SMART SELECTIVE LOAD — Gate Plan এর মতো
 // ================================================================
 window.loadRangeReport=async function(){
   let from=document.getElementById("fromDate").value;
@@ -1244,22 +1256,12 @@ window.loadDetailedReport=async function(){
     rows.forEach(function(r){
       let rowDate=r.date||"";
       
-      // Date range filter
       if(rowDate<from || rowDate>to) return;
-      
-      // Company filter
       if(filterComp && r.company!==filterComp) return;
-      
-      // MCD filter
       if(filterMcd && r.mcd!==filterMcd) return;
-      
-      // Month filter
       if(filterMonth && rowDate.substring(5,7)!==filterMonth) return;
-      
-      // Year filter
       if(filterYear && rowDate.substring(0,4)!==filterYear) return;
       
-      // ID Card search
       if(searchId){
         let found=false;
         if(r.leaveDetails){ r.leaveDetails.forEach(dt=>{ if((dt.idCard||"").toLowerCase().includes(searchId)) found=true; }); }
@@ -1514,7 +1516,7 @@ window.deleteRow=async function(id){
   if(confirm("🗑 Delete this report?")){
     await deleteDoc(doc(db,"billingManpowerReport",id));
     
-    // 🔥 NEW: Timestamp update + Cache invalidate
+    // 🔥 Timestamp update + Cache invalidate
     await updateCollectionTimestamp('billingManpowerReport');
     var localTS = JSON.parse(localStorage.getItem(LOCAL_TIMESTAMPS_KEY) || '{}');
     delete localTS['billingManpowerReport'];
@@ -1536,9 +1538,41 @@ window.exportExcel=function(){
 };
 
 // ================================================================
-// 🔄 REALTIME SYNC — অন্য কেউ data update করলে auto refresh
+// 🔄 REALTIME SYNC — Gate Plan এর মতো onSnapshot listener
 // ================================================================
 function setupRealtimeSync(){
+  console.log('🔔 Setting up realtime sync for billingManpowerReport...');
+  
+  // ★ NEW: billingManpowerReport collection এ onSnapshot listener
+  var billingCol = collection(db, 'billingManpowerReport');
+  onSnapshot(billingCol, function(snapshot){
+    console.log('🔔 Realtime: billingManpowerReport changed, docs:', snapshot.size);
+    
+    // Cache invalidate করো
+    window.GMS_CACHE.invalidate([CACHE_KEYS.billingManpowerReport]);
+    
+    // Local timestamp মুছে ফেলো
+    var localTS = JSON.parse(localStorage.getItem(LOCAL_TIMESTAMPS_KEY) || '{}');
+    delete localTS['billingManpowerReport'];
+    localStorage.setItem(LOCAL_TIMESTAMPS_KEY, JSON.stringify(localTS));
+    
+    // Status update
+    var syncStatus = document.getElementById('syncStatus');
+    if(syncStatus){
+      syncStatus.innerText = 'Updated ✅';
+      setTimeout(function(){ if(syncStatus) syncStatus.innerText = 'Active'; }, 2000);
+    }
+    
+    // যদি page active থাকে, তাহলে reload করো
+    if(!document.hidden){
+      console.log('🔄 Reloading report due to realtime change...');
+      var statusEl = document.getElementById('cacheStatusText');
+      if(statusEl) statusEl.innerText = '🔔 Realtime update detected...';
+      loadRangeReport();
+    }
+  });
+  
+  // system_sync collection এও listener
   var syncCol = collection(db, 'system_sync');
   onSnapshot(syncCol, function(snapshot){
     var remoteTS = {};
@@ -1552,12 +1586,14 @@ function setupRealtimeSync(){
     });
     
     if(changed.length > 0 && changed.includes('billingManpowerReport')){
-      console.log('🔔 Realtime: billingManpowerReport changed, reloading...');
-      var statusEl = document.getElementById('cacheStatusText');
-      if(statusEl) statusEl.innerText = '🔔 Realtime update detected...';
-      loadRangeReport();
+      console.log('🔔 Realtime: system_sync changed for billingManpowerReport');
+      if(!document.hidden){
+        loadRangeReport();
+      }
     }
   });
+  
+  console.log('✅ Realtime sync setup complete');
 }
 
 // ================================================================
@@ -1578,13 +1614,31 @@ loadReport();
 // Realtime sync setup
 setupRealtimeSync();
 
+// ★ NEW: Page visibility change এ auto refresh
+document.addEventListener('visibilitychange', function(){
+  if(!document.hidden){
+    console.log('🔄 Page visible — reloading report...');
+    loadRangeReport();
+  }
+});
+
+// ★ NEW: প্রতি 30 সেকেন্ড পর auto refresh
+setInterval(function(){
+  if(!document.hidden){
+    console.log('⏰ Auto-refresh triggered (30 seconds)');
+    loadRangeReport();
+  }
+}, 30000);
+
 // Console log
 console.log('%c═══════════════════════════════════════════', 'color: #22c55e; font-weight: bold;');
 console.log('%c  📊 BILLING MANPOWER REPORT - READY', 'color: #22c55e; font-weight: bold; font-size: 14px;');
 console.log('%c═══════════════════════════════════════════', 'color: #22c55e; font-weight: bold;');
 console.log('%c  ✅ Smart Selective Cache: Active', 'color: #3b82f6;');
-console.log('%c  ✅ ROI Tracking: Active', 'color: #8b5cf6;');
 console.log('%c  ✅ Realtime Sync: Active', 'color: #22c55e;');
+console.log('%c  ✅ ROI Tracking: Active', 'color: #8b5cf6;');
+console.log('%c  ✅ Cache Expiry: 5 minutes', 'color: #f59e0b;');
+console.log('%c  ✅ Auto Refresh: Every 30 seconds', 'color: #f59e0b;');
 console.log('%c  ✅ Firebase Reads Minimized: Yes', 'color: #f59e0b;');
 console.log('%c═══════════════════════════════════════════', 'color: #22c55e; font-weight: bold;');
 </script>
