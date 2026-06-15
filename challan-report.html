@@ -5,6 +5,7 @@
 <title>Challan Gate Pass Report</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 <style>
 *{box-sizing:border-box}
 body{margin:0;background:#07111f;color:#fff;font-family:Arial,Helvetica,sans-serif}
@@ -45,13 +46,13 @@ th{background:#dbeafe;font-weight:900}
 .gtitle{font-size:34px;font-weight:900;text-align:center;border-bottom:2px solid #000;padding:9px}.only{text-align:center;font-weight:900;border-bottom:2px solid #000;padding:5px}.gno{font-size:17px;padding:8px;border-bottom:2px solid #000}.gnum{font-size:24px;font-weight:900;text-align:center;padding:8px;border-bottom:2px solid #000}.gdate{font-size:17px;padding:8px}
 .vehicle{border:2px solid #000;margin-top:25px;padding:10px;font-size:36px;font-weight:900}.gateTable{table-layout:fixed;margin-top:15px;font-size:17px}.gateTable th,.gateTable td{border:2px solid #000;height:58px}
 .bottom{display:grid;grid-template-columns:1fr 1.3fr;border:2px solid #000;margin-top:40px;min-height:105px}.bleft{display:grid;grid-template-columns:1fr 1fr;align-items:end;text-align:center;font-weight:900;padding-bottom:14px}.bright{border-left:2px solid #000;text-align:center;padding-top:12px;font-size:18px}.bright2{display:grid;grid-template-columns:1fr 1fr;align-items:end;height:65px;font-weight:900}
-body.singleView .head,body.singleView .controls,body.singleView .summary,body.singleView .actionBar{display:none!important}
+body.singleView .head,body.singleView .controls,body.singleView .summary,body.singleView .actionBar,body.singleView #chartSection{display:none!important}
 body.singleView{background:#fff!important;color:#000!important}body.singleView .wrap{padding:0!important}body.singleView .reportSet{margin:0!important}
 #errorBox{display:none;background:#fee2e2;color:#991b1b;padding:12px;border-radius:10px;margin:10px 0;font-weight:900}
-@media(max-width:900px){.grid,.info,.gateHeader{grid-template-columns:1fr}.page{overflow-x:auto}}
+@media(max-width:900px){.grid,.info,.gateHeader,.chartGrid{grid-template-columns:1fr}.page{overflow-x:auto}}
 @page{size:A4 portrait;margin:6mm}
 @media print{
-body{background:#fff!important;margin:0!important;padding:0!important}.head,.controls,.summary,.actionBar,#errorBox{display:none!important}.wrap{padding:0!important;max-width:none!important;width:100%!important}.reportSet{margin:0!important;padding:0!important}.page{width:100%!important;padding:0!important;margin:0!important;overflow:hidden!important}.challanPage{height:285mm!important;min-height:0!important;page-break-after:always!important}.gatePage{height:285mm!important;min-height:0!important;page-break-before:always!important}.qr{width:42px!important;height:42px!important;margin:3px auto!important}.challanTitle{font-size:18px!important;padding:2px 20px!important}.companyBig{font-size:23px!important}.cno{right:20px!important;top:48px!important;font-size:9px!important}.cno b{font-size:15px!important}.info{margin-top:6px!important;gap:18px!important}.line{font-size:10px!important;margin:3px 0!important;grid-template-columns:82px 1fr!important}.line span:last-child{min-height:14px!important;border-bottom:1px solid #000!important}.desc{margin-top:6px!important;border:1px solid #000!important}.spec{font-size:8px!important;grid-template-columns:62px 1fr 38px 1fr 70px 1fr!important;padding:2px!important}.challanTable{font-size:7px!important}.challanTable th,.challanTable td{height:21px!important;padding:1px!important;border:1px solid #000!important}.good{font-size:9px!important;padding:2px!important;border:1px solid #000!important}
+body{background:#fff!important;margin:0!important;padding:0!important}.head,.controls,.summary,.actionBar,#errorBox,#chartSection{display:none!important}.wrap{padding:0!important;max-width:none!important;width:100%!important}.reportSet{margin:0!important;padding:0!important}.page{width:100%!important;padding:0!important;margin:0!important;overflow:hidden!important}.challanPage{height:285mm!important;min-height:0!important;page-break-after:always!important}.gatePage{height:285mm!important;min-height:0!important;page-break-before:always!important}.qr{width:42px!important;height:42px!important;margin:3px auto!important}.challanTitle{font-size:18px!important;padding:2px 20px!important}.companyBig{font-size:23px!important}.cno{right:20px!important;top:48px!important;font-size:9px!important}.cno b{font-size:15px!important}.info{margin-top:6px!important;gap:18px!important}.line{font-size:10px!important;margin:3px 0!important;grid-template-columns:82px 1fr!important}.line span:last-child{min-height:14px!important;border-bottom:1px solid #000!important}.desc{margin-top:6px!important;border:1px solid #000!important}.spec{font-size:8px!important;grid-template-columns:62px 1fr 38px 1fr 70px 1fr!important;padding:2px!important}.challanTable{font-size:7px!important}.challanTable th,.challanTable td{height:21px!important;padding:1px!important;border:1px solid #000!important}.good{font-size:9px!important;padding:2px!important;border:1px solid #000!important}
 .sign{height:70px!important;border:1px solid #000!important}
 .sign div{font-size:9px!important;border-right:1px solid #000!important;padding-bottom:6px!important}
 .addr{font-size:8px!important;margin-top:4px!important;line-height:1.05!important}.gateHeader{grid-template-columns:1fr 1.05fr!important;gap:12px!important}.gateCompany h2{font-size:22px!important}.addrBlock{font-size:8px!important;line-height:1.05!important;max-height:70px!important;overflow:hidden!important}.gateRight{min-height:125px!important}.gateText{font-size:11px!important;padding:8px!important;line-height:1.2!important}.blank{min-width:120px!important;border-bottom:1px solid #000!important}.gtitle{font-size:22px!important;padding:4px!important}.only{font-size:9px!important;padding:3px!important}.gno{font-size:10px!important;padding:3px!important}.gnum{font-size:14px!important;padding:4px!important}.gdate{font-size:10px!important;padding:4px!important}.vehicle{font-size:22px!important;margin-top:10px!important;padding:6px!important}.gateTable{font-size:10px!important;margin-top:8px!important}.gateTable th,.gateTable td{height:38px!important;border:1px solid #000!important;padding:2px!important}.bottom{margin-top:18px!important;min-height:65px!important;border:1px solid #000!important}.bright{font-size:10px!important;padding-top:5px!important;border-left:1px solid #000!important}.bright2{height:42px!important}.bleft{font-size:10px!important;padding-bottom:8px!important}
@@ -87,6 +88,142 @@ body.singleView .noDataBox{display:block!important}
   color:#22c55e;font-weight:900;padding:3px 10px;
   background:rgba(34,197,94,.15);border-radius:12px;border:1px solid rgba(34,197,94,.3);
 }
+
+/* 🔥 SMART CHART SECTION */
+#chartSection{
+  background:linear-gradient(135deg,#101827,#1a2332);
+  border:1px solid #263855;
+  border-radius:16px;
+  padding:16px;
+  margin:12px 0;
+  box-shadow:0 8px 32px rgba(0,0,0,.3);
+}
+.chartHeader{
+  text-align:center;
+  margin-bottom:14px;
+}
+.chartHeader h3{
+  margin:0;
+  color:#22c55e;
+  font-size:20px;
+  font-weight:900;
+  text-shadow:0 0 20px rgba(34,197,94,.3);
+}
+.chartHeader p{
+  margin:4px 0 0 0;
+  color:#94a3b8;
+  font-size:13px;
+}
+.chartGrid{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:14px;
+  align-items:start;
+}
+.chartCard{
+  background:linear-gradient(135deg,#0f172a,#1e293b);
+  border:1px solid #334155;
+  border-radius:12px;
+  padding:14px;
+  position:relative;
+  overflow:hidden;
+}
+.chartCard::before{
+  content:'';
+  position:absolute;
+  top:0;left:0;right:0;
+  height:3px;
+  background:linear-gradient(90deg,#22c55e,#3b82f6);
+}
+.chartCard h4{
+  margin:0 0 10px 0;
+  color:#e2e8f0;
+  font-size:14px;
+  font-weight:900;
+  text-align:center;
+  border-bottom:1px solid #334155;
+  padding-bottom:8px;
+}
+.chartCard .chartWrap{
+  position:relative;
+  height:220px;
+}
+.chartCard .chartWrap canvas{
+  max-height:220px;
+}
+.chartStats{
+  display:grid;
+  grid-template-columns:repeat(3,1fr);
+  gap:8px;
+  margin-top:12px;
+  padding-top:10px;
+  border-top:1px solid #334155;
+}
+.statBox{
+  background:rgba(34,197,94,.08);
+  border:1px solid rgba(34,197,94,.2);
+  border-radius:8px;
+  padding:8px;
+  text-align:center;
+}
+.statBox .statNum{
+  color:#22c55e;
+  font-size:22px;
+  font-weight:900;
+  display:block;
+}
+.statBox .statLabel{
+  color:#94a3b8;
+  font-size:10px;
+  font-weight:700;
+  text-transform:uppercase;
+}
+.statBox.blue{background:rgba(59,130,246,.08);border-color:rgba(59,130,246,.2)}
+.statBox.blue .statNum{color:#3b82f6}
+.statBox.purple{background:rgba(139,92,246,.08);border-color:rgba(139,92,246,.2)}
+.statBox.purple .statNum{color:#8b5cf6}
+
+/* User list in chart */
+.userList{
+  max-height:220px;
+  overflow-y:auto;
+  margin-top:10px;
+}
+.userItem{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  padding:8px 10px;
+  margin:4px 0;
+  background:rgba(255,255,255,.03);
+  border-left:3px solid #22c55e;
+  border-radius:6px;
+  transition:all .2s;
+}
+.userItem:hover{
+  background:rgba(255,255,255,.06);
+  transform:translateX(4px);
+}
+.userItem .userName{
+  color:#e2e8f0;
+  font-size:13px;
+  font-weight:700;
+}
+.userItem .userCount{
+  background:linear-gradient(135deg,#22c55e,#16a34a);
+  color:white;
+  padding:3px 10px;
+  border-radius:12px;
+  font-size:12px;
+  font-weight:900;
+  min-width:35px;
+  text-align:center;
+}
+
+@media(max-width:900px){
+  .chartGrid{grid-template-columns:1fr}
+  .chartStats{grid-template-columns:1fr}
+}
 </style>
 </head>
 <body>
@@ -95,7 +232,7 @@ body.singleView .noDataBox{display:block!important}
   
   <div class="cacheStatusBar">
     <div class="cacheDot"></div>
-    <span id="cacheStatusText">📦 Cache Ready</span>
+    <span id="cacheStatusText"> Cache Ready</span>
     <span class="cacheReadCount">🔥 Firebase Reads: <b id="readCounter">0</b></span>
     <span class="syncStatus">🔄 Sync: <b id="syncStatus">Active</b></span>
   </div>
@@ -105,6 +242,7 @@ body.singleView .noDataBox{display:block!important}
       <div><label>Company</label><select id="companyFilter" onchange="updateReportHeader();showReport()"><option>All</option><option>GMS TEXTILES LTD.</option><option>GMS COMPOSITE KNITTING IND LTD.</option><option>OTHER FACTORY</option></select></div>
       <div><label>To Company</label><select id="toCompanyFilter" onchange="showReport()"><option>All</option><option>GMS TEXTILES LTD.</option><option>GMS COMPOSITE KNITTING IND LTD.</option><option>OTHER FACTORY</option></select></div>
       <div><label>MCD</label><select id="mcdFilter" onchange="showReport()"><option>All</option><option>ACCESSORIES MCD</option><option>GREY FABRIC MCD</option><option>SHIPMENT MCD</option><option>BILLING SECTION</option><option>NEEDLE MCD</option><option>OUTER WEAR MCD</option><option>YARN MCD</option><option>PRINTING MCD</option><option>JHUT MCD</option><option>GENERAL MCD</option><option>LEFTOVER MCD</option><option>FINISH FABRIC MCD</option><option>YARN DYEING MCD</option><option>CHEMICAL MCD</option><option>GENERAL TECHNICAL MCD</option></select></div>
+      <div><label>👤 Created By</label><select id="createdByFilter" onchange="showReport()"><option value="">All Users</option></select></div>
       <div><label>Month</label><input type="month" id="monthFilter"></div>
       <div><label>Single Date</label><input type="date" id="singleDate"></div>
       <div><label>From Date</label><input type="date" id="fromDate"></div>
@@ -119,13 +257,53 @@ body.singleView .noDataBox{display:block!important}
       <button class="gray" onclick="monthF()">This Month</button>
       <button class="blue" onclick="showReport()">🔍 Search</button>
       <button class="gray" onclick="clearF()">Clear</button>
-      <button class="orange" onclick="loadOfflineData()">📦 Load Offline Data</button>
-      <button class="green" onclick="syncAllOffline()">📤 Sync All to Firebase</button>
+      <button class="orange" onclick="loadOfflineData()"> Load Offline Data</button>
+      <button class="green" onclick="syncAllOffline()"> Sync All to Firebase</button>
       <button class="green" onclick="excel()">Excel</button>
       <button class="purple" onclick="window.print()">Print/PDF</button>
       <button class="orange" onclick="location.href='challan-entry.html'">New Entry</button>
     </div>
   </div>
+  
+  <!-- 🔥 SMART CHART SECTION - Total Found এর উপরে -->
+  <div id="chartSection" style="display:none">
+    <div class="chartHeader">
+      <h3>📊 Challan & Gate Pass Analytics</h3>
+      <p>Real-time statistics of all challan entries</p>
+    </div>
+    <div class="chartGrid">
+      <!-- Bar Chart: Per User Count -->
+      <div class="chartCard">
+        <h4>👤 Challan Count by User</h4>
+        <div class="chartWrap">
+          <canvas id="userBarChart"></canvas>
+        </div>
+        <div class="userList" id="userListContainer"></div>
+      </div>
+      <!-- Pie Chart: Distribution -->
+      <div class="chartCard">
+        <h4>🥧 Challan Distribution</h4>
+        <div class="chartWrap">
+          <canvas id="distPieChart"></canvas>
+        </div>
+        <div class="chartStats">
+          <div class="statBox">
+            <span class="statNum" id="statTotal">0</span>
+            <span class="statLabel">Total Challan</span>
+          </div>
+          <div class="statBox blue">
+            <span class="statNum" id="statUsers">0</span>
+            <span class="statLabel">Active Users</span>
+          </div>
+          <div class="statBox purple">
+            <span class="statNum" id="statAvg">0</span>
+            <span class="statLabel">Avg/User</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  
   <div id="errorBox"></div><div id="summary"></div><div id="area"></div>
 </div>
 
@@ -144,6 +322,16 @@ const firebaseConfig={
 const app=initializeApp(firebaseConfig), db=getFirestore(app);
 const $=id=>document.getElementById(id);
 let all=[],cur=[];
+
+// 🔥 Chart instances
+let userBarChart=null, distPieChart=null;
+
+// 🔥 Smart colors for charts
+const CHART_COLORS = [
+  '#22c55e','#3b82f6','#8b5cf6','#f59e0b','#ef4444',
+  '#06b6d4','#ec4899','#14b8a6','#f97316','#6366f1',
+  '#84cc16','#eab308','#0ea5e9','#d946ef','#f43f5e'
+];
 
 window.GMS_CACHE = {
   CACHE_KEY: 'GMS_CHALLAN_SMART_CACHE',
@@ -211,7 +399,6 @@ function esc(v){return String(v??"").replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&l
 function n(v){return Number(v)||0}
 function fmt(v){return n(v).toLocaleString("en-US")}
 
-// 🔥 FIXED: PROPER STRING COMPARISON
 function same(a,b){
   if(!a || !b) return false;
   return String(a).trim().toUpperCase() === String(b).trim().toUpperCase();
@@ -248,11 +435,39 @@ function sorter(a,b){
   return String(b.challanNo||"").localeCompare(String(a.challanNo||""));
 }
 
-// 🔥 FIXED: PROPER MCD FILTER LOGIC
+function getUniqueCreatedBy(){
+  let names = new Set();
+  all.forEach(x=>{
+    let name = x.createdBy || x.preparedBy || 'Unknown';
+    if(name) names.add(name);
+  });
+  return Array.from(names).sort();
+}
+
+function populateCreatedByFilter(){
+  let select = $("createdByFilter");
+  let currentVal = select.value;
+  
+  select.innerHTML = '<option value="">All Users</option>';
+  
+  let names = getUniqueCreatedBy();
+  names.forEach(name=>{
+    let opt = document.createElement('option');
+    opt.value = name;
+    opt.textContent = name;
+    select.appendChild(opt);
+  });
+  
+  if(currentVal && names.includes(currentVal)){
+    select.value = currentVal;
+  }
+}
+
 function filter(){
   let company=$("companyFilter").value,
       toCompany=$("toCompanyFilter").value,
       mcd=$("mcdFilter").value,
+      createdBy=$("createdByFilter").value,
       month=$("monthFilter").value,
       single=$("singleDate").value,
       from=$("fromDate").value,
@@ -261,31 +476,26 @@ function filter(){
       gp=$("gateSearch").value.toLowerCase().trim(),
       txt=$("textSearch").value.toLowerCase().trim();
   
-  console.log('🔍 Filtering with MCD:', mcd);
-  
   return all.filter(x=>{
     let d=x.date||"";
     
-    // Date filters
     if(single && d!==single) return false;
     if(month && d.slice(0,7)!==month) return false;
     if(from && d<from) return false;
     if(to && d>to) return false;
     
-    // Challan/Gate Pass number filters
     if(ch && !(x.challanNo||"").toLowerCase().includes(ch)) return false;
     if(gp && !(x.gatePassNo||"").toLowerCase().includes(gp)) return false;
     
-    // 🔥 MCD FILTER - STRICT MATCH
     if(mcd && mcd!=="All"){
-      if(!same(x.mcd, mcd)){
-        console.log('❌ Filtered out - MCD mismatch:', x.mcd, '!=', mcd);
-        return false;
-      }
-      console.log('✅ MCD match:', x.mcd);
+      if(!same(x.mcd, mcd)) return false;
     }
     
-    // Company filter
+    if(createdBy){
+      let recordCreatedBy = x.createdBy || x.preparedBy || '';
+      if(!same(recordCreatedBy, createdBy)) return false;
+    }
+    
     if(company && company!=="All"){
       if(company==="OTHER FACTORY"){
         if(x.companyType!=="OTHER FACTORY") return false;
@@ -294,7 +504,6 @@ function filter(){
       }
     }
     
-    // To Company filter
     if(toCompany && toCompany!=="All"){
       if(toCompany==="OTHER FACTORY"){
         if(x.toCompanyType!=="OTHER FACTORY") return false;
@@ -303,7 +512,6 @@ function filter(){
       }
     }
     
-    // Text search
     if(txt){
       let hay=[x.buyer,x.vehicleNo,x.toCompany,x.company,x.driverName,x.transportNo,x.mcd,x.challanNo,x.gatePassNo].join(" ").toLowerCase();
       if(!hay.includes(txt)) return false;
@@ -311,6 +519,150 @@ function filter(){
     
     return true;
   }).sort(sorter);
+}
+
+// 🔥 SMART CHART RENDERING
+function renderCharts(data){
+  const chartSection = $('chartSection');
+  
+  if(!data || data.length===0){
+    chartSection.style.display = 'none';
+    return;
+  }
+  
+  chartSection.style.display = 'block';
+  
+  // Count by user
+  const userCounts = {};
+  data.forEach(x=>{
+    let name = x.createdBy || x.preparedBy || 'Unknown';
+    userCounts[name] = (userCounts[name] || 0) + 1;
+  });
+  
+  // Sort by count descending
+  const sortedUsers = Object.entries(userCounts).sort((a,b)=>b[1]-a[1]);
+  const labels = sortedUsers.map(u=>u[0]);
+  const counts = sortedUsers.map(u=>u[1]);
+  const colors = labels.map((_,i)=>CHART_COLORS[i % CHART_COLORS.length]);
+  
+  const totalChallan = data.length;
+  const activeUsers = labels.length;
+  const avgPerUser = activeUsers > 0 ? (totalChallan / activeUsers).toFixed(1) : 0;
+  
+  // Update stats
+  $('statTotal').innerText = totalChallan;
+  $('statUsers').innerText = activeUsers;
+  $('statAvg').innerText = avgPerUser;
+  
+  // Destroy old charts
+  if(userBarChart) userBarChart.destroy();
+  if(distPieChart) distPieChart.destroy();
+  
+  // Bar Chart - User wise count
+  const barCtx = $('userBarChart').getContext('2d');
+  userBarChart = new Chart(barCtx, {
+    type: 'bar',
+    data: {
+      labels: labels,
+      datasets: [{
+        label: 'Challan Count',
+        data: counts,
+        backgroundColor: colors.map(c=>c+'cc'),
+        borderColor: colors,
+        borderWidth: 2,
+        borderRadius: 8,
+        borderSkipped: false
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          backgroundColor: '#1e293b',
+          titleColor: '#22c55e',
+          bodyColor: '#e2e8f0',
+          borderColor: '#334155',
+          borderWidth: 1,
+          padding: 12,
+          callbacks: {
+            label: function(ctx){
+              const total = ctx.dataset.data.reduce((a,b)=>a+b,0);
+              const pct = ((ctx.raw / total) * 100).toFixed(1);
+              return ctx.label + ': ' + ctx.raw + ' challan (' + pct + '%)';
+            }
+          }
+        }
+      },
+      scales: {
+        y: {
+          beginAtZero: true,
+          grid: { color: 'rgba(148,163,184,.1)' },
+          ticks: { color: '#94a3b8', font: { weight: 'bold' } }
+        },
+        x: {
+          grid: { display: false },
+          ticks: { color: '#e2e8f0', font: { size: 11, weight: 'bold' }, maxRotation: 45 }
+        }
+      }
+    }
+  });
+  
+  // Pie Chart - Distribution
+  const pieCtx = $('distPieChart').getContext('2d');
+  distPieChart = new Chart(pieCtx, {
+    type: 'doughnut',
+    data: {
+      labels: labels,
+      datasets: [{
+        data: counts,
+        backgroundColor: colors.map(c=>c+'dd'),
+        borderColor: '#0f172a',
+        borderWidth: 3,
+        hoverOffset: 8
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      cutout: '55%',
+      plugins: {
+        legend: {
+          position: 'bottom',
+          labels: { color: '#e2e8f0', font: { size: 11, weight: 'bold' }, padding: 10 }
+        },
+        tooltip: {
+          backgroundColor: '#1e293b',
+          titleColor: '#22c55e',
+          bodyColor: '#e2e8f0',
+          borderColor: '#334155',
+          borderWidth: 1,
+          padding: 12,
+          callbacks: {
+            label: function(ctx){
+              const total = ctx.dataset.data.reduce((a,b)=>a+b,0);
+              const pct = ((ctx.raw / total) * 100).toFixed(1);
+              return ctx.label + ': ' + ctx.raw + ' (' + pct + '%)';
+            }
+          }
+        }
+      }
+    }
+  });
+  
+  // User list with counts
+  let userListHtml = '';
+  sortedUsers.forEach((u,i)=>{
+    const pct = ((u[1] / totalChallan) * 100).toFixed(0);
+    userListHtml += `
+      <div class="userItem" style="border-left-color:${colors[i]}">
+        <span class="userName">${esc(u[0])}</span>
+        <span class="userCount">${u[1]} (${pct}%)</span>
+      </div>
+    `;
+  });
+  $('userListContainer').innerHTML = userListHtml;
 }
 
 function qr(){
@@ -325,9 +677,9 @@ function summary(list){
   let rows=list.map((x,i)=>{
     let badge = x._source === "offline" 
       ? `<span class="offlineBadge">📦 Offline</span>` 
-      : `<span class="syncedBadge">📡 Synced</span>`;
+      : `<span class="syncedBadge"> Synced</span>`;
       
-    return `<tr><td>${i+1}</td><td>${esc(x.date)}</td><td>${esc(x.challanNo)}${badge}</td><td>${esc(x.gatePassNo)}</td><td>${esc(x.company)}</td><td>${esc(x.mcd)}</td><td>${esc(x.toCompany)}</td><td>${fmt(x.grandTotalQty)}</td><td>${fmt(x.totalPkg)}</td><td>${esc(x.preparedBy||x.createdBy||"")}</td><td><button class="purple" onclick="printOne(${i})">Print</button><button class="orange" onclick="editOne('${esc(x.challanNo)}')">Edit</button><button class="red" onclick="delOne('${esc(x.challanNo)}','${x._source||"firebase"}')">Delete</button></td></tr>`;
+    return `<tr><td>${i+1}</td><td>${esc(x.date)}</td><td>${esc(x.challanNo)}${badge}</td><td>${esc(x.gatePassNo)}</td><td>${esc(x.company)}</td><td>${esc(x.mcd)}</td><td>${esc(x.toCompany)}</td><td>${fmt(x.grandTotalQty)}</td><td>${fmt(x.totalPkg)}</td><td>${esc(x.createdBy||x.preparedBy||"")}</td><td><button class="purple" onclick="printOne(${i})">Print</button><button class="orange" onclick="editOne('${esc(x.challanNo)}')">Edit</button><button class="red" onclick="delOne('${esc(x.challanNo)}','${x._source||"firebase"}')">Delete</button></td></tr>`;
   }).join("");
   $("summary").innerHTML=`<div class="summary"><div class="sumTitle">Total Found: ${list.length} Challan / Gate Pass</div><div style="overflow-x:auto"><table><thead><tr><th>SL</th><th>Date</th><th>Challan No</th><th>Gate Pass No</th><th>Company</th><th>MCD</th><th>To Company</th><th>Total Qty</th><th>Total Pkgs/Rolls</th><th>Created By</th><th>Action</th></tr></thead><tbody>${rows}</tbody></table></div></div>`;
 }
@@ -352,7 +704,7 @@ function gate(x){
   <div class="bottom"><div class="bleft"><div>ISSUED BY</div><div>AUTHORISED BY</div></div><div class="bright">RECEIVED THE ABOVE QUANTITY OF GOODS IN GOOD CONDITION<div class="bright2"><div>RECEIVED BY</div><div>SECURITY DEPARTMENT</div></div></div></div></div>`;
 }
 
-function setHtml(x,i){return `<div class="reportSet"><div class="actionBar"><button class="purple" onclick="printOne(${i})">Print This</button><button class="orange" onclick="editOne('${esc(x.challanNo)}')">Edit</button><button class="red" onclick="delOne('${esc(x.challanNo)}','${x._source||"firebase"}')">Delete</button><span class="createdByBadge">Created By: ${esc(x.preparedBy||x.createdBy||"")}</span></div>${challan(x)}${gate(x)}</div>`}
+function setHtml(x,i){return `<div class="reportSet"><div class="actionBar"><button class="purple" onclick="printOne(${i})">Print This</button><button class="orange" onclick="editOne('${esc(x.challanNo)}')">Edit</button><button class="red" onclick="delOne('${esc(x.challanNo)}','${x._source||"firebase"}')">Delete</button><span class="createdByBadge">Created By: ${esc(x.createdBy||x.preparedBy||"")}</span></div>${challan(x)}${gate(x)}</div>`}
 
 window.loadOfflineData=function(){
   let offlineCount=0;
@@ -372,7 +724,11 @@ window.loadOfflineData=function(){
     }
   }
   if(offlineCount>0){
-    all.sort(sorter); cur=filter(); summary(cur);
+    all.sort(sorter); 
+    populateCreatedByFilter();
+    cur=filter(); 
+    renderCharts(cur);
+    summary(cur);
     $("area").innerHTML=cur.length?cur.map(setHtml).join(""):`<div class="noDataBox">No Challan Found</div>`;
     setTimeout(qr,100);
     alert("✅ Loaded "+offlineCount+" offline challan(s)");
@@ -404,7 +760,13 @@ window.syncAllOffline=async function(){
   }
   if(synced>0 || failed>0){
     alert("✅ Synced: "+synced+" | ❌ Failed: "+failed);
-    await load(); cur=filter(); summary(cur); $("area").innerHTML=cur.map(setHtml).join(""); setTimeout(qr,100);
+    await load(); 
+    populateCreatedByFilter();
+    cur=filter(); 
+    renderCharts(cur);
+    summary(cur); 
+    $("area").innerHTML=cur.map(setHtml).join(""); 
+    setTimeout(qr,100);
   }else{ alert("✅ No pending offline data"); }
 }
 
@@ -428,7 +790,13 @@ async function autoSyncReport(){
   }
   if(synced>0){ 
     console.log("🔄 Auto-synced "+synced+" items"); 
-    await load(); cur=filter(); summary(cur); $("area").innerHTML=cur.map(setHtml).join(""); setTimeout(qr,100); 
+    await load(); 
+    populateCreatedByFilter();
+    cur=filter(); 
+    renderCharts(cur);
+    summary(cur); 
+    $("area").innerHTML=cur.map(setHtml).join(""); 
+    setTimeout(qr,100); 
   }
 }
 setInterval(autoSyncReport, 60000);
@@ -438,9 +806,6 @@ window.showReport=async()=>{
   try{
     updateReportHeader();
     let statusEl = $('cacheStatusText');
-    let selectedMCD = $("mcdFilter").value;
-    
-    console.log('🔍 showReport called - Selected MCD:', selectedMCD);
     
     if(statusEl) statusEl.innerText = '🔍 Checking cache...';
     
@@ -448,7 +813,7 @@ window.showReport=async()=>{
     
     if(cached !== null){
       console.log('📦 Using cached data');
-      if(statusEl) statusEl.innerText = '📦 Cache loaded';
+      if(statusEl) statusEl.innerText = ' Cache loaded';
       all = cached;
     }else{
       if(statusEl) statusEl.innerText = '🔥 Loading from Firebase...';
@@ -458,21 +823,27 @@ window.showReport=async()=>{
       window.GMS_CACHE.incRead(all.length);
     }
     
-    // Apply filters
+    populateCreatedByFilter();
     cur=filter();
     
-    console.log('📊 Total records:', all.length, 'Filtered:', cur.length, 'MCD Filter:', selectedMCD);
+    // 🔥 Render charts
+    renderCharts(cur);
     
     const params=new URLSearchParams(location.search);
     const hasSpecific=params.get("challanNo");
     
     if(cur.length===0 && all.length>0 && !hasSpecific){
+      let selectedMCD = $("mcdFilter").value;
+      let selectedCreatedBy = $("createdByFilter").value;
       if(selectedMCD && selectedMCD!=="All"){
-        $("summary").innerHTML=`<div class="filterWarning">"${selectedMCD}" - ei MCD te kono data paowa jay ni. Tai all data show kora holo.</div>`;
+        $("summary").innerHTML=`<div class="filterWarning">"${selectedMCD}" - ei MCD te kono data paowa jay ni.</div>`;
+      }else if(selectedCreatedBy){
+        $("summary").innerHTML=`<div class="filterWarning">"${selectedCreatedBy}" - er kono data paowa jay ni.</div>`;
       }else{
-        $("summary").innerHTML=`<div class="filterWarning">Selected filter-e data paowa jai nai. Tai all saved Challan/Gate Pass show kora holo.</div>`;
+        $("summary").innerHTML=`<div class="filterWarning">Selected filter-e data paowa jai nai.</div>`;
       }
       cur=[...all].sort(sorter);
+      renderCharts(cur);
     }else if(cur.length===0 && hasSpecific){
       $("summary").innerHTML=`<div class="noDataBox">Challan No "${hasSpecific}" er kono data paowa jay ni.</div>`;
     }else{
@@ -488,7 +859,13 @@ window.showReport=async()=>{
   }catch(e){ console.error(e); $("errorBox").style.display="block"; $("errorBox").innerText="Report error: "+e.message; }
 }
 
-window.clearF=()=>{["companyFilter","toCompanyFilter","mcdFilter"].forEach(id=>$(id).value="All");["monthFilter","singleDate","fromDate","toDate","challanSearch","gateSearch","textSearch"].forEach(id=>$(id).value="");updateReportHeader();showReport()}
+window.clearF=()=>{
+  ["companyFilter","toCompanyFilter","mcdFilter"].forEach(id=>$(id).value="All");
+  $("createdByFilter").value="";
+  ["monthFilter","singleDate","fromDate","toDate","challanSearch","gateSearch","textSearch"].forEach(id=>$(id).value="");
+  updateReportHeader();
+  showReport()
+}
 window.todayF=()=>{clearF();$("singleDate").value=new Date().toISOString().slice(0,10);showReport()}
 window.last7=()=>{let e=new Date(),s=new Date();s.setDate(e.getDate()-6);clearF();$("fromDate").value=s.toISOString().slice(0,10);$("toDate").value=e.toISOString().slice(0,10);showReport()}
 window.monthF=()=>{clearF();$("monthFilter").value=new Date().toISOString().slice(0,7);showReport()}
@@ -529,18 +906,18 @@ showReport();
 
 setInterval(function(){
   if(!document.hidden){
-    console.log('⏰ Auto-refresh triggered');
+    console.log(' Auto-refresh triggered');
     showReport();
   }
 }, 30000);
 
 console.log('%c═══════════════════════════════════════════', 'color: #22c55e; font-weight: bold;');
-console.log('%c  📦 CHALLAN REPORT - MCD FILTER FIXED', 'color: #22c55e; font-weight: bold; font-size: 14px;');
+console.log('%c  📊 SMART CHART - CHALLAN REPORT', 'color: #22c55e; font-weight: bold; font-size:14px;');
 console.log('%c═══════════════════════════════════════════', 'color: #22c55e; font-weight: bold;');
-console.log('%c  ✅ MCD Filter: Strict Match', 'color: #3b82f6;');
-console.log('%c  ✅ Smart Cache: Active', 'color: #22c55e;');
-console.log('%c  ✅ Offline Mode: Active', 'color: #f59e0b;');
-console.log('%c  ✅ Realtime Sync: Active', 'color: #8b5cf6;');
+console.log('%c  ✅ Bar Chart: User wise count', 'color: #3b82f6;');
+console.log('%c  ✅ Pie Chart: Distribution', 'color: #22c55e;');
+console.log('%c  ✅ Stats: Total/Users/Avg', 'color: #8b5cf6;');
+console.log('%c  ✅ User List: With percentages', 'color: #f59e0b;');
 console.log('%c═══════════════════════════════════════════', 'color: #22c55e; font-weight: bold;');
 </script>
 </body>
