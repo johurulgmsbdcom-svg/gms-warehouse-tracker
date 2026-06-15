@@ -15,6 +15,8 @@ button{border:0;border-radius:9px;padding:11px 16px;color:#fff;font-weight:900;c
 .tableWrap{overflow-x:auto;background:#fff}table{width:100%;min-width:1250px;border-collapse:collapse;background:#fff;color:#000;font-size:15px}th,td{border:1px solid #111;padding:6px;text-align:center}th{background:#e5e7eb;font-size:15px}td input{border:0;border-radius:0;text-align:center;padding:8px;font-size:15px}
 .totalLine{background:#e5e7eb;color:#000;font-size:19px;font-weight:900;text-align:center;padding:10px}.btns{text-align:center;margin:12px 0}
 #toast{position:fixed;right:18px;top:18px;background:#16a34a;color:#fff;padding:14px 22px;border-radius:12px;font-weight:900;display:none;z-index:9999;font-size:16px}
+.userInfo{background:#1e293b;padding:8px 12px;border-radius:8px;margin:10px 0;text-align:center;font-size:14px}
+.userInfo b{color:#22c55e}
 @media(max-width:900px){.grid,.grid2{grid-template-columns:1fr}.title h1{font-size:27px}}
 </style>
 </head>
@@ -25,6 +27,12 @@ button{border:0;border-radius:9px;padding:11px 16px;color:#fff;font-weight:900;c
     <h1 id="topCompanyTitle">GMS TEXTILES LTD.</h1>
     <h2>Delivery Challan & Gate Pass Entry</h2>
     <div class="note">Save করলে Delivery Challan + Gate Pass report page-এ তৈরি হবে</div>
+  </div>
+
+  <!-- 🔥 USER INFO DISPLAY -->
+  <div class="userInfo">
+    👤 <b id="currentUserName">User</b> | 🏢 <b id="currentUserCompany">GMS TEXTILES LTD.</b> | 
+    🕐 <b id="currentTime"></b>
   </div>
 
   <div class="panel">
@@ -109,6 +117,9 @@ const firebaseConfig={
 const app=initializeApp(firebaseConfig), db=getFirestore(app), $=id=>document.getElementById(id);
 let editMode=false;
 
+// 🔥 GET CURRENT USER INFO
+const user = JSON.parse(localStorage.getItem("gmsUser") || '{"name":"Unknown User","email":"unknown@gms.com","company":"GMS TEXTILES LTD."}');
+
 function getDeviceId(){
   let did=localStorage.getItem("gms_device_id");
   if(!did){ did="D"+Math.random().toString(36).substr(2,9).toUpperCase(); localStorage.setItem("gms_device_id",did); }
@@ -119,6 +130,7 @@ function toast(m,c="#16a34a"){const t=$("toast");t.innerText=m;t.style.backgroun
 function today(){return new Date().toISOString().slice(0,10)} 
 function yy(){return new Date($("date").value||new Date()).getFullYear()} 
 function pad(n){return String(n).padStart(4,"0")}
+function currentTime(){const now=new Date();return now.toLocaleString("en-US",{dateStyle:"medium",timeStyle:"short"})}
 
 function generateOfflineId(){
   const now=new Date();
@@ -186,7 +198,49 @@ window.delRow=b=>{b.closest("tr").remove();resetSl();calcTotals()}
 function resetSl(){document.querySelectorAll("#rows tr").forEach((tr,i)=>tr.querySelector(".sl").innerText=i+1)}
 function getRows(){let a=[];document.querySelectorAll("#rows tr").forEach(tr=>{let x={item:tr.querySelector(".item").value.trim(),color:tr.querySelector(".color").value.trim(),mcDia:tr.querySelector(".mcDia").value.trim(),finDia:tr.querySelector(".finDia").value.trim(),unit:tr.querySelector(".unit").value.trim(),qty:Number(tr.querySelector(".qty").value)||0,pkg:Number(tr.querySelector(".pkg").value)||0,remarks:tr.querySelector(".remarks").value.trim(),bag:Number(tr.querySelector(".bag").value)||0,purpose:tr.querySelector(".purpose").value.trim()}; if(x.item||x.qty||x.pkg||x.bag)a.push(x)});return a}
 window.calcTotals=()=>{let r=getRows();$("grandTotal").innerText=r.reduce((a,b)=>a+b.qty,0);$("totalPkg").innerText=r.reduce((a,b)=>a+b.pkg,0);$("totalBag").innerText=r.reduce((a,b)=>a+b.bag,0)}
-function dataObj(){let rows=getRows();return {mcd:$("mcd").value,date:$("date").value,challanNo:$("challanNo").value,gatePassNo:$("gatePassNo").value,company:companyName(),companyType:$("company").value,companyManual:$("companyManual").value.trim(),companyAddress:$("companyAddress").value,toCompany:toCompanyName(),toCompanyType:$("toCompany").value,toCompanyManual:$("toCompanyManual").value.trim(),toAddress:$("toAddress").value,buyer:$("buyer").value.trim(),orderNo:$("orderNo").value.trim(),transportNo:$("transportNo").value.trim(),driverName:$("driverName").value.trim(),vehicleNo:$("vehicleNo").value.trim(),gateMs:$("gateMs").value.trim(),goodsBy:$("goodsBy").value.trim(),fromMillTo:$("fromMillTo").value.trim(),yarnCount:$("yarnCount").value.trim(),brand:$("brand").value.trim(),cardCombed:$("cardCombed").value.trim(),lotNo:$("lotNo").value.trim(),rows,grandTotalQty:rows.reduce((a,b)=>a+b.qty,0),totalPkg:rows.reduce((a,b)=>a+b.pkg,0),totalBag:rows.reduce((a,b)=>a+b.bag,0),deviceId:getDeviceId(),updatedAt:new Date().toISOString(),createdAt:editMode?undefined:new Date().toISOString()}}
+
+// 🔥 DATA OBJECT WITH CREATED BY
+function dataObj(){
+  let rows=getRows();
+  return {
+    mcd:$("mcd").value,
+    date:$("date").value,
+    challanNo:$("challanNo").value,
+    gatePassNo:$("gatePassNo").value,
+    company:companyName(),
+    companyType:$("company").value,
+    companyManual:$("companyManual").value.trim(),
+    companyAddress:$("companyAddress").value,
+    toCompany:toCompanyName(),
+    toCompanyType:$("toCompany").value,
+    toCompanyManual:$("toCompanyManual").value.trim(),
+    toAddress:$("toAddress").value,
+    buyer:$("buyer").value.trim(),
+    orderNo:$("orderNo").value.trim(),
+    transportNo:$("transportNo").value.trim(),
+    driverName:$("driverName").value.trim(),
+    vehicleNo:$("vehicleNo").value.trim(),
+    gateMs:$("gateMs").value.trim(),
+    goodsBy:$("goodsBy").value.trim(),
+    fromMillTo:$("fromMillTo").value.trim(),
+    yarnCount:$("yarnCount").value.trim(),
+    brand:$("brand").value.trim(),
+    cardCombed:$("cardCombed").value.trim(),
+    lotNo:$("lotNo").value.trim(),
+    rows,
+    grandTotalQty:rows.reduce((a,b)=>a+b.qty,0),
+    totalPkg:rows.reduce((a,b)=>a+b.pkg,0),
+    totalBag:rows.reduce((a,b)=>a+b.bag,0),
+    // 🔥 CREATED BY INFO
+    preparedBy: user.name || user.email || "Unknown",
+    createdBy: user.name || user.email || "Unknown",
+    createdById: user.id || user.email || "",
+    createdByCompany: user.company || $("company").value || "GMS TEXTILES LTD.",
+    deviceId: getDeviceId(),
+    updatedAt: new Date().toISOString(),
+    createdAt: editMode ? undefined : new Date().toISOString()
+  }
+}
 
 window.saveData=async()=>{
   try{
@@ -204,7 +258,7 @@ window.saveData=async()=>{
       if(window.currentSource === "firebase" && window.currentChallanNum){
          await setDoc(doc(db,"serialCounters","challan_"+yy()),{last:window.currentChallanNum,year:yy(),updatedAt:new Date().toISOString()},{merge:true});
       }
-      toast("✅ Saved to Firebase: "+d.challanNo);
+      toast("✅ Saved to Firebase: "+d.challanNo+" | Created By: "+d.createdBy);
       $("printOfflineBtn").style.display="none";
     }catch(e){
       const deviceId=getDeviceId();
@@ -218,7 +272,7 @@ window.saveData=async()=>{
       queue.push({ id:d.challanNo, data:d, status:"pending", createdAt:new Date().toISOString() });
       localStorage.setItem(queueKey,JSON.stringify(queue));
       
-      toast("⏳ Saved Offline (Limit Full): "+d.challanNo);
+      toast("⏳ Saved Offline: "+d.challanNo);
       $("printOfflineBtn").style.display="inline-block";
     }
     
@@ -268,6 +322,7 @@ function printChallan(x){
     .sign div{display:flex;align-items:flex-end;justify-content:center;border-right:2px solid #000;font-weight:900;font-size:16px;padding-bottom:15px}
     .sign div:last-child{border-right:0}
     .qr{width:80px;height:80px;margin:10px auto}
+    .createdBy{margin-top:10px;text-align:center;font-size:12px;color:#666}
     @media print{body{margin:0}.page{border:0}}
   </style></head><body>
   <div class="page">
@@ -306,6 +361,11 @@ function printChallan(x){
       <div>Counted & Delivery by</div>
       <div>Counted & Received by</div>
     </div>
+    <div class="createdBy">
+      <b>Created By:</b> ${x.createdBy || x.preparedBy || 'Unknown'} | 
+      <b>Company:</b> ${x.createdByCompany || ''} | 
+      <b>Time:</b> ${new Date().toLocaleString()}
+    </div>
   </div>
   <script>
     new QRCode(document.getElementById("qr"), {text:"${location.origin+location.pathname}?challanNo=${x.challanNo}", width:80, height:80});
@@ -333,7 +393,17 @@ async function loadEdit(){
   }catch(e){}
   alert("Not found"); return false;
 }
+
+// 🔥 INITIALIZE WITH USER INFO
 async function init(){
+  // Display user info
+  $("currentUserName").innerText = user.name || user.email || "Unknown User";
+  $("currentUserCompany").innerText = user.company || "GMS TEXTILES LTD.";
+  
+  // Update time every second
+  setInterval(()=>{$("currentTime").innerText=currentTime()},1000);
+  $("currentTime").innerText=currentTime();
+  
   $("date").value=today();
   let e=await loadEdit();
   if(!e){ await loadNextNumberToBox(); addBlankRows(); syncTo(); updateTitle(); }
