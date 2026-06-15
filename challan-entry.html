@@ -137,7 +137,6 @@ window.toCompanyChange=()=>{
   $("toCompanyManual").disabled=!o;
   if(!o)$("toCompanyManual").value="";
   
-  // Auto-fill To Address based on To Company selection
   let toComp = $("toCompany").value;
   let addressField = $("toAddress");
   
@@ -189,34 +188,29 @@ function getRows(){let a=[];document.querySelectorAll("#rows tr").forEach(tr=>{l
 window.calcTotals=()=>{let r=getRows();$("grandTotal").innerText=r.reduce((a,b)=>a+b.qty,0);$("totalPkg").innerText=r.reduce((a,b)=>a+b.pkg,0);$("totalBag").innerText=r.reduce((a,b)=>a+b.bag,0)}
 function dataObj(){let rows=getRows();return {mcd:$("mcd").value,date:$("date").value,challanNo:$("challanNo").value,gatePassNo:$("gatePassNo").value,company:companyName(),companyType:$("company").value,companyManual:$("companyManual").value.trim(),companyAddress:$("companyAddress").value,toCompany:toCompanyName(),toCompanyType:$("toCompany").value,toCompanyManual:$("toCompanyManual").value.trim(),toAddress:$("toAddress").value,buyer:$("buyer").value.trim(),orderNo:$("orderNo").value.trim(),transportNo:$("transportNo").value.trim(),driverName:$("driverName").value.trim(),vehicleNo:$("vehicleNo").value.trim(),gateMs:$("gateMs").value.trim(),goodsBy:$("goodsBy").value.trim(),fromMillTo:$("fromMillTo").value.trim(),yarnCount:$("yarnCount").value.trim(),brand:$("brand").value.trim(),cardCombed:$("cardCombed").value.trim(),lotNo:$("lotNo").value.trim(),rows,grandTotalQty:rows.reduce((a,b)=>a+b.qty,0),totalPkg:rows.reduce((a,b)=>a+b.pkg,0),totalBag:rows.reduce((a,b)=>a+b.bag,0),deviceId:getDeviceId(),updatedAt:new Date().toISOString(),createdAt:editMode?undefined:new Date().toISOString()}}
 
-// 🔥 SAVE DATA: Works Online & Offline
 window.saveData=async()=>{
   try{
     let d=dataObj(); 
     if(!d.rows.length){toast("Minimum 1 row লাগবে","#dc2626");return}
     
-    // If no number generated yet, generate one
     if(!d.challanNo) {
        let data = await getNextSequentialNumber();
        if(data) { d.challanNo = data.ch; d.gatePassNo = data.gp; window.currentChallanNum = data.num; }
        else { d.challanNo = generateOfflineId(); d.gatePassNo = d.challanNo.replace("CH","GP"); }
     }
 
-    // Try Firebase
     try{
       await setDoc(doc(db,"challanGatePass",d.challanNo),d,{merge:true});
       if(window.currentSource === "firebase" && window.currentChallanNum){
          await setDoc(doc(db,"serialCounters","challan_"+yy()),{last:window.currentChallanNum,year:yy(),updatedAt:new Date().toISOString()},{merge:true});
       }
       toast("✅ Saved to Firebase: "+d.challanNo);
-      $("printOfflineBtn").style.display="none"; // Hide print offline button if saved to firebase
+      $("printOfflineBtn").style.display="none";
     }catch(e){
-      // Firebase Failed -> Save Offline
       const deviceId=getDeviceId();
       const queueKey="GMS_CHALLAN_OFFLINE_"+deviceId;
       let queue=JSON.parse(localStorage.getItem(queueKey)||"[]");
       
-      // Ensure unique ID for offline
       if(queue.find(x=>x.id===d.challanNo)) d.challanNo = generateOfflineId(); 
       d.gatePassNo = d.challanNo.replace("CH","GP");
       d.status = "pending";
@@ -225,13 +219,11 @@ window.saveData=async()=>{
       localStorage.setItem(queueKey,JSON.stringify(queue));
       
       toast("⏳ Saved Offline (Limit Full): "+d.challanNo);
-      $("printOfflineBtn").style.display="inline-block"; // Show Print Button
+      $("printOfflineBtn").style.display="inline-block";
     }
     
-    // Store last data for printing
     window.lastSavedData = d;
 
-    // Prepare for next
     if(!editMode){
       ["buyer","orderNo","transportNo","driverName","vehicleNo","yarnCount","brand","cardCombed","lotNo"].forEach(id=>$(id).value="");
       $("rows").innerHTML="";
@@ -242,7 +234,6 @@ window.saveData=async()=>{
   }catch(e){ console.error(e); toast("❌ Error: "+e.message,"#dc2626") }
 };
 
-// 🔥 PRINT OFFLINE DATA (Generates QR locally)
 window.printLastOffline=()=>{
   if(!window.lastSavedData) return alert("No data to print");
   printChallan(window.lastSavedData);
@@ -273,8 +264,8 @@ function printChallan(x){
     table{width:100%;border-collapse:collapse;font-size:14px}
     th,td{border:2px solid #000;padding:6px;height:32px}
     th{background:#eee;font-size:14px}
-    .sign{display:grid;grid-template-columns:1fr 1fr 1fr;border:2px solid #000;border-top:0;height:120px;margin-top:20px}
-    .sign div{display:flex;align-items:end;justify-content:center;border-right:2px solid #000;font-weight:900;font-size:16px;padding-bottom:10px}
+    .sign{display:grid;grid-template-columns:1fr 1fr 1fr;border:2px solid #000;border-top:0;height:180px;margin-top:20px}
+    .sign div{display:flex;align-items:flex-end;justify-content:center;border-right:2px solid #000;font-weight:900;font-size:16px;padding-bottom:15px}
     .sign div:last-child{border-right:0}
     .qr{width:80px;height:80px;margin:10px auto}
     @media print{body{margin:0}.page{border:0}}
