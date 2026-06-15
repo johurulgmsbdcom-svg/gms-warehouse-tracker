@@ -341,6 +341,11 @@ th,td{
     <option>CHEMICAL MCD</option>
     <option>GENERAL TECHNICAL MCD</option>
   </select>
+  <!-- 🔥 NEW: NAME FILTER -->
+  Prepared By:
+  <select id="nameFilter">
+    <option value="">All Users</option>
+  </select>
   <br>
   <button class="search" onclick="showReport()">🔍 Search</button>
   <button class="clear" onclick="clearFilters()">♻ Clear Filter</button>
@@ -364,12 +369,12 @@ th,td{
       <div class="chartWrap"><canvas id="mcdBarChart"></canvas></div>
     </div>
     <div class="chartCard">
-      <h4>🏢 Company Distribution</h4>
-      <div class="chartWrap"><canvas id="companyPieChart"></canvas></div>
+      <h4>👤 Plans by Prepared By</h4>
+      <div class="chartWrap"><canvas id="namePieChart"></canvas></div>
       <div class="chartStats">
         <div class="statBox"><span class="statNum" id="statTotal">0</span><span class="statLabel">Total Plans</span></div>
         <div class="statBox blue"><span class="statNum" id="statMcds">0</span><span class="statLabel">MCDs</span></div>
-        <div class="statBox purple"><span class="statNum" id="statCompanies">0</span><span class="statLabel">Companies</span></div>
+        <div class="statBox purple"><span class="statNum" id="statNames">0</span><span class="statLabel">Users</span></div>
       </div>
     </div>
     <div class="chartCard">
@@ -398,7 +403,7 @@ const app=initializeApp(firebaseConfig);
 const db=getFirestore(app);
 
 let allPlans=[];
-let mcdBarChart=null, companyPieChart=null, deliveryChart=null;
+let mcdBarChart=null, namePieChart=null, deliveryChart=null;
 
 const CHART_COLORS = [
   '#22c55e','#3b82f6','#8b5cf6','#f59e0b','#ef4444',
@@ -476,6 +481,38 @@ function renderQRCodes(){
   });
 }
 
+// 🔥 GET UNIQUE NAMES FOR FILTER
+function getUniqueNames(){
+  const names = new Set();
+  allPlans.forEach(p=>{
+    const name = p.preparedBy || 'Unknown';
+    names.add(name);
+  });
+  return Array.from(names).sort();
+}
+
+// 🔥 POPULATE NAME FILTER
+function populateNameFilter(){
+  const select = document.getElementById('nameFilter');
+  const currentVal = select.value;
+  
+  select.innerHTML = '<option value="">All Users</option>';
+  
+  const names = getUniqueNames();
+  names.forEach(name=>{
+    const opt = document.createElement('option');
+    opt.value = name;
+    opt.textContent = name;
+    select.appendChild(opt);
+  });
+  
+  if(currentVal && names.includes(currentVal)){
+    select.value = currentVal;
+  }
+  
+  console.log('👤 Name filter populated with', names.length, 'users');
+}
+
 // SMART CHART RENDERING
 function renderCharts(data){
   const chartSection = document.getElementById('chartSection');
@@ -505,6 +542,16 @@ function renderCharts(data){
   const mcdValues = Object.values(mcdCounts);
   const mcdColors = mcdLabels.map((_,i)=>CHART_COLORS[i % CHART_COLORS.length]);
   
+  // Name-wise count (Prepared By)
+  const nameCounts = {};
+  data.forEach(p=>{
+    const name = p.preparedBy || 'Unknown';
+    nameCounts[name] = (nameCounts[name] || 0) + 1;
+  });
+  
+  const nameLabels = Object.keys(nameCounts);
+  const nameValues = Object.values(nameCounts);
+  
   // Company-wise count
   const companyCounts = {};
   data.forEach(p=>{
@@ -530,11 +577,11 @@ function renderCharts(data){
   // Update stats
   document.getElementById('statTotal').innerText = data.length;
   document.getElementById('statMcds').innerText = mcdLabels.length;
-  document.getElementById('statCompanies').innerText = companyLabels.length;
+  document.getElementById('statNames').innerText = nameLabels.length;
   
   // Destroy old charts
   if(mcdBarChart) mcdBarChart.destroy();
-  if(companyPieChart) companyPieChart.destroy();
+  if(namePieChart) namePieChart.destroy();
   if(deliveryChart) deliveryChart.destroy();
   
   try{
@@ -564,15 +611,15 @@ function renderCharts(data){
       }
     });
     
-    // Company Pie Chart
-    const companyCtx = document.getElementById('companyPieChart').getContext('2d');
-    companyPieChart = new ChartLib(companyCtx, {
+    // Name Pie Chart (Prepared By)
+    const nameCtx = document.getElementById('namePieChart').getContext('2d');
+    namePieChart = new ChartLib(nameCtx, {
       type: 'doughnut',
       data: {
-        labels: companyLabels,
+        labels: nameLabels,
         datasets: [{
-          data: companyValues,
-          backgroundColor: ['#3b82f6','#22c55e','#f59e0b','#8b5cf6','#ef4444'],
+          data: nameValues,
+          backgroundColor: ['#22c55e','#3b82f6','#f59e0b','#8b5cf6','#ef4444','#06b6d4'],
           borderWidth: 3
         }]
       },
@@ -755,12 +802,15 @@ function filtered(){
   const no=document.getElementById("gateNoSearch").value.trim();
   const company=document.getElementById("companyFilter").value;
   const mcd=document.getElementById("mcdFilter").value;
+  const name=document.getElementById("nameFilter").value;
+  
   return allPlans.filter(p=>{
     if(from&&(p.date||"")<from)return false;
     if(to&&(p.date||"")>to)return false;
     if(no&&planNo(p).toLowerCase()!==no.toLowerCase())return false;
     if(company!=="All"&&p.company!==company)return false;
     if(mcd!=="All"&&p.mcd!==mcd)return false;
+    if(name && (p.preparedBy||"")!==name)return false;
     return true;
   });
 }
@@ -791,6 +841,7 @@ window.loadOfflineData=function(){
       if(t!==0)return t;
       return planNo(b).localeCompare(planNo(a));
     });
+    populateNameFilter();
     const list=filtered();
     renderCharts(list);
     const area=document.getElementById("reportArea");
@@ -823,6 +874,7 @@ window.syncAllOffline=async function(){
     alert("✅ Synced: "+synced+" | ❌ Failed: "+failed);
     window.GMS_CACHE.invalidate([CACHE_KEYS.gatePlans]);
     await loadPlans();
+    populateNameFilter();
     const list=filtered();
     renderCharts(list);
     const area=document.getElementById("reportArea");
@@ -854,6 +906,7 @@ async function autoSyncReport(){
     console.log("🔄 Auto-synced "+synced+" gate plan(s)"); 
     window.GMS_CACHE.invalidate([CACHE_KEYS.gatePlans]);
     await loadPlans();
+    populateNameFilter();
     const list=filtered();
     renderCharts(list);
     const area=document.getElementById("reportArea");
@@ -870,6 +923,7 @@ window.showReport=async function(){
   if(statusEl) statusEl.innerText = '🔍 Checking cache...';
   
   await loadPlans();
+  populateNameFilter();
   const list=filtered();
   
   // Render charts
@@ -894,6 +948,7 @@ window.clearFilters=function(){
   document.getElementById("gateNoSearch").value="";
   document.getElementById("companyFilter").value="All";
   document.getElementById("mcdFilter").value="All";
+  document.getElementById("nameFilter").value="";
   showReport();
 };
 
