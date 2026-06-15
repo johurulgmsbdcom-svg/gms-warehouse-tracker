@@ -64,7 +64,6 @@ body.singleView .noDataBox{display:block!important}
 .offlineBadge{background:#f59e0b!important;color:#000!important;padding:2px 6px!important;border-radius:4px!important;font-size:10px!important;font-weight:900!important;margin-left:4px!important}
 .syncedBadge{background:#22c55e!important;color:#fff!important;padding:2px 6px!important;border-radius:4px!important;font-size:10px!important;font-weight:900!important;margin-left:4px!important}
 
-/* 🔥 CACHE STATUS BAR */
 .cacheStatusBar{
   display:flex;align-items:center;justify-content:center;gap:10px;
   padding:6px 12px;font-size:11px;font-weight:700;
@@ -94,7 +93,6 @@ body.singleView .noDataBox{display:block!important}
 <div class="wrap">
   <div class="head"><h2 id="reportCompanyTitle">GMS TEXTILES LTD.</h2><h3>Delivery Challan & Gate Pass Report</h3></div>
   
-  <!-- 🔥 CACHE STATUS BAR -->
   <div class="cacheStatusBar">
     <div class="cacheDot"></div>
     <span id="cacheStatusText">📦 Cache Ready</span>
@@ -106,7 +104,6 @@ body.singleView .noDataBox{display:block!important}
     <div class="grid">
       <div><label>Company</label><select id="companyFilter" onchange="updateReportHeader();showReport()"><option>All</option><option>GMS TEXTILES LTD.</option><option>GMS COMPOSITE KNITTING IND LTD.</option><option>OTHER FACTORY</option></select></div>
       <div><label>To Company</label><select id="toCompanyFilter" onchange="showReport()"><option>All</option><option>GMS TEXTILES LTD.</option><option>GMS COMPOSITE KNITTING IND LTD.</option><option>OTHER FACTORY</option></select></div>
-      <!-- 🔥 MCD FILTER - ALL SELECT KORLE ALL DATA, SPECIFIC KORLE SHUDU OI MCD -->
       <div><label>MCD</label><select id="mcdFilter" onchange="showReport()"><option>All</option><option>ACCESSORIES MCD</option><option>GREY FABRIC MCD</option><option>SHIPMENT MCD</option><option>BILLING SECTION</option><option>NEEDLE MCD</option><option>OUTER WEAR MCD</option><option>YARN MCD</option><option>PRINTING MCD</option><option>JHUT MCD</option><option>GENERAL MCD</option><option>LEFTOVER MCD</option><option>FINISH FABRIC MCD</option><option>YARN DYEING MCD</option><option>CHEMICAL MCD</option><option>GENERAL TECHNICAL MCD</option></select></div>
       <div><label>Month</label><input type="month" id="monthFilter"></div>
       <div><label>Single Date</label><input type="date" id="singleDate"></div>
@@ -148,9 +145,6 @@ const app=initializeApp(firebaseConfig), db=getFirestore(app);
 const $=id=>document.getElementById(id);
 let all=[],cur=[];
 
-// ================================================================
-// 📦 SMART CACHE MANAGER - OFFLINE MODE
-// ================================================================
 window.GMS_CACHE = {
   CACHE_KEY: 'GMS_CHALLAN_SMART_CACHE',
   READ_COUNT_KEY: 'GMS_CHALLAN_READ_COUNT_TODAY',
@@ -212,12 +206,17 @@ window.GMS_CACHE = {
 };
 
 const CACHE_KEYS = { challanGatePass: 'challan_gatepass_cache' };
-const LOCAL_TIMESTAMPS_KEY = 'GMS_CHALLAN_TIMESTAMPS';
 
 function esc(v){return String(v??"").replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[m]))}
 function n(v){return Number(v)||0}
 function fmt(v){return n(v).toLocaleString("en-US")}
-function same(a,b){return String(a||"").trim().toUpperCase()===String(b||"").trim().toUpperCase()}
+
+// 🔥 FIXED: PROPER STRING COMPARISON
+function same(a,b){
+  if(!a || !b) return false;
+  return String(a).trim().toUpperCase() === String(b).trim().toUpperCase();
+}
+
 function link(no){return location.origin+location.pathname+"?challanNo="+encodeURIComponent(no||"")}
 
 function applyUrlFilters(){
@@ -249,40 +248,67 @@ function sorter(a,b){
   return String(b.challanNo||"").localeCompare(String(a.challanNo||""));
 }
 
-// 🔥 FILTER FUNCTION - MCD FILTER LOGIC
+// 🔥 FIXED: PROPER MCD FILTER LOGIC
 function filter(){
-  let company=$("companyFilter").value,toCompany=$("toCompanyFilter").value,mcd=$("mcdFilter").value,
-  month=$("monthFilter").value,single=$("singleDate").value,from=$("fromDate").value,to=$("toDate").value,
-  ch=$("challanSearch").value.toLowerCase().trim(),gp=$("gateSearch").value.toLowerCase().trim(),
-  txt=$("textSearch").value.toLowerCase().trim();
+  let company=$("companyFilter").value,
+      toCompany=$("toCompanyFilter").value,
+      mcd=$("mcdFilter").value,
+      month=$("monthFilter").value,
+      single=$("singleDate").value,
+      from=$("fromDate").value,
+      to=$("toDate").value,
+      ch=$("challanSearch").value.toLowerCase().trim(),
+      gp=$("gateSearch").value.toLowerCase().trim(),
+      txt=$("textSearch").value.toLowerCase().trim();
+  
+  console.log('🔍 Filtering with MCD:', mcd);
   
   return all.filter(x=>{
     let d=x.date||"";
-    if(single&&d!==single)return false;
-    if(month&&d.slice(0,7)!==month)return false;
-    if(from&&d<from)return false;
-    if(to&&d>to)return false;
-    if(ch&&!(x.challanNo||"").toLowerCase().includes(ch))return false;
-    if(gp&&!(x.gatePassNo||"").toLowerCase().includes(gp))return false;
     
-    // 🔥 MCD FILTER LOGIC
-    if(mcd!=="All"){
-      if(mcd==="OTHER FACTORY"){if(x.companyType!=="OTHER FACTORY")return false}
-      else if(!same(x.mcd,mcd))return false; // SHUDU SELECTED MCD ER DATA ASBE
+    // Date filters
+    if(single && d!==single) return false;
+    if(month && d.slice(0,7)!==month) return false;
+    if(from && d<from) return false;
+    if(to && d>to) return false;
+    
+    // Challan/Gate Pass number filters
+    if(ch && !(x.challanNo||"").toLowerCase().includes(ch)) return false;
+    if(gp && !(x.gatePassNo||"").toLowerCase().includes(gp)) return false;
+    
+    // 🔥 MCD FILTER - STRICT MATCH
+    if(mcd && mcd!=="All"){
+      if(!same(x.mcd, mcd)){
+        console.log('❌ Filtered out - MCD mismatch:', x.mcd, '!=', mcd);
+        return false;
+      }
+      console.log('✅ MCD match:', x.mcd);
     }
     
-    if(company!=="All"){
-      if(company==="OTHER FACTORY"){if(x.companyType!=="OTHER FACTORY")return false}
-      else if(!same(x.company,company))return false;
+    // Company filter
+    if(company && company!=="All"){
+      if(company==="OTHER FACTORY"){
+        if(x.companyType!=="OTHER FACTORY") return false;
+      } else if(!same(x.company, company)){
+        return false;
+      }
     }
-    if(toCompany!=="All"){
-      if(toCompany==="OTHER FACTORY"){if(x.toCompanyType!=="OTHER FACTORY")return false}
-      else if(!same(x.toCompany,toCompany))return false;
+    
+    // To Company filter
+    if(toCompany && toCompany!=="All"){
+      if(toCompany==="OTHER FACTORY"){
+        if(x.toCompanyType!=="OTHER FACTORY") return false;
+      } else if(!same(x.toCompany, toCompany)){
+        return false;
+      }
     }
+    
+    // Text search
     if(txt){
       let hay=[x.buyer,x.vehicleNo,x.toCompany,x.company,x.driverName,x.transportNo,x.mcd,x.challanNo,x.gatePassNo].join(" ").toLowerCase();
-      if(!hay.includes(txt))return false;
+      if(!hay.includes(txt)) return false;
     }
+    
     return true;
   }).sort(sorter);
 }
@@ -328,7 +354,6 @@ function gate(x){
 
 function setHtml(x,i){return `<div class="reportSet"><div class="actionBar"><button class="purple" onclick="printOne(${i})">Print This</button><button class="orange" onclick="editOne('${esc(x.challanNo)}')">Edit</button><button class="red" onclick="delOne('${esc(x.challanNo)}','${x._source||"firebase"}')">Delete</button><span class="createdByBadge">Created By: ${esc(x.preparedBy||x.createdBy||"")}</span></div>${challan(x)}${gate(x)}</div>`}
 
-// 🔥 LOAD OFFLINE DATA FROM LOCALSTORAGE
 window.loadOfflineData=function(){
   let offlineCount=0;
   for(let i=0;i<localStorage.length;i++){
@@ -354,7 +379,6 @@ window.loadOfflineData=function(){
   }else{ alert("📦 No offline data found"); }
 }
 
-// 🔥 SYNC ALL OFFLINE DATA TO FIREBASE
 window.syncAllOffline=async function(){
   let synced=0,failed=0;
   for(let i=0;i<localStorage.length;i++){
@@ -384,7 +408,6 @@ window.syncAllOffline=async function(){
   }else{ alert("✅ No pending offline data"); }
 }
 
-// 🔥 AUTO SYNC EVERY 60 SECONDS
 async function autoSyncReport(){
   let synced=0;
   for(let i=0;i<localStorage.length;i++){
@@ -411,15 +434,16 @@ async function autoSyncReport(){
 setInterval(autoSyncReport, 60000);
 setTimeout(autoSyncReport, 3000);
 
-// 🔥 SMART LOAD WITH CACHE
 window.showReport=async()=>{
   try{
     updateReportHeader();
     let statusEl = $('cacheStatusText');
+    let selectedMCD = $("mcdFilter").value;
+    
+    console.log('🔍 showReport called - Selected MCD:', selectedMCD);
     
     if(statusEl) statusEl.innerText = '🔍 Checking cache...';
     
-    // Check cache first
     let cached = window.GMS_CACHE.get(CACHE_KEYS.challanGatePass);
     
     if(cached !== null){
@@ -427,7 +451,6 @@ window.showReport=async()=>{
       if(statusEl) statusEl.innerText = '📦 Cache loaded';
       all = cached;
     }else{
-      // Load from Firebase
       if(statusEl) statusEl.innerText = '🔥 Loading from Firebase...';
       console.log('🔥 Loading from Firebase');
       await load();
@@ -435,19 +458,29 @@ window.showReport=async()=>{
       window.GMS_CACHE.incRead(all.length);
     }
     
-    // Apply filters (including MCD filter)
+    // Apply filters
     cur=filter();
+    
+    console.log('📊 Total records:', all.length, 'Filtered:', cur.length, 'MCD Filter:', selectedMCD);
     
     const params=new URLSearchParams(location.search);
     const hasSpecific=params.get("challanNo");
     
     if(cur.length===0 && all.length>0 && !hasSpecific){
-      $("summary").innerHTML=`<div class="filterWarning">Selected MCD/Company filter-e data paowa jai nai. Tai all saved Challan/Gate Pass show kora holo.</div>`;
+      if(selectedMCD && selectedMCD!=="All"){
+        $("summary").innerHTML=`<div class="filterWarning">"${selectedMCD}" - ei MCD te kono data paowa jay ni. Tai all data show kora holo.</div>`;
+      }else{
+        $("summary").innerHTML=`<div class="filterWarning">Selected filter-e data paowa jai nai. Tai all saved Challan/Gate Pass show kora holo.</div>`;
+      }
       cur=[...all].sort(sorter);
+    }else if(cur.length===0 && hasSpecific){
+      $("summary").innerHTML=`<div class="noDataBox">Challan No "${hasSpecific}" er kono data paowa jay ni.</div>`;
+    }else{
+      $("summary").innerHTML="";
     }
     
     summary(cur);
-    $("area").innerHTML=cur.length?cur.map(setHtml).join(""):`<div class="noDataBox">No Challan Found. Please check Challan No or Firebase save.</div>`;
+    $("area").innerHTML=cur.length?cur.map(setHtml).join(""):`<div class="noDataBox">No Challan Found</div>`;
     setTimeout(qr,100);
     
     if(statusEl) statusEl.innerText = '✅ Report loaded ('+cur.length+' records)';
@@ -464,7 +497,6 @@ window.delOne=async(no,source)=>{if(confirm("Delete?")){if(source==="offline"){f
 window.printOne=i=>{let card=document.querySelectorAll(".reportSet")[i];if(!card)return;let w=window.open("","_blank");w.document.write(`<html><head><meta charset="UTF-8"><title>Print</title><script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"><\/script><style>${document.querySelector("style").innerHTML}</style></head><body><div class="wrap">${card.outerHTML}</div><script>function link(no){return "${location.origin+location.pathname}"+"?challanNo="+encodeURIComponent(no||"")}document.querySelectorAll(".actionBar").forEach(e=>e.remove());document.querySelectorAll("[data-qr]").forEach(e=>{e.innerHTML="";try{new QRCode(e,{text:link(e.dataset.qr),width:60,height:60,correctLevel:QRCode.CorrectLevel.M})}catch(e){}});setTimeout(()=>print(),700)<\/script></body></html>`);w.document.close()}
 window.excel=()=>{let b=new Blob([$("summary").innerHTML],{type:"application/vnd.ms-excel"}),a=document.createElement("a");a.href=URL.createObjectURL(b);a.download="challan-gate-pass.xls";a.click()}
 
-// 🔥 REALTIME SYNC LISTENER
 function setupRealtimeSync(){
   console.log('🔔 Setting up realtime sync...');
   var challanCol = collection(db, 'challanGatePass');
@@ -486,7 +518,6 @@ applyUrlFilters();
 let p=new URLSearchParams(location.search).get("challanNo");
 if(p){document.body.classList.add("singleView");$("challanSearch").value=p}
 
-// Initialize
 (function(){
   var c = window.GMS_CACHE.getReadCount();
   var el = document.getElementById('readCounter');
@@ -496,7 +527,6 @@ if(p){document.body.classList.add("singleView");$("challanSearch").value=p}
 setupRealtimeSync();
 showReport();
 
-// Auto refresh every 30 seconds
 setInterval(function(){
   if(!document.hidden){
     console.log('⏰ Auto-refresh triggered');
@@ -505,9 +535,9 @@ setInterval(function(){
 }, 30000);
 
 console.log('%c═══════════════════════════════════════════', 'color: #22c55e; font-weight: bold;');
-console.log('%c  📦 CHALLAN REPORT - OFFLINE MODE READY', 'color: #22c55e; font-weight: bold; font-size: 14px;');
+console.log('%c  📦 CHALLAN REPORT - MCD FILTER FIXED', 'color: #22c55e; font-weight: bold; font-size: 14px;');
 console.log('%c═══════════════════════════════════════════', 'color: #22c55e; font-weight: bold;');
-console.log('%c  ✅ MCD Filter: Active', 'color: #3b82f6;');
+console.log('%c  ✅ MCD Filter: Strict Match', 'color: #3b82f6;');
 console.log('%c  ✅ Smart Cache: Active', 'color: #22c55e;');
 console.log('%c  ✅ Offline Mode: Active', 'color: #f59e0b;');
 console.log('%c  ✅ Realtime Sync: Active', 'color: #8b5cf6;');
