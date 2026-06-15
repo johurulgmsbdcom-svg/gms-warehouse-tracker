@@ -308,7 +308,7 @@ th,td{
 <div class="cacheStatusBar">
   <div class="cacheDot"></div>
   <span id="cacheStatusText">📦 Cache Ready</span>
-  <span class="cacheReadCount">🔥 Firebase Reads: <b id="readCounter">0</b></span>
+  <span class="cacheReadCount"> Firebase Reads: <b id="readCounter">0</b></span>
   <span class="syncStatus">🔄 Sync: <b id="syncStatus">Active</b></span>
 </div>
 
@@ -341,9 +341,9 @@ th,td{
     <option>CHEMICAL MCD</option>
     <option>GENERAL TECHNICAL MCD</option>
   </select>
-  <!-- 🔥 NAME FILTER - MCD অনুযায়ী update হবে -->
+  <!-- 🔥 NAME FILTER - onchange এ chart update হবে -->
   Prepared By:
-  <select id="nameFilter">
+  <select id="nameFilter" onchange="showReport()">
     <option value="">All Users</option>
   </select>
   <br>
@@ -488,9 +488,7 @@ function getUniqueNamesForMCD(){
   
   const names = new Set();
   allPlans.forEach(p=>{
-    // MCD filter অনুযায়ী names filter কর
     if(selectedMCD !== "All" && p.mcd !== selectedMCD) return;
-    // Company filter অনুযায়ী names filter কর
     if(selectedCompany !== "All" && p.company !== selectedCompany) return;
     
     const name = p.preparedBy || 'Unknown';
@@ -502,7 +500,6 @@ function getUniqueNamesForMCD(){
 // 🔥 UPDATE NAME FILTER BASED ON MCD SELECTION
 window.updateNameFilter=function(){
   const select = document.getElementById('nameFilter');
-  const currentVal = select.value;
   
   select.innerHTML = '<option value="">All Users</option>';
   
@@ -514,17 +511,17 @@ window.updateNameFilter=function(){
     select.appendChild(opt);
   });
   
-  // Clear name filter when MCD changes
-  select.value = "";
-  
   console.log('👤 Name filter updated for MCD:', document.getElementById('mcdFilter').value, '- Users:', names.length);
 }
 
-// SMART CHART RENDERING
+// 🔥 SMART CHART RENDERING - FIXED
 function renderCharts(data){
+  console.log('📊 renderCharts called with', data ? data.length : 0, 'records');
+  
   const chartSection = document.getElementById('chartSection');
   
   if(!data || data.length===0){
+    console.log('️ No data for charts');
     chartSection.style.display = 'none';
     return;
   }
@@ -532,7 +529,7 @@ function renderCharts(data){
   chartSection.style.display = 'block';
   
   if(typeof window.Chart === 'undefined'){
-    console.error('Chart.js not loaded!');
+    console.error('❌ Chart.js not loaded!');
     return;
   }
   
@@ -549,6 +546,8 @@ function renderCharts(data){
   const mcdValues = Object.values(mcdCounts);
   const mcdColors = mcdLabels.map((_,i)=>CHART_COLORS[i % CHART_COLORS.length]);
   
+  console.log('📊 MCD Chart Data:', mcdCounts);
+  
   // Name-wise count (Prepared By)
   const nameCounts = {};
   data.forEach(p=>{
@@ -558,6 +557,8 @@ function renderCharts(data){
   
   const nameLabels = Object.keys(nameCounts);
   const nameValues = Object.values(nameCounts);
+  
+  console.log('👤 Name Chart Data:', nameCounts);
   
   // Delivery volume by date
   const deliveryByDate = {};
@@ -570,6 +571,8 @@ function renderCharts(data){
   
   const dateLabels = Object.keys(deliveryByDate).sort();
   const deliveryValues = dateLabels.map(d=>deliveryByDate[d]);
+  
+  console.log('📈 Delivery Chart Data:', deliveryByDate);
   
   // Update stats
   document.getElementById('statTotal').innerText = data.length;
@@ -655,8 +658,10 @@ function renderCharts(data){
         }
       }
     });
+    
+    console.log('✅ Charts rendered successfully');
   }catch(e){
-    console.error('Chart error:', e);
+    console.error('❌ Chart error:', e);
   }
 }
 
@@ -740,7 +745,7 @@ function renderNormal(p,i){
     <div class="actionBar noPrint">
       <button class="print" onclick="printSingle(${i})">🖨 Print This</button>
       <button class="edit" onclick="editPlan('${esc(planNo(p))}')">✏ Edit</button>
-      <button class="delete" onclick="deletePlan('${esc(planNo(p))}','${p._source||"firebase"}')">🗑 Delete</button>
+      <button class="delete" onclick="deletePlan('${esc(planNo(p))}','${p._source||"firebase"}')"> Delete</button>
     </div>
     <div class="tableWrap">
       <table>
@@ -775,7 +780,7 @@ function renderGrey(p,i){
     </div>
     <div class="qrCenter"><div class="qrMini" data-qr-no="${esc(planNo(p))}"></div></div>
     <div class="actionBar noPrint">
-      <button class="print" onclick="printSingle(${i})">🖨 Print This</button>
+      <button class="print" onclick="printSingle(${i})"> Print This</button>
       <button class="edit" onclick="editPlan('${esc(planNo(p))}')">✏ Edit</button>
       <button class="delete" onclick="deletePlan('${esc(planNo(p))}','${p._source||"firebase"}')">🗑 Delete</button>
     </div>
@@ -801,7 +806,9 @@ function filtered(){
   const mcd=document.getElementById("mcdFilter").value;
   const name=document.getElementById("nameFilter").value;
   
-  return allPlans.filter(p=>{
+  console.log('🔍 Filter params:', {from, to, no, company, mcd, name});
+  
+  const result = allPlans.filter(p=>{
     if(from&&(p.date||"")<from)return false;
     if(to&&(p.date||"")>to)return false;
     if(no&&planNo(p).toLowerCase()!==no.toLowerCase())return false;
@@ -810,6 +817,9 @@ function filtered(){
     if(name && (p.preparedBy||"")!==name)return false;
     return true;
   });
+  
+  console.log('🔍 Filtered result:', result.length, 'plans');
+  return result;
 }
 
 window.loadOfflineData=function(){
@@ -868,7 +878,7 @@ window.syncAllOffline=async function(){
     }
   }
   if(synced>0 || failed>0){
-    alert("✅ Synced: "+synced+" | ❌ Failed: "+failed);
+    alert("✅ Synced: "+synced+" |  Failed: "+failed);
     window.GMS_CACHE.invalidate([CACHE_KEYS.gatePlans]);
     await loadPlans();
     updateNameFilter();
@@ -915,7 +925,10 @@ async function autoSyncReport(){
 setInterval(autoSyncReport, 60000);
 setTimeout(autoSyncReport, 3000);
 
+// 🔥 FIXED: showReport with chart update
 window.showReport=async function(){
+  console.log('🔍 showReport called');
+  
   const statusEl = document.getElementById('cacheStatusText');
   if(statusEl) statusEl.innerText = '🔍 Checking cache...';
   
@@ -923,8 +936,10 @@ window.showReport=async function(){
   updateNameFilter();
   const list=filtered();
   
-  // Render charts
-  setTimeout(()=>{ renderCharts(list); }, 100);
+  console.log(' Total filtered plans:', list.length);
+  
+  // 🔥 CRITICAL: Render charts with filtered data
+  renderCharts(list);
   
   const area=document.getElementById("reportArea");
   if(list.length===0){
