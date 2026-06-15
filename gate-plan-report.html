@@ -317,13 +317,13 @@ th,td{
   To: <input type="date" id="toDate">
   Gate Plan No: <input id="gateNoSearch" placeholder="GP-2026-0001" style="width:145px">
   Company:
-  <select id="companyFilter">
+  <select id="companyFilter" onchange="updateNameFilter()">
     <option>All</option>
     <option>GMS Textiles Ltd.</option>
     <option>GMS Composite Knitting Ind Ltd.</option>
   </select>
   MCD:
-  <select id="mcdFilter">
+  <select id="mcdFilter" onchange="updateNameFilter()">
     <option>All</option>
     <option>ACCESSORIES MCD</option>
     <option>GREY FABRIC MCD</option>
@@ -341,7 +341,7 @@ th,td{
     <option>CHEMICAL MCD</option>
     <option>GENERAL TECHNICAL MCD</option>
   </select>
-  <!-- 🔥 NEW: NAME FILTER -->
+  <!-- 🔥 NAME FILTER - MCD অনুযায়ী update হবে -->
   Prepared By:
   <select id="nameFilter">
     <option value="">All Users</option>
@@ -481,24 +481,32 @@ function renderQRCodes(){
   });
 }
 
-// 🔥 GET UNIQUE NAMES FOR FILTER
-function getUniqueNames(){
+// 🔥 GET UNIQUE NAMES FOR SPECIFIC MCD
+function getUniqueNamesForMCD(){
+  const selectedMCD = document.getElementById('mcdFilter').value;
+  const selectedCompany = document.getElementById('companyFilter').value;
+  
   const names = new Set();
   allPlans.forEach(p=>{
+    // MCD filter অনুযায়ী names filter কর
+    if(selectedMCD !== "All" && p.mcd !== selectedMCD) return;
+    // Company filter অনুযায়ী names filter কর
+    if(selectedCompany !== "All" && p.company !== selectedCompany) return;
+    
     const name = p.preparedBy || 'Unknown';
     names.add(name);
   });
   return Array.from(names).sort();
 }
 
-// 🔥 POPULATE NAME FILTER
-function populateNameFilter(){
+// 🔥 UPDATE NAME FILTER BASED ON MCD SELECTION
+window.updateNameFilter=function(){
   const select = document.getElementById('nameFilter');
   const currentVal = select.value;
   
   select.innerHTML = '<option value="">All Users</option>';
   
-  const names = getUniqueNames();
+  const names = getUniqueNamesForMCD();
   names.forEach(name=>{
     const opt = document.createElement('option');
     opt.value = name;
@@ -506,11 +514,10 @@ function populateNameFilter(){
     select.appendChild(opt);
   });
   
-  if(currentVal && names.includes(currentVal)){
-    select.value = currentVal;
-  }
+  // Clear name filter when MCD changes
+  select.value = "";
   
-  console.log('👤 Name filter populated with', names.length, 'users');
+  console.log('👤 Name filter updated for MCD:', document.getElementById('mcdFilter').value, '- Users:', names.length);
 }
 
 // SMART CHART RENDERING
@@ -551,16 +558,6 @@ function renderCharts(data){
   
   const nameLabels = Object.keys(nameCounts);
   const nameValues = Object.values(nameCounts);
-  
-  // Company-wise count
-  const companyCounts = {};
-  data.forEach(p=>{
-    const company = p.company || 'Unknown';
-    companyCounts[company] = (companyCounts[company] || 0) + 1;
-  });
-  
-  const companyLabels = Object.keys(companyCounts);
-  const companyValues = Object.values(companyCounts);
   
   // Delivery volume by date
   const deliveryByDate = {};
@@ -841,7 +838,7 @@ window.loadOfflineData=function(){
       if(t!==0)return t;
       return planNo(b).localeCompare(planNo(a));
     });
-    populateNameFilter();
+    updateNameFilter();
     const list=filtered();
     renderCharts(list);
     const area=document.getElementById("reportArea");
@@ -874,7 +871,7 @@ window.syncAllOffline=async function(){
     alert("✅ Synced: "+synced+" | ❌ Failed: "+failed);
     window.GMS_CACHE.invalidate([CACHE_KEYS.gatePlans]);
     await loadPlans();
-    populateNameFilter();
+    updateNameFilter();
     const list=filtered();
     renderCharts(list);
     const area=document.getElementById("reportArea");
@@ -906,7 +903,7 @@ async function autoSyncReport(){
     console.log("🔄 Auto-synced "+synced+" gate plan(s)"); 
     window.GMS_CACHE.invalidate([CACHE_KEYS.gatePlans]);
     await loadPlans();
-    populateNameFilter();
+    updateNameFilter();
     const list=filtered();
     renderCharts(list);
     const area=document.getElementById("reportArea");
@@ -923,7 +920,7 @@ window.showReport=async function(){
   if(statusEl) statusEl.innerText = '🔍 Checking cache...';
   
   await loadPlans();
-  populateNameFilter();
+  updateNameFilter();
   const list=filtered();
   
   // Render charts
@@ -949,6 +946,7 @@ window.clearFilters=function(){
   document.getElementById("companyFilter").value="All";
   document.getElementById("mcdFilter").value="All";
   document.getElementById("nameFilter").value="";
+  updateNameFilter();
   showReport();
 };
 
