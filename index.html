@@ -20,6 +20,7 @@
 --red:#ef4444;
 --yellow:#f59e0b;
 --purple:#8b5cf6;
+--cyan:#06b6d4;
 --shadow:0 10px 40px rgba(0,0,0,.4);
 }
 body.light{
@@ -442,39 +443,172 @@ box-shadow:0 2px 10px rgba(0,0,0,0.05);min-height:65px;
 body.light .entryCard,body.light .reportCard{background:linear-gradient(135deg,#ffffff 0%,#f8fafc 100%);border-color:#e2e8f0;}
 .entryCard:hover,.reportCard:hover{transform:translateY(-3px);box-shadow:0 8px 25px rgba(59,130,246,0.15);border-color:rgba(59,130,246,0.3);}
 .entryCard i,.reportCard i{font-size:16px;color:var(--blue);}
-/* ===== ATTENDANCE 6 CARDS ===== */
-.attendance-grid{
-display:grid;
-grid-template-columns:repeat(auto-fit,minmax(180px,1fr));
-gap:14px;
+/* ===== GENERAL MCD / ATTENDANCE SPECIAL CHART BOX ===== */
+.generalMcdBox{
+background:linear-gradient(135deg,var(--card) 0%,var(--card2) 100%);
+border:2px solid var(--purple);
+border-radius:16px;
+padding:20px;
 margin-bottom:20px;
-}
-.att-card{
-background:var(--card);
-border-radius:14px;
-padding:18px;
-text-align:center;
-box-shadow:0 4px 15px rgba(0,0,0,0.15);
-transition:all 0.3s;
-border-top:4px solid var(--blue);
 cursor:pointer;
+transition:all 0.3s cubic-bezier(0.4,0,0.2,1);
+position:relative;
+overflow:hidden;
+box-shadow:0 4px 20px rgba(139,92,246,0.2);
 }
-.att-card:hover{transform:translateY(-4px);box-shadow:0 8px 25px rgba(0,0,0,0.2);}
-.att-card .att-icon{font-size:28px;margin-bottom:8px;}
-.att-card .att-value{font-size:28px;font-weight:800;margin-bottom:4px;}
-.att-card .att-label{font-size:11px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:0.5px;}
-.att-card.total{border-top-color:#3b82f6;}
-.att-card.total .att-value{color:#3b82f6;}
-.att-card.present{border-top-color:#10b981;}
-.att-card.present .att-value{color:#10b981;}
-.att-card.leave{border-top-color:#f59e0b;}
-.att-card.leave .att-value{color:#f59e0b;}
-.att-card.absent{border-top-color:#ef4444;}
-.att-card.absent .att-value{color:#ef4444;}
-.att-card.medical{border-top-color:#8b5cf6;}
-.att-card.medical .att-value{color:#8b5cf6;}
-.att-card.offday{border-top-color:#06b6d4;}
-.att-card.offday .att-value{color:#06b6d4;}
+.generalMcdBox:hover{
+transform:translateY(-4px);
+box-shadow:0 12px 30px rgba(139,92,246,0.35);
+border-color:var(--blue);
+}
+.generalMcdBox::before{
+content:'';
+position:absolute;
+top:-50%;right:-50%;
+width:100%;height:100%;
+background:radial-gradient(circle,rgba(139,92,246,0.1),transparent);
+pointer-events:none;
+}
+.generalMcdHeader{
+display:flex;
+justify-content:space-between;
+align-items:center;
+margin-bottom:16px;
+position:relative;
+z-index:1;
+}
+.generalMcdHeader h3{
+font-size:16px;
+font-weight:800;
+background:linear-gradient(135deg,var(--blue),var(--purple));
+-webkit-background-clip:text;
+-webkit-text-fill-color:transparent;
+background-clip:text;
+margin:0;
+display:flex;
+align-items:center;
+gap:10px;
+}
+.generalMcdBadge{
+background:linear-gradient(135deg,var(--green),#059669);
+color:#fff;
+padding:5px 12px;
+border-radius:20px;
+font-size:10px;
+font-weight:700;
+letter-spacing:0.5px;
+}
+.generalMcdChartCanvas{
+max-height:260px!important;
+position:relative;
+z-index:1;
+}
+.generalMcdStats{
+display:grid;
+grid-template-columns:repeat(auto-fit,minmax(120px,1fr));
+gap:10px;
+margin-top:16px;
+position:relative;
+z-index:1;
+}
+.generalMcdStat{
+background:rgba(59,130,246,0.08);
+border:1px solid rgba(59,130,246,0.2);
+border-radius:10px;
+padding:12px;
+text-align:center;
+}
+.generalMcdStat .label{
+font-size:10px;
+color:var(--muted);
+text-transform:uppercase;
+font-weight:600;
+letter-spacing:0.5px;
+margin-bottom:4px;
+}
+.generalMcdStat .value{
+font-size:18px;
+font-weight:800;
+color:var(--green);
+}
+.generalMcdClickHint{
+text-align:center;
+margin-top:12px;
+font-size:11px;
+color:var(--muted);
+font-weight:600;
+position:relative;
+z-index:1;
+}
+.generalMcdClickHint i{
+color:var(--blue);
+margin-right:4px;
+}
+/* ===== ATTENDANCE 6-CARD SMART LAYOUT ===== */
+.attendanceSixCardGrid{
+display:grid;
+grid-template-columns:repeat(6,1fr);
+gap:12px;
+margin-top:16px;
+position:relative;
+z-index:1;
+}
+@media(max-width:1100px){.attendanceSixCardGrid{grid-template-columns:repeat(3,1fr);}}
+@media(max-width:600px){.attendanceSixCardGrid{grid-template-columns:repeat(2,1fr);}}
+.attCard{
+background:linear-gradient(135deg,var(--card) 0%,var(--card2) 100%);
+border-radius:14px;
+padding:18px 12px;
+text-align:center;
+position:relative;
+overflow:hidden;
+transition:all 0.3s cubic-bezier(0.4,0,0.2,1);
+border:1px solid rgba(255,255,255,0.05);
+box-shadow:0 4px 15px rgba(0,0,0,0.2);
+}
+.attCard::before{
+content:'';
+position:absolute;
+top:0;left:0;right:0;
+height:4px;
+border-radius:4px 4px 0 0;
+}
+.attCard:hover{
+transform:translateY(-4px);
+box-shadow:0 8px 25px rgba(0,0,0,0.3);
+}
+.attCard.total::before{background:linear-gradient(90deg,#3b82f6,#2563eb);}
+.attCard.present::before{background:linear-gradient(90deg,#10b981,#059669);}
+.attCard.leave::before{background:linear-gradient(90deg,#f59e0b,#d97706);}
+.attCard.absent::before{background:linear-gradient(90deg,#ef4444,#dc2626);}
+.attCard.medical::before{background:linear-gradient(90deg,#8b5cf6,#7c3aed);}
+.attCard.offday::before{background:linear-gradient(90deg,#06b6d4,#0891b2);}
+.attCard .attIcon{
+font-size:28px;
+margin-bottom:8px;
+display:block;
+}
+.attCard .attValue{
+font-size:26px;
+font-weight:800;
+display:block;
+margin-bottom:4px;
+letter-spacing:-0.5px;
+}
+.attCard .attLabel{
+font-size:10px;
+font-weight:700;
+text-transform:uppercase;
+letter-spacing:1px;
+color:var(--muted);
+display:block;
+}
+.attCard.total .attValue{color:#3b82f6;}
+.attCard.present .attValue{color:#10b981;}
+.attCard.leave .attValue{color:#f59e0b;}
+.attCard.absent .attValue{color:#ef4444;}
+.attCard.medical .attValue{color:#8b5cf6;}
+.attCard.offday .attValue{color:#06b6d4;}
 /* ===== LIVE SIGNAL & STATS ===== */
 .liveSignalCard{
 background:var(--card);border:1px solid rgba(16,185,129,0.2);border-radius:16px;
@@ -696,7 +830,7 @@ box-shadow:0 8px 32px rgba(0,0,0,0.4);z-index:99998;max-width:90%;width:400px;
 <div class="pwa-offline-bar" id="pwaOfflineBar">
 <span class="pwa-offline-icon">📴</span>
 <span class="pwa-offline-text">Offline Mode - Data saved locally</span>
-<button class="pwa-sync-btn" id="pwaSyncBtn" onclick="gmsPWA.manualSync()"> Sync Now</button>
+<button class="pwa-sync-btn" id="pwaSyncBtn" onclick="gmsPWA.manualSync()">🔄 Sync Now</button>
 </div>
 </div>
 <!-- SESSION WARNING MODAL -->
@@ -736,17 +870,17 @@ box-shadow:0 8px 32px rgba(0,0,0,0.4);z-index:99998;max-width:90%;width:400px;
 </div>
 </div>
 <div class="companySwitch">
-<button id="btnTextile" class="active" onclick="switchCompany('GMS TEXTILES LTD')"> Textiles</button>
-<button id="btnComposite" onclick="switchCompany('GMS COMPOSITE KNITTING')">🏢 Composite</button>
+<button id="btnTextile" class="active" onclick="switchCompany('GMS TEXTILES LTD')">🏭 Textiles</button>
+<button id="btnComposite" onclick="switchCompany('GMS COMPOSITE KNITTING')"> Composite</button>
 </div>
 </div>
 <div class="sidebarNav">
 <button class="active" onclick="openPage('home',this)">🏠 Dashboard</button>
 <button onclick="openPage('entry',this)">➕ New Entry</button>
 <button onclick="openPage('reports',this)">📑 Reports</button>
-<button id="needleNav" onclick="openPage('needle',this)">🪡 Needle</button>
-<button id="adminNav" onclick="location.href='admin.html'">⚙️ Admin</button>
-<button id="manpowerNav" onclick="location.href='manpower.html'">👨‍💼 Manpower</button>
+<button id="needleNav" onclick="openPage('needle',this)"> Needle</button>
+<button id="adminNav" onclick="location.href='admin.html'"> Admin</button>
+<button id="manpowerNav" onclick="location.href='manpower.html'">👨‍ Manpower</button>
 <button id="roiNav" onclick="location.href='ROI-Report.html'" style="display:none">📊 ROI Report</button>
 <button id="noticeBtn" onclick="location.href='notice.html'">
 📢 Notice
@@ -754,8 +888,8 @@ box-shadow:0 8px 32px rgba(0,0,0,0.4);z-index:99998;max-width:90%;width:400px;
 </button>
 <button onclick="location.href='online-users.html'">🟢 Online</button>
 <button onclick="location.href='audit-history.html'">📜 Audit</button>
-<button id="backupNav" onclick="openPage('backup',this)">☁️ Backup</button>
-<button onclick="location.href='change-password.html'"> Password</button>
+<button id="backupNav" onclick="openPage('backup',this)">☁ Backup</button>
+<button onclick="location.href='change-password.html'">🔐 Password</button>
 </div>
 <div class="sidebarFooter">
 <button class="themeBtn" onclick="toggleTheme()">🌙 / ☀️ Theme</button>
@@ -766,7 +900,7 @@ box-shadow:0 8px 32px rgba(0,0,0,0.4);z-index:99998;max-width:90%;width:400px;
 <!-- PROFILE MODAL -->
 <div id="profileModal" class="profileModal">
 <div class="profileModalContent">
-<h3 style="margin-bottom:15px;">👤 Update Profile Photo</h3>
+<h3 style="margin-bottom:15px;"> Update Profile Photo</h3>
 <img id="modalProfileImg" src="https://i.ibb.co/5hzT1VGk/IMG.jpg" alt="Profile">
 <br>
 <input type="file" id="profilePicInput" accept="image/*" style="display:none" onchange="handleProfileUpload(this)">
@@ -794,8 +928,8 @@ Live
 <i class="fas fa-clock" style="font-size:10px;"></i>
 <span id="sessionTimerText">30:00</span>
 </div>
-<span id="companyBadge" class="companyBadge">🏭 GMS TEXTILES</span>
-<button class="profileBtnTop" onclick="openProfileModal()">👤 Profile</button>
+<span id="companyBadge" class="companyBadge"> GMS TEXTILES</span>
+<button class="profileBtnTop" onclick="openProfileModal()"> Profile</button>
 </div>
 </div>
 <!-- Cache Status Bar -->
@@ -805,7 +939,7 @@ Live
 <span class="cacheReadCount">Today Reads: <b id="readCounter">0</b></span>
 </div>
 </div>
-<div class="noticeBar"><div class="noticeMove" id="noticeMove">📢 Loading...</div></div>
+<div class="noticeBar"><div class="noticeMove" id="noticeMove"> Loading...</div></div>
 <!-- HOME PAGE -->
 <div id="home" class="page activePage">
 <div class="dashTitle">📊 Dashboard Overview <span id="dashCompanyBadge" class="companyBadge">🏭 TEXTILES</span></div>
@@ -833,7 +967,7 @@ LIVE UPDATE SIGNAL
 <!-- No Access -->
 <div id="noAccessMessage" class="noAccessMessage" style="display:none;">
 <i class="fas fa-lock"></i>
-<h3>⚠️ Access Denied</h3>
+<h3>️ Access Denied</h3>
 <p>আপনার এই কোম্পানির ডাটা দেখার পারমিশন নেই।<br>অ্যাডমিনের সাথে যোগাযোগ করুন।</p>
 </div>
 <!-- Textile Dashboard -->
@@ -844,7 +978,7 @@ LIVE UPDATE SIGNAL
 <div class="stat-icon"><i class="fas fa-box"></i></div>
 </div>
 <div class="stat-card-new bg-green" style="cursor:pointer; transition:transform 0.2s;" onmouseover="this.style.transform='translateY(-6px)'" onmouseout="this.style.transform='translateY(0)'" onclick="location.href='sewing-thread.html'" title="Go to Sewing Thread">
-<div class="stat-info"><p> Sewing Thread</p><h3 id="sumSewing">0</h3></div>
+<div class="stat-info"><p>🧵 Sewing Thread</p><h3 id="sumSewing">0</h3></div>
 <div class="stat-icon"><i class="fas fa-tape"></i></div>
 </div>
 <div class="stat-card-new bg-orange" style="cursor:pointer; transition:transform 0.2s;" onmouseover="this.style.transform='translateY(-6px)'" onmouseout="this.style.transform='translateY(0)'" onclick="location.href='twill-tape.html'" title="Go to Twill Tape">
@@ -852,55 +986,49 @@ LIVE UPDATE SIGNAL
 <div class="stat-icon"><i class="fas fa-ruler-horizontal"></i></div>
 </div>
 <div class="stat-card-new bg-purple" id="needleSummary" style="cursor:pointer; transition:transform 0.2s;" onmouseover="this.style.transform='translateY(-6px)'" onmouseout="this.style.transform='translateY(0)'" onclick="location.href='needle.html'" title="Go to Needle Section">
-<div class="stat-info"><p>🪡 Needle Today Stock</p><h3 id="needleToday">0</h3></div>
+<div class="stat-info"><p> Needle Today Stock</p><h3 id="needleToday">0</h3></div>
 <div class="stat-icon"><i class="fas fa-syringe"></i></div>
 </div>
 </div>
-
 <!-- ========================================= -->
-<!--  ATTENDANCE MANPOWER 6 CARDS -->
+<!-- 🌟 GENERAL MCD DAILY ISSUE SMART CHART BOX -->
 <!-- ========================================= -->
-<div class="attendance-grid" id="attendanceGrid" style="cursor:pointer;" onclick="location.href='billing-manpower-report.html'" title="Go to Manpower Report">
-<div class="att-card total">
-<div class="att-icon">👥</div>
-<div class="att-value" id="attTotal">0</div>
-<div class="att-label">Total</div>
+<div class="generalMcdBox" id="generalMcdChartBox" onclick="location.href='general-mcd-daily.html'" title="Go to General MCD Daily Issue Smart Chart">
+<div class="generalMcdHeader">
+<h3><i class="fas fa-chart-line"></i> General MCD Daily Issue Smart Chart</h3>
+<span class="generalMcdBadge">SMART CHART</span>
 </div>
-<div class="att-card present">
-<div class="att-icon">✅</div>
-<div class="att-value" id="attPresent">0</div>
-<div class="att-label">Present</div>
+<canvas id="generalMcdChart" class="generalMcdChartCanvas"></canvas>
+<div class="generalMcdStats">
+<div class="generalMcdStat">
+<div class="label">Today Value</div>
+<div class="value" id="gmcTodayValue">৳0</div>
 </div>
-<div class="att-card leave">
-<div class="att-icon">🏖</div>
-<div class="att-value" id="attLeave">0</div>
-<div class="att-label">Leave</div>
+<div class="generalMcdStat">
+<div class="label">Total Items</div>
+<div class="value" id="gmcTotalItems">0</div>
 </div>
-<div class="att-card absent">
-<div class="att-icon">❌</div>
-<div class="att-value" id="attAbsent">0</div>
-<div class="att-label">Absent</div>
+<div class="generalMcdStat">
+<div class="label">Departments</div>
+<div class="value" id="gmcDepartments">0</div>
 </div>
-<div class="att-card medical">
-<div class="att-icon">🏥</div>
-<div class="att-value" id="attMedical">0</div>
-<div class="att-label">Medical</div>
+<div class="generalMcdStat">
+<div class="label">Categories</div>
+<div class="value" id="gmcCategories">0</div>
 </div>
-<div class="att-card offday">
-<div class="att-icon">📅</div>
-<div class="att-value" id="attOffDay">0</div>
-<div class="att-label">Off Day</div>
+</div>
+<div class="generalMcdClickHint">
+<i class="fas fa-hand-pointer"></i> Click to open full Smart Dashboard
 </div>
 </div>
 <!-- ========================================= -->
-
 <div class="chartGrid" style="margin-bottom:20px;">
 <div class="chartBox" id="accessoriesChartBox" style="cursor:pointer; transition:transform 0.2s;" onmouseover="this.style.transform='translateY(-4px)'" onmouseout="this.style.transform='translateY(0)'" onclick="location.href='accessories-inventory-report.html'" title="Go to Accessories Report">
-<h3>📈 Accessories Stock Chart <i class="fas fa-external-link-alt" style="font-size:12px; margin-left:8px; opacity:0.6;"></i></h3>
+<h3> Accessories Stock Chart <i class="fas fa-external-link-alt" style="font-size:12px; margin-left:8px; opacity:0.6;"></i></h3>
 <canvas id="accessoriesChart"></canvas>
 </div>
 <div class="chartBox" id="needleChartBox" style="cursor:pointer; transition:transform 0.2s;" onmouseover="this.style.transform='translateY(-4px)'" onmouseout="this.style.transform='translateY(0)'" onclick="location.href='needle-dashboard.html'" title="Go to Needle Dashboard">
-<h3>🏭 Needle Floor Wise Stock <i class="fas fa-external-link-alt" style="font-size:12px; margin-left:8px; opacity:0.6;"></i></h3>
+<h3> Needle Floor Wise Stock <i class="fas fa-external-link-alt" style="font-size:12px; margin-left:8px; opacity:0.6;"></i></h3>
 <canvas id="needleChart"></canvas>
 </div>
 <div class="chartBox" id="greyChartBox" style="cursor:pointer; transition:transform 0.2s;" onmouseover="this.style.transform='translateY(-4px)'" onmouseout="this.style.transform='translateY(0)'" onclick="location.href='grey-fabric.html'" title="Go to Grey Fabric">
@@ -908,10 +1036,55 @@ LIVE UPDATE SIGNAL
 <canvas id="greyChart"></canvas>
 </div>
 <div class="chartBox" id="needleIssueChartBox" style="cursor:pointer; transition:transform 0.2s;" onmouseover="this.style.transform='translateY(-4px)'" onmouseout="this.style.transform='translateY(0)'" onclick="location.href='all-needle-summary.html'" title="Go to Needle Summary">
-<h3> Needle Broken / Missing / Change <i class="fas fa-external-link-alt" style="font-size:12px; margin-left:8px; opacity:0.6;"></i></h3>
+<h3>🪡 Needle Broken / Missing / Change <i class="fas fa-external-link-alt" style="font-size:12px; margin-left:8px; opacity:0.6;"></i></h3>
 <canvas id="needleIssueChart"></canvas>
 </div>
 </div>
+<!-- ========================================= -->
+<!-- 👨 ATTENDANCE MANPOWER CHART - 6 CARD SMART LAYOUT -->
+<!-- ========================================= -->
+<div class="generalMcdBox" id="billingChartBox" style="border-color: var(--blue);" onclick="location.href='billing-manpower-report.html'" title="Go to Billing Manpower Report">
+<div class="generalMcdHeader">
+<h3><i class="fas fa-users"></i> 📊 Daily Manpower Attendance Report</h3>
+<span class="generalMcdBadge">LIVE STATUS</span>
+</div>
+<div class="attendanceSixCardGrid">
+<div class="attCard total">
+<span class="attIcon">👥</span>
+<span class="attValue" id="attTotal">0</span>
+<span class="attLabel">Total</span>
+</div>
+<div class="attCard present">
+<span class="attIcon">✅</span>
+<span class="attValue" id="attPresent">0</span>
+<span class="attLabel">Present</span>
+</div>
+<div class="attCard leave">
+<span class="attIcon">🏖️</span>
+<span class="attValue" id="attLeave">0</span>
+<span class="attLabel">Leave</span>
+</div>
+<div class="attCard absent">
+<span class="attIcon">❌</span>
+<span class="attValue" id="attAbsent">0</span>
+<span class="attLabel">Absent</span>
+</div>
+<div class="attCard medical">
+<span class="attIcon">🏥</span>
+<span class="attValue" id="attMedical">0</span>
+<span class="attLabel">Medical</span>
+</div>
+<div class="attCard offday">
+<span class="attIcon">📅</span>
+<span class="attValue" id="attOffDay">0</span>
+<span class="attLabel">Off Day</span>
+</div>
+</div>
+<div class="generalMcdClickHint">
+<i class="fas fa-hand-pointer"></i> Click to open full Manpower Report
+</div>
+</div>
+<!-- ========================================= -->
 <div id="mcdDashboard" class="mcdDashboard">Loading...</div>
 </div>
 <!-- Composite Dashboard -->
@@ -989,7 +1162,7 @@ LIVE UPDATE SIGNAL
 <!-- REPORTS PAGE -->
 <div id="reports" class="page">
 <div class="reportSection">
-<h2><i class="fas fa-file-alt"></i> Reports <span id="reportCompanyBadge" class="companyBadge">🏭 TEXTILES</span></h2>
+<h2><i class="fas fa-file-alt"></i> Reports <span id="reportCompanyBadge" class="companyBadge"> TEXTILES</span></h2>
 <div class="formGroup">
 <label><i class="fas fa-building" style="color:var(--blue)"></i> Company</label>
 <select id="reportCompany">
@@ -1162,7 +1335,7 @@ var savedText = localStorage.getItem('customTextColor');
 if(savedText) document.documentElement.style.setProperty('--text', savedText);
 })();
 // ─────────────────────────────────────────────
-//  AUTO LOGOUT SYSTEM CONFIGURATION
+// 🔐 AUTO LOGOUT SYSTEM CONFIGURATION
 // ─────────────────────────────────────────────
 const SESSION_CONFIG = {
 TIMEOUT_MINUTES: 30,
@@ -1418,7 +1591,7 @@ window.resetActivityTimestamp = resetActivityTimestamp;
 window.performAutoLogout = performAutoLogout;
 // ─────────────────────────────────────────────
 // 📦 SMART CACHE MANAGER
-// ────────────────────────────────────────────
+// ─────────────────────────────────────────────
 window.GMS_CACHE = {
 CACHE_KEY : 'GMS_SMART_CACHE',
 READ_COUNT_KEY : 'GMS_READ_COUNT_TODAY',
@@ -1513,7 +1686,7 @@ if(window.userManpowerAccess==='selected') return window.userManpowerMcdAccess.i
 return false;
 }
 // ─────────────────────────────────────────────
-//  COMPANY SWITCH
+// 🔄 COMPANY SWITCH
 // ─────────────────────────────────────────────
 window.switchCompany = function(company){
 if(!canUserSeeCompany(company)){ showToast('❌ No access to '+company,'error'); return; }
@@ -1690,6 +1863,10 @@ if(mcd==='BILLING SECTION'){
 box.innerHTML='<div class="entryCard" onclick="location.href=\'billing-manpower-report.html\'"><i class="fas fa-users"></i> Billing Manpower</div>'+common;
 return;
 }
+if(mcd==='GENERAL MCD'){
+box.innerHTML='<div class="entryCard" onclick="location.href=\'general-mcd-daily.html\'" style="background:linear-gradient(135deg,rgba(139,92,246,0.15),rgba(59,130,246,0.15));border-color:var(--purple);"><i class="fas fa-file-alt" style="color:var(--purple);"></i> 📝 GENERAL MCD Daily Entry</div>'+common;
+return;
+}
 box.innerHTML='<div class="entryCard"> '+mcd+' Daily Entry</div><div class="entryCard" onclick="location.href=\'billing-manpower-report.html\'"><i class="fas fa-users"></i> Billing Manpower</div>'+common;
 };
 window.loadReport = function(){
@@ -1710,6 +1887,10 @@ return;
 }
 if(mcd==='BILLING SECTION'){
 box.innerHTML='<div class="reportCard" onclick="location.href=\'billing-manpower-report.html\'"><i class="fas fa-users"></i> Billing Manpower</div>'+common;
+return;
+}
+if(mcd==='GENERAL MCD'){
+box.innerHTML='<div class="reportCard" onclick="location.href=\'general-mcd-daily.html\'" style="background:linear-gradient(135deg,rgba(139,92,246,0.15),rgba(59,130,246,0.15));border-color:var(--purple);"><i class="fas fa-chart-bar" style="color:var(--purple);"></i> 📊 GENERAL MCD Daily Report</div>'+common;
 return;
 }
 box.innerHTML='<div class="reportCard">📑 '+mcd+' Report</div><div class="reportCard" onclick="location.href=\'billing-manpower-report.html\'"><i class="fas fa-users"></i> Billing Manpower</div>'+common;
@@ -1733,7 +1914,7 @@ usagePct: 100,
 addedAt: new Date().toISOString()
 });
 localStorage.setItem('gms_all_reports', JSON.stringify(autoReports));
-console.log('🔄 Auto-saved to ROI:', mcd, company);
+console.log(' Auto-saved to ROI:', mcd, company);
 }
 }catch(e){
 console.warn('autoSaveToROI error:', e);
@@ -1812,7 +1993,7 @@ company: window.currentCompany || 'GMS TEXTILES LTD'
 });
 if(activity.length > 1000) activity.splice(0, activity.length - 1000);
 localStorage.setItem('report_activity', JSON.stringify(activity));
-console.log(' Report activity tracked:', mcd, reportName);
+console.log('📊 Report activity tracked:', mcd, reportName);
 window.dispatchEvent(new Event('storage'));
 }catch(e){
 console.warn('trackReportActivity error:', e);
@@ -1868,7 +2049,7 @@ const FLOOR_OPENING = {
 'Shapla R':1171,'Shapla N':573,'Sample R':1138,'Sample N':251,
 'EMBROIDERY R':1011,'EMBROIDERY N':287,'Belly R':796,'Belly N':335
 };
-let accessoriesChart=null,needleChart=null,greyChart=null,billingChart=null,needleIssueChart=null;
+let accessoriesChart=null,needleChart=null,greyChart=null,billingChart=null,needleIssueChart=null,generalMcdChart=null;
 let selectedBackupData=null;
 document.getElementById('loginInfo').innerText =
 `${user.name||'User'} • ${window.userRole.toUpperCase()} ${window.userRole==='user'?'• '+userMCDs.join(', '):''}`;
@@ -1889,7 +2070,8 @@ greyFabricStock     : 'grey_stock',
 billingManpowerReport: 'billing_today',
 needleDailyReport   : 'needle_issue_today',
 manpower            : 'manpower_summary',
-ALL_DASHBOARD       : ['sewing_stock','twill_stock','accessories_stock','needle_floor_stock','grey_stock','billing_today','needle_issue_today','manpower_summary','firebase_counts']
+generalMcdDaily     : 'general_mcd_daily',
+ALL_DASHBOARD       : ['sewing_stock','twill_stock','accessories_stock','needle_floor_stock','grey_stock','billing_today','needle_issue_today','manpower_summary','firebase_counts','general_mcd_daily']
 };
 async function updateCollectionTimestamp(collectionName){
 try{
@@ -1929,7 +2111,7 @@ showToast('✅ Saved Successfully');
 var cacheKey = CACHE_KEYS[collectionName];
 if(cacheKey){
 window.GMS_CACHE.invalidate(Array.isArray(cacheKey)?cacheKey:[cacheKey]);
-console.log('️ Cache invalidated for:', collectionName);
+console.log('🗑️ Cache invalidated for:', collectionName);
 }
 var localTS = JSON.parse(localStorage.getItem(LOCAL_TIMESTAMPS_KEY)||'{}');
 delete localTS[collectionName];
@@ -1956,7 +2138,7 @@ syncedIds.push(item.id);
 await updateCollectionTimestamp(item.collection);
 }catch(err){
 if(err.code==='resource-exhausted'||err.code==='permission-denied'){
-console.log('️ Sync paused (quota). Retry later.');
+console.log('⏸️ Sync paused (quota). Retry later.');
 break;
 }
 }
@@ -1975,7 +2157,7 @@ window.forceSyncNow = function(){
 var queue=getQueue();
 var pending=queue.filter(function(x){return x.status==='pending';});
 if(pending.length===0){showToast('✅ No pending data');return;}
-showToast('🔄 Syncing '+pending.length+' items...');
+showToast(' Syncing '+pending.length+' items...');
 window.autoSyncQueue();
 };
 function renderAdminSyncTable(){
@@ -2022,7 +2204,7 @@ var keys=Object.keys(alerts);
 if(keys.length===0){panel.style.display='none';return;}
 panel.style.display='block';
 list.innerHTML=keys.map(function(k){
-return '<div class="quota-alert-item"><div><span class="msg">🔴 '+k+'</span><div style="color:var(--muted);font-size:11px;margin-top:2px;">'+alerts[k].msg+'</div></div><span class="time">'+alerts[k].time+'</span></div>';
+return '<div class="quota-alert-item"><div><span class="msg"> '+k+'</span><div style="color:var(--muted);font-size:11px;margin-top:2px;">'+alerts[k].msg+'</div></div><span class="time">'+alerts[k].time+'</span></div>';
 }).join('');
 }
 window.resetQuotaAlerts = function(){ localStorage.removeItem(QUOTA_ALERT_KEY); renderQuotaAlerts(); showToast('✅ Alerts cleared'); };
@@ -2045,6 +2227,7 @@ function isNeedleAllowed(){ return window.userRole==='admin'||window.userRole===
 function isAccessoriesAllowed(){ return window.userRole==='admin'||window.userRole==='full'||userMCDs.includes('ACCESSORIES MCD'); }
 function isGreyAllowed(){ return window.userRole==='admin'||window.userRole==='full'||userMCDs.includes('GREY FABRIC MCD'); }
 function isBillingAllowed(){ return window.userRole==='admin'||window.userRole==='full'||userMCDs.includes('BILLING SECTION'); }
+function isGeneralMcdAllowed(){ return window.userRole==='admin'||window.userRole==='full'||userMCDs.includes('GENERAL MCD'); }
 function isManpowerAllowed(){
 if(window.userRole==='admin'||window.userRole==='full') return true;
 if(manpowerAccess==='all') return true;
@@ -2072,7 +2255,11 @@ document.getElementById('accessoriesSummary').style.display='none';
 document.getElementById('accessoriesChartBox').style.display='none';
 }
 if(!isGreyAllowed()) document.getElementById('greyChartBox').style.display='none';
-if(!isBillingAllowed()) document.getElementById('attendanceGrid').style.display='none';
+if(!isBillingAllowed()) document.getElementById('billingChartBox').style.display='none';
+if(!isGeneralMcdAllowed()){
+var gmcBox = document.getElementById('generalMcdChartBox');
+if(gmcBox) gmcBox.style.display='none';
+}
 var list=allowedMCDList();
 document.getElementById('entryMcd').innerHTML=list.map(function(x){return '<option>'+x+'</option>';}).join('');
 document.getElementById('reportMcd').innerHTML=list.map(function(x){return '<option>'+x+'</option>';}).join('');
@@ -2083,7 +2270,7 @@ var cached = window.GMS_CACHE.get(cacheKey);
 if(cached !== null){
 var el=document.getElementById('cacheStatusText');
 if(el) el.innerText='Cache: '+cacheKey+' ✅ (no change)';
-console.log(' Selective cache hit (no Firebase read):', cacheKey);
+console.log('📦 Selective cache hit (no Firebase read):', cacheKey);
 return cached;
 }
 }
@@ -2094,7 +2281,7 @@ if(el2) el2.innerText='Cache: '+cacheKey+' ✅';
 console.log('📦 Cache hit:', cacheKey);
 return cached2;
 }
-console.log('🔥 Firebase read (selective):', cacheKey);
+console.log(' Firebase read (selective):', cacheKey);
 var el3=document.getElementById('cacheStatusText');
 if(el3) el3.innerText='Firebase: '+cacheKey+' 🔥';
 var snap = await getDocs(collection(db, collectionName));
@@ -2159,18 +2346,18 @@ return{labels,data,total,date:latest.date||''};
 }
 async function getBillingToday(shouldUpdate){
 var rows = await cachedGetDocs('billingManpowerReport', CACHE_KEYS.billingManpowerReport, shouldUpdate);
-var t=today(), total=0,leave=0,absent=0,present=0,medical=0,offday=0;
+var t=today(), total=0, leave=0, absent=0, present=0, medical=0, offDay=0;
 rows.forEach(function(x){
 if(x.date===t){
-total+=Number(x.totalManpower)||0;
-leave+=Number(x.leave)||0;
-absent+=Number(x.absent)||0;
-present+=Number(x.present)||0;
-medical+=Number(x.medical||x.sickLeave||0);
-offday+=Number(x.offDay||x.weeklyOff||0);
+total += Number(x.totalManpower || x.total) || 0;
+leave += Number(x.leave) || 0;
+absent += Number(x.absent) || 0;
+present += Number(x.present) || 0;
+medical += Number(x.medical) || 0;
+offDay += Number(x.offDay) || 0;
 }
 });
-return{total,leave,absent,present,medical,offday};
+return {total, leave, absent, present, medical, offDay};
 }
 async function getNeedleIssueToday(shouldUpdate){
 var rows = await cachedGetDocs('needleDailyReport', CACHE_KEYS.needleDailyReport, shouldUpdate);
@@ -2178,12 +2365,42 @@ rows.sort(function(a,b){return (b.date||'').localeCompare(a.date||'');});
 var latest=rows[0]||{};
 return{broken:parseNum(latest.brokenNeedle),missing:parseNum(latest.missingNeedle),change:parseNum(latest.changeNeedle),date:latest.date||''};
 }
+// =========================================
+// 🌟 GENERAL MCD DAILY DATA LOADER
+// =========================================
+async function getGeneralMcdDailyData(shouldUpdate){
+var rows = await cachedGetDocs('generalMcdDaily', CACHE_KEYS.generalMcdDaily, shouldUpdate);
+var t = today();
+var todayRows = rows.filter(function(x){ return x.date === t; });
+var totalAmount = 0, totalQty = 0;
+var deptMap = {}, catMap = {};
+todayRows.forEach(function(r){
+totalAmount += parseNum(r.amount);
+totalQty += parseNum(r.issueQty);
+var dept = r.department || 'Unknown';
+var cat = r.category || 'Unknown';
+if(!deptMap[dept]) deptMap[dept] = 0;
+deptMap[dept] += parseNum(r.amount);
+if(!catMap[cat]) catMap[cat] = 0;
+catMap[cat] += parseNum(r.amount);
+});
+return {
+totalAmount: totalAmount,
+totalQty: totalQty,
+totalItems: todayRows.length,
+totalDepts: Object.keys(deptMap).length,
+totalCats: Object.keys(catMap).length,
+deptMap: deptMap,
+catMap: catMap,
+date: t
+};
+}
 async function getFirebaseCounts(){
 var cached = window.GMS_CACHE.get('firebase_counts');
 if(cached) return cached;
 var cols=['greyFabricStock','accessoriesInventory','billingManpowerReport','dailyPosting',
 'sewingThread','twillTape','accessoriesSample','liveNotices','manpower','users',
-'needleDailyReport','gatePlans','challanGatePass'];
+'needleDailyReport','gatePlans','challanGatePass','generalMcdDaily'];
 var t=today(),totalCount=0,approxBytes=0,todayCount=0,gatePlanCount=0,challanCount=0;
 for(var c of cols){
 try{
@@ -2209,7 +2426,7 @@ var q = query(collection(db,'liveNotices'), orderBy('createdAt','desc'), limit(1
 var snap = await getDocs(q);
 window.GMS_CACHE.incRead(1);
 if(snap.empty){
-setNoticeBar('📢 No live notice');
+setNoticeBar(' No live notice');
 return;
 }
 var latestId = snap.docs[0].id;
@@ -2300,8 +2517,65 @@ x:{grid:{display:false},ticks:{font:{size:12,weight:'600'},color:isLight?'#47556
 }
 };
 }
-function renderCharts(sewing,accessories,twill,floorStocks,grey,billing,needleIssue){
-window._lastChartData=[sewing,accessories,twill,floorStocks,grey,billing,needleIssue];
+function renderCharts(sewing,accessories,twill,floorStocks,grey,needleIssue,generalMcd){
+window._lastChartData=[sewing,accessories,twill,floorStocks,grey,needleIssue,generalMcd];
+// =========================================
+// 🌟 GENERAL MCD SMART CHART
+// =========================================
+if(isGeneralMcdAllowed() && generalMcd){
+if(generalMcdChart) generalMcdChart.destroy();
+var catLabels = Object.keys(generalMcd.catMap);
+var catValues = Object.values(generalMcd.catMap);
+var isLight = document.body.classList.contains('light');
+generalMcdChart = new Chart(document.getElementById('generalMcdChart'), {
+type: 'doughnut',
+data: {
+labels: catLabels.length ? catLabels : ['No Data'],
+datasets: [{
+data: catValues.length ? catValues : [1],
+backgroundColor: chartColors(catLabels.length || 1),
+borderWidth: 3,
+borderColor: isLight ? '#ffffff' : '#1e293b'
+}]
+},
+options: {
+responsive: true,
+maintainAspectRatio: false,
+plugins: {
+legend: {
+position: 'bottom',
+labels: {
+font: { size: 11, weight: '600', family: 'Poppins' },
+color: isLight ? '#1e293b' : '#f1f5f9',
+padding: 12,
+usePointStyle: true,
+pointStyle: 'circle'
+}
+},
+tooltip: {
+backgroundColor: 'rgba(15,23,42,.95)',
+titleColor: '#fff',
+bodyColor: '#fff',
+callbacks: {
+label: function(ctx){
+return ctx.label + ': ৳' + fmt(ctx.raw);
+}
+}
+}
+}
+}
+});
+// Update stats
+var todayValEl = document.getElementById('gmcTodayValue');
+var totalItemsEl = document.getElementById('gmcTotalItems');
+var deptsEl = document.getElementById('gmcDepartments');
+var catsEl = document.getElementById('gmcCategories');
+if(todayValEl) todayValEl.innerText = '৳' + fmt(generalMcd.totalAmount);
+if(totalItemsEl) totalItemsEl.innerText = fmt(generalMcd.totalItems);
+if(deptsEl) deptsEl.innerText = fmt(generalMcd.totalDepts);
+if(catsEl) catsEl.innerText = fmt(generalMcd.totalCats);
+}
+// =========================================
 if(isAccessoriesAllowed()){
 if(accessoriesChart) accessoriesChart.destroy();
 accessoriesChart=new Chart(document.getElementById('accessoriesChart'),{
@@ -2374,15 +2648,17 @@ var greyNeedsUpdate        = shouldUpdate('greyFabricStock');
 var billingNeedsUpdate     = shouldUpdate('billingManpowerReport');
 var needleIssueNeedsUpdate = shouldUpdate('needleDailyReport');
 var manpowerNeedsUpdate    = shouldUpdate('manpower');
-console.log(' Selective Load Plan:', {
+var generalMcdNeedsUpdate  = shouldUpdate('generalMcdDaily');
+console.log('📊 Selective Load Plan:', {
 sewingThread: sewingNeedsUpdate?'🔥Firebase':'📦Cache',
-twillTape: twillNeedsUpdate?'🔥Firebase':'📦Cache',
+twillTape: twillNeedsUpdate?'🔥Firebase':'Cache',
 accessoriesSample: accessoriesNeedsUpdate?'🔥Firebase':'📦Cache',
 dailyPosting: needleNeedsUpdate?'🔥Firebase':'📦Cache',
 greyFabricStock: greyNeedsUpdate?'🔥Firebase':'📦Cache',
-billingManpowerReport: billingNeedsUpdate?'🔥Firebase':'Cache',
-needleDailyReport: needleIssueNeedsUpdate?'🔥Firebase':'📦Cache',
+billingManpowerReport: billingNeedsUpdate?'Firebase':'📦Cache',
+needleDailyReport: needleIssueNeedsUpdate?'🔥Firebase':'Cache',
 manpower: manpowerNeedsUpdate?'🔥Firebase':'📦Cache',
+generalMcdDaily: generalMcdNeedsUpdate?'🔥Firebase':'📦Cache',
 });
 if(statusEl) statusEl.innerText='⚡ Selective loading...';
 var sewing      = await getLatestPresent('sewingThread',133322, sewingNeedsUpdate);
@@ -2392,6 +2668,7 @@ var needleData  = await getNeedleFloorStock(needleNeedsUpdate);
 var grey        = await getGreyData(greyNeedsUpdate);
 var billing     = await getBillingToday(billingNeedsUpdate);
 var needleIssue = await getNeedleIssueToday(needleIssueNeedsUpdate);
+var generalMcd  = isGeneralMcdAllowed() ? await getGeneralMcdDailyData(generalMcdNeedsUpdate) : null;
 var firebase    = await getFirebaseCounts();
 var mpData      = await getManpowerSummary(manpowerNeedsUpdate);
 var manpower    = mpData.map;
@@ -2402,13 +2679,14 @@ newLocalTS[col] = remoteTimestamps[col];
 });
 localStorage.setItem(LOCAL_TIMESTAMPS_KEY, JSON.stringify(newLocalTS));
 if(statusEl) statusEl.innerText='Dashboard loaded ✅';
+// Update 6-card attendance layout
 if(isBillingAllowed()){
 document.getElementById('attTotal').innerText=billing.total;
+document.getElementById('attPresent').innerText=billing.present;
 document.getElementById('attLeave').innerText=billing.leave;
 document.getElementById('attAbsent').innerText=billing.absent;
-document.getElementById('attPresent').innerText=billing.present;
 document.getElementById('attMedical').innerText=billing.medical;
-document.getElementById('attOffDay').innerText=billing.offday;
+document.getElementById('attOffDay').innerText=billing.offDay;
 }
 updateLimitBox(firebase);
 if(isAccessoriesAllowed()){
@@ -2417,24 +2695,26 @@ document.getElementById('sumSewing').innerText=fmt(sewing);
 document.getElementById('sumTwill').innerText=fmt(twill);
 }
 if(isNeedleAllowed()) document.getElementById('needleToday').innerText=fmt(needleData.total);
-renderCharts(sewing,accessories,twill,needleData.floorStocks,grey,billing,needleIssue);
+renderCharts(sewing,accessories,twill,needleData.floorStocks,grey,needleIssue,generalMcd);
 var html='';
 ALL_MCD.forEach(function(mcd){
 if(!allowed.includes(mcd)) return;
 var mp={count:0,salary:0};
 if(manpower[mcd]&&(manpowerAccess==='all'||manpowerMcdAccess.includes(mcd))) mp=manpower[mcd];
 if(mcd==='ACCESSORIES MCD'){
-html+='<div class="mcdBox"><h3>📦 ACCESSORIES MCD</h3><div class="miniRow"><span>📦 Accessories+Sample</span><span class="miniValue">'+fmt(accessories)+'</span></div><div class="miniRow"><span>🧵 Sewing Thread</span><span class="miniValue">'+fmt(sewing)+'</span></div><div class="miniRow"><span>📏 Twill Tape</span><span class="miniValue">'+fmt(twill)+'</span></div></div>';
+html+='<div class="mcdBox"><h3> ACCESSORIES MCD</h3><div class="miniRow"><span>📦 Accessories+Sample</span><span class="miniValue">'+fmt(accessories)+'</span></div><div class="miniRow"><span>🧵 Sewing Thread</span><span class="miniValue">'+fmt(sewing)+'</span></div><div class="miniRow"><span>📏 Twill Tape</span><span class="miniValue">'+fmt(twill)+'</span></div></div>';
 } else if(mcd==='GREY FABRIC MCD'){
-html+='<div class="mcdBox"><h3>🏭 GREY FABRIC MCD</h3><div class="miniRow"><span>📦 Closing Balance</span><span class="miniValue">'+fmt(grey.total)+'</span></div></div>';
+html+='<div class="mcdBox"><h3> GREY FABRIC MCD</h3><div class="miniRow"><span>📦 Closing Balance</span><span class="miniValue">'+fmt(grey.total)+'</span></div></div>';
 } else if(mcd==='BILLING SECTION'){
-html+='<div class="mcdBox"><h3>👨‍💼 BILLING SECTION</h3><div class="miniRow"><span>👨‍💼 Total</span><span class="miniValue">'+fmt(billing.total)+'</span></div><div class="miniRow"><span>✅ Present</span><span class="miniValue">'+fmt(billing.present)+'</span></div><div class="miniRow"><span>❌ Absent</span><span class="miniValue">'+fmt(billing.absent)+'</span></div></div>';
+html+='<div class="mcdBox"><h3> BILLING SECTION</h3><div class="miniRow"><span>👨‍ Total</span><span class="miniValue">'+fmt(billing.total)+'</span></div><div class="miniRow"><span>✅ Present</span><span class="miniValue">'+fmt(billing.present)+'</span></div><div class="miniRow"><span>❌ Absent</span><span class="miniValue">'+fmt(billing.absent)+'</span></div></div>';
+} else if(mcd==='GENERAL MCD' && generalMcd){
+html+='<div class="mcdBox" style="cursor:pointer;border-color:var(--purple);" onclick="location.href=\'general-mcd-daily.html\'"><h3 style="background:linear-gradient(135deg,var(--blue),var(--purple));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;">📊 GENERAL MCD</h3><div class="miniRow"><span>💰 Today Value</span><span class="miniValue">৳'+fmt(generalMcd.totalAmount)+'</span></div><div class="miniRow"><span> Total Items</span><span class="miniValue">'+fmt(generalMcd.totalItems)+'</span></div><div class="miniRow"><span>🏢 Departments</span><span class="miniValue">'+fmt(generalMcd.totalDepts)+'</span></div><div class="miniRow"><span>📂 Categories</span><span class="miniValue">'+fmt(generalMcd.totalCats)+'</span></div></div>';
 } else {
 var mpHtml='';
 if(isManpowerAllowed()&&(manpowerAccess==='all'||manpowerMcdAccess.includes(mcd))){
-mpHtml='<div class="miniRow"><span>👨‍ Manpower</span><span class="miniValue">'+fmt(mp.count)+'</span></div><div class="miniRow"><span>💰 Salary</span><span class="miniValue">'+fmt(mp.salary)+'</span></div>';
+mpHtml='<div class="miniRow"><span>👨‍ Manpower</span><span class="miniValue">'+fmt(mp.count)+'</span></div><div class="miniRow"><span> Salary</span><span class="miniValue">'+fmt(mp.salary)+'</span></div>';
 }
-html+='<div class="mcdBox"><h3>📂 '+mcd+'</h3>'+mpHtml+'<div class="miniRow"><span>📊 Stock</span><span class="miniValue">Cached</span></div></div>';
+html+='<div class="mcdBox"><h3> '+mcd+'</h3>'+mpHtml+'<div class="miniRow"><span>📊 Stock</span><span class="miniValue">Cached</span></div></div>';
 }
 });
 document.getElementById('mcdDashboard').innerHTML=html||'<div class="mcdBox"><h3>❌ No Access</h3></div>';
@@ -2507,7 +2787,7 @@ window.backupAllData = async function(){
 if(window.userRole!=='admin'){alert('Admin only');return;}
 try{
 var backup={date:new Date().toISOString(),backupMonths:[],data:{}};
-var cols=['greyFabricStock','accessoriesInventory','billingManpowerReport','dailyPosting','sewingThread','twillTape','accessoriesSample','liveNotices','manpower','needleDailyReport','gatePlans','challanGatePass'];
+var cols=['greyFabricStock','accessoriesInventory','billingManpowerReport','dailyPosting','sewingThread','twillTape','accessoriesSample','liveNotices','manpower','needleDailyReport','gatePlans','challanGatePass','generalMcdDaily'];
 for(var c of cols){
 var snap=await getDocs(collection(db,c));
 backup.data[c]=[];
@@ -2584,7 +2864,7 @@ var currentMonth=now.getFullYear()+'-'+String(now.getMonth()+1).padStart(2,'0');
 var prev=new Date(now.getFullYear(),now.getMonth()-1,1);
 var previousMonth=prev.getFullYear()+'-'+String(prev.getMonth()+1).padStart(2,'0');
 var ok=confirm('Clear Old Data?\nKEEP:\n'+currentMonth+'\n'+previousMonth+'\nDELETE: Older months\nBackup: '+backupStatus); if(!ok) return;
-var cols=['greyFabricStock','accessoriesInventory','billingManpowerReport','dailyPosting','sewingThread','twillTape','accessoriesSample','liveNotices','needleDailyReport','gatePlans','challanGatePass'];
+var cols=['greyFabricStock','accessoriesInventory','billingManpowerReport','dailyPosting','sewingThread','twillTape','accessoriesSample','liveNotices','needleDailyReport','gatePlans','challanGatePass','generalMcdDaily'];
 var deleted=0,kept=0,skipped=0;
 try{
 for(var c of cols){
@@ -2609,7 +2889,7 @@ window.removeRestoredMonth = async function(){
 if(window.userRole!=='admin'){alert('Admin only');return;}
 var month=localStorage.getItem('lastRestoredMonth')||''; if(!month){alert('No restored month found.');return;}
 if(!confirm('Remove restored month data: '+month+' ?')) return;
-var cols=['greyFabricStock','accessoriesInventory','billingManpowerReport','dailyPosting','sewingThread','twillTape','accessoriesSample','liveNotices','needleDailyReport','gatePlans','challanGatePass'];
+var cols=['greyFabricStock','accessoriesInventory','billingManpowerReport','dailyPosting','sewingThread','twillTape','accessoriesSample','liveNotices','needleDailyReport','gatePlans','challanGatePass','generalMcdDaily'];
 var deleted=0;
 try{
 for(var c of cols){
@@ -2674,7 +2954,7 @@ window.addEventListener(evt, function(){ if(!audioCtx) initAudio(); }, {once:tru
 document.addEventListener('visibilitychange', function(){
 if(document.visibilityState === 'visible'){
 clearAppBadge();
-console.log('🔄 Page visible — selective dashboard check...');
+console.log(' Page visible — selective dashboard check...');
 if(document.getElementById('home').classList.contains('activePage')){
 loadDashboardStock(false);
 }
@@ -2718,7 +2998,7 @@ if(newWorker.state==='installed'&&navigator.serviceWorker.controller) this.showU
 setupNetworkListeners(){
 window.addEventListener('online',function(){
 this.isOnline=true; this.updateOfflineIndicator(true);
-showToast(' Internet Connected','success');
+showToast('🌐 Internet Connected','success');
 if(typeof window.autoSyncQueue==='function') setTimeout(function(){window.autoSyncQueue();},2000);
 if(typeof resetActivityTimestamp === 'function') resetActivityTimestamp();
 }.bind(this));
@@ -2737,7 +3017,7 @@ var btn=document.getElementById('pwaSyncBtn'); if(btn) btn.style.display='none';
 setTimeout(function(){bar.classList.remove('show');},3000);
 }else{
 bar.classList.remove('pwa-online-bar');
-bar.querySelector('.pwa-offline-text').textContent=' Offline Mode - Data saved locally';
+bar.querySelector('.pwa-offline-text').textContent='📴 Offline Mode - Data saved locally';
 bar.querySelector('.pwa-offline-icon').textContent='📴';
 var btn=document.getElementById('pwaSyncBtn'); if(btn) btn.style.display='flex';
 bar.classList.add('show');
@@ -2818,7 +3098,7 @@ var title=(payload.notification||{}).title;
 var body=(payload.notification||{}).body;
 var toast=document.createElement('div');
 toast.style.cssText='position:fixed;top:80px;right:20px;background:var(--card,#1e293b);border:1px solid var(--blue,#3b82f6);border-radius:12px;padding:14px 18px;z-index:99999;box-shadow:0 10px 40px rgba(0,0,0,0.4);max-width:350px;cursor:pointer;font-family:Poppins,sans-serif;';
-toast.innerHTML='<div style="display:flex;align-items:flex-start;gap:12px;"><div style="font-size:24px;">🔔</div><div style="flex:1;"><div style="font-size:14px;font-weight:600;color:var(--text,#f1f5f9);margin-bottom:4px;">'+(title||'GMS ERP')+'</div><div style="font-size:12px;color:var(--muted,#cbd5e1);">'+(body||'New notification')+'</div></div><button style="background:transparent;border:none;color:var(--muted);font-size:16px;cursor:pointer;" onclick="this.parentElement.parentElement.remove();event.stopPropagation();">✕</button></div>';
+toast.innerHTML='<div style="display:flex;align-items:flex-start;gap:12px;"><div style="font-size:24px;">🔔</div><div style="flex:1;"><div style="font-size:14px;font-weight:600;color:var(--text,#f1f5f9);margin-bottom:4px;">'+(title||'GMS ERP')+'</div><div style="font-size:12px;color:var(--muted,#cbd5e1);">'+(body||'New notification')+'</div></div><button style="background:transparent;border:none;color:var(--muted);font-size:16px;cursor:pointer;" onclick="this.parentElement.parentElement.remove();event.stopPropagation();"></button></div>';
 toast.addEventListener('click',function(){window.location.href=(payload.data||{}).url||'/';});
 document.body.appendChild(toast);
 setTimeout(function(){toast.remove();},5000);
