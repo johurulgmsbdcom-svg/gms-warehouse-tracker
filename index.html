@@ -442,7 +442,7 @@ box-shadow:0 2px 10px rgba(0,0,0,0.05);min-height:65px;
 body.light .entryCard,body.light .reportCard{background:linear-gradient(135deg,#ffffff 0%,#f8fafc 100%);border-color:#e2e8f0;}
 .entryCard:hover,.reportCard:hover{transform:translateY(-3px);box-shadow:0 8px 25px rgba(59,130,246,0.15);border-color:rgba(59,130,246,0.3);}
 .entryCard i,.reportCard i{font-size:16px;color:var(--blue);}
-/* ===== GENERAL MCD SPECIAL CHART BOX ===== */
+/* ===== GENERAL MCD / ATTENDANCE SPECIAL CHART BOX ===== */
 .generalMcdBox{
 background:linear-gradient(135deg,var(--card) 0%,var(--card2) 100%);
 border:2px solid var(--purple);
@@ -926,35 +926,42 @@ LIVE UPDATE SIGNAL
 </div>
 
 <!-- ========================================= -->
-<!-- 🌟 GENERAL MCD DAILY ISSUE SMART CHART BOX -->
+<!-- 👨 ATTENDANCE MANPOWER CHART BOX (REPLACED GENERAL MCD) -->
 <!-- ========================================= -->
-<div class="generalMcdBox" id="generalMcdChartBox" onclick="location.href='general-mcd-daily.html'" title="Go to General MCD Daily Issue Smart Chart">
-<div class="generalMcdHeader">
-<h3><i class="fas fa-chart-line"></i> General MCD Daily Issue Smart Chart</h3>
-<span class="generalMcdBadge">SMART CHART</span>
-</div>
-<canvas id="generalMcdChart" class="generalMcdChartCanvas"></canvas>
-<div class="generalMcdStats">
-<div class="generalMcdStat">
-<div class="label">Today Value</div>
-<div class="value" id="gmcTodayValue">৳0</div>
-</div>
-<div class="generalMcdStat">
-<div class="label">Total Items</div>
-<div class="value" id="gmcTotalItems">0</div>
-</div>
-<div class="generalMcdStat">
-<div class="label">Departments</div>
-<div class="value" id="gmcDepartments">0</div>
-</div>
-<div class="generalMcdStat">
-<div class="label">Categories</div>
-<div class="value" id="gmcCategories">0</div>
-</div>
-</div>
-<div class="generalMcdClickHint">
-<i class="fas fa-hand-pointer"></i> Click to open full Smart Dashboard
-</div>
+<div class="generalMcdBox" id="attendanceManpowerBox" onclick="location.href='billing-manpower-report.html'" title="Go to Billing Manpower Report" style="border-color: var(--blue);">
+    <div class="generalMcdHeader">
+        <h3><i class="fas fa-users"></i> 👨 Attendance Manpower Chart</h3>
+        <span class="generalMcdBadge">LIVE STATUS</span>
+    </div>
+    <div class="generalMcdStats" style="grid-template-columns: repeat(3, 1fr); gap: 12px;">
+        <div class="generalMcdStat" style="background: rgba(59, 130, 246, 0.1); border-color: rgba(59, 130, 246, 0.3);">
+            <div class="label">👥 Total</div>
+            <div class="value" id="attTotal" style="color: var(--blue);">0</div>
+        </div>
+        <div class="generalMcdStat" style="background: rgba(16, 185, 129, 0.1); border-color: rgba(16, 185, 129, 0.3);">
+            <div class="label">✅ Present</div>
+            <div class="value" id="attPresent" style="color: var(--green);">0</div>
+        </div>
+        <div class="generalMcdStat" style="background: rgba(245, 158, 11, 0.1); border-color: rgba(245, 158, 11, 0.3);">
+            <div class="label">🏖 Leave</div>
+            <div class="value" id="attLeave" style="color: var(--yellow);">0</div>
+        </div>
+        <div class="generalMcdStat" style="background: rgba(239, 68, 68, 0.1); border-color: rgba(239, 68, 68, 0.3);">
+            <div class="label">❌ Absent</div>
+            <div class="value" id="attAbsent" style="color: var(--red);">0</div>
+        </div>
+        <div class="generalMcdStat" style="background: rgba(139, 92, 246, 0.1); border-color: rgba(139, 92, 246, 0.3);">
+            <div class="label">🏥 Medical</div>
+            <div class="value" id="attMedical" style="color: var(--purple);">0</div>
+        </div>
+        <div class="generalMcdStat" style="background: rgba(100, 116, 139, 0.1); border-color: rgba(100, 116, 139, 0.3);">
+            <div class="label">📅 Off Day</div>
+            <div class="value" id="attOffDay" style="color: var(--muted);">0</div>
+        </div>
+    </div>
+    <div class="generalMcdClickHint">
+        <i class="fas fa-hand-pointer"></i> Click to open full Manpower Report
+    </div>
 </div>
 <!-- ========================================= -->
 
@@ -976,30 +983,7 @@ LIVE UPDATE SIGNAL
 <canvas id="needleIssueChart"></canvas>
 </div>
 </div>
-<div class="chartBox" id="billingChartBox" style="margin-bottom:20px; cursor:pointer; transition:transform 0.2s;" onmouseover="this.style.transform='translateY(-4px)'" onmouseout="this.style.transform='translateY(0)'" onclick="location.href='billing-manpower-report.html'" title="Go to Billing Manpower Report">
-<h3>👨 Attendance Manpower Chart <i class="fas fa-external-link-alt" style="font-size:12px; margin-left:8px; opacity:0.6;"></i></h3>
-<div class="chartGrid">
-<div style="text-align:center;"><canvas id="billingChart"></canvas></div>
-<div style="display:flex;flex-direction:column;justify-content:center;gap:10px;">
-<div style="background:rgba(16,185,129,.1);padding:14px;border-radius:12px;">
-<span style="color:var(--muted);font-size:11px;">👨‍ Attendance Total</span>
-<b style="color:var(--green);font-size:22px;" id="attTotal">0</b>
-</div>
-<div style="background:rgba(16,185,129,.1);padding:14px;border-radius:12px;">
-<span style="color:var(--muted);font-size:11px;">✅ Today Present</span>
-<b style="color:var(--green);font-size:22px;" id="attPresent">0</b>
-</div>
-<div style="background:rgba(245,158,11,.1);padding:14px;border-radius:12px;">
-<span style="color:var(--muted);font-size:11px;">🏖 Leave</span>
-<b style="color:var(--yellow);font-size:22px;" id="attLeave">0</b>
-</div>
-<div style="background:rgba(239,68,68,.1);padding:14px;border-radius:12px;">
-<span style="color:var(--muted);font-size:11px;">❌ Absent</span>
-<b style="color:var(--red);font-size:22px;" id="attAbsent">0</b>
-</div>
-</div>
-</div>
-</div>
+
 <div id="mcdDashboard" class="mcdDashboard">Loading...</div>
 </div>
 <!-- Composite Dashboard -->
@@ -2261,11 +2245,18 @@ return{labels,data,total,date:latest.date||''};
 }
 async function getBillingToday(shouldUpdate){
 var rows = await cachedGetDocs('billingManpowerReport', CACHE_KEYS.billingManpowerReport, shouldUpdate);
-var t=today(), total=0,leave=0,absent=0,present=0;
+var t=today(), total=0, leave=0, absent=0, present=0, medical=0, offDay=0;
 rows.forEach(function(x){
-if(x.date===t){total+=Number(x.totalManpower)||0;leave+=Number(x.leave)||0;absent+=Number(x.absent)||0;present+=Number(x.present)||0;}
+if(x.date===t){
+    total += Number(x.totalManpower || x.total) || 0;
+    leave += Number(x.leave) || 0;
+    absent += Number(x.absent) || 0;
+    present += Number(x.present) || 0;
+    medical += Number(x.medical) || 0;
+    offDay += Number(x.offDay) || 0;
+}
 });
-return{total,leave,absent,present};
+return {total, leave, absent, present, medical, offDay};
 }
 async function getNeedleIssueToday(shouldUpdate){
 var rows = await cachedGetDocs('needleDailyReport', CACHE_KEYS.needleDailyReport, shouldUpdate);
@@ -2425,65 +2416,8 @@ x:{grid:{display:false},ticks:{font:{size:12,weight:'600'},color:isLight?'#47556
 }
 };
 }
-function renderCharts(sewing,accessories,twill,floorStocks,grey,billing,needleIssue,generalMcd){
-window._lastChartData=[sewing,accessories,twill,floorStocks,grey,billing,needleIssue,generalMcd];
-// =========================================
-// 🌟 GENERAL MCD SMART CHART
-// =========================================
-if(isGeneralMcdAllowed() && generalMcd){
-if(generalMcdChart) generalMcdChart.destroy();
-var catLabels = Object.keys(generalMcd.catMap);
-var catValues = Object.values(generalMcd.catMap);
-var isLight = document.body.classList.contains('light');
-generalMcdChart = new Chart(document.getElementById('generalMcdChart'), {
-type: 'doughnut',
-data: {
-labels: catLabels.length ? catLabels : ['No Data'],
-datasets: [{
-data: catValues.length ? catValues : [1],
-backgroundColor: chartColors(catLabels.length || 1),
-borderWidth: 3,
-borderColor: isLight ? '#ffffff' : '#1e293b'
-}]
-},
-options: {
-responsive: true,
-maintainAspectRatio: false,
-plugins: {
-legend: {
-position: 'bottom',
-labels: {
-font: { size: 11, weight: '600', family: 'Poppins' },
-color: isLight ? '#1e293b' : '#f1f5f9',
-padding: 12,
-usePointStyle: true,
-pointStyle: 'circle'
-}
-},
-tooltip: {
-backgroundColor: 'rgba(15,23,42,.95)',
-titleColor: '#fff',
-bodyColor: '#fff',
-callbacks: {
-label: function(ctx){
-return ctx.label + ': ৳' + fmt(ctx.raw);
-}
-}
-}
-}
-}
-});
-// Update stats
-var todayValEl = document.getElementById('gmcTodayValue');
-var totalItemsEl = document.getElementById('gmcTotalItems');
-var deptsEl = document.getElementById('gmcDepartments');
-var catsEl = document.getElementById('gmcCategories');
-if(todayValEl) todayValEl.innerText = '৳' + fmt(generalMcd.totalAmount);
-if(totalItemsEl) totalItemsEl.innerText = fmt(generalMcd.totalItems);
-if(deptsEl) deptsEl.innerText = fmt(generalMcd.totalDepts);
-if(catsEl) catsEl.innerText = fmt(generalMcd.totalCats);
-}
-// =========================================
+function renderCharts(sewing,accessories,twill,floorStocks,grey,needleIssue,generalMcd){
+window._lastChartData=[sewing,accessories,twill,floorStocks,grey,needleIssue,generalMcd];
 if(isAccessoriesAllowed()){
 if(accessoriesChart) accessoriesChart.destroy();
 accessoriesChart=new Chart(document.getElementById('accessoriesChart'),{
@@ -2512,14 +2446,6 @@ greyChart=new Chart(document.getElementById('greyChart'),{
 type:'bar',
 data:{labels:grey.labels.length?grey.labels:['No Data'],datasets:[{data:grey.data.length?grey.data:[0],backgroundColor:chartColors((grey.data.length||1)),borderRadius:10,barPercentage:0.6}]},
 options:barOptions('Grey Fabric Present Stock'),plugins:[valueLabelPlugin]
-});
-}
-if(isBillingAllowed()){
-if(billingChart) billingChart.destroy();
-billingChart=new Chart(document.getElementById('billingChart'),{
-type:'doughnut',
-data:{labels:['Present','Leave','Absent'],datasets:[{data:[billing.present,billing.leave,billing.absent],backgroundColor:['#22c55e','#f59e0b','#ef4444'],borderWidth:3,borderColor:document.body.classList.contains('light')?'#ffffff':'#1e293b'}]},
-options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'bottom',labels:{font:{size:12,weight:'600',family:'Poppins'},color:document.body.classList.contains('light')?'#1e293b':'#f1f5f9',padding:16,usePointStyle:true,pointStyle:'circle'}}}}
 });
 }
 }
@@ -2597,9 +2523,11 @@ localStorage.setItem(LOCAL_TIMESTAMPS_KEY, JSON.stringify(newLocalTS));
 if(statusEl) statusEl.innerText='Dashboard loaded ✅';
 if(isBillingAllowed()){
 document.getElementById('attTotal').innerText=billing.total;
+document.getElementById('attPresent').innerText=billing.present;
 document.getElementById('attLeave').innerText=billing.leave;
 document.getElementById('attAbsent').innerText=billing.absent;
-document.getElementById('attPresent').innerText=billing.present;
+document.getElementById('attMedical').innerText=billing.medical;
+document.getElementById('attOffDay').innerText=billing.offDay;
 }
 updateLimitBox(firebase);
 if(isAccessoriesAllowed()){
@@ -2608,7 +2536,7 @@ document.getElementById('sumSewing').innerText=fmt(sewing);
 document.getElementById('sumTwill').innerText=fmt(twill);
 }
 if(isNeedleAllowed()) document.getElementById('needleToday').innerText=fmt(needleData.total);
-renderCharts(sewing,accessories,twill,needleData.floorStocks,grey,billing,needleIssue,generalMcd);
+renderCharts(sewing,accessories,twill,needleData.floorStocks,grey,needleIssue,generalMcd);
 var html='';
 ALL_MCD.forEach(function(mcd){
 if(!allowed.includes(mcd)) return;
@@ -2776,12 +2704,7 @@ var now=new Date();
 var currentMonth=now.getFullYear()+'-'+String(now.getMonth()+1).padStart(2,'0');
 var prev=new Date(now.getFullYear(),now.getMonth()-1,1);
 var previousMonth=prev.getFullYear()+'-'+String(prev.getMonth()+1).padStart(2,'0');
-var ok=confirm('Clear Old Data?
-KEEP:
-'+currentMonth+'
-'+previousMonth+'
-DELETE: Older months
-Backup: '+backupStatus); if(!ok) return;
+var ok=confirm('Clear Old Data?\nKEEP:\n'+currentMonth+'\n'+previousMonth+'\nDELETE: Older months\nBackup: '+backupStatus); if(!ok) return;
 var cols=['greyFabricStock','accessoriesInventory','billingManpowerReport','dailyPosting','sewingThread','twillTape','accessoriesSample','liveNotices','needleDailyReport','gatePlans','challanGatePass','generalMcdDaily'];
 var deleted=0,kept=0,skipped=0;
 try{
@@ -2799,10 +2722,7 @@ localStorage.setItem('lastClearDate',new Date().toISOString());
 window.GMS_CACHE.clear();
 localStorage.removeItem(LOCAL_TIMESTAMPS_KEY);
 addBackupLog('CLEAR','Deleted: '+deleted+', Kept: '+kept+', Skipped: '+skipped);
-alert('Clear Complete
-Deleted: '+deleted+'
-Kept: '+kept+'
-Skipped: '+skipped);
+alert('Clear Complete\nDeleted: '+deleted+'\nKept: '+kept+'\nSkipped: '+skipped);
 window.loadDashboardStock(true);
 }catch(e){console.log(e);alert('Clear Failed: '+e.message);}
 };
