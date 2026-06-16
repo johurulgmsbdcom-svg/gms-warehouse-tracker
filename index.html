@@ -442,6 +442,107 @@ box-shadow:0 2px 10px rgba(0,0,0,0.05);min-height:65px;
 body.light .entryCard,body.light .reportCard{background:linear-gradient(135deg,#ffffff 0%,#f8fafc 100%);border-color:#e2e8f0;}
 .entryCard:hover,.reportCard:hover{transform:translateY(-3px);box-shadow:0 8px 25px rgba(59,130,246,0.15);border-color:rgba(59,130,246,0.3);}
 .entryCard i,.reportCard i{font-size:16px;color:var(--blue);}
+/* ===== GENERAL MCD SPECIAL CHART BOX ===== */
+.generalMcdBox{
+background:linear-gradient(135deg,var(--card) 0%,var(--card2) 100%);
+border:2px solid var(--purple);
+border-radius:16px;
+padding:20px;
+margin-bottom:20px;
+cursor:pointer;
+transition:all 0.3s cubic-bezier(0.4,0,0.2,1);
+position:relative;
+overflow:hidden;
+box-shadow:0 4px 20px rgba(139,92,246,0.2);
+}
+.generalMcdBox:hover{
+transform:translateY(-4px);
+box-shadow:0 12px 30px rgba(139,92,246,0.35);
+border-color:var(--blue);
+}
+.generalMcdBox::before{
+content:'';
+position:absolute;
+top:-50%;right:-50%;
+width:100%;height:100%;
+background:radial-gradient(circle,rgba(139,92,246,0.1),transparent);
+pointer-events:none;
+}
+.generalMcdHeader{
+display:flex;
+justify-content:space-between;
+align-items:center;
+margin-bottom:16px;
+position:relative;
+z-index:1;
+}
+.generalMcdHeader h3{
+font-size:16px;
+font-weight:800;
+background:linear-gradient(135deg,var(--blue),var(--purple));
+-webkit-background-clip:text;
+-webkit-text-fill-color:transparent;
+background-clip:text;
+margin:0;
+display:flex;
+align-items:center;
+gap:10px;
+}
+.generalMcdBadge{
+background:linear-gradient(135deg,var(--green),#059669);
+color:#fff;
+padding:5px 12px;
+border-radius:20px;
+font-size:10px;
+font-weight:700;
+letter-spacing:0.5px;
+}
+.generalMcdChartCanvas{
+max-height:260px!important;
+position:relative;
+z-index:1;
+}
+.generalMcdStats{
+display:grid;
+grid-template-columns:repeat(auto-fit,minmax(120px,1fr));
+gap:10px;
+margin-top:16px;
+position:relative;
+z-index:1;
+}
+.generalMcdStat{
+background:rgba(59,130,246,0.08);
+border:1px solid rgba(59,130,246,0.2);
+border-radius:10px;
+padding:12px;
+text-align:center;
+}
+.generalMcdStat .label{
+font-size:10px;
+color:var(--muted);
+text-transform:uppercase;
+font-weight:600;
+letter-spacing:0.5px;
+margin-bottom:4px;
+}
+.generalMcdStat .value{
+font-size:18px;
+font-weight:800;
+color:var(--green);
+}
+.generalMcdClickHint{
+text-align:center;
+margin-top:12px;
+font-size:11px;
+color:var(--muted);
+font-weight:600;
+position:relative;
+z-index:1;
+}
+.generalMcdClickHint i{
+color:var(--blue);
+margin-right:4px;
+}
 /* ===== LIVE SIGNAL & STATS ===== */
 .liveSignalCard{
 background:var(--card);border:1px solid rgba(16,185,129,0.2);border-radius:16px;
@@ -823,6 +924,40 @@ LIVE UPDATE SIGNAL
 <div class="stat-icon"><i class="fas fa-syringe"></i></div>
 </div>
 </div>
+
+<!-- ========================================= -->
+<!-- 🌟 GENERAL MCD DAILY ISSUE SMART CHART BOX -->
+<!-- ========================================= -->
+<div class="generalMcdBox" id="generalMcdChartBox" onclick="location.href='general-mcd-daily.html'" title="Go to General MCD Daily Issue Smart Chart">
+<div class="generalMcdHeader">
+<h3><i class="fas fa-chart-line"></i> General MCD Daily Issue Smart Chart</h3>
+<span class="generalMcdBadge">SMART CHART</span>
+</div>
+<canvas id="generalMcdChart" class="generalMcdChartCanvas"></canvas>
+<div class="generalMcdStats">
+<div class="generalMcdStat">
+<div class="label">Today Value</div>
+<div class="value" id="gmcTodayValue">৳0</div>
+</div>
+<div class="generalMcdStat">
+<div class="label">Total Items</div>
+<div class="value" id="gmcTotalItems">0</div>
+</div>
+<div class="generalMcdStat">
+<div class="label">Departments</div>
+<div class="value" id="gmcDepartments">0</div>
+</div>
+<div class="generalMcdStat">
+<div class="label">Categories</div>
+<div class="value" id="gmcCategories">0</div>
+</div>
+</div>
+<div class="generalMcdClickHint">
+<i class="fas fa-hand-pointer"></i> Click to open full Smart Dashboard
+</div>
+</div>
+<!-- ========================================= -->
+
 <div class="chartGrid" style="margin-bottom:20px;">
 <div class="chartBox" id="accessoriesChartBox" style="cursor:pointer; transition:transform 0.2s;" onmouseover="this.style.transform='translateY(-4px)'" onmouseout="this.style.transform='translateY(0)'" onclick="location.href='accessories-inventory-report.html'" title="Go to Accessories Report">
 <h3>📈 Accessories Stock Chart <i class="fas fa-external-link-alt" style="font-size:12px; margin-left:8px; opacity:0.6;"></i></h3>
@@ -1108,14 +1243,12 @@ document.documentElement.style.setProperty('--text', '#f1f5f9');
 toggleColorPanel();
 showToast('🔄 Theme reset to default');
 };
-// Apply saved custom colors on load
 (function applyCustomTheme() {
 var savedBg = localStorage.getItem('customBgColor');
 if(savedBg) document.documentElement.style.setProperty('--bg', savedBg);
 var savedText = localStorage.getItem('customTextColor');
 if(savedText) document.documentElement.style.setProperty('--text', savedText);
 })();
-
 // ─────────────────────────────────────────────
 // 🔐 AUTO LOGOUT SYSTEM CONFIGURATION
 // ─────────────────────────────────────────────
@@ -1136,7 +1269,6 @@ let warningCountdownTimer = null;
 let warningRemainingSeconds = 0;
 let lastActivityUpdateTime = 0;
 let isSessionExpired = false;
-
 function initAutoLogoutSystem() {
 console.log('🔐 Auto-Logout System Initializing...');
 resetActivityTimestamp();
@@ -1372,7 +1504,6 @@ window.manualLogoutNow = manualLogoutNow;
 window.destroyAutoLogoutSystem = destroyAutoLogoutSystem;
 window.resetActivityTimestamp = resetActivityTimestamp;
 window.performAutoLogout = performAutoLogout;
-
 // ─────────────────────────────────────────────
 // 📦 SMART CACHE MANAGER
 // ─────────────────────────────────────────────
@@ -1423,7 +1554,6 @@ localStorage.removeItem(this.CACHE_KEY);
 console.log('✅ All cache cleared');
 }
 };
-
 // ─────────────────────────────────────────────
 // 📢 NOTICE CACHE MANAGER
 // ─────────────────────────────────────────────
@@ -1455,7 +1585,6 @@ setLastId : function(id){
 localStorage.setItem(this.KEY_LAST_ID, id);
 }
 };
-
 // Global vars
 window.userAllowedCompanies = [];
 window.currentCompany = 'GMS TEXTILES LTD';
@@ -1471,7 +1600,6 @@ if(window.userManpowerAccess==='all') return true;
 if(window.userManpowerAccess==='selected') return window.userManpowerMcdAccess.includes(m);
 return false;
 }
-
 // ─────────────────────────────────────────────
 // 🔄 COMPANY SWITCH
 // ─────────────────────────────────────────────
@@ -1550,7 +1678,6 @@ window.compositeEntryCards = function(c,m){ return '<div class="entryCard" oncli
 window.compositeReportCards = function(c,m){ return '<div class="reportCard" onclick="openGatePlanReport(\''+c+'\',\''+m+'\')"><i class="fas fa-truck"></i> Gate Plan Report</div><div class="reportCard" onclick="openChallanReport(\''+c+'\',\''+m+'\')"><i class="fas fa-file-invoice"></i> Challan / Gate Pass Report</div>'; };
 window.commonEntryCards   = window.compositeEntryCards;
 window.commonReportCards  = window.compositeReportCards;
-
 window.openProfileModal  = function(){ document.getElementById('profileModal').style.display='flex'; };
 window.closeProfileModal = function(){ document.getElementById('profileModal').style.display='none'; };
 window.handleProfileUpload = function(input){
@@ -1651,6 +1778,10 @@ if(mcd==='BILLING SECTION'){
 box.innerHTML='<div class="entryCard" onclick="location.href=\'billing-manpower-report.html\'"><i class="fas fa-users"></i> Billing Manpower</div>'+common;
 return;
 }
+if(mcd==='GENERAL MCD'){
+box.innerHTML='<div class="entryCard" onclick="location.href=\'general-mcd-daily.html\'" style="background:linear-gradient(135deg,rgba(139,92,246,0.15),rgba(59,130,246,0.15));border-color:var(--purple);"><i class="fas fa-file-alt" style="color:var(--purple);"></i> 📝 GENERAL MCD Daily Entry</div>'+common;
+return;
+}
 box.innerHTML='<div class="entryCard">📝 '+mcd+' Daily Entry</div><div class="entryCard" onclick="location.href=\'billing-manpower-report.html\'"><i class="fas fa-users"></i> Billing Manpower</div>'+common;
 };
 window.loadReport = function(){
@@ -1673,9 +1804,12 @@ if(mcd==='BILLING SECTION'){
 box.innerHTML='<div class="reportCard" onclick="location.href=\'billing-manpower-report.html\'"><i class="fas fa-users"></i> Billing Manpower</div>'+common;
 return;
 }
+if(mcd==='GENERAL MCD'){
+box.innerHTML='<div class="reportCard" onclick="location.href=\'general-mcd-daily.html\'" style="background:linear-gradient(135deg,rgba(139,92,246,0.15),rgba(59,130,246,0.15));border-color:var(--purple);"><i class="fas fa-chart-bar" style="color:var(--purple);"></i> 📊 GENERAL MCD Daily Report</div>'+common;
+return;
+}
 box.innerHTML='<div class="reportCard">📑 '+mcd+' Report</div><div class="reportCard" onclick="location.href=\'billing-manpower-report.html\'"><i class="fas fa-users"></i> Billing Manpower</div>'+common;
 };
-
 // ================================================================
 // 🔥 AUTO ROI SYNC FUNCTIONS
 // ================================================================
@@ -1701,7 +1835,6 @@ console.log('🔄 Auto-saved to ROI:', mcd, company);
 console.warn('autoSaveToROI error:', e);
 }
 }
-
 window.trackNeedleActivity = function(type, user, minutes){
 try{
 var activity = JSON.parse(localStorage.getItem('gms_needle_activity') || '[]');
@@ -1720,7 +1853,6 @@ window.dispatchEvent(new Event('storage'));
 console.warn('trackNeedleActivity error:', e);
 }
 };
-
 window.trackButtonUsage = function(buttonName, mcd){
 try{
 var activity = JSON.parse(localStorage.getItem('gms_button_activity') || '[]');
@@ -1736,7 +1868,6 @@ localStorage.setItem('gms_button_activity', JSON.stringify(activity));
 console.warn('trackButtonUsage error:', e);
 }
 };
-
 window.addCustomReportToROI = function(mcd, reportName, rptDay, users, usagePct){
 try{
 var autoReports = JSON.parse(localStorage.getItem('gms_all_reports') || '[]');
@@ -1764,8 +1895,6 @@ console.warn('addCustomReportToROI error:', e);
 return false;
 }
 };
-
-// 5. trackReportActivity — যখনই কোনো রিপোর্ট লোড বা ভিউ হবে (Reports Today এর জন্য)
 window.trackReportActivity = function(mcd, reportName){
 try{
 var activity = JSON.parse(localStorage.getItem('report_activity') || '[]');
@@ -1785,14 +1914,12 @@ window.dispatchEvent(new Event('storage'));
 console.warn('trackReportActivity error:', e);
 }
 };
-
 (function(){
 var c = window.GMS_CACHE.getReadCount();
 var el = document.getElementById('readCounter');
 if(el) el.innerText = c;
 })();
 </script>
-
 <!-- ================================================================
 FIREBASE MODULE — SMART SELECTIVE CACHE + TIMESTAMP SYSTEM
 ================================================================ -->
@@ -1837,11 +1964,10 @@ const FLOOR_OPENING = {
 'Shapla R':1171,'Shapla N':573,'Sample R':1138,'Sample N':251,
 'EMBROIDERY R':1011,'EMBROIDERY N':287,'Belly R':796,'Belly N':335
 };
-let accessoriesChart=null,needleChart=null,greyChart=null,billingChart=null,needleIssueChart=null;
+let accessoriesChart=null,needleChart=null,greyChart=null,billingChart=null,needleIssueChart=null,generalMcdChart=null;
 let selectedBackupData=null;
 document.getElementById('loginInfo').innerText =
 `${user.name||'User'} • ${window.userRole.toUpperCase()} ${window.userRole==='user'?'• '+userMCDs.join(', '):''}`;
-
 const SYNC_QUEUE_KEY  = 'GMS_STEALTH_QUEUE';
 const COUNTER_KEY     = 'GMS_SERIAL_COUNTERS';
 const QUOTA_ALERT_KEY = 'GMS_QUOTA_LIMIT_ALERTS';
@@ -1850,7 +1976,6 @@ function getQueue(){ return JSON.parse(localStorage.getItem(SYNC_QUEUE_KEY)||'[]
 function setQueue(q){ localStorage.setItem(SYNC_QUEUE_KEY, JSON.stringify(q)); }
 function getQuotaAlerts(){ return JSON.parse(localStorage.getItem(QUOTA_ALERT_KEY)||'{}'); }
 function setQuotaAlerts(d){ localStorage.setItem(QUOTA_ALERT_KEY, JSON.stringify(d)); }
-
 const CACHE_KEYS = {
 sewingThread        : 'sewing_stock',
 twillTape           : 'twill_stock',
@@ -1860,9 +1985,9 @@ greyFabricStock     : 'grey_stock',
 billingManpowerReport: 'billing_today',
 needleDailyReport   : 'needle_issue_today',
 manpower            : 'manpower_summary',
-ALL_DASHBOARD       : ['sewing_stock','twill_stock','accessories_stock','needle_floor_stock','grey_stock','billing_today','needle_issue_today','manpower_summary','firebase_counts']
+generalMcdDaily     : 'general_mcd_daily',
+ALL_DASHBOARD       : ['sewing_stock','twill_stock','accessories_stock','needle_floor_stock','grey_stock','billing_today','needle_issue_today','manpower_summary','firebase_counts','general_mcd_daily']
 };
-
 async function updateCollectionTimestamp(collectionName){
 try{
 await setDoc(doc(db, 'system_sync', collectionName), { lastUpdated: Date.now() }, { merge: true });
@@ -1872,7 +1997,6 @@ console.warn('Timestamp update failed:', e);
 }
 }
 window.updateCollectionTimestamp = updateCollectionTimestamp;
-
 function buildShouldUpdate(remoteTimestamps, forceAll){
 return function(col){
 if(forceAll) return true;
@@ -1882,7 +2006,6 @@ var remote = remoteTimestamps[col]||0;
 return remote > local[col];
 };
 }
-
 window.saveDataOffline = function(collectionName, data, serialPrefix){
 serialPrefix = serialPrefix||'';
 var queue = getQueue();
@@ -1915,7 +2038,6 @@ updateLocalUI(collectionName, data);
 if(window.userRole==='admin'||window.userRole==='full') renderAdminSyncTable();
 if(typeof resetActivityTimestamp === 'function') resetActivityTimestamp();
 };
-
 window.autoSyncQueue = async function(){
 var queue = getQueue();
 var pending = queue.filter(function(x){return x.status==='pending';});
@@ -1946,7 +2068,6 @@ showToast('☁️ '+syncedIds.length+' items synced');
 }
 }catch(e){console.log('Sync error:',e);}
 };
-
 window.forceSyncNow = function(){
 var queue=getQueue();
 var pending=queue.filter(function(x){return x.status==='pending';});
@@ -1954,7 +2075,6 @@ if(pending.length===0){showToast('✅ No pending data');return;}
 showToast(' Syncing '+pending.length+' items...');
 window.autoSyncQueue();
 };
-
 function renderAdminSyncTable(){
 var panel=document.getElementById('adminSyncPanel'); if(!panel) return;
 panel.style.display='block';
@@ -1973,7 +2093,6 @@ var summary=item.data.buyer||item.data.challanNo||item.data.floor||item.serial||
 return '<tr><td style="padding:12px;">'+item.user+'</td><td style="padding:12px;">'+item.collection+'</td><td style="padding:12px;">'+summary+'</td><td style="padding:12px;color:var(--muted);">'+item.time+'</td><td style="padding:12px;text-align:center;"><span class="pending-badge">⏳ Pending</span></td></tr>';
 }).join('');
 }
-
 function updateLocalUI(col, data){
 if(col.includes('needle')||col.includes('posting')){
 var stockEl=document.getElementById('needleToday');
@@ -1983,7 +2102,6 @@ stockEl.innerText=(current+(data.receive||0)-(data.delivery||0)).toLocaleString(
 }
 }
 }
-
 window.triggerQuotaAlert = function(type, details){
 if(window.userRole!=='admin'&&window.userRole!=='full') return;
 var alerts=getQuotaAlerts();
@@ -1992,7 +2110,6 @@ alerts[type]={msg:details||type+' LIMIT EXHAUSTED',time:new Date().toLocaleStrin
 setQuotaAlerts(alerts); renderQuotaAlerts();
 }
 };
-
 function renderQuotaAlerts(){
 var panel=document.getElementById('adminQuotaAlerts');
 var list=document.getElementById('quotaAlertList');
@@ -2005,9 +2122,7 @@ list.innerHTML=keys.map(function(k){
 return '<div class="quota-alert-item"><div><span class="msg">🔴 '+k+'</span><div style="color:var(--muted);font-size:11px;margin-top:2px;">'+alerts[k].msg+'</div></div><span class="time">'+alerts[k].time+'</span></div>';
 }).join('');
 }
-
 window.resetQuotaAlerts = function(){ localStorage.removeItem(QUOTA_ALERT_KEY); renderQuotaAlerts(); showToast('✅ Alerts cleared'); };
-
 function dailyQuotaReset(){
 var lastReset=localStorage.getItem('GMS_QUOTA_LAST_RESET');
 var today=new Date().toDateString();
@@ -2017,7 +2132,6 @@ localStorage.removeItem(LOCAL_TIMESTAMPS_KEY);
 localStorage.setItem('GMS_QUOTA_LAST_RESET',today);
 }
 }
-
 function today(){ return new Date().toISOString().slice(0,10); }
 function parseNum(v){ return Number(String(v||0).replace(/,/g,''))||0; }
 function fmt(v){ return parseNum(v).toLocaleString('en-US'); }
@@ -2028,13 +2142,13 @@ function isNeedleAllowed(){ return window.userRole==='admin'||window.userRole===
 function isAccessoriesAllowed(){ return window.userRole==='admin'||window.userRole==='full'||userMCDs.includes('ACCESSORIES MCD'); }
 function isGreyAllowed(){ return window.userRole==='admin'||window.userRole==='full'||userMCDs.includes('GREY FABRIC MCD'); }
 function isBillingAllowed(){ return window.userRole==='admin'||window.userRole==='full'||userMCDs.includes('BILLING SECTION'); }
+function isGeneralMcdAllowed(){ return window.userRole==='admin'||window.userRole==='full'||userMCDs.includes('GENERAL MCD'); }
 function isManpowerAllowed(){
 if(window.userRole==='admin'||window.userRole==='full') return true;
 if(manpowerAccess==='all') return true;
 if(manpowerAccess==='selected'&&manpowerMcdAccess.length>0) return true;
 return false;
 }
-
 function setupRoleUI(){
 if(window.userRole!=='admin'){
 document.getElementById('adminNav').style.display='none';
@@ -2057,11 +2171,14 @@ document.getElementById('accessoriesChartBox').style.display='none';
 }
 if(!isGreyAllowed()) document.getElementById('greyChartBox').style.display='none';
 if(!isBillingAllowed()) document.getElementById('billingChartBox').style.display='none';
+if(!isGeneralMcdAllowed()){
+var gmcBox = document.getElementById('generalMcdChartBox');
+if(gmcBox) gmcBox.style.display='none';
+}
 var list=allowedMCDList();
 document.getElementById('entryMcd').innerHTML=list.map(function(x){return '<option>'+x+'</option>';}).join('');
 document.getElementById('reportMcd').innerHTML=list.map(function(x){return '<option>'+x+'</option>';}).join('');
 }
-
 async function cachedGetDocs(collectionName, cacheKey, shouldUpdate){
 if(shouldUpdate === false){
 var cached = window.GMS_CACHE.get(cacheKey);
@@ -2089,7 +2206,6 @@ window.GMS_CACHE.set(cacheKey, rows);
 window.GMS_CACHE.incRead(snap.size||1);
 return rows;
 }
-
 async function getLatestPresent(collectionName, openingStock, shouldUpdate){
 var cacheKey = CACHE_KEYS[collectionName]||('stock_'+collectionName);
 var rows = await cachedGetDocs(collectionName, cacheKey, shouldUpdate);
@@ -2099,7 +2215,6 @@ var r=0, dv=0;
 rows.forEach(function(x){r+=Number(x.receive)||0; dv+=Number(x.delivery)||0;});
 return openingStock+r-dv;
 }
-
 async function getManpowerSummary(shouldUpdate){
 var rows = await cachedGetDocs('manpower', CACHE_KEYS.manpower, shouldUpdate);
 var map={}, totalCount=0, totalSalary=0;
@@ -2113,7 +2228,6 @@ totalCount++; totalSalary+=Number(x.salary)||0;
 });
 return{map,totalCount,totalSalary};
 }
-
 async function getNeedleFloorStock(shouldUpdate){
 var rows = await cachedGetDocs('dailyPosting', CACHE_KEYS.dailyPosting, shouldUpdate);
 var latestByFloor={};
@@ -2132,7 +2246,6 @@ floorStocks[f]=stock; total+=stock;
 });
 return{floorStocks,total};
 }
-
 async function getGreyData(shouldUpdate){
 var rows = await cachedGetDocs('greyFabricStock', CACHE_KEYS.greyFabricStock, shouldUpdate);
 var docs = rows.filter(function(x){return x.date&&x.rows&&x.rows.length>0;});
@@ -2146,7 +2259,6 @@ if(closing>0){labels.push(r.year||r.fabric||'Item');data.push(closing);total+=cl
 if(total>0){labels.push('Grand Total');data.push(total);}
 return{labels,data,total,date:latest.date||''};
 }
-
 async function getBillingToday(shouldUpdate){
 var rows = await cachedGetDocs('billingManpowerReport', CACHE_KEYS.billingManpowerReport, shouldUpdate);
 var t=today(), total=0,leave=0,absent=0,present=0;
@@ -2155,20 +2267,48 @@ if(x.date===t){total+=Number(x.totalManpower)||0;leave+=Number(x.leave)||0;absen
 });
 return{total,leave,absent,present};
 }
-
 async function getNeedleIssueToday(shouldUpdate){
 var rows = await cachedGetDocs('needleDailyReport', CACHE_KEYS.needleDailyReport, shouldUpdate);
 rows.sort(function(a,b){return (b.date||'').localeCompare(a.date||'');});
 var latest=rows[0]||{};
 return{broken:parseNum(latest.brokenNeedle),missing:parseNum(latest.missingNeedle),change:parseNum(latest.changeNeedle),date:latest.date||''};
 }
-
+// =========================================
+// 🌟 GENERAL MCD DAILY DATA LOADER
+// =========================================
+async function getGeneralMcdDailyData(shouldUpdate){
+var rows = await cachedGetDocs('generalMcdDaily', CACHE_KEYS.generalMcdDaily, shouldUpdate);
+var t = today();
+var todayRows = rows.filter(function(x){ return x.date === t; });
+var totalAmount = 0, totalQty = 0;
+var deptMap = {}, catMap = {};
+todayRows.forEach(function(r){
+totalAmount += parseNum(r.amount);
+totalQty += parseNum(r.issueQty);
+var dept = r.department || 'Unknown';
+var cat = r.category || 'Unknown';
+if(!deptMap[dept]) deptMap[dept] = 0;
+deptMap[dept] += parseNum(r.amount);
+if(!catMap[cat]) catMap[cat] = 0;
+catMap[cat] += parseNum(r.amount);
+});
+return {
+totalAmount: totalAmount,
+totalQty: totalQty,
+totalItems: todayRows.length,
+totalDepts: Object.keys(deptMap).length,
+totalCats: Object.keys(catMap).length,
+deptMap: deptMap,
+catMap: catMap,
+date: t
+};
+}
 async function getFirebaseCounts(){
 var cached = window.GMS_CACHE.get('firebase_counts');
 if(cached) return cached;
 var cols=['greyFabricStock','accessoriesInventory','billingManpowerReport','dailyPosting',
 'sewingThread','twillTape','accessoriesSample','liveNotices','manpower','users',
-'needleDailyReport','gatePlans','challanGatePass'];
+'needleDailyReport','gatePlans','challanGatePass','generalMcdDaily'];
 var t=today(),totalCount=0,approxBytes=0,todayCount=0,gatePlanCount=0,challanCount=0;
 for(var c of cols){
 try{
@@ -2188,7 +2328,6 @@ var result={totalCount,storagePercent:(approxBytes/1024/1024/1024)*100,todayEntr
 window.GMS_CACHE.set('firebase_counts', result);
 return result;
 }
-
 async function smartLoadNotices(){
 try{
 var q = query(collection(db,'liveNotices'), orderBy('createdAt','desc'), limit(1));
@@ -2227,7 +2366,6 @@ var cached = window.GMS_NOTICE_CACHE.getCachedText();
 setNoticeBar(cached||'📢 Notice loading failed');
 }
 }
-
 function setNoticeBar(text){
 var el=document.getElementById('noticeMove');
 if(!el) return;
@@ -2236,7 +2374,6 @@ el.offsetHeight;
 el.innerText=text;
 el.style.animation='marquee 30s linear infinite';
 }
-
 function setupNoticeListener(){
 var q = query(collection(db,'liveNotices'), orderBy('createdAt','desc'), limit(1));
 onSnapshot(q, function(snap){
@@ -2253,7 +2390,6 @@ snap.forEach(function(d){rows.push({id:d.id,...d.data()});});
 updateSidebarNoticeBadge(rows);
 });
 }
-
 const chartPalette=['#38bdf8','#22c55e','#f59e0b','#a855f7','#ef4444','#14b8a6','#eab308','#6366f1','#ec4899','#84cc16','#06b6d4','#f97316'];
 function chartColors(count){ return Array.from({length:count},function(_,i){return chartPalette[i%chartPalette.length];}); }
 const valueLabelPlugin={
@@ -2289,9 +2425,65 @@ x:{grid:{display:false},ticks:{font:{size:12,weight:'600'},color:isLight?'#47556
 }
 };
 }
-
-function renderCharts(sewing,accessories,twill,floorStocks,grey,billing,needleIssue){
-window._lastChartData=[sewing,accessories,twill,floorStocks,grey,billing,needleIssue];
+function renderCharts(sewing,accessories,twill,floorStocks,grey,billing,needleIssue,generalMcd){
+window._lastChartData=[sewing,accessories,twill,floorStocks,grey,billing,needleIssue,generalMcd];
+// =========================================
+// 🌟 GENERAL MCD SMART CHART
+// =========================================
+if(isGeneralMcdAllowed() && generalMcd){
+if(generalMcdChart) generalMcdChart.destroy();
+var catLabels = Object.keys(generalMcd.catMap);
+var catValues = Object.values(generalMcd.catMap);
+var isLight = document.body.classList.contains('light');
+generalMcdChart = new Chart(document.getElementById('generalMcdChart'), {
+type: 'doughnut',
+data: {
+labels: catLabels.length ? catLabels : ['No Data'],
+datasets: [{
+data: catValues.length ? catValues : [1],
+backgroundColor: chartColors(catLabels.length || 1),
+borderWidth: 3,
+borderColor: isLight ? '#ffffff' : '#1e293b'
+}]
+},
+options: {
+responsive: true,
+maintainAspectRatio: false,
+plugins: {
+legend: {
+position: 'bottom',
+labels: {
+font: { size: 11, weight: '600', family: 'Poppins' },
+color: isLight ? '#1e293b' : '#f1f5f9',
+padding: 12,
+usePointStyle: true,
+pointStyle: 'circle'
+}
+},
+tooltip: {
+backgroundColor: 'rgba(15,23,42,.95)',
+titleColor: '#fff',
+bodyColor: '#fff',
+callbacks: {
+label: function(ctx){
+return ctx.label + ': ৳' + fmt(ctx.raw);
+}
+}
+}
+}
+}
+});
+// Update stats
+var todayValEl = document.getElementById('gmcTodayValue');
+var totalItemsEl = document.getElementById('gmcTotalItems');
+var deptsEl = document.getElementById('gmcDepartments');
+var catsEl = document.getElementById('gmcCategories');
+if(todayValEl) todayValEl.innerText = '৳' + fmt(generalMcd.totalAmount);
+if(totalItemsEl) totalItemsEl.innerText = fmt(generalMcd.totalItems);
+if(deptsEl) deptsEl.innerText = fmt(generalMcd.totalDepts);
+if(catsEl) catsEl.innerText = fmt(generalMcd.totalCats);
+}
+// =========================================
 if(isAccessoriesAllowed()){
 if(accessoriesChart) accessoriesChart.destroy();
 accessoriesChart=new Chart(document.getElementById('accessoriesChart'),{
@@ -2331,7 +2523,6 @@ options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'bo
 });
 }
 }
-
 window.loadDashboardStock = async function(forceAll){
 if(!canUserSeeCompany(window.currentCompany)){
 document.getElementById('textileDashboard').style.display='none';
@@ -2373,6 +2564,7 @@ var greyNeedsUpdate        = shouldUpdate('greyFabricStock');
 var billingNeedsUpdate     = shouldUpdate('billingManpowerReport');
 var needleIssueNeedsUpdate = shouldUpdate('needleDailyReport');
 var manpowerNeedsUpdate    = shouldUpdate('manpower');
+var generalMcdNeedsUpdate  = shouldUpdate('generalMcdDaily');
 console.log('📊 Selective Load Plan:', {
 sewingThread: sewingNeedsUpdate?'🔥Firebase':'📦Cache',
 twillTape: twillNeedsUpdate?'🔥Firebase':'📦Cache',
@@ -2382,6 +2574,7 @@ greyFabricStock: greyNeedsUpdate?'🔥Firebase':'📦Cache',
 billingManpowerReport: billingNeedsUpdate?'🔥Firebase':'📦Cache',
 needleDailyReport: needleIssueNeedsUpdate?'🔥Firebase':'📦Cache',
 manpower: manpowerNeedsUpdate?'🔥Firebase':'📦Cache',
+generalMcdDaily: generalMcdNeedsUpdate?'🔥Firebase':'📦Cache',
 });
 if(statusEl) statusEl.innerText='⚡ Selective loading...';
 var sewing      = await getLatestPresent('sewingThread',133322, sewingNeedsUpdate);
@@ -2391,6 +2584,7 @@ var needleData  = await getNeedleFloorStock(needleNeedsUpdate);
 var grey        = await getGreyData(greyNeedsUpdate);
 var billing     = await getBillingToday(billingNeedsUpdate);
 var needleIssue = await getNeedleIssueToday(needleIssueNeedsUpdate);
+var generalMcd  = isGeneralMcdAllowed() ? await getGeneralMcdDailyData(generalMcdNeedsUpdate) : null;
 var firebase    = await getFirebaseCounts();
 var mpData      = await getManpowerSummary(manpowerNeedsUpdate);
 var manpower    = mpData.map;
@@ -2414,7 +2608,7 @@ document.getElementById('sumSewing').innerText=fmt(sewing);
 document.getElementById('sumTwill').innerText=fmt(twill);
 }
 if(isNeedleAllowed()) document.getElementById('needleToday').innerText=fmt(needleData.total);
-renderCharts(sewing,accessories,twill,needleData.floorStocks,grey,billing,needleIssue);
+renderCharts(sewing,accessories,twill,needleData.floorStocks,grey,billing,needleIssue,generalMcd);
 var html='';
 ALL_MCD.forEach(function(mcd){
 if(!allowed.includes(mcd)) return;
@@ -2426,6 +2620,8 @@ html+='<div class="mcdBox"><h3> ACCESSORIES MCD</h3><div class="miniRow"><span>�
 html+='<div class="mcdBox"><h3> GREY FABRIC MCD</h3><div class="miniRow"><span>📦 Closing Balance</span><span class="miniValue">'+fmt(grey.total)+'</span></div></div>';
 } else if(mcd==='BILLING SECTION'){
 html+='<div class="mcdBox"><h3>‍ BILLING SECTION</h3><div class="miniRow"><span>👨‍ Total</span><span class="miniValue">'+fmt(billing.total)+'</span></div><div class="miniRow"><span>✅ Present</span><span class="miniValue">'+fmt(billing.present)+'</span></div><div class="miniRow"><span>❌ Absent</span><span class="miniValue">'+fmt(billing.absent)+'</span></div></div>';
+} else if(mcd==='GENERAL MCD' && generalMcd){
+html+='<div class="mcdBox" style="cursor:pointer;border-color:var(--purple);" onclick="location.href=\'general-mcd-daily.html\'"><h3 style="background:linear-gradient(135deg,var(--blue),var(--purple));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;">📊 GENERAL MCD</h3><div class="miniRow"><span>💰 Today Value</span><span class="miniValue">৳'+fmt(generalMcd.totalAmount)+'</span></div><div class="miniRow"><span>📦 Total Items</span><span class="miniValue">'+fmt(generalMcd.totalItems)+'</span></div><div class="miniRow"><span>🏢 Departments</span><span class="miniValue">'+fmt(generalMcd.totalDepts)+'</span></div><div class="miniRow"><span>📂 Categories</span><span class="miniValue">'+fmt(generalMcd.totalCats)+'</span></div></div>';
 } else {
 var mpHtml='';
 if(isManpowerAllowed()&&(manpowerAccess==='all'||manpowerMcdAccess.includes(mcd))){
@@ -2441,7 +2637,6 @@ if(statusEl) statusEl.innerText='Load error ❌';
 document.getElementById('mcdDashboard').innerHTML='Firebase data load error';
 }
 };
-
 function setupRealtimeDashboardSync(){
 var syncCol = collection(db, 'system_sync');
 onSnapshot(syncCol, function(snapshot){
@@ -2459,7 +2654,6 @@ loadDashboardStock(false);
 }
 });
 }
-
 function updateLimitBox(firebase){
 var approxMB=0, storagePercent=0;
 if(firebase){approxMB=firebase.totalCount||0; storagePercent=firebase.storagePercent||0;}
@@ -2484,7 +2678,6 @@ if(pct>=95) window.triggerQuotaAlert('Storage','Firestore storage at '+pct.toFix
 else if(pct>=85) window.triggerQuotaAlert('Storage Warning','Storage at '+pct.toFixed(1)+'%. Monitor closely.');
 }
 }
-
 function addBackupLog(type,details){
 var logs=JSON.parse(localStorage.getItem('backupActivityLogs')||'[]');
 logs.unshift({type,details,user:user.name||user.email||'Admin',time:new Date().toLocaleString()});
@@ -2492,7 +2685,6 @@ logs=logs.slice(0,20);
 localStorage.setItem('backupActivityLogs',JSON.stringify(logs));
 renderBackupLog();
 }
-
 function renderBackupLog(){
 var box=document.getElementById('backupActivityLog'); if(!box) return;
 var logs=JSON.parse(localStorage.getItem('backupActivityLogs')||'[]');
@@ -2502,15 +2694,13 @@ return '<div class="logItem"><b>'+x.type+'</b> - '+x.details+'<br><span>'+x.time
 }).join('');
 }
 window.renderBackupLog = renderBackupLog;
-
 function getRowMonth(row){ var dt=row.date||row.postingDate||row.entryDate||(row.createdAt||'').slice(0,10)||''; return dt&&dt.length>=7?dt.slice(0,7):''; }
 function backupDocId(row){ return row._docId||row.id||row.challanNo||row.gatePlanNo||row.gatePassNo||(row.date||'no-date')+'-'+Date.now()+'-'+Math.floor(Math.random()*999999); }
-
 window.backupAllData = async function(){
 if(window.userRole!=='admin'){alert('Admin only');return;}
 try{
 var backup={date:new Date().toISOString(),backupMonths:[],data:{}};
-var cols=['greyFabricStock','accessoriesInventory','billingManpowerReport','dailyPosting','sewingThread','twillTape','accessoriesSample','liveNotices','manpower','needleDailyReport','gatePlans','challanGatePass'];
+var cols=['greyFabricStock','accessoriesInventory','billingManpowerReport','dailyPosting','sewingThread','twillTape','accessoriesSample','liveNotices','manpower','needleDailyReport','gatePlans','challanGatePass','generalMcdDaily'];
 for(var c of cols){
 var snap=await getDocs(collection(db,c));
 backup.data[c]=[];
@@ -2528,7 +2718,6 @@ alert('Backup Download Complete');
 window.loadDashboardStock();
 }catch(e){console.log(e);alert('Backup Failed: '+e.message);}
 };
-
 window.loadRestoreFile = function(event){
 if(window.userRole!=='admin'){alert('Admin only');return;}
 var file=event.target.files[0]; if(!file) return;
@@ -2551,7 +2740,6 @@ addBackupLog('RESTORE FILE','Loaded: '+file.name+', months: '+months.length);
 };
 reader.readAsText(file);
 };
-
 window.restoreSelectedMonth = async function(){
 if(window.userRole!=='admin'){alert('Admin only');return;}
 if(!selectedBackupData){alert('Please select backup JSON file first');return;}
@@ -2580,7 +2768,6 @@ alert('Restore Complete: '+total+' data restored for '+month);
 window.loadDashboardStock(true);
 }catch(e){console.log(e);document.getElementById('restoreStatus').innerText='RESTORE FAILED';alert('Restore Failed: '+e.message);}
 };
-
 window.clearOldData = async function(){
 if(window.userRole!=='admin'){alert('Admin only');return;}
 var backupStatus=localStorage.getItem('backupStatus')||'';
@@ -2589,8 +2776,13 @@ var now=new Date();
 var currentMonth=now.getFullYear()+'-'+String(now.getMonth()+1).padStart(2,'0');
 var prev=new Date(now.getFullYear(),now.getMonth()-1,1);
 var previousMonth=prev.getFullYear()+'-'+String(prev.getMonth()+1).padStart(2,'0');
-var ok=confirm('Clear Old Data?\nKEEP:\n'+currentMonth+'\n'+previousMonth+'\nDELETE: Older months\nBackup: '+backupStatus); if(!ok) return;
-var cols=['greyFabricStock','accessoriesInventory','billingManpowerReport','dailyPosting','sewingThread','twillTape','accessoriesSample','liveNotices','needleDailyReport','gatePlans','challanGatePass'];
+var ok=confirm('Clear Old Data?
+KEEP:
+'+currentMonth+'
+'+previousMonth+'
+DELETE: Older months
+Backup: '+backupStatus); if(!ok) return;
+var cols=['greyFabricStock','accessoriesInventory','billingManpowerReport','dailyPosting','sewingThread','twillTape','accessoriesSample','liveNotices','needleDailyReport','gatePlans','challanGatePass','generalMcdDaily'];
 var deleted=0,kept=0,skipped=0;
 try{
 for(var c of cols){
@@ -2607,16 +2799,18 @@ localStorage.setItem('lastClearDate',new Date().toISOString());
 window.GMS_CACHE.clear();
 localStorage.removeItem(LOCAL_TIMESTAMPS_KEY);
 addBackupLog('CLEAR','Deleted: '+deleted+', Kept: '+kept+', Skipped: '+skipped);
-alert('Clear Complete\nDeleted: '+deleted+'\nKept: '+kept+'\nSkipped: '+skipped);
+alert('Clear Complete
+Deleted: '+deleted+'
+Kept: '+kept+'
+Skipped: '+skipped);
 window.loadDashboardStock(true);
 }catch(e){console.log(e);alert('Clear Failed: '+e.message);}
 };
-
 window.removeRestoredMonth = async function(){
 if(window.userRole!=='admin'){alert('Admin only');return;}
 var month=localStorage.getItem('lastRestoredMonth')||''; if(!month){alert('No restored month found.');return;}
 if(!confirm('Remove restored month data: '+month+' ?')) return;
-var cols=['greyFabricStock','accessoriesInventory','billingManpowerReport','dailyPosting','sewingThread','twillTape','accessoriesSample','liveNotices','needleDailyReport','gatePlans','challanGatePass'];
+var cols=['greyFabricStock','accessoriesInventory','billingManpowerReport','dailyPosting','sewingThread','twillTape','accessoriesSample','liveNotices','needleDailyReport','gatePlans','challanGatePass','generalMcdDaily'];
 var deleted=0;
 try{
 for(var c of cols){
@@ -2635,14 +2829,12 @@ alert('Removed: '+deleted+' data');
 window.loadDashboardStock(true);
 }catch(e){console.log(e);alert('Remove Failed: '+e.message);}
 };
-
 async function updateLastActive(){
 if(user.id){
 try{await updateDoc(doc(db,'users',user.id),{lastActive:new Date().toISOString()});}
 catch(e){}
 }
 }
-
 onMessage(messaging, function(payload){
 console.log('[FCM] Foreground:', payload);
 var title=(payload.notification||{}).title;
@@ -2654,7 +2846,6 @@ window.GMS_NOTICE_CACHE.setLastId('');
 smartLoadNotices();
 if(typeof resetActivityTimestamp === 'function') resetActivityTimestamp();
 });
-
 setupRoleUI();
 setupCompanyPermissions();
 (function(){
@@ -2701,20 +2892,7 @@ renderAdminSyncTable();
 setInterval(window.autoSyncQueue, 300000);
 setTimeout(window.autoSyncQueue, 2000);
 });
-(function displaySessionConfig() {
-console.log('═══════════════════════════════════════════');
-console.log('🔐 AUTO LOGOUT SYSTEM - ACTIVE');
-console.log('═══════════════════════════════════════════');
-console.log('⏱️  Session Timeout:', SESSION_CONFIG.TIMEOUT_MINUTES, 'minutes');
-console.log('⚠️  Warning Shows:', SESSION_CONFIG.WARNING_MINUTES, 'minutes before logout');
-console.log('🔄 Check Interval:', SESSION_CONFIG.CHECK_INTERVAL / 1000, 'seconds');
-console.log('📊 Display Update:', SESSION_CONFIG.DISPLAY_INTERVAL / 1000, 'second');
-console.log('⚡ Activity Throttle:', SESSION_CONFIG.ACTIVITY_THROTTLE / 1000, 'seconds');
-console.log('🎯 Tracked Events:', SESSION_CONFIG.IDLE_EVENTS.join(', '));
-console.log('═══════════════════════════════════════════');
-})();
 </script>
-
 <!-- ================================================================
 PWA SCRIPT
 ================================================================ -->
@@ -2801,7 +2979,6 @@ updateApp(){ if(this.newWorker){this.newWorker.postMessage({type:'SKIP_WAITING'}
 const gmsPWA=new GMS_PWA();
 window.gmsPWA=gmsPWA;
 </script>
-
 <!-- ================================================================
 PUSH NOTIFICATION SCRIPT
 ================================================================ -->
@@ -2863,7 +3040,6 @@ if(typeof resetActivityTimestamp === 'function') resetActivityTimestamp();
 };
 initNotifications();
 </script>
-
 <!-- ================================================================
 AUTO LOGOUT SYSTEM - FINAL INITIALIZATION & EVENT BINDING
 ================================================================ -->
@@ -2954,94 +3130,11 @@ if(typeof resetActivityTimestamp === 'function') { resetActivityTimestamp(); }
 }
 };
 })(), { passive: true });
-
-console.log('%c═══════════════════════════════════════════════════', 'color: #10b981; font-weight: bold;');
-console.log('%c  🔐 AUTO LOGOUT SYSTEM - CONFIGURATION SUMMARY', 'color: #10b981; font-weight: bold; font-size: 14px;');
-console.log('%c═══════════════════════════════════════════════════', 'color: #10b981; font-weight: bold;');
-if (typeof SESSION_CONFIG !== 'undefined') {
-console.log('%c  ⏱️  Session Timeout: ' + SESSION_CONFIG.TIMEOUT_MINUTES + ' minutes', 'color: #3b82f6;');
-console.log('%c  ⚠️  Warning Shows: ' + SESSION_CONFIG.WARNING_MINUTES + ' minutes before logout', 'color: #f59e0b;');
-console.log('%c  🔄 Check Interval: ' + (SESSION_CONFIG.CHECK_INTERVAL / 1000) + ' seconds', 'color: #8b5cf6;');
-console.log('%c  📊 Display Update: ' + (SESSION_CONFIG.DISPLAY_INTERVAL / 1000) + ' second', 'color: #8b5cf6;');
-console.log('%c  ⚡ Activity Throttle: ' + (SESSION_CONFIG.ACTIVITY_THROTTLE / 1000) + ' seconds', 'color: #8b5cf6;');
-console.log('%c  🎯 Tracked Events: ' + SESSION_CONFIG.IDLE_EVENTS.length + ' event types', 'color: #10b981;');
-console.log('%c  📦 Storage Key: ' + SESSION_CONFIG.STORAGE_KEY, 'color: #64748b;');
-console.log('%c  📅 Session Start Key: ' + SESSION_CONFIG.SESSION_START_KEY, 'color: #64748b;');
-}
-console.log('%c═══════════════════════════════════════════════════', 'color: #10b981; font-weight: bold;');
-console.log('%c  ✅ Auto Logout System: FULLY OPERATIONAL', 'color: #10b981; font-weight: bold; font-size: 12px;');
-console.log('%c═══════════════════════════════════════════════════', 'color: #10b981; font-weight: bold;');
-
-var sessionStartTime = parseInt(localStorage.getItem(SESSION_CONFIG.SESSION_START_KEY) || Date.now().toString());
-var sessionDuration = Date.now() - sessionStartTime;
-var durationMinutes = Math.floor(sessionDuration / 60000);
-var durationSeconds = Math.floor((sessionDuration % 60000) / 1000);
-console.log('%c  📈 Session Statistics:', 'color: #10b981; font-weight: bold;');
-console.log('%c  ─────────────────────────────────────────────', 'color: #64748b;');
-console.log('%c  ⏰ Session Started: ' + new Date(sessionStartTime).toLocaleString(), 'color: #cbd5e1;');
-console.log('%c  ⏳ Session Duration: ' + durationMinutes + 'm ' + durationSeconds + 's', 'color: #cbd5e1;');
-console.log('%c  ─────────────────────────────────────────────', 'color: #64748b;');
-
-console.log('%c  ✨ Features:', 'color: #10b981; font-weight: bold;');
-console.log('%c  ─────────────────────────────────────────────', 'color: #64748b;');
-console.log('%c  ✅ Real-time session timer display', 'color: #cbd5e1;');
-console.log('%c  ✅ Warning modal with countdown', 'color: #cbd5e1;');
-console.log('%c  ✅ Session extend functionality', 'color: #cbd5e1;');
-console.log('%c  ✅ Activity tracking across multiple events', 'color: #cbd5e1;');
-console.log('%c  ✅ Cross-tab session synchronization', 'color: #cbd5e1;');
-console.log('%c  ✅ Automatic logout on timeout', 'color: #cbd5e1;');
-console.log('%c  ✅ Session expired overlay', 'color: #cbd5e1;');
-console.log('%c  ✅ Audio notifications', 'color: #cbd5e1;');
-console.log('%c  ✅ Progress bar in warning modal', 'color: #cbd5e1;');
-console.log('%c  ✅ Color-coded timer display', 'color: #cbd5e1;');
-console.log('%c  ─────────────────────────────────────────────', 'color: #64748b;');
-
-console.log('%c  🔒 Security Notes:', 'color: #ef4444; font-weight: bold;');
-console.log('%c  ─────────────────────────────────────────────', 'color: #64748b;');
-console.log('%c  ⚠️  User will be logged out after ' + SESSION_CONFIG.TIMEOUT_MINUTES + ' minutes of inactivity', 'color: #cbd5e1;');
-console.log('%c  ⚠️  Warning appears ' + SESSION_CONFIG.WARNING_MINUTES + ' minutes before auto-logout', 'color: #cbd5e1;');
-console.log('%c  ⚠️  All session data cleared on logout', 'color: #cbd5e1;');
-console.log('%c  ⚠️  Redirect to login page after session expiry', 'color: #cbd5e1;');
-console.log('%c  ─────────────────────────────────────────────', 'color: #64748b;');
-console.log('%c═══════════════════════════════════════════════════', 'color: #10b981; font-weight: bold;');
-
 setTimeout(function() {
 if (typeof updateSessionTimerDisplay === 'function') {
 updateSessionTimerDisplay();
 }
 }, 100);
-
-console.log('%c  🌐 Browser Compatibility:', 'color: #10b981; font-weight: bold;');
-console.log('%c  ─────────────────────────────────────────────', 'color: #64748b;');
-console.log('%c  ✓ localStorage: ' + (typeof localStorage !== 'undefined' ? 'Supported' : 'Not Supported'), 'color: ' + (typeof localStorage !== 'undefined' ? '#10b981' : '#ef4444') + ';');
-console.log('%c  ✓ sessionStorage: ' + (typeof sessionStorage !== 'undefined' ? 'Supported' : 'Not Supported'), 'color: ' + (typeof sessionStorage !== 'undefined' ? '#10b981' : '#ef4444') + ';');
-console.log('%c  ✓ AudioContext: ' + (typeof window.AudioContext !== 'undefined' || typeof window.webkitAudioContext !== 'undefined' ? 'Supported' : 'Not Supported'), 'color: ' + (typeof window.AudioContext !== 'undefined' || typeof window.webkitAudioContext !== 'undefined' ? '#10b981' : '#f59e0b') + ';');
-console.log('%c  ✓ Event Listeners: Supported', 'color: #10b981;');
-console.log('%c  ✓ Timers: Supported', 'color: #10b981;');
-console.log('%c  ─────────────────────────────────────────────', 'color: #64748b;');
-console.log('%c═══════════════════════════════════════════════════', 'color: #10b981; font-weight: bold;');
-
-console.log('%c  📖 Usage Instructions:', 'color: #10b981; font-weight: bold;');
-console.log('%c  ─────────────────────────────────────────────', 'color: #64748b;');
-console.log('%c  1. Stay active - any interaction resets the timer', 'color: #cbd5e1;');
-console.log('%c  2. Warning will appear before auto-logout', 'color: #cbd5e1;');
-console.log('%c  3. Click "Stay Logged In" to extend session', 'color: #cbd5e1;');
-console.log('%c  4. Or click "Logout Now" to logout immediately', 'color: #cbd5e1;');
-console.log('%c  5. If no action taken, you will be logged out', 'color: #cbd5e1;');
-console.log('%c  ─────────────────────────────────────────────', 'color: #64748b;');
-console.log('%c═══════════════════════════════════════════════════', 'color: #10b981; font-weight: bold;');
-
-console.log('%c  ⚡ Performance Optimization:', 'color: #10b981; font-weight: bold;');
-console.log('%c  ─────────────────────────────────────────────', 'color: #64748b;');
-console.log('%c  ✓ Activity events throttled to prevent spam', 'color: #cbd5e1;');
-console.log('%c  ✓ Session check runs every ' + (SESSION_CONFIG.CHECK_INTERVAL / 1000) + ' seconds', 'color: #cbd5e1;');
-console.log('%c  ✓ Display updates every ' + (SESSION_CONFIG.DISPLAY_INTERVAL / 1000) + ' second', 'color: #cbd5e1;');
-console.log('%c  ✓ Minimal DOM manipulation', 'color: #cbd5e1;');
-console.log('%c  ✓ Efficient event delegation', 'color: #cbd5e1;');
-console.log('%c  ─────────────────────────────────────────────', 'color: #64748b;');
-console.log('%c═══════════════════════════════════════════════════', 'color: #10b981; font-weight: bold;');
-console.log('%c  🎉 AUTO LOGOUT SYSTEM READY!', 'color: #10b981; font-weight: bold; font-size: 16px;');
-console.log('%c═══════════════════════════════════════════════════', 'color: #10b981; font-weight: bold;');
 })();
 </script>
 </body>
