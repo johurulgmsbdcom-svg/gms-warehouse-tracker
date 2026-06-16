@@ -3,191 +3,176 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>GMS Daily Item Smart Dashboard</title>
-<!-- Libraries -->
+<title>GMS General MCD Daily Issue Smart Chart</title>
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap');
-:root {
-    --bg: #f8fafc; --card: #ffffff; --text: #0f172a; --muted: #64748b;
-    --border: #e2e8f0; --blue: #3b82f6; --green: #10b981; --red: #ef4444;
-    --yellow: #f59e0b; --purple: #8b5cf6; --shadow: 0 4px 20px rgba(0,0,0,0.05);
+:root{
+--bg:#0a1628;--card:#1e293b;--card2:#334155;--text:#f1f5f9;--muted:#cbd5e1;
+--border:#475569;--blue:#3b82f6;--green:#10b981;--red:#ef4444;--yellow:#f59e0b;
+--purple:#8b5cf6;--shadow:0 10px 40px rgba(0,0,0,.4);
 }
-body.dark {
-    --bg: #0f172a; --card: #1e293b; --text: #f1f5f9; --muted: #94a3b8;
-    --border: #334155; --shadow: 0 4px 20px rgba(0,0,0,0.3);
+body.light{
+--bg:#f8fafc;--card:#ffffff;--card2:#f1f5f9;--text:#1e293b;--muted:#64748b;
+--border:#cbd5e1;--shadow:0 10px 40px rgba(0,0,0,.1);
 }
-* { box-sizing: border-box; margin: 0; padding: 0; }
-body { background: var(--bg); color: var(--text); font-family: 'Poppins', sans-serif; transition: all 0.3s; }
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--bg);color:var(--text);font-family:'Poppins',sans-serif;line-height:1.6;transition:all .3s}
 
-.header { background: linear-gradient(135deg, var(--blue), var(--purple)); padding: 20px; text-align: center; color: #fff; box-shadow: var(--shadow); }
-.header h1 { font-size: 24px; font-weight: 800; }
-.header p { font-size: 12px; opacity: 0.9; }
+.header{background:linear-gradient(135deg,var(--blue),var(--purple));padding:20px;text-align:center;color:#fff;box-shadow:var(--shadow)}
+.header h1{font-size:24px;font-weight:800}
+.header p{font-size:12px;opacity:.9;margin-top:4px}
+.container{max-width:1400px;margin:0 auto;padding:20px}
 
-.container { max-width: 1400px; margin: 0 auto; padding: 20px; }
+.back-btn{position:fixed;top:20px;left:20px;background:var(--card);border:1px solid var(--border);padding:10px 16px;border-radius:10px;cursor:pointer;color:var(--text);font-weight:600;font-size:13px;z-index:1000;box-shadow:var(--shadow);text-decoration:none;display:flex;align-items:center;gap:6px}
+.theme-toggle{position:fixed;top:20px;right:20px;background:var(--card);border:1px solid var(--border);width:44px;height:44px;border-radius:50%;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:18px;z-index:1000;box-shadow:var(--shadow);color:var(--text)}
 
-/* Controls */
-.theme-toggle { position: fixed; top: 20px; right: 20px; background: var(--card); border: 1px solid var(--border); width: 44px; height: 44px; border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 18px; z-index: 1000; box-shadow: var(--shadow); color: var(--text); }
-.archive-btn { position: fixed; top: 20px; left: 20px; background: var(--card); border: 1px solid var(--border); padding: 10px 16px; border-radius: 10px; cursor: pointer; color: var(--text); font-weight: 600; font-size: 13px; z-index: 1000; box-shadow: var(--shadow); display: flex; align-items: center; gap: 6px; }
+.status-bar{display:flex;justify-content:space-between;align-items:center;padding:10px 16px;background:rgba(16,185,129,0.1);border-radius:10px;margin-bottom:20px;font-size:12px;font-weight:600;color:var(--green);flex-wrap:wrap;gap:8px}
+.status-bar.offline{background:rgba(245,158,11,0.1);color:var(--yellow)}
 
-.status-bar { display: flex; justify-content: space-between; align-items: center; padding: 10px 16px; background: rgba(16,185,129,0.1); border-radius: 10px; margin-bottom: 20px; font-size: 12px; font-weight: 600; color: var(--green); }
-.status-bar.offline { background: rgba(245,158,11,0.1); color: var(--yellow); }
+.upload-box{border:3px dashed var(--blue);border-radius:16px;padding:40px;text-align:center;cursor:pointer;background:rgba(59,130,246,0.05);transition:all .3s;margin-bottom:20px}
+.upload-box:hover{background:rgba(59,130,246,0.1);transform:translateY(-2px)}
+.upload-box.dragover{background:rgba(16,185,129,0.1);border-color:var(--green)}
+.upload-box i{font-size:48px;color:var(--blue);margin-bottom:12px}
+.upload-box h3{font-size:18px;margin-bottom:8px}
+.upload-box p{color:var(--muted);font-size:13px}
 
-.upload-box { border: 3px dashed var(--blue); border-radius: 16px; padding: 40px; text-align: center; cursor: pointer; background: rgba(59,130,246,0.05); transition: all 0.3s; margin-bottom: 20px; }
-.upload-box:hover { background: rgba(59,130,246,0.1); transform: translateY(-2px); }
-.upload-box.dragover { background: rgba(16,185,129,0.1); border-color: var(--green); }
-.upload-box i { font-size: 48px; color: var(--blue); margin-bottom: 12px; }
+.action-bar{display:flex;gap:12px;flex-wrap:wrap;margin-bottom:20px;justify-content:center}
+.btn{padding:12px 24px;border:none;border-radius:10px;font-weight:600;cursor:pointer;font-size:13px;transition:all .3s;display:inline-flex;align-items:center;gap:8px;box-shadow:0 2px 10px rgba(0,0,0,0.1)}
+.btn-excel{background:linear-gradient(135deg,#10b981,#059669);color:#fff}
+.btn-pdf{background:linear-gradient(135deg,#ef4444,#dc2626);color:#fff}
+.btn-home{background:linear-gradient(135deg,var(--blue),var(--purple));color:#fff}
+.btn:hover{transform:translateY(-2px);box-shadow:0 6px 20px rgba(0,0,0,0.2)}
 
-/* Action Buttons */
-.action-bar { display: flex; gap: 12px; flex-wrap: wrap; margin-bottom: 20px; justify-content: center; }
-.btn { padding: 12px 24px; border: none; border-radius: 10px; font-weight: 600; cursor: pointer; font-size: 13px; transition: all 0.3s; display: inline-flex; align-items: center; gap: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
-.btn-excel { background: linear-gradient(135deg, #10b981, #059669); color: #fff; }
-.btn-pdf { background: linear-gradient(135deg, #ef4444, #dc2626); color: #fff; }
-.btn:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(0,0,0,0.2); }
+#dashboard-content{background:var(--card);border-radius:16px;padding:24px;box-shadow:var(--shadow);margin-bottom:20px}
 
-/* Dashboard Content (For PDF) */
-#dashboard-content { background: var(--card); border-radius: 16px; padding: 24px; box-shadow: var(--shadow); margin-bottom: 20px; }
+.stats-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:16px;margin-bottom:20px}
+.stat-card{background:var(--bg);border-radius:12px;padding:20px;box-shadow:0 2px 10px rgba(0,0,0,0.05);border-left:4px solid var(--blue);transition:all .3s}
+.stat-card:hover{transform:translateY(-4px)}
+.stat-card.green{border-left-color:var(--green)}
+.stat-card.orange{border-left-color:var(--yellow)}
+.stat-card.purple{border-left-color:var(--purple)}
+.stat-card h4{font-size:11px;color:var(--muted);text-transform:uppercase;margin-bottom:6px}
+.stat-card .value{font-size:24px;font-weight:800}
 
-.stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; margin-bottom: 20px; }
-.stat-card { background: var(--bg); border-radius: 12px; padding: 20px; box-shadow: 0 2px 10px rgba(0,0,0,0.05); border-left: 4px solid var(--blue); }
-.stat-card.green { border-left-color: var(--green); }
-.stat-card.orange { border-left-color: var(--yellow); }
-.stat-card.purple { border-left-color: var(--purple); }
-.stat-card h4 { font-size: 11px; color: var(--muted); text-transform: uppercase; margin-bottom: 6px; }
-.stat-card .value { font-size: 24px; font-weight: 800; }
+.chart-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(400px,1fr));gap:16px;margin-bottom:20px}
+.chart-box{background:var(--bg);border-radius:16px;padding:20px;box-shadow:0 2px 10px rgba(0,0,0,0.05)}
+.chart-box h3{font-size:14px;font-weight:700;margin-bottom:12px;display:flex;align-items:center;gap:8px}
+.chart-box canvas{max-height:300px}
 
-.chart-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(400px, 1fr)); gap: 16px; margin-bottom: 20px; }
-.chart-box { background: var(--bg); border-radius: 16px; padding: 20px; box-shadow: 0 2px 10px rgba(0,0,0,0.05); }
-.chart-box h3 { font-size: 14px; font-weight: 700; margin-bottom: 12px; display: flex; align-items: center; gap: 8px; }
+.filter-bar{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:20px;align-items:center;background:var(--card);padding:16px;border-radius:12px;box-shadow:var(--shadow)}
+.filter-btn{padding:8px 16px;border:1px solid var(--border);background:var(--bg);border-radius:8px;cursor:pointer;font-size:12px;font-weight:600;color:var(--text);transition:all .2s}
+.filter-btn:hover{border-color:var(--blue)}
+.filter-btn.active{background:linear-gradient(135deg,var(--blue),var(--purple));color:#fff;border-color:transparent}
 
-.filter-bar { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 20px; align-items: center; background: var(--card); padding: 16px; border-radius: 12px; box-shadow: var(--shadow); }
-.filter-btn { padding: 8px 16px; border: 1px solid var(--border); background: var(--bg); border-radius: 8px; cursor: pointer; font-size: 12px; font-weight: 600; color: var(--text); transition: all 0.2s; }
-.filter-btn:hover { border-color: var(--blue); }
-.filter-btn.active { background: linear-gradient(135deg, var(--blue), var(--purple)); color: #fff; border-color: transparent; }
+.table-section{background:var(--card);border-radius:16px;padding:20px;box-shadow:var(--shadow);overflow-x:auto}
+table{width:100%;border-collapse:collapse;font-size:12px}
+th{padding:12px;text-align:left;font-weight:700;color:var(--muted);border-bottom:2px solid var(--border);text-transform:uppercase;font-size:11px}
+td{padding:10px 12px;border-bottom:1px solid var(--border)}
+tr:hover{background:rgba(59,130,246,0.05)}
+.amount{font-weight:700;color:var(--green);text-align:right}
 
-.table-section { background: var(--card); border-radius: 16px; padding: 20px; box-shadow: var(--shadow); overflow-x: auto; }
-table { width: 100%; border-collapse: collapse; font-size: 12px; }
-th { padding: 12px; text-align: left; font-weight: 700; color: var(--muted); border-bottom: 2px solid var(--border); text-transform: uppercase; font-size: 11px; }
-td { padding: 10px 12px; border-bottom: 1px solid var(--border); }
-tr:hover { background: rgba(59,130,246,0.05); }
-.amount { font-weight: 700; color: var(--green); text-align: right; }
+.toast{position:fixed;bottom:30px;right:30px;background:var(--green);color:#fff;padding:14px 20px;border-radius:10px;font-weight:600;box-shadow:var(--shadow);z-index:9999;animation:slideIn .3s}
+.toast.error{background:var(--red)}
+@keyframes slideIn{from{transform:translateX(100%);opacity:0}to{transform:translateX(0);opacity:1}}
 
-.toast { position: fixed; bottom: 30px; right: 30px; background: var(--green); color: #fff; padding: 14px 20px; border-radius: 10px; font-weight: 600; box-shadow: var(--shadow); z-index: 9999; animation: slideIn 0.3s; }
-.toast.error { background: var(--red); }
-@keyframes slideIn { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+.empty-state{text-align:center;padding:60px 20px;color:var(--muted)}
+.empty-state i{font-size:64px;margin-bottom:16px;opacity:.5}
 
-/* Modal */
-.modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 2000; justify-content: center; align-items: center; }
-.modal-content { background: var(--card); padding: 30px; border-radius: 16px; max-width: 500px; width: 90%; max-height: 80vh; overflow-y: auto; }
-.modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
-.close-modal { background: var(--red); color: #fff; border: none; padding: 8px 16px; border-radius: 6px; cursor: pointer; }
-.archive-item { display: flex; justify-content: space-between; align-items: center; padding: 12px; background: var(--bg); border-radius: 8px; margin-bottom: 8px; border: 1px solid var(--border); }
-
-@media(max-width: 768px) { 
-    .chart-grid { grid-template-columns: 1fr; } 
-    .stats-grid { grid-template-columns: repeat(2, 1fr); } 
-}
-
-/* PDF Print Styles */
-@media print {
-    body { background: #fff !important; color: #000 !important; }
-    .theme-toggle, .archive-btn, .upload-box, .action-bar, .filter-bar, .table-section, .status-bar { display: none !important; }
-    #dashboard-content { box-shadow: none !important; padding: 0 !important; }
-    .chart-box, .stat-card { break-inside: avoid; box-shadow: none !important; border: 1px solid #ddd; }
+@media(max-width:768px){
+.header h1{font-size:18px}
+.container{padding:12px}
+.stats-grid{grid-template-columns:repeat(2,1fr)}
+.chart-grid{grid-template-columns:1fr}
+.filter-bar{flex-direction:column;align-items:stretch}
 }
 </style>
 </head>
 <body>
 
+<a href="index.html" class="back-btn"><i class="fas fa-arrow-left"></i> Back to Dashboard</a>
 <button class="theme-toggle" onclick="toggleTheme()"><i class="fas fa-moon" id="themeIcon"></i></button>
-<button class="archive-btn" onclick="openArchiveModal()"><i class="fas fa-history"></i> View Archive</button>
 
 <div class="header">
-    <h1><i class="fas fa-chart-line"></i> GMS Daily Item Smart Dashboard</h1>
-    <p>Real-time Sync • Offline Mode • 2-Month Active + Auto Archive</p>
+<h1><i class="fas fa-chart-line"></i> GMS General MCD Daily Issue Smart Chart</h1>
+<p>Real-time Sync • Offline Mode • 1-Read/1-Write Optimized • Auto Archive</p>
 </div>
 
 <div class="container">
-    <div class="status-bar" id="statusBar">
-        <span><i class="fas fa-circle" style="font-size:8px"></i> <span id="statusText">Connecting...</span></span>
-        <span>Last Update: <span id="lastUpdate">-</span></span>
-    </div>
-
-    <div class="upload-box" id="uploadBox" onclick="document.getElementById('fileInput').click()">
-        <i class="fas fa-cloud-upload-alt"></i>
-        <h3>Upload Daily Excel File</h3>
-        <p>Drag & Drop or Click to Select (.xlsx, .csv)</p>
-        <p style="font-size:11px; color:var(--muted); margin-top:8px;">Auto-saves to Firebase. Old data auto-archived.</p>
-    </div>
-    <input type="file" id="fileInput" accept=".xlsx,.xls,.csv" style="display:none" onchange="handleFile(event)">
-
-    <!-- Action Buttons -->
-    <div class="action-bar">
-        <button class="btn btn-excel" onclick="exportToExcel()"><i class="fas fa-file-excel"></i> Download Excel</button>
-        <button class="btn btn-pdf" onclick="exportToPDF()"><i class="fas fa-file-pdf"></i> Print PDF (A4 Landscape)</button>
-    </div>
-
-    <!-- Dashboard Content (Target for PDF) -->
-    <div id="dashboard-content">
-        <div class="stats-grid">
-            <div class="stat-card"><h4>Total Amount</h4><div class="value" id="statAmount">৳0</div></div>
-            <div class="stat-card green"><h4>Total Qty</h4><div class="value" id="statQty">0</div></div>
-            <div class="stat-card orange"><h4>Total Items</h4><div class="value" id="statItems">0</div></div>
-            <div class="stat-card purple"><h4>Departments</h4><div class="value" id="statDepts">0</div></div>
-        </div>
-
-        <div class="chart-grid">
-            <div class="chart-box">
-                <h3><i class="fas fa-chart-pie" style="color:var(--blue)"></i> Category Wise (Click to Filter)</h3>
-                <canvas id="categoryChart"></canvas>
-            </div>
-            <div class="chart-box">
-                <h3><i class="fas fa-chart-bar" style="color:var(--green)"></i> Department Wise (Click to Filter)</h3>
-                <canvas id="departmentChart"></canvas>
-            </div>
-            <div class="chart-box">
-                <h3><i class="fas fa-chart-line" style="color:var(--purple)"></i> Top 10 Items</h3>
-                <canvas id="topItemsChart"></canvas>
-            </div>
-            <div class="chart-box">
-                <h3><i class="fas fa-chart-area" style="color:var(--yellow)"></i> Date Wise Trend</h3>
-                <canvas id="dateChart"></canvas>
-            </div>
-        </div>
-    </div>
-
-    <div class="filter-bar" id="filterBar">
-        <span style="font-weight:700; font-size:13px; margin-right:10px;"><i class="fas fa-filter"></i> Filters:</span>
-        <button class="filter-btn active" onclick="clearFilters()">All Data</button>
-        <div id="activeFilters"></div>
-    </div>
-
-    <div class="table-section">
-        <h3 style="font-size:14px; font-weight:700; margin-bottom:12px;"><i class="fas fa-table"></i> Detailed Data</h3>
-        <table>
-            <thead>
-                <tr>
-                    <th>SL</th><th>Date</th><th>Category</th><th>Department</th><th>Item Description</th>
-                    <th style="text-align:center">Qty</th><th style="text-align:right">Amount (TK)</th><th>Issue ID</th>
-                </tr>
-            </thead>
-            <tbody id="tableBody"></tbody>
-        </table>
-    </div>
+<div class="status-bar" id="statusBar">
+<span><i class="fas fa-circle" style="font-size:8px"></i> <span id="statusText">Connecting...</span></span>
+<span>Last Update: <span id="lastUpdate">-</span></span>
 </div>
 
-<!-- Archive Modal -->
-<div id="archiveModal" class="modal">
-    <div class="modal-content">
-        <div class="modal-header">
-            <h3><i class="fas fa-history"></i> Archived Months</h3>
-            <button class="close-modal" onclick="closeArchiveModal()">Close</button>
-        </div>
-        <div id="archiveList">Loading archives...</div>
-    </div>
+<div class="upload-box" id="uploadBox" onclick="document.getElementById('fileInput').click()">
+<i class="fas fa-cloud-upload-alt"></i>
+<h3>Upload Daily Excel File</h3>
+<p>Drag & Drop or Click to Select (.xlsx, .xls, .csv)</p>
+<p style="font-size:11px;color:var(--muted);margin-top:8px">Auto-saves to Firebase. Old data auto-archived after 2 months.</p>
+</div>
+<input type="file" id="fileInput" accept=".xlsx,.xls,.csv" style="display:none" onchange="handleFile(event)">
+
+<div class="action-bar">
+<button class="btn btn-excel" onclick="exportToExcel()"><i class="fas fa-file-excel"></i> Download Excel</button>
+<button class="btn btn-pdf" onclick="exportToPDF()"><i class="fas fa-file-pdf"></i> Print PDF (A4 Landscape)</button>
+<button class="btn btn-home" onclick="location.href='index.html'"><i class="fas fa-home"></i> Home</button>
+</div>
+
+<div id="dashboard-content">
+<div class="stats-grid">
+<div class="stat-card"><h4>Total Amount</h4><div class="value" id="statAmount">৳0</div></div>
+<div class="stat-card green"><h4>Total Qty</h4><div class="value" id="statQty">0</div></div>
+<div class="stat-card orange"><h4>Total Items</h4><div class="value" id="statItems">0</div></div>
+<div class="stat-card purple"><h4>Departments</h4><div class="value" id="statDepts">0</div></div>
+</div>
+
+<div class="chart-grid">
+<div class="chart-box">
+<h3><i class="fas fa-chart-pie" style="color:var(--blue)"></i> Category Wise Amount (Click to Filter)</h3>
+<canvas id="categoryChart"></canvas>
+</div>
+<div class="chart-box">
+<h3><i class="fas fa-chart-bar" style="color:var(--green)"></i> Department Wise Amount (Click to Filter)</h3>
+<canvas id="departmentChart"></canvas>
+</div>
+<div class="chart-box">
+<h3><i class="fas fa-chart-line" style="color:var(--purple)"></i> Top 10 Items by Amount</h3>
+<canvas id="topItemsChart"></canvas>
+</div>
+<div class="chart-box">
+<h3><i class="fas fa-chart-area" style="color:var(--yellow)"></i> Date Wise Trend</h3>
+<canvas id="dateChart"></canvas>
+</div>
+</div>
+</div>
+
+<div class="filter-bar" id="filterBar">
+<span style="font-weight:700;font-size:13px;margin-right:10px"><i class="fas fa-filter"></i> Filters:</span>
+<button class="filter-btn active" onclick="clearFilters()">All Data</button>
+<div id="activeFilters"></div>
+</div>
+
+<div class="table-section">
+<h3 style="font-size:14px;font-weight:700;margin-bottom:12px"><i class="fas fa-table"></i> Detailed Data</h3>
+<table>
+<thead>
+<tr>
+<th>SL</th><th>Date</th><th>Category</th><th>Department</th><th>Item Description</th>
+<th style="text-align:center">Qty</th><th style="text-align:right">Amount (TK)</th><th>Issue ID</th>
+</tr>
+</thead>
+<tbody id="tableBody"></tbody>
+</table>
+</div>
+
+<div class="empty-state" id="emptyState" style="display:none">
+<i class="fas fa-inbox"></i>
+<h3>No Data Found</h3>
+<p>Upload an Excel file to get started</p>
+</div>
 </div>
 
 <script type="module">
@@ -195,16 +180,19 @@ import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/fireba
 import { getFirestore, doc, setDoc, onSnapshot, collection, getDocs, deleteDoc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
 const firebaseConfig = {
-    apiKey: "AIzaSyD-wBCF5eeWMHobLFOhBzKW7aB2pagz9-w",
-    authDomain: "gms-warehouse-tracker-7f57e.firebaseapp.com",
-    projectId: "gms-warehouse-tracker-7f57e",
-    storageBucket: "gms-warehouse-tracker-7f57e.firebasestorage.app",
-    messagingSenderId: "992250313291",
-    appId: "1:992250313291:web:ee3bceae76d4d53bc26bce"
+apiKey: "AIzaSyD-wBCF5eeWMHobLFOhBzKW7aB2pagz9-w",
+authDomain: "gms-warehouse-tracker-7f57e.firebaseapp.com",
+projectId: "gms-warehouse-tracker-7f57e",
+storageBucket: "gms-warehouse-tracker-7f57e.firebasestorage.app",
+messagingSenderId: "992250313291",
+appId: "1:992250313291:web:ee3bceae76d4d53bc26bce"
 };
 
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
+const DOC_ID = "general_mcd_latest";
+const ARCHIVE_COL = "generalMcdDaily_archive";
+const ACTIVE_COL = "generalMcdDaily";
 
 let allData = [];
 let filteredData = [];
@@ -214,300 +202,245 @@ let isOnline = navigator.onLine;
 
 // Theme
 window.toggleTheme = function() {
-    document.body.classList.toggle('dark');
-    const icon = document.getElementById('themeIcon');
-    icon.className = document.body.classList.contains('dark') ? 'fas fa-moon' : 'fas fa-sun';
-    localStorage.setItem('theme', document.body.classList.contains('dark') ? 'dark' : 'light');
-    renderCharts();
+document.body.classList.toggle('light');
+const icon = document.getElementById('themeIcon');
+icon.className = document.body.classList.contains('light') ? 'fas fa-sun' : 'fas fa-moon';
+localStorage.setItem('theme', document.body.classList.contains('light') ? 'light' : 'dark');
+renderCharts();
 };
-if(localStorage.getItem('theme') === 'dark') {
-    document.body.classList.add('dark');
-    document.getElementById('themeIcon').className = 'fas fa-moon';
+if (localStorage.getItem('theme') === 'light') {
+document.body.classList.add('light');
+document.getElementById('themeIcon').className = 'fas fa-sun';
 }
 
-// Network Status
+// Network
 window.addEventListener('online', () => { isOnline = true; updateStatus('Online - Syncing...'); loadActiveData(); });
 window.addEventListener('offline', () => { isOnline = false; updateStatus('Offline Mode', true); });
-function updateStatus(msg, offline=false) {
-    document.getElementById('statusText').innerText = msg;
-    document.getElementById('statusBar').className = 'status-bar' + (offline ? ' offline' : '');
+function updateStatus(msg, offline = false) {
+document.getElementById('statusText').innerText = msg;
+document.getElementById('statusBar').className = 'status-bar' + (offline ? ' offline' : '');
 }
 
 // Drag & Drop
 const uploadBox = document.getElementById('uploadBox');
-['dragenter','dragover'].forEach(e => uploadBox.addEventListener(e, ev => { ev.preventDefault(); uploadBox.classList.add('dragover'); }));
-['dragleave','drop'].forEach(e => uploadBox.addEventListener(e, ev => { ev.preventDefault(); uploadBox.classList.remove('dragover'); }));
-uploadBox.addEventListener('drop', ev => { if(ev.dataTransfer.files.length) processFile(ev.dataTransfer.files[0]); });
+['dragenter', 'dragover'].forEach(e => uploadBox.addEventListener(e, ev => { ev.preventDefault(); uploadBox.classList.add('dragover'); }));
+['dragleave', 'drop'].forEach(e => uploadBox.addEventListener(e, ev => { ev.preventDefault(); uploadBox.classList.remove('dragover'); }));
+uploadBox.addEventListener('drop', ev => { if (ev.dataTransfer.files.length) processFile(ev.dataTransfer.files[0]); });
 
-window.handleFile = function(event) { if(event.target.files[0]) processFile(event.target.files[0]); };
+window.handleFile = function(event) { if (event.target.files[0]) processFile(event.target.files[0]); };
 
 function processFile(file) {
-    updateStatus('Processing file...');
-    const reader = new FileReader();
-    reader.onload = function(e) {
-        try {
-            const data = new Uint8Array(e.target.result);
-            const workbook = XLSX.read(data, {type:'array'});
-            const jsonData = XLSX.utils.sheet_to_json(workbook.Sheets[workbook.SheetNames[0]], {defval:''});
-            const normalized = normalizeData(jsonData);
-            saveToFirebase(normalized);
-        } catch(err) { showToast('Error: '+err.message, true); }
-    };
-    reader.readAsArrayBuffer(file);
+updateStatus('Processing file...');
+const reader = new FileReader();
+reader.onload = function(e) {
+try {
+const data = new Uint8Array(e.target.result);
+const workbook = XLSX.read(data, { type: 'array' });
+const jsonData = XLSX.utils.sheet_to_json(workbook.Sheets[workbook.SheetNames[0]], { defval: '' });
+if (jsonData.length === 0) { showToast('No data found!', true); return; }
+const normalized = normalizeData(jsonData);
+saveToFirebase(normalized);
+} catch (err) { showToast('Error: ' + err.message, true); }
+};
+reader.readAsArrayBuffer(file);
 }
 
 function normalizeData(raw) {
-    return raw.map((row, idx) => ({
-        sl: row['SL'] || (idx+1),
-        date: formatDate(row['Trans. Date'] || row['date']),
-        category: String(row['Category'] || '').trim(),
-        division: String(row['Division'] || '').trim(),
-        department: String(row['Department'] || '').trim(),
-        section: String(row['Section'] || '').trim(),
-        itemGroup: String(row['Item Group'] || '').trim(),
-        uom: String(row['UOM'] || '').trim(),
-        itemDescription: String(row['Item Description'] || '').trim(),
-        issueQty: parseNum(row['Issue Qty'] || row['qty']),
-        amount: parseNum(row['Amount(TK)'] || row['Amount']),
-        issueId: String(row['Issue ID'] || '').trim(),
-        remarks: String(row['Remarks'] || '').trim()
-    })).filter(r => r.itemDescription || r.amount > 0);
+return raw.map((row, idx) => ({
+sl: row['SL'] || (idx + 1),
+date: formatDate(row['Trans. Date'] || row['date']),
+category: String(row['Category'] || '').trim(),
+division: String(row['Division'] || '').trim(),
+department: String(row['Department'] || '').trim(),
+section: String(row['Section'] || '').trim(),
+itemGroup: String(row['Item Group'] || '').trim(),
+uom: String(row['UOM'] || '').trim(),
+itemDescription: String(row['Item Description'] || '').trim(),
+issueQty: parseNum(row['Issue Qty'] || row['qty']),
+amount: parseNum(row['Amount(TK)'] || row['Amount']),
+issueId: String(row['Issue ID'] || '').trim(),
+remarks: String(row['Remarks'] || '').trim()
+})).filter(r => r.itemDescription || r.amount > 0);
 }
 
-function parseNum(v) { if(typeof v==='number') return v; return Number(String(v||0).replace(/,/g,''))||0; }
+function parseNum(v) { if (typeof v === 'number') return v; return Number(String(v || 0).replace(/,/g, '')) || 0; }
 function formatDate(d) {
-    if(!d) return '';
-    if(typeof d==='number') { const date = XLSX.SSF.parse_date_code(d); if(date) return `${String(date.d).padStart(2,'0')}-${String(date.m).padStart(2,'0')}-${date.y}`; }
-    return String(d);
+if (!d) return '';
+if (typeof d === 'number') { const date = XLSX.SSF.parse_date_code(d); if (date) return `${String(date.d).padStart(2, '0')}-${String(date.m).padStart(2, '0')}-${date.y}`; }
+return String(d);
 }
 function getMonthKey(dateStr) {
-    if(!dateStr) return '';
-    const parts = dateStr.split('-');
-    if(parts.length===3) return `${parts[2]}-${parts[1].padStart(2,'0')}`;
-    return '';
+if (!dateStr) return '';
+const parts = dateStr.split('-');
+if (parts.length === 3) return `${parts[2]}-${parts[1].padStart(2, '0')}`;
+return '';
 }
 
 async function saveToFirebase(data) {
-    updateStatus('Saving to Firebase...');
-    const now = new Date();
-    const currentMonth = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}`;
-    const prevMonth = `${now.getFullYear()}-${String(now.getMonth()).padStart(2,'0')}`;
-    
-    const grouped = {};
-    data.forEach(row => {
-        const m = getMonthKey(row.date);
-        if(m) { if(!grouped[m]) grouped[m]=[]; grouped[m].push(row); }
-    });
+updateStatus('Saving to Firebase...');
+const now = new Date();
+const currentMonth = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+const prevMonth = `${now.getFullYear()}-${String(now.getMonth()).padStart(2, '0')}`;
 
-    const writes = [];
-    for(const [month, rows] of Object.entries(grouped)) {
-        const col = (month === currentMonth || month === prevMonth) ? 'daily_reports' : 'daily_reports_archive';
-        writes.push(setDoc(doc(db, col, month), { data: rows, updatedAt: Date.now() }));
-    }
-    
-    await Promise.all(writes);
-    showToast(`✅ Saved ${data.length} rows!`);
-    updateStatus('Saved successfully!');
+const grouped = {};
+data.forEach(row => {
+const m = getMonthKey(row.date);
+if (m) { if (!grouped[m]) grouped[m] = []; grouped[m].push(row); }
+});
+
+try {
+const writes = [];
+for (const [month, rows] of Object.entries(grouped)) {
+const col = (month === currentMonth || month === prevMonth) ? ACTIVE_COL : ARCHIVE_COL;
+writes.push(setDoc(doc(db, col, month), { data: rows, updatedAt: Date.now() }));
+}
+await Promise.all(writes);
+showToast(`✅ Saved ${data.length} rows!`);
+updateStatus('Saved successfully!');
+} catch (err) { showToast('Save failed: ' + err.message, true); }
 }
 
 // Real-time Listener
 function loadActiveData() {
-    updateStatus('Loading live data...');
-    onSnapshot(collection(db, 'daily_reports'), (snapshot) => {
-        allData = [];
-        let lastUpdate = 0;
-        snapshot.forEach(docSnap => {
-            const d = docSnap.data();
-            if(d.data) { allData = allData.concat(d.data); lastUpdate = Math.max(lastUpdate, d.updatedAt||0); }
-        });
-        allData.sort((a,b) => (b.date||'').localeCompare(a.date||''));
-        document.getElementById('lastUpdate').innerText = lastUpdate ? new Date(lastUpdate).toLocaleString() : '-';
-        applyFilters();
-        updateStatus('Live Sync Active ✅');
-    }, (err) => {
-        console.error(err);
-        updateStatus('Load failed. Check console.', true);
-    });
+updateStatus('Loading live data...');
+onSnapshot(collection(db, ACTIVE_COL), (snapshot) => {
+allData = [];
+let lastUpdate = 0;
+snapshot.forEach(docSnap => {
+const d = docSnap.data();
+if (d.data) { allData = allData.concat(d.data); lastUpdate = Math.max(lastUpdate, d.updatedAt || 0); }
+});
+allData.sort((a, b) => (b.date || '').localeCompare(a.date || ''));
+document.getElementById('lastUpdate').innerText = lastUpdate ? new Date(lastUpdate).toLocaleString() : '-';
+applyFilters();
+updateStatus('Live Sync Active ✅');
+}, (err) => { updateStatus('Load failed', true); });
 }
 loadActiveData();
 
-// Charts & UI
+// Filters & UI
 function applyFilters() {
-    filteredData = allData.filter(row => {
-        if(currentFilter.category && row.category !== currentFilter.category) return false;
-        if(currentFilter.department && row.department !== currentFilter.department) return false;
-        return true;
-    });
-    renderStats();
-    renderCharts();
-    renderTable();
-    renderFilterButtons();
+filteredData = allData.filter(row => {
+if (currentFilter.category && row.category !== currentFilter.category) return false;
+if (currentFilter.department && row.department !== currentFilter.department) return false;
+return true;
+});
+renderStats();
+renderCharts();
+renderTable();
+renderFilterButtons();
+document.getElementById('emptyState').style.display = filteredData.length === 0 ? 'block' : 'none';
 }
 
 window.clearFilters = function() { currentFilter = {}; applyFilters(); };
 
 function renderFilterButtons() {
-    const container = document.getElementById('activeFilters');
-    let html = '';
-    if(currentFilter.category) html += `<button class="filter-btn active" onclick="delete currentFilter.category;applyFilters()">Category: ${currentFilter.category} ✕</button>`;
-    if(currentFilter.department) html += `<button class="filter-btn active" onclick="delete currentFilter.department;applyFilters()">Dept: ${currentFilter.department} ✕</button>`;
-    container.innerHTML = html;
+const container = document.getElementById('activeFilters');
+let html = '';
+if (currentFilter.category) html += `<button class="filter-btn active" onclick="delete currentFilter.category;applyFilters()">Category: ${currentFilter.category} ✕</button>`;
+if (currentFilter.department) html += `<button class="filter-btn active" onclick="delete currentFilter.department;applyFilters()">Dept: ${currentFilter.department} ✕</button>`;
+container.innerHTML = html;
 }
 
 function renderStats() {
-    const total = filteredData.length;
-    const amount = filteredData.reduce((s,r) => s + r.amount, 0);
-    const qty = filteredData.reduce((s,r) => s + r.issueQty, 0);
-    const depts = new Set(filteredData.map(r => r.department).filter(v=>v)).size;
-    document.getElementById('statAmount').innerText = '৳' + amount.toLocaleString('en-US',{maximumFractionDigits:0});
-    document.getElementById('statQty').innerText = qty.toLocaleString();
-    document.getElementById('statItems').innerText = total.toLocaleString();
-    document.getElementById('statDepts').innerText = depts;
+const total = filteredData.length;
+const amount = filteredData.reduce((s, r) => s + r.amount, 0);
+const qty = filteredData.reduce((s, r) => s + r.issueQty, 0);
+const depts = new Set(filteredData.map(r => r.department).filter(v => v)).size;
+document.getElementById('statAmount').innerText = '৳' + amount.toLocaleString('en-US', { maximumFractionDigits: 0 });
+document.getElementById('statQty').innerText = qty.toLocaleString();
+document.getElementById('statItems').innerText = total.toLocaleString();
+document.getElementById('statDepts').innerText = depts;
 }
 
 function renderCharts() {
-    Object.values(charts).forEach(c => c && c.destroy());
-    const isDark = document.body.classList.contains('dark');
-    const textColor = isDark ? '#f1f5f9' : '#0f172a';
-    const gridColor = isDark ? 'rgba(148,163,184,.2)' : 'rgba(0,0,0,.1)';
-    const palette = ['#38bdf8','#22c55e','#f59e0b','#a855f7','#ef4444','#14b8a6','#eab308','#6366f1','#ec4899','#84cc16'];
+Object.values(charts).forEach(c => c && c.destroy());
+const isDark = document.body.classList.contains('light') === false;
+const textColor = isDark ? '#f1f5f9' : '#1e293b';
+const gridColor = isDark ? 'rgba(148,163,184,.2)' : 'rgba(0,0,0,.1)';
+const palette = ['#38bdf8', '#22c55e', '#f59e0b', '#a855f7', '#ef4444', '#14b8a6', '#eab308', '#6366f1', '#ec4899', '#84cc16'];
 
-    const groupBy = (key, valKey='amount') => {
-        const map = {};
-        filteredData.forEach(r => { const k=r[key]||'Unknown'; map[k]=(map[k]||0)+r[valKey]; });
-        return Object.entries(map).sort((a,b)=>b[1]-a[1]);
-    };
+const groupBy = (key, valKey = 'amount') => {
+const map = {};
+filteredData.forEach(r => { const k = r[key] || 'Unknown'; map[k] = (map[k] || 0) + r[valKey]; });
+return Object.entries(map).sort((a, b) => b[1] - a[1]);
+};
 
-    // Category
-    const catData = groupBy('category');
-    charts.category = new Chart(document.getElementById('categoryChart'), {
-        type: 'doughnut',
-        data: { labels: catData.map(e=>e[0]), datasets: [{ data: catData.map(e=>e[1]), backgroundColor: palette, borderWidth: 3, borderColor: isDark?'#1e293b':'#fff' }] },
-        options: { responsive: true, onClick: (e, els) => { if(els[0]) { currentFilter.category = catData[els[0].index][0]; applyFilters(); } }, plugins: { legend: { position: 'bottom', labels: { color: textColor } } } }
-    });
+const catData = groupBy('category');
+charts.category = new Chart(document.getElementById('categoryChart'), {
+type: 'doughnut',
+data: { labels: catData.map(e => e[0]), datasets: [{ data: catData.map(e => e[1]), backgroundColor: palette, borderWidth: 3, borderColor: isDark ? '#1e293b' : '#fff' }] },
+options: { responsive: true, onClick: (e, els) => { if (els[0]) { currentFilter.category = catData[els[0].index][0]; applyFilters(); } }, plugins: { legend: { position: 'bottom', labels: { color: textColor } } } }
+});
 
-    // Department
-    const deptData = groupBy('department');
-    charts.department = new Chart(document.getElementById('departmentChart'), {
-        type: 'bar',
-        data: { labels: deptData.slice(0,10).map(e=>e[0]), datasets: [{ label: 'Amount', data: deptData.slice(0,10).map(e=>e[1]), backgroundColor: palette, borderRadius: 8 }] },
-        options: { responsive: true, onClick: (e, els) => { if(els[0]) { currentFilter.department = deptData[els[0].index][0]; applyFilters(); } }, plugins: { legend: { display: false } }, scales: { y: { grid: { color: gridColor }, ticks: { color: textColor } }, x: { ticks: { color: textColor, maxRotation: 45 } } } }
-    });
+const deptData = groupBy('department');
+charts.department = new Chart(document.getElementById('departmentChart'), {
+type: 'bar',
+data: { labels: deptData.slice(0, 10).map(e => e[0]), datasets: [{ label: 'Amount', data: deptData.slice(0, 10).map(e => e[1]), backgroundColor: palette, borderRadius: 8 }] },
+options: { responsive: true, onClick: (e, els) => { if (els[0]) { currentFilter.department = deptData[els[0].index][0]; applyFilters(); } }, plugins: { legend: { display: false } }, scales: { y: { grid: { color: gridColor }, ticks: { color: textColor } }, x: { ticks: { color: textColor, maxRotation: 45 } } } }
+});
 
-    // Top Items
-    const itemData = groupBy('itemDescription');
-    charts.topItems = new Chart(document.getElementById('topItemsChart'), {
-        type: 'bar',
-        data: { labels: itemData.slice(0,10).map(e=>e[0].substring(0,30)), datasets: [{ label: 'Amount', data: itemData.slice(0,10).map(e=>e[1]), backgroundColor: '#8b5cf6', borderRadius: 8 }] },
-        options: { indexAxis: 'y', responsive: true, plugins: { legend: { display: false } }, scales: { x: { grid: { color: gridColor }, ticks: { color: textColor } }, y: { ticks: { color: textColor, font: { size: 10 } } } } }
-    });
+const itemData = groupBy('itemDescription');
+charts.topItems = new Chart(document.getElementById('topItemsChart'), {
+type: 'bar',
+data: { labels: itemData.slice(0, 10).map(e => e[0].substring(0, 30)), datasets: [{ label: 'Amount', data: itemData.slice(0, 10).map(e => e[1]), backgroundColor: '#8b5cf6', borderRadius: 8 }] },
+options: { indexAxis: 'y', responsive: true, plugins: { legend: { display: false } }, scales: { x: { grid: { color: gridColor }, ticks: { color: textColor } }, y: { ticks: { color: textColor, font: { size: 10 } } } } }
+});
 
-    // Date Trend
-    const dateData = groupBy('date');
-    charts.date = new Chart(document.getElementById('dateChart'), {
-        type: 'line',
-        data: { labels: dateData.map(e=>e[0]), datasets: [{ label: 'Amount', data: dateData.map(e=>e[1]), borderColor: '#f59e0b', backgroundColor: 'rgba(245,158,11,0.1)', fill: true, tension: 0.4 }] },
-        options: { responsive: true, plugins: { legend: { display: false } }, scales: { y: { grid: { color: gridColor }, ticks: { color: textColor } }, x: { ticks: { color: textColor, maxRotation: 45 } } } }
-    });
+const dateData = groupBy('date');
+charts.date = new Chart(document.getElementById('dateChart'), {
+type: 'line',
+data: { labels: dateData.map(e => e[0]), datasets: [{ label: 'Amount', data: dateData.map(e => e[1]), borderColor: '#f59e0b', backgroundColor: 'rgba(245,158,11,0.1)', fill: true, tension: 0.4 }] },
+options: { responsive: true, plugins: { legend: { display: false } }, scales: { y: { grid: { color: gridColor }, ticks: { color: textColor } }, x: { ticks: { color: textColor, maxRotation: 45 } } } }
+});
 }
 
 function renderTable() {
-    const tbody = document.getElementById('tableBody');
-    tbody.innerHTML = filteredData.slice(0, 100).map((r, i) => `
-        <tr>
-            <td>${r.sl}</td><td>${r.date}</td><td>${r.category}</td><td>${r.department}</td>
-            <td style="max-width:300px">${r.itemDescription}</td>
-            <td style="text-align:center">${r.issueQty.toLocaleString()}</td>
-            <td class="amount">৳${r.amount.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2})}</td>
-            <td>${r.issueId}</td>
-        </tr>
-    `).join('') + (filteredData.length > 100 ? `<tr><td colspan="8" style="text-align:center;color:var(--muted)">Showing top 100 of ${filteredData.length} rows</td></tr>` : '');
+const tbody = document.getElementById('tableBody');
+tbody.innerHTML = filteredData.slice(0, 100).map((r, i) => `
+<tr>
+<td>${r.sl}</td><td>${r.date}</td><td>${r.category}</td><td>${r.department}</td>
+<td style="max-width:300px">${r.itemDescription}</td>
+<td style="text-align:center">${r.issueQty.toLocaleString()}</td>
+<td class="amount">৳${r.amount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
+<td>${r.issueId}</td>
+</tr>
+`).join('') + (filteredData.length > 100 ? `<tr><td colspan="8" style="text-align:center;color:var(--muted)">Showing top 100 of ${filteredData.length} rows</td></tr>` : '');
 }
-
-// Archive Modal
-window.openArchiveModal = async function() {
-    document.getElementById('archiveModal').style.display = 'flex';
-    const list = document.getElementById('archiveList');
-    list.innerHTML = 'Loading...';
-    try {
-        const snap = await getDocs(collection(db, 'daily_reports_archive'));
-        if(snap.empty) { list.innerHTML = '<p style="color:var(--muted)">No archived data found.</p>'; return; }
-        let html = '';
-        snap.forEach(docSnap => {
-            const d = docSnap.data();
-            const count = d.data ? d.data.length : 0;
-            html += `
-                <div class="archive-item">
-                    <div>
-                        <b>${docSnap.id}</b><br>
-                        <span style="font-size:11px;color:var(--muted)">${count} rows • ${new Date(d.updatedAt||0).toLocaleDateString()}</span>
-                    </div>
-                    <div style="display:flex;gap:8px">
-                        <button class="filter-btn" onclick="viewArchive('${docSnap.id}')"><i class="fas fa-eye"></i> View</button>
-                        <button class="filter-btn" style="color:var(--red);border-color:var(--red)" onclick="deleteArchive('${docSnap.id}')"><i class="fas fa-trash"></i></button>
-                    </div>
-                </div>
-            `;
-        });
-        list.innerHTML = html;
-    } catch(err) { list.innerHTML = 'Error loading archives.'; }
-};
-
-window.closeArchiveModal = function() { document.getElementById('archiveModal').style.display = 'none'; };
-
-window.viewArchive = async function(month) {
-    const snap = await getDocs(collection(db, 'daily_reports_archive'));
-    snap.forEach(docSnap => {
-        if(docSnap.id === month) {
-            allData = docSnap.data().data || [];
-            currentFilter = {};
-            applyFilters();
-            closeArchiveModal();
-            showToast(`Viewing archive: ${month}`);
-        }
-    });
-};
-
-window.deleteArchive = async function(month) {
-    if(!confirm(`Delete archive for ${month}?`)) return;
-    await deleteDoc(doc(db, 'daily_reports_archive', month));
-    showToast('Archive deleted');
-    openArchiveModal();
-};
 
 // Export Functions
 window.exportToExcel = function() {
-    const ws = XLSX.utils.json_to_sheet(filteredData.map(r => ({
-        'SL': r.sl, 'Date': r.date, 'Category': r.category, 'Division': r.division,
-        'Department': r.department, 'Section': r.section, 'Item Group': r.itemGroup,
-        'UOM': r.uom, 'Item Description': r.itemDescription, 'Issue Qty': r.issueQty,
-        'Amount(TK)': r.amount, 'Issue ID': r.issueId, 'Remarks': r.remarks
-    })));
-    const wb = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(wb, ws, 'Daily Report');
-    XLSX.writeFile(wb, `GMS-Daily-Report-${new Date().toISOString().slice(0,10)}.xlsx`);
-    showToast('✅ Excel exported!');
+const ws = XLSX.utils.json_to_sheet(filteredData.map(r => ({
+'SL': r.sl, 'Date': r.date, 'Category': r.category, 'Division': r.division,
+'Department': r.department, 'Section': r.section, 'Item Group': r.itemGroup,
+'UOM': r.uom, 'Item Description': r.itemDescription, 'Issue Qty': r.issueQty,
+'Amount(TK)': r.amount, 'Issue ID': r.issueId, 'Remarks': r.remarks
+})));
+const wb = XLSX.utils.book_new();
+XLSX.utils.book_append_sheet(wb, ws, 'Daily Report');
+XLSX.writeFile(wb, `GMS-General-MCD-${new Date().toISOString().slice(0, 10)}.xlsx`);
+showToast('✅ Excel exported!');
 };
 
 window.exportToPDF = function() {
-    const element = document.getElementById('dashboard-content');
-    const opt = {
-        margin: 5,
-        filename: `GMS-Daily-Dashboard-${new Date().toISOString().slice(0,10)}.pdf`,
-        image: { type: 'jpeg', quality: 0.98 },
-        html2canvas: { scale: 2, useCORS: true },
-        jsPDF: { unit: 'mm', format: 'a4', orientation: 'landscape' }
-    };
-    showToast(' Generating PDF...');
-    html2pdf().set(opt).from(element).save().then(() => showToast('✅ PDF Downloaded!'));
+const element = document.getElementById('dashboard-content');
+const opt = {
+margin: 5,
+filename: `GMS-General-MCD-Dashboard-${new Date().toISOString().slice(0, 10)}.pdf`,
+image: { type: 'jpeg', quality: 0.98 },
+html2canvas: { scale: 2, useCORS: true },
+jsPDF: { unit: 'mm', format: 'a4', orientation: 'landscape' }
+};
+showToast('🖨️ Generating PDF...');
+html2pdf().set(opt).from(element).save().then(() => showToast('✅ PDF Downloaded!'));
 };
 
-function showToast(msg, error=false) {
-    const t = document.createElement('div');
-    t.className = 'toast' + (error ? ' error' : '');
-    t.innerText = msg;
-    document.body.appendChild(t);
-    setTimeout(() => t.remove(), 3000);
+function showToast(msg, error = false) {
+const t = document.createElement('div');
+t.className = 'toast' + (error ? ' error' : '');
+t.innerText = msg;
+document.body.appendChild(t);
+setTimeout(() => t.remove(), 3000);
 }
 window.showToast = showToast;
 </script>
