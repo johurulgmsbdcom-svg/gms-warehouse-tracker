@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>GMS General MCD Daily Issue Smart Chart</title>
+<title>GMS Daily Smart Report - General MCD</title>
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
@@ -33,6 +33,10 @@ body{background:var(--bg);color:var(--text);font-family:'Poppins',sans-serif;lin
 .status-bar{display:flex;justify-content:space-between;align-items:center;padding:10px 16px;background:rgba(16,185,129,0.1);border-radius:10px;margin-bottom:20px;font-size:12px;font-weight:600;color:var(--green);flex-wrap:wrap;gap:8px}
 .status-bar.offline{background:rgba(245,158,11,0.1);color:var(--yellow)}
 
+.date-filter{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:20px;align-items:center;background:var(--card);padding:16px;border-radius:12px;box-shadow:var(--shadow)}
+.date-filter input{padding:8px 12px;border:1px solid var(--border);border-radius:8px;background:var(--bg);color:var(--text);font-size:13px}
+.date-filter button{padding:8px 16px;border:none;border-radius:8px;background:linear-gradient(135deg,var(--blue),var(--purple));color:#fff;font-weight:600;cursor:pointer}
+
 .upload-box{border:3px dashed var(--blue);border-radius:16px;padding:40px;text-align:center;cursor:pointer;background:rgba(59,130,246,0.05);transition:all .3s;margin-bottom:20px}
 .upload-box:hover{background:rgba(59,130,246,0.1);transform:translateY(-2px)}
 .upload-box.dragover{background:rgba(16,185,129,0.1);border-color:var(--green)}
@@ -55,6 +59,7 @@ body{background:var(--bg);color:var(--text);font-family:'Poppins',sans-serif;lin
 .stat-card.green{border-left-color:var(--green)}
 .stat-card.orange{border-left-color:var(--yellow)}
 .stat-card.purple{border-left-color:var(--purple)}
+.stat-card.red{border-left-color:var(--red)}
 .stat-card h4{font-size:11px;color:var(--muted);text-transform:uppercase;margin-bottom:6px}
 .stat-card .value{font-size:24px;font-weight:800}
 
@@ -79,15 +84,19 @@ tr:hover{background:rgba(59,130,246,0.05)}
 .toast.error{background:var(--red)}
 @keyframes slideIn{from{transform:translateX(100%);opacity:0}to{transform:translateX(0);opacity:1}}
 
-.empty-state{text-align:center;padding:60px 20px;color:var(--muted)}
-.empty-state i{font-size:64px;margin-bottom:16px;opacity:.5}
-
 @media(max-width:768px){
 .header h1{font-size:18px}
 .container{padding:12px}
 .stats-grid{grid-template-columns:repeat(2,1fr)}
 .chart-grid{grid-template-columns:1fr}
 .filter-bar{flex-direction:column;align-items:stretch}
+}
+
+@media print{
+body{background:#fff!important;color:#000!important}
+.theme-toggle,.back-btn,.upload-box,.action-bar,.filter-bar,.table-section,.status-bar{display:none!important}
+#dashboard-content{box-shadow:none!important;padding:0!important}
+.chart-box,.stat-card{break-inside:avoid;box-shadow:none!important;border:1px solid #ddd}
 }
 </style>
 </head>
@@ -97,45 +106,52 @@ tr:hover{background:rgba(59,130,246,0.05)}
 <button class="theme-toggle" onclick="toggleTheme()"><i class="fas fa-moon" id="themeIcon"></i></button>
 
 <div class="header">
-<h1><i class="fas fa-chart-line"></i> GMS General MCD Daily Issue Smart Chart</h1>
-<p>Real-time Sync • Offline Mode • 1-Read/1-Write Optimized • Auto Archive</p>
+<h1><i class="fas fa-chart-line"></i> GMS Daily Smart Report - General MCD</h1>
+<p>Real-time Analytics • Department Wise • Category Wise • Date: <span id="currentDate"></span></p>
 </div>
 
 <div class="container">
 <div class="status-bar" id="statusBar">
-<span><i class="fas fa-circle" style="font-size:8px"></i> <span id="statusText">Connecting...</span></span>
+<span><i class="fas fa-circle" style="font-size:8px"></i> <span id="statusText">Ready</span></span>
 <span>Last Update: <span id="lastUpdate">-</span></span>
+</div>
+
+<div class="date-filter">
+<label><i class="fas fa-calendar"></i> Select Date:</label>
+<input type="date" id="reportDate" onchange="loadReportData()">
+<button onclick="exportCurrentView()"><i class="fas fa-download"></i> Export</button>
 </div>
 
 <div class="upload-box" id="uploadBox" onclick="document.getElementById('fileInput').click()">
 <i class="fas fa-cloud-upload-alt"></i>
-<h3>Upload Daily Excel File</h3>
-<p>Drag & Drop or Click to Select (.xlsx, .xls, .csv)</p>
-<p style="font-size:11px;color:var(--muted);margin-top:8px">Auto-saves to Firebase. Old data auto-archived after 2 months.</p>
+<h3>Upload Excel File</h3>
+<p>Drag & Drop or Click to Select (.xlsx, .xls)</p>
+<p style="font-size:11px;color:var(--muted);margin-top:8px">Upload daily data Excel file to generate report</p>
 </div>
 <input type="file" id="fileInput" accept=".xlsx,.xls,.csv" style="display:none" onchange="handleFile(event)">
 
 <div class="action-bar">
 <button class="btn btn-excel" onclick="exportToExcel()"><i class="fas fa-file-excel"></i> Download Excel</button>
-<button class="btn btn-pdf" onclick="exportToPDF()"><i class="fas fa-file-pdf"></i> Print PDF (A4 Landscape)</button>
+<button class="btn btn-pdf" onclick="exportToPDF()"><i class="fas fa-file-pdf"></i> Print PDF (A4)</button>
 <button class="btn btn-home" onclick="location.href='index.html'"><i class="fas fa-home"></i> Home</button>
 </div>
 
 <div id="dashboard-content">
 <div class="stats-grid">
 <div class="stat-card"><h4>Total Amount</h4><div class="value" id="statAmount">৳0</div></div>
-<div class="stat-card green"><h4>Total Qty</h4><div class="value" id="statQty">0</div></div>
-<div class="stat-card orange"><h4>Total Items</h4><div class="value" id="statItems">0</div></div>
-<div class="stat-card purple"><h4>Departments</h4><div class="value" id="statDepts">0</div></div>
+<div class="stat-card green"><h4>Total Items</h4><div class="value" id="statItems">0</div></div>
+<div class="stat-card orange"><h4>Departments</h4><div class="value" id="statDepts">0</div></div>
+<div class="stat-card purple"><h4>Categories</h4><div class="value" id="statCats">0</div></div>
+<div class="stat-card red"><h4>Avg. Per Item</h4><div class="value" id="statAvg">৳0</div></div>
 </div>
 
 <div class="chart-grid">
 <div class="chart-box">
-<h3><i class="fas fa-chart-pie" style="color:var(--blue)"></i> Category Wise Amount (Click to Filter)</h3>
+<h3><i class="fas fa-chart-pie" style="color:var(--blue)"></i> Category Wise Distribution</h3>
 <canvas id="categoryChart"></canvas>
 </div>
 <div class="chart-box">
-<h3><i class="fas fa-chart-bar" style="color:var(--green)"></i> Department Wise Amount (Click to Filter)</h3>
+<h3><i class="fas fa-chart-bar" style="color:var(--green)"></i> Department Wise Amount</h3>
 <canvas id="departmentChart"></canvas>
 </div>
 <div class="chart-box">
@@ -143,112 +159,80 @@ tr:hover{background:rgba(59,130,246,0.05)}
 <canvas id="topItemsChart"></canvas>
 </div>
 <div class="chart-box">
-<h3><i class="fas fa-chart-area" style="color:var(--yellow)"></i> Date Wise Trend</h3>
-<canvas id="dateChart"></canvas>
+<h3><i class="fas fa-chart-area" style="color:var(--yellow)"></i> Division Wise Summary</h3>
+<canvas id="divisionChart"></canvas>
 </div>
 </div>
 </div>
 
 <div class="filter-bar" id="filterBar">
-<span style="font-weight:700;font-size:13px;margin-right:10px"><i class="fas fa-filter"></i> Filters:</span>
+<span style="font-weight:700;font-size:13px;margin-right:10px"><i class="fas fa-filter"></i> Filter by:</span>
 <button class="filter-btn active" onclick="clearFilters()">All Data</button>
 <div id="activeFilters"></div>
 </div>
 
 <div class="table-section">
-<h3 style="font-size:14px;font-weight:700;margin-bottom:12px"><i class="fas fa-table"></i> Detailed Data</h3>
+<h3 style="font-size:14px;font-weight:700;margin-bottom:12px"><i class="fas fa-table"></i> Detailed Data (<span id="rowCount">0</span> rows)</h3>
 <table>
 <thead>
 <tr>
-<th>SL</th><th>Date</th><th>Category</th><th>Department</th><th>Item Description</th>
-<th style="text-align:center">Qty</th><th style="text-align:right">Amount (TK)</th><th>Issue ID</th>
+<th>SL</th><th>Category</th><th>Division</th><th>Department</th><th>Item Description</th>
+<th style="text-align:center">Qty</th><th>UOM</th><th style="text-align:right">Amount (TK)</th><th>Issue ID</th>
 </tr>
 </thead>
 <tbody id="tableBody"></tbody>
 </table>
 </div>
-
-<div class="empty-state" id="emptyState" style="display:none">
-<i class="fas fa-inbox"></i>
-<h3>No Data Found</h3>
-<p>Upload an Excel file to get started</p>
-</div>
 </div>
 
-<script type="module">
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-import { getFirestore, doc, setDoc, onSnapshot, collection, getDocs, deleteDoc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
-
-const firebaseConfig = {
-apiKey: "AIzaSyD-wBCF5eeWMHobLFOhBzKW7aB2pagz9-w",
-authDomain: "gms-warehouse-tracker-7f57e.firebaseapp.com",
-projectId: "gms-warehouse-tracker-7f57e",
-storageBucket: "gms-warehouse-tracker-7f57e.firebasestorage.app",
-messagingSenderId: "992250313291",
-appId: "1:992250313291:web:ee3bceae76d4d53bc26bce"
-};
-
-const app = initializeApp(firebaseConfig);
-const db = getFirestore(app);
-const DOC_ID = "general_mcd_latest";
-const ARCHIVE_COL = "generalMcdDaily_archive";
-const ACTIVE_COL = "generalMcdDaily";
-
+<script>
 let allData = [];
 let filteredData = [];
 let charts = {};
 let currentFilter = {};
-let isOnline = navigator.onLine;
 
-// Theme
-window.toggleTheme = function() {
+// Theme toggle
+function toggleTheme(){
 document.body.classList.toggle('light');
 const icon = document.getElementById('themeIcon');
 icon.className = document.body.classList.contains('light') ? 'fas fa-sun' : 'fas fa-moon';
 localStorage.setItem('theme', document.body.classList.contains('light') ? 'light' : 'dark');
 renderCharts();
-};
-if (localStorage.getItem('theme') === 'light') {
-document.body.classList.add('light');
-document.getElementById('themeIcon').className = 'fas fa-sun';
 }
 
-// Network
-window.addEventListener('online', () => { isOnline = true; updateStatus('Online - Syncing...'); loadActiveData(); });
-window.addEventListener('offline', () => { isOnline = false; updateStatus('Offline Mode', true); });
-function updateStatus(msg, offline = false) {
-document.getElementById('statusText').innerText = msg;
-document.getElementById('statusBar').className = 'status-bar' + (offline ? ' offline' : '');
-}
+// Set current date
+document.getElementById('currentDate').textContent = new Date().toLocaleDateString('en-GB');
+document.getElementById('reportDate').valueAsDate = new Date();
 
-// Drag & Drop
+// File upload handling
 const uploadBox = document.getElementById('uploadBox');
-['dragenter', 'dragover'].forEach(e => uploadBox.addEventListener(e, ev => { ev.preventDefault(); uploadBox.classList.add('dragover'); }));
-['dragleave', 'drop'].forEach(e => uploadBox.addEventListener(e, ev => { ev.preventDefault(); uploadBox.classList.remove('dragover'); }));
-uploadBox.addEventListener('drop', ev => { if (ev.dataTransfer.files.length) processFile(ev.dataTransfer.files[0]); });
+['dragenter','dragover'].forEach(e => uploadBox.addEventListener(e, ev => { ev.preventDefault(); uploadBox.classList.add('dragover'); }));
+['dragleave','drop'].forEach(e => uploadBox.addEventListener(e, ev => { ev.preventDefault(); uploadBox.classList.remove('dragover'); }));
+uploadBox.addEventListener('drop', ev => { if(ev.dataTransfer.files.length) processFile(ev.dataTransfer.files[0]); });
 
-window.handleFile = function(event) { if (event.target.files[0]) processFile(event.target.files[0]); };
+function handleFile(event){
+if(event.target.files[0]) processFile(event.target.files[0]);
+}
 
-function processFile(file) {
-updateStatus('Processing file...');
+function processFile(file){
+document.getElementById('statusText').textContent = 'Processing...';
 const reader = new FileReader();
-reader.onload = function(e) {
-try {
+reader.onload = function(e){
+try{
 const data = new Uint8Array(e.target.result);
-const workbook = XLSX.read(data, { type: 'array' });
-const jsonData = XLSX.utils.sheet_to_json(workbook.Sheets[workbook.SheetNames[0]], { defval: '' });
-if (jsonData.length === 0) { showToast('No data found!', true); return; }
-const normalized = normalizeData(jsonData);
-saveToFirebase(normalized);
-} catch (err) { showToast('Error: ' + err.message, true); }
+const workbook = XLSX.read(data, {type:'array'});
+const jsonData = XLSX.utils.sheet_to_json(workbook.Sheets[workbook.SheetNames[0]], {defval:''});
+if(jsonData.length === 0){ showToast('No data found!', true); return; }
+processData(jsonData);
+} catch(err){ showToast('Error: '+err.message, true); }
 };
 reader.readAsArrayBuffer(file);
 }
 
-function normalizeData(raw) {
-return raw.map((row, idx) => ({
-sl: row['SL'] || (idx + 1),
-date: formatDate(row['Trans. Date'] || row['date']),
+function processData(rawData){
+allData = rawData.map((row, idx) => ({
+sl: row['SL'] || (idx+1),
+date: row['Trans. Date'] || '',
 category: String(row['Category'] || '').trim(),
 division: String(row['Division'] || '').trim(),
 department: String(row['Department'] || '').trim(),
@@ -256,160 +240,193 @@ section: String(row['Section'] || '').trim(),
 itemGroup: String(row['Item Group'] || '').trim(),
 uom: String(row['UOM'] || '').trim(),
 itemDescription: String(row['Item Description'] || '').trim(),
-issueQty: parseNum(row['Issue Qty'] || row['qty']),
-amount: parseNum(row['Amount(TK)'] || row['Amount']),
+issueQty: parseNum(row['Issue Qty']),
+amount: parseNum(row['Amount(TK)']),
 issueId: String(row['Issue ID'] || '').trim(),
 remarks: String(row['Remarks'] || '').trim()
 })).filter(r => r.itemDescription || r.amount > 0);
-}
 
-function parseNum(v) { if (typeof v === 'number') return v; return Number(String(v || 0).replace(/,/g, '')) || 0; }
-function formatDate(d) {
-if (!d) return '';
-if (typeof d === 'number') { const date = XLSX.SSF.parse_date_code(d); if (date) return `${String(date.d).padStart(2, '0')}-${String(date.m).padStart(2, '0')}-${date.y}`; }
-return String(d);
-}
-function getMonthKey(dateStr) {
-if (!dateStr) return '';
-const parts = dateStr.split('-');
-if (parts.length === 3) return `${parts[2]}-${parts[1].padStart(2, '0')}`;
-return '';
-}
-
-async function saveToFirebase(data) {
-updateStatus('Saving to Firebase...');
-const now = new Date();
-const currentMonth = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
-const prevMonth = `${now.getFullYear()}-${String(now.getMonth()).padStart(2, '0')}`;
-
-const grouped = {};
-data.forEach(row => {
-const m = getMonthKey(row.date);
-if (m) { if (!grouped[m]) grouped[m] = []; grouped[m].push(row); }
-});
-
-try {
-const writes = [];
-for (const [month, rows] of Object.entries(grouped)) {
-const col = (month === currentMonth || month === prevMonth) ? ACTIVE_COL : ARCHIVE_COL;
-writes.push(setDoc(doc(db, col, month), { data: rows, updatedAt: Date.now() }));
-}
-await Promise.all(writes);
-showToast(`✅ Saved ${data.length} rows!`);
-updateStatus('Saved successfully!');
-} catch (err) { showToast('Save failed: ' + err.message, true); }
-}
-
-// Real-time Listener
-function loadActiveData() {
-updateStatus('Loading live data...');
-onSnapshot(collection(db, ACTIVE_COL), (snapshot) => {
-allData = [];
-let lastUpdate = 0;
-snapshot.forEach(docSnap => {
-const d = docSnap.data();
-if (d.data) { allData = allData.concat(d.data); lastUpdate = Math.max(lastUpdate, d.updatedAt || 0); }
-});
-allData.sort((a, b) => (b.date || '').localeCompare(a.date || ''));
-document.getElementById('lastUpdate').innerText = lastUpdate ? new Date(lastUpdate).toLocaleString() : '-';
-applyFilters();
-updateStatus('Live Sync Active ✅');
-}, (err) => { updateStatus('Load failed', true); });
-}
-loadActiveData();
-
-// Filters & UI
-function applyFilters() {
-filteredData = allData.filter(row => {
-if (currentFilter.category && row.category !== currentFilter.category) return false;
-if (currentFilter.department && row.department !== currentFilter.department) return false;
-return true;
-});
-renderStats();
+filteredData = [...allData];
+updateStats();
 renderCharts();
 renderTable();
-renderFilterButtons();
-document.getElementById('emptyState').style.display = filteredData.length === 0 ? 'block' : 'none';
+document.getElementById('statusText').textContent = 'Data Loaded ✓';
+document.getElementById('lastUpdate').textContent = new Date().toLocaleTimeString();
+showToast(`✅ Loaded ${allData.length} rows`);
 }
 
-window.clearFilters = function() { currentFilter = {}; applyFilters(); };
-
-function renderFilterButtons() {
-const container = document.getElementById('activeFilters');
-let html = '';
-if (currentFilter.category) html += `<button class="filter-btn active" onclick="delete currentFilter.category;applyFilters()">Category: ${currentFilter.category} ✕</button>`;
-if (currentFilter.department) html += `<button class="filter-btn active" onclick="delete currentFilter.department;applyFilters()">Dept: ${currentFilter.department} ✕</button>`;
-container.innerHTML = html;
+function parseNum(v){
+if(typeof v === 'number') return v;
+return Number(String(v || 0).replace(/,/g, '')) || 0;
 }
 
-function renderStats() {
+function updateStats(){
 const total = filteredData.length;
-const amount = filteredData.reduce((s, r) => s + r.amount, 0);
-const qty = filteredData.reduce((s, r) => s + r.issueQty, 0);
-const depts = new Set(filteredData.map(r => r.department).filter(v => v)).size;
-document.getElementById('statAmount').innerText = '৳' + amount.toLocaleString('en-US', { maximumFractionDigits: 0 });
-document.getElementById('statQty').innerText = qty.toLocaleString();
-document.getElementById('statItems').innerText = total.toLocaleString();
-document.getElementById('statDepts').innerText = depts;
+const amount = filteredData.reduce((s,r) => s + r.amount, 0);
+const depts = new Set(filteredData.map(r => r.department).filter(v=>v)).size;
+const cats = new Set(filteredData.map(r => r.category).filter(v=>v)).size;
+const avg = total > 0 ? amount / total : 0;
+
+document.getElementById('statAmount').textContent = '৳' + amount.toLocaleString('en-US', {maximumFractionDigits:0});
+document.getElementById('statItems').textContent = total.toLocaleString();
+document.getElementById('statDepts').textContent = depts;
+document.getElementById('statCats').textContent = cats;
+document.getElementById('statAvg').textContent = '৳' + avg.toLocaleString('en-US', {maximumFractionDigits:0});
+document.getElementById('rowCount').textContent = total;
 }
 
-function renderCharts() {
+function renderCharts(){
 Object.values(charts).forEach(c => c && c.destroy());
 const isDark = document.body.classList.contains('light') === false;
 const textColor = isDark ? '#f1f5f9' : '#1e293b';
 const gridColor = isDark ? 'rgba(148,163,184,.2)' : 'rgba(0,0,0,.1)';
-const palette = ['#38bdf8', '#22c55e', '#f59e0b', '#a855f7', '#ef4444', '#14b8a6', '#eab308', '#6366f1', '#ec4899', '#84cc16'];
+const palette = ['#38bdf8','#22c55e','#f59e0b','#a855f7','#ef4444','#14b8a6','#eab308','#6366f1','#ec4899','#84cc16'];
 
-const groupBy = (key, valKey = 'amount') => {
-const map = {};
-filteredData.forEach(r => { const k = r[key] || 'Unknown'; map[k] = (map[k] || 0) + r[valKey]; });
-return Object.entries(map).sort((a, b) => b[1] - a[1]);
-};
-
+// Category wise
 const catData = groupBy('category');
 charts.category = new Chart(document.getElementById('categoryChart'), {
 type: 'doughnut',
-data: { labels: catData.map(e => e[0]), datasets: [{ data: catData.map(e => e[1]), backgroundColor: palette, borderWidth: 3, borderColor: isDark ? '#1e293b' : '#fff' }] },
-options: { responsive: true, onClick: (e, els) => { if (els[0]) { currentFilter.category = catData[els[0].index][0]; applyFilters(); } }, plugins: { legend: { position: 'bottom', labels: { color: textColor } } } }
+data: {
+labels: catData.map(e=>e[0]),
+datasets: [{
+data: catData.map(e=>e[1]),
+backgroundColor: palette,
+borderWidth: 3,
+borderColor: isDark ? '#1e293b' : '#fff'
+}]
+},
+options: {
+responsive: true,
+maintainAspectRatio: false,
+plugins: {
+legend: { position: 'bottom', labels: { color: textColor, font: { size: 10 } } },
+tooltip: {
+callbacks: {
+label: function(ctx){
+const total = ctx.dataset.data.reduce((a,b)=>a+b,0);
+const pct = ((ctx.raw/total)*100).toFixed(1);
+return ctx.label + ': ৳' + ctx.raw.toLocaleString() + ' (' + pct + '%)';
+}
+}
+}
+}
+}
 });
 
+// Department wise
 const deptData = groupBy('department');
 charts.department = new Chart(document.getElementById('departmentChart'), {
 type: 'bar',
-data: { labels: deptData.slice(0, 10).map(e => e[0]), datasets: [{ label: 'Amount', data: deptData.slice(0, 10).map(e => e[1]), backgroundColor: palette, borderRadius: 8 }] },
-options: { responsive: true, onClick: (e, els) => { if (els[0]) { currentFilter.department = deptData[els[0].index][0]; applyFilters(); } }, plugins: { legend: { display: false } }, scales: { y: { grid: { color: gridColor }, ticks: { color: textColor } }, x: { ticks: { color: textColor, maxRotation: 45 } } } }
+data: {
+labels: deptData.slice(0,15).map(e=>e[0]),
+datasets: [{
+label: 'Amount',
+data: deptData.slice(0,15).map(e=>e[1]),
+backgroundColor: palette,
+borderRadius: 8
+}]
+},
+options: {
+responsive: true,
+maintainAspectRatio: false,
+plugins: { legend: { display: false } },
+scales: {
+y: { grid: { color: gridColor }, ticks: { color: textColor } },
+x: { ticks: { color: textColor, maxRotation: 45, font: { size: 9 } } }
+}
+}
 });
 
+// Top items
 const itemData = groupBy('itemDescription');
 charts.topItems = new Chart(document.getElementById('topItemsChart'), {
 type: 'bar',
-data: { labels: itemData.slice(0, 10).map(e => e[0].substring(0, 30)), datasets: [{ label: 'Amount', data: itemData.slice(0, 10).map(e => e[1]), backgroundColor: '#8b5cf6', borderRadius: 8 }] },
-options: { indexAxis: 'y', responsive: true, plugins: { legend: { display: false } }, scales: { x: { grid: { color: gridColor }, ticks: { color: textColor } }, y: { ticks: { color: textColor, font: { size: 10 } } } } }
+data: {
+labels: itemData.slice(0,10).map(e=>e[0].substring(0,30)),
+datasets: [{
+label: 'Amount',
+data: itemData.slice(0,10).map(e=>e[1]),
+backgroundColor: '#8b5cf6',
+borderRadius: 8
+}]
+},
+options: {
+indexAxis: 'y',
+responsive: true,
+maintainAspectRatio: false,
+plugins: { legend: { display: false } },
+scales: {
+x: { grid: { color: gridColor }, ticks: { color: textColor } },
+y: { ticks: { color: textColor, font: { size: 10 } } }
+}
+}
 });
 
-const dateData = groupBy('date');
-charts.date = new Chart(document.getElementById('dateChart'), {
+// Division wise
+const divData = groupBy('division');
+charts.division = new Chart(document.getElementById('divisionChart'), {
 type: 'line',
-data: { labels: dateData.map(e => e[0]), datasets: [{ label: 'Amount', data: dateData.map(e => e[1]), borderColor: '#f59e0b', backgroundColor: 'rgba(245,158,11,0.1)', fill: true, tension: 0.4 }] },
-options: { responsive: true, plugins: { legend: { display: false } }, scales: { y: { grid: { color: gridColor }, ticks: { color: textColor } }, x: { ticks: { color: textColor, maxRotation: 45 } } } }
+data: {
+labels: divData.map(e=>e[0]),
+datasets: [{
+label: 'Amount',
+data: divData.map(e=>e[1]),
+borderColor: '#f59e0b',
+backgroundColor: 'rgba(245,158,11,0.1)',
+fill: true,
+tension: 0.4
+}]
+},
+options: {
+responsive: true,
+maintainAspectRatio: false,
+plugins: { legend: { display: false } },
+scales: {
+y: { grid: { color: gridColor }, ticks: { color: textColor } },
+x: { ticks: { color: textColor, maxRotation: 45, font: { size: 9 } } }
+}
+}
 });
 }
 
-function renderTable() {
+function groupBy(key){
+const map = {};
+filteredData.forEach(r => {
+const k = r[key] || 'Unknown';
+map[k] = (map[k] || 0) + r.amount;
+});
+return Object.entries(map).sort((a,b)=>b[1]-a[1]);
+}
+
+function renderTable(){
 const tbody = document.getElementById('tableBody');
-tbody.innerHTML = filteredData.slice(0, 100).map((r, i) => `
+tbody.innerHTML = filteredData.slice(0, 500).map((r, i) => `
 <tr>
-<td>${r.sl}</td><td>${r.date}</td><td>${r.category}</td><td>${r.department}</td>
+<td>${r.sl}</td>
+<td>${r.category}</td>
+<td>${r.division}</td>
+<td>${r.department}</td>
 <td style="max-width:300px">${r.itemDescription}</td>
 <td style="text-align:center">${r.issueQty.toLocaleString()}</td>
-<td class="amount">৳${r.amount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
+<td>${r.uom}</td>
+<td class="amount">৳${r.amount.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2})}</td>
 <td>${r.issueId}</td>
 </tr>
-`).join('') + (filteredData.length > 100 ? `<tr><td colspan="8" style="text-align:center;color:var(--muted)">Showing top 100 of ${filteredData.length} rows</td></tr>` : '');
+`).join('') + (filteredData.length > 500 ? `<tr><td colspan="9" style="text-align:center;color:var(--muted)">Showing first 500 of ${filteredData.length} rows</td></tr>` : '');
 }
 
-// Export Functions
-window.exportToExcel = function() {
+function clearFilters(){
+currentFilter = {};
+filteredData = [...allData];
+updateStats();
+renderCharts();
+renderTable();
+document.getElementById('activeFilters').innerHTML = '';
+document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+document.querySelector('.filter-btn').classList.add('active');
+}
+
+function exportToExcel(){
 const ws = XLSX.utils.json_to_sheet(filteredData.map(r => ({
 'SL': r.sl, 'Date': r.date, 'Category': r.category, 'Division': r.division,
 'Department': r.department, 'Section': r.section, 'Item Group': r.itemGroup,
@@ -418,31 +435,40 @@ const ws = XLSX.utils.json_to_sheet(filteredData.map(r => ({
 })));
 const wb = XLSX.utils.book_new();
 XLSX.utils.book_append_sheet(wb, ws, 'Daily Report');
-XLSX.writeFile(wb, `GMS-General-MCD-${new Date().toISOString().slice(0, 10)}.xlsx`);
+XLSX.writeFile(wb, `GMS-Daily-Report-${new Date().toISOString().slice(0,10)}.xlsx`);
 showToast('✅ Excel exported!');
-};
+}
 
-window.exportToPDF = function() {
+function exportToPDF(){
 const element = document.getElementById('dashboard-content');
 const opt = {
 margin: 5,
-filename: `GMS-General-MCD-Dashboard-${new Date().toISOString().slice(0, 10)}.pdf`,
+filename: `GMS-Daily-Smart-Report-${new Date().toISOString().slice(0,10)}.pdf`,
 image: { type: 'jpeg', quality: 0.98 },
 html2canvas: { scale: 2, useCORS: true },
 jsPDF: { unit: 'mm', format: 'a4', orientation: 'landscape' }
 };
 showToast('🖨️ Generating PDF...');
 html2pdf().set(opt).from(element).save().then(() => showToast('✅ PDF Downloaded!'));
-};
+}
 
-function showToast(msg, error = false) {
+function exportCurrentView(){
+exportToExcel();
+}
+
+function showToast(msg, error=false){
 const t = document.createElement('div');
 t.className = 'toast' + (error ? ' error' : '');
 t.innerText = msg;
 document.body.appendChild(t);
 setTimeout(() => t.remove(), 3000);
 }
-window.showToast = showToast;
+
+// Load sample data on page load (for demo)
+window.addEventListener('DOMContentLoaded', function(){
+// You can remove this and wait for file upload
+showToast('📁 Upload Excel file to generate report');
+});
 </script>
 </body>
 </html>
