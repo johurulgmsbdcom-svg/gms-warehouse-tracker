@@ -141,13 +141,170 @@ th,td{border:1px solid #000;padding:5px;text-align:center;vertical-align:middle;
   .singleMode .header,.singleMode .controls,.singleMode #loadStatus,.singleMode #chartSection{display:none!important}
   .singleMode .reportCard,.singleMode .greyCard{margin:0;border:0;width:100%;overflow-x:auto}
 }
-@page{size:A4 landscape;margin:4mm}
+
+/* 🔥 A4 LANDSCAPE PRINT - 1 PAGE PER CARD */
+@page{
+  size:A4 landscape;
+  margin:4mm;
+}
 @media print{
-  html,body{background:#fff!important;color:#000!important;margin:0!important;padding:0!important}
-  *{color:#000!important;text-shadow:none!important;opacity:1!important;-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important}
-  .header,.controls,.actionBar,#loadStatus,.noPrint,#chartSection,.cacheStatusBar{display:none!important}
-  #reportArea{width:100%!important;margin:0!important}
-  .reportCard,.greyCard{width:100%!important;margin:0!important;border:1px solid #000!important;page-break-inside:avoid!important;page-break-after:avoid!important}
+  html,body{
+    background:#fff!important;
+    color:#000!important;
+    margin:0!important;
+    padding:0!important;
+    width:297mm!important;
+    height:210mm!important;
+    overflow:hidden!important;
+  }
+  *{
+    color:#000!important;
+    text-shadow:none!important;
+    opacity:1!important;
+    -webkit-print-color-adjust:exact!important;
+    print-color-adjust:exact!important;
+  }
+  .header,.controls,.actionBar,#loadStatus,.noPrint,#chartSection,.cacheStatusBar{
+    display:none!important;
+  }
+  #reportArea{
+    width:100%!important;
+    margin:0!important;
+    padding:0!important;
+  }
+  
+  /* 🔥 প্রতিটি card আলাদা A4 landscape page এ */
+  .reportCard,.greyCard{
+    width:297mm!important;
+    height:202mm!important;
+    margin:0!important;
+    padding:2mm!important;
+    border:1px solid #000!important;
+    page-break-after:always!important;
+    page-break-inside:avoid!important;
+    page-break-before:always!important;
+    overflow:hidden!important;
+    display:block!important;
+  }
+  
+  /* শেষ card এর পর page break নয় */
+  .reportCard:last-child,.greyCard:last-child{
+    page-break-after:auto!important;
+  }
+  
+  /* 🔥 Report Card Internal Layout */
+  .reportCard .reportPrintHeader{
+    padding:3px 0!important;
+    margin-bottom:2px!important;
+  }
+  .reportCard .reportPrintHeader h2{
+    font-size:16px!important;
+    margin:0!important;
+  }
+  .reportCard .reportPrintHeader h4{
+    font-size:9px!important;
+    margin:1px 0!important;
+  }
+  .reportCard .reportPrintHeader h3{
+    font-size:12px!important;
+    margin:1px 0!important;
+  }
+  .reportCard .qrCenter{
+    margin:3px auto 5px!important;
+  }
+  .reportCard .qrMini{
+    width:50px!important;
+    height:50px!important;
+  }
+  .reportCard .companyLine{
+    font-size:12px!important;
+    padding:3px 2px!important;
+  }
+  .reportCard .meta{
+    font-size:9px!important;
+  }
+  .reportCard .meta div{
+    padding:3px 2px!important;
+    font-size:9px!important;
+  }
+  .reportCard .tableWrap{
+    overflow:visible!important;
+    margin:3px 0!important;
+  }
+  .reportCard table{
+    width:100%!important;
+    min-width:0!important;
+    table-layout:fixed!important;
+    font-size:8px!important;
+  }
+  .reportCard th,.reportCard td{
+    padding:2px 1px!important;
+    font-size:8px!important;
+    line-height:1.1!important;
+    overflow:hidden!important;
+    word-break:break-word!important;
+  }
+  .reportCard .totalRow{
+    font-size:9px!important;
+  }
+  .reportCard .sign{
+    margin-top:15px!important;
+    display:grid!important;
+    grid-template-columns:repeat(8,1fr)!important;
+    gap:0!important;
+  }
+  .reportCard .sign div{
+    font-size:8px!important;
+    padding:3px 1px!important;
+    line-height:1.1!important;
+  }
+  
+  /* 🔥 Grey Card Internal Layout */
+  .greyCard .greyHeader{
+    line-height:1.1!important;
+  }
+  .greyCard .greyHeader h2{
+    font-size:18px!important;
+    margin:0!important;
+  }
+  .greyCard .greyHeader h4{
+    font-size:10px!important;
+    margin:1px 0!important;
+  }
+  .greyCard .greyHeader h1{
+    font-size:26px!important;
+    margin:2px 0!important;
+  }
+  .greyCard .greyTitle{
+    font-size:14px!important;
+    margin:4px 0!important;
+  }
+  .greyCard .qrCenter{
+    margin:5px auto 8px!important;
+  }
+  .greyCard .qrMini{
+    width:50px!important;
+    height:50px!important;
+  }
+  .greyCard .greyTable{
+    width:70%!important;
+    margin:5px auto 0!important;
+    table-layout:fixed!important;
+  }
+  .greyCard .greyTable th,.greyCard .greyTable td{
+    font-size:10px!important;
+    padding:4px 3px!important;
+  }
+  .greyCard .greySign{
+    margin-top:50px!important;
+    display:grid!important;
+    grid-template-columns:repeat(6,1fr)!important;
+    gap:15px!important;
+  }
+  .greyCard .greySign div{
+    font-size:9px!important;
+    padding-top:4px!important;
+  }
 }
 </style>
 </head>
@@ -262,7 +419,7 @@ const db=getFirestore(app);
 
 let allPlans=[];
 let mcdBarChart=null, namePieChart=null, deliveryChart=null;
-let selectedNameValue = ""; // 🔥 Selected name value
+let selectedNameValue = "";
 
 const CHART_COLORS = ['#22c55e','#3b82f6','#8b5cf6','#f59e0b','#ef4444','#06b6d4','#ec4899','#14b8a6','#f97316','#6366f1'];
 
@@ -336,7 +493,6 @@ function renderQRCodes(){
   });
 }
 
-// 🔥 GET UNIQUE NAMES FOR FILTER (MCD অনুযায়ী)
 function getUniqueNamesForMCD(){
   const selectedMCD = document.getElementById('mcdFilter').value;
   const selectedCompany = document.getElementById('companyFilter').value;
@@ -352,16 +508,14 @@ function getUniqueNamesForMCD(){
   return Array.from(names).sort();
 }
 
-// 🔥 UPDATE NAME FILTER - MCD change হলে call হবে
 window.updateNameFilter=function(){
-  selectedNameValue = ""; // Reset selection
+  selectedNameValue = "";
   document.getElementById('nameSearchInput').value = "";
   document.getElementById('nameClearBtn').classList.remove('show');
   document.getElementById('nameDropdown').classList.remove('show');
   console.log('👤 Name filter reset for MCD:', document.getElementById('mcdFilter').value);
 }
 
-// 🔥 FILTER NAME DROPDOWN - Letter টাইপ করলে
 window.filterNameDropdown=function(){
   const input = document.getElementById('nameSearchInput');
   const dropdown = document.getElementById('nameDropdown');
@@ -370,7 +524,6 @@ window.filterNameDropdown=function(){
   
   const allNames = getUniqueNamesForMCD();
   
-  // Filter names by search text
   const filteredNames = searchText 
     ? allNames.filter(name => name.toLowerCase().includes(searchText))
     : allNames;
@@ -387,15 +540,13 @@ window.filterNameDropdown=function(){
   clearBtn.classList.toggle('show', input.value.length > 0);
 }
 
-// 🔥 SHOW NAME DROPDOWN
 window.showNameDropdown=function(){
   const input = document.getElementById('nameSearchInput');
   if(input.value === ""){
-    filterNameDropdown(); // Show all names
+    filterNameDropdown();
   }
 }
 
-// 🔥 SELECT NAME FROM DROPDOWN
 window.selectName=function(name){
   const input = document.getElementById('nameSearchInput');
   const dropdown = document.getElementById('nameDropdown');
@@ -407,10 +558,9 @@ window.selectName=function(name){
   clearBtn.classList.add('show');
   
   console.log('✅ Selected name:', name);
-  showReport(); // Auto filter
+  showReport();
 }
 
-// 🔥 CLEAR NAME FILTER
 window.clearNameFilter=function(){
   const input = document.getElementById('nameSearchInput');
   const dropdown = document.getElementById('nameDropdown');
@@ -424,7 +574,6 @@ window.clearNameFilter=function(){
   showReport();
 }
 
-// 🔥 CLOSE DROPDOWN WHEN CLICK OUTSIDE
 document.addEventListener('click', function(e){
   const container = document.querySelector('.nameFilterContainer');
   const dropdown = document.getElementById('nameDropdown');
@@ -462,8 +611,6 @@ function renderCharts(data){
   const mcdValues = Object.values(mcdCounts);
   const mcdColors = mcdLabels.map((_,i)=>CHART_COLORS[i % CHART_COLORS.length]);
   
-  console.log('📊 MCD Chart Data:', mcdCounts);
-  
   const nameCounts = {};
   data.forEach(p=>{
     const name = p.preparedBy || 'Unknown';
@@ -472,8 +619,6 @@ function renderCharts(data){
   
   const nameLabels = Object.keys(nameCounts);
   const nameValues = Object.values(nameCounts);
-  
-  console.log('👤 Name Chart Data:', nameCounts);
   
   const deliveryByDate = {};
   data.forEach(p=>{
@@ -485,8 +630,6 @@ function renderCharts(data){
   
   const dateLabels = Object.keys(deliveryByDate).sort();
   const deliveryValues = dateLabels.map(d=>deliveryByDate[d]);
-  
-  console.log('📈 Delivery Chart Data:', deliveryByDate);
   
   document.getElementById('statTotal').innerText = data.length;
   document.getElementById('statMcds').innerText = mcdLabels.length;
@@ -709,7 +852,7 @@ function filtered(){
   const no=document.getElementById("gateNoSearch").value.trim();
   const company=document.getElementById("companyFilter").value;
   const mcd=document.getElementById("mcdFilter").value;
-  const name=selectedNameValue; // 🔥 Use selectedNameValue
+  const name=selectedNameValue;
   
   console.log('🔍 Filter params:', {from, to, no, company, mcd, name});
   
@@ -874,7 +1017,36 @@ window.printSingle=function(i){
   const win=window.open("","_blank");
   win.document.write(`<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Gate Plan Print</title>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"><\/script>
-  <style>${document.querySelector("style").innerHTML}</style></head><body>
+  <style>
+    @page{size:A4 landscape;margin:4mm}
+    html,body{background:#fff!important;color:#000!important;margin:0!important;padding:0!important;width:297mm!important;height:210mm!important}
+    *{color:#000!important;-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important}
+    .reportCard,.greyCard{width:297mm!important;height:202mm!important;margin:0!important;padding:2mm!important;border:1px solid #000!important;overflow:hidden!important}
+    .reportPrintHeader{text-align:center;line-height:1.15;padding:3px 0!important;border-bottom:1px solid #000}
+    .reportPrintHeader h2{margin:0!important;font-size:16px!important;font-weight:900}
+    .reportPrintHeader h4{margin:1px 0!important;font-size:9px!important}
+    .reportPrintHeader h3{margin:1px 0!important;font-size:12px!important}
+    .qrCenter{display:block;text-align:center;width:100%;margin:3px auto 5px!important}
+    .qrMini{display:block;width:50px!important;height:50px!important;margin:0 auto}
+    .companyLine{text-align:center;font-size:12px!important;font-weight:900;border-top:1px solid #000;border-bottom:1px solid #000;padding:3px 2px!important}
+    .meta{display:grid;grid-template-columns:repeat(5,1fr);border-bottom:1px solid #000}
+    .meta div{border-right:1px solid #000;padding:3px 2px!important;text-align:center;font-weight:900;font-size:9px!important}
+    table{width:100%!important;min-width:0!important;border-collapse:collapse;table-layout:fixed;font-size:8px!important}
+    th,td{border:1px solid #000;padding:2px 1px!important;text-align:center;vertical-align:middle;font-size:8px!important;line-height:1.1!important}
+    .totalRow{background:#f3f4f6;font-weight:900}
+    .sign{display:grid;grid-template-columns:repeat(8,1fr);gap:0;margin-top:15px!important}
+    .sign div{text-align:center;font-weight:900;border-top:1px solid #000;padding:3px 1px!important;font-size:8px!important;line-height:1.1!important}
+    .greyHeader{text-align:center;line-height:1.1!important}
+    .greyHeader h2{margin:0!important;font-size:18px!important;font-weight:900}
+    .greyHeader h4{margin:1px 0!important;font-size:10px!important}
+    .greyHeader h1{margin:2px 0!important;font-size:26px!important;font-weight:900;color:#555}
+    .greyTitle{text-align:center;font-size:14px!important;font-weight:900;margin:4px 0!important}
+    .greyTable{width:70%!important;min-width:0;margin:5px auto 0!important;border-collapse:collapse;table-layout:fixed}
+    .greyTable th,.greyTable td{border:1px solid #000;padding:4px 3px!important;text-align:center;font-size:10px!important}
+    .greySign{display:grid;grid-template-columns:repeat(6,1fr);gap:15px;margin-top:50px!important}
+    .greySign div{text-align:center;font-weight:900;border-top:1px solid #000;padding-top:4px!important;font-size:9px!important}
+    .actionBar,.noPrint{display:none!important}
+  </style></head><body>
   <div id="reportArea">${card.outerHTML}</div>
   <script>
     function reportLink(no){return "${location.origin+location.pathname}"+"?gatePlanNo="+encodeURIComponent(no||"")}
@@ -882,7 +1054,7 @@ window.printSingle=function(i){
     document.querySelectorAll("[data-qr-no]").forEach(el=>{
       const no=el.getAttribute("data-qr-no")||"";
       el.innerHTML="";
-      try{ new QRCode(el,{text:reportLink(no),width:70,height:70,correctLevel:QRCode.CorrectLevel.M}); }catch(e){}
+      try{ new QRCode(el,{text:reportLink(no),width:50,height:50,correctLevel:QRCode.CorrectLevel.M}); }catch(e){}
     });
     setTimeout(()=>window.print(),600);
   <\/script></body></html>`);
