@@ -49,6 +49,7 @@ body{background:var(--bg);color:var(--text);font-family:'Poppins',sans-serif;lin
 .date-selection button{padding:8px 16px;border:none;border-radius:8px;font-weight:600;cursor:pointer;font-size:12px;transition:all .3s}
 .btn-apply{background:linear-gradient(135deg,var(--blue),var(--purple));color:#fff}
 .btn-clear{background:var(--red);color:#fff}
+.btn-delete{background:linear-gradient(135deg,var(--red),#dc2626);color:#fff}
 .date-selection button:hover{transform:translateY(-2px);box-shadow:0 4px 12px rgba(0,0,0,.3)}
 
 /* Monthly Summary Box */
@@ -63,6 +64,16 @@ body{background:var(--bg);color:var(--text);font-family:'Poppins',sans-serif;lin
 .summary-item:nth-child(6){border-left-color:var(--cyan)}
 .summary-item span{color:var(--muted);font-size:11px;font-weight:600}
 .summary-item b{color:var(--green);font-size:16px;font-weight:800}
+
+/* Team Section - NOW AT TOP */
+.team-section{background:linear-gradient(135deg,var(--card),var(--card2));border:2px solid var(--purple);border-radius:16px;padding:24px;margin:20px auto;max-width:1200px;box-shadow:var(--shadow)}
+.team-section h3{text-align:center;margin-bottom:20px;font-size:18px;font-weight:700;color:var(--text);display:flex;align-items:center;justify-content:center;gap:10px}
+.team-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:20px}
+.team-card{background:linear-gradient(135deg,var(--bg),var(--card2));border-radius:12px;padding:20px;text-align:center;border:2px solid var(--border);transition:all .3s}
+.team-card:hover{transform:translateY(-5px);border-color:var(--blue);box-shadow:0 10px 30px rgba(59,130,246,0.3)}
+.team-card img{width:100px;height:100px;border-radius:50%;object-fit:cover;border:3px solid var(--blue);margin-bottom:12px;box-shadow:0 4px 15px rgba(59,130,246,0.3)}
+.team-card h4{margin:8px 0;font-size:14px;font-weight:700;color:var(--text)}
+.team-card p{margin:0;font-size:11px;color:var(--blue);font-weight:600}
 
 /* Filter Buttons with Grand Total */
 .filter-bar{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:20px;align-items:center;background:var(--card);padding:16px;border-radius:12px;box-shadow:var(--shadow)}
@@ -112,16 +123,6 @@ tr:hover{background:rgba(59,130,246,0.05)}
 .toast.error{background:var(--red)}
 @keyframes slideIn{from{transform:translateX(100%);opacity:0}to{transform:translateX(0);opacity:1}}
 
-/* Team Section */
-.team-section{background:linear-gradient(135deg,var(--card),var(--card2));border:2px solid var(--purple);border-radius:16px;padding:24px;margin:20px auto;max-width:1200px;box-shadow:var(--shadow)}
-.team-section h3{text-align:center;margin-bottom:20px;font-size:18px;font-weight:700;color:var(--text);display:flex;align-items:center;justify-content:center;gap:10px}
-.team-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:20px}
-.team-card{background:linear-gradient(135deg,var(--bg),var(--card2));border-radius:12px;padding:20px;text-align:center;border:2px solid var(--border);transition:all .3s}
-.team-card:hover{transform:translateY(-5px);border-color:var(--blue);box-shadow:0 10px 30px rgba(59,130,246,0.3)}
-.team-card img{width:100px;height:100px;border-radius:50%;object-fit:cover;border:3px solid var(--blue);margin-bottom:12px;box-shadow:0 4px 15px rgba(59,130,246,0.3)}
-.team-card h4{margin:8px 0;font-size:14px;font-weight:700;color:var(--text)}
-.team-card p{margin:0;font-size:11px;color:var(--blue);font-weight:600}
-
 @media(max-width:768px){
 .header h1{font-size:18px}
 .container{padding:12px}
@@ -165,12 +166,13 @@ body{background:#fff!important;color:#000!important}
 </div>
 <input type="file" id="fileInput" accept=".xlsx,.xls,.csv" style="display:none" onchange="handleFile(event)">
 
-<!-- Date Selection -->
+<!-- Date Selection with Delete Button -->
 <div class="date-selection">
 <label><i class="fas fa-calendar"></i> Select Date:</label>
 <input type="date" id="reportDate">
 <button class="btn-apply" onclick="applyDateFilter()"><i class="fas fa-filter"></i> Apply</button>
 <button class="btn-clear" onclick="clearDateFilter()"><i class="fas fa-times"></i> Clear</button>
+<button class="btn-delete" onclick="deleteDateData()"><i class="fas fa-trash"></i> Delete Date</button>
 </div>
 
 <!-- Monthly Summary Box -->
@@ -200,6 +202,33 @@ body{background:#fff!important;color:#000!important}
 <div class="summary-item">
 <span><i class="fas fa-tags"></i> Categories</span>
 <b id="summaryCats">0</b>
+</div>
+</div>
+</div>
+
+<!-- Team Section - NOW AT TOP (After Monthly Summary) -->
+<div class="team-section">
+<h3><i class="fas fa-users"></i> Our General MCD Team</h3>
+<div class="team-grid">
+<div class="team-card">
+<img src="https://i.ibb.co/gM3mKWDs" alt="Md. Kamaruzzaman">
+<h4>Md. Kamaruzzaman</h4>
+<p>Jr. Officer</p>
+</div>
+<div class="team-card">
+<img src="https://i.ibb.co/5WqzrmzR" alt="MD. HABIBUR RAHMAN">
+<h4>MD. HABIBUR RAHMAN</h4>
+<p>Supervisor</p>
+</div>
+<div class="team-card">
+<img src="https://i.ibb.co/PG9hvSPJ" alt="MD. ABDULLAH-AL-MAMUN">
+<h4>MD. ABDULLAH-AL-MAMUN</h4>
+<p>Sr. Supervisor</p>
+</div>
+<div class="team-card">
+<img src="https://i.ibb.co/fzkXCRdH" alt="MD.TARIQUL ISLAM">
+<h4>MD.TARIQUL ISLAM</h4>
+<p>Asst. Officer</p>
 </div>
 </div>
 </div>
@@ -285,33 +314,6 @@ All Data
 </thead>
 <tbody id="tableBody"></tbody>
 </table>
-</div>
-
-<!-- Team Section -->
-<div class="team-section">
-<h3><i class="fas fa-users"></i> Our General MCD Team</h3>
-<div class="team-grid">
-<div class="team-card">
-<img src="https://i.ibb.co/gM3mKWDs" alt="Md. Kamaruzzaman">
-<h4>Md. Kamaruzzaman</h4>
-<p>Jr. Officer</p>
-</div>
-<div class="team-card">
-<img src="https://i.ibb.co/5WqzrmzR" alt="MD. HABIBUR RAHMAN">
-<h4>MD. HABIBUR RAHMAN</h4>
-<p>Supervisor</p>
-</div>
-<div class="team-card">
-<img src="https://i.ibb.co/PG9hvSPJ" alt="MD. ABDULLAH-AL-MAMUN">
-<h4>MD. ABDULLAH-AL-MAMUN</h4>
-<p>Sr. Supervisor</p>
-</div>
-<div class="team-card">
-<img src="https://i.ibb.co/fzkXCRdH" alt="MD.TARIQUL ISLAM">
-<h4>MD.TARIQUL ISLAM</h4>
-<p>Asst. Officer</p>
-</div>
-</div>
 </div>
 </div>
 
@@ -454,6 +456,58 @@ await deleteDoc(doc(db, ACTIVE_COL, docSnap.id));
 });
 } catch (err) { console.error('Error deleting old data:', err); }
 }
+
+// NEW: Delete specific date data
+window.deleteDateData = async function() {
+const dateInput = document.getElementById('reportDate').value;
+if (!dateInput) { 
+showToast('Please select a date to delete', true); 
+return; 
+}
+
+const [year, month, day] = dateInput.split('-');
+const formattedDate = `${day}-${month}-${year.slice(2)}`;
+
+if (!confirm(`Are you sure you want to delete all data for ${formattedDate}?`)) {
+return;
+}
+
+try {
+updateStatus('Deleting data...');
+const monthKey = getMonthKey(dateInput);
+if (!monthKey) {
+showToast('Invalid date format', true);
+return;
+}
+
+// Get the document
+const docRef = doc(db, ACTIVE_COL, monthKey);
+const docSnap = await getDocs(docRef);
+
+if (docSnap.exists()) {
+const docData = docSnap.data();
+if (docData.data) {
+// Filter out the data for the selected date
+const filteredData = docData.data.filter(row => row.date !== formattedDate);
+
+// Update the document with filtered data
+await setDoc(docRef, { 
+data: filteredData, 
+updatedAt: Date.now() 
+});
+
+showToast(`✅ Data for ${formattedDate} deleted successfully!`);
+loadActiveData(); // Reload data
+} else {
+showToast('No data found for this month', true);
+}
+} else {
+showToast('No data found for this month', true);
+}
+} catch (err) {
+showToast('Delete failed: ' + err.message, true);
+}
+};
 
 function loadActiveData() {
 updateStatus('Loading live data...');
