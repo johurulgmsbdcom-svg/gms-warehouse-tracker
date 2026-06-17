@@ -13,7 +13,7 @@
 :root{
 --bg:#0a1628;--card:#1e293b;--card2:#334155;--text:#f1f5f9;--muted:#cbd5e1;
 --border:#475569;--blue:#3b82f6;--green:#10b981;--red:#ef4444;--yellow:#f59e0b;
---purple:#8b5cf6;--shadow:0 10px 40px rgba(0,0,0,.4);
+--purple:#8b5cf6;--cyan:#06b6d4;--shadow:0 10px 40px rgba(0,0,0,.4);
 }
 body.light{
 --bg:#f8fafc;--card:#ffffff;--card2:#f1f5f9;--text:#1e293b;--muted:#64748b;
@@ -30,82 +30,47 @@ body{background:var(--bg);color:var(--text);font-family:'Poppins',sans-serif;lin
 .back-btn{position:fixed;top:20px;left:20px;background:var(--card);border:1px solid var(--border);padding:10px 16px;border-radius:10px;cursor:pointer;color:var(--text);font-weight:600;font-size:13px;z-index:1000;box-shadow:var(--shadow);text-decoration:none;display:flex;align-items:center;gap:6px}
 .theme-toggle{position:fixed;top:20px;right:20px;background:var(--card);border:1px solid var(--border);width:44px;height:44px;border-radius:50%;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:18px;z-index:1000;box-shadow:var(--shadow);color:var(--text)}
 
-/* ===== CACHE STATUS BAR ===== */
-.cacheStatusBar{
-display:flex;
-align-items:center;
-justify-content:center;
-gap:10px;
-padding:10px 16px;
-font-size:12px;
-font-weight:700;
-background:linear-gradient(90deg,rgba(34,197,94,.1),rgba(59,130,246,.1));
-border:1px solid rgba(34,197,94,.2);
-border-radius:12px;
-color:var(--muted);
-flex-wrap:wrap;
-margin-bottom:20px;
-}
-.cacheStatusBar .cacheDot{
-width:8px;height:8px;border-radius:50%;
-background:var(--green);
-animation:livePulse 2s infinite;
-box-shadow:0 0 8px var(--green);
-}
-@keyframes livePulse{
-0%{box-shadow:0 0 0 0 rgba(34,197,94,.7);transform:scale(1)}
-70%{box-shadow:0 0 0 8px rgba(34,197,94,0);transform:scale(1.1)}
-100%{box-shadow:0 0 0 0 rgba(34,197,94,0);transform:scale(1)}
-}
-.cacheStatusBar .cacheReadCount{
-color:var(--blue);font-weight:900;
-padding:4px 12px;
-background:rgba(37,99,235,.15);
-border-radius:12px;
-border:1px solid rgba(37,99,235,.3);
-}
-.cacheStatusBar .roiBadge{
-color:var(--purple);font-weight:900;
-padding:4px 12px;
-background:rgba(139,92,246,.15);
-border-radius:12px;
-border:1px solid rgba(139,92,246,.3);
-}
-.cacheStatusBar .syncStatus{
-color:var(--green);font-weight:900;
-padding:4px 12px;
-background:rgba(34,197,94,.15);
-border-radius:12px;
-border:1px solid rgba(34,197,94,.3);
-}
+.status-bar{display:flex;justify-content:space-between;align-items:center;padding:10px 16px;background:rgba(16,185,129,0.1);border-radius:10px;margin-bottom:20px;font-size:12px;font-weight:600;color:var(--green);flex-wrap:wrap;gap:8px}
+.status-bar.offline{background:rgba(245,158,11,0.1);color:var(--yellow)}
+
+/* Compact Upload Box */
+.upload-box{border:2px dashed var(--blue);border-radius:12px;padding:16px;text-align:center;cursor:pointer;background:rgba(59,130,246,0.05);transition:all .3s;margin-bottom:20px}
+.upload-box:hover{background:rgba(59,130,246,0.1);border-color:var(--green)}
+.upload-box.dragover{background:rgba(16,185,129,0.1);border-color:var(--green)}
+.upload-box i{font-size:24px;color:var(--blue);margin-bottom:6px}
+.upload-box h3{font-size:13px;margin-bottom:4px}
+.upload-box p{color:var(--muted);font-size:10px}
 
 /* Date Selection */
-.date-selection{display:flex;gap:12px;align-items:center;margin-bottom:20px;padding:16px;background:var(--card);border-radius:12px;box-shadow:var(--shadow);flex-wrap:wrap}
-.date-selection label{font-weight:600;color:var(--muted);font-size:13px}
-.date-selection input[type="date"]{padding:10px 14px;border:2px solid var(--border);border-radius:8px;background:var(--bg);color:var(--text);font-size:13px;font-weight:600;cursor:pointer}
+.date-selection{display:flex;gap:12px;align-items:center;margin-bottom:20px;padding:14px;background:var(--card);border-radius:12px;box-shadow:var(--shadow);flex-wrap:wrap}
+.date-selection label{font-weight:600;color:var(--muted);font-size:12px;display:flex;align-items:center;gap:6px}
+.date-selection input[type="date"]{padding:8px 12px;border:2px solid var(--border);border-radius:8px;background:var(--bg);color:var(--text);font-size:12px;font-weight:600;cursor:pointer}
 .date-selection input[type="date"]:focus{outline:none;border-color:var(--blue)}
-.date-selection button{padding:10px 20px;border:none;border-radius:8px;font-weight:600;cursor:pointer;font-size:13px;transition:all .3s}
+.date-selection button{padding:8px 16px;border:none;border-radius:8px;font-weight:600;cursor:pointer;font-size:12px;transition:all .3s}
 .btn-apply{background:linear-gradient(135deg,var(--blue),var(--purple));color:#fff}
 .btn-clear{background:var(--red);color:#fff}
 .date-selection button:hover{transform:translateY(-2px);box-shadow:0 4px 12px rgba(0,0,0,.3)}
 
-/* Compact Upload Box */
-.upload-box{border:2px dashed var(--blue);border-radius:12px;padding:20px;text-align:center;cursor:pointer;background:rgba(59,130,246,0.05);transition:all .3s;margin-bottom:20px}
-.upload-box:hover{background:rgba(59,130,246,0.1);border-color:var(--green)}
-.upload-box.dragover{background:rgba(16,185,129,0.1);border-color:var(--green)}
-.upload-box i{font-size:32px;color:var(--blue);margin-bottom:8px}
-.upload-box h3{font-size:14px;margin-bottom:4px}
-.upload-box p{color:var(--muted);font-size:11px}
+/* Monthly Summary Box */
+.monthly-summary{background:linear-gradient(135deg,var(--card),var(--card2));border:2px solid var(--blue);border-radius:16px;padding:20px;margin-bottom:20px;box-shadow:var(--shadow)}
+.monthly-summary h3{font-size:16px;font-weight:700;margin-bottom:16px;color:var(--text);display:flex;align-items:center;gap:8px}
+.summary-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px}
+.summary-item{background:var(--bg);padding:14px;border-radius:10px;display:flex;justify-content:space-between;align-items:center;border-left:3px solid var(--green)}
+.summary-item:nth-child(2){border-left-color:var(--blue)}
+.summary-item:nth-child(3){border-left-color:var(--yellow)}
+.summary-item:nth-child(4){border-left-color:var(--purple)}
+.summary-item:nth-child(5){border-left-color:var(--red)}
+.summary-item:nth-child(6){border-left-color:var(--cyan)}
+.summary-item span{color:var(--muted);font-size:11px;font-weight:600}
+.summary-item b{color:var(--green);font-size:16px;font-weight:800}
 
-/* File List */
-.file-list{background:var(--card);border-radius:12px;padding:16px;margin-bottom:20px;box-shadow:var(--shadow)}
-.file-item{display:flex;justify-content:space-between;align-items:center;padding:10px;background:var(--bg);border-radius:8px;margin-bottom:8px;border-left:4px solid var(--blue)}
-.file-item-info{display:flex;align-items:center;gap:10px}
-.file-item-info i{color:var(--green);font-size:16px}
-.file-item-name{font-weight:600;font-size:13px}
-.file-item-date{color:var(--muted);font-size:11px}
-.file-item-delete{background:var(--red);color:#fff;border:none;padding:6px 12px;border-radius:6px;cursor:pointer;font-size:11px;font-weight:600}
-.file-item-delete:hover{background:#dc2626}
+/* Filter Buttons with Grand Total */
+.filter-bar{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:20px;align-items:center;background:var(--card);padding:16px;border-radius:12px;box-shadow:var(--shadow)}
+.filter-btn{padding:10px 16px;border:2px solid var(--border);background:var(--bg);border-radius:10px;cursor:pointer;font-size:11px;font-weight:600;color:var(--text);transition:all .2s;text-align:center;min-width:120px}
+.filter-btn:hover{border-color:var(--blue);transform:translateY(-2px)}
+.filter-btn.active{background:linear-gradient(135deg,var(--blue),var(--purple));color:#fff;border-color:transparent}
+.filter-btn small{display:block;font-size:10px;color:var(--green);margin-top:4px;font-weight:700}
+.filter-btn.active small{color:#fff}
 
 .action-bar{display:flex;gap:12px;flex-wrap:wrap;margin-bottom:20px;justify-content:center}
 .btn{padding:12px 24px;border:none;border-radius:10px;font-weight:600;cursor:pointer;font-size:13px;transition:all .3s;display:inline-flex;align-items:center;gap:8px;box-shadow:0 2px 10px rgba(0,0,0,0.1)}
@@ -136,11 +101,6 @@ border:1px solid rgba(34,197,94,.3);
 .chart-box canvas{max-height:300px}
 .chart-total{margin-top:12px;padding:10px;background:rgba(16,185,129,0.1);border-radius:8px;text-align:center;font-weight:700;color:var(--green);font-size:14px}
 
-.filter-bar{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:20px;align-items:center;background:var(--card);padding:16px;border-radius:12px;box-shadow:var(--shadow)}
-.filter-btn{padding:8px 16px;border:1px solid var(--border);background:var(--bg);border-radius:8px;cursor:pointer;font-size:12px;font-weight:600;color:var(--text);transition:all .2s}
-.filter-btn:hover{border-color:var(--blue)}
-.filter-btn.active{background:linear-gradient(135deg,var(--blue),var(--purple));color:#fff;border-color:transparent}
-
 .table-section{background:var(--card);border-radius:16px;padding:20px;box-shadow:var(--shadow);overflow-x:auto}
 table{width:100%;border-collapse:collapse;font-size:12px}
 th{padding:12px;text-align:left;font-weight:700;color:var(--muted);border-bottom:2px solid var(--border);text-transform:uppercase;font-size:11px}
@@ -153,13 +113,12 @@ tr:hover{background:rgba(59,130,246,0.05)}
 @keyframes slideIn{from{transform:translateX(100%);opacity:0}to{transform:translateX(0);opacity:1}}
 
 /* Team Section */
-.team-section{background:linear-gradient(135deg,var(--card),var(--card2));border:2px solid var(--purple);border-radius:16px;padding:24px;margin:20px auto;box-shadow:var(--shadow)}
+.team-section{background:linear-gradient(135deg,var(--card),var(--card2));border:2px solid var(--purple);border-radius:16px;padding:24px;margin:20px auto;max-width:1200px;box-shadow:var(--shadow)}
 .team-section h3{text-align:center;margin-bottom:20px;font-size:18px;font-weight:700;color:var(--text);display:flex;align-items:center;justify-content:center;gap:10px}
 .team-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:20px}
 .team-card{background:linear-gradient(135deg,var(--bg),var(--card2));border-radius:12px;padding:20px;text-align:center;border:2px solid var(--border);transition:all .3s}
 .team-card:hover{transform:translateY(-5px);border-color:var(--blue);box-shadow:0 10px 30px rgba(59,130,246,0.3)}
-.team-card img{width:100px;height:100px;border-radius:50%;object-fit:cover;border:3px solid var(--blue);margin-bottom:12px;box-shadow:0 4px 15px rgba(59,130,246,0.3);display:none}
-.team-card img.loaded{display:block;margin:0 auto 12px auto}
+.team-card img{width:100px;height:100px;border-radius:50%;object-fit:cover;border:3px solid var(--blue);margin-bottom:12px;box-shadow:0 4px 15px rgba(59,130,246,0.3)}
 .team-card h4{margin:8px 0;font-size:14px;font-weight:700;color:var(--text)}
 .team-card p{margin:0;font-size:11px;color:var(--blue);font-weight:600}
 
@@ -170,14 +129,15 @@ tr:hover{background:rgba(59,130,246,0.05)}
 .chart-grid{grid-template-columns:1fr}
 .filter-bar{flex-direction:column;align-items:stretch}
 .date-selection{flex-direction:column;align-items:stretch}
+.summary-grid{grid-template-columns:1fr}
 .team-grid{grid-template-columns:1fr}
 }
 
 @media print{
 body{background:#fff!important;color:#000!important}
-.theme-toggle,.back-btn,.upload-box,.action-bar,.filter-bar,.table-section,.status-bar,.date-selection,.team-section,.cacheStatusBar{display:none!important}
+.theme-toggle,.back-btn,.upload-box,.action-bar,.filter-bar,.table-section,.status-bar,.date-selection,.team-section{display:none!important}
 #dashboard-content{box-shadow:none!important;padding:0!important}
-.chart-box,.stat-card{break-inside:avoid;box-shadow:none!important;border:1px solid #ddd}
+.chart-box,.stat-card,.summary-item{break-inside:avoid;box-shadow:none!important;border:1px solid #ddd}
 }
 </style>
 </head>
@@ -192,22 +152,9 @@ body{background:#fff!important;color:#000!important}
 </div>
 
 <div class="container">
-
-<!-- ===== CACHE STATUS BAR ===== -->
-<div class="cacheStatusBar">
-<div class="cacheDot"></div>
-<span id="cacheStatusText">📦 Cache Ready</span>
-<span class="cacheReadCount"><i class="fas fa-fire"></i> Today Reads: <b id="readCounter">0</b></span>
-<span class="roiBadge"><i class="fas fa-chart-line"></i> ROI: <b id="roiStatus">Active</b></span>
-<span class="syncStatus"><i class="fas fa-sync"></i> Sync: <b id="syncStatus">Active</b></span>
-</div>
-
-<!-- Date Selection -->
-<div class="date-selection">
-<label><i class="fas fa-calendar"></i> Select Date:</label>
-<input type="date" id="reportDate">
-<button class="btn-apply" onclick="applyDateFilter()"><i class="fas fa-filter"></i> Apply</button>
-<button class="btn-clear" onclick="clearDateFilter()"><i class="fas fa-times"></i> Clear</button>
+<div class="status-bar" id="statusBar">
+<span><i class="fas fa-circle" style="font-size:8px"></i> <span id="statusText">Ready</span></span>
+<span>Last Update: <span id="lastUpdate">-</span></span>
 </div>
 
 <!-- Compact Upload Box -->
@@ -218,10 +165,43 @@ body{background:#fff!important;color:#000!important}
 </div>
 <input type="file" id="fileInput" accept=".xlsx,.xls,.csv" style="display:none" onchange="handleFile(event)">
 
-<!-- File List -->
-<div class="file-list" id="fileList" style="display:none">
-<h3 style="font-size:14px;margin-bottom:12px"><i class="fas fa-file-alt"></i> Uploaded Files</h3>
-<div id="fileListContent"></div>
+<!-- Date Selection -->
+<div class="date-selection">
+<label><i class="fas fa-calendar"></i> Select Date:</label>
+<input type="date" id="reportDate">
+<button class="btn-apply" onclick="applyDateFilter()"><i class="fas fa-filter"></i> Apply</button>
+<button class="btn-clear" onclick="clearDateFilter()"><i class="fas fa-times"></i> Clear</button>
+</div>
+
+<!-- Monthly Summary Box -->
+<div class="monthly-summary">
+<h3><i class="fas fa-chart-bar"></i> Monthly Summary - <span id="currentMonthLabel">June 2026</span></h3>
+<div class="summary-grid">
+<div class="summary-item">
+<span><i class="fas fa-calendar"></i> Total Days</span>
+<b id="summaryDays">0</b>
+</div>
+<div class="summary-item">
+<span><i class="fas fa-coins"></i> Total Amount</span>
+<b id="summaryAmount">৳0</b>
+</div>
+<div class="summary-item">
+<span><i class="fas fa-chart-line"></i> Avg Per Day</span>
+<b id="summaryAvg">৳0</b>
+</div>
+<div class="summary-item">
+<span><i class="fas fa-boxes"></i> Total Items</span>
+<b id="summaryItems">0</b>
+</div>
+<div class="summary-item">
+<span><i class="fas fa-building"></i> Departments</span>
+<b id="summaryDepts">0</b>
+</div>
+<div class="summary-item">
+<span><i class="fas fa-tags"></i> Categories</span>
+<b id="summaryCats">0</b>
+</div>
+</div>
 </div>
 
 <div class="action-bar">
@@ -239,38 +219,58 @@ body{background:#fff!important;color:#000!important}
 <div class="stat-card red" onclick="clearFilters()"><h4>Avg. Per Item</h4><div class="value" id="statAvg">৳0</div></div>
 </div>
 
+<!-- 4 Smart Charts -->
 <div class="chart-grid">
-<div class="chart-box" onclick="filterByChart('category')">
-<h3><i class="fas fa-chart-pie" style="color:var(--blue)"></i> Category Wise (Click to Filter)</h3>
-<canvas id="categoryChart"></canvas>
-<div class="chart-total" id="categoryTotal">Grand Total: ৳0</div>
+<div class="chart-box" onclick="filterByChart('department')">
+<h3><i class="fas fa-chart-bar" style="color:var(--green)"></i> Daily Uses Value Report (Department Wise)</h3>
+<canvas id="dailyValueChart"></canvas>
+<div class="chart-total" id="dailyValueTotal">Grand Total: ৳0</div>
 </div>
-<div class="chart-box green" onclick="filterByChart('department')">
-<h3><i class="fas fa-chart-bar" style="color:var(--green)"></i> Department Wise (Click to Filter)</h3>
-<canvas id="departmentChart"></canvas>
-<div class="chart-total" id="departmentTotal">Grand Total: ৳0</div>
+<div class="chart-box green" onclick="filterReport('photocopy')">
+<h3><i class="fas fa-file-alt" style="color:var(--blue)"></i> Photocopy Paper Issue Report</h3>
+<canvas id="photocopyChart"></canvas>
+<div class="chart-total" id="photocopyTotal">Grand Total: 0 Ream, ৳0</div>
 </div>
-<div class="chart-box orange" onclick="filterByChart('item')">
-<h3><i class="fas fa-chart-line" style="color:var(--purple)"></i> Top 10 Items</h3>
-<canvas id="topItemsChart"></canvas>
-<div class="chart-total" id="topItemsTotal">Grand Total: ৳0</div>
+<div class="chart-box orange" onclick="filterReport('polybag')">
+<h3><i class="fas fa-shopping-bag" style="color:var(--yellow)"></i> Dyeing Poly Bag Issue Report</h3>
+<canvas id="polybagChart"></canvas>
+<div class="chart-total" id="polybagTotal">Grand Total: 0 Bags, ৳0</div>
 </div>
-<div class="chart-box purple" onclick="filterByChart('division')">
-<h3><i class="fas fa-chart-area" style="color:var(--yellow)"></i> Division Wise</h3>
-<canvas id="divisionChart"></canvas>
-<div class="chart-total" id="divisionTotal">Grand Total: ৳0</div>
+<div class="chart-box purple" onclick="filterReport('aceton')">
+<h3><i class="fas fa-flask" style="color:var(--purple)"></i> Aceton Issue Report</h3>
+<canvas id="acetonChart"></canvas>
+<div class="chart-total" id="acetonTotal">Grand Total: 0 KG, ৳0</div>
 </div>
 </div>
 </div>
 
+<!-- Filter Buttons with Grand Total -->
 <div class="filter-bar" id="filterBar">
 <span style="font-weight:700;font-size:13px;margin-right:10px"><i class="fas fa-filter"></i> Reports:</span>
-<button class="filter-btn active" onclick="showAllData()" id="btnAll">All Data<small id="totalAll">৳0</small></button>
-<button class="filter-btn" onclick="filterReport('photocopy')">📄 Photocopy<small id="totalPhotocopy">৳0</small></button>
-<button class="filter-btn" onclick="filterReport('polybag')">🛍️ Poly Bag<small id="totalPolybag">৳0</small></button>
-<button class="filter-btn" onclick="filterReport('aceton')">🧪 Aceton<small id="totalAceton">৳0</small></button>
-<button class="filter-btn" onclick="filterReport('stationery')">📝 Stationery<small id="totalStationery">৳0</small></button>
-<button class="filter-btn" onclick="filterReport('printing')">🖨️ Printing<small id="totalPrinting">৳0</small></button>
+<button class="filter-btn active" onclick="showAllData()" id="btnAll">
+All Data
+<small id="totalAll">৳0</small>
+</button>
+<button class="filter-btn" onclick="filterReport('photocopy')" id="btnPhotocopy">
+📄 Photocopy Paper
+<small id="totalPhotocopy">৳0</small>
+</button>
+<button class="filter-btn" onclick="filterReport('polybag')" id="btnPolybag">
+🛍️ Dyeing Poly Bag
+<small id="totalPolybag">৳0</small>
+</button>
+<button class="filter-btn" onclick="filterReport('aceton')" id="btnAceton">
+🧪 Aceton
+<small id="totalAceton">৳0</small>
+</button>
+<button class="filter-btn" onclick="filterReport('stationery')" id="btnStationery">
+📝 Stationery
+<small id="totalStationery">৳0</small>
+</button>
+<button class="filter-btn" onclick="filterReport('printing')" id="btnPrinting">
+🖨️ Printing
+<small id="totalPrinting">৳0</small>
+</button>
 <div id="activeFilters"></div>
 </div>
 
@@ -292,22 +292,22 @@ body{background:#fff!important;color:#000!important}
 <h3><i class="fas fa-users"></i> Our General MCD Team</h3>
 <div class="team-grid">
 <div class="team-card">
-<img src="https://i.ibb.co/gM3mKWDs/kamaruzzaman.jpg" alt="Md. Kamaruzzaman" onload="this.classList.add('loaded')" onerror="this.style.display='none'">
+<img src="https://i.ibb.co/gM3mKWDs" alt="Md. Kamaruzzaman">
 <h4>Md. Kamaruzzaman</h4>
 <p>Jr. Officer</p>
 </div>
 <div class="team-card">
-<img src="https://i.ibb.co/5WqzrmzR/habib.jpg" alt="MD. HABIBUR RAHMAN" onload="this.classList.add('loaded')" onerror="this.style.display='none'">
+<img src="https://i.ibb.co/5WqzrmzR" alt="MD. HABIBUR RAHMAN">
 <h4>MD. HABIBUR RAHMAN</h4>
 <p>Supervisor</p>
 </div>
 <div class="team-card">
-<img src="https://i.ibb.co/PG9hvSPJ/mamun.jpg" alt="MD. ABDULLAH-AL-MAMUN" onload="this.classList.add('loaded')" onerror="this.style.display='none'">
+<img src="https://i.ibb.co/PG9hvSPJ" alt="MD. ABDULLAH-AL-MAMUN">
 <h4>MD. ABDULLAH-AL-MAMUN</h4>
 <p>Sr. Supervisor</p>
 </div>
 <div class="team-card">
-<img src="https://i.ibb.co/fzkXCRdH/tariqul.jpg" alt="MD.TARIQUL ISLAM" onload="this.classList.add('loaded')" onerror="this.style.display='none'">
+<img src="https://i.ibb.co/fzkXCRdH" alt="MD.TARIQUL ISLAM">
 <h4>MD.TARIQUL ISLAM</h4>
 <p>Asst. Officer</p>
 </div>
@@ -337,167 +337,6 @@ let allData = [];
 let filteredData = [];
 let charts = {};
 let currentFilter = {};
-let uploadedFiles = [];
-
-// ================================================================
-// 📦 SMART CACHE MANAGER — manpower.html থেকে
-// ================================================================
-window.GMS_CACHE = {
-CACHE_KEY: 'GMS_SMART_CACHE',
-READ_COUNT_KEY: 'GMS_READ_COUNT_TODAY',
-READ_DATE_KEY: 'GMS_READ_COUNT_DATE',
-CACHE_EXPIRY_MS: 5 * 60 * 1000,
-
-getReadCount: function(){
-var today = new Date().toDateString();
-if(localStorage.getItem(this.READ_DATE_KEY) !== today){
-localStorage.setItem(this.READ_DATE_KEY, today);
-localStorage.setItem(this.READ_COUNT_KEY, '0');
-}
-return parseInt(localStorage.getItem(this.READ_COUNT_KEY) || '0');
-},
-
-incRead: function(n){
-n = n || 1;
-var count = this.getReadCount() + n;
-localStorage.setItem(this.READ_COUNT_KEY, String(count));
-var el = document.getElementById('readCounter');
-if(el) el.innerText = count;
-return count;
-},
-
-_all: function(){
-try{ return JSON.parse(localStorage.getItem(this.CACHE_KEY) || '{}'); }
-catch(e){ return {}; }
-},
-
-set: function(key, data){
-var all = this._all();
-all[key] = { data: data, savedAt: Date.now() };
-try{ localStorage.setItem(this.CACHE_KEY, JSON.stringify(all)); }
-catch(e){ console.warn('Cache set failed:', e); }
-},
-
-get: function(key){
-var all = this._all();
-var entry = all[key];
-if(!entry) return null;
-
-var age = Date.now() - entry.savedAt;
-if(age > this.CACHE_EXPIRY_MS){
-console.log('⏰ Cache expired for:', key);
-return null;
-}
-
-return entry.data;
-},
-
-invalidate: function(keys){
-var all = this._all();
-if(typeof keys === 'string') keys = [keys];
-keys.forEach(function(k){ delete all[k]; });
-localStorage.setItem(this.CACHE_KEY, JSON.stringify(all));
-},
-
-clear: function(){
-localStorage.removeItem(this.CACHE_KEY);
-}
-};
-
-// ================================================================
-// 🔑 CACHE KEYS & TIMESTAMPS
-// ================================================================
-const CACHE_KEYS = {
-generalMcdDaily: 'general_mcd_daily_cache'
-};
-const LOCAL_TIMESTAMPS_KEY = 'GMS_LOCAL_TIMESTAMPS';
-
-// ================================================================
-// 🕐 TIMESTAMP HELPER
-// ================================================================
-async function updateCollectionTimestamp(collectionName){
-try{
-await setDoc(doc(db, 'system_sync', collectionName), { 
-lastUpdated: Date.now() 
-}, { merge: true });
-console.log('🕐 Timestamp updated for:', collectionName);
-}catch(e){
-console.warn('Timestamp update failed:', e);
-}
-}
-
-// ================================================================
-// 🔍 shouldUpdate
-// ================================================================
-function buildShouldUpdate(remoteTimestamps, forceAll){
-return function(col){
-if(forceAll) return true;
-var local = JSON.parse(localStorage.getItem(LOCAL_TIMESTAMPS_KEY) || '{}');
-if(!local[col]) return true;
-var remote = remoteTimestamps[col] || 0;
-return remote > local[col];
-};
-}
-
-// ================================================================
-// 📦 SMART SELECTIVE CACHE
-// ================================================================
-async function cachedGetDocs(collectionName, cacheKey, shouldUpdate){
-var statusEl = document.getElementById('cacheStatusText');
-
-if(shouldUpdate === false){
-var cached = window.GMS_CACHE.get(cacheKey);
-if(cached !== null){
-if(statusEl) statusEl.innerText = '✅ Report loaded (Cache 📦)';
-console.log('📦 Selective cache hit (0 Firebase read):', cacheKey);
-return cached;
-}
-}
-
-var cached2 = window.GMS_CACHE.get(cacheKey);
-if(cached2 !== null && shouldUpdate !== true){
-if(statusEl) statusEl.innerText = '✅ Report loaded (Cache 📦)';
-console.log('📦 Cache hit:', cacheKey);
-return cached2;
-}
-
-if(statusEl) statusEl.innerText = '🔥 Firebase read...';
-console.log('🔥 Firebase read (selective):', cacheKey);
-
-var snap = await getDocs(collection(db, collectionName));
-var rows = [];
-snap.forEach(function(d){ 
-rows.push({...d.data(), _docId: d.id}); 
-});
-
-window.GMS_CACHE.set(cacheKey, rows);
-window.GMS_CACHE.incRead(snap.size || 1);
-
-return rows;
-}
-
-// ================================================================
-// 🔥 ROI TRACKING
-// ================================================================
-window.trackReportActivity = function(reportName){
-try{
-var activity = JSON.parse(localStorage.getItem('report_activity') || '[]');
-activity.push({
-report: reportName,
-user: 'User',
-date: new Date().toISOString().slice(0,10),
-timestamp: new Date().toISOString()
-});
-if(activity.length > 1000) activity.splice(0, activity.length - 1000);
-localStorage.setItem('report_activity', JSON.stringify(activity));
-
-var roiStatus = document.getElementById('roiStatus');
-if(roiStatus) roiStatus.innerText = 'Tracked ✅';
-setTimeout(function(){ if(roiStatus) roiStatus.innerText = 'Active'; }, 2000);
-}catch(e){
-console.warn('trackReportActivity error:', e);
-}
-};
 
 // Theme toggle
 window.toggleTheme = function() {
@@ -515,17 +354,11 @@ document.getElementById('themeIcon').className = 'fas fa-sun';
 document.getElementById('currentDate').textContent = new Date().toLocaleDateString('en-GB');
 document.getElementById('reportDate').valueAsDate = new Date();
 
-// Read counter init
-(function(){
-var c = window.GMS_CACHE.getReadCount();
-var el = document.getElementById('readCounter');
-if(el) el.innerText = c;
-})();
-
 window.addEventListener('online', () => { updateStatus('Online - Syncing...'); });
 window.addEventListener('offline', () => { updateStatus('Offline Mode', true); });
 function updateStatus(msg, offline = false) {
-document.getElementById('cacheStatusText').textContent = msg;
+document.getElementById('statusText').textContent = msg;
+document.getElementById('statusBar').className = 'status-bar' + (offline ? ' offline' : '');
 }
 
 const uploadBox = document.getElementById('uploadBox');
@@ -602,22 +435,9 @@ for (const [month, rows] of Object.entries(grouped)) {
 const col = (month === currentMonth || month === prevMonth) ? ACTIVE_COL : ARCHIVE_COL;
 writes.push(setDoc(doc(db, col, month), { data: rows, updatedAt: Date.now() }));
 }
-
-await updateCollectionTimestamp(ACTIVE_COL);
-
-var localTS = JSON.parse(localStorage.getItem(LOCAL_TIMESTAMPS_KEY) || '{}');
-delete localTS[ACTIVE_COL];
-localStorage.setItem(LOCAL_TIMESTAMPS_KEY, JSON.stringify(localTS));
-
-window.GMS_CACHE.invalidate([CACHE_KEYS.generalMcdDaily]);
-
 await Promise.all(writes);
 showToast(`✅ Saved ${data.length} rows!`);
-updateStatus('✅ Report loaded (Firebase 🔥)');
-
-window.trackReportActivity('General MCD Daily Report');
-
-loadActiveData();
+updateStatus('Saved successfully!');
 } catch (err) { showToast('Save failed: ' + err.message, true); }
 }
 
@@ -635,57 +455,6 @@ await deleteDoc(doc(db, ACTIVE_COL, docSnap.id));
 } catch (err) { console.error('Error deleting old data:', err); }
 }
 
-// ================================================================
-// 🔄 REALTIME SYNC
-// ================================================================
-function setupRealtimeSync(){
-console.log('🔔 Setting up realtime sync for generalMcdDaily...');
-
-var generalMcdCol = collection(db, ACTIVE_COL);
-onSnapshot(generalMcdCol, function(snapshot){
-console.log('🔔 Realtime: generalMcdDaily changed, docs:', snapshot.size);
-
-window.GMS_CACHE.invalidate([CACHE_KEYS.generalMcdDaily]);
-
-var localTS = JSON.parse(localStorage.getItem(LOCAL_TIMESTAMPS_KEY) || '{}');
-delete localTS[ACTIVE_COL];
-localStorage.setItem(LOCAL_TIMESTAMPS_KEY, JSON.stringify(localTS));
-
-var syncStatus = document.getElementById('syncStatus');
-if(syncStatus){
-syncStatus.innerText = 'Updated ✅';
-setTimeout(function(){ if(syncStatus) syncStatus.innerText = 'Active'; }, 2000);
-}
-
-if(!document.hidden){
-console.log('🔄 Reloading data due to realtime change...');
-loadActiveData();
-}
-});
-
-var syncCol = collection(db, 'system_sync');
-onSnapshot(syncCol, function(snapshot){
-var remoteTS = {};
-snapshot.forEach(function(d){ 
-remoteTS[d.id] = d.data().lastUpdated || 0; 
-});
-
-var localTS = JSON.parse(localStorage.getItem(LOCAL_TIMESTAMPS_KEY) || '{}');
-var changed = Object.keys(remoteTS).filter(function(col){
-return !localTS[col] || remoteTS[col] > localTS[col];
-});
-
-if(changed.length > 0 && changed.includes(ACTIVE_COL)){
-console.log('🔔 Realtime: system_sync changed for generalMcdDaily');
-if(!document.hidden){
-loadActiveData();
-}
-}
-});
-
-console.log('✅ Realtime sync setup complete');
-}
-
 function loadActiveData() {
 updateStatus('Loading live data...');
 onSnapshot(collection(db, ACTIVE_COL), (snapshot) => {
@@ -696,33 +465,16 @@ const d = docSnap.data();
 if (d.data) { allData = allData.concat(d.data); lastUpdate = Math.max(lastUpdate, d.updatedAt || 0); }
 });
 allData.sort((a, b) => (b.date || '').localeCompare(a.date || ''));
+document.getElementById('lastUpdate').textContent = lastUpdate ? new Date(lastUpdate).toLocaleString() : '-';
 updateFilterTotals();
 applyFilters();
-updateStatus('✅ Report loaded (Cache 📦)');
+updateStatus('Live Sync Active ✅');
 }, (err) => {
 console.error(err);
 updateStatus('Load failed', true);
 });
 }
-
 loadActiveData();
-setupRealtimeSync();
-
-// ★ Auto refresh every 30 seconds
-setInterval(function(){
-if(!document.hidden){
-console.log('⏰ Auto-refresh triggered (30 seconds)');
-loadActiveData();
-}
-}, 30000);
-
-// ★ Page visibility change
-document.addEventListener('visibilitychange', function(){
-if(!document.hidden){
-console.log('🔄 Page visible — reloading data...');
-loadActiveData();
-}
-});
 
 window.applyDateFilter = function() {
 const dateInput = document.getElementById('reportDate').value;
@@ -755,7 +507,9 @@ document.getElementById('btnAll').classList.add('active');
 applyFilters();
 };
 
-window.filterByChart = function(type) {};
+window.filterByChart = function(type) {
+// Handled in chart options
+};
 
 function updateFilterTotals() {
 const totals = {
@@ -792,6 +546,7 @@ if (currentFilter.reportType === 'printing' && row.category !== 'PRINTING') retu
 return true;
 });
 updateStats();
+updateMonthlySummary();
 renderCharts();
 renderTable();
 }
@@ -818,6 +573,22 @@ document.getElementById('statAvg').textContent = '৳' + avg.toLocaleString('en-
 document.getElementById('rowCount').textContent = total;
 }
 
+function updateMonthlySummary() {
+const days = new Set(filteredData.map(r => r.date)).size;
+const amount = filteredData.reduce((s, r) => s + r.amount, 0);
+const avg = days > 0 ? amount / days : 0;
+const items = filteredData.length;
+const depts = new Set(filteredData.map(r => r.department).filter(v => v)).size;
+const cats = new Set(filteredData.map(r => r.category).filter(v => v)).size;
+
+document.getElementById('summaryDays').textContent = days;
+document.getElementById('summaryAmount').textContent = '৳' + amount.toLocaleString('en-US', { maximumFractionDigits: 0 });
+document.getElementById('summaryAvg').textContent = '৳' + avg.toLocaleString('en-US', { maximumFractionDigits: 0 });
+document.getElementById('summaryItems').textContent = items;
+document.getElementById('summaryDepts').textContent = depts;
+document.getElementById('summaryCats').textContent = cats;
+}
+
 function renderCharts() {
 Object.values(charts).forEach(c => c && c.destroy());
 const isDark = document.body.classList.contains('light') === false;
@@ -825,47 +596,167 @@ const textColor = isDark ? '#f1f5f9' : '#1e293b';
 const gridColor = isDark ? 'rgba(148,163,184,.2)' : 'rgba(0,0,0,.1)';
 const palette = ['#38bdf8', '#22c55e', '#f59e0b', '#a855f7', '#ef4444', '#14b8a6', '#eab308', '#6366f1', '#ec4899', '#84cc16'];
 
-const groupBy = (key, valKey = 'amount') => {
-const map = {};
-filteredData.forEach(r => { const k = r[key] || 'Unknown'; map[k] = (map[k] || 0) + r[valKey]; });
-return Object.entries(map).sort((a, b) => b[1] - a[1]);
+const valueLabelPlugin = {
+id: 'valueLabelPlugin',
+afterDatasetsDraw(chart) {
+const { ctx } = chart;
+ctx.save();
+ctx.font = '600 11px Poppins';
+ctx.fillStyle = textColor;
+ctx.textAlign = 'center';
+chart.data.datasets.forEach((dataset, di) => {
+const meta = chart.getDatasetMeta(di);
+meta.data.forEach((bar, i) => {
+const value = dataset.data[i];
+if (value === undefined || value === null) return;
+ctx.fillText('৳' + value.toLocaleString('en-US', { maximumFractionDigits: 0 }), bar.x, bar.y - 6);
+});
+});
+ctx.restore();
+}
 };
 
-const catData = groupBy('category');
-const catTotal = catData.reduce((s, e) => s + e[1], 0);
-charts.category = new Chart(document.getElementById('categoryChart'), {
-type: 'doughnut',
-data: { labels: catData.map(e => e[0]), datasets: [{ data: catData.map(e => e[1]), backgroundColor: palette, borderWidth: 3, borderColor: isDark ? '#1e293b' : '#fff' }] },
-options: { responsive: true, maintainAspectRatio: false, onClick: (e, els) => { if (els[0]) { currentFilter.category = catData[els[0].index][0]; applyFilters(); } }, plugins: { legend: { position: 'bottom', labels: { color: textColor } } } }
+// Chart 1: Daily Uses Value Report
+const deptData = {};
+filteredData.forEach(r => {
+const dept = r.department || 'Unknown';
+deptData[dept] = (deptData[dept] || 0) + r.amount;
 });
-document.getElementById('categoryTotal').textContent = 'Grand Total: ৳' + catTotal.toLocaleString('en-US', { maximumFractionDigits: 0 });
+const deptLabels = Object.keys(deptData).slice(0, 15);
+const deptValues = deptLabels.map(l => deptData[l]);
+const deptTotal = deptValues.reduce((a, b) => a + b, 0);
 
-const deptData = groupBy('department');
-const deptTotal = deptData.reduce((s, e) => s + e[1], 0);
-charts.department = new Chart(document.getElementById('departmentChart'), {
+charts.dailyValue = new Chart(document.getElementById('dailyValueChart'), {
 type: 'bar',
-data: { labels: deptData.slice(0, 15).map(e => e[0]), datasets: [{ label: 'Amount', data: deptData.slice(0, 15).map(e => e[1]), backgroundColor: palette, borderRadius: 8 }] },
-options: { responsive: true, maintainAspectRatio: false, onClick: (e, els) => { if (els[0]) { currentFilter.department = deptData[els[0].index][0]; applyFilters(); } }, plugins: { legend: { display: false } }, scales: { y: { grid: { color: gridColor }, ticks: { color: textColor } }, x: { ticks: { color: textColor, maxRotation: 45, font: { size: 9 } } } } }
+data: {
+labels: deptLabels,
+datasets: [{
+label: 'Amount',
+data: deptValues,
+backgroundColor: palette,
+borderRadius: 8
+}]
+},
+options: {
+responsive: true,
+maintainAspectRatio: false,
+plugins: { legend: { display: false } },
+scales: {
+y: { grid: { color: gridColor }, ticks: { color: textColor } },
+x: { ticks: { color: textColor, maxRotation: 45, font: { size: 9 } } }
+}
+},
+plugins: [valueLabelPlugin]
 });
-document.getElementById('departmentTotal').textContent = 'Grand Total: ৳' + deptTotal.toLocaleString('en-US', { maximumFractionDigits: 0 });
+document.getElementById('dailyValueTotal').textContent = 'Grand Total: ৳' + deptTotal.toLocaleString('en-US', { maximumFractionDigits: 0 });
 
-const itemData = groupBy('itemDescription');
-const itemTotal = itemData.reduce((s, e) => s + e[1], 0);
-charts.topItems = new Chart(document.getElementById('topItemsChart'), {
+// Chart 2: Photocopy Paper
+const photocopyData = filteredData.filter(r => r.itemDescription.toLowerCase().includes('photocopy'));
+const photocopyByDept = {};
+photocopyData.forEach(r => {
+const dept = r.department || 'Unknown';
+photocopyByDept[dept] = (photocopyByDept[dept] || 0) + r.amount;
+});
+const photocopyLabels = Object.keys(photocopyByDept);
+const photocopyValues = photocopyLabels.map(l => photocopyByDept[l]);
+const photocopyQty = photocopyData.reduce((s, r) => s + r.issueQty, 0);
+const photocopyTotal = photocopyValues.reduce((a, b) => a + b, 0);
+
+charts.photocopy = new Chart(document.getElementById('photocopyChart'), {
 type: 'bar',
-data: { labels: itemData.slice(0, 10).map(e => e[0].substring(0, 30)), datasets: [{ label: 'Amount', data: itemData.slice(0, 10).map(e => e[1]), backgroundColor: '#8b5cf6', borderRadius: 8 }] },
-options: { indexAxis: 'y', responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { x: { grid: { color: gridColor }, ticks: { color: textColor } }, y: { ticks: { color: textColor, font: { size: 10 } } } } }
+data: {
+labels: photocopyLabels,
+datasets: [{
+label: 'Amount',
+data: photocopyValues,
+backgroundColor: '#3b82f6',
+borderRadius: 8
+}]
+},
+options: {
+responsive: true,
+maintainAspectRatio: false,
+plugins: { legend: { display: false } },
+scales: {
+y: { grid: { color: gridColor }, ticks: { color: textColor } },
+x: { ticks: { color: textColor, maxRotation: 45, font: { size: 9 } } }
+}
+},
+plugins: [valueLabelPlugin]
 });
-document.getElementById('topItemsTotal').textContent = 'Grand Total: ৳' + itemTotal.toLocaleString('en-US', { maximumFractionDigits: 0 });
+document.getElementById('photocopyTotal').textContent = `Grand Total: ${photocopyQty} Ream, ৳${photocopyTotal.toLocaleString('en-US', { maximumFractionDigits: 0 })}`;
 
-const divData = groupBy('division');
-const divTotal = divData.reduce((s, e) => s + e[1], 0);
-charts.division = new Chart(document.getElementById('divisionChart'), {
-type: 'line',
-data: { labels: divData.map(e => e[0]), datasets: [{ label: 'Amount', data: divData.map(e => e[1]), borderColor: '#f59e0b', backgroundColor: 'rgba(245,158,11,0.1)', fill: true, tension: 0.4 }] },
-options: { responsive: true, maintainAspectRatio: false, onClick: (e, els) => { if (els[0]) { currentFilter.division = divData[els[0].index][0]; applyFilters(); } }, plugins: { legend: { display: false } }, scales: { y: { grid: { color: gridColor }, ticks: { color: textColor } }, x: { ticks: { color: textColor, maxRotation: 45, font: { size: 9 } } } } }
+// Chart 3: Poly Bag
+const polybagData = filteredData.filter(r => r.itemDescription.toLowerCase().includes('poly'));
+const polybagByDept = {};
+polybagData.forEach(r => {
+const dept = r.department || 'Unknown';
+polybagByDept[dept] = (polybagByDept[dept] || 0) + r.amount;
 });
-document.getElementById('divisionTotal').textContent = 'Grand Total: ৳' + divTotal.toLocaleString('en-US', { maximumFractionDigits: 0 });
+const polybagLabels = Object.keys(polybagByDept);
+const polybagValues = polybagLabels.map(l => polybagByDept[l]);
+const polybagQty = polybagData.reduce((s, r) => s + r.issueQty, 0);
+const polybagTotal = polybagValues.reduce((a, b) => a + b, 0);
+
+charts.polybag = new Chart(document.getElementById('polybagChart'), {
+type: 'bar',
+data: {
+labels: polybagLabels,
+datasets: [{
+label: 'Amount',
+data: polybagValues,
+backgroundColor: '#f59e0b',
+borderRadius: 8
+}]
+},
+options: {
+responsive: true,
+maintainAspectRatio: false,
+plugins: { legend: { display: false } },
+scales: {
+y: { grid: { color: gridColor }, ticks: { color: textColor } },
+x: { ticks: { color: textColor, maxRotation: 45, font: { size: 9 } } }
+}
+},
+plugins: [valueLabelPlugin]
+});
+document.getElementById('polybagTotal').textContent = `Grand Total: ${polybagQty} Bags, ৳${polybagTotal.toLocaleString('en-US', { maximumFractionDigits: 0 })}`;
+
+// Chart 4: Aceton
+const acetonData = filteredData.filter(r => r.itemDescription.toLowerCase().includes('aceton'));
+const acetonByDept = {};
+acetonData.forEach(r => {
+const dept = r.department || 'Unknown';
+acetonByDept[dept] = (acetonByDept[dept] || 0) + r.amount;
+});
+const acetonLabels = Object.keys(acetonByDept);
+const acetonValues = acetonLabels.map(l => acetonByDept[l]);
+const acetonQty = acetonData.reduce((s, r) => s + r.issueQty, 0);
+const acetonTotal = acetonValues.reduce((a, b) => a + b, 0);
+
+charts.aceton = new Chart(document.getElementById('acetonChart'), {
+type: 'bar',
+data: {
+labels: acetonLabels,
+datasets: [{
+label: 'Amount',
+data: acetonValues,
+backgroundColor: '#8b5cf6',
+borderRadius: 8
+}]
+},
+options: {
+responsive: true,
+maintainAspectRatio: false,
+plugins: { legend: { display: false } },
+scales: {
+y: { grid: { color: gridColor }, ticks: { color: textColor } },
+x: { ticks: { color: textColor, maxRotation: 45, font: { size: 9 } } }
+}
+},
+plugins: [valueLabelPlugin]
+});
+document.getElementById('acetonTotal').textContent = `Grand Total: ${acetonQty} KG, ৳${acetonTotal.toLocaleString('en-US', { maximumFractionDigits: 0 })}`;
 }
 
 function renderTable() {
@@ -919,18 +810,6 @@ document.body.appendChild(t);
 setTimeout(() => t.remove(), 3000);
 }
 window.showToast = showToast;
-
-// Console log
-console.log('%c═══════════════════════════════════════════', 'color: #22c55e; font-weight: bold;');
-console.log('%c  📊 GENERAL MCD DAILY REPORT - READY', 'color: #22c55e; font-weight: bold; font-size: 14px;');
-console.log('%c═══════════════════════════════════════════', 'color: #22c55e; font-weight: bold;');
-console.log('%c  ✅ Smart Selective Cache: Active', 'color: #3b82f6;');
-console.log('%c  ✅ Realtime Sync: Active', 'color: #22c55e;');
-console.log('%c  ✅ ROI Tracking: Active', 'color: #8b5cf6;');
-console.log('%c  ✅ Cache Expiry: 5 minutes', 'color: #f59e0b;');
-console.log('%c  ✅ Auto Refresh: Every 30 seconds', 'color: #f59e0b;');
-console.log('%c  ✅ Firebase Reads Minimized: Yes', 'color: #f59e0b;');
-console.log('%c═══════════════════════════════════════════', 'color: #22c55e; font-weight: bold;');
 </script>
 </body>
 </html>
