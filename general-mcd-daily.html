@@ -30,6 +30,55 @@ body{background:var(--bg);color:var(--text);font-family:'Poppins',sans-serif;lin
 .back-btn{position:fixed;top:20px;left:20px;background:var(--card);border:1px solid var(--border);padding:10px 16px;border-radius:10px;cursor:pointer;color:var(--text);font-weight:600;font-size:13px;z-index:1000;box-shadow:var(--shadow);text-decoration:none;display:flex;align-items:center;gap:6px}
 .theme-toggle{position:fixed;top:20px;right:20px;background:var(--card);border:1px solid var(--border);width:44px;height:44px;border-radius:50%;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:18px;z-index:1000;box-shadow:var(--shadow);color:var(--text)}
 
+/* ===== CACHE STATUS BAR ===== */
+.cacheStatusBar{
+display:flex;
+align-items:center;
+justify-content:center;
+gap:10px;
+padding:10px 16px;
+font-size:12px;
+font-weight:700;
+background:linear-gradient(90deg,rgba(34,197,94,.1),rgba(59,130,246,.1));
+border:1px solid rgba(34,197,94,.2);
+border-radius:12px;
+color:var(--muted);
+flex-wrap:wrap;
+margin-bottom:20px;
+}
+.cacheStatusBar .cacheDot{
+width:8px;height:8px;border-radius:50%;
+background:var(--green);
+animation:livePulse 2s infinite;
+box-shadow:0 0 8px var(--green);
+}
+@keyframes livePulse{
+0%{box-shadow:0 0 0 0 rgba(34,197,94,.7);transform:scale(1)}
+70%{box-shadow:0 0 0 8px rgba(34,197,94,0);transform:scale(1.1)}
+100%{box-shadow:0 0 0 0 rgba(34,197,94,0);transform:scale(1)}
+}
+.cacheStatusBar .cacheReadCount{
+color:var(--blue);font-weight:900;
+padding:4px 12px;
+background:rgba(37,99,235,.15);
+border-radius:12px;
+border:1px solid rgba(37,99,235,.3);
+}
+.cacheStatusBar .roiBadge{
+color:var(--purple);font-weight:900;
+padding:4px 12px;
+background:rgba(139,92,246,.15);
+border-radius:12px;
+border:1px solid rgba(139,92,246,.3);
+}
+.cacheStatusBar .syncStatus{
+color:var(--green);font-weight:900;
+padding:4px 12px;
+background:rgba(34,197,94,.15);
+border-radius:12px;
+border:1px solid rgba(34,197,94,.3);
+}
+
 .status-bar{display:flex;justify-content:space-between;align-items:center;padding:10px 16px;background:rgba(16,185,129,0.1);border-radius:10px;margin-bottom:20px;font-size:12px;font-weight:600;color:var(--green);flex-wrap:wrap;gap:8px}
 .status-bar.offline{background:rgba(245,158,11,0.1);color:var(--yellow)}
 
@@ -65,13 +114,21 @@ body{background:var(--bg);color:var(--text);font-family:'Poppins',sans-serif;lin
 .summary-item span{color:var(--muted);font-size:11px;font-weight:600}
 .summary-item b{color:var(--green);font-size:16px;font-weight:800}
 
-/* Team Section - NOW AT TOP */
+/* Team Section */
 .team-section{background:linear-gradient(135deg,var(--card),var(--card2));border:2px solid var(--purple);border-radius:16px;padding:24px;margin:20px auto;max-width:1200px;box-shadow:var(--shadow)}
 .team-section h3{text-align:center;margin-bottom:20px;font-size:18px;font-weight:700;color:var(--text);display:flex;align-items:center;justify-content:center;gap:10px}
 .team-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:20px}
 .team-card{background:linear-gradient(135deg,var(--bg),var(--card2));border-radius:12px;padding:20px;text-align:center;border:2px solid var(--border);transition:all .3s}
 .team-card:hover{transform:translateY(-5px);border-color:var(--blue);box-shadow:0 10px 30px rgba(59,130,246,0.3)}
-.team-card img{width:100px;height:100px;border-radius:50%;object-fit:cover;border:3px solid var(--blue);margin-bottom:12px;box-shadow:0 4px 15px rgba(59,130,246,0.3)}
+.team-card .avatar{
+width:100px;height:100px;border-radius:50%;
+margin:0 auto 12px auto;
+display:flex;align-items:center;justify-content:center;
+font-size:36px;font-weight:800;color:#fff;
+box-shadow:0 4px 15px rgba(59,130,246,0.3);
+border:3px solid var(--blue);
+}
+.team-card .avatar img{width:100%;height:100%;border-radius:50%;object-fit:cover}
 .team-card h4{margin:8px 0;font-size:14px;font-weight:700;color:var(--text)}
 .team-card p{margin:0;font-size:11px;color:var(--blue);font-weight:600}
 
@@ -136,7 +193,7 @@ tr:hover{background:rgba(59,130,246,0.05)}
 
 @media print{
 body{background:#fff!important;color:#000!important}
-.theme-toggle,.back-btn,.upload-box,.action-bar,.filter-bar,.table-section,.status-bar,.date-selection,.team-section{display:none!important}
+.theme-toggle,.back-btn,.upload-box,.action-bar,.filter-bar,.table-section,.status-bar,.date-selection,.team-section,.cacheStatusBar{display:none!important}
 #dashboard-content{box-shadow:none!important;padding:0!important}
 .chart-box,.stat-card,.summary-item{break-inside:avoid;box-shadow:none!important;border:1px solid #ddd}
 }
@@ -149,10 +206,20 @@ body{background:#fff!important;color:#000!important}
 
 <div class="header">
 <h1><i class="fas fa-chart-line"></i> GMS General MCD Daily Issue Smart Chart</h1>
-<p>Real-time Sync • Auto Archive • Smart Filters • Date: <span id="currentDate"></span></p>
+<p>Real-time Sync • Smart Cache (24h) • Auto Archive • Smart Filters • Date: <span id="currentDate"></span></p>
 </div>
 
 <div class="container">
+
+<!-- ===== CACHE STATUS BAR ===== -->
+<div class="cacheStatusBar">
+<div class="cacheDot"></div>
+<span id="cacheStatusText">📦 Cache Ready</span>
+<span class="cacheReadCount"><i class="fas fa-fire"></i> Today Reads: <b id="readCounter">0</b></span>
+<span class="roiBadge"><i class="fas fa-chart-line"></i> ROI: <b id="roiStatus">Active</b></span>
+<span class="syncStatus"><i class="fas fa-sync"></i> Sync: <b id="syncStatus">Active</b></span>
+</div>
+
 <div class="status-bar" id="statusBar">
 <span><i class="fas fa-circle" style="font-size:8px"></i> <span id="statusText">Ready</span></span>
 <span>Last Update: <span id="lastUpdate">-</span></span>
@@ -206,27 +273,35 @@ body{background:#fff!important;color:#000!important}
 </div>
 </div>
 
-<!-- Team Section - NOW AT TOP (After Monthly Summary) -->
+<!-- ===== TEAM SECTION - TOP ===== -->
 <div class="team-section">
 <h3><i class="fas fa-users"></i> Our General MCD Team</h3>
 <div class="team-grid">
 <div class="team-card">
-<img src="https://i.ibb.co/gM3mKWDs" alt="Md. Kamaruzzaman">
+<div class="avatar" style="background:linear-gradient(135deg,#3b82f6,#8b5cf6);" data-initials="MK">
+<img src="https://i.ibb.co/gM3mKWDs/kamaruzzaman.jpg" alt="Md. Kamaruzzaman" onerror="this.style.display='none';this.parentElement.innerHTML='MK'">
+</div>
 <h4>Md. Kamaruzzaman</h4>
 <p>Jr. Officer</p>
 </div>
 <div class="team-card">
-<img src="https://i.ibb.co/5WqzrmzR" alt="MD. HABIBUR RAHMAN">
+<div class="avatar" style="background:linear-gradient(135deg,#10b981,#059669);" data-initials="HR">
+<img src="https://i.ibb.co/5WqzrmzR/habib.jpg" alt="MD. HABIBUR RAHMAN" onerror="this.style.display='none';this.parentElement.innerHTML='HR'">
+</div>
 <h4>MD. HABIBUR RAHMAN</h4>
 <p>Supervisor</p>
 </div>
 <div class="team-card">
-<img src="https://i.ibb.co/PG9hvSPJ" alt="MD. ABDULLAH-AL-MAMUN">
+<div class="avatar" style="background:linear-gradient(135deg,#f59e0b,#d97706);" data-initials="AM">
+<img src="https://i.ibb.co/PG9hvSPJ/mamun.jpg" alt="MD. ABDULLAH-AL-MAMUN" onerror="this.style.display='none';this.parentElement.innerHTML='AM'">
+</div>
 <h4>MD. ABDULLAH-AL-MAMUN</h4>
 <p>Sr. Supervisor</p>
 </div>
 <div class="team-card">
-<img src="https://i.ibb.co/fzkXCRdH" alt="MD.TARIQUL ISLAM">
+<div class="avatar" style="background:linear-gradient(135deg,#ef4444,#dc2626);" data-initials="TI">
+<img src="https://i.ibb.co/fzkXCRdH/tariqul.jpg" alt="MD.TARIQUL ISLAM" onerror="this.style.display='none';this.parentElement.innerHTML='TI'">
+</div>
 <h4>MD.TARIQUL ISLAM</h4>
 <p>Asst. Officer</p>
 </div>
@@ -315,11 +390,46 @@ All Data
 <tbody id="tableBody"></tbody>
 </table>
 </div>
+
+<!-- ===== TEAM SECTION - BOTTOM ===== -->
+<div class="team-section">
+<h3><i class="fas fa-users"></i> Our General MCD Team</h3>
+<div class="team-grid">
+<div class="team-card">
+<div class="avatar" style="background:linear-gradient(135deg,#3b82f6,#8b5cf6);" data-initials="MK">
+<img src="https://i.ibb.co/gM3mKWDs/kamaruzzaman.jpg" alt="Md. Kamaruzzaman" onerror="this.style.display='none';this.parentElement.innerHTML='MK'">
+</div>
+<h4>Md. Kamaruzzaman</h4>
+<p>Jr. Officer</p>
+</div>
+<div class="team-card">
+<div class="avatar" style="background:linear-gradient(135deg,#10b981,#059669);" data-initials="HR">
+<img src="https://i.ibb.co/5WqzrmzR/habib.jpg" alt="MD. HABIBUR RAHMAN" onerror="this.style.display='none';this.parentElement.innerHTML='HR'">
+</div>
+<h4>MD. HABIBUR RAHMAN</h4>
+<p>Supervisor</p>
+</div>
+<div class="team-card">
+<div class="avatar" style="background:linear-gradient(135deg,#f59e0b,#d97706);" data-initials="AM">
+<img src="https://i.ibb.co/PG9hvSPJ/mamun.jpg" alt="MD. ABDULLAH-AL-MAMUN" onerror="this.style.display='none';this.parentElement.innerHTML='AM'">
+</div>
+<h4>MD. ABDULLAH-AL-MAMUN</h4>
+<p>Sr. Supervisor</p>
+</div>
+<div class="team-card">
+<div class="avatar" style="background:linear-gradient(135deg,#ef4444,#dc2626);" data-initials="TI">
+<img src="https://i.ibb.co/fzkXCRdH/tariqul.jpg" alt="MD.TARIQUL ISLAM" onerror="this.style.display='none';this.parentElement.innerHTML='TI'">
+</div>
+<h4>MD.TARIQUL ISLAM</h4>
+<p>Asst. Officer</p>
+</div>
+</div>
+</div>
 </div>
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-import { getFirestore, doc, setDoc, onSnapshot, collection, getDocs, deleteDoc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+import { getFirestore, doc, setDoc, onSnapshot, collection, getDocs, deleteDoc, getDoc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
 const firebaseConfig = {
 apiKey: "AIzaSyD-wBCF5eeWMHobLFOhBzKW7aB2pagz9-w",
@@ -334,11 +444,227 @@ const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 const ACTIVE_COL = "generalMcdDaily";
 const ARCHIVE_COL = "generalMcdDaily_archive";
+const SYNC_COL = "system_sync";
 
 let allData = [];
 let filteredData = [];
 let charts = {};
 let currentFilter = {};
+
+// ================================================================
+// 📦 ULTRA SMART CACHE MANAGER (24 hours expiry)
+// ================================================================
+window.GMS_CACHE = {
+CACHE_KEY: 'GMS_MCD_CACHE_V2',
+READ_COUNT_KEY: 'GMS_MCD_READ_COUNT_TODAY',
+READ_DATE_KEY: 'GMS_MCD_READ_DATE',
+LOCAL_TS_KEY: 'GMS_MCD_LOCAL_TIMESTAMPS',
+CACHE_EXPIRY_MS: 24 * 60 * 60 * 1000, // 24 hours
+
+getReadCount: function(){
+var today = new Date().toDateString();
+if(localStorage.getItem(this.READ_DATE_KEY) !== today){
+localStorage.setItem(this.READ_DATE_KEY, today);
+localStorage.setItem(this.READ_COUNT_KEY, '0');
+}
+return parseInt(localStorage.getItem(this.READ_COUNT_KEY) || '0');
+},
+
+incRead: function(n){
+n = n || 1;
+var count = this.getReadCount() + n;
+localStorage.setItem(this.READ_COUNT_KEY, String(count));
+var el = document.getElementById('readCounter');
+if(el) el.innerText = count;
+return count;
+},
+
+_all: function(){
+try{ return JSON.parse(localStorage.getItem(this.CACHE_KEY) || '{}'); }
+catch(e){ return {}; }
+},
+
+set: function(key, data, timestamp){
+var all = this._all();
+all[key] = { 
+data: data, 
+savedAt: Date.now(),
+timestamp: timestamp || Date.now()
+};
+try{ 
+localStorage.setItem(this.CACHE_KEY, JSON.stringify(all)); 
+console.log('💾 Cache saved:', key);
+}
+catch(e){ console.warn('Cache save failed:', e); }
+},
+
+get: function(key){
+var all = this._all();
+var entry = all[key];
+if(!entry) {
+console.log('❌ Cache miss:', key);
+return null;
+}
+
+var age = Date.now() - entry.savedAt;
+if(age > this.CACHE_EXPIRY_MS){
+console.log('⏰ Cache expired:', key, 'Age:', Math.round(age/1000/60/60), 'hours');
+return null;
+}
+
+console.log('✅ Cache hit:', key, 'Age:', Math.round(age/1000/60), 'minutes');
+return entry.data;
+},
+
+getLocalTimestamp: function(collection){
+var timestamps = JSON.parse(localStorage.getItem(this.LOCAL_TS_KEY) || '{}');
+return timestamps[collection] || 0;
+},
+
+setLocalTimestamp: function(collection, timestamp){
+var timestamps = JSON.parse(localStorage.getItem(this.LOCAL_TS_KEY) || '{}');
+timestamps[collection] = timestamp;
+localStorage.setItem(this.LOCAL_TS_KEY, JSON.stringify(timestamps));
+},
+
+needsUpdate: function(collection, remoteTimestamp){
+var localTS = this.getLocalTimestamp(collection);
+var needsUpdate = remoteTimestamp > localTS;
+console.log('🔍 Check update:', collection, 
+'Local:', new Date(localTS).toLocaleString(), 
+'Remote:', new Date(remoteTimestamp).toLocaleString(),
+'Needs Update:', needsUpdate);
+return needsUpdate;
+},
+
+invalidate: function(keys){
+var all = this._all();
+if(typeof keys === 'string') keys = [keys];
+keys.forEach(function(k){ 
+delete all[k]; 
+console.log('🗑️ Cache invalidated:', k);
+});
+localStorage.setItem(this.CACHE_KEY, JSON.stringify(all));
+},
+
+clear: function(){
+localStorage.removeItem(this.CACHE_KEY);
+localStorage.removeItem(this.LOCAL_TS_KEY);
+console.log('🗑️ All cache cleared');
+}
+};
+
+// ================================================================
+// 📊 SMART DATA LOADER (manpower.html এর মতো)
+// ================================================================
+async function smartLoadData() {
+var statusEl = document.getElementById('cacheStatusText');
+var syncStatus = document.getElementById('syncStatus');
+
+try {
+// STEP 1: Check remote timestamp (1 read)
+if(statusEl) statusEl.innerText = '🔍 Checking for updates...';
+
+var remoteTimestamp = 0;
+try {
+var syncDoc = await getDoc(doc(db, SYNC_COL, ACTIVE_COL));
+if(syncDoc.exists()) {
+remoteTimestamp = syncDoc.data().lastUpdated || 0;
+}
+window.GMS_CACHE.incRead(1);
+console.log('🕐 Remote timestamp:', new Date(remoteTimestamp).toLocaleString());
+} catch(e) {
+console.warn('system_sync read failed:', e);
+}
+
+// STEP 2: Check if we need to update
+var needsUpdate = window.GMS_CACHE.needsUpdate(ACTIVE_COL, remoteTimestamp);
+
+if(!needsUpdate) {
+// STEP 3A: Load from cache (0 reads!)
+var cachedData = window.GMS_CACHE.get(ACTIVE_COL);
+if(cachedData !== null) {
+if(statusEl) statusEl.innerText = '✅ Report loaded (Cache 📦) - 0 Firebase reads';
+console.log('📦 Cache hit - 0 Firebase reads!');
+return cachedData;
+}
+}
+
+// STEP 3B: Load from Firebase (reads required)
+if(statusEl) statusEl.innerText = '🔥 Fetching from Firebase...';
+console.log('🔥 Firebase read required');
+
+var snapshot = await getDocs(collection(db, ACTIVE_COL));
+var rawData = [];
+snapshot.forEach(function(docSnap){
+var d = docSnap.data();
+if(d.data) {
+rawData = rawData.concat(d.data.map(r => ({...r, _month: docSnap.id})));
+}
+});
+
+window.GMS_CACHE.incRead(snapshot.size || 1);
+
+// STEP 4: Save to cache
+window.GMS_CACHE.set(ACTIVE_COL, rawData, remoteTimestamp);
+window.GMS_CACHE.setLocalTimestamp(ACTIVE_COL, remoteTimestamp);
+
+if(statusEl) statusEl.innerText = '✅ Report loaded (Firebase 🔥) - ' + (snapshot.size || 1) + ' reads';
+console.log('💾 Data cached successfully');
+
+return rawData;
+
+} catch(error) {
+console.error('❌ Smart load error:', error);
+if(statusEl) statusEl.innerText = '❌ Load failed';
+
+// Fallback to cache if available
+var cachedData = window.GMS_CACHE.get(ACTIVE_COL);
+if(cachedData !== null) {
+console.log('🔄 Using cached data as fallback');
+return cachedData;
+}
+
+return [];
+}
+}
+
+// ================================================================
+// 🔄 REAL-TIME SYNC LISTENER
+// ================================================================
+function setupRealtimeSync(){
+console.log('🔔 Setting up realtime sync for:', ACTIVE_COL);
+
+var syncCol = collection(db, SYNC_COL);
+onSnapshot(syncCol, function(snapshot){
+var remoteTS = {};
+snapshot.forEach(function(d){ 
+remoteTS[d.id] = d.data().lastUpdated || 0; 
+});
+
+var localTS = window.GMS_CACHE.getLocalTimestamp(ACTIVE_COL);
+var remoteForActive = remoteTS[ACTIVE_COL] || 0;
+
+if(remoteForActive > localTS){
+console.log('🔔 Realtime: data changed, reloading...');
+window.GMS_CACHE.invalidate([ACTIVE_COL]);
+
+var syncStatus = document.getElementById('syncStatus');
+if(syncStatus){
+syncStatus.innerText = 'Updated ✅';
+setTimeout(function(){ if(syncStatus) syncStatus.innerText = 'Active'; }, 2000);
+}
+
+if(!document.hidden){
+loadActiveData();
+}
+}
+}, function(error){
+console.error('❌ Realtime sync error:', error);
+});
+
+console.log('✅ Realtime sync setup complete');
+}
 
 // Theme toggle
 window.toggleTheme = function() {
@@ -356,8 +682,15 @@ document.getElementById('themeIcon').className = 'fas fa-sun';
 document.getElementById('currentDate').textContent = new Date().toLocaleDateString('en-GB');
 document.getElementById('reportDate').valueAsDate = new Date();
 
-window.addEventListener('online', () => { updateStatus('Online - Syncing...'); });
-window.addEventListener('offline', () => { updateStatus('Offline Mode', true); });
+// Read counter init
+(function(){
+var c = window.GMS_CACHE.getReadCount();
+var el = document.getElementById('readCounter');
+if(el) el.innerText = c;
+})();
+
+window.addEventListener('online', () => { updateStatus('Online - Syncing...'); loadActiveData(); });
+window.addEventListener('offline', () => { updateStatus('Offline Mode - Using Cache', true); });
 function updateStatus(msg, offline = false) {
 document.getElementById('statusText').textContent = msg;
 document.getElementById('statusBar').className = 'status-bar' + (offline ? ' offline' : '');
@@ -437,9 +770,40 @@ for (const [month, rows] of Object.entries(grouped)) {
 const col = (month === currentMonth || month === prevMonth) ? ACTIVE_COL : ARCHIVE_COL;
 writes.push(setDoc(doc(db, col, month), { data: rows, updatedAt: Date.now() }));
 }
+
+// Update timestamp
+await setDoc(doc(db, SYNC_COL, ACTIVE_COL), { 
+lastUpdated: Date.now(),
+collection: ACTIVE_COL
+}, { merge: true });
+
+// Invalidate cache
+window.GMS_CACHE.invalidate([ACTIVE_COL]);
+
 await Promise.all(writes);
 showToast(`✅ Saved ${data.length} rows!`);
-updateStatus('Saved successfully!');
+updateStatus('✅ Saved successfully!');
+
+// Track ROI
+try{
+var activity = JSON.parse(localStorage.getItem('report_activity') || '[]');
+activity.push({
+report: 'General MCD Daily Report',
+user: 'User',
+date: new Date().toISOString().slice(0,10),
+timestamp: new Date().toISOString()
+});
+if(activity.length > 1000) activity.splice(0, activity.length - 1000);
+localStorage.setItem('report_activity', JSON.stringify(activity));
+
+var roiStatus = document.getElementById('roiStatus');
+if(roiStatus){
+roiStatus.innerText = 'Tracked ✅';
+setTimeout(function(){ if(roiStatus) roiStatus.innerText = 'Active'; }, 2000);
+}
+}catch(e){}
+
+loadActiveData();
 } catch (err) { showToast('Save failed: ' + err.message, true); }
 }
 
@@ -457,7 +821,7 @@ await deleteDoc(doc(db, ACTIVE_COL, docSnap.id));
 } catch (err) { console.error('Error deleting old data:', err); }
 }
 
-// NEW: Delete specific date data
+// Delete specific date data
 window.deleteDateData = async function() {
 const dateInput = document.getElementById('reportDate').value;
 if (!dateInput) { 
@@ -480,24 +844,28 @@ showToast('Invalid date format', true);
 return;
 }
 
-// Get the document
 const docRef = doc(db, ACTIVE_COL, monthKey);
-const docSnap = await getDocs(docRef);
+const docSnap = await getDoc(docRef);
 
 if (docSnap.exists()) {
 const docData = docSnap.data();
 if (docData.data) {
-// Filter out the data for the selected date
-const filteredData = docData.data.filter(row => row.date !== formattedDate);
-
-// Update the document with filtered data
+const filtered = docData.data.filter(row => row.date !== formattedDate);
 await setDoc(docRef, { 
-data: filteredData, 
+data: filtered, 
 updatedAt: Date.now() 
 });
 
+// Update timestamp
+await setDoc(doc(db, SYNC_COL, ACTIVE_COL), { 
+lastUpdated: Date.now()
+}, { merge: true });
+
+// Invalidate cache
+window.GMS_CACHE.invalidate([ACTIVE_COL]);
+
 showToast(`✅ Data for ${formattedDate} deleted successfully!`);
-loadActiveData(); // Reload data
+loadActiveData();
 } else {
 showToast('No data found for this month', true);
 }
@@ -509,26 +877,35 @@ showToast('Delete failed: ' + err.message, true);
 }
 };
 
-function loadActiveData() {
+async function loadActiveData() {
 updateStatus('Loading live data...');
-onSnapshot(collection(db, ACTIVE_COL), (snapshot) => {
-allData = [];
-let lastUpdate = 0;
-snapshot.forEach(docSnap => {
-const d = docSnap.data();
-if (d.data) { allData = allData.concat(d.data); lastUpdate = Math.max(lastUpdate, d.updatedAt || 0); }
-});
+const data = await smartLoadData();
+allData = data;
 allData.sort((a, b) => (b.date || '').localeCompare(a.date || ''));
-document.getElementById('lastUpdate').textContent = lastUpdate ? new Date(lastUpdate).toLocaleString() : '-';
 updateFilterTotals();
 applyFilters();
 updateStatus('Live Sync Active ✅');
-}, (err) => {
-console.error(err);
-updateStatus('Load failed', true);
-});
 }
+
+// Initial load
 loadActiveData();
+setupRealtimeSync();
+
+// Auto refresh every 5 minutes
+setInterval(function(){
+if(!document.hidden){
+console.log('⏰ Auto-refresh triggered (5 minutes)');
+loadActiveData();
+}
+}, 5 * 60 * 1000);
+
+// Page visibility change
+document.addEventListener('visibilitychange', function(){
+if(!document.hidden){
+console.log('🔄 Page visible — checking for updates...');
+loadActiveData();
+}
+});
 
 window.applyDateFilter = function() {
 const dateInput = document.getElementById('reportDate').value;
@@ -641,6 +1018,11 @@ document.getElementById('summaryAvg').textContent = '৳' + avg.toLocaleString('
 document.getElementById('summaryItems').textContent = items;
 document.getElementById('summaryDepts').textContent = depts;
 document.getElementById('summaryCats').textContent = cats;
+
+// Update month label
+const now = new Date();
+const months = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+document.getElementById('currentMonthLabel').textContent = months[now.getMonth()] + ' ' + now.getFullYear();
 }
 
 function renderCharts() {
@@ -864,6 +1246,17 @@ document.body.appendChild(t);
 setTimeout(() => t.remove(), 3000);
 }
 window.showToast = showToast;
+
+// Console log
+console.log('%c═══════════════════════════════════════════', 'color: #22c55e; font-weight: bold;');
+console.log('%c  📊 GENERAL MCD DAILY REPORT - READY', 'color: #22c55e; font-weight: bold; font-size: 14px;');
+console.log('%c═══════════════════════════════════════════', 'color: #22c55e; font-weight: bold;');
+console.log('%c  ✅ Smart Cache (24h): Active', 'color: #3b82f6;');
+console.log('%c  ✅ Realtime Sync: Active', 'color: #22c55e;');
+console.log('%c  ✅ ROI Tracking: Active', 'color: #8b5cf6;');
+console.log('%c  ✅ Auto Refresh: Every 5 minutes', 'color: #f59e0b;');
+console.log('%c  ✅ Firebase Reads Minimized: Yes', 'color: #f59e0b;');
+console.log('%c═══════════════════════════════════════════', 'color: #22c55e; font-weight: bold;');
 </script>
 </body>
 </html>
