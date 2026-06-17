@@ -2,782 +2,184 @@
 <html>
 <head>
 <meta charset="UTF-8">
-<title>Gate Plan Entry</title>
-<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<title>Gate Plan Report</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 
 <style>
-body{
-  margin:0;
-  background:#07111f;
-  color:white;
-  font-family:"Segoe UI Emoji","Apple Color Emoji","Segoe UI",Arial,sans-serif;
-}
-.header{
-  text-align:center;
-  padding:12px 6px;
-}
-.header h2,.header h3,.header h4{
-  margin:3px;
-}
-.controls{
-  text-align:center;
-  margin:10px;
-}
-button{
-  padding:10px 14px;
-  border:0;
-  border-radius:8px;
-  color:white;
-  font-weight:bold;
-  margin:4px;
-  cursor:pointer;
-}
-.add{background:#f59e0b}
-.save{background:#16a34a}
-.report{background:#2563eb}
-.home{background:#0f766e}
-.del{background:#dc2626}
-.print{background:#7c3aed}
-.offline-print{background:#000;border:2px solid #fff}
-input,select,textarea{
-  font-size:15px;
-  padding:7px;
-  border-radius:6px;
-  border:1px solid #999;
-}
-.box{
-  width:96%;
-  margin:10px auto;
-  background:white;
-  color:black;
-  border:1px solid #000;
-}
-.topLine{
-  text-align:center;
-  font-weight:bold;
-  border-bottom:1px solid #000;
-  padding:5px;
-  font-size:18px;
-}
-.meta{
-  display:grid;
-  grid-template-columns:repeat(3,1fr);
-  border-bottom:1px solid #000;
-}
-.meta div{
-  border-right:1px solid #000;
-  padding:6px;
-  text-align:center;
-  font-weight:bold;
-}
-.tableWrap{
-  overflow-x:auto;
-  width:100%;
-}
-table{
-  min-width:1500px;
-  width:100%;
-  border-collapse:collapse;
-  background:white;
-  color:black;
-  font-size:12px;
-  table-layout:fixed;
-}
-th,td{
-  border:1px solid #000;
-  padding:5px;
-  text-align:center;
-  vertical-align:middle;
-}
-td input,td textarea{
-  width:100%;
-  box-sizing:border-box;
-  border:0;
-  outline:none;
-  text-align:center;
-  font-size:14px;
-  background:white;
-  color:black;
-}
-td textarea{
-  resize:none;
-  text-align:left;
-}
-.totalRow{
-  font-weight:bold;
-  background:#f3f4f6;
-}
-.sign{
-  display:grid;
-  grid-template-columns:repeat(8,1fr);
-  gap:0;
-  margin-top:80px;
-}
-.sign div{
-  text-align:center;
-  font-weight:bold;
-  border-top:1px solid #000;
-  padding:6px;
-  font-size:12px;
-}
-.slCol{width:40px}
-.buyerCol{width:115px}
-.srCol{width:105px}
-.styleCol{width:110px}
-.orderCol{width:115px}
-.itemCol{width:125px}
-.colorCol{width:95px}
-.unitCol{width:70px}
-.qtyCol{width:90px}
-.ctnCol{width:95px}
-.partyCol{width:240px}
-.vehicleCol{width:115px}
-.remarksCol{width:115px}
-.actionCol{width:80px}
-.toParty{
-  font-size:13px!important;
-  text-align:left!important;
-  padding-left:5px!important;
-  white-space:normal!important;
-}
+*{box-sizing:border-box;letter-spacing:0!important;word-spacing:normal!important}
+body{margin:0;background:#07111f;color:#fff;font-family:Arial, Helvetica, sans-serif}
+.header{text-align:center;padding:16px 8px}
+.header h2,.header h3,.header h4{margin:3px}
+.controls{text-align:center;padding:10px}
+input,select{padding:8px;border-radius:7px;border:1px solid #999;font-size:15px}
+button{padding:10px 15px;border:0;border-radius:8px;color:white;font-weight:900;margin:4px;cursor:pointer}
+.search{background:#2563eb}.clear{background:#64748b}.excel{background:#16a34a}.print{background:#7c3aed}
+.new{background:#2563eb}.home{background:#0f766e}.edit{background:#f59e0b}.delete{background:#dc2626}
+#loadStatus{text-align:center;color:#22c55e;font-weight:900;padding:6px}
+#reportArea{width:98%;margin:10px auto 50px}
+.reportCard,.greyCard{background:#fff;color:#000;border:1px solid #000;margin:14px 0;overflow:hidden}
+.reportPrintHeader{text-align:center;line-height:1.15;padding:7px 0 6px;border-bottom:1px solid #000}
+.reportPrintHeader h2{margin:0;font-size:22px;font-weight:900}
+.reportPrintHeader h4{margin:1px 0;font-size:12px;font-weight:800}
+.reportPrintHeader h3{margin:2px 0 0;font-size:16px;font-weight:900}
+.qrCenter{display:block;text-align:center;width:100%;margin:9px auto 13px;clear:both}
+.qrMini{display:block;width:70px;height:70px;margin:0 auto}
+.companyLine{text-align:center;font-size:16px;font-weight:900;border-top:1px solid #000;border-bottom:1px solid #000;padding:5px 3px}
+.meta{display:grid;grid-template-columns:repeat(5,1fr);border-bottom:1px solid #000}
+.meta div{border-right:1px solid #000;padding:6px 3px;text-align:center;font-weight:900}
+.actionBar{text-align:center;padding:10px;border-bottom:1px solid #000}
+.tableWrap{overflow-x:auto}
+table{width:100%;min-width:1450px;border-collapse:collapse;table-layout:fixed;font-size:12px;color:#000}
+th,td{border:1px solid #000;padding:5px;text-align:center;vertical-align:middle;word-break:normal;color:#000}
+.totalRow{background:#f3f4f6;font-weight:900;color:#000}
+.sign{display:grid;grid-template-columns:repeat(8,1fr);gap:0;margin-top:80px}
+.sign div{text-align:center;font-weight:900;border-top:1px solid #000;padding:6px 2px;font-size:12px;color:#000}
+.greyHeader{text-align:center;line-height:1.2}
+.greyHeader h2{margin:0;font-size:24px;font-weight:900}
+.greyHeader h4{margin:1px 0;font-size:12px}
+.greyHeader h1{margin:2px 0;font-size:32px;font-weight:900;color:#555}
+.greyTitle{text-align:center;font-size:18px;font-weight:900;margin:7px 0}
+.greyTable{width:65%;min-width:0;margin:8px auto 0;border-collapse:collapse;table-layout:fixed}
+.greyTable th,.greyTable td{border:1px solid #000;padding:7px;text-align:center}
+.greySign{display:grid;grid-template-columns:repeat(6,1fr);gap:25px;margin-top:105px}
+.greySign div{text-align:center;font-weight:900;border-top:1px solid #000;padding-top:6px;font-size:12px}
+.noData{text-align:center;color:#fff;font-size:20px;font-weight:900;padding:30px}
 
-/* GREY FABRIC FORMAT */
-.greyReport{
-  display:none;
-  width:96%;
-  margin:10px auto;
-  background:white;
-  color:black;
-  border:1px solid #000;
-  padding:8px;
-}
-.greyHeader{
-  text-align:center;
-  line-height:1.25;
-}
-.greyHeader h2{
-  margin:0;
-  font-size:26px;
-  font-weight:900;
-}
-.greyHeader h4{
-  margin:2px 0;
-  font-size:14px;
-}
-.greyHeader h1{
-  margin:2px 0;
-  font-size:36px;
-  font-weight:900;
-  color:#555;
-}
-.greyTitle{
-  font-size:20px;
-  font-weight:900;
-  margin:8px 0;
-}
-.greyTable{
-  min-width:0!important;
-  width:65%;
-  margin:8px auto 0;
-  font-size:14px;
-  table-layout:fixed;
-}
-.greyTable th,.greyTable td{
-  padding:7px;
-  border:1px solid #000;
-}
-.greyTable input{
-  background:#fffef2!important;
-  color:#000!important;
-  border:1px solid #aaa!important;
-  border-radius:3px!important;
-  padding:3px!important;
-  font-size:12px!important;
-}
-.greySign{
-  display:grid;
-  grid-template-columns:repeat(6,1fr);
-  gap:25px;
-  margin-top:105px;
-}
-.greySign div{
-  text-align:center;
-  font-weight:bold;
-  border-top:1px solid #000;
-  padding-top:6px;
-  font-size:12px;
-}
+#chartSection{background:linear-gradient(135deg,#101827,#1a2332);border:1px solid #263855;border-radius:16px;padding:16px;margin:12px 0;box-shadow:0 8px 32px rgba(0,0,0,.3)}
+.chartHeader{text-align:center;margin-bottom:14px}
+.chartHeader h3{margin:0;color:#22c55e;font-size:20px;font-weight:900}
+.chartHeader p{margin:4px 0 0 0;color:#94a3b8;font-size:13px}
+.chartGrid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;align-items:start}
+.chartCard{background:linear-gradient(135deg,#0f172a,#1e293b);border:1px solid #334155;border-radius:12px;padding:14px;position:relative;overflow:hidden}
+.chartCard::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg,#22c55e,#3b82f6)}
+.chartCard h4{margin:0 0 10px 0;color:#e2e8f0;font-size:14px;font-weight:900;text-align:center;border-bottom:1px solid #334155;padding-bottom:8px}
+.chartWrap{position:relative;height:200px}
+.chartWrap canvas{max-height:200px}
+.chartStats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:12px;padding-top:10px;border-top:1px solid #334155}
+.statBox{background:rgba(34,197,94,.08);border:1px solid rgba(34,197,94,.2);border-radius:8px;padding:8px;text-align:center}
+.statBox .statNum{color:#22c55e;font-size:20px;font-weight:900;display:block}
+.statBox .statLabel{color:#94a3b8;font-size:9px;font-weight:700;text-transform:uppercase}
+.statBox.blue{background:rgba(59,130,246,.08);border-color:rgba(59,130,246,.2)}
+.statBox.blue .statNum{color:#3b82f6}
+.statBox.purple{background:rgba(139,92,246,.08);border-color:rgba(139,92,246,.2)}
+.statBox.purple .statNum{color:#8b5cf6}
 
-/* CHEMICAL MCD FORMAT */
-.chemicalReport{
-  display:none;
-  width:96%;
-  margin:10px auto;
-  background:white;
-  color:black;
-  border:1px solid #000;
-  padding:10px;
-}
-.chemicalHeader{
-  text-align:center;
-  line-height:1.3;
-  margin-bottom:10px;
-}
-.chemicalHeader h2{
-  margin:0;
-  font-size:24px;
-  font-weight:900;
-}
-.chemicalHeader h4{
-  margin:2px 0;
-  font-size:13px;
-}
-.chemicalHeader h3{
-  margin:4px 0;
-  font-size:18px;
-  font-weight:800;
-}
-.chemicalRef{
+.cacheStatusBar{display:flex;align-items:center;justify-content:center;gap:10px;padding:6px 12px;font-size:11px;font-weight:700;background:linear-gradient(90deg,rgba(34,197,94,.1),rgba(59,130,246,.1));border-bottom:1px solid #263855;color:#9fb0c7}
+.cacheStatusBar .cacheDot{width:8px;height:8px;border-radius:50%;background:#22c55e;animation:livePulse 2s infinite;box-shadow:0 0 8px #22c55e}
+@keyframes livePulse{0%{box-shadow:0 0 0 0 rgba(34,197,94,.7);transform:scale(1)}70%{box-shadow:0 0 0 8px rgba(34,197,94,0);transform:scale(1.1)}100%{box-shadow:0 0 0 0 rgba(34,197,94,0);transform:scale(1)}}
+.cacheStatusBar .cacheReadCount{color:#2563eb;font-weight:900;padding:3px 10px;background:rgba(37,99,235,.15);border-radius:12px;border:1px solid rgba(37,99,235,.3)}
+.cacheStatusBar .syncStatus{color:#22c55e;font-weight:900;padding:3px 10px;background:rgba(34,197,94,.15);border-radius:12px;border:1px solid rgba(34,197,94,.3)}
+
+.offlineBadge{background:#f59e0b!important;color:#000!important;padding:2px 6px!important;border-radius:4px!important;font-size:10px!important;font-weight:900!important;margin-left:4px!important}
+.syncedBadge{background:#22c55e!important;color:#fff!important;padding:2px 6px!important;border-radius:4px!important;font-size:10px!important;font-weight:900!important;margin-left:4px!important}
+
+/* 🔥 SEARCHABLE NAME FILTER */
+.nameFilterContainer{
   display:inline-block;
-  border:1px solid #000;
-  padding:3px 8px;
-  font-weight:bold;
-  font-size:12px;
-  margin-bottom:8px;
+  position:relative;
+  vertical-align:top;
 }
-.chemicalTop{
-  display:grid;
-  grid-template-columns:1fr 1fr;
-  gap:10px;
-  margin-bottom:10px;
+.nameSearchInput{
+  padding:8px;
+  border-radius:7px;
+  border:1px solid #999;
+  font-size:15px;
+  width:180px;
+  background:#fff;
+  color:#000;
 }
-.chemicalSection{
-  font-weight:bold;
-  font-size:14px;
-  border-bottom:2px solid #000;
-  padding-bottom:3px;
-}
-.chemicalTo{
-  text-align:right;
-  font-weight:bold;
-  font-size:14px;
-}
-.chemicalMeta{
-  display:grid;
-  grid-template-columns:1fr 1fr;
-  border:1px solid #000;
-  margin-bottom:10px;
-}
-.chemicalMeta div{
-  padding:5px;
-  border-right:1px solid #000;
-  font-size:13px;
-}
-.chemicalMeta div:last-child{
-  border-right:0;
-}
-.chemicalTable{
+.nameDropdown{
+  position:absolute;
+  top:100%;
+  left:0;
   width:100%;
-  border-collapse:collapse;
-  font-size:12px;
-}
-.chemicalTable th,.chemicalTable td{
-  border:1px solid #000;
-  padding:6px 4px;
-  text-align:center;
-}
-.chemicalTable th{
-  background:#f9fafb;
-  font-weight:700;
-  font-size:11px;
-}
-.chemicalTable input{
-  width:100%;
-  box-sizing:border-box;
-  border:0;
-  outline:none;
-  text-align:center;
-  font-size:12px;
-  background:transparent;
-}
-.chemicalTable .areaCol{width:80px}
-.chemicalTable .itemCol{width:200px}
-.chemicalTable .unitCol{width:60px}
-.chemicalTable .packCol{width:90px}
-.chemicalTable .qtyKgCol{width:90px}
-.chemicalTable .qtyPackCol{width:80px}
-.chemicalTable .deliveryCol{width:180px}
-.chemicalTable .purposeCol{width:120px}
-.chemicalTable .remarksCol{width:100px}
-.chemicalTotal{
-  font-weight:bold;
-  background:#f3f4f6;
-}
-.chemicalSign{
-  display:grid;
-  grid-template-columns:repeat(7,1fr);
-  gap:15px;
-  margin-top:100px;
-}
-.chemicalSign div{
-  text-align:center;
-  font-weight:bold;
-  border-top:1px solid #000;
-  padding-top:6px;
-  font-size:11px;
-  line-height:1.4;
-}
-
-/* GENERAL MCD - ENGLISH FORMAT */
-.generalEnglishReport{
+  max-height:250px;
+  overflow-y:auto;
+  background:#fff;
+  border:1px solid #999;
+  border-radius:7px;
+  margin-top:2px;
+  z-index:1000;
   display:none;
-  width:96%;
-  margin:10px auto;
-  background:white;
-  color:black;
-  border:1px solid #000;
-  padding:15px;
+  box-shadow:0 4px 12px rgba(0,0,0,.3);
 }
-.generalEnglishHeader{
-  text-align:center;
-  margin-bottom:15px;
-}
-.generalEnglishHeader h2{
-  margin:0;
-  font-size:26px;
-  font-weight:900;
-}
-.generalEnglishHeader h4{
-  margin:3px 0;
+.nameDropdown.show{display:block}
+.nameDropdownItem{
+  padding:8px 10px;
+  cursor:pointer;
+  color:#000;
   font-size:14px;
+  border-bottom:1px solid #eee;
 }
-.generalEnglishSection{
-  display:grid;
-  grid-template-columns:1fr 1fr;
-  margin:10px 0;
-  font-weight:bold;
-  font-size:14px;
-}
-.generalEnglishTitle{
-  text-align:center;
-  font-size:16px;
-  font-weight:800;
-  text-decoration:underline;
-  margin:10px 0;
-}
-.generalEnglishTable{
-  width:100%;
-  border-collapse:collapse;
-  font-size:13px;
-  margin:15px 0;
-}
-.generalEnglishTable th,.generalEnglishTable td{
-  border:1px solid #000;
-  padding:8px 5px;
-  text-align:center;
-}
-.generalEnglishTable th{
-  background:#f3f4f6;
-  font-weight:700;
-}
-.generalEnglishTable input{
-  width:100%;
+.nameDropdownItem:hover{background:#2563eb;color:#fff}
+.nameDropdownItem:last-child{border-bottom:0}
+.nameDropdownItem.selected{background:#16a34a;color:#fff}
+.nameClearBtn{
+  position:absolute;
+  right:8px;
+  top:50%;
+  transform:translateY(-50%);
+  background:#dc2626;
+  color:#fff;
   border:0;
-  outline:none;
-  text-align:center;
-  font-size:13px;
-  background:transparent;
-}
-.generalEnglishTotal{
-  font-weight:bold;
-  background:#f3f4f6;
-}
-.generalEnglishSign{
-  display:grid;
-  grid-template-columns:repeat(6,1fr);
-  gap:15px;
-  margin-top:100px;
-}
-.generalEnglishSign div{
-  text-align:center;
-  font-weight:bold;
-  border-top:1px solid #000;
-  padding-top:6px;
-  font-size:11px;
-  line-height:1.5;
-}
-
-/* GENERAL MCD - BANGLA FORMAT */
-.generalBanglaReport{
-  display:none;
-  width:96%;
-  margin:10px auto;
-  background:white;
-  color:black;
-  border:1px solid #000;
-  padding:15px;
-  font-family:SolaimanLipi, Kalpurush, Arial, sans-serif;
-}
-.generalBanglaHeader{
-  text-align:center;
-  margin-bottom:15px;
-  line-height:1.8;
-}
-.generalBanglaHeader h2{
-  margin:0;
-  font-size:24px;
-  font-weight:900;
-}
-.generalBanglaHeader h4{
-  margin:3px 0;
-  font-size:14px;
-}
-.generalBanglaTop{
-  display:grid;
-  grid-template-columns:1fr 1fr;
-  margin:15px 0;
-  font-size:13px;
-}
-.generalBanglaLeft{
-  line-height:2;
-}
-.generalBanglaRight{
-  border:1px solid #000;
-  padding:10px;
-  text-align:center;
-}
-.generalBanglaTitle{
-  text-align:center;
-  font-size:16px;
-  font-weight:800;
-  margin:15px 0;
-  line-height:1.8;
-}
-.generalBanglaTable{
-  width:100%;
-  border-collapse:collapse;
-  font-size:13px;
-  margin:15px 0;
-  direction:ltr;
-}
-.generalBanglaTable th,.generalBanglaTable td{
-  border:1px solid #000;
-  padding:8px 5px;
-  text-align:center;
-}
-.generalBanglaTable th{
-  background:#f3f4f6;
-  font-weight:700;
-}
-.generalBanglaTable input{
-  width:100%;
-  border:0;
-  outline:none;
-  text-align:center;
-  font-size:13px;
-  background:transparent;
-}
-.generalBanglaTotal{
-  font-weight:bold;
-  background:#f3f4f6;
-}
-.generalBanglaFooter{
-  margin-top:20px;
-  line-height:2;
-  font-size:13px;
-}
-.generalBanglaSign{
-  display:grid;
-  grid-template-columns:repeat(3,1fr);
-  gap:30px;
-  margin-top:80px;
-}
-.generalBanglaSign div{
-  text-align:center;
-  font-weight:bold;
-  border-top:1px solid #000;
-  padding-top:6px;
+  border-radius:50%;
+  width:20px;
+  height:20px;
+  cursor:pointer;
   font-size:12px;
-}
-
-.toast{
-  position:fixed;
-  right:15px;
-  bottom:15px;
-  background:#22c55e;
-  color:white;
-  padding:12px 18px;
-  border-radius:10px;
-  font-weight:bold;
+  line-height:1;
   display:none;
-  z-index:9999;
 }
+.nameClearBtn.show{display:block}
 
-@page{
-  size:A4 landscape;
-  margin:4mm;
+@media(max-width:900px){.chartGrid{grid-template-columns:1fr}.chartStats{grid-template-columns:1fr}}
+@media(max-width:700px){
+  body.singleMode,.singleMode #reportArea{background:#fff!important;color:#000!important;margin:0!important;width:100%!important}
+  .singleMode .header,.singleMode .controls,.singleMode #loadStatus,.singleMode #chartSection{display:none!important}
+  .singleMode .reportCard,.singleMode .greyCard{margin:0;border:0;width:100%;overflow-x:auto}
 }
+@page{size:A4 landscape;margin:4mm}
 @media print{
-  html,body{
-    width:297mm;
-    height:210mm;
-    margin:0!important;
-    padding:0!important;
-    background:white!important;
-    color:black!important;
-    overflow:hidden!important;
-  }
-  .controls,.noPrint,.toast{display:none!important}
-  body.printGrey .box,body.printGrey #normalGateBox,body.printGrey .chemicalReport,body.printGrey .generalEnglishReport,body.printGrey .generalBanglaReport{display:none!important}
-  body.printChemical .box,body.printChemical #normalGateBox,body.printChemical .greyReport,body.printChemical .generalEnglishReport,body.printChemical .generalBanglaReport{display:none!important}
-  body.printGeneralEnglish .box,body.printGeneralEnglish #normalGateBox,body.printGeneralEnglish .greyReport,body.printGeneralEnglish .chemicalReport,body.printGeneralEnglish .generalBanglaReport{display:none!important}
-  body.printGeneralBangla .box,body.printGeneralBangla #normalGateBox,body.printGeneralBangla .greyReport,body.printGeneralBangla .chemicalReport,body.printGeneralBangla .generalEnglishReport{display:none!important}
-  body.printNormal .greyReport,body.printNormal .chemicalReport,body.printNormal .generalEnglishReport,body.printNormal .generalBanglaReport,body.printNormal #greyGateBox,body.printNormal #chemicalGateBox,body.printNormal #generalEnglishGateBox,body.printNormal #generalBanglaGateBox{display:none!important}
-  body.printNormal .box,body.printNormal #normalGateBox{display:block!important}
-  body.printGrey .greyReport,body.printGrey #greyGateBox{display:block!important}
-  body.printChemical .chemicalReport,body.printChemical #chemicalGateBox{display:block!important}
-  body.printGeneralEnglish .generalEnglishReport,body.printGeneralEnglish #generalEnglishGateBox{display:block!important}
-  body.printGeneralBangla .generalBanglaReport,body.printGeneralBangla #generalBanglaGateBox{display:block!important}
-  .header{padding:1mm 0!important}
-  .header h2{font-size:16px!important;margin:0!important}
-  .header h4{font-size:10px!important;margin:0!important}
-  .header h3{font-size:13px!important;margin:0!important}
-  .box{
-    width:100%!important;
-    margin:0!important;
-    border:1px solid #000!important;
-    height:178mm!important;
-    page-break-after:avoid!important;
-    page-break-inside:avoid!important;
-  }
-  .topLine{font-size:12px!important;padding:2px!important}
-  .meta div{padding:2px!important;font-size:10px!important}
-  .tableWrap{overflow:visible!important}
-  table{
-    width:100%!important;
-    min-width:0!important;
-    table-layout:fixed!important;
-    font-size:7px!important;
-  }
-  th,td{
-    padding:1px!important;
-    font-size:7px!important;
-    line-height:1!important;
-    overflow:hidden!important;
-  }
-  td input,td textarea{
-    border:0!important;
-    outline:0!important;
-    background:transparent!important;
-    color:#000!important;
-    font-size:7px!important;
-    padding:0!important;
-    resize:none!important;
-  }
-  .slCol{width:22px!important}
-  .buyerCol{width:70px!important}
-  .srCol{width:62px!important}
-  .styleCol{width:70px!important}
-  .orderCol{width:78px!important}
-  .itemCol{width:82px!important}
-  .colorCol{width:58px!important}
-  .unitCol{width:40px!important}
-  .qtyCol{width:55!important}
-  .ctnCol{width:58px!important}
-  .partyCol{width:150px!important}
-  .vehicleCol{width:70px!important}
-  .remarksCol{width:72px!important}
-  .toParty{
-    font-size:6.5px!important;
-    text-align:left!important;
-    white-space:normal!important;
-  }
-  .sign{
-    margin-top:24mm!important;
-    display:grid!important;
-    grid-template-columns:repeat(8,1fr)!important;
-  }
-  .sign div{
-    font-size:7px!important;
-    padding:2px 1px!important;
-    line-height:1!important;
-  }
-  .greyReport{
-    width:100%!important;
-    margin:0!important;
-    padding:0!important;
-    border:0!important;
-    height:185mm!important;
-    page-break-after:avoid!important;
-    page-break-inside:avoid!important;
-  }
-  .greyHeader h2{font-size:18px!important;margin:0!important}
-  .greyHeader h4{font-size:10px!important;margin:0!important}
-  .greyHeader h1{font-size:26px!important;margin:1px 0!important}
-  .greyTitle{font-size:14px!important;margin:3px 0!important}
-  .greyTable{
-    width:70%!important;
-    margin:5mm auto 0!important;
-    table-layout:fixed!important;
-  }
-  .greyTable th,.greyTable td{
-    font-size:9px!important;
-    padding:3px!important;
-    overflow:visible!important;
-  }
-  .greyTable input{
-    font-size:9px!important;
-    border:0!important;
-    outline:0!important;
-    background:transparent!important;
-    text-align:center!important;
-  }
-  .greySign{
-    margin-top:36mm!important;
-    display:grid!important;
-    grid-template-columns:repeat(6,1fr)!important;
-    gap:12px!important;
-  }
-  .greySign div{
-    font-size:8px!important;
-    padding-top:3px!important;
-  }
-  .chemicalReport{
-    width:100%!important;
-    margin:0!important;
-    padding:2mm!important;
-    border:0!important;
-    height:195mm!important;
-    page-break-after:avoid!important;
-    page-break-inside:avoid!important;
-  }
-  .chemicalHeader h2{font-size:16px!important;margin:0!important}
-  .chemicalHeader h4{font-size:9px!important;margin:1px 0!important}
-  .chemicalHeader h3{font-size:12px!important;margin:2px 0!important}
-  .chemicalRef{font-size:9px!important;padding:2px 5px!important;margin-bottom:5px!important}
-  .chemicalSection,.chemicalTo{font-size:11px!important}
-  .chemicalMeta div{font-size:10px!important;padding:3px!important}
-  .chemicalTable{font-size:8px!important}
-  .chemicalTable th,.chemicalTable td{padding:3px 2px!important;font-size:8px!important}
-  .chemicalTable input{font-size:8px!important;border:0!important}
-  .chemicalSign{
-    margin-top:30mm!important;
-    grid-template-columns:repeat(7,1fr)!important;
-    gap:8px!important;
-  }
-  .chemicalSign div{
-    font-size:7px!important;
-    padding-top:3px!important;
-  }
-  .generalEnglishReport{
-    width:100%!important;
-    margin:0!important;
-    padding:3mm!important;
-    border:0!important;
-    height:195mm!important;
-    page-break-after:avoid!important;
-    page-break-inside:avoid!important;
-  }
-  .generalEnglishHeader h2{font-size:18px!important}
-  .generalEnglishHeader h4{font-size:10px!important}
-  .generalEnglishSection,.generalEnglishTitle{font-size:11px!important}
-  .generalEnglishTable{font-size:9px!important}
-  .generalEnglishTable th,.generalEnglishTable td{padding:4px 2px!important;font-size:9px!important}
-  .generalEnglishTable input{font-size:9px!important}
-  .generalEnglishSign{
-    margin-top:35mm!important;
-    grid-template-columns:repeat(6,1fr)!important;
-    gap:10px!important;
-  }
-  .generalEnglishSign div{font-size:7px!important;padding-top:3px!important}
-  .generalBanglaReport{
-    width:100%!important;
-    margin:0!important;
-    padding:3mm!important;
-    border:0!important;
-    height:195mm!important;
-    page-break-after:avoid!important;
-    page-break-inside:avoid!important;
-  }
-  .generalBanglaHeader h2{font-size:17px!important}
-  .generalBanglaHeader h4{font-size:9px!important}
-  .generalBanglaTop,.generalBanglaTitle{font-size:10px!important}
-  .generalBanglaTable{font-size:9px!important}
-  .generalBanglaTable th,.generalBanglaTable td{padding:4px 2px!important;font-size:9px!important}
-  .generalBanglaTable input{font-size:9px!important}
-  .generalBanglaFooter{font-size:9px!important;line-height:1.8!important}
-  .generalBanglaSign{
-    margin-top:35mm!important;
-    grid-template-columns:repeat(3,1fr)!important;
-    gap:20px!important;
-  }
-  .generalBanglaSign div{font-size:8px!important;padding-top:3px!important}
-}
-
-.normalPrintHeader{
-  text-align:center;
-  line-height:1.15;
-  padding:6px 0 4px;
-  border-bottom:1px solid #000;
-}
-.normalPrintHeader h2{
-  margin:0;
-  font-size:22px;
-  font-weight:900;
-}
-.normalPrintHeader h4{
-  margin:1px 0;
-  font-size:12px;
-  font-weight:800;
-}
-.normalPrintHeader h3{
-  margin:2px 0 0;
-  font-size:16px;
-  font-weight:900;
-}
-@media print{
-  .normalPrintHeader{
-    padding:1mm 0!important;
-  }
-  .normalPrintHeader h2{
-    font-size:16px!important;
-    margin:0!important;
-  }
-  .normalPrintHeader h4{
-    font-size:8px!important;
-    margin:0!important;
-  }
-  .normalPrintHeader h3{
-    font-size:11px!important;
-    margin:0!important;
-  }
+  html,body{background:#fff!important;color:#000!important;margin:0!important;padding:0!important}
+  *{color:#000!important;text-shadow:none!important;opacity:1!important;-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important}
+  .header,.controls,.actionBar,#loadStatus,.noPrint,#chartSection,.cacheStatusBar{display:none!important}
+  #reportArea{width:100%!important;margin:0!important}
+  .reportCard,.greyCard{width:100%!important;margin:0!important;border:1px solid #000!important;page-break-inside:avoid!important;page-break-after:avoid!important}
 }
 </style>
 </head>
-
 <body>
 
 <div class="header">
   <h2>GMS Textiles Ltd.</h2>
   <h4>Tansutrapur, Kaliakair, Gazipur.</h4>
   <h4>Daily Goods Delivery Plan</h4>
-  <h3 id="mcdTitle">ACCESSORIES MCD</h3>
+  <h3>Gate Plan Report</h3>
 </div>
 
-<div class="controls noPrint">
-  Date: <input type="date" id="planDate">
-  Time: <input type="time" id="planTime">
-  Gate Plan No: <input id="gatePlanNo" readonly style="width:145px">
-  <br>
+<div class="cacheStatusBar">
+  <div class="cacheDot"></div>
+  <span id="cacheStatusText">📦 Cache Ready</span>
+  <span class="cacheReadCount">🔥 Firebase Reads: <b id="readCounter">0</b></span>
+  <span class="syncStatus">🔄 Sync: <b id="syncStatus">Active</b></span>
+</div>
+
+<div class="controls">
+  From: <input type="date" id="fromDate">
+  To: <input type="date" id="toDate">
+  Gate Plan No: <input id="gateNoSearch" placeholder="GP-2026-0001" style="width:145px">
   Company:
-  <select id="companyName" onchange="updateHeader()">
+  <select id="companyFilter" onchange="updateNameFilter()">
+    <option>All</option>
     <option>GMS Textiles Ltd.</option>
     <option>GMS Composite Knitting Ind Ltd.</option>
   </select>
-
   MCD:
-  <select id="mcdName" onchange="updateHeader()">
+  <select id="mcdFilter" onchange="updateNameFilter()">
+    <option>All</option>
     <option>ACCESSORIES MCD</option>
     <option>GREY FABRIC MCD</option>
     <option>BILLING SECTION</option>
@@ -794,318 +196,58 @@ td textarea{
     <option>CHEMICAL MCD</option>
     <option>GENERAL TECHNICAL MCD</option>
   </select>
-
-  To Company:
-  <select id="toType" onchange="updateHeader()">
-    <option>GMS Textiles Ltd.</option>
-    <option>GMS Composite Knitting Ind Ltd.</option>
-    <option>Other's Factory</option>
-  </select>
+  
+  <!-- 🔥 SEARCHABLE NAME FILTER -->
+  <div class="nameFilterContainer">
+    Prepared By: 
+    <input type="text" id="nameSearchInput" class="nameSearchInput" placeholder="🔍 Search name..." oninput="filterNameDropdown()" onfocus="showNameDropdown()">
+    <button id="nameClearBtn" class="nameClearBtn" onclick="clearNameFilter()">×</button>
+    <div id="nameDropdown" class="nameDropdown"></div>
+  </div>
+  
   <br>
-
-  <button class="add" onclick="addRow()">➕ Add Row</button>
-  <button class="save" onclick="saveGatePlan()">💾 Save</button>
-  <button class="offline-print" id="printOfflineBtn" onclick="printLastOffline()" style="display:none">🖨 Print Offline Data</button>
+  <button class="search" onclick="showReport()">🔍 Search</button>
+  <button class="clear" onclick="clearFilters()">♻ Clear Filter</button>
+  <button class="edit" onclick="loadOfflineData()">📦 Load Offline Data</button>
+  <button class="excel" onclick="syncAllOffline()">📤 Sync All to Firebase</button>
+  <button class="excel" onclick="exportExcel()">📊 Excel</button>
   <button class="print" onclick="window.print()">🖨 PDF / Print</button>
-  <button class="report" onclick="location.href='gate-plan-report.html'">📑 Report</button>
+  <button class="new" onclick="location.href='gate-plan.html'">➕ New Gate Plan</button>
   <button class="home" onclick="location.href='index.html'">🏠 Home</button>
 </div>
 
-<datalist id="buyerList"></datalist>
-<datalist id="srList"></datalist>
-<datalist id="styleList"></datalist>
-<datalist id="orderList"></datalist>
-<datalist id="itemList"></datalist>
-<datalist id="colorList"></datalist>
-<datalist id="unitList"></datalist>
-<datalist id="partyList"></datalist>
-<datalist id="vehicleList"></datalist>
-<datalist id="remarksList"></datalist>
-<datalist id="areaList"></datalist>
-<datalist id="packSizeList"></datalist>
-
-<!-- NORMAL GATE PLAN FORMAT -->
-<div class="box" id="normalGateBox">
-  <div class="normalPrintHeader">
-    <h2>GMS Textiles Ltd.</h2>
-    <h4>Tansutrapur, Kaliakair, Gazipur.</h4>
-    <h4>Daily Goods Delivery Plan</h4>
-    <h3 id="normalMcdTitle">ACCESSORIES MCD</h3>
+<div id="chartSection" style="display:none">
+  <div class="chartHeader">
+    <h3>📊 Gate Plan Analytics</h3>
+    <p>Real-time statistics of all gate plans</p>
   </div>
-  <div class="topLine" id="companyLine">GMS Textiles Ltd. To GMS Textiles Ltd.</div>
-  <div class="meta">
-    <div>Gate Plan No: <span id="showGatePlan"></span></div>
-    <div>Date: <span id="showDate"></span></div>
-    <div>Time: <span id="showTime"></span></div>
-  </div>
-
-  <div class="tableWrap">
-    <table>
-      <thead>
-        <tr>
-          <th class="slCol">SL No</th>
-          <th class="buyerCol">Buyer Name</th>
-          <th class="srCol">SR/GT No</th>
-          <th class="styleCol">Style Name</th>
-          <th class="orderCol">Order No/PO No</th>
-          <th class="itemCol">Name of Item</th>
-          <th class="colorCol">Color</th>
-          <th class="unitCol">Unit</th>
-          <th class="qtyCol">Delivery Qty</th>
-          <th class="ctnCol">CTN/PKG Qty</th>
-          <th class="partyCol">To Party Name</th>
-          <th class="vehicleCol">Vehicle No</th>
-          <th class="remarksCol">Remarks</th>
-          <th class="noPrint actionCol">Action</th>
-        </tr>
-      </thead>
-      <tbody id="gateBody"></tbody>
-      <tfoot>
-        <tr class="totalRow">
-          <td colspan="8">Grand Total</td>
-          <td id="deliveryTotal">0</td>
-          <td id="ctnTotal">0</td>
-          <td colspan="3"></td>
-          <td class="noPrint"></td>
-        </tr>
-      </tfoot>
-    </table>
-  </div>
-
-  <div class="sign">
-    <div>Prepared By<br><span id="signPrepared"></span></div>
-    <div>Security Dept.</div>
-    <div>Checked By<br>Sr. Officer ( MCD )</div>
-    <div>Asst. Manager<br>(MCD)</div>
-    <div>AGM (MCD)</div>
-    <div>Verify By<br>Merchant Dept.</div>
-    <div>Verify By<br>HR & Admin Dept.</div>
-    <div>Approved By</div>
-  </div>
-</div>
-
-<!-- GREY FABRIC SPECIAL FORMAT -->
-<div class="greyReport" id="greyGateBox">
-  <div class="greyHeader">
-    <h2>GMS TEXTILES LTD.</h2>
-    <h4>Tansutrapur, Kaliakoir, Gazipur</h4>
-    <h1>Grey Fabric-MCD</h1>
-    <div class="greyTitle">Daily GMS Textiles to GMS Composite Delivery Status</div>
-  </div>
-
-  <table class="greyTable">
-    <thead>
-      <tr>
-        <th style="width:90px">Date</th>
-        <th>Company Name</th>
-        <th>Delivery Reason</th>
-        <th style="width:90px">Total Qty</th>
-        <th style="width:100px">Remarks</th>
-      </tr>
-    </thead>
-    <tbody>
-      <tr>
-        <td id="greyShowDate"></td>
-        <td><input id="greyCompanyInput" value="" oninput="syncGreyInputs()"></td>
-        <td><input id="greyReasonInput" value="For Dyeing" oninput="syncGreyInputs()"></td>
-        <td><input id="greyQtyInput" type="number" value="0" oninput="syncGreyInputs()"></td>
-        <td><input id="greyRemarksInput" oninput="syncGreyInputs()"></td>
-      </tr>
-      <tr class="totalRow">
-        <td colspan="3">Total-</td>
-        <td id="greyShowTotal">0</td>
-        <td></td>
-      </tr>
-    </tbody>
-  </table>
-
-  <div class="greySign">
-    <div>Prepared By<br><span id="greyPrepared"></span></div>
-    <div>Security Dept.</div>
-    <div>Checked By Officer - MCD</div>
-    <div>Asst. Manager - MCD</div>
-    <div>Knitting Manager/DGM</div>
-    <div>Dyeing Manager/DGM</div>
-  </div>
-</div>
-
-<!-- CHEMICAL MCD SPECIAL FORMAT -->
-<div class="chemicalReport" id="chemicalGateBox">
-  <div class="chemicalHeader">
-    <h2>GMS Textiles Limited</h2>
-    <h4>Factory: Tansutrapur, Kaliakoir, Gazipur</h4>
-    <h3>Daily Dyes & Chemical Delivery Schedule</h3>
-  </div>
-  
-  <div>
-    <span class="chemicalRef" id="chemicalRefNo">CS-DP-0004038</span>
-  </div>
-  
-  <div class="chemicalTop">
-    <div class="chemicalSection">Section:-Chemical MCD</div>
-    <div class="chemicalTo" id="chemicalToLine">GMS Textiles Ltd To GMS Composite And Auxicolour Bangladesh</div>
-  </div>
-  
-  <div class="chemicalMeta">
-    <div>Date: <span id="chemicalShowDate"></span></div>
-    <div style="text-align:right;padding-right:10px"></div>
-  </div>
-
-  <table class="chemicalTable">
-    <thead>
-      <tr>
-        <th style="width:40px">SL No</th>
-        <th class="areaCol">Area</th>
-        <th class="itemCol">Name Of Item</th>
-        <th class="unitCol">Unit</th>
-        <th class="packCol">Pack Size</th>
-        <th class="qtyKgCol">Qty Kg</th>
-        <th class="qtyPackCol">Qty Pack</th>
-        <th class="deliveryCol">Delivery To</th>
-        <th class="purposeCol">Delivery Purpose</th>
-        <th class="remarksCol">Remarks</th>
-      </tr>
-    </thead>
-    <tbody id="chemicalBody">
-    </tbody>
-    <tfoot>
-      <tr class="chemicalTotal">
-        <td colspan="5" style="text-align:right">Total</td>
-        <td id="chemicalQtyKgTotal">0.00</td>
-        <td id="chemicalQtyPackTotal">0</td>
-        <td colspan="3"></td>
-      </tr>
-    </tfoot>
-  </table>
-
-  <div class="chemicalSign">
-    <div>Prepared By<br><span id="chemicalPrepared"></span></div>
-    <div>Checked By<br><span id="chemicalChecked"></span></div>
-    <div>Security<br><span id="chemicalSecurity"></span></div>
-    <div>Asst.Manager(MCD)<br><span id="chemicalAsstMgr"></span></div>
-    <div>AGM (MCD)<br><span id="chemicalAGM"></span></div>
-    <div>Approved By<br>[Concern Dept.]</div>
-    <div>Authorised By<br>[Admin Dept.]</div>
-  </div>
-</div>
-
-<!-- GENERAL MCD - ENGLISH FORMAT -->
-<div class="generalEnglishReport" id="generalEnglishGateBox">
-  <div class="generalEnglishHeader">
-    <h2>GMS Textiles Ltd.</h2>
-    <h4>Factory: Tansutrapur, Kaliakoir, Gazipur, Bangladesh.</h4>
-  </div>
-  
-  <div class="generalEnglishSection">
-    <div>Section : General MCD</div>
-    <div style="text-align:right">Date <span id="generalEnglishDate"></span></div>
-  </div>
-  
-  <div class="generalEnglishTitle">
-    Goods Delivery Statement (GMS Textiles Ltd. to GMS Composite Knitting Ind. Ltd.)
-  </div>
-
-  <table class="generalEnglishTable">
-    <thead>
-      <tr>
-        <th style="width:50px">SL NO</th>
-        <th>Name of item</th>
-        <th style="width:80px">Unit</th>
-        <th style="width:90px">Quantity</th>
-        <th>Delivery purpose</th>
-        <th style="width:100px">Remark</th>
-      </tr>
-    </thead>
-    <tbody id="generalEnglishBody">
-    </tbody>
-    <tfoot>
-      <tr class="generalEnglishTotal">
-        <td colspan="3" style="text-align:right"><b>Total</b></td>
-        <td id="generalEnglishQtyTotal">0</td>
-        <td colspan="2"></td>
-      </tr>
-    </tfoot>
-  </table>
-
-  <div class="generalEnglishSign">
-    <div>Prepared BY<br><span id="generalEnglishPrepared"></span></div>
-    <div>Checked By<br><span id="generalEnglishChecked"></span></div>
-    <div>Asst. Manager<br>MCD<br><span id="generalEnglishAsstMgr"></span></div>
-    <div>Asst. General Manager<br>MCD<br><span id="generalEnglishAGM"></span></div>
-    <div>Recommended By<br>Admin Dept.<br><span id="generalEnglishAdmin"></span></div>
-    <div>Authorised By<br><span id="generalEnglishAuth"></span></div>
-  </div>
-</div>
-
-<!-- GENERAL MCD - BANGLA FORMAT -->
-<div class="generalBanglaReport" id="generalBanglaGateBox">
-  <div class="generalBanglaHeader">
-    <h2>জি,এম,এস টেক্সটাইলস লিমিটেড।</h2>
-    <h4>কারখানা: তানসুট্রাপুর, কালিয়াকৈর, গাজীপুর।</h4>
-  </div>
-  
-  <div class="generalBanglaTop">
-    <div class="generalBanglaLeft">
-      <div>তারিখ: <span id="generalBanglaDate"></span></div>
-      <div>বরাবর,</div>
-      <div>মহাব্যবস্থাপক,</div>
-      <div>জিএমএস(এডমিন এন্ড ইনভেন্টরী)</div>
-      <div>জি,এম,এস টেক্সটাইলস লিমিটেড।</div>
-      <div>টানসুট্রাপুর, কালিয়াকৈর, গাজীপুর।</div>
+  <div class="chartGrid">
+    <div class="chartCard">
+      <h4>📦 Total Plans by MCD</h4>
+      <div class="chartWrap"><canvas id="mcdBarChart"></canvas></div>
     </div>
-    <div class="generalBanglaRight">
-      <b>পাঠেজ যোগাযোগ মাধ্যম</b><br><br>
-      নামঃ ..............................<br>
-      মোবাইল নম্বরঃ ..................
+    <div class="chartCard">
+      <h4>👤 Plans by Prepared By</h4>
+      <div class="chartWrap"><canvas id="namePieChart"></canvas></div>
+      <div class="chartStats">
+        <div class="statBox"><span class="statNum" id="statTotal">0</span><span class="statLabel">Total Plans</span></div>
+        <div class="statBox blue"><span class="statNum" id="statMcds">0</span><span class="statLabel">MCDs</span></div>
+        <div class="statBox purple"><span class="statNum" id="statNames">0</span><span class="statLabel">Users</span></div>
+      </div>
+    </div>
+    <div class="chartCard">
+      <h4>📈 Delivery Volume</h4>
+      <div class="chartWrap"><canvas id="deliveryChart"></canvas></div>
     </div>
   </div>
-  
-  <div class="generalBanglaTitle">
-    বিষয়ঃ মালমাল বাহিরে নেওয়া অনুমোদন প্রসঙ্গে।<br>
-    জনাব,<br>
-    যথাবিহীত সম্মান পূর্বক বিনীত নিবেদন এই যে, নিচের মালমালগুলো।<br>
-    জন্য ফ্যাক্টরির বাহিরে পাঠানো প্রয়োজন।<br>
-    নিম্নে মালমালের বিবরণ প্রদান করা হলোঃ
-  </div>
-
-  <table class="generalBanglaTable">
-    <thead>
-      <tr>
-        <th style="width:40px">ক্রমিক নং</th>
-        <th>মালমালের বিবরণ</th>
-        <th style="width:70px">একক</th>
-        <th style="width:80px">পরিমান</th>
-        <th style="width:120px">বাহিরে থাকার সময়কাল</th>
-      </tr>
-    </thead>
-    <tbody id="generalBanglaBody">
-    </tbody>
-    <tfoot>
-      <tr class="generalBanglaTotal">
-        <td colspan="3" style="text-align:right"><b>মোট</b></td>
-        <td id="generalBanglaQtyTotal">0</td>
-        <td></td>
-      </tr>
-    </tfoot>
-  </table>
-
-  <div class="generalBanglaFooter">
-    <div>অতএব,</div>
-    <div>জনাবের নিকট আকুল আবেদন এই যে, উক্ত মালমাল বাহিরে নেওয়ার জন্য আপনার সম্মতি কামনা করছি।</div>
-  </div>
-
-  <div class="generalBanglaSign">
-    <div>প্রস্তুতকারী<br><span id="generalBanglaPrepared"></span></div>
-    <div>বিভাগীয় প্রধান<br><span id="generalBanglaDeptHead"></span></div>
-    <div>পাঠেজ<br>ম্যানেজার এডমিন,এইচ আর এন্ড কমপ্লায়েন্স<br><span id="generalBanglaManager"></span></div>
-  </div>
 </div>
 
-<div id="toast" class="toast">Saved</div>
+<div id="loadStatus">Loading saved Gate Plans...</div>
+<div id="reportArea"></div>
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-app.js";
-import { getFirestore, collection, getDocs, doc, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-firestore.js";
+import { getFirestore, collection, getDocs, doc, setDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-firestore.js";
 
 const firebaseConfig={
   apiKey:"AIzaSyD-wBCF5eeWMHobLFOhBzKW7aB2pagz9-w",
@@ -1115,923 +257,681 @@ const firebaseConfig={
   messagingSenderId:"992250313291",
   appId:"1:992250313291:web:ee3bceae76d4d53bc26bce"
 };
-
 const app=initializeApp(firebaseConfig);
 const db=getFirestore(app);
 
-const user=JSON.parse(localStorage.getItem("gmsUser")||"null");
-if(!user){location.href="login.html";}
+let allPlans=[];
+let mcdBarChart=null, namePieChart=null, deliveryChart=null;
+let selectedNameValue = ""; // 🔥 Selected name value
 
-let editMode=false;
+const CHART_COLORS = ['#22c55e','#3b82f6','#8b5cf6','#f59e0b','#ef4444','#06b6d4','#ec4899','#14b8a6','#f97316','#6366f1'];
 
-function getDeviceId(){
-  let did=localStorage.getItem("gms_device_id");
-  if(!did){ did="D"+Math.random().toString(36).substr(2,9).toUpperCase(); localStorage.setItem("gms_device_id",did); }
-  return did;
-}
-
-function today(){
-  return new Date().toISOString().slice(0,10);
-}
-
-function nowTime(){
-  let d=new Date();
-  return String(d.getHours()).padStart(2,"0")+":"+String(d.getMinutes()).padStart(2,"0");
-}
-
-function n(v){
-  return Number(v)||0;
-}
-
-function toast(msg){
-  let t=document.getElementById("toast");
-  t.innerText=msg;
-  t.style.display="block";
-  setTimeout(()=>t.style.display="none",1800);
-}
-
-function makeId(no){
-  return String(no).replaceAll("/","-").replaceAll(" ","-");
-}
-
-function generateOfflineId(){
-  const now=new Date();
-  const timeStr = String(now.getHours()).padStart(2,'0') + String(now.getMinutes()).padStart(2,'0') + String(now.getSeconds()).padStart(2,'0');
-  return `GP-${now.getFullYear()}-OFF-${timeStr}`;
-}
-
-async function nextGatePlanNo(){
-  let year=new Date().getFullYear();
-  let max=0;
-
-  try{
-    let snap=await getDocs(collection(db,"gatePlans"));
-    snap.forEach(d=>{
-      let p=d.data();
-      let no=p.gatePlanNo||p.gatePassNo||"";
-      let m=String(no).match(/GP-\d{4}-(\d+)/);
-      if(m) max=Math.max(max,Number(m[1])||0);
-    });
-  }catch(e){
-    console.log(e);
-  }
-
-  return "GP-"+year+"-"+String(max+1).padStart(4,"0");
-}
-
-async function init(){
-  document.getElementById("planDate").value=today();
-  document.getElementById("planTime").value=nowTime();
-  document.getElementById("signPrepared").innerText=user.name||user.email||"User";
-  document.getElementById("greyPrepared").innerText=user.name||user.email||"User";
-  document.getElementById("chemicalPrepared").innerText=user.name||user.email||"User";
-  document.getElementById("generalEnglishPrepared").innerText=user.name||user.email||"User";
-  document.getElementById("generalBanglaPrepared").innerText=user.name||user.email||"User";
-
-  let url=new URLSearchParams(location.search);
-  let editId=url.get("edit")||localStorage.getItem("editGatePlanNo")||"";
-
-  if(editId){
-    await loadEditPlan(editId);
-  }else{
-    document.getElementById("gatePlanNo").value=await nextGatePlanNo();
-    document.getElementById("chemicalRefNo").innerText="CS-DP-"+String(Math.floor(Math.random()*900000)+100000);
-    addRow();
-  }
-
-  updateHeader();
-  calculateTotals();
-  loadSuggestions();
-}
-
-async function loadEditPlan(no){
-  try{
-    let ref=doc(db,"gatePlans",makeId(no));
-    let snap=await getDoc(ref);
-
-    if(!snap.exists()){
-      alert("Edit data not found");
-      document.getElementById("gatePlanNo").value=await nextGatePlanNo();
-      addRow();
-      return;
+window.GMS_CACHE = {
+  CACHE_KEY: 'GMS_GATEPLAN_SMART_CACHE',
+  READ_COUNT_KEY: 'GMS_GATEPLAN_READ_COUNT_TODAY',
+  READ_DATE_KEY: 'GMS_GATEPLAN_READ_COUNT_DATE',
+  CACHE_EXPIRY_MS: 5 * 60 * 1000,
+  getReadCount: function(){
+    var today = new Date().toDateString();
+    if(localStorage.getItem(this.READ_DATE_KEY) !== today){
+      localStorage.setItem(this.READ_DATE_KEY, today);
+      localStorage.setItem(this.READ_COUNT_KEY, '0');
     }
-
-    let p=snap.data();
-    editMode=true;
-
-    document.getElementById("gatePlanNo").value=p.gatePlanNo||no;
-    document.getElementById("planDate").value=p.date||today();
-    document.getElementById("planTime").value=p.time||nowTime();
-    document.getElementById("companyName").value=p.company||"GMS Textiles Ltd.";
-    document.getElementById("mcdName").value=p.mcd||"ACCESSORIES MCD";
-    document.getElementById("toType").value=p.toCompany||"GMS Textiles Ltd.";
-
-    document.getElementById("gateBody").innerHTML="";
-    document.getElementById("chemicalBody").innerHTML="";
-    document.getElementById("generalEnglishBody").innerHTML="";
-    document.getElementById("generalBanglaBody").innerHTML="";
-
-    (p.rows||[]).forEach(r=>addRow(r));
-
-    if((p.rows||[]).length===0) addRow();
-
-    localStorage.removeItem("editGatePlanNo");
-
-    toast("Edit Mode Loaded");
-
-  }catch(e){
-    console.log(e);
-    alert("Edit load error");
-    addRow();
-  }
-}
-
-window.syncGreyInputs=function(){
-  let company=document.getElementById("greyCompanyInput").value||"";
-  let reason=document.getElementById("greyReasonInput").value||"For Dyeing";
-  let qty=Number(document.getElementById("greyQtyInput").value)||0;
-  let remarks=document.getElementById("greyRemarksInput").value||"";
-
-  document.getElementById("greyShowTotal").innerText=qty.toFixed(1);
-
-  let firstParty=document.querySelector(".toParty");
-  let firstItem=document.querySelector(".itemName");
-  let firstQty=document.querySelector(".deliveryQty");
-  let firstRemarks=document.querySelector(".remarks");
-
-  if(document.getElementById("toType").value==="Other's Factory" && firstParty){
-    firstParty.value=company;
-  }
-
-  if(firstItem) firstItem.value=reason;
-  if(firstQty) firstQty.value=qty;
-  if(firstRemarks) firstRemarks.value=remarks;
-
-  document.getElementById("deliveryTotal").innerText=qty.toFixed(1);
-};
-
-
-function isCompanyName(v){
-  return v==="GMS Textiles Ltd." || v==="GMS Composite Knitting Ind Ltd.";
-}
-
-function updateToPartyFields(force=false){
-  let toCompany=document.getElementById("toType").value;
-
-  document.querySelectorAll(".toParty").forEach(x=>{
-    if(toCompany==="Other's Factory"){
-      if(isCompanyName(x.value)){
-        x.value="";
-      }
-    }else{
-      if(force || !x.value || isCompanyName(x.value)){
-        x.value=toCompany;
-      }
+    return parseInt(localStorage.getItem(this.READ_COUNT_KEY) || '0');
+  },
+  incRead: function(n){
+    n = n || 1;
+    var count = this.getReadCount() + n;
+    localStorage.setItem(this.READ_COUNT_KEY, String(count));
+    var el = document.getElementById('readCounter');
+    if(el) el.innerText = count;
+    return count;
+  },
+  _all: function(){
+    try{ return JSON.parse(localStorage.getItem(this.CACHE_KEY) || '{}'); }
+    catch(e){ return {}; }
+  },
+  set: function(key, data){
+    var all = this._all();
+    all[key] = { data: data, savedAt: Date.now() };
+    try{ localStorage.setItem(this.CACHE_KEY, JSON.stringify(all)); }
+    catch(e){ console.warn('Cache set failed:', e); }
+  },
+  get: function(key){
+    var all = this._all();
+    var entry = all[key];
+    if(!entry) return null;
+    var age = Date.now() - entry.savedAt;
+    if(age > this.CACHE_EXPIRY_MS){
+      console.log('⏰ Cache expired for:', key);
+      return null;
     }
-    x.readOnly=false;
-    x.title=x.value;
-  });
-
-  let greyCompanyInput=document.getElementById("greyCompanyInput");
-  if(greyCompanyInput){
-    if(toCompany==="Other's Factory"){
-      if(isCompanyName(greyCompanyInput.value)){
-        greyCompanyInput.value="";
-      }
-      greyCompanyInput.readOnly=false;
-    }else{
-      greyCompanyInput.value=toCompany;
-      greyCompanyInput.readOnly=false;
-    }
-  }
-}
-
-window.updateHeader=function(){
-  let company=document.getElementById("companyName").value;
-  let toCompany=document.getElementById("toType").value;
-  let mcd=document.getElementById("mcdName").value;
-
-  let isGrey=mcd==="GREY FABRIC MCD";
-  let isChemical=mcd==="CHEMICAL MCD";
-  let isGeneral=mcd==="GENERAL MCD";
-  let isGeneralEnglish=isGeneral && toCompany==="GMS Composite Knitting Ind Ltd.";
-  let isGeneralBangla=isGeneral && toCompany==="Other's Factory";
-
-  document.getElementById("companyLine").innerText=company+" To "+toCompany;
-  document.getElementById("showDate").innerText=document.getElementById("planDate").value;
-  document.getElementById("showTime").innerText=document.getElementById("planTime").value;
-  document.getElementById("showGatePlan").innerText=document.getElementById("gatePlanNo").value;
-  document.getElementById("mcdTitle").innerText=mcd;
-  if(document.getElementById("normalMcdTitle")) document.getElementById("normalMcdTitle").innerText=mcd;
-
-  // Format date for chemical
-  let dateVal=document.getElementById("planDate").value;
-  let dateObj=new Date(dateVal);
-  let months=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
-  let formattedDate=String(dateObj.getDate()).padStart(2,'0')+'-'+months[dateObj.getMonth()]+'-'+dateObj.getFullYear();
-  document.getElementById("chemicalShowDate").innerText=formattedDate;
-  
-  // Chemical to line
-  let toText=toCompany==="Other's Factory" ? "GMS Composite And Auxicolour Bangladesh" : toCompany;
-  document.getElementById("chemicalToLine").innerText=company+" To "+toText;
-  
-  // Chemical reference number
-  if(!document.getElementById("chemicalRefNo").innerText.includes("CS-DP-")){
-    document.getElementById("chemicalRefNo").innerText="CS-DP-"+String(Math.floor(Math.random()*900000)+100000);
-  }
-
-  // General MCD dates
-  let banglaMonths=['জানুয়ারি','ফেব্রুয়ারি','মার্চ','এপ্রিল','মে','জুন','জুলাই','আগস্ট','সেপ্টেম্বর','অক্টোবর','নভেম্বর','ডিসেম্বর'];
-  let banglaDate=String(dateObj.getDate()).padStart(2,'0')+'.'+String(dateObj.getMonth()+1).padStart(2,'0')+'.'+dateObj.getFullYear();
-  let banglaFullDate=String(dateObj.getDate())+' '+banglaMonths[dateObj.getMonth()]+' '+dateObj.getFullYear();
-  
-  document.getElementById("generalEnglishDate").innerText=banglaDate;
-  document.getElementById("generalBanglaDate").innerText=banglaFullDate;
-
-  document.getElementById("normalGateBox").style.display=(isGrey||isChemical||isGeneral)?"none":"block";
-  document.getElementById("greyGateBox").style.display=isGrey?"block":"none";
-  document.getElementById("chemicalGateBox").style.display=isChemical?"block":"none";
-  document.getElementById("generalEnglishGateBox").style.display=isGeneralEnglish?"block":"none";
-  document.getElementById("generalBanglaGateBox").style.display=isGeneralBangla?"block":"none";
-
-  document.body.classList.toggle("printGrey",isGrey);
-  document.body.classList.toggle("printChemical",isChemical);
-  document.body.classList.toggle("printGeneralEnglish",isGeneralEnglish);
-  document.body.classList.toggle("printGeneralBangla",isGeneralBangla);
-  document.body.classList.toggle("printNormal",!isGrey&&!isChemical&&!isGeneral);
-
-  document.getElementById("greyShowDate").innerText=document.getElementById("planDate").value;
-  document.getElementById("greyPrepared").innerText=user.name||user.email||"User";
-  document.getElementById("chemicalPrepared").innerText=user.name||user.email||"User";
-  document.getElementById("generalEnglishPrepared").innerText=user.name||user.email||"User";
-  document.getElementById("generalBanglaPrepared").innerText=user.name||user.email||"User";
-
-  updateToPartyFields(true);
-
-  calculateTotals();
-};
-
-function addOption(id,value){
-  if(!value)return;
-  let list=document.getElementById(id);
-  if([...list.children].some(o=>o.value===value))return;
-  let opt=document.createElement("option");
-  opt.value=value;
-  list.appendChild(opt);
-}
-
-async function loadSuggestions(){
-  try{
-    let snap=await getDocs(collection(db,"gatePlans"));
-    snap.forEach(d=>{
-      let p=d.data();
-      (p.rows||[]).forEach(r=>{
-        addOption("buyerList",r.buyerName);
-        addOption("srList",r.srGtNo);
-        addOption("styleList",r.styleName);
-        addOption("orderList",r.orderNo);
-        addOption("itemList",r.itemName);
-        addOption("colorList",r.color);
-        addOption("unitList",r.unit);
-        addOption("partyList",r.toParty);
-        addOption("vehicleList",r.vehicleNo);
-        addOption("remarksList",r.remarks);
-        addOption("areaList",r.area);
-        addOption("packSizeList",r.packSize);
-      });
-    });
-  }catch(e){
-    console.log(e);
-  }
-}
-
-window.addRow=function(data={}){
-  let mcd=document.getElementById("mcdName").value;
-  let toCompany=document.getElementById("toType").value;
-  
-  if(mcd==="CHEMICAL MCD"){
-    addChemicalRow(data);
-  }else if(mcd==="GENERAL MCD" && toCompany==="GMS Composite Knitting Ind Ltd."){
-    addGeneralEnglishRow(data);
-  }else if(mcd==="GENERAL MCD" && toCompany==="Other's Factory"){
-    addGeneralBanglaRow(data);
-  }else{
-    addNormalRow(data);
+    return entry.data;
+  },
+  invalidate: function(keys){
+    var all = this._all();
+    if(typeof keys === 'string') keys = [keys];
+    keys.forEach(function(k){ delete all[k]; });
+    localStorage.setItem(this.CACHE_KEY, JSON.stringify(all));
+  },
+  clear: function(){
+    localStorage.removeItem(this.CACHE_KEY);
   }
 };
 
-function addNormalRow(data={}){
-  let tbody=document.getElementById("gateBody");
-  let tr=document.createElement("tr");
-  let sl=tbody.children.length+1;
-  let toCompany=document.getElementById("toType").value;
-  let defaultParty=data.toParty ?? (toCompany==="Other's Factory" ? "" : toCompany);
+const CACHE_KEYS = { gatePlans: 'gate_plans_cache' };
 
-  tr.innerHTML=`
-    <td class="slCol">${sl}</td>
-    <td class="buyerCol"><input class="buyerName" list="buyerList" value="${data.buyerName||""}"></td>
-    <td class="srCol"><input class="srGtNo" list="srList" value="${data.srGtNo||""}"></td>
-    <td class="styleCol"><input class="styleName" list="styleList" value="${data.styleName||""}"></td>
-    <td class="orderCol"><input class="orderNo" list="orderList" value="${data.orderNo||""}"></td>
-    <td class="itemCol"><input class="itemName" list="itemList" placeholder="For Dyeing" value="${data.itemName||""}"></td>
-    <td class="colorCol"><input class="color" list="colorList" value="${data.color||""}"></td>
-    <td class="unitCol"><input class="unit" list="unitList" value="${data.unit||""}"></td>
-    <td class="qtyCol"><input type="number" class="deliveryQty" oninput="calculateTotals()" value="${data.deliveryQty||""}"></td>
-    <td class="ctnCol"><input type="number" class="ctnQty" oninput="calculateTotals()" value="${data.ctnQty||""}"></td>
-    <td class="partyCol"><textarea class="toParty" title="${defaultParty}" oninput="this.title=this.value">${defaultParty}</textarea></td>
-    <td class="vehicleCol"><input class="vehicleNo" list="vehicleList" value="${data.vehicleNo||""}"></td>
-    <td class="remarksCol"><input class="remarks" list="remarksList" value="${data.remarks||""}"></td>
-    <td class="noPrint actionCol"><button class="del" onclick="deleteRow(this)">Delete</button></td>
-  `;
+function esc(v){return String(v??"").replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[m]))}
+function num(v){return Number(v)||0}
+function fmt(v){return num(v).toLocaleString("en-US")}
+function planNo(p){return p.gatePlanNo||p.gatePassNo||p.no||""}
+function makeId(no){return String(no).replaceAll("/","-").replaceAll(" ","-")}
+function reportLink(no){return location.origin+location.pathname+"?gatePlanNo="+encodeURIComponent(no||"")}
 
-  tbody.appendChild(tr);
-}
-
-function addChemicalRow(data={}){
-  let tbody=document.getElementById("chemicalBody");
-  let tr=document.createElement("tr");
-  let sl=tbody.children.length+1;
-  let toCompany=document.getElementById("toType").value;
-  let defaultDeliveryTo=toCompany==="Other's Factory" ? "GMS Composite And Auxicolour Bangladesh" : toCompany;
-
-  tr.innerHTML=`
-    <td style="width:40px">${sl}</td>
-    <td class="areaCol"><input class="chemArea" list="areaList" value="${data.area||"Dyeing"}"></td>
-    <td class="itemCol"><input class="chemItem" list="itemList" value="${data.itemName||"Dyeing Chemical And Dyes"}"></td>
-    <td class="unitCol"><input class="chemUnit" list="unitList" value="${data.unit||"KG"}"></td>
-    <td class="packCol"><input class="chemPackSize" list="packSizeList" value="${data.packSize||"Varieties"}"></td>
-    <td class="qtyKgCol"><input type="number" step="0.01" class="chemQtyKg" oninput="calculateChemicalTotals()" value="${data.deliveryQty||""}"></td>
-    <td class="qtyPackCol"><input type="number" class="chemQtyPack" oninput="calculateChemicalTotals()" value="${data.ctnQty||""}"></td>
-    <td class="deliveryCol"><input class="chemDeliveryTo" value="${data.toParty||defaultDeliveryTo}"></td>
-    <td class="purposeCol"><input class="chemPurpose" value="${data.remarks||"As Loan Return"}"></td>
-    <td class="remarksCol"><input class="chemRemarks" list="remarksList" value="${data.remarks2||""}"></td>
-  `;
-
-  tbody.appendChild(tr);
-}
-
-function addGeneralEnglishRow(data={}){
-  let tbody=document.getElementById("generalEnglishBody");
-  let tr=document.createElement("tr");
-  let sl=tbody.children.length+1;
-
-  tr.innerHTML=`
-    <td>${sl}</td>
-    <td><input class="genEngItem" list="itemList" value="${data.itemName||""}"></td>
-    <td><input class="genEngUnit" list="unitList" value="${data.unit||""}"></td>
-    <td><input type="number" class="genEngQty" oninput="calculateGeneralTotals()" value="${data.deliveryQty||""}"></td>
-    <td><input class="genEngPurpose" value="${data.remarks||""}"></td>
-    <td><input class="genEngRemark" list="remarksList" value="${data.remarks2||""}"></td>
-  `;
-
-  tbody.appendChild(tr);
-}
-
-function addGeneralBanglaRow(data={}){
-  let tbody=document.getElementById("generalBanglaBody");
-  let tr=document.createElement("tr");
-  let sl=tbody.children.length+1;
-
-  tr.innerHTML=`
-    <td>${sl}</td>
-    <td><input class="genBanItem" list="itemList" value="${data.itemName||""}"></td>
-    <td><input class="genBanUnit" list="unitList" value="${data.unit||""}"></td>
-    <td><input type="number" class="genBanQty" oninput="calculateGeneralTotals()" value="${data.deliveryQty||""}"></td>
-    <td><input class="genBanDuration" value="${data.remarks||""}"></td>
-  `;
-
-  tbody.appendChild(tr);
-}
-
-window.deleteRow=function(btn){
-  btn.closest("tr").remove();
-  refreshSl();
-  calculateTotals();
-};
-
-function refreshSl(){
-  let mcd=document.getElementById("mcdName").value;
-  let toCompany=document.getElementById("toType").value;
-  let tbody;
-  
-  if(mcd==="CHEMICAL MCD"){
-    tbody=document.getElementById("chemicalBody");
-  }else if(mcd==="GENERAL MCD" && toCompany==="GMS Composite Knitting Ind Ltd."){
-    tbody=document.getElementById("generalEnglishBody");
-  }else if(mcd==="GENERAL MCD" && toCompany==="Other's Factory"){
-    tbody=document.getElementById("generalBanglaBody");
-  }else{
-    tbody=document.getElementById("gateBody");
-  }
-  
-  [...tbody.children].forEach((tr,i)=>{
-    tr.children[0].innerText=i+1;
+function renderQRCodes(){
+  document.querySelectorAll("[data-qr-no]").forEach(el=>{
+    const no=el.getAttribute("data-qr-no")||"";
+    el.innerHTML="";
+    try{ new QRCode(el,{text:reportLink(no),width:70,height:70,correctLevel:QRCode.CorrectLevel.M}); }catch(e){}
   });
 }
 
-function readRows(){
-  let mcd=document.getElementById("mcdName").value;
-  let toCompany=document.getElementById("toType").value;
-  let rows=[];
-
-  if(mcd==="CHEMICAL MCD"){
-    document.querySelectorAll("#chemicalBody tr").forEach(tr=>{
-      let row={
-        area:tr.querySelector(".chemArea").value.trim(),
-        itemName:tr.querySelector(".chemItem").value.trim(),
-        unit:tr.querySelector(".chemUnit").value.trim(),
-        packSize:tr.querySelector(".chemPackSize").value.trim(),
-        deliveryQty:tr.querySelector(".chemQtyKg").value.trim(),
-        ctnQty:tr.querySelector(".chemQtyPack").value.trim(),
-        toParty:tr.querySelector(".chemDeliveryTo").value.trim(),
-        remarks:tr.querySelector(".chemPurpose").value.trim(),
-        remarks2:tr.querySelector(".chemRemarks").value.trim()
-      };
-
-      if(Object.values(row).some(v=>String(v).trim())) rows.push(row);
-    });
-  }else if(mcd==="GENERAL MCD" && toCompany==="GMS Composite Knitting Ind Ltd."){
-    document.querySelectorAll("#generalEnglishBody tr").forEach(tr=>{
-      let row={
-        itemName:tr.querySelector(".genEngItem").value.trim(),
-        unit:tr.querySelector(".genEngUnit").value.trim(),
-        deliveryQty:tr.querySelector(".genEngQty").value.trim(),
-        remarks:tr.querySelector(".genEngPurpose").value.trim(),
-        remarks2:tr.querySelector(".genEngRemark").value.trim()
-      };
-
-      if(Object.values(row).some(v=>String(v).trim())) rows.push(row);
-    });
-  }else if(mcd==="GENERAL MCD" && toCompany==="Other's Factory"){
-    document.querySelectorAll("#generalBanglaBody tr").forEach(tr=>{
-      let row={
-        itemName:tr.querySelector(".genBanItem").value.trim(),
-        unit:tr.querySelector(".genBanUnit").value.trim(),
-        deliveryQty:tr.querySelector(".genBanQty").value.trim(),
-        remarks:tr.querySelector(".genBanDuration").value.trim()
-      };
-
-      if(Object.values(row).some(v=>String(v).trim())) rows.push(row);
-    });
-  }else{
-    document.querySelectorAll("#gateBody tr").forEach(tr=>{
-      let row={
-        buyerName:tr.querySelector(".buyerName").value.trim(),
-        srGtNo:tr.querySelector(".srGtNo").value.trim(),
-        styleName:tr.querySelector(".styleName").value.trim(),
-        orderNo:tr.querySelector(".orderNo").value.trim(),
-        itemName:tr.querySelector(".itemName").value.trim(),
-        color:tr.querySelector(".color").value.trim(),
-        unit:tr.querySelector(".unit").value.trim(),
-        deliveryQty:tr.querySelector(".deliveryQty").value.trim(),
-        ctnQty:tr.querySelector(".ctnQty").value.trim(),
-        toParty:tr.querySelector(".toParty").value.trim(),
-        vehicleNo:tr.querySelector(".vehicleNo").value.trim(),
-        remarks:tr.querySelector(".remarks").value.trim()
-      };
-
-      if(Object.values(row).some(v=>String(v).trim())) rows.push(row);
-    });
-  }
-
-  return rows;
-}
-
-window.calculateTotals=function(){
-  let mcd=document.getElementById("mcdName").value;
-  let toCompany=document.getElementById("toType").value;
+// 🔥 GET UNIQUE NAMES FOR FILTER (MCD অনুযায়ী)
+function getUniqueNamesForMCD(){
+  const selectedMCD = document.getElementById('mcdFilter').value;
+  const selectedCompany = document.getElementById('companyFilter').value;
   
-  if(mcd==="CHEMICAL MCD"){
-    calculateChemicalTotals();
-  }else if(mcd==="GENERAL MCD"){
-    calculateGeneralTotals();
-  }else{
-    calculateNormalTotals();
-  }
-};
-
-function calculateNormalTotals(){
-  let totalDelivery=0;
-  let totalCtn=0;
-
-  document.querySelectorAll(".deliveryQty").forEach(x=>totalDelivery+=n(x.value));
-  document.querySelectorAll(".ctnQty").forEach(x=>totalCtn+=n(x.value));
-
-  document.getElementById("deliveryTotal").innerText=totalDelivery;
-  document.getElementById("ctnTotal").innerText=totalCtn;
-
-  let firstReason=document.querySelector(".itemName")?.value.trim()||"For Dyeing";
-  let firstRemarks=document.querySelector(".remarks")?.value.trim()||"";
-
-  let active=document.activeElement?.id||"";
-
-  if(!["greyCompanyInput","greyReasonInput","greyQtyInput","greyRemarksInput"].includes(active)){
-    document.getElementById("greyReasonInput").value=firstReason;
-    document.getElementById("greyQtyInput").value=totalDelivery;
-    document.getElementById("greyRemarksInput").value=firstRemarks;
-    document.getElementById("greyShowTotal").innerText=totalDelivery.toFixed(1);
-  }
+  const names = new Set();
+  allPlans.forEach(p=>{
+    if(selectedMCD !== "All" && p.mcd !== selectedMCD) return;
+    if(selectedCompany !== "All" && p.company !== selectedCompany) return;
+    
+    const name = p.preparedBy || 'Unknown';
+    names.add(name);
+  });
+  return Array.from(names).sort();
 }
 
-function calculateChemicalTotals(){
-  let totalKg=0;
-  let totalPack=0;
-
-  document.querySelectorAll(".chemQtyKg").forEach(x=>totalKg+=n(x.value));
-  document.querySelectorAll(".chemQtyPack").forEach(x=>totalPack+=n(x.value));
-
-  document.getElementById("chemicalQtyKgTotal").innerText=totalKg.toFixed(2);
-  document.getElementById("chemicalQtyPackTotal").innerText=totalPack;
+// 🔥 UPDATE NAME FILTER - MCD change হলে call হবে
+window.updateNameFilter=function(){
+  selectedNameValue = ""; // Reset selection
+  document.getElementById('nameSearchInput').value = "";
+  document.getElementById('nameClearBtn').classList.remove('show');
+  document.getElementById('nameDropdown').classList.remove('show');
+  console.log('👤 Name filter reset for MCD:', document.getElementById('mcdFilter').value);
 }
 
-function calculateGeneralTotals(){
-  let toCompany=document.getElementById("toType").value;
-  let totalQty=0;
-
-  if(toCompany==="GMS Composite Knitting Ind Ltd."){
-    document.querySelectorAll(".genEngQty").forEach(x=>totalQty+=n(x.value));
-    document.getElementById("generalEnglishQtyTotal").innerText=totalQty;
-  }else{
-    document.querySelectorAll(".genBanQty").forEach(x=>totalQty+=n(x.value));
-    document.getElementById("generalBanglaQtyTotal").innerText=totalQty;
-  }
-}
-
-window.saveGatePlan=async function(){
-  let mcd=document.getElementById("mcdName").value;
+// 🔥 FILTER NAME DROPDOWN - Letter টাইপ করলে
+window.filterNameDropdown=function(){
+  const input = document.getElementById('nameSearchInput');
+  const dropdown = document.getElementById('nameDropdown');
+  const clearBtn = document.getElementById('nameClearBtn');
+  const searchText = input.value.trim().toLowerCase();
   
-  if(mcd==="GREY FABRIC MCD"){
-    syncGreyInputs();
+  const allNames = getUniqueNamesForMCD();
+  
+  // Filter names by search text
+  const filteredNames = searchText 
+    ? allNames.filter(name => name.toLowerCase().includes(searchText))
+    : allNames;
+  
+  if(filteredNames.length === 0){
+    dropdown.innerHTML = '<div class="nameDropdownItem" style="color:#999">No match found</div>';
+  }else{
+    dropdown.innerHTML = filteredNames.map(name => 
+      `<div class="nameDropdownItem" onclick="selectName('${esc(name)}')">${esc(name)}</div>`
+    ).join("");
   }
+  
+  dropdown.classList.add('show');
+  clearBtn.classList.toggle('show', input.value.length > 0);
+}
 
-  let rows=readRows();
+// 🔥 SHOW NAME DROPDOWN
+window.showNameDropdown=function(){
+  const input = document.getElementById('nameSearchInput');
+  if(input.value === ""){
+    filterNameDropdown(); // Show all names
+  }
+}
 
-  if(rows.length===0){
-    alert("Data nai");
+// 🔥 SELECT NAME FROM DROPDOWN
+window.selectName=function(name){
+  const input = document.getElementById('nameSearchInput');
+  const dropdown = document.getElementById('nameDropdown');
+  const clearBtn = document.getElementById('nameClearBtn');
+  
+  input.value = name;
+  selectedNameValue = name;
+  dropdown.classList.remove('show');
+  clearBtn.classList.add('show');
+  
+  console.log('✅ Selected name:', name);
+  showReport(); // Auto filter
+}
+
+// 🔥 CLEAR NAME FILTER
+window.clearNameFilter=function(){
+  const input = document.getElementById('nameSearchInput');
+  const dropdown = document.getElementById('nameDropdown');
+  const clearBtn = document.getElementById('nameClearBtn');
+  
+  input.value = "";
+  selectedNameValue = "";
+  dropdown.classList.remove('show');
+  clearBtn.classList.remove('show');
+  
+  showReport();
+}
+
+// 🔥 CLOSE DROPDOWN WHEN CLICK OUTSIDE
+document.addEventListener('click', function(e){
+  const container = document.querySelector('.nameFilterContainer');
+  const dropdown = document.getElementById('nameDropdown');
+  if(container && !container.contains(e.target)){
+    dropdown.classList.remove('show');
+  }
+});
+
+function renderCharts(data){
+  console.log('📊 renderCharts called with', data ? data.length : 0, 'records');
+  
+  const chartSection = document.getElementById('chartSection');
+  
+  if(!data || data.length===0){
+    chartSection.style.display = 'none';
     return;
   }
-
-  let planNo=document.getElementById("gatePlanNo").value;
   
-  if(!planNo){
-    try{
-      planNo = await nextGatePlanNo();
-      document.getElementById("gatePlanNo").value = planNo;
-    }catch(e){
-      planNo = generateOfflineId();
-      document.getElementById("gatePlanNo").value = planNo;
-    }
+  chartSection.style.display = 'block';
+  
+  if(typeof window.Chart === 'undefined'){
+    console.error('❌ Chart.js not loaded!');
+    return;
   }
-
-  let plan={
-    gatePlanNo:planNo,
-    gatePassNo:planNo,
-    date:document.getElementById("planDate").value,
-    time:document.getElementById("planTime").value,
-    company:document.getElementById("companyName").value,
-    toCompany:document.getElementById("toType").value,
-    mcd:mcd,
-    preparedBy:user.name||user.email||"User",
-    preparedUserId:user.id||"",
-    rows:rows,
-    status:"Prepared",
-    updatedAt:new Date().toISOString(),
-    createdAt:editMode ? undefined : new Date().toISOString()
-  };
-
-  Object.keys(plan).forEach(k=>plan[k]===undefined && delete plan[k]);
-
+  
+  const ChartLib = window.Chart;
+  
+  const mcdCounts = {};
+  data.forEach(p=>{
+    const mcd = p.mcd || 'Unknown';
+    mcdCounts[mcd] = (mcdCounts[mcd] || 0) + 1;
+  });
+  
+  const mcdLabels = Object.keys(mcdCounts);
+  const mcdValues = Object.values(mcdCounts);
+  const mcdColors = mcdLabels.map((_,i)=>CHART_COLORS[i % CHART_COLORS.length]);
+  
+  console.log('📊 MCD Chart Data:', mcdCounts);
+  
+  const nameCounts = {};
+  data.forEach(p=>{
+    const name = p.preparedBy || 'Unknown';
+    nameCounts[name] = (nameCounts[name] || 0) + 1;
+  });
+  
+  const nameLabels = Object.keys(nameCounts);
+  const nameValues = Object.values(nameCounts);
+  
+  console.log('👤 Name Chart Data:', nameCounts);
+  
+  const deliveryByDate = {};
+  data.forEach(p=>{
+    const date = p.date || 'Unknown';
+    let totalQty = 0;
+    (p.rows||[]).forEach(r=>{ totalQty += num(r.deliveryQty); });
+    deliveryByDate[date] = (deliveryByDate[date] || 0) + totalQty;
+  });
+  
+  const dateLabels = Object.keys(deliveryByDate).sort();
+  const deliveryValues = dateLabels.map(d=>deliveryByDate[d]);
+  
+  console.log('📈 Delivery Chart Data:', deliveryByDate);
+  
+  document.getElementById('statTotal').innerText = data.length;
+  document.getElementById('statMcds').innerText = mcdLabels.length;
+  document.getElementById('statNames').innerText = nameLabels.length;
+  
+  if(mcdBarChart) mcdBarChart.destroy();
+  if(namePieChart) namePieChart.destroy();
+  if(deliveryChart) deliveryChart.destroy();
+  
   try{
-    await setDoc(doc(db,"gatePlans",makeId(planNo)),plan,{merge:true});
-    toast(editMode ? "Gate Plan Updated Firebase" : "Gate Plan Saved Firebase");
-    document.getElementById("printOfflineBtn").style.display="none";
-    
-  }catch(e){
-    console.log("Firebase failed, saving offline:",e.message);
-    
-    const deviceId=getDeviceId();
-    const queueKey="GMS_GATEPLAN_OFFLINE_"+deviceId;
-    let queue=JSON.parse(localStorage.getItem(queueKey)||"[]");
-    
-    if(queue.find(x=>x.id===planNo)) planNo = generateOfflineId();
-    plan.gatePlanNo = planNo;
-    plan.gatePassNo = planNo;
-    plan.status = "pending";
-    
-    queue.push({
-      id:planNo,
-      data:plan,
-      status:"pending",
-      createdAt:new Date().toISOString(),
-      deviceId:deviceId
+    const mcdCtx = document.getElementById('mcdBarChart').getContext('2d');
+    mcdBarChart = new ChartLib(mcdCtx, {
+      type: 'bar',
+      data: {
+        labels: mcdLabels,
+        datasets: [{
+          label: 'Gate Plans',
+          data: mcdValues,
+          backgroundColor: mcdColors.map(c=>c+'cc'),
+          borderColor: mcdColors,
+          borderWidth: 2,
+          borderRadius: 8
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: { legend: { display: false } },
+        scales: {
+          y: { beginAtZero: true, grid: { color: 'rgba(148,163,184,.1)' }, ticks: { color: '#94a3b8' } },
+          x: { grid: { display: false }, ticks: { color: '#e2e8f0', maxRotation: 45 } }
+        }
+      }
     });
     
-    localStorage.setItem(queueKey,JSON.stringify(queue));
-    toast("⏳ Saved Offline: "+planNo);
-    document.getElementById("printOfflineBtn").style.display="inline-block";
+    const nameCtx = document.getElementById('namePieChart').getContext('2d');
+    namePieChart = new ChartLib(nameCtx, {
+      type: 'doughnut',
+      data: {
+        labels: nameLabels,
+        datasets: [{
+          data: nameValues,
+          backgroundColor: ['#22c55e','#3b82f6','#f59e0b','#8b5cf6','#ef4444','#06b6d4'],
+          borderWidth: 3
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        cutout: '55%',
+        plugins: {
+          legend: { position: 'bottom', labels: { color: '#e2e8f0', font: { size: 10 } } }
+        }
+      }
+    });
+    
+    const deliveryCtx = document.getElementById('deliveryChart').getContext('2d');
+    deliveryChart = new ChartLib(deliveryCtx, {
+      type: 'line',
+      data: {
+        labels: dateLabels,
+        datasets: [{
+          label: 'Total Delivery Qty',
+          data: deliveryValues,
+          borderColor: '#22c55e',
+          backgroundColor: 'rgba(34,197,94,.1)',
+          fill: true,
+          tension: 0.4
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: { legend: { display: false } },
+        scales: {
+          y: { beginAtZero: true, grid: { color: 'rgba(148,163,184,.1)' }, ticks: { color: '#94a3b8' } },
+          x: { grid: { display: false }, ticks: { color: '#e2e8f0', maxRotation: 45 } }
+        }
+      }
+    });
+    
+    console.log('✅ Charts rendered successfully');
+  }catch(e){
+    console.error('❌ Chart error:', e);
   }
-  
-  window.lastSavedGatePlan = plan;
-
-  editMode=false;
-  localStorage.removeItem("editGatePlanNo");
-  history.replaceState(null,"","gate-plan.html");
-
-  document.getElementById("gateBody").innerHTML="";
-  document.getElementById("chemicalBody").innerHTML="";
-  document.getElementById("generalEnglishBody").innerHTML="";
-  document.getElementById("generalBanglaBody").innerHTML="";
-  document.getElementById("gatePlanNo").value=await nextGatePlanNo();
-  addRow();
-  calculateTotals();
-  updateHeader();
-};
-
-window.printLastOffline=()=>{
-  if(!window.lastSavedGatePlan) return alert("No data to print");
-  printGatePlan(window.lastSavedGatePlan);
 }
 
-function printGatePlan(x){
-  let rows=x.rows||[];
-  let totalDelivery=rows.reduce((a,b)=>a+(Number(b.deliveryQty)||0),0);
-  let totalCtn=rows.reduce((a,b)=>a+(Number(b.ctnQty)||0),0);
+async function loadPlans(){
+  const map={};
   
-  let isChemical = x.mcd === "CHEMICAL MCD";
-  let isGeneralEnglish = x.mcd === "GENERAL MCD" && x.toCompany === "GMS Composite Knitting Ind Ltd.";
-  let isGeneralBangla = x.mcd === "GENERAL MCD" && x.toCompany === "Other's Factory";
-  
-  let rowHtml='', chemicalRowHtml='', generalEnglishRowHtml='', generalBanglaRowHtml='';
-  
-  if(isChemical){
-    chemicalRowHtml=rows.map((r,i)=>`<tr><td>${i+1}</td><td>${r.area||""}</td><td>${r.itemName||""}</td><td>${r.unit||""}</td><td>${r.packSize||""}</td><td>${r.deliveryQty||""}</td><td>${r.ctnQty||""}</td><td>${r.toParty||""}</td><td>${r.remarks||""}</td><td>${r.remarks2||""}</td></tr>`).join("");
-  }else if(isGeneralEnglish){
-    generalEnglishRowHtml=rows.map((r,i)=>`<tr><td>${i+1}</td><td>${r.itemName||""}</td><td>${r.unit||""}</td><td>${r.deliveryQty||""}</td><td>${r.remarks||""}</td><td>${r.remarks2||""}</td></tr>`).join("");
-  }else if(isGeneralBangla){
-    generalBanglaRowHtml=rows.map((r,i)=>`<tr><td>${i+1}</td><td>${r.itemName||""}</td><td>${r.unit||""}</td><td>${r.deliveryQty||""}</td><td>${r.remarks||""}</td></tr>`).join("");
-  }else{
-    rowHtml=rows.map((r,i)=>`<tr><td>${r.item||r.deliveryQty||r.ctnQty?i+1:""}</td><td>${r.buyerName}</td><td>${r.srGtNo}</td><td>${r.styleName}</td><td>${r.orderNo}</td><td>${r.itemName}</td><td>${r.color}</td><td>${r.unit}</td><td>${r.deliveryQty?r.deliveryQty:""}</td><td>${r.ctnQty?r.ctnQty:""}</td><td>${r.toParty}</td><td>${r.vehicleNo}</td><td>${r.remarks}</td></tr>`).join("");
+  const cached = window.GMS_CACHE.get(CACHE_KEYS.gatePlans);
+  if(cached !== null){
+    console.log('📦 Using cached gate plans');
+    allPlans = cached;
+    document.getElementById('loadStatus').innerText="Loaded: "+allPlans.length+" Gate Plan (Cache)";
+    return;
   }
   
-  let html = `
-  <html><head><meta charset="UTF-8"><title>Print Gate Plan ${x.gatePlanNo}</title>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"><\/script>
-  <style>
-    body{font-family:Arial;margin:0;padding:20px}
-    .page{width:297mm;min-height:210mm;padding:10mm;margin:0 auto;border:1px solid #ccc;page-break-after:always}
-    .header{text-align:center;margin-bottom:10px}
-    .header h2{margin:0;font-size:22px}
-    .header h4{margin:2px 0;font-size:12px}
-    .header h3{margin:4px 0;font-size:18px}
-    .box{border:2px solid #000;padding:10px}
-    .topLine{text-align:center;font-weight:bold;border-bottom:2px solid #000;padding:5px;font-size:16px}
-    .meta{display:grid;grid-template-columns:1fr 1fr 1fr;border-bottom:2px solid #000}
-    .meta div{border-right:2px solid #000;padding:5px;text-align:center;font-weight:bold}
-    table{width:100%;border-collapse:collapse;font-size:11px}
-    th,td{border:2px solid #000;padding:4px;text-align:center}
-    th{background:#eee}
-    .sign{display:grid;grid-template-columns:1fr 1fr 1fr 1fr 1fr 1fr 1fr 1fr;border:2px solid #000;border-top:0;height:80px;margin-top:20px}
-    .sign div{display:flex;align-items:end;justify-content:center;border-right:2px solid #000;font-weight:bold;font-size:10px}
-    .sign div:last-child{border-right:0}
-    .qr{width:60px;height:60px;margin:10px auto}
-    @media print{body{margin:0}.page{border:0}}
-  </style></head><body>
-  <div class="page">`;
+  try{
+    const snap=await getDocs(collection(db,"gatePlans"));
+    snap.forEach(d=>{
+      const p={...d.data(),_id:d.id,_source:"firebase"};
+      const no=planNo(p)||d.id;
+      map[no]=p;
+    });
+    window.GMS_CACHE.incRead(snap.size);
+    console.log('🔥 Firebase read:', snap.size, 'documents');
+  }catch(e){console.log(e)}
   
-  if(isChemical){
-    let dateObj=new Date(x.date);
-    let months=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
-    let formattedDate=String(dateObj.getDate()).padStart(2,'0')+'-'+months[dateObj.getMonth()]+'-'+dateObj.getFullYear();
-    
-    html+=`
-    <div style="text-align:center;margin-bottom:15px">
-      <h2 style="margin:0;font-size:20px">GMS Textiles Limited</h2>
-      <h4 style="margin:2px 0;font-size:11px">Factory: Tansutrapur, Kaliakoir, Gazipur</h4>
-      <h3 style="margin:5px 0;font-size:15px">Daily Dyes & Chemical Delivery Schedule</h3>
-    </div>
-    <div style="border:1px solid #000;padding:3px 8px;display:inline-block;font-weight:bold;font-size:11px;margin-bottom:8px">CS-DP-${x.gatePlanNo.replace(/GP-\d{4}-/,'')}</div>
-    <div style="display:grid;grid-template-columns:1fr 1fr;margin-bottom:10px">
-      <div style="font-weight:bold;border-bottom:2px solid #000;padding-bottom:3px">Section:-Chemical MCD</div>
-      <div style="text-align:right;font-weight:bold">${x.company} To ${x.toCompany==="Other's Factory"?'GMS Composite And Auxicolour Bangladesh':x.toCompany}</div>
-    </div>
-    <div style="border:1px solid #000;margin-bottom:10px;display:grid;grid-template-columns:1fr 1fr">
-      <div style="padding:5px;border-right:1px solid #000">Date: ${formattedDate}</div>
-      <div style="padding:5px"></div>
-    </div>
-    <table style="width:100%;border-collapse:collapse;font-size:10px">
-      <thead><tr style="background:#f9fafb"><th style="width:40px;border:1px solid #000;padding:5px">SL No</th><th style="border:1px solid #000;padding:5px">Area</th><th style="border:1px solid #000;padding:5px">Name Of Item</th><th style="border:1px solid #000;padding:5px">Unit</th><th style="border:1px solid #000;padding:5px">Pack Size</th><th style="border:1px solid #000;padding:5px">Qty Kg</th><th style="border:1px solid #000;padding:5px">Qty Pack</th><th style="border:1px solid #000;padding:5px">Delivery To</th><th style="border:1px solid #000;padding:5px">Delivery Purpose</th><th style="border:1px solid #000;padding:5px">Remarks</th></tr></thead>
-      <tbody>${chemicalRowHtml}</tbody>
-      <tfoot><tr style="font-weight:bold;background:#f3f4f6"><td colspan="5" style="border:1px solid #000;padding:5px;text-align:right">Total</td><td style="border:1px solid #000;padding:5px">${totalDelivery.toFixed(2)}</td><td style="border:1px solid #000;padding:5px">${totalCtn}</td><td colspan="3" style="border:1px solid #000;padding:5px"></td></tr></tfoot>
-    </table>
-    <div style="display:grid;grid-template-columns:repeat(7,1fr);gap:15px;margin-top:80px">
-      <div style="text-align:center;border-top:1px solid #000;padding-top:5px;font-weight:bold;font-size:9px">Prepared By<br>${x.preparedBy||''}</div>
-      <div style="text-align:center;border-top:1px solid #000;padding-top:5px;font-weight:bold;font-size:9px">Checked By</div>
-      <div style="text-align:center;border-top:1px solid #000;padding-top:5px;font-weight:bold;font-size:9px">Security</div>
-      <div style="text-align:center;border-top:1px solid #000;padding-top:5px;font-weight:bold;font-size:9px">Asst.Manager(MCD)</div>
-      <div style="text-align:center;border-top:1px solid #000;padding-top:5px;font-weight:bold;font-size:9px">AGM (MCD)</div>
-      <div style="text-align:center;border-top:1px solid #000;padding-top:5px;font-weight:bold;font-size:9px">Approved By<br>[Concern Dept.]</div>
-      <div style="text-align:center;border-top:1px solid #000;padding-top:5px;font-weight:bold;font-size:9px">Authorised By<br>[Admin Dept.]</div>
-    </div>
-    `;
-  }else if(isGeneralEnglish){
-    let dateObj=new Date(x.date);
-    let formattedDate=String(dateObj.getDate()).padStart(2,'0')+'.'+String(dateObj.getMonth()+1).padStart(2,'0')+'.'+dateObj.getFullYear();
-    
-    html+=`
-    <div style="text-align:center;margin-bottom:15px">
-      <h2 style="margin:0;font-size:22px">GMS Textiles Ltd.</h2>
-      <h4 style="margin:3px 0;font-size:12px">Factory: Tansutrapur, Kaliakoir, Gazipur, Bangladesh.</h4>
-    </div>
-    <div style="display:grid;grid-template-columns:1fr 1fr;margin:10px 0;font-weight:bold;font-size:12px">
-      <div>Section : General MCD</div>
-      <div style="text-align:right">Date ${formattedDate}</div>
-    </div>
-    <div style="text-align:center;font-size:14px;font-weight:800;text-decoration:underline;margin:10px 0">
-      Goods Delivery Statement (GMS Textiles Ltd. to GMS Composite Knitting Ind. Ltd.)
-    </div>
-    <table style="width:100%;border-collapse:collapse;font-size:11px;margin:15px 0">
-      <thead><tr style="background:#f3f4f6"><th style="width:40px;border:1px solid #000;padding:6px 4px">SL NO</th><th style="border:1px solid #000;padding:6px 4px">Name of item</th><th style="width:70px;border:1px solid #000;padding:6px 4px">Unit</th><th style="width:80px;border:1px solid #000;padding:6px 4px">Quantity</th><th style="border:1px solid #000;padding:6px 4px">Delivery purpose</th><th style="width:90px;border:1px solid #000;padding:6px 4px">Remark</th></tr></thead>
-      <tbody>${generalEnglishRowHtml}</tbody>
-      <tfoot><tr style="font-weight:bold;background:#f3f4f6"><td colspan="3" style="border:1px solid #000;padding:6px 4px;text-align:right">Total</td><td style="border:1px solid #000;padding:6px 4px">${totalDelivery}</td><td colspan="2" style="border:1px solid #000;padding:6px 4px"></td></tr></tfoot>
-    </table>
-    <div style="display:grid;grid-template-columns:repeat(6,1fr);gap:12px;margin-top:80px">
-      <div style="text-align:center;border-top:1px solid #000;padding-top:5px;font-weight:bold;font-size:9px;line-height:1.5">Prepared BY<br>${x.preparedBy||''}</div>
-      <div style="text-align:center;border-top:1px solid #000;padding-top:5px;font-weight:bold;font-size:9px;line-height:1.5">Checked By</div>
-      <div style="text-align:center;border-top:1px solid #000;padding-top:5px;font-weight:bold;font-size:9px;line-height:1.5">Asst. Manager<br>MCD</div>
-      <div style="text-align:center;border-top:1px solid #000;padding-top:5px;font-weight:bold;font-size:9px;line-height:1.5">Asst. General Manager<br>MCD</div>
-      <div style="text-align:center;border-top:1px solid #000;padding-top:5px;font-weight:bold;font-size:9px;line-height:1.5">Recommended By<br>Admin Dept.</div>
-      <div style="text-align:center;border-top:1px solid #000;padding-top:5px;font-weight:bold;font-size:9px;line-height:1.5">Authorised By</div>
-    </div>
-    `;
-  }else if(isGeneralBangla){
-    let dateObj=new Date(x.date);
-    let banglaMonths=['জানুয়ারি','ফেব্রুয়ারি','মার্চ','এপ্রিল','মে','জুন','জুলাই','আগস্ট','সেপ্টেম্বর','অক্টোবর','নভেম্বর','ডিসেম্বর'];
-    let banglaFullDate=String(dateObj.getDate())+' '+banglaMonths[dateObj.getMonth()]+' '+dateObj.getFullYear();
-    
-    html+=`
-    <div style="text-align:center;margin-bottom:15px;line-height:1.8;font-family:SolaimanLipi,Kalpurush,Arial,sans-serif">
-      <h2 style="margin:0;font-size:20px">জি,এম,এস টেক্সটাইলস লিমিটেড।</h2>
-      <h4 style="margin:3px 0;font-size:11px">কারখানা: তানসুট্রাপুর, কালিয়াকৈর, গাজীপুর।</h4>
-    </div>
-    <div style="display:grid;grid-template-columns:1fr 1fr;margin:15px 0;font-size:11px;line-height:2">
-      <div>
-        <div>তারিখ: ${banglaFullDate}</div>
-        <div>বরাবর,</div>
-        <div>মহাব্যবস্থাপক,</div>
-        <div>জিএমএস(এডমিন এন্ড ইনভেন্টরী)</div>
-        <div>জি,এম,এস টেক্সটাইলস লিমিটেড।</div>
-        <div>টানসুট্রাপুর, কালিয়াকৈর, গাজীপুর।</div>
-      </div>
-      <div style="border:1px solid #000;padding:8px;text-align:center">
-        <b>পাঠেজ যোগাযোগ মাধ্যম</b><br><br>
-        নামঃ ..............................<br>
-        মোবাইল নম্বরঃ ..................
-      </div>
-    </div>
-    <div style="text-align:center;font-size:13px;font-weight:800;margin:15px 0;line-height:1.8">
-      বিষয়ঃ মালমাল বাহিরে নেওয়া অনুমোদন প্রসঙ্গে।<br>
-      জনাব,<br>
-      যথাবিহীত সম্মান পূর্বক বিনীত নিবেদন এই যে, নিচের মালমালগুলো।<br>
-      জন্য ফ্যাক্টরির বাহিরে পাঠানো প্রয়োজন।<br>
-      নিম্নে মালমালের বিবরণ প্রদান করা হলোঃ
-    </div>
-    <table style="width:100%;border-collapse:collapse;font-size:11px;margin:15px 0;direction:ltr">
-      <thead><tr style="background:#f3f4f6"><th style="width:35px;border:1px solid #000;padding:6px 4px">ক্রমিক নং</th><th style="border:1px solid #000;padding:6px 4px">মালমালের বিবরণ</th><th style="width:60px;border:1px solid #000;padding:6px 4px">একক</th><th style="width:70px;border:1px solid #000;padding:6px 4px">পরিমান</th><th style="width:110px;border:1px solid #000;padding:6px 4px">বাহিরে থাকার সময়কাল</th></tr></thead>
-      <tbody>${generalBanglaRowHtml}</tbody>
-      <tfoot><tr style="font-weight:bold;background:#f3f4f6"><td colspan="3" style="border:1px solid #000;padding:6px 4px;text-align:right">মোট</td><td style="border:1px solid #000;padding:6px 4px">${totalDelivery}</td><td style="border:1px solid #000;padding:6px 4px"></td></tr></tfoot>
-    </table>
-    <div style="margin-top:20px;line-height:2;font-size:11px">
-      <div>অতএব,</div>
-      <div>জনাবের নিকট আকুল আবেদন এই যে, উক্ত মালমাল বাহিরে নেওয়ার জন্য আপনার সম্মতি কামনা করছি।</div>
-    </div>
-    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:25px;margin-top:70px">
-      <div style="text-align:center;border-top:1px solid #000;padding-top:5px;font-weight:bold;font-size:10px">প্রস্তুতকারী<br>${x.preparedBy||''}</div>
-      <div style="text-align:center;border-top:1px solid #000;padding-top:5px;font-weight:bold;font-size:10px">বিভাগীয় প্রধান</div>
-      <div style="text-align:center;border-top:1px solid #000;padding-top:5px;font-weight:bold;font-size:10px">পাঠেজ<br>ম্যানেজার এডমিন,এইচ আর এন্ড কমপ্লায়েন্স</div>
-    </div>
-    `;
-  }else{
-    html+=`
-    <div class="header">
-      <h2>${x.company}</h2>
-      <h4>Tansutrapur, Kaliakair, Gazipur.</h4>
-      <h4>Daily Goods Delivery Plan</h4>
-      <h3>${x.mcd}</h3>
-    </div>
-    <div class="box">
-      <div class="topLine">${x.company} To ${x.toCompany}</div>
-      <div class="meta">
-        <div>Gate Plan No:<br><b>${x.gatePlanNo}</b></div>
-        <div>Date:<br><b>${x.date}</b></div>
-        <div>Time:<br><b>${x.time}</b></div>
-      </div>
-      <table>
-        <thead><tr><th>SL</th><th>Buyer</th><th>SR/GT</th><th>Style</th><th>Order</th><th>Item</th><th>Color</th><th>Unit</th><th>Qty</th><th>Pkgs</th><th>To Party</th><th>Vehicle</th><th>Remarks</th></tr></thead>
-        <tbody>${rowHtml}</tbody>
-        <tfoot><tr><td colspan="8" style="text-align:right;font-weight:bold">Total:</td><td>${totalDelivery}</td><td>${totalCtn}</td><td colspan="3"></td></tr></tfoot>
-      </table>
-      <div class="sign"><div>Prepared By</div><div>Security</div><div>Checked By</div><div>Asst. Mgr</div><div>AGM</div><div>Merchant</div><div>HR/Admin</div><div>Approved</div></div>
-    </div>
-    <div style="text-align:center;margin-top:20px"><div class="qr" id="qr"></div><div style="font-size:10px">Scan for details</div></div>
-    `;
-  }
+  try{
+    const local=JSON.parse(localStorage.getItem("gatePlans")||"[]");
+    local.forEach(p=>{const no=planNo(p); if(no&&!map[no])map[no]={...p,_source:"offline"}});
+  }catch(e){}
   
-  html+=`
+  allPlans=Object.values(map).sort((a,b)=>{
+    const d=(b.date||"").localeCompare(a.date||"");
+    if(d!==0)return d;
+    const t=(b.time||"").localeCompare(a.time||"");
+    if(t!==0)return t;
+    return planNo(b).localeCompare(planNo(a));
+  });
+  
+  window.GMS_CACHE.set(CACHE_KEYS.gatePlans, allPlans);
+  
+  document.getElementById("loadStatus").innerText="Loaded: "+allPlans.length+" Gate Plan";
+}
+
+function normalHeader(p){
+  return `
+  <div class="reportPrintHeader">
+    <h2>GMS Textiles Ltd.</h2>
+    <h4>Tansutrapur, Kaliakair, Gazipur.</h4>
+    <h4>Daily Goods Delivery Plan</h4>
+    <h3>${esc(p.mcd||"ACCESSORIES MCD")}</h3>
   </div>
-  <script>
-    ${!isChemical&&!isGeneralEnglish&&!isGeneralBangla ? 'new QRCode(document.getElementById("qr"), {text:"'+location.origin+location.pathname+'?gatePlanNo=${x.gatePlanNo}", width:60, height:60});' : ''}
-    setTimeout(()=>window.print(), 700);
-  <\/script>
-  </body></html>`;
-  
-  let w=window.open("","_blank");
-  w.document.write(html);
-  w.document.close();
+  <div class="qrCenter"><div class="qrMini" data-qr-no="${esc(planNo(p))}"></div></div>`;
 }
 
-async function autoSyncOfflineGatePlans(){
-  let totalSynced=0;
+function renderNormal(p,i){
+  let delivery=0,ctn=0;
+  const rows=p.rows||[];
+  rows.forEach(r=>{delivery+=num(r.deliveryQty);ctn+=num(r.ctnQty)});
+  const badge = p._source === "offline" 
+    ? `<span class="offlineBadge">📦 Offline</span>` 
+    : `<span class="syncedBadge">📡 Synced</span>`;
+  const body=rows.map((r,idx)=>`
+  <tr>
+    <td>${idx+1}</td><td>${esc(r.buyerName)}</td><td>${esc(r.srGtNo)}</td>
+    <td>${esc(r.styleName)}</td><td>${esc(r.orderNo)}</td><td>${esc(r.itemName)}</td>
+    <td>${esc(r.color)}</td><td>${esc(r.unit)}</td><td>${esc(r.deliveryQty)}</td>
+    <td>${esc(r.ctnQty)}</td><td>${esc(r.toParty)}</td><td>${esc(r.vehicleNo)}</td><td>${esc(r.remarks)}</td>
+  </tr>`).join("");
+  return `
+  <div class="reportCard">
+    ${normalHeader(p)}
+    <div class="companyLine">${esc(p.company||"GMS Textiles Ltd.")} To ${esc(p.toCompany||"")}${badge}</div>
+    <div class="meta">
+      <div>Gate Plan No: ${esc(planNo(p))}</div><div>Date: ${esc(p.date)}</div><div>Time: ${esc(p.time)}</div>
+      <div>MCD: ${esc(p.mcd)}</div><div>Prepared By: ${esc(p.preparedBy)}</div>
+    </div>
+    <div class="actionBar noPrint">
+      <button class="print" onclick="printSingle(${i})">🖨 Print This</button>
+      <button class="edit" onclick="editPlan('${esc(planNo(p))}')">✏ Edit</button>
+      <button class="delete" onclick="deletePlan('${esc(planNo(p))}','${p._source||"firebase"}')">🗑 Delete</button>
+    </div>
+    <div class="tableWrap">
+      <table>
+        <thead><tr>
+          <th>SL No</th><th>Buyer Name</th><th>SR/GT No</th><th>Style Name</th><th>Order No/PO No</th>
+          <th>Name of Item</th><th>Color</th><th>Unit</th><th>Delivery Qty</th><th>CTN/PKG Qty</th>
+          <th>To Party Name</th><th>Vehicle No</th><th>Remarks</th>
+        </tr></thead>
+        <tbody>${body}</tbody>
+        <tfoot><tr class="totalRow"><td colspan="8">Grand Total</td><td>${fmt(delivery)}</td><td>${fmt(ctn)}</td><td colspan="3"></td></tr></tfoot>
+      </table>
+    </div>
+    <div class="sign">
+      <div>Prepared By<br>${esc(p.preparedBy)}</div><div>Security Dept.</div><div>Checked By<br>Sr. Officer ( MCD )</div>
+      <div>Asst. Manager<br>(MCD)</div><div>AGM (MCD)</div><div>Verify By<br>Merchant Dept.</div>
+      <div>Verify By<br>HR & Admin Dept.</div><div>Approved By</div>
+    </div>
+  </div>`;
+}
+
+function renderGrey(p,i){
+  const rows=p.rows||[], r=rows[0]||{};
+  let qty=0; rows.forEach(x=>qty+=num(x.deliveryQty));
+  const badge = p._source === "offline" 
+    ? `<span class="offlineBadge">📦 Offline</span>` 
+    : `<span class="syncedBadge">📡 Synced</span>`;
+  return `
+  <div class="greyCard">
+    <div class="greyHeader">
+      <h2>GMS TEXTILES LTD.</h2><h4>Tansutrapur, Kaliakoir, Gazipur</h4>
+      <h1>Grey Fabric-MCD</h1><div class="greyTitle">Daily GMS Textiles to GMS Composite Delivery Status</div>
+    </div>
+    <div class="qrCenter"><div class="qrMini" data-qr-no="${esc(planNo(p))}"></div></div>
+    <div class="actionBar noPrint">
+      <button class="print" onclick="printSingle(${i})">🖨 Print This</button>
+      <button class="edit" onclick="editPlan('${esc(planNo(p))}')">✏ Edit</button>
+      <button class="delete" onclick="deletePlan('${esc(planNo(p))}','${p._source||"firebase"}')">🗑 Delete</button>
+    </div>
+    <table class="greyTable">
+      <thead><tr><th>Date</th><th>Company Name</th><th>Delivery Reason</th><th>Total Qty</th><th>Remarks</th></tr></thead>
+      <tbody>
+        <tr><td>${esc(p.date)}</td><td>${esc(r.toParty||p.toCompany||"")}</td><td>${esc(r.itemName||"For Dyeing")}</td><td>${fmt(qty)}</td><td>${esc(r.remarks)}</td></tr>
+        <tr class="totalRow"><td colspan="3">Total-</td><td>${fmt(qty)}</td><td></td></tr>
+      </tbody>
+    </table>
+    <div class="greySign">
+      <div>Prepared By<br>${esc(p.preparedBy)}</div><div>Security Dept.</div><div>Checked By Officer - MCD</div>
+      <div>Asst. Manager - MCD</div><div>Knitting Manager/DGM</div><div>Dyeing Manager/DGM</div>
+    </div>
+  </div>`;
+}
+
+function filtered(){
+  const from=document.getElementById("fromDate").value;
+  const to=document.getElementById("toDate").value;
+  const no=document.getElementById("gateNoSearch").value.trim();
+  const company=document.getElementById("companyFilter").value;
+  const mcd=document.getElementById("mcdFilter").value;
+  const name=selectedNameValue; // 🔥 Use selectedNameValue
   
+  console.log('🔍 Filter params:', {from, to, no, company, mcd, name});
+  
+  const result = allPlans.filter(p=>{
+    if(from&&(p.date||"")<from)return false;
+    if(to&&(p.date||"")>to)return false;
+    if(no&&planNo(p).toLowerCase()!==no.toLowerCase())return false;
+    if(company!=="All"&&p.company!==company)return false;
+    if(mcd!=="All"&&p.mcd!==mcd)return false;
+    if(name && (p.preparedBy||"")!==name)return false;
+    return true;
+  });
+  
+  console.log('🔍 Filtered result:', result.length, 'plans');
+  return result;
+}
+
+window.loadOfflineData=function(){
+  let offlineCount=0;
+  for(let i=0;i<localStorage.length;i++){
+    const key=localStorage.key(i);
+    if(key && key.startsWith("GMS_GATEPLAN_OFFLINE_")){
+      try{
+        const queue=JSON.parse(localStorage.getItem(key)||"[]");
+        const pending=queue.filter(x=>x.status!=="synced");
+        pending.forEach(item=>{
+          const no=planNo(item.data);
+          if(no && !allPlans.find(a=>planNo(a)===no)){
+            let c=item.data; c._source="offline"; c._status=item.status||"pending";
+            allPlans.push(c); offlineCount++;
+          }
+        });
+      }catch(e){}
+    }
+  }
+  if(offlineCount>0){
+    allPlans.sort((a,b)=>{
+      const d=(b.date||"").localeCompare(a.date||"");
+      if(d!==0)return d;
+      const t=(b.time||"").localeCompare(a.time||"");
+      if(t!==0)return t;
+      return planNo(b).localeCompare(planNo(a));
+    });
+    updateNameFilter();
+    const list=filtered();
+    renderCharts(list);
+    const area=document.getElementById("reportArea");
+    if(list.length===0){area.innerHTML='<div class="noData">No saved Gate Plan found</div>';return}
+    area.innerHTML=list.map((p,i)=>p.mcd==="GREY FABRIC MCD"?renderGrey(p,i):renderNormal(p,i)).join("");
+    setTimeout(renderQRCodes,100);
+    alert("✅ Loaded "+offlineCount+" offline gate plan(s)");
+  }else{ alert("📦 No offline data found"); }
+}
+
+window.syncAllOffline=async function(){
+  let synced=0,failed=0;
   for(let i=0;i<localStorage.length;i++){
     const key=localStorage.key(i);
     if(key && key.startsWith("GMS_GATEPLAN_OFFLINE_")){
       try{
         const queue=JSON.parse(localStorage.getItem(key)||"[]");
         const pending=queue.filter(x=>x.status==="pending");
-        
         for(let item of pending){
           try{
             await setDoc(doc(db,"gatePlans",item.id),item.data,{merge:true});
-            item.status="synced";
-            item.syncedAt=new Date().toISOString();
-            totalSynced++;
+            item.status="synced"; item.syncedAt=new Date().toISOString(); synced++;
+          }catch(e){ failed++; }
+        }
+        localStorage.setItem(key,JSON.stringify(queue));
+      }catch(e){}
+    }
+  }
+  if(synced>0 || failed>0){
+    alert("✅ Synced: "+synced+" | ❌ Failed: "+failed);
+    window.GMS_CACHE.invalidate([CACHE_KEYS.gatePlans]);
+    await loadPlans();
+    updateNameFilter();
+    const list=filtered();
+    renderCharts(list);
+    const area=document.getElementById("reportArea");
+    if(list.length===0){area.innerHTML='<div class="noData">No saved Gate Plan found</div>';return}
+    area.innerHTML=list.map((p,i)=>p.mcd==="GREY FABRIC MCD"?renderGrey(p,i):renderNormal(p,i)).join("");
+    setTimeout(renderQRCodes,100);
+  }else{ alert("✅ No pending offline data"); }
+}
+
+async function autoSyncReport(){
+  let synced=0;
+  for(let i=0;i<localStorage.length;i++){
+    const key=localStorage.key(i);
+    if(key && key.startsWith("GMS_GATEPLAN_OFFLINE_")){
+      try{
+        const queue=JSON.parse(localStorage.getItem(key)||"[]");
+        const pending=queue.filter(x=>x.status==="pending");
+        for(let item of pending){
+          try{
+            await setDoc(doc(db,"gatePlans",item.id),item.data,{merge:true});
+            item.status="synced"; synced++;
           }catch(e){}
         }
         localStorage.setItem(key,JSON.stringify(queue));
       }catch(e){}
     }
   }
-  
-  if(totalSynced>0){
-    console.log(`✅ Auto-synced ${totalSynced} gate plan(s)`);
+  if(synced>0){ 
+    console.log("🔄 Auto-synced "+synced+" gate plan(s)"); 
+    window.GMS_CACHE.invalidate([CACHE_KEYS.gatePlans]);
+    await loadPlans();
+    updateNameFilter();
+    const list=filtered();
+    renderCharts(list);
+    const area=document.getElementById("reportArea");
+    if(list.length===0){area.innerHTML='<div class="noData">No saved Gate Plan found</div>';return}
+    area.innerHTML=list.map((p,i)=>p.mcd==="GREY FABRIC MCD"?renderGrey(p,i):renderNormal(p,i)).join("");
+    setTimeout(renderQRCodes,100);
   }
-  return totalSynced;
 }
+setInterval(autoSyncReport, 60000);
+setTimeout(autoSyncReport, 3000);
 
-setInterval(autoSyncOfflineGatePlans, 60000);
-setTimeout(autoSyncOfflineGatePlans, 2000);
-
-document.getElementById("toType").addEventListener("change",function(){
-  updateToPartyFields(true);
-  updateHeader();
-  // Clear and add new row based on new selection
-  let mcd=document.getElementById("mcdName").value;
-  if(mcd==="GENERAL MCD"){
-    let toComp=this.value;
-    if(toComp==="GMS Composite Knitting Ind Ltd."){
-      document.getElementById("generalEnglishBody").innerHTML="";
-      addGeneralEnglishRow();
-    }else if(toComp==="Other's Factory"){
-      document.getElementById("generalBanglaBody").innerHTML="";
-      addGeneralBanglaRow();
-    }
+window.showReport=async function(){
+  console.log('🔍 showReport called');
+  
+  const statusEl = document.getElementById('cacheStatusText');
+  if(statusEl) statusEl.innerText = '🔍 Checking cache...';
+  
+  await loadPlans();
+  const list=filtered();
+  
+  console.log('📊 Total filtered plans:', list.length);
+  
+  renderCharts(list);
+  
+  const area=document.getElementById("reportArea");
+  if(list.length===0){
+    area.innerHTML='<div class="noData">No saved Gate Plan found</div>';
+    if(statusEl) statusEl.innerText = '⚠️ No data found';
+    return;
   }
-});
+  
+  area.innerHTML=list.map((p,i)=>p.mcd==="GREY FABRIC MCD"?renderGrey(p,i):renderNormal(p,i)).join("");
+  setTimeout(renderQRCodes,100);
+  
+  if(statusEl) statusEl.innerText = '✅ Report loaded ('+list.length+' plans)';
+};
 
-document.addEventListener("input",e=>{
-  if(e.target.closest("#gateBody") || e.target.closest("#chemicalBody") || e.target.closest("#generalEnglishBody") || e.target.closest("#generalBanglaBody")){
-    calculateTotals();
-  }
-});
+window.clearFilters=function(){
+  document.getElementById("fromDate").value="";
+  document.getElementById("toDate").value="";
+  document.getElementById("gateNoSearch").value="";
+  document.getElementById("companyFilter").value="All";
+  document.getElementById("mcdFilter").value="All";
+  selectedNameValue = "";
+  document.getElementById("nameSearchInput").value = "";
+  document.getElementById("nameClearBtn").classList.remove('show');
+  showReport();
+};
 
-document.addEventListener("keydown",e=>{
-  if(e.target.tagName!=="INPUT" && e.target.tagName!=="TEXTAREA")return;
-  if(e.key==="Tab")return;
+window.printSingle=function(i){
+  const card=document.querySelectorAll(".reportCard,.greyCard")[i];
+  if(!card)return;
+  const win=window.open("","_blank");
+  win.document.write(`<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Gate Plan Print</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"><\/script>
+  <style>${document.querySelector("style").innerHTML}</style></head><body>
+  <div id="reportArea">${card.outerHTML}</div>
+  <script>
+    function reportLink(no){return "${location.origin+location.pathname}"+"?gatePlanNo="+encodeURIComponent(no||"")}
+    document.querySelectorAll(".noPrint,.actionBar").forEach(x=>x.remove());
+    document.querySelectorAll("[data-qr-no]").forEach(el=>{
+      const no=el.getAttribute("data-qr-no")||"";
+      el.innerHTML="";
+      try{ new QRCode(el,{text:reportLink(no),width:70,height:70,correctLevel:QRCode.CorrectLevel.M}); }catch(e){}
+    });
+    setTimeout(()=>window.print(),600);
+  <\/script></body></html>`);
+  win.document.close();
+};
 
-  if(e.key==="Enter"){
-    e.preventDefault();
+window.editPlan=function(no){
+  localStorage.setItem("editGatePlanNo",no);
+  location.href="gate-plan.html?edit="+encodeURIComponent(no);
+};
 
-    let td=e.target.closest("td");
-    let tr=e.target.closest("tr");
-
-    if(!td||!tr)return;
-
-    let colIndex=[...tr.children].indexOf(td);
-    let nextTr=tr.nextElementSibling;
-
-    if(nextTr){
-      let nextInput=nextTr.children[colIndex]?.querySelector("input,textarea");
-      if(nextInput){
-        nextInput.focus();
-        nextInput.select();
+window.deletePlan=async function(no,source){
+  if(!confirm("Delete this Gate Plan?"))return;
+  if(source==="offline"){
+    for(let i=0;i<localStorage.length;i++){
+      const key=localStorage.key(i);
+      if(key&&key.startsWith("GMS_GATEPLAN_OFFLINE_")){
+        const queue=JSON.parse(localStorage.getItem(key)||"[]");
+        const idx=queue.findIndex(x=>planNo(x.data)===no);
+        if(idx!==-1){queue.splice(idx,1);localStorage.setItem(key,JSON.stringify(queue));break}
       }
     }
+  }else{
+    try{await deleteDoc(doc(db,"gatePlans",makeId(no)))}catch(e){console.log(e)}
   }
-});
+  window.GMS_CACHE.invalidate([CACHE_KEYS.gatePlans]);
+  showReport();
+};
 
-window.addEventListener("beforeprint",()=>updateHeader());
+window.exportExcel=function(){
+  const blob=new Blob([document.getElementById("reportArea").innerHTML],{type:"application/vnd.ms-excel"});
+  const a=document.createElement("a");
+  a.href=URL.createObjectURL(blob);
+  a.download="gate-plan-report.xls";
+  a.click();
+};
 
-init();
+(function(){
+  var c = window.GMS_CACHE.getReadCount();
+  var el = document.getElementById('readCounter');
+  if(el) el.innerText = c;
+})();
+
+const param=new URLSearchParams(location.search).get("gatePlanNo")||"";
+if(param){
+  document.body.classList.add("singleMode");
+  document.getElementById("gateNoSearch").value=param;
+}
+showReport();
 </script>
 
 </body>
