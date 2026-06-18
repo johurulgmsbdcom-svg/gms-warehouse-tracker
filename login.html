@@ -425,7 +425,6 @@ footer a{color:#2563eb;text-decoration:none;}
 <script>
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
-    // ব্লব ইউআরএল বা ডাইনামিক স্ক্রিপ্ট দিয়ে সার্ভিস ওয়ার্কার তৈরি করা হচ্ছে যেন আলাদা ফাইল না লাগে
     const swCode = `
       const CACHE_NAME = 'gms-erp-v1';
       const ASSETS = [
@@ -445,7 +444,6 @@ if ('serviceWorker' in navigator) {
       });
 
       self.addEventListener('fetch', e => {
-        // Firebase রিকোয়েস্ট ক্যাশ করা যাবে না, ওগুলো কোড হ্যান্ডেল করবে
         if (e.request.url.includes('firebase') || e.request.url.includes('firestore')) {
           return;
         }
@@ -471,7 +469,6 @@ if ('serviceWorker' in navigator) {
   });
 }
 
-// নেটওয়ার্ক স্ট্যাটাস চেক ও রিয়েল-টাইম আপডেট
 function updateOnlineStatus() {
   const statusEl = document.getElementById('net-status');
   if (navigator.onLine) {
@@ -641,7 +638,6 @@ window.addEventListener('load',()=>{
       setTimeout(()=>sp.remove(), 900);
     }
   }, 3800);
-  // লোড হওয়ার সাথে সাথে একবার স্ট্যাটাস রান করুন
   if(typeof updateOnlineStatus === 'function') updateOnlineStatus();
 });
 
@@ -660,6 +656,26 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const db  = getFirestore(app);
 
+/* 🔐 SECURITY: Hash Function (SHA-256) */
+async function hashPassword(password) {
+    try {
+        const encoder = new TextEncoder();
+        const data = encoder.encode(password);
+        const hashBuffer = await crypto.subtle.digest('SHA-256', data);
+        const hashArray = Array.from(new Uint8Array(hashBuffer));
+        return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+    } catch (e) {
+        // Fallback for file:// protocol (Simple Hash)
+        let hash = 0;
+        for (let i = 0; i < password.length; i++) {
+            const char = password.charCodeAt(i);
+            hash = ((hash << 5) - hash) + char;
+            hash = hash & hash;
+        }
+        return "fallback_" + Math.abs(hash).toString(16);
+    }
+}
+
 /* LOGIN (ONLINE + OFFLINE HYBRID LOGIC) */
 window.login = async function(){
   const email    = document.getElementById('email').value.trim();
@@ -673,22 +689,28 @@ window.login = async function(){
     return;
   }
 
+  // Hash the entered password once
+  const enteredHash = await hashPassword(password);
+
   // ১. ইউজার যদি অফলাইনে থাকে (ইন্টারনেট না থাকে)
   if (!navigator.onLine) {
     msg.style.color = '#ea580c';
     msg.innerHTML   = '🔄 Checking local cache...';
 
     const localUsers = JSON.parse(localStorage.getItem('gms_cached_users') || '[]');
-    const matchingUser = localUsers.find(u => 
-      String(u.email || '').trim().toLowerCase() === email.toLowerCase() &&
-      String(u.password || '').trim() === password
-    );
+    const matchingUser = localUsers.find(u => {
+        const emailMatch = String(u.email || '').trim().toLowerCase() === email.toLowerCase();
+        // Check against Hash OR Legacy Plain Password (for backward compatibility)
+        const hashMatch = u.passwordHash === enteredHash;
+        const legacyMatch = !u.passwordHash && u.password === password;
+        return emailMatch && (hashMatch || legacyMatch);
+    });
 
     if (matchingUser) {
       handleSuccess(matchingUser, true);
     } else {
       msg.style.color = '#ef4444';
-      msg.innerHTML   = '❌ অফলাইন লগইন ব্যর্থ! পূর্বে এই পিসিতে এই আইডি দিয়ে অনলাইন লগইন করা থাকতে হবে।';
+      msg.innerHTML   = '❌ অফলাইন লগইন ব্যর্থ! Email বা Password ভুল।';
     }
     return;
   }
@@ -700,25 +722,34 @@ window.login = async function(){
   try{
     const snap = await getDocs(collection(db, 'users'));
     let found = null, id = '';
-    let allUsersList = []; // অফলাইন ব্যাকআপের জন্য সব ইউজার লিস্টে নিচ্ছি
+    let allUsersList = []; 
 
     snap.forEach(d => {
       const u = d.data();
       u.id = d.id;
-      allUsersList.push(u); // ভবিষ্যতের অফলাইন ম্যাচিং এর জন্য
+      allUsersList.push(u); 
 
-      if(
-        String(u.email   || '').trim().toLowerCase() === email.toLowerCase() &&
-        String(u.password|| '').trim()               === password
-      ){
+      const emailMatch = String(u.email || '').trim().toLowerCase() === email.toLowerCase();
+      // Priority: Hash Match > Legacy Plain Match
+      const hashMatch = u.passwordHash === enteredHash;
+      const legacyMatch = !u.passwordHash && u.password === password;
+
+      if(emailMatch && (hashMatch || legacyMatch)){
         found = u;
         id    = d.id;
       }
     });
 
-    // অনলাইনে সফলভাবে পুরো ডেটা আসলে লোকাল ক্যাশ ও ব্যাকআপ আপডেট করে রাখছি
+    // 🔥 SECURITY: Save to Local Cache WITHOUT Plain Passwords
     if(allUsersList.length > 0) {
-      localStorage.setItem('gms_cached_users', JSON.stringify(allUsersList));
+      let secureCacheList = [];
+      allUsersList.forEach(u => {
+          let safeUser = { ...u };
+          // ALWAYS remove plain password from cache
+          if (safeUser.password) delete safeUser.password; 
+          secureCacheList.push(safeUser);
+      });
+      localStorage.setItem('gms_cached_users', JSON.stringify(secureCacheList));
     }
 
     if(!found){
@@ -731,12 +762,14 @@ window.login = async function(){
 
   } catch(e){
     console.error(e);
-    // যদি কোনো কারণে ফায়ারবেস ফেইল করে (যেমন নেটওয়ার্ক ড্রপ), তখন লোকাল চেক করার শেষ চেষ্টা
+    // Fallback to offline cache
     const localUsers = JSON.parse(localStorage.getItem('gms_cached_users') || '[]');
-    const matchingUser = localUsers.find(u => 
-      String(u.email || '').trim().toLowerCase() === email.toLowerCase() &&
-      String(u.password || '').trim() === password
-    );
+    const matchingUser = localUsers.find(u => {
+        const emailMatch = String(u.email || '').trim().toLowerCase() === email.toLowerCase();
+        const hashMatch = u.passwordHash === enteredHash;
+        const legacyMatch = !u.passwordHash && u.password === password;
+        return emailMatch && (hashMatch || legacyMatch);
+    });
 
     if(matchingUser) {
       handleSuccess(matchingUser, true);
@@ -747,10 +780,15 @@ window.login = async function(){
   }
 };
 
-// লগইন সফল হলে UI হ্যান্ডেল করার ফাংশন
 function handleSuccess(user, isOffline) {
   const msg = document.getElementById('msg');
-  localStorage.setItem('gmsUser', JSON.stringify(user));
+  
+  // 🔥 SECURITY: Remove sensitive data before saving session
+  let safeUser = { ...user };
+  delete safeUser.password;
+  delete safeUser.passwordHash;
+  
+  localStorage.setItem('gmsUser', JSON.stringify(safeUser));
 
   msg.style.color = '#00e5ff';
   msg.innerHTML   = isOffline ? '✅ Offline Login Successful!' : '✅ Online Login Successful!';
