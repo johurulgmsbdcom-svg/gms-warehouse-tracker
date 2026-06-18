@@ -235,6 +235,11 @@ body.light .checkItem:hover{background:var(--card2)!important;}
       <button class="btn green" onclick="saveUser()">💾 Save User</button>
     </div>
 
+    <!-- 🔥 Password Security Note -->
+    <div class="smallNote" style="border-left-color: var(--blue); background: rgba(37,99,235,.1); margin-top: 10px;">
+      🔒 <b>Edit</b> করার সময় Password খালি রাখলে আগের Password-ই বহাল থাকবে। নতুন দিলে তা Hash (এনক্রিপ্ট) হয়ে সেভ হবে।
+    </div>
+
     <div class="smallNote" id="manpowerNote">
       Manpower None দিলে user manpower পাবে না।
     </div>
@@ -308,6 +313,32 @@ const firebaseConfig = {
 
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
+
+// 🛡️ SECURITY: Admin Access Check
+const currentUser = JSON.parse(localStorage.getItem('gmsUser') || 'null');
+if (!currentUser || currentUser.role !== 'admin') {
+    alert("🚫 Access Denied! Only Admins can access this page.");
+    window.location.href = "login.html";
+}
+
+// 🔐 SECURITY: Password Hash Function (SHA-256)
+async function hashPassword(password) {
+    try {
+        const encoder = new TextEncoder();
+        const data = encoder.encode(password);
+        const hashBuffer = await crypto.subtle.digest('SHA-256', data);
+        const hashArray = Array.from(new Uint8Array(hashBuffer));
+        return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+    } catch (e) {
+        let hash = 0;
+        for (let i = 0; i < password.length; i++) {
+            const char = password.charCodeAt(i);
+            hash = ((hash << 5) - hash) + char;
+            hash = hash & hash;
+        }
+        return "fallback_" + Math.abs(hash).toString(16);
+    }
+}
 
 // 🔐 MCD to Company Mapping
 const MCD_COMPANY_MAP = {
@@ -392,12 +423,10 @@ window.updateCompanyUI=function(){
   if(t.checked) selectedCompanies.push("GMS TEXTILES LTD");
   if(c.checked) selectedCompanies.push("GMS COMPOSITE KNITTING");
 
-  // Refresh both MCD sections with current selections
   renderMcdChecks("mcdChecks", getNormalMCD(), selectedCompanies);
   renderMcdChecks("manpowerMcdChecks", getManpowerMCD(), selectedCompanies);
 };
 
-// ✅ Generic MCD Renderer (Works for both Normal & Manpower) - 🔥 FIXED
 function renderMcdChecks(containerId, selected=[], allowedCompanies=[]){
   let box = document.getElementById(containerId);
   if(!box) return;
@@ -405,7 +434,6 @@ function renderMcdChecks(containerId, selected=[], allowedCompanies=[]){
   let html="";
   const filteredMCDs = MCD_LIST.filter(mcd => {
     const type = MCD_COMPANY_MAP[mcd] || "both";
-    // 🔥 FIX: যদি কোনো কোম্পানি সিলেক্ট না থাকে, সব ১৪টি MCD দেখাও
     if(allowedCompanies.length === 0) return true;
     if(type === "both") return true;
     if(allowedCompanies.includes("GMS TEXTILES LTD") && type === "textile") return true;
@@ -430,7 +458,6 @@ function renderMcdChecks(containerId, selected=[], allowedCompanies=[]){
   box.innerHTML=html;
 }
 
-// 🔍 Get Selected MCDs from specific container
 function getNormalMCD(){
   return [...document.querySelectorAll("#mcdChecks .mcdCheck-mcdChecks:checked")].map(c=>c.value);
 }
@@ -464,6 +491,7 @@ window.clearForm=function(){
   document.getElementById("name").value="";
   document.getElementById("email").value="";
   document.getElementById("password").value="";
+  document.getElementById("password").placeholder = "Password"; // Reset placeholder
   document.getElementById("role").value="user";
   document.getElementById("needleAccess").value="no";
   document.getElementById("manpowerAccess").value="none";
@@ -475,7 +503,7 @@ window.clearForm=function(){
   window.scrollTo({top:0,behavior:"smooth"});
 };
 
-// 💾 FIXED: Save User with Separate Normal & Manpower MCD
+// 💾 SMART SAVE: Hashes new passwords, keeps old 3-letter passwords intact
 window.saveUser=async function(){
   const cmps = [...document.querySelectorAll("#cmpTextile:checked,#cmpComposite:checked")].map(c => c.value);
   if(cmps.length === 0) { alert("⚠️ অন্তত ১টা কোম্পানি সিলেক্ট করুন!"); return; }
@@ -491,34 +519,52 @@ window.saveUser=async function(){
   let needleAccess=document.getElementById("needleAccess").value==="yes";
   let manpowerAccess=document.getElementById("manpowerAccess").value;
 
-  if(!name || !email || !password){ alert("Name, Email, Password lagbe"); return; }
+  if(!name || !email){ alert("Name এবং Email লাগবে"); return; }
   if(manpowerAccess==="selected" && mpMCD.length===0){ alert("Manpower Selected দিলে অন্তত ১টা MCD tick করতে হবে"); return; }
 
-  // 🔥 Boolean for manpower.html compatibility
   let manpowerAccessBoolean = (manpowerAccess !== "none");
 
   let userData={
     name:name,
     email:email,
-    password:password,
     role:role,
     userCompanies: cmps,
-    
-    mcdAccess: normalMCD,           // 📂 Normal MCD (Dashboard/Reports)
+    mcdAccess: normalMCD,
     needleAccess: needleAccess,
-    
-    manpowerAccess: manpowerAccessBoolean,    // 👨 Boolean (for manpower.html)
-    manpowerAccessLevel: manpowerAccess,      // 👨 String (for UI)
-    manpowerMcdAccess: mpMCD,                 // 👨 Separate Manpower MCD Array
-
+    manpowerAccess: manpowerAccessBoolean,
+    manpowerAccessLevel: manpowerAccess,
+    manpowerMcdAccess: mpMCD,
     updatedAt:new Date().toISOString()
   };
 
   if(editId){
+    // 🔥 EDITING EXISTING USER
+    if(password) {
+      // If new password is provided, Hash it
+      userData.passwordHash = await hashPassword(password);
+    } else {
+      // If password is blank, keep the old password/hash exactly as it is
+      let existingUser = allUsers.find(x => x.id === editId);
+      if(existingUser) {
+        if(existingUser.data.passwordHash) {
+          userData.passwordHash = existingUser.data.passwordHash;
+        } else if(existingUser.data.password) {
+          // Keep legacy plain text password (for your old 3-letter passwords)
+          userData.password = existingUser.data.password; 
+        }
+      }
+    }
+    
     await updateDoc(doc(db,"users",editId),userData);
     toast("User Updated ✅");
-  }else{
+  } else {
+    // 🔥 CREATING NEW USER
+    if(!password){ alert("নতুন ইউজারের জন্য Password লাগবে!"); return; }
+    
+    // Hash the password before saving
+    userData.passwordHash = await hashPassword(password);
     userData.createdAt=new Date().toISOString();
+    
     await addDoc(collection(db,"users"),userData);
     toast("User Saved ✅");
   }
@@ -527,7 +573,7 @@ window.saveUser=async function(){
   loadUsers();
 };
 
-// ✏️ Edit User with Dual MCD Restore
+// ✏️ Edit User (Password field kept blank for security)
 window.editUser=function(id){
   let found=allUsers.find(x=>x.id===id);
   if(!found) return;
@@ -539,21 +585,22 @@ window.editUser=function(id){
   document.getElementById("editId").value=id;
   document.getElementById("name").value=u.name || "";
   document.getElementById("email").value=u.email || "";
-  document.getElementById("password").value=u.password || "";
+  
+  // 🔥 SECURITY: Do NOT show password. Change placeholder to indicate it's optional
+  document.getElementById("password").value = "";
+  document.getElementById("password").placeholder = "Leave blank to keep current password";
+  
   document.getElementById("role").value=u.role || "user";
   document.getElementById("needleAccess").value=u.needleAccess ? "yes" : "no";
   
-  // Company
   const companies = u.userCompanies || [];
   document.getElementById("cmpTextile").checked = companies.includes("GMS TEXTILES LTD");
   document.getElementById("cmpComposite").checked = companies.includes("GMS COMPOSITE KNITTING");
   
-  // Manpower Dropdown & Toggle
   document.getElementById("manpowerAccess").value = u.manpowerAccessLevel || access;
   toggleManpowerSections();
   updateCompanyUI();
 
-  // 🔥 Restore BOTH MCD selections explicitly
   let normalSelected = Array.isArray(u.mcdAccess) ? u.mcdAccess : [];
   let mpSelected = Array.isArray(u.manpowerMcdAccess) ? u.manpowerMcdAccess : [];
   
