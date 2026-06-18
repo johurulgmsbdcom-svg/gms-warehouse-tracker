@@ -123,6 +123,9 @@ td{padding:10px 12px;border-bottom:1px solid var(--border)}
 tr:hover{background:rgba(59,130,246,0.05)}
 .amount{font-weight:700;color:var(--green);text-align:right}
 
+.empty-state{text-align:center;padding:60px 20px;color:var(--muted)}
+.empty-state i{font-size:64px;margin-bottom:16px;opacity:.5}
+
 .toast{position:fixed;bottom:30px;right:30px;background:var(--green);color:#fff;padding:14px 20px;border-radius:10px;font-weight:600;box-shadow:var(--shadow);z-index:9999;animation:slideIn .3s}
 .toast.error{background:var(--red)}
 @keyframes slideIn{from{transform:translateX(100%);opacity:0}to{transform:translateX(0);opacity:1}}
@@ -269,7 +272,13 @@ TI
 <div class="stat-card red" onclick="clearFilters()"><h4>Avg. Per Item</h4><div class="value" id="statAvg">৳0</div></div>
 </div>
 
-<div class="chart-grid">
+<div id="emptyState" class="empty-state" style="display:none;">
+<i class="fas fa-inbox"></i>
+<h3>No Data Available</h3>
+<p>Upload an Excel file to get started</p>
+</div>
+
+<div class="chart-grid" id="chartGrid">
 <div class="chart-box">
 <h3><i class="fas fa-chart-pie" style="color:var(--blue)"></i> Category Wise Issue Value</h3>
 <canvas id="categoryChart"></canvas>
@@ -301,6 +310,10 @@ TI
 <button class="filter-btn" onclick="filterReport('aceton')" id="btnAceton">🧪 Aceton<small id="totalAceton">৳0</small></button>
 <button class="filter-btn" onclick="filterReport('stationery')" id="btnStationery">📝 Stationery<small id="totalStationery">৳0</small></button>
 <button class="filter-btn" onclick="filterReport('printing')" id="btnPrinting">🖨️ Printing<small id="totalPrinting">৳0</small></button>
+<button class="filter-btn" onclick="filterReport('laboratory')" id="btnLaboratory">🔬 Laboratory<small id="totalLaboratory">৳0</small></button>
+<button class="filter-btn" onclick="filterReport('medical')" id="btnMedical">🏥 Medical<small id="totalMedical">৳0</small></button>
+<button class="filter-btn" onclick="filterReport('miscellaneous')" id="btnMiscellaneous">📦 Miscellaneous<small id="totalMiscellaneous">৳0</small></button>
+<button class="filter-btn" onclick="filterReport('fire')" id="btnFire">🔥 Fire Safety<small id="totalFire">৳0</small></button>
 <div id="activeFilters"></div>
 </div>
 
@@ -753,7 +766,11 @@ photocopy: allData.filter(r => r.itemDescription.toLowerCase().includes('photoco
 polybag: allData.filter(r => r.itemDescription.toLowerCase().includes('poly')).reduce((s, r) => s + r.amount, 0),
 aceton: allData.filter(r => r.itemDescription.toLowerCase().includes('aceton')).reduce((s, r) => s + r.amount, 0),
 stationery: allData.filter(r => r.category === 'STATIONERY').reduce((s, r) => s + r.amount, 0),
-printing: allData.filter(r => r.category === 'PRINTING').reduce((s, r) => s + r.amount, 0)
+printing: allData.filter(r => r.category === 'PRINTING').reduce((s, r) => s + r.amount, 0),
+laboratory: allData.filter(r => r.category === 'LABORATORY ITEMS').reduce((s, r) => s + r.amount, 0),
+medical: allData.filter(r => r.category === 'MEDICAL ITEMS').reduce((s, r) => s + r.amount, 0),
+miscellaneous: allData.filter(r => r.category === 'MISCELLANEOUS GOODS').reduce((s, r) => s + r.amount, 0),
+fire: allData.filter(r => r.category.includes('FIRE SAFETY')).reduce((s, r) => s + r.amount, 0)
 };
 
 document.getElementById('totalAll').textContent = '৳' + totals.all.toLocaleString('en-US', { maximumFractionDigits: 0 });
@@ -762,6 +779,10 @@ document.getElementById('totalPolybag').textContent = '৳' + totals.polybag.toL
 document.getElementById('totalAceton').textContent = '৳' + totals.aceton.toLocaleString('en-US', { maximumFractionDigits: 0 });
 document.getElementById('totalStationery').textContent = '৳' + totals.stationery.toLocaleString('en-US', { maximumFractionDigits: 0 });
 document.getElementById('totalPrinting').textContent = '৳' + totals.printing.toLocaleString('en-US', { maximumFractionDigits: 0 });
+document.getElementById('totalLaboratory').textContent = '৳' + totals.laboratory.toLocaleString('en-US', { maximumFractionDigits: 0 });
+document.getElementById('totalMedical').textContent = '৳' + totals.medical.toLocaleString('en-US', { maximumFractionDigits: 0 });
+document.getElementById('totalMiscellaneous').textContent = '৳' + totals.miscellaneous.toLocaleString('en-US', { maximumFractionDigits: 0 });
+document.getElementById('totalFire').textContent = '৳' + totals.fire.toLocaleString('en-US', { maximumFractionDigits: 0 });
 }
 
 function applyFilters() {
@@ -773,9 +794,25 @@ if (currentFilter.reportType === 'polybag' && !row.itemDescription.toLowerCase()
 if (currentFilter.reportType === 'aceton' && !row.itemDescription.toLowerCase().includes('aceton')) return false;
 if (currentFilter.reportType === 'stationery' && row.category !== 'STATIONERY') return false;
 if (currentFilter.reportType === 'printing' && row.category !== 'PRINTING') return false;
+if (currentFilter.reportType === 'laboratory' && row.category !== 'LABORATORY ITEMS') return false;
+if (currentFilter.reportType === 'medical' && row.category !== 'MEDICAL ITEMS') return false;
+if (currentFilter.reportType === 'miscellaneous' && row.category !== 'MISCELLANEOUS GOODS') return false;
+if (currentFilter.reportType === 'fire' && !row.category.includes('FIRE SAFETY')) return false;
 }
 return true;
 });
+
+// Show/hide empty state
+const emptyState = document.getElementById('emptyState');
+const chartGrid = document.getElementById('chartGrid');
+if (filteredData.length === 0) {
+emptyState.style.display = 'block';
+chartGrid.style.display = 'none';
+} else {
+emptyState.style.display = 'none';
+chartGrid.style.display = 'grid';
+}
+
 updateStats();
 updateMonthlySummary();
 renderCharts();
@@ -851,6 +888,7 @@ ctx.restore();
 }
 };
 
+// Chart 1: Category Wise (Pie)
 const catData = {};
 filteredData.forEach(r => { const cat = r.category || 'Unknown'; catData[cat] = (catData[cat] || 0) + r.amount; });
 const catLabels = Object.keys(catData);
@@ -859,11 +897,12 @@ const catTotal = catValues.reduce((a, b) => a + b, 0);
 
 charts.category = new Chart(document.getElementById('categoryChart'), {
 type: 'pie',
-data: { labels: catLabels, datasets: [{ data: catValues, backgroundColor: palette, borderWidth: 2, borderColor: isDark ? '#1e293b' : '#fff' }] },
+data: { labels: catLabels.length ? catLabels : ['No Data'], datasets: [{ data: catValues.length ? catValues : [1], backgroundColor: palette, borderWidth: 2, borderColor: isDark ? '#1e293b' : '#fff' }] },
 options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom', labels: { color: textColor, font: { size: 10 } } } } }
 });
 document.getElementById('categoryTotal').textContent = 'Grand Total: ৳' + catTotal.toLocaleString('en-US', { maximumFractionDigits: 0 });
 
+// Chart 2: Section Wise (Bar)
 const secData = {};
 filteredData.forEach(r => { const sec = r.section || 'Unknown'; secData[sec] = (secData[sec] || 0) + r.amount; });
 const secLabels = Object.keys(secData).slice(0, 15);
@@ -872,12 +911,13 @@ const secTotal = secValues.reduce((a, b) => a + b, 0);
 
 charts.section = new Chart(document.getElementById('sectionChart'), {
 type: 'bar',
-data: { labels: secLabels, datasets: [{ label: 'Amount', data: secValues, backgroundColor: '#22c55e', borderRadius: 8 }] },
+data: { labels: secLabels.length ? secLabels : ['No Data'], datasets: [{ label: 'Amount', data: secValues.length ? secValues : [0], backgroundColor: '#22c55e', borderRadius: 8 }] },
 options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { grid: { color: gridColor }, ticks: { color: textColor } }, x: { ticks: { color: textColor, maxRotation: 45, font: { size: 9 } } } } },
 plugins: [valueLabelPlugin]
 });
 document.getElementById('sectionTotal').textContent = 'Grand Total: ৳' + secTotal.toLocaleString('en-US', { maximumFractionDigits: 0 });
 
+// Chart 3: Issue ID Wise (Bar)
 const idData = {};
 filteredData.forEach(r => { const id = r.issueId || 'Unknown'; idData[id] = (idData[id] || 0) + r.amount; });
 const idLabels = Object.keys(idData).slice(0, 10);
@@ -886,12 +926,13 @@ const idTotal = idValues.reduce((a, b) => a + b, 0);
 
 charts.issueId = new Chart(document.getElementById('issueIdChart'), {
 type: 'bar',
-data: { labels: idLabels, datasets: [{ label: 'Amount', data: idValues, backgroundColor: '#f59e0b', borderRadius: 8 }] },
+data: { labels: idLabels.length ? idLabels : ['No Data'], datasets: [{ label: 'Amount', data: idValues.length ? idValues : [0], backgroundColor: '#f59e0b', borderRadius: 8 }] },
 options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { grid: { color: gridColor }, ticks: { color: textColor } }, x: { ticks: { color: textColor, maxRotation: 45, font: { size: 9 } } } } },
 plugins: [valueLabelPlugin]
 });
 document.getElementById('issueIdTotal').textContent = 'Grand Total: ৳' + idTotal.toLocaleString('en-US', { maximumFractionDigits: 0 });
 
+// Chart 4: Division Wise (Bar)
 const divData = {};
 filteredData.forEach(r => { const div = r.division || 'Unknown'; divData[div] = (divData[div] || 0) + r.amount; });
 const divLabels = Object.keys(divData);
@@ -900,7 +941,7 @@ const divTotal = divValues.reduce((a, b) => a + b, 0);
 
 charts.division = new Chart(document.getElementById('divisionChart'), {
 type: 'bar',
-data: { labels: divLabels, datasets: [{ label: 'Amount', data: divValues, backgroundColor: '#8b5cf6', borderRadius: 8 }] },
+data: { labels: divLabels.length ? divLabels : ['No Data'], datasets: [{ label: 'Amount', data: divValues.length ? divValues : [0], backgroundColor: '#8b5cf6', borderRadius: 8 }] },
 options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { grid: { color: gridColor }, ticks: { color: textColor } }, x: { ticks: { color: textColor, maxRotation: 45, font: { size: 9 } } } } },
 plugins: [valueLabelPlugin]
 });
