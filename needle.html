@@ -1,81 +1,90 @@
 <!DOCTYPE html>
 <html>
 <head>
-<title>Needle Daily Posting</title>
-<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
-<link rel="manifest" href="/manifest.json">
-<meta name="theme-color" content="#0f172a">
+<title>GMS Composite - Needle Daily Posting</title>
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<meta charset="UTF-8">
 <style>
 *{box-sizing:border-box}
-html,body{width:100%;max-width:100%;overflow-x:hidden;margin:0;padding:0;background:#0f172a;color:white;font-family:Arial,sans-serif;touch-action:manipulation}
-body{padding:4px}
-h2{text-align:center;font-size:17px;margin:6px 0 8px}
-.topControls{text-align:center;margin-bottom:8px!important;font-size:12px}
-button{padding:7px 9px;border:0;border-radius:6px;color:white;font-weight:bold;cursor:pointer;margin:2px;font-size:11px}
-.deleteBtn{background:#dc2626}.excelBtn{background:#16a34a}.pdfBtn{background:#7c3aed}.homeBtn{background:#2563eb}.saveBtn{background:green}
-input,select,textarea,button{font-size:16px}
-select,input[type="date"],input[type="text"]{padding:5px;border-radius:5px;border:1px solid #999;max-width:150px}
-.tableWrap{width:100%;max-width:100%;overflow-x:hidden}
+html,body{width:100%;max-width:100%;overflow-x:hidden;margin:0;padding:0;background:#0f172a;color:white;font-family:'Poppins',Arial,sans-serif;touch-action:manipulation}
+body.light{background:#f8fafc;color:#0f172a}
+body{padding:2px}
+h2{text-align:center;font-size:16px;margin:4px 0 6px;background:linear-gradient(135deg,#8b5cf6,#3b82f6);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+body.light h2{background:linear-gradient(135deg,#3b82f6,#8b5cf6);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.topControls{text-align:center;margin-bottom:6px!important;font-size:11px;background:rgba(30,41,59,0.8);padding:6px;border-radius:8px}
+body.light .topControls{background:rgba(241,245,249,0.9)}
+button{padding:6px 8px;border:0;border-radius:6px;color:white;font-weight:bold;cursor:pointer;margin:2px;font-size:10px;transition:all 0.3s}
+button:hover{transform:translateY(-2px);box-shadow:0 4px 12px rgba(0,0,0,0.3)}
+.deleteBtn{background:#dc2626}.excelBtn{background:#16a34a}.pdfBtn{background:#7c3aed}.homeBtn{background:#2563eb}.saveBtn{background:#10b981}.themeBtn{background:#64748b}
+input,select,textarea,button{font-size:13px}
+select,input[type="date"],input[type="text"]{padding:4px;border-radius:6px;border:1px solid #475569;max-width:150px;background:#1e293b;color:white}
+body.light select,body.light input[type="date"],body.light input[type="text"]{background:#f1f5f9;color:#0f172a;border-color:#cbd5e1}
+.tableWrap{width:100%;max-width:100%;overflow-x:hidden;margin:6px 0}
 #reportTable{width:100%;max-width:100%;margin:0 auto;border-collapse:collapse;table-layout:fixed;background:white;color:black}
-#reportTable th,#reportTable td{border:1px solid #000;padding:1px;text-align:center;font-size:10px;line-height:1.08;white-space:nowrap;overflow:hidden}
-#reportTable thead{background:#1e293b;color:white}
+#reportTable th,#reportTable td{border:1px solid #000;padding:1px;text-align:center;font-size:9px;line-height:1.1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#reportTable thead{background:#1e293b;color:white;position:sticky;top:0}
+body.light #reportTable thead{background:#334155}
 #reportTable tfoot{background:#334155;color:white;font-weight:bold}
-.col-sl{width:6%;font-size:9px!important}.col-type{width:22%;font-size:10px!important}.col-size{width:8%;font-size:10px!important}
-.col-prev{width:12%}.col-rcvd{width:11%}.col-dvld{width:11%}.col-present{width:14%}.col-bn{width:10%}
-.qtyInput{width:100%;height:24px;padding:1px;text-align:center;font-size:16px;font-weight:bold;border:1px solid #999;border-radius:3px;background:white;color:black;-webkit-text-size-adjust:100%}
-.summaryWrap{width:100%;max-width:100%;overflow-x:hidden}
-#summaryTable{width:100%;max-width:100%;margin:auto;text-align:center;border-collapse:collapse;table-layout:fixed;background:white;color:black}
-#summaryTable th,#summaryTable td{border:1px solid #000;padding:2px;font-size:10px}
-
+.col-sl{width:4%}.col-code{width:9%}.col-type{width:13%}.col-size{width:7%}
+.col-brand{width:8%}.col-price{width:7%}.col-prev{width:9%}.col-rcvd{width:9%}.col-dvld{width:9%}
+.col-present{width:10%}.col-bn{width:9%}
+.qtyInput{width:100%;height:24px;padding:1px;text-align:center;font-size:11px;font-weight:bold;border:1px solid #999;border-radius:3px;background:white;color:black}
+body.light .qtyInput{background:#f8fafc}
+.qtyInput:focus{outline:none;border-color:#3b82f6;box-shadow:0 0 0 2px rgba(59,130,246,0.2)}
+.summaryWrap{width:100%;margin:10px auto;text-align:center;overflow-x:hidden}
+#summaryTable{width:100%;max-width:100%;margin:auto;text-align:center;border-collapse:collapse;background:white;color:black}
+#summaryTable th,#summaryTable td{border:1px solid #000;padding:4px;font-size:10px}
+#summaryTable thead{background:#1e293b;color:white}
+body.light #summaryTable thead{background:#334155}
 .negative-row{background:#fecaca!important}
 .negative-row td{color:#991b1b;font-weight:bold}
-
-#negativePopup{display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.7);z-index:9999;justify-content:center;align-items:center}
-.popup-content{background:white;color:black;padding:16px;border-radius:10px;max-width:95%;width:400px;box-shadow:0 4px 20px rgba(0,0,0,0.3);position:relative}
-.popup-close{position:absolute;top:8px;right:12px;font-size:20px;cursor:pointer;color:#666;font-weight:bold}
+#negativePopup{display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.8);z-index:9999;justify-content:center;align-items:center}
+.popup-content{background:white;color:black;padding:20px;border-radius:12px;max-width:95%;width:420px;box-shadow:0 8px 30px rgba(0,0,0,0.4);position:relative;animation:popupSlide 0.3s}
+@keyframes popupSlide{from{transform:translateY(-50px);opacity:0}to{transform:translateY(0);opacity:1}}
+.popup-close{position:absolute;top:10px;right:14px;font-size:22px;cursor:pointer;color:#666;font-weight:bold}
 .popup-close:hover{color:#dc2626}
-.popup-title{font-size:16px;font-weight:bold;margin-bottom:12px;color:#dc2626;text-align:center}
-.popup-details{font-size:12px;line-height:1.6}
-.popup-details div{margin:4px 0;display:flex;justify-content:space-between}
+.popup-title{font-size:17px;font-weight:bold;margin-bottom:14px;color:#dc2626;text-align:center;display:flex;align-items:center;justify-content:center;gap:8px}
+.popup-details{font-size:12px;line-height:1.8}
+.popup-details div{margin:5px 0;display:flex;justify-content:space-between;padding:6px;background:#f8fafc;border-radius:6px}
 .popup-details span.label{font-weight:bold;color:#334155}
-.popup-details span.value{color:#1e293b;font-weight:500}
-.popup-fix-btn{background:#2563eb;color:white;border:none;padding:8px 16px;border-radius:6px;font-weight:bold;cursor:pointer;width:100%;margin-top:12px;font-size:13px}
-.popup-fix-btn:hover{background:#1d4ed8}
-.popup-footer{text-align:center;font-size:11px;color:#64748b;margin-top:8px}
-
-.offline-indicator{
-  position:fixed;top:0;left:0;right:0;background:#f59e0b;color:#000;padding:6px 12px;text-align:center;font-size:12px;font-weight:600;z-index:9999;display:none;
-}
-.offline-indicator.show{display:block;}
-
-/* 🔥 ROI Tracking Indicator */
-.roi-tracker-indicator{
-  position:fixed;bottom:10px;right:10px;background:rgba(16,185,129,0.9);color:#fff;padding:6px 12px;border-radius:20px;font-size:10px;font-weight:600;z-index:9998;display:flex;align-items:center;gap:6px;box-shadow:0 4px 12px rgba(0,0,0,0.3);
-}
-.roi-tracker-indicator .roi-dot{width:6px;height:6px;background:#fff;border-radius:50%;animation:roiPulse 1.5s infinite;}
-@keyframes roiPulse{0%,100%{opacity:1;}50%{opacity:0.3;}}
-
+.popup-details span.value{color:#1e293b;font-weight:600}
+.popup-fix-btn{background:#2563eb;color:white;border:none;padding:10px 18px;border-radius:8px;font-weight:bold;cursor:pointer;width:100%;margin-top:14px;font-size:14px;transition:all 0.3s}
+.popup-fix-btn:hover{background:#1d4ed8;transform:translateY(-2px)}
+.popup-footer{text-align:center;font-size:11px;color:#64748b;margin-top:10px;padding-top:10px;border-top:1px solid #e2e8f0}
+.offline-indicator{position:fixed;top:0;left:0;right:0;background:#f59e0b;color:#000;padding:6px 10px;text-align:center;font-size:11px;font-weight:700;z-index:9999;display:none;animation:slideDown 0.3s}
+@keyframes slideDown{from{transform:translateY(-100%)}to{transform:translateY(0)}}
+.floor-badge{display:inline-block;padding:2px 8px;background:linear-gradient(135deg,#8b5cf6,#3b82f6);color:white;border-radius:10px;font-size:10px;font-weight:600;margin-left:6px}
+.carry-badge{display:inline-block;padding:2px 8px;background:linear-gradient(135deg,#f59e0b,#d97706);color:#000;border-radius:10px;font-size:9px;font-weight:700;margin-left:6px}
+.loading-overlay{position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(15,23,42,0.9);z-index:10000;display:none;justify-content:center;align-items:center;flex-direction:column}
+body.light .loading-overlay{background:rgba(248,250,252,0.9)}
+.loading-overlay.show{display:flex}
+.spinner{width:50px;height:50px;border:4px solid #334155;border-top-color:#3b82f6;border-radius:50%;animation:spin 1s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.loading-text{margin-top:15px;font-size:14px;color:#cbd5e1;font-weight:600}
+body.light .loading-text{color:#475569}
+.theme-toggle{position:fixed;top:6px;right:6px;z-index:1000}
 @media(max-width:480px){
-  body{padding:2px}h2{font-size:15px;margin:4px 0}.topControls{font-size:11px}
-  button{padding:6px 7px;font-size:10px}
-  #reportTable th,#reportTable td{font-size:9px;padding:1px 0}
-  .col-sl{width:6%;font-size:8px!important}.col-type{width:22%;font-size:9px!important}.col-size{width:8%;font-size:9px!important}
-  .col-prev{width:12%}.col-rcvd{width:11%}.col-dvld{width:11%}.col-present{width:14%}.col-bn{width:10%}
-  .qtyInput{height:22px;font-size:16px}
-  .popup-content{width:95%;padding:12px}
-  .popup-title{font-size:14px}
+  body{padding:1px}h2{font-size:13px;margin:3px 0 4px}
+  .topControls{font-size:10px;padding:5px}
+  button{padding:5px 6px;font-size:9px;margin:1px}
+  select,input[type="date"],input[type="text"]{max-width:100px;padding:3px;font-size:11px}
+  #reportTable th,#reportTable td{font-size:7px;padding:0px;line-height:1}
+  .qtyInput{height:20px;font-size:9px}
+  .popup-content{width:95%;padding:16px}
+  .popup-title{font-size:15px}
   .popup-details{font-size:11px}
-  .roi-tracker-indicator{font-size:9px;padding:4px 8px;bottom:5px;right:5px;}
+  .col-sl{width:4%}.col-code{width:9%}.col-type{width:12%}.col-size{width:6%}
+  .col-brand{width:7%}.col-price{width:7%}.col-prev{width:9%}.col-rcvd{width:10%}.col-dvld{width:10%}
+  .col-present{width:11%}.col-bn{width:9%}
+  #summaryTable th,#summaryTable td{font-size:8px;padding:2px}
 }
 @media print{
   html,body{background:white!important;color:black!important;overflow:visible!important}
-  button,input[type="date"],select,input[type="text"]{display:none!important}
+  button,input[type="date"],select,input[type="text"],.offline-indicator,.loading-overlay,.theme-toggle{display:none!important}
   .tableWrap,.summaryWrap{overflow:visible!important}
   #reportTable,#summaryTable{width:100%!important;max-width:100%!important;color:black!important;background:white!important}
-  #reportTable th,#reportTable td{font-size:7px;padding:1px}
+  #reportTable th,#reportTable td{font-size:8px;padding:2px}
   #negativePopup{display:none!important}
-  .offline-indicator{display:none!important}
-  .roi-tracker-indicator{display:none!important}
 }
 </style>
 </head>
@@ -83,69 +92,148 @@ select,input[type="date"],input[type="text"]{padding:5px;border-radius:5px;borde
 
 <div class="offline-indicator" id="offlineIndicator">📴 Offline Mode - Data saved locally</div>
 
-<!-- 🔥 ROI Tracking Indicator -->
-<div class="roi-tracker-indicator" id="roiTrackerIndicator" title="ROI Tracking Active">
-  <div class="roi-dot"></div>
-  <span>ROI Tracking Active</span>
+<div class="loading-overlay" id="loadingOverlay">
+  <div class="spinner"></div>
+  <div class="loading-text" id="loadingText">Loading...</div>
 </div>
 
-<h2 style="text-align:center;">Needle Daily Posting</h2>
+<div class="theme-toggle">
+  <button class="themeBtn" onclick="toggleTheme()">🌙/☀️</button>
+</div>
+
+<h2>🪡 GMS COMPOSITE - NEEDLE DAILY POSTING</h2>
 
 <div class="topControls">
-Operator: <input type="text" id="operatorName" placeholder="Enter name" style="max-width:120px;">
-Date: <input type="date" id="postDate">
+<div style="display:flex;flex-wrap:wrap;gap:6px;justify-content:center;align-items:center;margin-bottom:6px">
+  <div>
+    <label style="font-weight:600;color:#cbd5e1;margin-right:4px">Operator:</label>
+    <input type="text" id="operatorName" placeholder="Name" style="max-width:110px">
+  </div>
+  <div>
+    <label style="font-weight:600;color:#cbd5e1;margin-right:4px">Date:</label>
+    <input type="date" id="postDate">
+  </div>
+  <div>
+    <label style="font-weight:600;color:#cbd5e1;margin-right:4px">Floor:</label>
+    <select id="floor" onchange="onFloorChange()">
+      <option value="">-- Select Floor --</option>
+      <optgroup label="BUILDING 02">
+        <option>A-FLOOR(BUILDING NO-02)_NEW</option>
+        <option>A-FLOOR(BUILDING NO-02)_RUNNING</option>
+        <option>B-FLOOR(BUILDING NO-02)_NEW</option>
+        <option>B-FLOOR(BUILDING NO-02)_RUNNING</option>
+      </optgroup>
+      <optgroup label="BUILDING 04">
+        <option>C-FLOOR ( BUILDING NO-04)_NEW</option>
+        <option>C-FLOOR ( BUILDING NO-04)_RUNNING</option>
+        <option>D-FLOOR ( BUILDING NO -04)_NEW</option>
+        <option>D-FLOOR ( BUILDING NO -04)_RUNNING</option>
+      </optgroup>
+      <optgroup label="BUILDING 03">
+        <option>E-FLOOR ( BUILDING NO-03)_NEW</option>
+        <option>E-FLOOR ( BUILDING NO-03)_RUNNING</option>
+      </optgroup>
+      <optgroup label="BUILDING 01">
+        <option>EMB-(BUILDING NO-01)_NEW</option>
+        <option>EMB-(BUILDING NO-01)_RUNNING</option>
+        <option>TRAINING CENTRE-(BUILDING NO-01)_NEW</option>
+        <option>TRAINING CENTRE-(BUILDING NO-01)_RUNNING</option>
+      </optgroup>
+      <optgroup label="BUILDING 6A">
+        <option>F-FLOOR (BUILDING NO-6A)_NEW</option>
+        <option>F-FLOOR (BUILDING NO-6A)_RUNNING</option>
+        <option>G-FLOOR ( BUILDING NO-6A)_NEW</option>
+        <option>G-FLOOR ( BUILDING NO-6A)_RUNNING</option>
+      </optgroup>
+      <optgroup label="BUILDING 6B">
+        <option>H-FLOOR (BUILDING NO-6B)_NEW</option>
+        <option>H-FLOOR (BUILDING NO-6B)_RUNNING</option>
+        <option>I-FLOOR (BUILDING NO-06 B)_NEW</option>
+        <option>I-FLOOR (BUILDING NO-06 B)_RUNNING</option>
+      </optgroup>
+      <optgroup label="BUILDING 09">
+        <option>J-FLOOR(BUILDING NO-09)_NEW</option>
+        <option>J-FLOOR(BUILDING NO-09)_RUNNING</option>
+        <option>K-FLOOR(BUILDING NO-09)_NEW</option>
+        <option>K-FLOOR(BUILDING NO-09)_RUNNING</option>
+      </optgroup>
+      <optgroup label="BUILDING 03 (SAMPLE)">
+        <option>SAMPLE-(BUILDING NO-03)_NEW</option>
+        <option>SAMPLE-(BUILDING NO-03)_RUNNING</option>
+      </optgroup>
+    </select>
+    <span class="floor-badge" id="categoryBadge">NEW</span>
+    <span class="carry-badge" id="carryBadge" style="display:none">⏪ Carried</span>
+  </div>
+</div>
 
-Floor:
-<select id="floor" onchange="loadTable(); loadData();">
-<option>Kadom R</option><option>Kadom N</option><option>Shapla R</option><option>Shapla N</option>
-<option>Poddo R</option><option>Poddo N</option><option>Belly R</option><option>Belly N</option>
-<option>Sample R</option><option>Sample N</option><option>EMBROIDERY R</option><option>EMBROIDERY N</option>
-</select>
-<br><br>
-<button class="saveBtn" onclick="saveData()">💾 Save Data</button>
-<button class="deleteBtn" onclick="deleteData()">Delete Data</button>
-<button class="excelBtn" onclick="exportExcel()">Export Excel</button>
-<button class="pdfBtn" onclick="exportPDF()">PDF / Print</button>
-<button class="homeBtn" onclick="location.href='index.html'">Back Home</button>
+<div style="margin-top:6px">
+  <button class="saveBtn" onclick="saveData()">💾 Save</button>
+  <button class="deleteBtn" onclick="deleteData()">🗑️ Delete</button>
+  <button class="excelBtn" onclick="exportExcel()">📊 Excel</button>
+  <button class="pdfBtn" onclick="exportPDF()">📄 PDF</button>
+  <button class="homeBtn" onclick="location.href='index.html'">🏠 Home</button>
+</div>
 </div>
 
 <div class="tableWrap">
 <table id="reportTable" border="1">
-<thead style="background:#1e293b;">
+<thead>
 <tr>
-<th class="col-sl">SL</th><th class="col-type">Needle Type</th><th class="col-size">Size</th>
-<th class="col-prev">Previous</th><th class="col-rcvd">Rcvd</th><th class="col-dvld">Dvld</th>
-<th class="col-present">Present</th><th class="col-bn" id="bnHeader">BNR</th>
+  <th class="col-sl">SL</th>
+  <th class="col-code">CODE</th>
+  <th class="col-type">TYPE</th>
+  <th class="col-size">SIZE</th>
+  <th class="col-brand">BRAND</th>
+  <th class="col-price">PRICE</th>
+  <th class="col-prev">Prev</th>
+  <th class="col-rcvd">Rcvd</th>
+  <th class="col-dvld">Dvld</th>
+  <th class="col-present">Present</th>
+  <th class="col-bn" id="bnHeader">BNR</th>
 </tr>
 </thead>
 <tbody id="tableBody"></tbody>
-<tfoot style="background:#334155;font-weight:bold;">
+<tfoot>
 <tr>
-<td colspan="3">TOTAL</td><td id="totalPrevious">0</td><td id="totalReceive">0</td><td id="totalDelivery">0</td><td id="totalPresent">0</td><td id="totalBN">0</td>
+  <td colspan="6" style="text-align:right;font-weight:bold">TOTAL:</td>
+  <td id="totalPrevious">0</td>
+  <td id="totalReceive">0</td>
+  <td id="totalDelivery">0</td>
+  <td id="totalPresent">0</td>
+  <td id="totalBN">0</td>
 </tr>
 </tfoot>
 </table>
 </div>
 
-<div style="width:98%;margin:14px auto;text-align:center;">
-<h3>Monthly Summary</h3>
 <div class="summaryWrap">
+<h3 style="margin-bottom:8px;color:#cbd5e1;font-size:13px">📅 Monthly Summary</h3>
 <table id="summaryTable" border="1">
-<thead style="background:#1e293b;">
-<tr><th>Opening</th><th>Total Receive</th><th>Total Delivery</th><th>Present Stock</th><th id="monthBNHeader">Total BNR</th></tr>
+<thead>
+<tr>
+  <th>Opening</th>
+  <th>Receive</th>
+  <th>Delivery</th>
+  <th>Present</th>
+  <th>BNR/BNF</th>
+</tr>
 </thead>
 <tbody>
-<tr style="background:#334155;font-weight:bold;">
-<td id="monthOpening">0</td><td id="monthReceive">0</td><td id="monthDelivery">0</td><td id="monthPresent">0</td><td id="monthBN">0</td>
+<tr style="background:#f1f5f9;font-weight:bold">
+  <td id="monthOpening">0</td>
+  <td id="monthReceive">0</td>
+  <td id="monthDelivery">0</td>
+  <td id="monthPresent">0</td>
+  <td id="monthBN">0</td>
 </tr>
 </tbody>
 </table>
 </div>
-</div>
 
 <div id="negativePopup">
   <div class="popup-content">
-    <span class="popup-close" onclick="closePopup()">❌</span>
+    <span class="popup-close" onclick="closePopup()">×</span>
     <div class="popup-title">⚠️ Negative Stock Detected!</div>
     <div class="popup-details" id="popupDetails"></div>
     <button class="popup-fix-btn" onclick="fixNegativeRow()">📍 Fix করুন</button>
@@ -154,371 +242,648 @@ Floor:
 </div>
 
 <script type="module">
-import { initializeApp } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-app.js";
-import { getFirestore, doc, setDoc, getDoc, deleteDoc, collection, getDocs, addDoc, serverTimestamp, enableIndexedDbPersistence } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-firestore.js";
+import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm";
 
-const firebaseConfig = {
-  apiKey: "AIzaSyD-wBCF5eeWMHobLFOhBzKW7aB2pagz9-w",
-  authDomain: "gms-warehouse-tracker-7f57e.firebaseapp.com",
-  projectId: "gms-warehouse-tracker-7f57e",
-  storageBucket: "gms-warehouse-tracker-7f57e.firebasestorage.app",
-  messagingSenderId: "992250313291",
-  appId: "1:992250313291:web:ee3bceae76d4d53bc26bce"
+// =========================================
+// 🔐 SUPABASE CONFIGURATION
+// =========================================
+const SUPABASE_URL = 'https://hmatleeearcaltguosiz.supabase.co';
+const SUPABASE_KEY = 'sb_publishable_VA7UkQqRwCxdeVwHuxzsjw_dQxOPiIj';
+const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
+
+const COMPANY_CODE = 'composite';
+const OFFLINE_QUEUE_KEY = 'composite_needle_queue';
+
+// =========================================
+// 📦 FLOOR DATA (All 28 Floors from Excel)
+// =========================================
+const floorData = {
+  "A-FLOOR(BUILDING NO-02)_NEW": [
+    [1,"SN-003","DB X 1","7","ORGAN",0.03985072,8],
+    [2,"SN-013","DB X 1","8","ORGAN",0.32559112,18],
+    [3,"SN-029","DB X 1","9","ORGAN",0.06552784,86],
+    [4,"SN-056","DB X 1","11","ORGAN",0.06131768,22],
+    [5,"SN-065","DB X 1","12","ORGAN",0.00616,15],
+    [6,"SN-094","DC X 1-KN","8","ORGAN",0.096,77],
+    [7,"SN-107","DC X 1","9","ORGAN",0.10728008,144],
+    [8,"SN-126","DC X 1","11","ORGAN",0.10620288,16],
+    [9,"SN-147","UY X 128","8","ORGAN",0.08,13],
+    [10,"SN-163","UY X 128","9","ORGAN",0.16077616,74],
+    [11,"SN-175","UY X 128 GAS KN","9 LP","ORGAN",0.18394952,34],
+    [12,"SN-183","UY X 128","10","ORGAN",0.13031448,109],
+    [13,"SN-195","UY X 128 GAS KN","10 LP","ORGAN",0.30747248,33],
+    [14,"SN-203","UY X 128","11","ORGAN",0.13286432,45],
+    [15,"SN-237","DP X 5","7","ORGAN",0.056,9],
+    [16,"SN-261","DP X 5","11","ORGAN",0.06874008,50],
+    [17,"SN-263","DP X 5-KN","11","ORGAN",0.06,6],
+    [18,"SN-289","UO X 113(UO X 1)","11","ORGAN",0.1256,55],
+    [19,"SN-308","DP X 17","11","ORGAN",0.15784,33],
+    [20,"SN-320","DV X 57","14","ORGAN",0.14264,20]
+  ],
+  "A-FLOOR(BUILDING NO-02)_RUNNING": [
+    [1,"SN-003","DB X 1","7","ORGAN",0.03985072,31],
+    [2,"SN-013","DB X 1","8","ORGAN",0.32559112,46],
+    [3,"SN-014","DB X 1 SF","8","ORGAN",0.05984984,20],
+    [4,"SN-029","DB X 1","9","ORGAN",0.06552784,174],
+    [5,"SN-032","DB X 1-SF","9","ORGAN",0.072,19],
+    [6,"SN-043","DB X 1","10","ORGAN",0.06118872,32],
+    [7,"SN-056","DB X 1","11","ORGAN",0.06131768,43],
+    [8,"SN-065","DB X 1","12","ORGAN",0.00616,20],
+    [9,"SN-085","DC X 1","7","ORGAN",0.07969632,19],
+    [10,"SN-092","DC X 1","8","ORGAN",0.10636168,50],
+    [11,"SN-094","DC X 1-KN","8","ORGAN",0.096,131],
+    [12,"SN-107","DC X 1","9","ORGAN",0.10728008,197],
+    [13,"SN-126","DC X 1","11","ORGAN",0.10620288,39],
+    [14,"SN-147","UY X 128","8","ORGAN",0.08,37],
+    [15,"SN-156","UY X 128- GAS SF","8 LP","ORGAN",0.0856,20],
+    [16,"SN-163","UY X 128","9","ORGAN",0.16077616,199],
+    [17,"SN-175","UY X 128 GAS KN","9 LP","ORGAN",0.18394952,9],
+    [18,"SN-183","UY X 128","10","ORGAN",0.13031448,100],
+    [19,"SN-195","UY X 128 GAS KN","10 LP","ORGAN",0.30747248,51],
+    [20,"SN-203","UY X 128","11","ORGAN",0.13286432,94],
+    [21,"SN-212","UY X 128-KK-KN","11","ORGAN",0.0835932,47],
+    [22,"SN-220","UY X 128","12","ORGAN",0.7621176,37],
+    [23,"SN-261","DP X 5","11","ORGAN",0.06874008,28],
+    [24,"SN-289","UO X 113(UO X 1)","11","ORGAN",0.1256,57],
+    [25,"SN-308","DP X 17","11","ORGAN",0.15784,21],
+    [26,"SN-320","DV X 57","14","ORGAN",0.14264,30],
+    [27,"SN-480","LWX1669E","14","GROZ",0.4864,30],
+    [28,"SN-481","LWX1669E","12","GROZ",0.4864,50]
+  ],
+  "B-FLOOR(BUILDING NO-02)_NEW": [
+    [1,"SN-013","DB X 1","8","ORGAN",0.32559112,21],
+    [2,"SN-029","DB X 1","9","ORGAN",0.06552784,74],
+    [3,"SN-043","DB X 1","10","ORGAN",0.06118872,62],
+    [4,"SN-056","DB X 1","11","ORGAN",0.06131768,85],
+    [5,"SN-065","DB X 1","12","ORGAN",0.00616,8],
+    [6,"SN-092","DC X 1","8","ORGAN",0.10636168,22],
+    [7,"SN-107","DC X 1","9","ORGAN",0.10728008,146],
+    [8,"SN-120","DC X 1 27 SAN 10","10","GROZ(FFG)",0.0904,43],
+    [9,"SN-126","DC X 1","11","ORGAN",0.10620288,33],
+    [10,"SN-163","UY X 128","9","ORGAN",0.16077616,62],
+    [11,"SN-175","UY X 128 GAS KN","9 LP","ORGAN",0.18394952,61],
+    [12,"SN-183","UY X 128","10","ORGAN",0.13031448,43],
+    [13,"SN-195","UY X 128 GAS KN","10 LP","ORGAN",0.30747248,79],
+    [14,"SN-203","UY X 128","11","ORGAN",0.13286432,49],
+    [15,"SN-223","UYX 128-KN","12","ORGAN",0.0688,27],
+    [16,"SN-261","DP X 5","11","ORGAN",0.06874008,39],
+    [17,"SN-289","UO X 113(UO X 1)","11","ORGAN",0.1256,8],
+    [18,"SN-297","UO X 163","12","GROZ(FFG)",0.08448,2],
+    [19,"SN-308","DP X 17","11","ORGAN",0.15784,39],
+    [20,"SN-318","DV X 57","12","ORGAN",0.16,6]
+  ],
+  "B-FLOOR(BUILDING NO-02)_RUNNING": [
+    [1,"SN-013","DB X 1","8","ORGAN",0.32559112,13],
+    [2,"SN-029","DB X 1","9","ORGAN",0.06552784,26],
+    [3,"SN-043","DB X 1","10","ORGAN",0.06118872,49],
+    [4,"SN-056","DB X 1","11","ORGAN",0.06131768,37],
+    [5,"SN-065","DB X 1","12","ORGAN",0.00616,15],
+    [6,"SN-085","DC X 1","7","ORGAN",0.07969632,55],
+    [7,"SN-092","DC X 1","8","ORGAN",0.10636168,28],
+    [8,"SN-107","DC X 1","9","ORGAN",0.10728008,86],
+    [9,"SN-119","DC X 1","10","ORGAN",0.0904,61],
+    [10,"SN-126","DC X 1","11","ORGAN",0.10620288,34],
+    [11,"SN-147","UY X 128","8","ORGAN",0.08,24],
+    [12,"SN-163","UY X 128","9","ORGAN",0.16077616,30],
+    [13,"SN-175","UY X 128 GAS KN","9 LP","ORGAN",0.18394952,15],
+    [14,"SN-183","UY X 128","10","ORGAN",0.13031448,49],
+    [15,"SN-195","UY X 128 GAS KN","10 LP","ORGAN",0.30747248,39],
+    [16,"SN-203","UY X 128","11","ORGAN",0.13286432,32],
+    [17,"SN-220","UY X 128","12","ORGAN",0.7621176,39],
+    [18,"SN-261","DP X 5","11","ORGAN",0.06874008,32],
+    [19,"SN-289","UO X 113(UO X 1)","11","ORGAN",0.1256,13],
+    [20,"SN-308","DP X 17","11","ORGAN",0.15784,119],
+    [21,"SN-317","DV X 57","11","ORGAN",0.00872,5],
+    [22,"SN-320","DV X 57","14","ORGAN",0.14264,20]
+  ],
+  "C-FLOOR ( BUILDING NO-04)_NEW": [
+    [1,"SN-029","DB X 1","9","ORGAN",0.06552784,85],
+    [2,"SN-043","DB X 1","10","ORGAN",0.06118872,66],
+    [3,"SN-056","DB X 1","11","ORGAN",0.06131768,60],
+    [4,"SN-092","DC X 1","8","ORGAN",0.10636168,8],
+    [5,"SN-101","DC X 1-KN","8 LP","ORGAN",0.1818584,24],
+    [6,"SN-107","DC X 1","9","ORGAN",0.10728008,65],
+    [7,"SN-126","DC X 1","11","ORGAN",0.10620288,20],
+    [8,"SN-163","UY X 128","9","ORGAN",0.16077616,79],
+    [9,"SN-175","UY X 128 GAS KN","9 LP","ORGAN",0.18394952,10],
+    [10,"SN-183","UY X 128","10","ORGAN",0.13031448,70],
+    [11,"SN-203","UY X 128","11","ORGAN",0.13286432,43],
+    [12,"SN-220","UY X 128","12","ORGAN",0.7621176,25],
+    [13,"SN-250","DP X 5","9","ORGAN",0.03824,16],
+    [14,"SN-261","DP X 5","11","ORGAN",0.06874008,53],
+    [15,"SN-289","UO X 113(UO X 1)","11","ORGAN",0.1256,48],
+    [16,"SN-300","DP X 17","9","GROZ(FFG)",0.03544,7],
+    [17,"SN-308","DP X 17","11","ORGAN",0.15784,54]
+  ],
+  "C-FLOOR ( BUILDING NO-04)_RUNNING": [
+    [1,"SN-013","DB X 1","8","ORGAN",0.32559112,25],
+    [2,"SN-014","DB X 1 SF","8","ORGAN",0.05984984,118],
+    [3,"SN-029","DB X 1","9","ORGAN",0.06552784,263],
+    [4,"SN-032","DB X 1-SF","9","ORGAN",0.072,4],
+    [5,"SN-043","DB X 1","10","ORGAN",0.06118872,150],
+    [6,"SN-045","DB X K5 KK","10","GROZ(FFG)",0.0344,49],
+    [7,"SN-056","DB X 1","11","ORGAN",0.06131768,102],
+    [8,"SN-058","DB X K5 KK","11","ORGAN",0.0344,37],
+    [9,"SN-065","DB X 1","12","ORGAN",0.00616,22],
+    [10,"SN-070","DB X 1","14","GROZ(FFG)",0.03300576,45],
+    [11,"SN-092","DC X 1","8","ORGAN",0.10636168,92],
+    [12,"SN-095","DC X 1-SF","8","ORGAN",0.18658816,5],
+    [13,"SN-101","DC X 1-KN","8 LP","ORGAN",0.1818584,180],
+    [14,"SN-107","DC X 1","9","ORGAN",0.10728008,476],
+    [15,"SN-126","DC X 1","11","ORGAN",0.10620288,21],
+    [16,"SN-133","DC X 1","12","ORGAN",0.08432,22],
+    [17,"SN-140","UY X 128","7","ORGAN",0.0584,30],
+    [18,"SN-147","UY X 128","8","ORGAN",0.08,20],
+    [19,"SN-163","UY X 128","9","ORGAN",0.16077616,149],
+    [20,"SN-169","UY X 128- KK - KN","9","ORGAN",0.08226448,40],
+    [21,"SN-175","UY X 128 GAS KN","9 LP","ORGAN",0.18394952,150],
+    [22,"SN-183","UY X 128","10","ORGAN",0.13031448,115],
+    [23,"SN-195","UY X 128 GAS KN","10 LP","ORGAN",0.30747248,115],
+    [24,"SN-203","UY X 128","11","ORGAN",0.13286432,190],
+    [25,"SN-220","UY X 128","12","ORGAN",0.7621176,22],
+    [26,"SN-222","UY X 128 NY2 SPD","12","ORGAN",0.0688,62],
+    [27,"SN-231","UY X 128","14","ORGAN",0.06392,10],
+    [28,"SN-248","DP X 5","9","GROZ(FFG)",0.03432,54],
+    [29,"SN-261","DP X 5","11","ORGAN",0.06874008,42],
+    [30,"SN-289","UO X 113(UO X 1)","11","ORGAN",0.1256,22],
+    [31,"SN-308","DP X 17","11","ORGAN",0.15784,77]
+  ],
+  "D-FLOOR ( BUILDING NO -04)_NEW": [
+    [1,"SN-013","DB X 1","8","ORGAN",0.32559112,35],
+    [2,"SN-029","DB X 1","9","ORGAN",0.06552784,137],
+    [3,"SN-056","DB X 1","11","ORGAN",0.06131768,70],
+    [4,"SN-095","DC X 1-SF","8","ORGAN",0.18658816,10],
+    [5,"SN-107","DC X 1","9","ORGAN",0.10728008,112],
+    [6,"SN-126","DC X 1","11","ORGAN",0.10620288,94],
+    [7,"SN-163","UY X 128","9","ORGAN",0.16077616,42],
+    [8,"SN-175","UY X 128 GAS KN","9 LP","ORGAN",0.18394952,54],
+    [9,"SN-183","UY X 128","10","ORGAN",0.13031448,62],
+    [10,"SN-203","UY X 128","11","ORGAN",0.13286432,58],
+    [11,"SN-220","UY X 128","12","ORGAN",0.7621176,95],
+    [12,"SN-222","UY X 128 NY2 SPD","12","ORGAN",0.0688,64],
+    [13,"SN-261","DP X 5","11","ORGAN",0.06874008,42],
+    [14,"SN-289","UO X 113(UO X 1)","11","ORGAN",0.1256,18],
+    [15,"SN-308","DP X 17","11","ORGAN",0.15784,43]
+  ],
+  "D-FLOOR ( BUILDING NO -04)_RUNNING": [
+    [1,"SN-003","DB X 1","7","ORGAN",0.03985072,24],
+    [2,"SN-013","DB X 1","8","ORGAN",0.32559112,59],
+    [3,"SN-029","DB X 1","9","ORGAN",0.06552784,168],
+    [4,"SN-043","DB X 1","10","ORGAN",0.06118872,38],
+    [5,"SN-056","DB X 1","11","ORGAN",0.06131768,41],
+    [6,"SN-058","DB X K5 KK","11","ORGAN",0.0344,27],
+    [7,"SN-065","DB X 1","12","ORGAN",0.00616,35],
+    [8,"SN-085","DC X 1","7","ORGAN",0.07969632,11],
+    [9,"SN-092","DC X 1","8","ORGAN",0.10636168,62],
+    [10,"SN-107","DC X 1","9","ORGAN",0.10728008,327],
+    [11,"SN-126","DC X 1","11","ORGAN",0.10620288,67],
+    [12,"SN-133","DC X 1","12","ORGAN",0.08432,44],
+    [13,"SN-147","UY X 128","8","ORGAN",0.08,49],
+    [14,"SN-163","UY X 128","9","ORGAN",0.16077616,53],
+    [15,"SN-175","UY X 128 GAS KN","9 LP","ORGAN",0.18394952,86],
+    [16,"SN-183","UY X 128","10","ORGAN",0.13031448,158],
+    [17,"SN-195","UY X 128 GAS KN","10 LP","ORGAN",0.30747248,32],
+    [18,"SN-203","UY X 128","11","ORGAN",0.13286432,37],
+    [19,"SN-220","UY X 128","12","ORGAN",0.7621176,41],
+    [20,"SN-222","UY X 128 NY2 SPD","12","ORGAN",0.0688,77],
+    [21,"SN-231","UY X 128","14","ORGAN",0.06392,45],
+    [22,"SN-261","DP X 5","11","ORGAN",0.06874008,56],
+    [23,"SN-289","UO X 113(UO X 1)","11","ORGAN",0.1256,62],
+    [24,"SN-308","DP X 17","11","ORGAN",0.15784,32]
+  ],
+  "E-FLOOR ( BUILDING NO-03)_NEW": [
+    [1,"SN-029","DB X 1","9","ORGAN",0.06552784,118],
+    [2,"SN-107","DC X 1","9","ORGAN",0.10728008,167],
+    [3,"SN-163","UY X 128","9","ORGAN",0.16077616,134],
+    [4,"SN-183","UY X 128","10","ORGAN",0.13031448,46],
+    [5,"SN-203","UY X 128","11","ORGAN",0.13286432,19],
+    [6,"SN-261","DP X 5","11","ORGAN",0.06874008,23],
+    [7,"SN-308","DP X 17","11","ORGAN",0.15784,19]
+  ],
+  "E-FLOOR ( BUILDING NO-03)_RUNNING": [
+    [1,"SN-001","DB X 1","7","GROZ(FFG)",0.05070144,85],
+    [2,"SN-013","DB X 1","8","ORGAN",0.32559112,74],
+    [3,"SN-029","DB X 1","9","ORGAN",0.06552784,211],
+    [4,"SN-043","DB X 1","10","ORGAN",0.06118872,170],
+    [5,"SN-056","DB X 1","11","ORGAN",0.06131768,21],
+    [6,"SN-085","DC X 1","7","ORGAN",0.07969632,47],
+    [7,"SN-092","DC X 1","8","ORGAN",0.10636168,15],
+    [8,"SN-095","DC X 1-SF","8","ORGAN",0.18658816,182],
+    [9,"SN-107","DC X 1","9","ORGAN",0.10728008,547],
+    [10,"SN-113","DC X 1 KN","9 LP","ORGAN",0.19304736,15],
+    [11,"SN-126","DC X 1","11","ORGAN",0.10620288,7],
+    [12,"SN-140","UY X 128","7","ORGAN",0.0584,33],
+    [13,"SN-147","UY X 128","8","ORGAN",0.08,42],
+    [14,"SN-155","UY X 128- SF","8","ORGAN",0.1388436,10],
+    [15,"SN-156","UY X 128- GAS SF","8 LP","ORGAN",0.0856,10],
+    [16,"SN-163","UY X 128","9","ORGAN",0.16077616,396],
+    [17,"SN-172","UY X 128 GAS SPD","9","ORGAN",0.1307632,14],
+    [18,"SN-175","UY X 128 GAS KN","9 LP","ORGAN",0.18394952,5],
+    [19,"SN-176","UY X 128 SF","9","ORGAN",0.13350376,16],
+    [20,"SN-183","UY X 128","10","ORGAN",0.13031448,162],
+    [21,"SN-194","UY X 128 SF","10","ORGAN",0.24,9],
+    [22,"SN-203","UY X 128","11","ORGAN",0.13286432,102],
+    [23,"SN-261","DP X 5","11","ORGAN",0.06874008,28]
+  ],
+  "EMB-(BUILDING NO-01)_NEW": [
+    [1,"SN-001","DB X 1","7","GROZ(FFG)",0.05070144,10],
+    [2,"SN-013","DB X 1","8","ORGAN",0.32559112,97],
+    [3,"SN-029","DB X 1","9","ORGAN",0.06552784,78],
+    [4,"SN-056","DB X 1","11","ORGAN",0.06131768,37],
+    [5,"SN-070","DB X 1","14","GROZ(FFG)",0.03300576,28],
+    [6,"SN-079","PH - C70 -","14","ORGAN",0.76981432,32],
+    [7,"SN-082","PH - C70 -","16","ORGAN",0.27975952,43]
+  ],
+  "EMB-(BUILDING NO-01)_RUNNING": [
+    [1,"SN-001","DB X 1","7","GROZ(FFG)",0.05070144,346],
+    [2,"SN-003","DB X 1","7","ORGAN",0.03985072,93],
+    [3,"SN-013","DB X 1","8","ORGAN",0.32559112,417],
+    [4,"SN-014","DB X 1 SF","8","ORGAN",0.05984984,30],
+    [5,"SN-029","DB X 1","9","ORGAN",0.06552784,349],
+    [6,"SN-056","DB X 1","11","ORGAN",0.06131768,64],
+    [7,"SN-070","DB X 1","14","GROZ(FFG)",0.03300576,101],
+    [8,"SN-079","PH - C70 -","14","ORGAN",0.76981432,35],
+    [9,"SN-082","PH - C70 -","16","ORGAN",0.27975952,119]
+  ],
+  "F-FLOOR (BUILDING NO-6A)_NEW": [
+    [1,"SN-013","DB X 1","8","ORGAN",0.32559112,19],
+    [2,"SN-029","DB X 1","9","ORGAN",0.06552784,93],
+    [3,"SN-036","DB X 1 KN","9LP","ORGAN",0.09410144,17],
+    [4,"SN-043","DB X 1","10","ORGAN",0.06118872,22],
+    [5,"SN-056","DB X 1","11","ORGAN",0.06131768,40],
+    [6,"SN-065","DB X 1","12","ORGAN",0.00616,6],
+    [7,"SN-092","DC X 1","8","ORGAN",0.10636168,30],
+    [8,"SN-107","DC X 1","9","ORGAN",0.10728008,65],
+    [9,"SN-113","DC X 1 KN","9 LP","ORGAN",0.19304736,24],
+    [10,"SN-126","DC X 1","11","ORGAN",0.10620288,9],
+    [11,"SN-147","UY X 128","8","ORGAN",0.08,24],
+    [12,"SN-163","UY X 128","9","ORGAN",0.16077616,45],
+    [13,"SN-183","UY X 128","10","ORGAN",0.13031448,108],
+    [14,"SN-195","UY X 128 GAS KN","10 LP","ORGAN",0.30747248,20],
+    [15,"SN-203","UY X 128","11","ORGAN",0.13286432,7],
+    [16,"SN-209","UY X 128 KN","11 HP","ORGAN",0.0856,37],
+    [17,"SN-220","UY X 128","12","ORGAN",0.7621176,26],
+    [18,"SN-231","UY X 128","14","ORGAN",0.06392,10],
+    [19,"SN-250","DP X 5","9","ORGAN",0.03824,8],
+    [20,"SN-261","DP X 5","11","ORGAN",0.06874008,51],
+    [21,"SN-278","UO X 113(UO X 1)","9","ORGAN",0.08336,50],
+    [22,"SN-289","UO X 113(UO X 1)","11","ORGAN",0.1256,6],
+    [23,"SN-308","DP X 17","11","ORGAN",0.15784,59],
+    [24,"SN-317","DV X 57","11","ORGAN",0.00872,5]
+  ],
+  "F-FLOOR (BUILDING NO-6A)_RUNNING": [
+    [1,"SN-013","DB X 1","8","ORGAN",0.32559112,67],
+    [2,"SN-029","DB X 1","9","ORGAN",0.06552784,66],
+    [3,"SN-036","DB X 1 KN","9LP","ORGAN",0.09410144,17],
+    [4,"SN-043","DB X 1","10","ORGAN",0.06118872,127],
+    [5,"SN-056","DB X 1","11","ORGAN",0.06131768,20],
+    [6,"SN-058","DB X K5 KK","11","ORGAN",0.0344,36],
+    [7,"SN-065","DB X 1","12","ORGAN",0.00616,29],
+    [8,"SN-070","DB X 1","14","GROZ(FFG)",0.03300576,20],
+    [9,"SN-092","DC X 1","8","ORGAN",0.10636168,93],
+    [10,"SN-107","DC X 1","9","ORGAN",0.10728008,534],
+    [11,"SN-113","DC X 1 KN","9 LP","ORGAN",0.19304736,53],
+    [12,"SN-119","DC X 1","10","ORGAN",0.0904,200],
+    [13,"SN-126","DC X 1","11","ORGAN",0.10620288,49],
+    [14,"SN-133","DC X 1","12","ORGAN",0.08432,85],
+    [15,"SN-136","DC X 1","14","ORGAN",0.10672496,22],
+    [16,"SN-163","UY X 128","9","ORGAN",0.16077616,45],
+    [17,"SN-183","UY X 128","10","ORGAN",0.13031448,166],
+    [18,"SN-195","UY X 128 GAS KN","10 LP","ORGAN",0.30747248,87],
+    [19,"SN-203","UY X 128","11","ORGAN",0.13286432,130],
+    [20,"SN-209","UY X 128 KN","11 HP","ORGAN",0.0856,185],
+    [21,"SN-222","UY X 128 NY2 SPD","12","ORGAN",0.0688,61],
+    [22,"SN-224","UY X 128-KN","12 LP","ORGAN",0.07704976,100],
+    [23,"SN-231","UY X 128","14","ORGAN",0.06392,20],
+    [24,"SN-248","DP X 5","9","GROZ(FFG)",0.03432,100],
+    [25,"SN-261","DP X 5","11","ORGAN",0.06874008,38],
+    [26,"SN-287","UO X 113(UO X 1)","11","GROZ(FFG)",0.12056,36],
+    [27,"SN-308","DP X 17","11","ORGAN",0.15784,67],
+    [28,"SN-317","DV X 57","11","ORGAN",0.00872,20]
+  ],
+  "G-FLOOR ( BUILDING NO-6A)_NEW": [
+    [1,"SN-013","DB X 1","8","ORGAN",0.32559112,65],
+    [2,"SN-019","DB X 1 KN","8 LP","ORGAN",0.1,30],
+    [3,"SN-029","DB X 1","9","ORGAN",0.06552784,79],
+    [4,"SN-043","DB X 1","10","ORGAN",0.06118872,45],
+    [5,"SN-056","DB X 1","11","ORGAN",0.06131768,44],
+    [6,"SN-065","DB X 1","12","ORGAN",0.00616,10],
+    [7,"SN-071","DB X 1","14","GROZ(GEBEDUR)",0.0344,31],
+    [8,"SN-092","DC X 1","8","ORGAN",0.10636168,32],
+    [9,"SN-101","DC X 1-KN","8 LP","ORGAN",0.1818584,38],
+    [10,"SN-107","DC X 1","9","ORGAN",0.10728008,73],
+    [11,"SN-126","DC X 1","11","ORGAN",0.10620288,61],
+    [12,"SN-147","UY X 128","8","ORGAN",0.08,42],
+    [13,"SN-163","UY X 128","9","ORGAN",0.16077616,34],
+    [14,"SN-175","UY X 128 GAS KN","9 LP","ORGAN",0.18394952,23],
+    [15,"SN-183","UY X 128","10","ORGAN",0.13031448,81],
+    [16,"SN-203","UY X 128","11","ORGAN",0.13286432,66],
+    [17,"SN-220","UY X 128","12","ORGAN",0.7621176,33],
+    [18,"SN-250","DP X 5","9","ORGAN",0.03824,14],
+    [19,"SN-261","DP X 5","11","ORGAN",0.06874008,16],
+    [20,"SN-308","DP X 17","11","ORGAN",0.15784,78],
+    [21,"SN-317","DV X 57","11","ORGAN",0.00872,103],
+    [22,"SN-334","FLX 118-GCS","11","ORGAN",0.3914096,25]
+  ],
+  "G-FLOOR ( BUILDING NO-6A)_RUNNING": [
+    [1,"SN-001","DB X 1","7","GROZ(FFG)",0.05070144,62],
+    [2,"SN-013","DB X 1","8","ORGAN",0.32559112,89],
+    [3,"SN-029","DB X 1","9","ORGAN",0.06552784,110],
+    [4,"SN-036","DB X 1 KN","9LP","ORGAN",0.09410144,15],
+    [5,"SN-043","DB X 1","10","ORGAN",0.06118872,136],
+    [6,"SN-048","DB X 1-KN","10 LP","ORGAN",0.132536,50],
+    [7,"SN-056","DB X 1","11","ORGAN",0.06131768,48],
+    [8,"SN-065","DB X 1","12","ORGAN",0.00616,39],
+    [9,"SN-070","DB X 1","14","GROZ(FFG)",0.03300576,40],
+    [10,"SN-092","DC X 1","8","ORGAN",0.10636168,60],
+    [11,"SN-101","DC X 1-KN","8 LP","ORGAN",0.1818584,65],
+    [12,"SN-107","DC X 1","9","ORGAN",0.10728008,433],
+    [13,"SN-119","DC X 1","10","ORGAN",0.0904,78],
+    [14,"SN-126","DC X 1","11","ORGAN",0.10620288,20],
+    [15,"SN-133","DC X 1","12","ORGAN",0.08432,77],
+    [16,"SN-147","UY X 128","8","ORGAN",0.08,58],
+    [17,"SN-163","UY X 128","9","ORGAN",0.16077616,62],
+    [18,"SN-175","UY X 128 GAS KN","9 LP","ORGAN",0.18394952,32],
+    [19,"SN-183","UY X 128","10","ORGAN",0.13031448,73],
+    [20,"SN-195","UY X 128 GAS KN","10 LP","ORGAN",0.30747248,23],
+    [21,"SN-203","UY X 128","11","ORGAN",0.13286432,65],
+    [22,"SN-220","UY X 128","12","ORGAN",0.7621176,22],
+    [23,"SN-225","UY X 128","12","GROZ(GEBEDUR)",0.07405864,18],
+    [24,"SN-231","UY X 128","14","ORGAN",0.06392,40],
+    [25,"SN-250","DP X 5","9","ORGAN",0.03824,3],
+    [26,"SN-261","DP X 5","11","ORGAN",0.06874008,37],
+    [27,"SN-263","DP X 5-KN","11","ORGAN",0.06,33],
+    [28,"SN-265","DP X 5","14","GROZ(FFG)",0.03272,20],
+    [29,"SN-308","DP X 17","11","ORGAN",0.15784,14],
+    [30,"SN-317","DV X 57","11","ORGAN",0.00872,25],
+    [31,"SN-318","DV X 57","12","ORGAN",0.16,16],
+    [32,"SN-334","FLX 118-GCS","11","ORGAN",0.3914096,60]
+  ],
+  "H-FLOOR (BUILDING NO-6B)_NEW": [
+    [1,"SN-029","DB X 1","9","ORGAN",0.06552784,45],
+    [2,"SN-036","DB X 1 KN","9LP","ORGAN",0.09410144,7],
+    [3,"SN-043","DB X 1","10","ORGAN",0.06118872,69],
+    [4,"SN-045","DB X K5 KK","10","GROZ(FFG)",0.0344,9],
+    [5,"SN-056","DB X 1","11","ORGAN",0.06131768,77],
+    [6,"SN-107","DC X 1","9","ORGAN",0.10728008,114],
+    [7,"SN-126","DC X 1","11","ORGAN",0.10620288,71],
+    [8,"SN-163","UY X 128","9","ORGAN",0.16077616,126],
+    [9,"SN-183","UY X 128","10","ORGAN",0.13031448,98],
+    [10,"SN-203","UY X 128","11","ORGAN",0.13286432,94],
+    [11,"SN-206","UY X 128 SPD","11","ORGAN",0.20594336,19],
+    [12,"SN-220","UY X 128","12","ORGAN",0.7621176,56],
+    [13,"SN-261","DP X 5","11","ORGAN",0.06874008,79],
+    [14,"SN-308","DP X 17","11","ORGAN",0.15784,66],
+    [15,"SN-317","DV X 57","11","ORGAN",0.00872,90],
+    [16,"SN-351","LW X 6 T/1669 E","14","GROZ(FFG)",0.2684,5]
+  ],
+  "H-FLOOR (BUILDING NO-6B)_RUNNING": [
+    [1,"SN-001","DB X 1","7","GROZ(FFG)",0.05070144,76],
+    [2,"SN-013","DB X 1","8","ORGAN",0.32559112,30],
+    [3,"SN-029","DB X 1","9","ORGAN",0.06552784,252],
+    [4,"SN-036","DB X 1 KN","9LP","ORGAN",0.09410144,30],
+    [5,"SN-043","DB X 1","10","ORGAN",0.06118872,32],
+    [6,"SN-045","DB X K5 KK","10","GROZ(FFG)",0.0344,118],
+    [7,"SN-056","DB X 1","11","ORGAN",0.06131768,25],
+    [8,"SN-058","DB X K5 KK","11","ORGAN",0.0344,17],
+    [9,"SN-065","DB X 1","12","ORGAN",0.00616,35],
+    [10,"SN-085","DC X 1","7","ORGAN",0.07969632,26],
+    [11,"SN-092","DC X 1","8","ORGAN",0.10636168,21],
+    [12,"SN-107","DC X 1","9","ORGAN",0.10728008,342],
+    [13,"SN-126","DC X 1","11","ORGAN",0.10620288,81],
+    [14,"SN-146","UY X 128","8","GROZ(FFG)",0.08,30],
+    [15,"SN-163","UY X 128","9","ORGAN",0.16077616,37],
+    [16,"SN-175","UY X 128 GAS KN","9 LP","ORGAN",0.18394952,16],
+    [17,"SN-177","UY X 128 SAN 10 XS","9","GROZ(FFG)",0.08305976,15],
+    [18,"SN-183","UY X 128","10","ORGAN",0.13031448,128],
+    [19,"SN-203","UY X 128","11","ORGAN",0.13286432,32],
+    [20,"SN-206","UY X 128 SPD","11","ORGAN",0.20594336,16],
+    [21,"SN-225","UY X 128","12","GROZ(GEBEDUR)",0.07405864,30],
+    [22,"SN-230","UY X 128","14","GROZ(GEBEDUR)",0.08835888,40],
+    [23,"SN-231","UY X 128","14","ORGAN",0.06392,70],
+    [24,"SN-250","DP X 5","9","ORGAN",0.03824,14],
+    [25,"SN-261","DP X 5","11","ORGAN",0.06874008,108],
+    [26,"SN-263","DP X 5-KN","11","ORGAN",0.06,68],
+    [27,"SN-308","DP X 17","11","ORGAN",0.15784,84],
+    [28,"SN-317","DV X 57","11","ORGAN",0.00872,155],
+    [29,"SN-318","DV X 57","12","ORGAN",0.16,71],
+    [30,"SN-324","DV X 57","10","ORGAN",0.2048,58],
+    [31,"SN-352","LW X 6 T/1669 E","16","GROZ(FFG)",0.2684,30],
+    [32,"SN-418","DB X 1-GEBEDURE-FFG ,NO-08,GROZ","8","GROZ",0.0496,65],
+    [33,"SN-479","DV X 43","14","ORGAN",0.13288,55]
+  ],
+  "I-FLOOR (BUILDING NO-06 B)_NEW": [
+    [1,"SN-013","DB X 1","8","ORGAN",0.32559112,52],
+    [2,"SN-029","DB X 1","9","ORGAN",0.06552784,60],
+    [3,"SN-043","DB X 1","10","ORGAN",0.06118872,76],
+    [4,"SN-056","DB X 1","11","ORGAN",0.06131768,29],
+    [5,"SN-092","DC X 1","8","ORGAN",0.10636168,62],
+    [6,"SN-107","DC X 1","9","ORGAN",0.10728008,52],
+    [7,"SN-126","DC X 1","11","ORGAN",0.10620288,8],
+    [8,"SN-163","UY X 128","9","ORGAN",0.16077616,71],
+    [9,"SN-183","UY X 128","10","ORGAN",0.13031448,50],
+    [10,"SN-203","UY X 128","11","ORGAN",0.13286432,71],
+    [11,"SN-261","DP X 5","11","ORGAN",0.06874008,60],
+    [12,"SN-308","DP X 17","11","ORGAN",0.15784,37],
+    [13,"SN-317","DV X 57","11","ORGAN",0.00872,36]
+  ],
+  "I-FLOOR (BUILDING NO-06 B)_RUNNING": [
+    [1,"SN-001","DB X 1","7","GROZ(FFG)",0.05070144,130],
+    [2,"SN-013","DB X 1","8","ORGAN",0.32559112,140],
+    [3,"SN-029","DB X 1","9","ORGAN",0.06552784,85],
+    [4,"SN-036","DB X 1 KN","9LP","ORGAN",0.09410144,14],
+    [5,"SN-043","DB X 1","10","ORGAN",0.06118872,128],
+    [6,"SN-045","DB X K5 KK","10","GROZ(FFG)",0.0344,123],
+    [7,"SN-056","DB X 1","11","ORGAN",0.06131768,7],
+    [8,"SN-058","DB X K5 KK","11","ORGAN",0.0344,18],
+    [9,"SN-065","DB X 1","12","ORGAN",0.00616,78],
+    [10,"SN-085","DC X 1","7","ORGAN",0.07969632,55],
+    [11,"SN-092","DC X 1","8","ORGAN",0.10636168,141],
+    [12,"SN-107","DC X 1","9","ORGAN",0.10728008,268],
+    [13,"SN-126","DC X 1","11","ORGAN",0.10620288,53],
+    [14,"SN-146","UY X 128","8","GROZ(FFG)",0.08,5],
+    [15,"SN-163","UY X 128","9","ORGAN",0.16077616,60],
+    [16,"SN-175","UY X 128 GAS KN","9 LP","ORGAN",0.18394952,20],
+    [17,"SN-183","UY X 128","10","ORGAN",0.13031448,89],
+    [18,"SN-203","UY X 128","11","ORGAN",0.13286432,33],
+    [19,"SN-220","UY X 128","12","ORGAN",0.7621176,9],
+    [20,"SN-225","UY X 128","12","GROZ(GEBEDUR)",0.07405864,5],
+    [21,"SN-231","UY X 128","14","ORGAN",0.06392,42],
+    [22,"SN-248","DP X 5","9","GROZ(FFG)",0.03432,23],
+    [23,"SN-261","DP X 5","11","ORGAN",0.06874008,59],
+    [24,"SN-263","DP X 5-KN","11","ORGAN",0.06,45],
+    [25,"SN-265","DP X 5","14","GROZ(FFG)",0.03272,23],
+    [26,"SN-308","DP X 17","11","ORGAN",0.15784,77],
+    [27,"SN-317","DV X 57","11","ORGAN",0.00872,41],
+    [28,"SN-318","DV X 57","12","ORGAN",0.16,40],
+    [29,"SN-320","DV X 57","14","ORGAN",0.14264,49],
+    [30,"SN-343","DM X 13","10","GROZ(FFG)",0.06,24],
+    [31,"SN-418","DB X 1-GEBEDURE-FFG ,NO-08,GROZ","8","GROZ",0.0496,84],
+    [32,"SN-479","DV X 43","14","ORGAN",0.13288,13]
+  ],
+  "J-FLOOR(BUILDING NO-09)_NEW": [
+    [1,"SN-029","DB X 1","9","ORGAN",0.06552784,72],
+    [2,"SN-107","DC X 1","9","ORGAN",0.10728008,66],
+    [3,"SN-163","UY X 128","9","ORGAN",0.16077616,72],
+    [4,"SN-183","UY X 128","10","ORGAN",0.13031448,41],
+    [5,"SN-197","UY X 128 GAS SF","10 LP","ORGAN",0.1744,30],
+    [6,"SN-203","UY X 128","11","ORGAN",0.13286432,25],
+    [7,"SN-261","DP X 5","11","ORGAN",0.06874008,21],
+    [8,"SN-289","UO X 113(UO X 1)","11","ORGAN",0.1256,33],
+    [9,"SN-308","DP X 17","11","ORGAN",0.15784,17]
+  ],
+  "J-FLOOR(BUILDING NO-09)_RUNNING": [
+    [1,"SN-001","DB X 1","7","GROZ(FFG)",0.05070144,92],
+    [2,"SN-013","DB X 1","8","ORGAN",0.32559112,86],
+    [3,"SN-029","DB X 1","9","ORGAN",0.06552784,190],
+    [4,"SN-043","DB X 1","10","ORGAN",0.06118872,51],
+    [5,"SN-056","DB X 1","11","ORGAN",0.06131768,66],
+    [6,"SN-085","DC X 1","7","ORGAN",0.07969632,58],
+    [7,"SN-092","DC X 1","8","ORGAN",0.10636168,62],
+    [8,"SN-107","DC X 1","9","ORGAN",0.10728008,215],
+    [9,"SN-119","DC X 1","10","ORGAN",0.0904,42],
+    [10,"SN-126","DC X 1","11","ORGAN",0.10620288,57],
+    [11,"SN-140","UY X 128","7","ORGAN",0.0584,34],
+    [12,"SN-147","UY X 128","8","ORGAN",0.08,29],
+    [13,"SN-163","UY X 128","9","ORGAN",0.16077616,110],
+    [14,"SN-175","UY X 128 GAS KN","9 LP","ORGAN",0.18394952,123],
+    [15,"SN-183","UY X 128","10","ORGAN",0.13031448,79],
+    [16,"SN-195","UY X 128 GAS KN","10 LP","ORGAN",0.30747248,30],
+    [17,"SN-203","UY X 128","11","ORGAN",0.13286432,86],
+    [18,"SN-220","UY X 128","12","ORGAN",0.7621176,25],
+    [19,"SN-261","DP X 5","11","ORGAN",0.06874008,39],
+    [20,"SN-289","UO X 113(UO X 1)","11","ORGAN",0.1256,20],
+    [21,"SN-308","DP X 17","11","ORGAN",0.15784,44],
+    [22,"SN-332","FLX 118-GCS","10","ORGAN",0.27132,50],
+    [23,"SN-334","FLX 118-GCS","11","ORGAN",0.3914096,38],
+    [24,"SN-338","FLX 118-GCS NY2","9","ORGAN",0.3005824,17]
+  ],
+  "K-FLOOR(BUILDING NO-09)_NEW": [
+    [1,"SN-029","DB X 1","9","ORGAN",0.06552784,86],
+    [2,"SN-071","DB X 1","14","GROZ(GEBEDUR)",0.0344,5],
+    [3,"SN-101","DC X 1-KN","8 LP","ORGAN",0.1818584,28],
+    [4,"SN-107","DC X 1","9","ORGAN",0.10728008,170],
+    [5,"SN-147","UY X 128","8","ORGAN",0.08,5],
+    [6,"SN-156","UY X 128- GAS SF","8 LP","ORGAN",0.0856,16],
+    [7,"SN-163","UY X 128","9","ORGAN",0.16077616,99],
+    [8,"SN-175","UY X 128 GAS KN","9 LP","ORGAN",0.18394952,104],
+    [9,"SN-183","UY X 128","10","ORGAN",0.13031448,92],
+    [10,"SN-195","UY X 128 GAS KN","10 LP","ORGAN",0.30747248,109],
+    [11,"SN-203","UY X 128","11","ORGAN",0.13286432,124],
+    [12,"SN-206","UY X 128 SPD","11","ORGAN",0.20594336,30],
+    [13,"SN-220","UY X 128","12","ORGAN",0.7621176,5],
+    [14,"SN-263","DP X 5-KN","11","ORGAN",0.06,59],
+    [15,"SN-289","UO X 113(UO X 1)","11","ORGAN",0.1256,46],
+    [16,"SN-301","DP X 17","9","ORGAN",0.056,3],
+    [17,"SN-308","DP X 17","11","ORGAN",0.15784,30],
+    [18,"SN-330","FLX 118-GCS","9","ORGAN",0.28,26],
+    [19,"SN-334","FLX 118-GCS","11","ORGAN",0.3914096,101]
+  ],
+  "K-FLOOR(BUILDING NO-09)_RUNNING": [
+    [1,"SN-001","DB X 1","7","GROZ(FFG)",0.05070144,74],
+    [2,"SN-013","DB X 1","8","ORGAN",0.32559112,53],
+    [3,"SN-029","DB X 1","9","ORGAN",0.06552784,112],
+    [4,"SN-032","DB X 1-SF","9","ORGAN",0.072,31],
+    [5,"SN-043","DB X 1","10","ORGAN",0.06118872,81],
+    [6,"SN-056","DB X 1","11","ORGAN",0.06131768,17],
+    [7,"SN-065","DB X 1","12","ORGAN",0.00616,20],
+    [8,"SN-085","DC X 1","7","ORGAN",0.07969632,19],
+    [9,"SN-092","DC X 1","8","ORGAN",0.10636168,36],
+    [10,"SN-101","DC X 1-KN","8 LP","ORGAN",0.1818584,48],
+    [11,"SN-107","DC X 1","9","ORGAN",0.10728008,234],
+    [12,"SN-126","DC X 1","11","ORGAN",0.10620288,24],
+    [13,"SN-163","UY X 128","9","ORGAN",0.16077616,74],
+    [14,"SN-175","UY X 128 GAS KN","9 LP","ORGAN",0.18394952,36],
+    [15,"SN-183","UY X 128","10","ORGAN",0.13031448,51],
+    [16,"SN-191","UY X 128-KK-KN","10","ORGAN",0.13284256,6],
+    [17,"SN-195","UY X 128 GAS KN","10 LP","ORGAN",0.30747248,36],
+    [18,"SN-203","UY X 128","11","ORGAN",0.13286432,76],
+    [19,"SN-206","UY X 128 SPD","11","ORGAN",0.20594336,15],
+    [20,"SN-220","UY X 128","12","ORGAN",0.7621176,46],
+    [21,"SN-231","UY X 128","14","ORGAN",0.06392,7],
+    [22,"SN-250","DP X 5","9","ORGAN",0.03824,5],
+    [23,"SN-261","DP X 5","11","ORGAN",0.06874008,25],
+    [24,"SN-289","UO X 113(UO X 1)","11","ORGAN",0.1256,11],
+    [25,"SN-300","DP X 17","9","GROZ(FFG)",0.03544,30],
+    [26,"SN-308","DP X 17","11","ORGAN",0.15784,41],
+    [27,"SN-330","FLX 118-GCS","9","ORGAN",0.28,50],
+    [28,"SN-334","FLX 118-GCS","11","ORGAN",0.3914096,246]
+  ],
+  "SAMPLE-(BUILDING NO-03)_NEW": [
+    [1,"SN-029","DB X 1","9","ORGAN",0.06552784,38],
+    [2,"SN-056","DB X 1","11","ORGAN",0.06131768,25],
+    [3,"SN-107","DC X 1","9","ORGAN",0.10728008,44],
+    [4,"SN-126","DC X 1","11","ORGAN",0.10620288,65],
+    [5,"SN-163","UY X 128","9","ORGAN",0.16077616,27],
+    [6,"SN-203","UY X 128","11","ORGAN",0.13286432,56],
+    [7,"SN-261","DP X 5","11","ORGAN",0.06874008,29],
+    [8,"SN-287","UO X 113(UO X 1)","11","GROZ(FFG)",0.12056,29],
+    [9,"SN-308","DP X 17","11","ORGAN",0.15784,33],
+    [10,"SN-334","FLX 118-GCS","11","ORGAN",0.3914096,49],
+    [11,"SN-351","LW X 6 T/1669 E","14","GROZ(FFG)",0.2684,5]
+  ],
+  "SAMPLE-(BUILDING NO-03)_RUNNING": [
+    [1,"SN-003","DB X 1","7","ORGAN",0.03985072,73],
+    [2,"SN-029","DB X 1","9","ORGAN",0.06552784,100],
+    [3,"SN-056","DB X 1","11","ORGAN",0.06131768,22],
+    [4,"SN-070","DB X 1","14","GROZ(FFG)",0.03300576,30],
+    [5,"SN-085","DC X 1","7","ORGAN",0.07969632,51],
+    [6,"SN-107","DC X 1","9","ORGAN",0.10728008,222],
+    [7,"SN-126","DC X 1","11","ORGAN",0.10620288,50],
+    [8,"SN-140","UY X 128","7","ORGAN",0.0584,46],
+    [9,"SN-147","UY X 128","8","ORGAN",0.08,34],
+    [10,"SN-163","UY X 128","9","ORGAN",0.16077616,94],
+    [11,"SN-175","UY X 128 GAS KN","9 LP","ORGAN",0.18394952,67],
+    [12,"SN-183","UY X 128","10","ORGAN",0.13031448,47],
+    [13,"SN-191","UY X 128-KK-KN","10","ORGAN",0.13284256,38],
+    [14,"SN-203","UY X 128","11","ORGAN",0.13286432,94],
+    [15,"SN-225","UY X 128","12","GROZ(GEBEDUR)",0.07405864,94],
+    [16,"SN-248","DP X 5","9","GROZ(FFG)",0.03432,23],
+    [17,"SN-250","DP X 5","9","ORGAN",0.03824,10],
+    [18,"SN-261","DP X 5","11","ORGAN",0.06874008,115],
+    [19,"SN-265","DP X 5","14","GROZ(FFG)",0.03272,10],
+    [20,"SN-277","UO X 113(UO X 1)","9","GROZ(FFG)",0.086,60],
+    [21,"SN-289","UO X 113(UO X 1)","11","ORGAN",0.1256,31],
+    [22,"SN-299","UO X 113(UO X 1)","14","ORGAN",0.17488,22],
+    [23,"SN-308","DP X 17","11","ORGAN",0.15784,75],
+    [24,"SN-312","DP X 17 kk(DPxN31)","11 J","ORGAN",0.05704,45],
+    [25,"SN-320","DV X 57","14","ORGAN",0.14264,62],
+    [26,"SN-334","FLX 118-GCS","11","ORGAN",0.3914096,68],
+    [27,"SN-351","LW X 6 T/1669 E","14","GROZ(FFG)",0.2684,20]
+  ],
+  "TRAINING CENTRE-(BUILDING NO-01)_NEW": [
+    [1,"SN-029","DB X 1","9","ORGAN",0.06552784,26],
+    [2,"SN-107","DC X 1","9","ORGAN",0.10728008,20],
+    [3,"SN-120","DC X 1 27 SAN 10","10","GROZ(FFG)",0.0904,9],
+    [4,"SN-163","UY X 128","9","ORGAN",0.16077616,27]
+  ],
+  "TRAINING CENTRE-(BUILDING NO-01)_RUNNING": [
+    [1,"SN-029","DB X 1","9","ORGAN",0.06552784,37],
+    [2,"SN-043","DB X 1","10","ORGAN",0.06118872,13],
+    [3,"SN-107","DC X 1","9","ORGAN",0.10728008,59],
+    [4,"SN-119","DC X 1","10","ORGAN",0.0904,4],
+    [5,"SN-163","UY X 128","9","ORGAN",0.16077616,34],
+    [6,"SN-183","UY X 128","10","ORGAN",0.13031448,12],
+    [7,"SN-261","DP X 5","11","ORGAN",0.06874008,21],
+    [8,"SN-308","DP X 17","11","ORGAN",0.15784,6]
+  ]
 };
 
-const app = initializeApp(firebaseConfig);
-const db = getFirestore(app);
-
-enableIndexedDbPersistence(db).catch((err) => {
-  if (err.code == 'failed-precondition') {
-    console.log('Multiple tabs open, persistence can only be enabled in one tab at a time.');
-  } else if (err.code == 'unimplemented') {
-    console.log('Browser does not support persistence.');
-  }
-});
-
-// ================================================================
-// 🔥 ROI ACTIVITY TRACKER — শুধু localStorage এ save (Firebase read/write নেই)
-// ================================================================
-function trackNeedleActivity(type, user, minutes, extraData){
-  try{
-    var activity = JSON.parse(localStorage.getItem('gms_needle_activity') || '[]');
-    
-    var floor = document.getElementById('floor') ? document.getElementById('floor').value : 'Unknown';
-    var date = new Date().toISOString().slice(0,10);
-    var company = localStorage.getItem('gmsSelectedCompany') || 'GMS TEXTILES LTD';
-    
-    activity.push({
-      type: type || 'entry',
-      user: user || 'Unknown',
-      floor: floor,
-      date: date,
-      minutes: minutes || 5,
-      timestamp: new Date().toISOString(),
-      company: company,
-      extra: extraData || {}
-    });
-    
-    // শুধু শেষ ১০০০টি entry রাখব (localStorage ভর্তি হওয়া ঠেকাতে)
-    if(activity.length > 1000){
-      activity = activity.slice(activity.length - 1000);
-    }
-    
-    localStorage.setItem('gms_needle_activity', JSON.stringify(activity));
-    console.log('🪡 Needle activity tracked:', type, user, 'floor:', floor);
-    
-    // ROI Report-কে notify করুন (যদি একই browser এ খোলা থাকে)
-    try{
-      window.dispatchEvent(new Event('storage'));
-    }catch(e){}
-    
-  }catch(e){
-    console.warn('trackNeedleActivity error:', e);
-  }
-}
-
-// Global-এ expose করুন
-window.trackNeedleActivity = trackNeedleActivity;
-
-// ================================================================
-// 🔥 PAGE LOAD TRACKING — Page ওপেন হলে track হবে
-// ================================================================
-(function(){
-  try{
-    var user = localStorage.getItem('lastOperator') || 'Unknown';
-    trackNeedleActivity('page_view', user, 1, {action: 'opened_needle_page'});
-  }catch(e){}
-})();
-
-const floorData = {
-"Kadom R": [
-[1,"DBX1","7",25],[2,"DBX1","8",1],[3,"DBX1- KN","8",0],[4,"DBX1- NS","8",0],
-[5,"DBX1","9",32],[6,"DBX1 -KN","9",0],[7,"DBX1-NS","8LP",0],[8,"DBX1-SF","9B",0],
-[9,"DBX1 -SF","9B",0],[10,"DBXK5-KK","9B",0],[11,"DBX1","10",8],[12,"DBX1 KN","10",0],
-[13,"DBX1","11",1],[14,"DBX1","12SPI",0],[15,"DBX1","12",12],[16,"DBX1","14",22],
-[17,"DBXK5-KK","9S",0],[18,"DBX1","12SPD",0],[19,"DCX1","7",23],[20,"DCX1","8",0],
-[21,"DCX1- KN","8",1],[22,"DCX1","9",15],[23,"DCX1 SF","9LP",0],[24,"DPX5-FG","9",0],
-[25,"DCX1","10",9],[26,"DCX1","11",34],[27,"DCX1","12",4],[28,"DCX1","14",0],
-[29,"UYX128","7",15],[30,"UYX128 -KN","8",7],[31,"UYX128","9",19],[32,"UYX128","9SPD",0],
-[33,"UYX128 -KN","9",0],[34,"UYX128 KK- KN","9",0],[35,"UYX128 -KK","7",0],
-[36,"UYX128","10",46],[37,"UYX128 -KN","10PD",0],[38,"UY128-NY2","10SPD",0],
-[39,"UYX128","11",2],[40,"UYX128","11SPD",0],[41,"UYX128 -KN","11",0],
-[42,"UYX128 -KN","11PD",0],[43,"UYX128","12",1],[44,"UY128++GAS","12",0],
-[45,"UYX128","14",35],[46,"DPX5-NS","8",0],[47,"UY/UOX113","9",16],
-[48,"UY/UOX113","11",21],[49,"UY/UOX113","12",0],[50,"UY/UOX113","14",30],
-[51,"DVX57","12",22],[52,"DPX5","9",11],[53,"DPX5","10SPD",20],[54,"DPX5","11",10],
-[55,"DPX5","9 SLP",0],[56,"DPX5","12",17],[57,"DPX5","12SPD",30],[58,"DPX5","14SPD",0],
-[59,"DPX5","14",39],[60,"DPX17","9",8],[61,"DPX17","11",9],[62,"UYX128-KK KN","10",0],
-[63,"DPX5-KN","8",0],[64,"DBX1-SF","8",0],[65,"DBX1-NS","9",0],[66,"DCX1- KN","9",0],
-[67,"DPX5-NS","9",0],[68,"UYX128-KK","8",0],[69,"UOX113","11SPI",0],[70,"DBX1-SF","8LP",0],
-[71,"DBX1-SF","9LP",0],[72,"DBX1-SF","11AP",0],[73,"DCX1-SF","8LP",0],[74,"DCX1-SF","9AP",0],
-[75,"DCX1-SF","11LP",0],[76,"UYX128-SF","9LP",33],[77,"UYX128-SF","10PD",0],
-[78,"UYX128-SF","10LP",0],[79,"UYX128-SAN","10",20],[80,"UYX128-SF","11PD",0],
-[81,"UYX128-SAN","12",20],[82,"DPX5-SF","10PD",0]
-],
-"Kadom N": [
-[1,"DBX1","7",16],[2,"DBX1","8",0],[3,"DBX1- KN","8",0],[4,"DBX1- NS","8",0],
-[5,"DBX1","9",30],[6,"DBX1 -KN","9",0],[7,"DBX1 -NS","9",0],[8,"DBX1 -SF","9B",0],
-[9,"DBXK5-KK","9B",0],[10,"DBX1","10",0],[11,"DBX1 -KN","10",0],[12,"DBX1 SF","10",0],
-[13,"DBX1","11",24],[14,"DBX1","12",0],[15,"DBX1","14",0],[16,"DBXK5-KK","9S",0],
-[17,"DBX1","12SPD",0],[18,"DCX1","7",20],[19,"DCX1","8",0],[20,"DCX1- KN","8",30],
-[21,"DCX1","9",24],[22,"DCX1 SF","9LP",0],[23,"DCX1","9JPD",0],[24,"DCX1","10",0],
-[25,"DCX1","11",28],[26,"DCX1","12",10],[27,"DCX1","14",0],[28,"UYX128","7",20],
-[29,"UYX128","8",0],[30,"UYX128 -KN","8",20],[31,"UYX128","9",2],[32,"UYX128 -KN","9",0],
-[33,"UYX128 KK- KN","9",0],[34,"UYX128 -NY2","9B",0],[35,"UYX128","10",10],
-[36,"UYX128 -KN","10PD",0],[37,"UYX128","11",20],[38,"UYX128","11SLP+",0],
-[39,"UYX128 -KN","11",0],[40,"UYX128 -KN","11HP",0],[41,"UYX128 -KN","11PD",0],
-[42,"UYX128","12",20],[43,"UYX128","14",0],[44,"UYX128 -NY2","14S",0],
-[45,"UY/UOX113","9",20],[46,"UY/UOX113","11",10],[47,"UY/UOX113","14",0],
-[48,"DVX57","14",0],[49,"DPX5","9",20],[50,"DPX5","9SPD",0],[51,"DPX5","10SPD",0],
-[52,"DPX5","11",25],[53,"DPX5","12",10],[54,"DPX5","14",44],[55,"DPX17","9",20],
-[56,"DPX17","11",20],[57,"FLX118 -GCS","9",0],[58,"FLX118 -GCS","11",0]
-],
-"Poddo R": [
-[1,"DBX1","7",18],[2,"DBX1","8",3],[3,"DBX1- KN","8",0],[4,"DBX1- NS","8",0],
-[5,"DBX1","9",1],[6,"DBX1 -KN","9",0],[7,"DBX1-KN","09PD",31],[8,"DBX1 -NS","9",0],
-[9,"DBX1 -SF","9B",0],[10,"DBXK5-KK","9B",0],[11,"DBX1","10",6],[12,"DBX1 KN","10",0],
-[13,"DBX1","11",2],[14,"DBX1 KK","11J",0],[15,"DBX1","12",10],[16,"DBX1","14",20],
-[17,"DBXK5-KK","9S",0],[18,"TQX1","16",40],[19,"DCX1","7",44],[20,"DCX1","8",77],
-[21,"DCX1- KN","8",0],[22,"DCX1","9",27],[23,"DCX1 SF","9AP",0],[24,"DMX13-KN","10",0],
-[25,"DCX1","10",7],[26,"DCX1","11",3],[27,"DCX1","12",10],[28,"DCX1","14",14],
-[29,"UYX128","7",30],[30,"UYX128 -KN","8",36],[31,"UYX128","9",49],[32,"UY128","9 SPD",20],
-[33,"UYX128 -KN","9",0],[34,"UYX128 KK- KN","9",20],[35,"UYX128 -NY2","9B",0],
-[36,"UYX128","10",59],[37,"UYX128 -KN","10PD",0],[38,"UY128 NY2","10SPD",0],
-[39,"UYX128","11",19],[40,"UYX128","11SLP+",0],[41,"UYX128 -KN","11HP",40],
-[42,"UYX128 -KN-KN","11",16],[43,"UYX128","12",1],[44,"UY128++SAN","12",20],
-[45,"UYX128","14",68],[46,"UYX128 -NY2","14S",0],[47,"UY/UOX113","9",0],
-[48,"UY/UOX113","11",10],[49,"UY/UOX113","12",12],[50,"UY/UOX113","14",18],
-[51,"DVX57","14",39],[52,"DPX5","9",40],[53,"DVX57","12",42],[54,"DPX5","11",3],
-[55,"DPX5","11SPD",0],[56,"DPX5","12",9],[57,"DPX5","12SPD",0],[58,"DPX5","14SPD",0],
-[59,"DPX5","14",38],[60,"DPX17","9",4],[61,"DPX17","11",18],[62,"FLX118 -GCS","10",33],
-[63,"FLX118 -GCS","11",0],[64,"DBX1-SF","8LP",24],[65,"DBX1-SF","9LP",0],
-[66,"DBX1-SF","10LP",185],[67,"DBX1-SF","11LP",0],[68,"DCX1-SF","8LP",0],
-[69,"DCX1-SF","9AP",13],[70,"DCX1-SF","10LP",0],[71,"DCX1-SF","11LP",8],
-[72,"UYX128-KN","8LP",0],[73,"UYX128-SF","8LP",81],[74,"UYX128-SAN","9XS",11],
-[75,"UYX128-SF","9LP",0],[76,"UYX128-KK-KN","9LP",0],[77,"UYX128-SAN","10XS",16],
-[78,"UYX128-SF","10LP",0],[79,"UYX128-SF","10PD",20],[80,"UYX128-KK-KN","10LP",57],
-[81,"UYX128-KN","11LP",70],[82,"UYX128-SF","11LP",0],[83,"UYX128-SF","11PD",0],
-[84,"UYX128-KK-KN","11LP",140],[85,"DPX5-KN","8LP",100],[86,"DPX5-SF","9LP",100],
-[87,"DPX5-SF","10LP",107],[88,"DPX5-SF","11LP",0]
-],
-"Poddo N": [
-[1,"DBX1","7",0],[2,"DBX1","8",0],[3,"DBX1- KN","8",0],[4,"DBX1- NS","8",0],
-[5,"DBX1","9",3],[6,"DBX1 -KN","9",0],[7,"DBX1 -NS","9",0],[8,"DBX1 -SF","9B",0],
-[9,"DBXK5-KK","9B",0],[10,"DBX1","10",0],[11,"DBX1 -KN","10",0],[12,"DBX1 SF","10",0],
-[13,"DBX1","11",0],[14,"DBX1","12",0],[15,"DBX1","14",0],[16,"DBXK5-KK","9S",0],
-[17,"DBX1","12SPD",0],[18,"DCX1","7",0],[19,"DCX1","8",0],[20,"DCX1- KN","8",0],
-[21,"DCX1","9",3],[22,"DCX1 SF","9LP",0],[23,"DCX1","9JPD",0],[24,"DCX1","10",0],
-[25,"DCX1","11",0],[26,"DCX1","12",0],[27,"DCX1","14",0],[28,"UYX128","7",0],
-[29,"UYX128","8",0],[30,"UYX128","9",0],[31,"UYX128 -KN","8",0],[32,"UYX128 -KN","9",0],
-[33,"UYX128 KK- KN","9",0],[34,"UYX128 -NY2","9B",0],[35,"UYX128","10",0],
-[36,"UYX128 -KN","10PD",0],[37,"UYX128","11",0],[38,"UYX128","11SLP+",0],
-[39,"UYX128 -KN","11",0],[40,"UYX128 -KN","11HP",0],[41,"UYX128 -KN","11PD",0],
-[42,"UYX128","12",0],[43,"UYX128","14",0],[44,"UYX128 -NY2","14S",0],
-[45,"UY/UOX113","9",37],[46,"UY/UOX113","11",63],[47,"UY/UOX113","12",50],
-[48,"UY/UOX113","14",0],[49,"DVX57","14",104],[50,"DPX5","9",60],[51,"DPX5","9SPD",0],
-[52,"DPX5","10SPD",0],[53,"DPX5","11",9],[54,"DPX5","12",0],[55,"DPX5","12SPD",0],
-[56,"DPX5","14SPD",0],[57,"DPX5","14",0],[58,"DPX17","9",0],[59,"DPX17","11",56],
-[60,"FLX118 -GCS","11",16],[61,"DVX57","12",0]
-],
-"Shapla R": [
-[1,"DBX1","7",25],[2,"DBX1","8",16],[3,"DBX1- KN","8",0],[4,"DBX1- NS","8",0],
-[5,"DBX1","9",16],[6,"DBX1 -KN","10",0],[7,"DBX1-KN","9PD",0],[8,"DBX1 -NS","9",0],
-[9,"DBX1 -SF","9B",0],[10,"DBXK5-KK","9B",50],[11,"DBX1","10",37],[12,"DBX1","11",70],
-[13,"DBX1","12SPI",0],[14,"DBX1","12",0],[15,"DBX1","14",11],[16,"DBX1","14SPD",30],
-[17,"DBX1","12SPD",0],[18,"DCX1","7",46],[19,"DCX1","8",14],[20,"DCX1- KN","8",0],
-[21,"DCX1","9",68],[22,"DCX1 SF","9LP",0],[23,"DMX13-KN","10",0],[24,"DCX1","10",36],
-[25,"DCX1","11",54],[26,"DCX1","12",10],[27,"DCX1","14",0],[28,"UYX128","7",11],
-[29,"UYX128 -KN","8",0],[30,"UYX128","9",52],[31,"UY128","9SPD",30],[32,"UYX128 -KN","9",0],
-[33,"UYX128 KK- KN","9",20],[34,"UYX128 -NY2","9B",0],[35,"UYX128","10",43],
-[36,"UYX128 -KN-KN","10",30],[37,"UYX128","11",33],[38,"UY128 NY2","10SPD",30],
-[39,"UYX128 KN","11SLP+",35],[40,"UYX128 -Kk-kn","11",30],[41,"UYX128 -KN","11PD",0],
-[42,"UYX128","12",23],[43,"UY128++GAS","12",0],[44,"UYX128","14",15],[45,"UYX128 -NY2","14S",0],
-[46,"UY/UOX113","9",22],[47,"UY/UOX113","11",20],[48,"DVX57","12",0],[49,"UY/UOX113","14",55],
-[50,"DVX57","14",24],[51,"DPX5","9",9],[52,"DPX5++","9SLP",36],[53,"DPX5","10SPD",22],
-[54,"DPX5","11",25],[55,"DPX5","11SPD",0],[56,"DPX5","12",26],[57,"DPX5","12SPD",0],
-[58,"DPX5","14SPD",13],[59,"DPX5","14",0],[60,"DPX17","9",21],[61,"DPX17","11",45],
-[62,"FLX118 -GCS","9",0],[63,"FLX118 -GCS","11",18]
-],
-"Shapla N": [
-[1,"DBX1","7",16],[2,"DBX1","8",0],[3,"DBX1- KN","8",0],[4,"DBX1- NS","8",0],
-[5,"DBX1","9",27],[6,"DBX1 -KN","9",0],[7,"DBX1 -NS","9",0],[8,"DBX1 -SF","9B",0],
-[9,"DBXK5-KK","9B",0],[10,"DBX1","10",0],[11,"DBX1 -KN","10",0],[12,"DBX1 SF","10",0],
-[13,"DBX1","11",29],[14,"DBX1","12",54],[15,"DBX1","14",0],[16,"DBXK5-KK","9S",0],
-[17,"DBX1","12SPD",0],[18,"DCX1","7",27],[19,"DCX1","8",46],[20,"DCX1- KN","8",0],
-[21,"DCX1","9",79],[22,"DCX1 SF","9LP",0],[23,"DCX1","9JPD",0],[24,"DCX1","10",0],
-[25,"DCX1","11",23],[26,"DCX1","12",0],[27,"DCX1","14",0],[28,"UYX128","7",0],
-[29,"UYX128","8",0],[30,"UYX128 -KN","8",0],[31,"UYX128","9",27],[32,"UYX128 -KN","9",0],
-[33,"UYX128 KK- KN","9",0],[34,"UYX128 -NY2","9B",0],[35,"UYX128","10",47],
-[36,"UYX128 -KN","10PD",0],[37,"UYX128","11",5],[38,"UYX128","11SLP+",0],
-[39,"UYX128 -KN","11",0],[40,"UYX128 -KN","11HP",0],[41,"UYX128 -KN","11PD",0],
-[42,"UYX128","12",39],[43,"UYX128","14",0],[44,"UYX128 -NY2","14S",0],
-[45,"UY/UOX113","9",16],[46,"UY/UOX113","11",18],[47,"UY/UOX113","12",0],
-[48,"UY/UOX113","14",0],[49,"DVX57","14",30],[50,"DPX5","9",24],[51,"DPX5","9SPD",0],
-[52,"DPX5","10SPD",0],[53,"DPX5","11",10],[54,"DPX5","12",0],[55,"DPX5","12SPD",0],
-[56,"DPX5","14SPD",0],[57,"DPX5","14",0],[58,"DPX17","9",0],[59,"DPX17","11",6],
-[60,"FLX118 -GCS","9",0],[61,"FLX118 -GCS","11",50]
-],
-"Sample R": [
-[1,"DBX1","7",33],[2,"DBX1","8",51],[3,"DBX1- KN","8",0],[4,"DBX1- NS","8",20],
-[5,"DBX1","9",7],[6,"DBX1 -KN","9",24],[7,"DBX1 -NS","9",0],[8,"DBX1 -SF","9B",0],
-[9,"DBXK5-KK","9B",0],[10,"DBX1","10",15],[11,"DBX1 -KN","10",0],[12,"DBX1 SF","10",0],
-[13,"DBX1","11",43],[14,"DBX1","12",30],[15,"DBX1","14",18],[16,"DBXK5-KK","9S",0],
-[17,"DBX1","12SPD",0],[18,"DCX1","7",40],[19,"DCX1","8",11],[20,"DCX1- KN","8",50],
-[21,"DCX1","9",23],[22,"DCX1 SF","9LP",0],[23,"DCX1","9JPD",0],[24,"DCX1","10",11],
-[25,"DCX1","11",30],[26,"DCX1","12",30],[27,"DCX1","14",26],[28,"UYX128","7",35],
-[29,"UYX128 KK- KK","8",0],[30,"UYX128 -KN","8",40],[31,"UYX128","9",55],
-[32,"UYX128 -KN","9",0],[33,"UYX128 KK- KN","9",10],[34,"UYX128 -NY2","9B",0],
-[35,"UYX128","10",48],[36,"UYX128 -KN","10PD",0],[37,"UYX128","11",13],
-[38,"UYX128","11SLP+",0],[39,"UYX128 -KN","11",0],[40,"UYX128 -KN","11HP",0],
-[41,"UYX128 -KN","11PD",0],[42,"UYX128","12",39],[43,"UYX128","14",24],
-[44,"UYX128 -NY2","14S",0],[45,"UY/UOX113","9",65],[46,"UY/UOX113","11",47],
-[47,"UY/UOX113","14",25],[48,"DOX558","12",0],[49,"DPX5","9",60],[50,"DPX5","9SPD",0],
-[51,"DPX5","10SPD",0],[52,"DPX5","11",26],[53,"DPX5","12",0],[54,"DPX5","12SPD",10],
-[55,"DPX5","14SPD",0],[56,"DPX5","14",31],[57,"DPX17","9",59],[58,"DPX17","11",60],
-[59,"DVX558","12",0],[60,"FLX118 -GCS","11",29]
-],
-"Sample N": [
-[1,"DBX1","7",10],[2,"DBX1","8",0],[3,"DBX1- KN","8",0],[4,"DBX1- NS","8",0],
-[5,"DBX1","9",23],[6,"DBX1 -KN","9",0],[7,"DBX1 -NS","9",0],[8,"DBX1 -SF","9B",0],
-[9,"DBXK5-KK","9B",0],[10,"DBX1","10",0],[11,"DBX1 -KN","10",0],[12,"DBX1 SF","10",0],
-[13,"DBX1","11",20],[14,"DBX1","12",0],[15,"DBX1","14",0],[16,"DBXK5-KK","9S",0],
-[17,"DBX1","12SPD",0],[18,"DCX1","7",10],[19,"DCX1","8",0],[20,"DCX1- KN","8",0],
-[21,"DCX1","9",41],[22,"DCX1 SF","9LP",0],[23,"DCX1","9JPD",0],[24,"DCX1","10",0],
-[25,"DCX1","11",0],[26,"DCX1","12",0],[27,"DCX1","14",0],[28,"UYX128","7",10],
-[29,"UYX128","8",0],[30,"UYX128 -KN","8",0],[31,"UYX128","9",19],[32,"UYX128 -KN","9",0],
-[33,"UYX128 KK- KN","9",0],[34,"UYX128 -NY2","9B",0],[35,"UYX128","10",0],
-[36,"UYX128 -KN","10PD",0],[37,"UYX128","11",20],[38,"UYX128","11SLP+",0],
-[39,"UYX128 -KN","11",0],[40,"UYX128 -KN","11HP",0],[41,"UYX128 -KN","11PD",0],
-[42,"UYX128","12",0],[43,"UYX128","14",0],[44,"UYX128 -NY2","14S",0],
-[45,"UY/UOX113","9",0],[46,"UY/UOX113","11",40],[47,"UY/UOX113","14",0],
-[48,"DVX57","14",0],[49,"DPX5","9",0],[50,"DPX5","9SPD",0],[51,"DPX5","10SPD",0],
-[52,"DPX5","11",20],[53,"DPX5","12",0],[54,"DPX5","14",0],[55,"DPX17","9",0],
-[56,"DPX17","11",20],[57,"FLX118 -GCS","9",0],[58,"FLX118 -GCS","11",18]
-],
-"EMBROIDERY R": [
-[1,"DBX1","7",120],[2,"DBX1","8",214],[3,"DBX1","9",234],[4,"DBX1","10",0],
-[5,"DBX1","11",181],[6,"DBX1","12",0],[7,"DBX1","14",35],[8,"DCX1","9",0],
-[9,"DCX1","11",37],[10,"DPX5","9",0],[11,"DBXK5KK","9",0],[12,"DBXK5KK","10",20],
-[13,"DPX5","11",0],[14,"DPX5","14",0],[15,"PHXC70","14",65],[16,"PHXC70","16",39],
-[17,"TVX64","14",0],[18,"TVX64","16",35],[19,"TQX1","14",0],[20,"TQX1","16",0],
-[21,"UOX113","14",31],[22,"UOX113","16",0]
-],
-"EMBROIDERY N": [
-[1,"DBX1","7",22],[2,"DBX1","8",37],[3,"DBX1","9",36],[4,"DBX1","10",0],
-[5,"DBX1","11",10],[6,"DBX1","12",0],[7,"DBX1","14",15],[8,"DCX1","9",0],
-[9,"DCX1","11",68],[10,"DPX5","9",0],[11,"134 SAN DPX5","10",0],[12,"134 SAN DPX5","11",0],
-[13,"DPX5","11",0],[14,"DPX5","14",0],[15,"PHXC70","14",9],[16,"PHXC70","16",20],
-[17,"TVX64","14",0],[18,"TVX64","16",28],[19,"TQX1","14",0],[20,"TQX1","16",0],
-[21,"UOX113","14",42],[22,"UOX113","16",0]
-],
-"Belly R": [
-[1,"DBX1","7",7],[2,"DBX1","8",27],[3,"DBX1- KN","8",0],[4,"DBX1-NS","8LP",0],
-[5,"DBX1","9",100],[6,"DBX1 -KN","10",0],[7,"DBX1-KN","9PD",0],[8,"DBX1 -NS","9",0],
-[9,"DBX1","10",0],[10,"DBXK5-NS","10",0],[11,"DBX1-SF","10",0],[12,"DBX1","11",54],
-[13,"DBX1 NS","11J",0],[14,"DBX1","12",33],[15,"DBX1","14",31],[16,"DBXK5-KK","9S",0],
-[17,"DBX1","12SPD",0],[18,"DCX1","7",0],[19,"DCX1","9",8],[20,"DCX1- KN","8",0],
-[21,"DCX1","8",0],[22,"DCX1-NS","9",0],[23,"DCX1- KN","9",60],[24,"DCX1","10",14],
-[25,"DCX1","11",43],[26,"DCX1","12",11],[27,"DCX1","14",13],[28,"UYX128","7",0],
-[29,"UYX128 -KN","8",0],[30,"UYX128","9",10],[31,"UY128","9SPD",0],[32,"UYX128 -KN","9",0],
-[33,"UYX128 KK","7",0],[34,"UYX128 -NY2","9B",0],[35,"UYX128","10",20],
-[36,"DPX5","7",0],[37,"DPX5-NS","11",25],[38,"UYX128","11",23],[39,"DPX5-NS","9",20],
-[40,"UYX128 -KN","11",0],[41,"UYX128 -KN","11PD",0],[42,"UYX128","12",20],
-[43,"UY128++GAS","12",0],[44,"UYX128","14",16],[45,"UYX128 -NY2","14S",0],
-[46,"UY/UOX113","9",0],[47,"UY/UOX113","12",0],[48,"DPX5-NS","10",40],[49,"DCX1-NS","8",0],
-[50,"DVX57","14",0],[51,"DPX5","9",50],[52,"DPX5","9SLP",0],[53,"DPX5","10SPD",18],
-[54,"DPX5","11",40],[55,"DPX5","11SPD",0],[56,"DPX5","12",20],[57,"DPX5","12SPD",10],
-[58,"DPX5","14SPD",20],[59,"DPX5","14",15],[60,"DPX17","9",0],[61,"DPX17","11",28],
-[62,"FLX118 -GCS","9",0],[63,"FLX118 -GCS","11",0],[64,"UYX128 -KK","8",0],
-[65,"UOX113","11SPI",20],[66,"DPX5-SF","10LP",0],[67,"DPX5-KN","8LP",0],
-[68,"DPX5-SF","9LP",0],[69,"DBX1-SF","10LP",0]
-],
-"Belly N": [
-[1,"DBX1","7",0],[2,"DBX1","8",12],[3,"DBX1- KN","8",0],[4,"DBX1-SF","8",0],
-[5,"DBX1","9",12],[6,"DBX1 -KN","9",0],[7,"DBX1 -NS","9",0],[8,"DBX1 -SF","9B",0],
-[9,"DBXK5-KK","9B",0],[10,"DBX1","10",0],[11,"DBX1 -KN","10",0],[12,"DBX1 SF","10",0],
-[13,"DBX1","11",21],[14,"DBX1","12",20],[15,"DBX1","14",16],[16,"DBXK5-KK","9S",0],
-[17,"DBX1","12SPD",0],[18,"DCX1","7",0],[19,"DCX1","8",0],[20,"DCX1- KN","8",0],
-[21,"DCX1","9",12],[22,"DCX1 SF","9LP",0],[23,"DCX1- KN","9",0],[24,"DCX1","10",0],
-[25,"DCX1","11",20],[26,"DCX1","12",18],[27,"DCX1","14",20],[28,"UYX128","7",0],
-[29,"UYX128","8",0],[30,"UYX128 -KN","8",0],[31,"UYX128","9",26],[32,"UYX128","9SPD",0],
-[33,"UYX128 KK","7",0],[34,"UYX128 KK- KN","9",0],[35,"UYX128 -NY2","9B",0],
-[36,"UYX128","10",18],[37,"DPX5-KN","9",0],[38,"DPX5","7",0],[39,"UYX128","11",38],
-[40,"UYX128","11SLP+",0],[41,"UYX128 -KN","11",0],[42,"UYX128 -KN","11HP",0],
-[43,"UYX128 -KN","11PD",0],[44,"UYX128","12",28],[45,"UYX128","14",0],
-[46,"UYX128 -NY2","14S",0],[47,"UY/UOX113","9",0],[48,"UY/UOX113","11",0],
-[49,"UY/UOX113","12",0],[50,"UY/UOX113","14",0],[51,"DVX57","14",0],[52,"DPX5","11",9],
-[53,"DPX5","9SPD",0],[54,"DPX5","10SPD",0],[55,"DPX5","9",11],[56,"DPX5","12",15],
-[57,"DPX5","12SPD",0],[58,"DPX5","14SPD",0],[59,"DPX5","14",20],[60,"DPX17","9",0],
-[61,"DPX17","11",19],[62,"FLX118 -GCS","9",0],[63,"FLX118 -GCS","11",0],
-[64,"UYX128-KK","8",0],[65,"UOX113","9SPD",0],[66,"UOX113","11SPI",0]
-]};
-
+// =========================================
+// 🌐 GLOBAL VARIABLES
+// =========================================
 let negativeRowIndex = -1;
-let dynamicOpening = null;
+let currentFloorData = [];
 
-function getPreviousMonth(monthStr){
-  let parts = monthStr.split("-");
-  let year = parseInt(parts[0]);
-  let mon = parseInt(parts[1]);
-  mon -= 1;
-  if(mon < 1){ mon = 12; year -= 1; }
-  return `${year}-${String(mon).padStart(2, '0')}`;
+// =========================================
+// 💾 OFFLINE QUEUE FUNCTIONS
+// =========================================
+function getOfflineQueue(){
+  return JSON.parse(localStorage.getItem(OFFLINE_QUEUE_KEY) || '[]');
 }
 
-const OFFLINE_QUEUE_KEY = "needle_posting_queue";
-function getOfflineQueue(){ return JSON.parse(localStorage.getItem(OFFLINE_QUEUE_KEY) || "[]"); }
-function setOfflineQueue(q){ localStorage.setItem(OFFLINE_QUEUE_KEY, JSON.stringify(q)); }
-
-async function updateDashboardNeedleState(floor, rows) {
-  const company = localStorage.getItem('gmsSelectedCompany') || 'GMS TEXTILES LTD';
-  const companyKey = company.replace(/\s+/g, "_");
-  const stateDocRef = doc(db, "systemState", "dashboard_" + companyKey);
-  
-  let currentNeedleState = { total: 0, floorStocks: {} };
-  try {
-    const stateDocSnap = await getDoc(stateDocRef);
-    if (stateDocSnap.exists()) {
-      const stateData = stateDocSnap.data();
-      if (stateData.needle) {
-        currentNeedleState = stateData.needle;
-      }
-    }
-  } catch(e) { console.log("State fetch error:", e); }
-
-  if (!currentNeedleState.floorStocks) {
-    currentNeedleState.floorStocks = {};
-  }
-
-  let totalPresentVal = 0;
-  rows.forEach(r => totalPresentVal += Number(r.present) || 0);
-  currentNeedleState.floorStocks[floor] = totalPresentVal;
-
-  let newGrandTotal = 0;
-  const defaultFloors = ["Kadom R", "Kadom N", "Shapla R", "Shapla N", "Poddo R", "Poddo N", "Belly R", "Belly N", "Sample R", "Sample N", "EMBROIDERY R", "EMBROIDERY N"];
-  defaultFloors.forEach(f => {
-    if (currentNeedleState.floorStocks[f] === undefined) {
-      let opSum = 0;
-      if (floorData[f]) {
-        floorData[f].forEach(row => opSum += Number(row[3]) || 0);
-      }
-      currentNeedleState.floorStocks[f] = opSum;
-    }
-    newGrandTotal += currentNeedleState.floorStocks[f];
-  });
-  currentNeedleState.total = newGrandTotal;
-
-  try {
-    await setDoc(stateDocRef, {
-      needle: currentNeedleState,
-      lastUpdated: {
-        needle: new Date().toISOString()
-      }
-    }, { merge: true });
-    console.log("[State Update] Dashboard state tracker updated.");
-  } catch(e) {
-    console.error("Dashboard tracker state update failed:", e);
-  }
+function setOfflineQueue(queue){
+  localStorage.setItem(OFFLINE_QUEUE_KEY, JSON.stringify(queue));
 }
 
 function saveDataOffline(floor, date, operator, rows){
@@ -527,126 +892,210 @@ function saveDataOffline(floor, date, operator, rows){
     id: `${floor}_${date}_${Date.now()}`,
     floor, date, operator, rows,
     timestamp: new Date().toISOString(),
-    status: "pending"
+    status: 'pending'
   });
   setOfflineQueue(queue);
-  showToast("✅ Saved Offline - Will sync when online");
-  
-  // 🔥 Offline save হলেও track হবে
-  trackNeedleActivity('save_offline', operator, 5, {
-    floor: floor,
-    date: date,
-    itemsCount: rows.length
-  });
+  showToast('✅ Saved Offline - Will sync when online');
 }
 
 async function syncOfflineQueue(){
   if(!navigator.onLine) return;
   let queue = getOfflineQueue();
   let synced = 0;
+  
   for(let i=0; i<queue.length; i++){
-    if(queue[i].status === "pending"){
+    if(queue[i].status === 'pending'){
       try{
-        await setDoc(doc(db,"dailyPosting",queue[i].id), {
-          date: queue[i].date,
-          month: getMonth(queue[i].date),
-          floor: queue[i].floor,
-          rows: queue[i].rows,
-          operator: queue[i].operator,
-          updatedAt: serverTimestamp()
-        });
-        queue[i].status = "synced";
+        await saveToSupabase(queue[i].floor, queue[i].date, queue[i].operator, queue[i].rows, false);
+        queue[i].status = 'synced';
         synced++;
-        
-        await updateDashboardNeedleState(queue[i].floor, queue[i].rows);
-        
-        // 🔥 Sync হলে track হবে
-        trackNeedleActivity('sync_offline', queue[i].operator, 2, {
-          floor: queue[i].floor,
-          date: queue[i].date,
-          itemsCount: queue[i].rows ? queue[i].rows.length : 0
-        });
-      }catch(e){ console.log("Sync failed:", e); }
+      }catch(e){
+        console.log('Sync failed:', e);
+      }
     }
   }
+  
   if(synced > 0){
     setOfflineQueue(queue);
-    showToast(`☁️ ${synced} items synced to Firebase`);
+    showToast(`☁️ ${synced} items synced to Supabase`);
   }
 }
 
-function showToast(msg){
-  let t = document.createElement("div");
-  t.style.cssText = "position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:#10b981;color:#fff;padding:10px 20px;border-radius:8px;font-weight:600;z-index:9999;animation:fadeIn 0.3s";
-  t.innerText = msg;
-  document.body.appendChild(t);
-  setTimeout(()=>t.remove(), 2500);
+// =========================================
+// 🔌 SUPABASE FUNCTIONS
+// =========================================
+async function getCompanyId(){
+  const { data, error } = await supabase
+    .from('companies')
+    .select('id')
+    .eq('code', COMPANY_CODE)
+    .single();
+  
+  if(error || !data){
+    console.error('Company not found:', error);
+    return null;
+  }
+  return data.id;
 }
 
-function updateOfflineIndicator(){
-  let ind = document.getElementById("offlineIndicator");
-  if(!navigator.onLine){ ind.classList.add("show"); }
-  else{ ind.classList.remove("show"); }
+async function saveToSupabase(floor, date, operator, rows, showSuccess = true){
+  const companyId = await getCompanyId();
+  if(!companyId){
+    alert('❌ Company configuration error!');
+    return { error: 'Company not found' };
+  }
+
+  const summary = {
+    total_opening: rows.reduce((sum, r) => sum + (r.opening || 0), 0),
+    total_receive: rows.reduce((sum, r) => sum + (r.receive || 0), 0),
+    total_delivery: rows.reduce((sum, r) => sum + (r.delivery || 0), 0),
+    total_present: rows.reduce((sum, r) => sum + (r.present || 0), 0),
+    total_bn: rows.reduce((sum, r) => sum + (r.bn || 0), 0)
+  };
+
+  const { error } = await supabase
+    .from('needle_reports')
+    .upsert({
+      company_id: companyId,
+      floor: floor,
+      report_date: date,
+      operator: operator,
+      rows: rows,
+      summary: summary,
+      updated_at: new Date().toISOString()
+    }, {
+      onConflict: 'company_id,floor,report_date'
+    });
+
+  if(error){
+    console.error('Save error:', error);
+    if(showSuccess) alert('❌ Save failed: ' + error.message);
+    return { error };
+  }
+
+  await supabase.from('needle_audit_logs').insert({
+    company_id: companyId,
+    action: 'UPSERT',
+    floor: floor,
+    report_date: date,
+    operator: operator,
+    details: { itemsCount: rows.length }
+  });
+
+  if(showSuccess) showToast('✅ Saved to Supabase');
+  return { success: true };
 }
 
-window.addEventListener("online", ()=>{ updateOfflineIndicator(); syncOfflineQueue(); });
-window.addEventListener("offline", ()=>{ updateOfflineIndicator(); });
+async function loadFromSupabase(floor, date){
+  const companyId = await getCompanyId();
+  if(!companyId) return null;
 
+  const { data, error } = await supabase
+    .from('needle_reports')
+    .select('*')
+    .eq('company_id', companyId)
+    .eq('floor', floor)
+    .eq('report_date', date)
+    .maybeSingle();   // <-- maybeSingle() ব্যবহার করায় ডাটা না থাকলে 406 error আসবে না, null আসবে
+
+  if(error){
+    console.error('loadFromSupabase error:', error);
+    return null;
+  }
+
+  return data; // data হবে either the row, or null (0 rows পেলে)
+}
+
+// =========================================
+// ⏪ PREVIOUS-DAY CARRY-FORWARD LOGIC
+// (আজকের Present Stock = কালকের Previous Stock, মাস পরিবর্তন হলেও কাজ করবে)
+// =========================================
+function getPrevDateStr(dateStr){
+  const d = new Date(dateStr + 'T00:00:00');
+  d.setDate(d.getDate() - 1);
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  return `${y}-${m}-${day}`;
+}
+
+async function getPreviousDayPresentArray(floor, date){
+  const prevDate = getPrevDateStr(date);
+  const prevRecord = await loadFromSupabase(floor, prevDate);
+  if(prevRecord && prevRecord.rows && prevRecord.rows.length){
+    return prevRecord.rows.map(r => Number(r.present) || 0);
+  }
+  return null; // আগের দিনের ডাটা নেই
+}
+
+// =========================================
+// 📊 UI FUNCTIONS
+// =========================================
 function getItems(){
-  let floor=document.getElementById("floor").value;
+  const floor = document.getElementById('floor').value;
   return floorData[floor] || [];
 }
 
-function getMonth(date){return date.slice(0,7);}
+function updateCategoryBadge(){
+  const floor = document.getElementById('floor').value;
+  const badge = document.getElementById('categoryBadge');
+  if(floor.includes('_NEW')){
+    badge.textContent = 'NEW';
+    badge.style.background = 'linear-gradient(135deg,#10b981,#059669)';
+  }else if(floor.includes('_RUNNING')){
+    badge.textContent = 'RUNNING';
+    badge.style.background = 'linear-gradient(135deg,#3b82f6,#2563eb)';
+  }
+}
 
-function loadTable(customPrevious=null){
-  let items=getItems();
-  let floor=document.getElementById("floor").value;
-  let bnName = floor.includes("N") ? "BNF" : "BNR";
-  document.getElementById("bnHeader").innerText = bnName;
-  document.getElementById("monthBNHeader").innerText = "Total " + bnName;
-  let html="";
-
-  items.forEach((item,i)=>{
-    let previous;
-    if(customPrevious && customPrevious[i] !== undefined){
-      previous = customPrevious[i];
-    } else if(dynamicOpening && dynamicOpening[i] !== undefined){
-      previous = dynamicOpening[i];
-    } else {
-      previous = item[3];
-    }
+function loadTable(customPrevious = null){
+  currentFloorData = getItems();
+  updateCategoryBadge();
+  
+  const floor = document.getElementById('floor').value;
+  const bnName = floor.includes('_NEW') ? 'BNR' : 'BNF';
+  document.getElementById('bnHeader').innerText = bnName;
+  
+  let html = '';
+  
+  currentFloorData.forEach((item, i) => {
+    const previous = (customPrevious && customPrevious[i] !== undefined) ? customPrevious[i] : item[6];
     
-    html+=`
-    <tr id="row${i}">
-      <td class="col-sl">${item[0]}</td>
-      <td class="col-type">${item[1]}</td>
-      <td class="col-size">${item[2]}</td>
-      <td class="col-prev" id="p${i}">${previous}</td>
-      <td class="col-rcvd"><input class="qtyInput" type="number" id="r${i}" oninput="calc(${i})"></td>
-      <td class="col-dvld"><input class="qtyInput" type="number" id="d${i}" oninput="calc(${i})"></td>
-      <td class="col-present" id="b${i}">${previous}</td>
-      <td class="col-bn"><input class="qtyInput" type="number" id="bn${i}" oninput="updateTotal()"></td>
-    </tr>`;
+    html += `
+      <tr id="row${i}">
+        <td>${item[0]}</td>
+        <td>${item[1]}</td>
+        <td>${item[2]}</td>
+        <td>${item[3]}</td>
+        <td>${item[4]}</td>
+        <td style="text-align:right">${item[5].toFixed(4)}</td>
+        <td id="p${i}">${previous}</td>
+        <td><input class="qtyInput" type="number" id="r${i}" oninput="calc(${i})" step="0.01" min="0"></td>
+        <td><input class="qtyInput" type="number" id="d${i}" oninput="calc(${i})" step="0.01" min="0"></td>
+        <td id="b${i}" style="font-weight:bold">${previous}</td>
+        <td><input class="qtyInput" type="number" id="bn${i}" oninput="updateTotal()" step="0.01" min="0"></td>
+      </tr>
+    `;
   });
-
-  document.getElementById("tableBody").innerHTML=html;
+  
+  document.getElementById('tableBody').innerHTML = html;
   updateTotal();
   setTimeout(checkNegativeStock, 100);
 }
 
 function calc(i){
-  let p=Number(document.getElementById("p"+i).innerText)||0;
-  let r=Number(document.getElementById("r"+i).value)||0;
-  let d=Number(document.getElementById("d"+i).value)||0;
-  let present = p+r-d;
-  document.getElementById("b"+i).innerText = present;
+  const p = Number(document.getElementById(`p${i}`).innerText) || 0;
+  const r = Number(document.getElementById(`r${i}`).value) || 0;
+  const d = Number(document.getElementById(`d${i}`).value) || 0;
+  const present = p + r - d;
   
-  let row = document.getElementById("row"+i);
+  document.getElementById(`b${i}`).innerText = present;
+  
+  const row = document.getElementById(`row${i}`);
   if(present < 0){
-    row.classList.add("negative-row");
-  } else {
-    row.classList.remove("negative-row");
+    row.classList.add('negative-row');
+  }else{
+    row.classList.remove('negative-row');
   }
   
   updateTotal();
@@ -654,43 +1103,38 @@ function calc(i){
 }
 
 function updateTotal(){
-  let items=getItems();
-  let tp=0,tr=0,td=0,tb=0,tbn=0;
-
-  for(let i=0;i<items.length;i++){
-    tp+=Number(document.getElementById("p"+i)?.innerText)||0;
-    tr+=Number(document.getElementById("r"+i)?.value)||0;
-    td+=Number(document.getElementById("d"+i)?.value)||0;
-    tb+=Number(document.getElementById("b"+i)?.innerText)||0;
-    tbn+=Number(document.getElementById("bn"+i)?.value)||0;
-  }
-
-  document.getElementById("totalPrevious").innerText=tp;
-  document.getElementById("totalReceive").innerText=tr;
-  document.getElementById("totalDelivery").innerText=td;
-  document.getElementById("totalPresent").innerText=tb;
-  document.getElementById("totalBN").innerText=tbn;
+  let tp = 0, tr = 0, td = 0, tb = 0, tbn = 0;
+  
+  currentFloorData.forEach((_, i) => {
+    tp += Number(document.getElementById(`p${i}`)?.innerText) || 0;
+    tr += Number(document.getElementById(`r${i}`)?.value) || 0;
+    td += Number(document.getElementById(`d${i}`)?.value) || 0;
+    tb += Number(document.getElementById(`b${i}`)?.innerText) || 0;
+    tbn += Number(document.getElementById(`bn${i}`)?.value) || 0;
+  });
+  
+  document.getElementById('totalPrevious').innerText = tp.toLocaleString();
+  document.getElementById('totalReceive').innerText = tr.toLocaleString();
+  document.getElementById('totalDelivery').innerText = td.toLocaleString();
+  document.getElementById('totalPresent').innerText = tb.toLocaleString();
+  document.getElementById('totalBN').innerText = tbn.toLocaleString();
 }
 
 function checkNegativeStock(){
-  let items = getItems();
-  let floor = document.getElementById("floor").value;
-  let operator = document.getElementById("operatorName").value.trim() || "Unknown";
-  
-  for(let i=0; i<items.length; i++){
-    let present = Number(document.getElementById("b"+i)?.innerText) || 0;
+  for(let i = 0; i < currentFloorData.length; i++){
+    const present = Number(document.getElementById(`b${i}`)?.innerText) || 0;
+    const row = document.getElementById(`row${i}`);
     
-    let row = document.getElementById("row"+i);
     if(present < 0){
-      row.classList.add("negative-row");
-    } else {
-      row.classList.remove("negative-row");
+      row.classList.add('negative-row');
+    }else{
+      row.classList.remove('negative-row');
     }
     
     if(present < 0){
       negativeRowIndex = i;
-      showNegativePopup(floor, operator, items[i][0], items[i][1], items[i][2], present);
-      return; 
+      showNegativeStock(present);
+      return;
     }
   }
   
@@ -698,36 +1142,38 @@ function checkNegativeStock(){
   closePopup();
 }
 
-function showNegativePopup(floor, operator, sl, needleType, size, stockValue){
-  let popup = document.getElementById("negativePopup");
-  let details = document.getElementById("popupDetails");
+function showNegativeStock(present){
+  const floor = document.getElementById('floor').value;
+  const operator = document.getElementById('operatorName').value.trim() || 'Unknown';
+  const item = currentFloorData[negativeRowIndex];
   
+  const details = document.getElementById('popupDetails');
   details.innerHTML = `
     <div><span class="label">Floor:</span><span class="value">${floor}</span></div>
     <div><span class="label">Operator:</span><span class="value">${operator}</span></div>
-    <div><span class="label">SL:</span><span class="value">${sl}</span></div>
-    <div><span class="label">Needle Type:</span><span class="value">${needleType}</span></div>
-    <div><span class="label">Size:</span><span class="value">${size}</span></div>
-    <div><span class="label">Present Stock:</span><span class="value" style="color:#dc2626;font-weight:bold">${stockValue}</span></div>
+    <div><span class="label">Item Code:</span><span class="value">${item[1]}</span></div>
+    <div><span class="label">Needle Type:</span><span class="value">${item[2]}</span></div>
+    <div><span class="label">Size:</span><span class="value">${item[3]}</span></div>
+    <div><span class="label">Present Stock:</span><span class="value" style="color:#dc2626;font-weight:bold">${present}</span></div>
   `;
   
-  popup.style.display = "flex";
+  document.getElementById('negativePopup').style.display = 'flex';
 }
 
 function closePopup(){
-  document.getElementById("negativePopup").style.display = "none";
+  document.getElementById('negativePopup').style.display = 'none';
 }
 
 function fixNegativeRow(){
   if(negativeRowIndex >= 0){
-    let row = document.getElementById("row"+negativeRowIndex);
+    const row = document.getElementById(`row${negativeRowIndex}`);
     if(row){
-      row.scrollIntoView({behavior:"smooth", block:"center"});
-      row.style.boxShadow = "0 0 0 3px #dc2626";
-      setTimeout(() => row.style.boxShadow = "", 2000);
+      row.scrollIntoView({behavior: 'smooth', block: 'center'});
+      row.style.boxShadow = '0 0 0 3px #dc2626';
+      setTimeout(() => row.style.boxShadow = '', 2000);
     }
     
-    let deliveryInput = document.getElementById("d"+negativeRowIndex);
+    const deliveryInput = document.getElementById(`d${negativeRowIndex}`);
     if(deliveryInput){
       deliveryInput.focus();
       deliveryInput.select();
@@ -735,300 +1181,337 @@ function fixNegativeRow(){
   }
 }
 
-// 🔥 MAIN SAVE FUNCTION — Save হলে ROI tracking হবে
+function updateMonthlySummary(rows){
+  let opening = 0, receive = 0, delivery = 0, present = 0, bn = 0;
+  
+  rows.forEach(r => {
+    opening += Number(r.opening) || 0;
+    receive += Number(r.receive) || 0;
+    delivery += Number(r.delivery) || 0;
+    present += Number(r.present) || 0;
+    bn += Number(r.bn) || 0;
+  });
+  
+  document.getElementById('monthOpening').innerText = opening.toLocaleString();
+  document.getElementById('monthReceive').innerText = receive.toLocaleString();
+  document.getElementById('monthDelivery').innerText = delivery.toLocaleString();
+  document.getElementById('monthPresent').innerText = present.toLocaleString();
+  document.getElementById('monthBN').innerText = bn.toLocaleString();
+}
+
+// =========================================
+// 💾 SAVE / LOAD / DELETE
+// =========================================
 async function saveData(){
-  let date=document.getElementById("postDate").value;
-  let floor=document.getElementById("floor").value;
-  let operator=document.getElementById("operatorName").value.trim() || localStorage.getItem("lastOperator") || "Unknown";
-  let items=getItems();
-
-  if(!date){alert("Date select koro");return;}
-
-  let rows=[];
-  for(let i=0;i<items.length;i++){
-    let openingVal = (dynamicOpening && dynamicOpening[i] !== undefined) ? dynamicOpening[i] : (Number(items[i][3]) || 0);
-    
-    rows.push({
-      sl:items[i][0],needleType:items[i][1],size:items[i][2],
-      opening:openingVal,
-      previous:Number(document.getElementById("p"+i).innerText)||0,
-      receive:Number(document.getElementById("r"+i).value)||0,
-      delivery:Number(document.getElementById("d"+i).value)||0,
-      present:Number(document.getElementById("b"+i).innerText)||0,
-      bn:Number(document.getElementById("bn"+i).value)||0
-    });
+  const date = document.getElementById('postDate').value;
+  const floor = document.getElementById('floor').value;
+  const operator = document.getElementById('operatorName').value.trim() || localStorage.getItem('lastOperator') || 'Unknown';
+  
+  if(!date){
+    alert('❌ Date select করুন');
+    return;
   }
-
-  let docRef = doc(db,"dailyPosting",floor+"_"+date);
-  let oldDoc = await getDoc(docRef);
-  let action = oldDoc.exists() ? "UPDATE" : "CREATE";
-  let details = {};
-
-  if(action === "UPDATE"){
-    let oldRows = oldDoc.data().rows || [];
-    let changed = [];
-    for(let i=0; i<rows.length; i++){
-      let old = oldRows[i] || {};
-      let neu = rows[i];
-      if(JSON.stringify(old) !== JSON.stringify(neu)){
-        changed.push({sl: neu.sl, type: neu.needleType, size: neu.size, oldRcv: old.receive, newRcv: neu.receive, oldDlv: old.delivery, newDlv: neu.delivery});
-      }
-    }
-    details = {changedItems: changed, count: changed.length};
-  } else {
-    details = {totalItems: rows.length, msg: "New posting"};
+  
+  if(!floor){
+    alert('❌ Floor select করুন');
+    return;
   }
-
+  
+  const rows = currentFloorData.map((item, i) => ({
+    sl: item[0],
+    itemCode: item[1],
+    needleType: item[2],
+    size: item[3],
+    brand: item[4],
+    unitPrice: item[5],
+    opening: item[6],
+    previous: Number(document.getElementById(`p${i}`).innerText) || 0,
+    receive: Number(document.getElementById(`r${i}`).value) || 0,
+    delivery: Number(document.getElementById(`d${i}`).value) || 0,
+    present: Number(document.getElementById(`b${i}`).innerText) || 0,
+    bn: Number(document.getElementById(`bn${i}`).value) || 0
+  }));
+  
   if(navigator.onLine){
-    try{
-      await setDoc(docRef,{
-        date:date,month:getMonth(date),floor:floor,rows:rows,operator:operator,updatedAt: serverTimestamp()
-      });
-      
-      await updateDashboardNeedleState(floor, rows);
-
-      try {
-        await addDoc(collection(db, "auditLogs"), {
-          action: action,floor: floor,date: date,operator: operator,timestamp: serverTimestamp(),details: details
-        });
-      } catch(e) { console.error("Audit log error:", e); }
-      showToast("✅ Saved to Firebase");
-      
-      // 🔥 Firebase save হলে track হবে
-      trackNeedleActivity('save', operator, 5, {
-        floor: floor,
-        date: date,
-        action: action,
-        itemsCount: rows.length,
-        changedCount: details.count || 0
-      });
-    }catch(err){
-      console.log("Firebase save failed, saving offline:", err);
-      saveDataOffline(floor, date, operator, rows);
+    const result = await saveToSupabase(floor, date, operator, rows);
+    if(result.success){
+      localStorage.setItem('lastOperator', operator);
+      await loadData();
     }
   }else{
     saveDataOffline(floor, date, operator, rows);
+    localStorage.setItem('lastOperator', operator);
   }
-
-  localStorage.setItem("lastOperator", operator);
-  await loadData();
-  syncOfflineQueue();
-}
-
-async function deleteData(){
-  let date=document.getElementById("postDate").value;
-  let floor=document.getElementById("floor").value;
-  let operator=document.getElementById("operatorName").value.trim() || localStorage.getItem("lastOperator") || "Unknown";
-
-  if(!date){alert("Date select koro");return;}
-  if(!confirm("Ei date er data delete korba?")) return;
-
-  let docRef = doc(db,"dailyPosting",floor+"_"+date);
-  let oldDoc = await getDoc(docRef);
-  
-  if(oldDoc.exists()){
-    try {
-      await addDoc(collection(db, "auditLogs"), {
-        action: "DELETE",floor: floor,date: date,operator: operator,timestamp: serverTimestamp(),
-        details: { deletedFloor: floor, deletedDate: date, itemsCount: oldDoc.data().rows?.length || 0 }
-      });
-    } catch(e) { console.error("Audit log error:", e); }
-  }
-  
-  await deleteDoc(docRef);
-  
-  let items = getItems();
-  let emptyRows = items.map(item => ({ present: item[3] }));
-  await updateDashboardNeedleState(floor, emptyRows);
-
-  // 🔥 Delete হলে track হবে
-  trackNeedleActivity('delete', operator, 3, {
-    floor: floor,
-    date: date,
-    itemsCount: oldDoc.exists() ? (oldDoc.data().rows?.length || 0) : 0
-  });
-
-  await loadData();
-  alert("Deleted Successfully");
 }
 
 async function loadData(){
-  let date=document.getElementById("postDate").value;
-  let floor=document.getElementById("floor").value;
-  let items=getItems();
-
-  if(!date){
-    dynamicOpening = null;
+  showLoading('Loading data...');
+  document.getElementById('carryBadge').style.display = 'none';
+  
+  const date = document.getElementById('postDate').value;
+  const floor = document.getElementById('floor').value;
+  
+  if(!date || !floor){
+    hideLoading();
     loadTable();
-    showMonthlySummary(0,0,0,0,0);
-    document.getElementById("operatorName").value = localStorage.getItem("lastOperator") || "";
+    updateMonthlySummary([]);
     return;
   }
-
-  let month=getMonth(date);
-  let prevMonth = getPreviousMonth(month);
   
-  let snap=await getDocs(collection(db,"dailyPosting"));
-  let monthRows=[];
-  let prevMonthRows=[];
-
-  snap.forEach(docSnap=>{
-    let data=docSnap.data();
-    if(data.floor===floor){
-      if(data.month===month && data.date<=date){
-        monthRows.push(data);
-      }
-      if(data.month===prevMonth){
-        prevMonthRows.push(data);
-      }
-    }
-  });
-
-  prevMonthRows.sort((a,b)=>a.date.localeCompare(b.date));
-  let lastDayOfPrevMonth = prevMonthRows.length > 0 ? prevMonthRows[prevMonthRows.length - 1] : null;
-  
-  dynamicOpening = [];
-  for(let i=0; i<items.length; i++){
-    if(lastDayOfPrevMonth && lastDayOfPrevMonth.rows && lastDayOfPrevMonth.rows[i]){
-      dynamicOpening[i] = Number(lastDayOfPrevMonth.rows[i].present) || 0;
-    } else {
-      dynamicOpening[i] = Number(items[i][3]) || 0;
-    }
-  }
-
-  monthRows.sort((a,b)=>a.date.localeCompare(b.date));
-  let todayData=null;
-  monthRows.forEach(row=>{if(row.date===date) todayData=row;});
-
-  let monthlyReceive=Array(items.length).fill(0);
-  let monthlyDelivery=Array(items.length).fill(0);
-  let monthlyBN=Array(items.length).fill(0);
-
-  monthRows.forEach(day=>{
-    if(day.rows){
-      day.rows.forEach((row,i)=>{
-        monthlyReceive[i]+=Number(row.receive)||0;
-        monthlyDelivery[i]+=Number(row.delivery)||0;
-        monthlyBN[i]+=Number(row.bn)||0;
+  try{
+    // ১. আজকের তারিখে আগেই সেভ করা ডাটা আছে কিনা চেক
+    const savedData = await loadFromSupabase(floor, date);
+    
+    if(savedData && savedData.rows && savedData.rows.length){
+      // আগের সেভ করা ডাটা পাওয়া গেছে -> সেটাই দেখাও
+      const previousArr = savedData.rows.map(r => Number(r.previous) || 0);
+      loadTable(previousArr);
+      
+      savedData.rows.forEach((row, i) => {
+        if(document.getElementById(`r${i}`)){
+          document.getElementById(`r${i}`).value = row.receive || '';
+          document.getElementById(`d${i}`).value = row.delivery || '';
+          document.getElementById(`bn${i}`).value = row.bn || '';
+          calc(i);
+        }
       });
+      
+      document.getElementById('operatorName').value = savedData.operator || document.getElementById('operatorName').value;
+      updateMonthlySummary(savedData.rows);
+    }else{
+      // ২. আজকের ডাটা নেই -> আগের দিনের Present Stock কে আজকের Previous বানাও
+      const prevPresentArr = await getPreviousDayPresentArray(floor, date);
+      
+      if(prevPresentArr){
+        loadTable(prevPresentArr); // ⏪ Carry-forward থেকে আসা Previous
+        document.getElementById('carryBadge').style.display = 'inline-block';
+      }else{
+        loadTable(); // আগের দিনের ডাটাও নেই -> default Opening Stock ব্যবহার হবে
+      }
+      updateMonthlySummary([]);
     }
-  });
-
-  let todayReceive=Array(items.length).fill(0);
-  let todayDelivery=Array(items.length).fill(0);
-  let todayBN=Array(items.length).fill(0);
-
-  if(todayData && todayData.rows){
-    todayData.rows.forEach((row,i)=>{
-      todayReceive[i]=Number(row.receive)||0;
-      todayDelivery[i]=Number(row.delivery)||0;
-      todayBN[i]=Number(row.bn)||0;
-    });
+  }catch(e){
+    console.error('Load error:', e);
+    loadTable();
   }
-
-  let previousList=[];
-  for(let i=0;i<items.length;i++){
-    let opening = dynamicOpening[i];
-    let beforeReceive=monthlyReceive[i]-todayReceive[i];
-    let beforeDelivery=monthlyDelivery[i]-todayDelivery[i];
-    previousList[i]=opening+beforeReceive-beforeDelivery;
-  }
-
-  loadTable(previousList);
-  document.getElementById("operatorName").value = todayData?.operator || localStorage.getItem("lastOperator") || "";
-
-  for(let i=0;i<items.length;i++){
-    document.getElementById("r"+i).value = todayReceive[i] || "";
-    document.getElementById("d"+i).value = todayDelivery[i] || "";
-    document.getElementById("bn"+i).value = todayBN[i] || "";
-    calc(i); 
-  }
-
-  updateMonthlySummary(monthlyReceive,monthlyDelivery,monthlyBN,dynamicOpening);
-  setTimeout(checkNegativeStock, 200);
-}
-
-function updateMonthlySummary(monthlyReceive,monthlyDelivery,monthlyBN,openingValues=null){
-  let items=getItems();
-  let opening=0, receive=0, delivery=0, present=0, bn=0;
-  for(let i=0;i<items.length;i++){
-    let op = (openingValues && openingValues[i] !== undefined) ? Number(openingValues[i]) : (Number(items[i][3]) || 0);
-    let r=Number(monthlyReceive[i])||0;
-    let d=Number(monthlyDelivery[i])||0;
-    opening+=op;receive+=r;delivery+=d;present+=op+r-d;bn+=Number(monthlyBN[i])||0;
-  }
-  showMonthlySummary(opening,receive,delivery,present,bn);
-}
-
-function showMonthlySummary(opening,receive,delivery,present,bn){
-  document.getElementById("monthOpening").innerText=opening;
-  document.getElementById("monthReceive").innerText=receive;
-  document.getElementById("monthDelivery").innerText=delivery;
-  document.getElementById("monthPresent").innerText=present;
-  document.getElementById("monthBN").innerText=bn;
-}
-
-function exportExcel(){
-  let title=`<h2>Needle Daily Posting</h2><h3>Floor: ${document.getElementById("floor").value}</h3><h3>Date: ${document.getElementById("postDate").value}</h3>`;
-  let table1=document.getElementById("reportTable").outerHTML;
-  let table2=document.getElementById("summaryTable").outerHTML;
-  let file=new Blob([title+table1+"<br>"+table2],{type:"application/vnd.ms-excel"});
-  let a=document.createElement("a");a.href=URL.createObjectURL(file);a.download="needle-report.xls";a.click();
   
-  // 🔥 Export হলে track হবে
-  trackNeedleActivity('export_excel', localStorage.getItem("lastOperator") || 'Unknown', 2, {
-    floor: document.getElementById("floor").value,
-    date: document.getElementById("postDate").value
+  hideLoading();
+}
+
+function onFloorChange(){
+  loadData();
+}
+
+async function deleteData(){
+  const date = document.getElementById('postDate').value;
+  const floor = document.getElementById('floor').value;
+  
+  if(!date){
+    alert('❌ Date select করুন');
+    return;
+  }
+  
+  if(!confirm('⚠️ এই তারিখের ডাটা delete করবেন?')) return;
+  
+  const companyId = await getCompanyId();
+  if(!companyId) return;
+  
+  const { error } = await supabase
+    .from('needle_reports')
+    .delete()
+    .eq('company_id', companyId)
+    .eq('floor', floor)
+    .eq('report_date', date);
+  
+  if(error){
+    alert('❌ Delete failed: ' + error.message);
+  }else{
+    showToast('✅ Deleted successfully');
+    loadData();
+  }
+}
+
+// =========================================
+// 📄 EXPORT FUNCTIONS
+// =========================================
+function exportExcel(){
+  const floor = document.getElementById('floor').value;
+  const date = document.getElementById('postDate').value;
+  const operator = document.getElementById('operatorName').value;
+  
+  let html = `
+    <h2>GMS COMPOSITE - NEEDLE DAILY POSTING</h2>
+    <h3>Floor: ${floor} | Date: ${date} | Operator: ${operator}</h3>
+    <table border="1" style="border-collapse:collapse;width:100%">
+      <thead>
+        <tr style="background:#1e293b;color:white">
+          <th>SL</th><th>ITEM CODE</th><th>NEEDLE TYPE</th><th>SIZE</th>
+          <th>BRAND</th><th>PRICE</th><th>Previous</th><th>Rcvd</th>
+          <th>Dvld</th><th>Present</th><th>BNR/BNF</th>
+        </tr>
+      </thead>
+      <tbody>
+  `;
+  
+  currentFloorData.forEach((_, i) => {
+    const row = document.getElementById(`p${i}`).parentElement.children;
+    html += `
+      <tr>
+        <td>${row[0].innerText}</td>
+        <td>${row[1].innerText}</td>
+        <td>${row[2].innerText}</td>
+        <td>${row[3].innerText}</td>
+        <td>${row[4].innerText}</td>
+        <td>${row[5].innerText}</td>
+        <td>${document.getElementById(`p${i}`).innerText}</td>
+        <td>${document.getElementById(`r${i}`).value || 0}</td>
+        <td>${document.getElementById(`d${i}`).value || 0}</td>
+        <td>${document.getElementById(`b${i}`).innerText}</td>
+        <td>${document.getElementById(`bn${i}`).value || 0}</td>
+      </tr>
+    `;
   });
+  
+  html += `
+      </tbody>
+      <tfoot style="background:#334155;color:white;font-weight:bold">
+        <tr>
+          <td colspan="6" style="text-align:right">TOTAL:</td>
+          <td>${document.getElementById('totalPrevious').innerText}</td>
+          <td>${document.getElementById('totalReceive').innerText}</td>
+          <td>${document.getElementById('totalDelivery').innerText}</td>
+          <td>${document.getElementById('totalPresent').innerText}</td>
+          <td>${document.getElementById('totalBN').innerText}</td>
+        </tr>
+      </tfoot>
+    </table>
+  `;
+  
+  const blob = new Blob([html], {type: 'application/vnd.ms-excel'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = `needle-composite-${floor}-${date}.xls`;
+  a.click();
+  
+  showToast('✅ Excel exported');
 }
 
 function exportPDF(){
   window.print();
-  
-  // 🔥 Print হলে track হবে
-  trackNeedleActivity('export_pdf', localStorage.getItem("lastOperator") || 'Unknown', 2, {
-    floor: document.getElementById("floor").value,
-    date: document.getElementById("postDate").value
-  });
 }
 
-document.getElementById("postDate").addEventListener("change",loadData);
+// =========================================
+// 🎨 UTILITY FUNCTIONS
+// =========================================
+function showToast(msg){
+  const toast = document.createElement('div');
+  toast.style.cssText = `
+    position:fixed;bottom:80px;left:50%;transform:translateX(-50%);
+    background:#10b981;color:#fff;padding:12px 24px;border-radius:8px;
+    font-weight:600;font-size:13px;z-index:9999;
+    box-shadow:0 4px 12px rgba(0,0,0,0.3);animation:toastFade 0.3s ease;
+  `;
+  toast.innerText = msg;
+  document.body.appendChild(toast);
+  setTimeout(() => toast.remove(), 2500);
+}
 
-window.loadTable=loadTable;window.calc=calc;window.updateTotal=updateTotal;
-window.saveData=saveData;window.deleteData=deleteData;window.loadData=loadData;
-window.exportExcel=exportExcel;window.exportPDF=exportPDF;
-window.checkNegativeStock=checkNegativeStock;window.closePopup=closePopup;window.fixNegativeRow=fixNegativeRow;
-window.syncOfflineQueue=syncOfflineQueue;window.updateOfflineIndicator=updateOfflineIndicator;
+function showLoading(text = 'Loading...'){
+  document.getElementById('loadingText').innerText = text;
+  document.getElementById('loadingOverlay').classList.add('show');
+}
 
-document.addEventListener("keydown", function(e){
-  if(e.target.tagName !== "INPUT") return;
+function hideLoading(){
+  document.getElementById('loadingOverlay').classList.remove('show');
+}
+
+function updateOfflineIndicator(){
+  const indicator = document.getElementById('offlineIndicator');
+  if(!navigator.onLine){
+    indicator.classList.add('show');
+  }else{
+    indicator.classList.remove('show');
+  }
+}
+
+function toggleTheme(){
+  document.body.classList.toggle('light');
+  const isLight = document.body.classList.contains('light');
+  localStorage.setItem('theme', isLight ? 'light' : 'dark');
+}
+
+// =========================================
+// 🎯 EVENT LISTENERS
+// =========================================
+window.addEventListener('online', () => {
+  updateOfflineIndicator();
+  syncOfflineQueue();
+});
+
+window.addEventListener('offline', () => {
+  updateOfflineIndicator();
+});
+
+document.getElementById('postDate').addEventListener('change', loadData);
+
+document.addEventListener('keydown', function(e){
+  if(e.target.tagName !== 'INPUT') return;
   if(!e.target.id.match(/^(r|d|bn)\d+$/)) return;
-  if(e.key === "Tab") return;
-  if(e.key === "Enter"){
+  
+  if(e.key === 'Enter'){
     e.preventDefault();
-    let col = e.target.id.replace(/[0-9]/g, "");
-    let row = Number(e.target.id.replace(/\D/g, ""));
-    let next = document.getElementById(col + (row + 1));
-    if(next){next.focus();next.select();}
+    const col = e.target.id.replace(/[0-9]/g, '');
+    const row = Number(e.target.id.replace(/\D/g, ''));
+    const next = document.getElementById(col + (row + 1));
+    if(next){
+      next.focus();
+      next.select();
+    }
   }
 });
 
-updateOfflineIndicator();
-loadTable();
-setTimeout(syncOfflineQueue, 1000);
-
-// 🔥 ROI Tracker Status Update
-setInterval(function(){
-  try{
-    var activity = JSON.parse(localStorage.getItem('gms_needle_activity') || '[]');
-    var today = new Date().toISOString().slice(0,10);
-    var todayCount = activity.filter(a => a.date === today).length;
-    var indicator = document.getElementById('roiTrackerIndicator');
-    if(indicator){
-      indicator.title = `Today: ${todayCount} activities tracked | Total: ${activity.length}`;
+// =========================================
+// 🚀 INITIALIZATION
+// =========================================
+(function init(){
+  document.getElementById('postDate').value = new Date().toISOString().slice(0, 10);
+  
+  const lastOperator = localStorage.getItem('lastOperator');
+  if(lastOperator){
+    document.getElementById('operatorName').value = lastOperator;
+  }
+  
+  const savedTheme = localStorage.getItem('theme');
+  if(savedTheme === 'light'){
+    document.body.classList.add('light');
+  }
+  
+  updateOfflineIndicator();
+  updateCategoryBadge();
+  loadTable();
+  
+  setTimeout(syncOfflineQueue, 2000);
+  
+  document.addEventListener('keydown', function(e){
+    if(e.ctrlKey && e.key === 's'){
+      e.preventDefault();
+      saveData();
     }
-  }catch(e){}
-}, 5000);
+  });
+})();
+
+window.saveData = saveData;
+window.loadData = loadData;
+window.deleteData = deleteData;
+window.exportExcel = exportExcel;
+window.exportPDF = exportPDF;
+window.calc = calc;
+window.updateTotal = updateTotal;
+window.closePopup = closePopup;
+window.fixNegativeRow = fixNegativeRow;
+window.loadTable = loadTable;
+window.toggleTheme = toggleTheme;
+window.onFloorChange = onFloorChange;
 </script>
 </body>
 </html>
