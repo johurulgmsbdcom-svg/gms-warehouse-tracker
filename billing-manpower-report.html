@@ -1,1347 +1,1706 @@
 <!DOCTYPE html>
-<html lang="bn">
+<html>
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <meta name="theme-color" content="#667eea">
-    <title>GMS Textiles - Smart Dashboard</title>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-    <link rel="manifest" href="manifest.json">
-    
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-        
-        :root {
-            --primary: #667eea;
-            --secondary: #764ba2;
-            --success: #10b981;
-            --danger: #ef4444;
-            --warning: #f59e0b;
-            --info: #3b82f6;
-            --purple: #8b5cf6;
-            --dark: #1e293b;
-            --light: #f8fafc;
-            --gradient-1: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            --gradient-2: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
-            --gradient-3: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
-            --gradient-4: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
-            --shadow: 0 4px 20px rgba(0,0,0,0.08);
-            --shadow-lg: 0 10px 40px rgba(0,0,0,0.12);
-        }
-        
-        body {
-            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
-            background: linear-gradient(135deg, #f5f7fa 0%, #e4e8ec 100%);
-            color: var(--dark);
-            overflow-x: hidden;
-            line-height: 1.5;
-        }
-        
-        /* Animated Header */
-        .premium-header {
-            background: var(--gradient-1);
-            color: white;
-            padding: 15px 20px;
-            box-shadow: var(--shadow-lg);
-            position: relative;
-            overflow: hidden;
-            animation: slideDown 0.6s ease;
-        }
-        
-        .premium-header::before {
-            content: '';
-            position: absolute;
-            top: -50%;
-            right: -10%;
-            width: 300px;
-            height: 300px;
-            background: rgba(255,255,255,0.1);
-            border-radius: 50%;
-            animation: float 6s ease-in-out infinite;
-        }
-        
-        @keyframes slideDown {
-            from { transform: translateY(-100%); opacity: 0; }
-            to { transform: translateY(0); opacity: 1; }
-        }
-        
-        @keyframes float {
-            0%, 100% { transform: translateY(0px); }
-            50% { transform: translateY(-20px); }
-        }
-        
-        .brand-text {
-            font-size: 24px;
-            font-weight: 800;
-            letter-spacing: 1px;
-            animation: glow 2s ease-in-out infinite;
-            text-shadow: 0 0 20px rgba(255,255,255,0.5);
-        }
-        
-        @keyframes glow {
-            0%, 100% { text-shadow: 0 0 20px rgba(255,255,255,0.5); }
-            50% { text-shadow: 0 0 30px rgba(255,255,255,0.8), 0 0 40px rgba(255,255,255,0.6); }
-        }
-        
-        .sub-text {
-            font-size: 12px;
-            opacity: 0.9;
-            margin-top: 4px;
-        }
-        
-        /* Compact KPI Grid */
-        .kpi-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
-            gap: 10px;
-            padding: 12px;
-            animation: fadeIn 0.8s ease 0.2s both;
-        }
-        
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(20px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-        
-        .kpi-card {
-            background: white;
-            border-radius: 12px;
-            padding: 12px;
-            box-shadow: var(--shadow);
-            text-align: center;
-            transition: all 0.3s ease;
-            border-left: 4px solid var(--primary);
-            animation: slideUp 0.5s ease backwards;
-        }
-        
-        .kpi-card:nth-child(1) { animation-delay: 0.1s; border-left-color: var(--primary); }
-        .kpi-card:nth-child(2) { animation-delay: 0.2s; border-left-color: var(--success); }
-        .kpi-card:nth-child(3) { animation-delay: 0.3s; border-left-color: var(--danger); }
-        .kpi-card:nth-child(4) { animation-delay: 0.4s; border-left-color: var(--warning); }
-        .kpi-card:nth-child(5) { animation-delay: 0.5s; border-left-color: var(--purple); }
-        .kpi-card:nth-child(6) { animation-delay: 0.6s; border-left-color: var(--info); }
-        
-        @keyframes slideUp {
-            from { opacity: 0; transform: translateY(30px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-        
-        .kpi-card:hover {
-            transform: translateY(-5px);
-            box-shadow: var(--shadow-lg);
-        }
-        
-        .kpi-icon {
-            font-size: 24px;
-            margin-bottom: 6px;
-        }
-        
-        .kpi-value {
-            font-size: 22px;
-            font-weight: 800;
-            color: var(--dark);
-            line-height: 1;
-        }
-        
-        .kpi-label {
-            font-size: 11px;
-            color: #64748b;
-            margin-top: 4px;
-            font-weight: 600;
-        }
-        
-        .kpi-change {
-            font-size: 10px;
-            margin-top: 4px;
-            font-weight: 700;
-        }
-        
-        .positive { color: var(--success); }
-        .negative { color: var(--danger); }
-        
-        /* Charts Grid */
-        .charts-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-            gap: 12px;
-            padding: 12px;
-            animation: fadeIn 0.8s ease 0.4s both;
-        }
-        
-        .chart-card {
-            background: white;
-            border-radius: 16px;
-            padding: 14px;
-            box-shadow: var(--shadow);
-            transition: all 0.3s ease;
-        }
-        
-        .chart-card:hover {
-            box-shadow: var(--shadow-lg);
-            transform: translateY(-3px);
-        }
-        
-        .chart-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 12px;
-        }
-        
-        .chart-title {
-            font-size: 13px;
-            font-weight: 700;
-            color: var(--dark);
-        }
-        
-        .chart-badge {
-            background: var(--gradient-1);
-            color: white;
-            padding: 3px 8px;
-            border-radius: 12px;
-            font-size: 10px;
-            font-weight: 700;
-        }
-        
-        .chart-container {
-            position: relative;
-            height: 180px;
-        }
-        
-        /* Department Grid */
-        .dept-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
-            gap: 10px;
-            padding: 12px;
-            animation: fadeIn 0.8s ease 0.6s both;
-        }
-        
-        .dept-card {
-            background: white;
-            border-radius: 12px;
-            padding: 12px;
-            box-shadow: var(--shadow);
-            cursor: pointer;
-            transition: all 0.3s ease;
-            border: 2px solid transparent;
-        }
-        
-        .dept-card:hover {
-            border-color: var(--primary);
-            transform: scale(1.03);
-            box-shadow: var(--shadow-lg);
-        }
-        
-        .dept-name {
-            font-size: 11px;
-            font-weight: 700;
-            color: var(--dark);
-            margin-bottom: 8px;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-        }
-        
-        .dept-stats {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 6px;
-        }
-        
-        .dept-stat {
-            text-align: center;
-            padding: 6px;
-            border-radius: 8px;
-            background: var(--light);
-        }
-        
-        .dept-stat-value {
-            font-size: 16px;
-            font-weight: 800;
-            color: var(--primary);
-        }
-        
-        .dept-stat-label {
-            font-size: 9px;
-            color: #64748b;
-            margin-top: 2px;
-        }
-        
-        /* Top Absentees */
-        .absentees-list {
-            background: white;
-            border-radius: 16px;
-            padding: 14px;
-            margin: 12px;
-            box-shadow: var(--shadow);
-            animation: fadeIn 0.8s ease 0.8s both;
-        }
-        
-        .section-title {
-            font-size: 14px;
-            font-weight: 800;
-            color: var(--dark);
-            margin-bottom: 12px;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-        
-        .absentee-item {
-            display: flex;
-            align-items: center;
-            padding: 10px;
-            border-radius: 10px;
-            background: var(--light);
-            margin-bottom: 8px;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            border-left: 4px solid var(--danger);
-        }
-        
-        .absentee-item:hover {
-            background: #fee2e2;
-            transform: translateX(5px);
-        }
-        
-        .absentee-avatar {
-            width: 40px;
-            height: 40px;
-            border-radius: 50%;
-            background: var(--gradient-2);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: white;
-            font-weight: 800;
-            margin-right: 12px;
-            flex-shrink: 0;
-        }
-        
-        .absentee-info {
-            flex: 1;
-        }
-        
-        .absentee-name {
-            font-size: 13px;
-            font-weight: 700;
-            color: var(--dark);
-        }
-        
-        .absentee-id {
-            font-size: 11px;
-            color: #64748b;
-        }
-        
-        .absentee-count {
-            background: var(--danger);
-            color: white;
-            padding: 4px 10px;
-            border-radius: 12px;
-            font-size: 12px;
-            font-weight: 800;
-        }
-        
-        /* Action Buttons */
-        .action-bar {
-            position: fixed;
-            bottom: 0;
-            left: 0;
-            right: 0;
-            background: white;
-            padding: 10px;
-            box-shadow: 0 -4px 20px rgba(0,0,0,0.1);
-            display: flex;
-            gap: 8px;
-            overflow-x: auto;
-            z-index: 100;
-        }
-        
-        .action-btn {
-            flex: 1;
-            min-width: 80px;
-            padding: 10px 14px;
-            border: none;
-            border-radius: 10px;
-            font-weight: 700;
-            font-size: 12px;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 6px;
-        }
-        
-        .btn-primary { background: var(--gradient-1); color: white; }
-        .btn-success { background: var(--gradient-4); color: white; }
-        .btn-warning { background: var(--gradient-2); color: white; }
-        .btn-info { background: var(--gradient-3); color: white; }
-        
-        .action-btn:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 6px 20px rgba(0,0,0,0.15);
-        }
-        
-        .action-btn:active {
-            transform: translateY(0);
-        }
-        
-        /* Modal */
-        .modal {
-            display: none;
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: rgba(0,0,0,0.8);
-            z-index: 1000;
-            animation: fadeIn 0.3s ease;
-            overflow-y: auto;
-        }
-        
-        .modal-content {
-            background: white;
-            margin: 20px auto;
-            border-radius: 20px;
-            max-width: 900px;
-            max-height: 90vh;
-            overflow-y: auto;
-            animation: slideUp 0.4s ease;
-        }
-        
-        .modal-header {
-            background: var(--gradient-1);
-            color: white;
-            padding: 16px 20px;
-            position: sticky;
-            top: 0;
-            z-index: 10;
-        }
-        
-        .modal-title {
-            font-size: 16px;
-            font-weight: 800;
-        }
-        
-        .modal-close {
-            position: absolute;
-            top: 16px;
-            right: 20px;
-            background: rgba(255,255,255,0.2);
-            border: none;
-            color: white;
-            width: 32px;
-            height: 32px;
-            border-radius: 50%;
-            cursor: pointer;
-            font-size: 18px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-        
-        .modal-body {
-            padding: 20px;
-        }
-        
-        /* Heatmap Calendar */
-        .heatmap-calendar {
-            display: grid;
-            grid-template-columns: repeat(7, 1fr);
-            gap: 6px;
-            margin-top: 16px;
-        }
-        
-        .heatmap-day-header {
-            text-align: center;
-            font-size: 11px;
-            font-weight: 700;
-            color: #64748b;
-            padding: 8px;
-        }
-        
-        .heatmap-day {
-            aspect-ratio: 1;
-            border-radius: 8px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 12px;
-            font-weight: 700;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            position: relative;
-        }
-        
-        .heatmap-day:hover {
-            transform: scale(1.15);
-            z-index: 10;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
-        }
-        
-        .heatmap-day.excellent { background: #10b981; color: white; }
-        .heatmap-day.good { background: #34d399; color: white; }
-        .heatmap-day.average { background: #fbbf24; color: white; }
-        .heatmap-day.poor { background: #ef4444; color: white; }
-        .heatmap-day.off { background: #e2e8f0; color: #94a3b8; }
-        
-        /* Loading */
-        .loading {
-            display: none;
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: rgba(255,255,255,0.9);
-            z-index: 2000;
-            align-items: center;
-            justify-content: center;
-            flex-direction: column;
-        }
-        
-        .loading.active {
-            display: flex;
-        }
-        
-        .spinner {
-            width: 50px;
-            height: 50px;
-            border: 4px solid #e2e8f0;
-            border-top-color: var(--primary);
-            border-radius: 50%;
-            animation: spin 1s linear infinite;
-        }
-        
-        @keyframes spin {
-            to { transform: rotate(360deg); }
-        }
-        
-        .loading-text {
-            margin-top: 16px;
-            font-size: 14px;
-            font-weight: 700;
-            color: var(--dark);
-        }
-        
-        /* Responsive */
-        @media (max-width: 768px) {
-            .brand-text { font-size: 18px; }
-            .kpi-grid { grid-template-columns: repeat(3, 1fr); gap: 8px; padding: 8px; }
-            .kpi-value { font-size: 18px; }
-            .charts-grid { grid-template-columns: 1fr; padding: 8px; }
-            .dept-grid { grid-template-columns: repeat(2, 1fr); padding: 8px; }
-            .chart-container { height: 150px; }
-            .action-bar { padding: 8px; }
-            .action-btn { min-width: 70px; padding: 8px 10px; font-size: 11px; }
-        }
-        
-        /* Scrollbar */
-        ::-webkit-scrollbar {
-            width: 8px;
-            height: 8px;
-        }
-        
-        ::-webkit-scrollbar-track {
-            background: #f1f1f1;
-            border-radius: 4px;
-        }
-        
-        ::-webkit-scrollbar-thumb {
-            background: var(--primary);
-            border-radius: 4px;
-        }
-        
-        ::-webkit-scrollbar-thumb:hover {
-            background: var(--secondary);
-        }
-    </style>
+<title>Billing Manpower Report - Smart Dashboard</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+
+<style>
+:root{
+  --bg:#f5f7fa;
+  --card:#ffffff;
+  --card2:#f8fafc;
+  --text:#1e293b;
+  --muted:#64748b;
+  --border:#e2e8f0;
+  --blue:#667eea;
+  --blue-dark:#5a67d8;
+  --green:#10b981;
+  --red:#ef4444;
+  --orange:#f59e0b;
+  --purple:#8b5cf6;
+  --pink:#ec4899;
+  --cyan:#06b6d4;
+  --shadow:0 4px 20px rgba(0,0,0,0.06);
+  --shadow-lg:0 10px 40px rgba(0,0,0,0.1);
+  --gradient-1:linear-gradient(135deg,#667eea 0%,#764ba2 100%);
+  --gradient-2:linear-gradient(135deg,#f093fb 0%,#f5576c 100%);
+  --gradient-3:linear-gradient(135deg,#4facfe 0%,#00f2fe 100%);
+  --gradient-4:linear-gradient(135deg,#43e97b 0%,#38f9d7 100%);
+}
+body.dark{
+  --bg:#0f172a;
+  --card:#1e293b;
+  --card2:#334155;
+  --text:#f1f5f9;
+  --muted:#94a3b8;
+  --border:#475569;
+  --shadow:0 4px 20px rgba(0,0,0,0.3);
+  --shadow-lg:0 10px 40px rgba(0,0,0,0.4);
+}
+*{box-sizing:border-box}
+body{
+  margin:0;
+  background:var(--bg);
+  color:var(--text);
+  font-family:'Segoe UI',system-ui,-apple-system,sans-serif;
+  transition:all .3s ease;
+  padding-bottom:80px;
+}
+
+/* Header */
+.header{
+  text-align:center;
+  padding:16px 12px;
+  background:var(--gradient-1);
+  color:white;
+  box-shadow:var(--shadow-lg);
+  position:relative;
+  overflow:hidden;
+  animation:slideDown .6s ease;
+}
+.header::before{
+  content:'';
+  position:absolute;
+  top:-50%;right:-10%;
+  width:300px;height:300px;
+  background:rgba(255,255,255,0.1);
+  border-radius:50%;
+  animation:float 6s ease-in-out infinite;
+}
+@keyframes slideDown{from{transform:translateY(-100%);opacity:0}to{transform:translateY(0);opacity:1}}
+@keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-20px)}}
+@keyframes glow{0%,100%{text-shadow:0 0 20px rgba(255,255,255,0.5)}50%{text-shadow:0 0 30px rgba(255,255,255,0.8),0 0 40px rgba(255,255,255,0.6)}}
+.header h2{
+  font-size:22px;
+  font-weight:800;
+  letter-spacing:1px;
+  margin:2px;
+  animation:glow 2s ease-in-out infinite;
+  position:relative;
+  z-index:1;
+}
+.header h3,.header h4{margin:2px;position:relative;z-index:1;font-weight:600}
+.header h4{font-size:12px;opacity:0.9}
+.header h3{font-size:14px}
+
+/* Cache Bar */
+.cacheStatusBar{
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap:8px;
+  padding:6px 10px;
+  font-size:10px;
+  font-weight:700;
+  background:linear-gradient(90deg,#10b981,#059669);
+  color:white;
+  flex-wrap:wrap;
+  position:sticky;
+  top:0;
+  z-index:100;
+}
+.cacheStatusBar .cacheDot{
+  width:7px;height:7px;border-radius:50%;
+  background:white;
+  animation:livePulse 2s infinite;
+}
+@keyframes livePulse{0%{box-shadow:0 0 0 0 rgba(255,255,255,0.7);transform:scale(1)}70%{box-shadow:0 0 0 6px rgba(255,255,255,0);transform:scale(1.1)}100%{box-shadow:0 0 0 0 rgba(255,255,255,0);transform:scale(1)}}
+.cacheStatusBar span{
+  background:rgba(255,255,255,0.2);
+  padding:2px 8px;
+  border-radius:10px;
+  backdrop-filter:blur(10px);
+}
+
+/* Controls */
+.controls{
+  background:var(--card);
+  border:1px solid var(--border);
+  border-radius:14px;
+  padding:12px;
+  margin:10px;
+  display:grid;
+  grid-template-columns:repeat(4,1fr);
+  gap:8px;
+  box-shadow:var(--shadow);
+}
+label{font-size:10px;color:var(--muted);font-weight:700;display:block;margin-bottom:3px}
+input,select{
+  width:100%;
+  padding:8px;
+  border-radius:8px;
+  border:1px solid var(--border);
+  background:var(--bg);
+  color:var(--text);
+  font-size:13px;
+  transition:all .3s;
+}
+input:focus,select:focus{outline:none;border-color:var(--blue);box-shadow:0 0 0 2px rgba(102,126,234,0.2)}
+button{
+  padding:8px 12px;
+  border:0;
+  border-radius:8px;
+  color:white;
+  font-weight:700;
+  cursor:pointer;
+  margin:3px;
+  font-size:12px;
+  transition:all .3s;
+}
+button:hover{transform:translateY(-2px);box-shadow:0 4px 12px rgba(0,0,0,0.2)}
+.save{background:var(--gradient-4);color:#064e3b}
+.show{background:var(--gradient-1)}
+.excel{background:linear-gradient(135deg,#059669,#047857)}
+.print{background:var(--gradient-2)}
+.home{background:linear-gradient(135deg,#0f766e,#115e59)}
+.del{background:linear-gradient(135deg,#ef4444,#dc2626)}
+.theme{background:var(--gradient-3);color:#0c4a6e}
+
+/* KPI Grid */
+.kpi{
+  display:grid;
+  grid-template-columns:repeat(6,1fr);
+  gap:8px;
+  margin:10px;
+  animation:fadeIn .8s ease .2s both;
+}
+@keyframes fadeIn{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
+.kpiBox{
+  background:var(--card);
+  border:1px solid var(--border);
+  border-radius:12px;
+  padding:10px;
+  text-align:center;
+  box-shadow:var(--shadow);
+  transition:all .3s;
+  border-left:4px solid var(--blue);
+  animation:slideUp .5s ease backwards;
+}
+.kpiBox:nth-child(1){animation-delay:.1s;border-left-color:var(--blue)}
+.kpiBox:nth-child(2){animation-delay:.2s;border-left-color:var(--green)}
+.kpiBox:nth-child(3){animation-delay:.3s;border-left-color:var(--red)}
+.kpiBox:nth-child(4){animation-delay:.4s;border-left-color:var(--purple)}
+.kpiBox:nth-child(5){animation-delay:.5s;border-left-color:var(--orange)}
+.kpiBox:nth-child(6){animation-delay:.6s;border-left-color:var(--cyan)}
+@keyframes slideUp{from{opacity:0;transform:translateY(30px)}to{opacity:1;transform:translateY(0)}}
+.kpiBox:hover{transform:translateY(-4px);box-shadow:var(--shadow-lg)}
+.kpiBox span{color:var(--muted);font-size:10px;font-weight:700}
+.kpiBox b{display:block;color:var(--text);font-size:20px;margin-top:4px;font-weight:800}
+
+/* Charts Grid */
+.charts-grid{
+  display:grid;
+  grid-template-columns:repeat(2,1fr);
+  gap:10px;
+  margin:10px;
+  animation:fadeIn .8s ease .4s both;
+}
+.chart-card{
+  background:var(--card);
+  border:1px solid var(--border);
+  border-radius:14px;
+  padding:12px;
+  box-shadow:var(--shadow);
+  transition:all .3s;
+}
+.chart-card:hover{box-shadow:var(--shadow-lg);transform:translateY(-2px)}
+.chart-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px}
+.chart-title{font-size:12px;font-weight:700;color:var(--text)}
+.chart-badge{background:var(--gradient-1);color:white;padding:2px 8px;border-radius:10px;font-size:9px;font-weight:700}
+.chart-container{position:relative;height:180px}
+
+/* MCD Grid */
+.section-title{
+  font-size:13px;
+  font-weight:800;
+  color:var(--text);
+  margin:12px 10px 8px;
+  display:flex;
+  align-items:center;
+  gap:6px;
+}
+.dept-grid{
+  display:grid;
+  grid-template-columns:repeat(auto-fill,minmax(140px,1fr));
+  gap:8px;
+  margin:0 10px 10px;
+  animation:fadeIn .8s ease .6s both;
+}
+.dept-card{
+  background:var(--card);
+  border:1px solid var(--border);
+  border-radius:10px;
+  padding:10px;
+  box-shadow:var(--shadow);
+  cursor:pointer;
+  transition:all .3s;
+}
+.dept-card:hover{border-color:var(--blue);transform:scale(1.03);box-shadow:var(--shadow-lg)}
+.dept-name{font-size:9px;font-weight:700;color:var(--text);margin-bottom:6px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.dept-stats{display:grid;grid-template-columns:1fr 1fr;gap:4px}
+.dept-stat{text-align:center;padding:5px;border-radius:6px;background:var(--card2)}
+.dept-stat-value{font-size:14px;font-weight:800;color:var(--blue)}
+.dept-stat-label{font-size:8px;color:var(--muted);margin-top:1px}
+
+/* Absentees List */
+.absentees-list{
+  background:var(--card);
+  border:1px solid var(--border);
+  border-radius:14px;
+  padding:12px;
+  margin:10px;
+  box-shadow:var(--shadow);
+  animation:fadeIn .8s ease .8s both;
+}
+.absentee-item{
+  display:flex;
+  align-items:center;
+  padding:8px;
+  border-radius:8px;
+  background:var(--card2);
+  margin-bottom:6px;
+  cursor:pointer;
+  transition:all .3s;
+  border-left:3px solid var(--red);
+}
+.absentee-item:hover{background:rgba(239,68,68,0.1);transform:translateX(4px)}
+.absentee-avatar{
+  width:34px;height:34px;border-radius:50%;
+  background:var(--gradient-2);
+  display:flex;align-items:center;justify-content:center;
+  color:white;font-weight:800;margin-right:10px;flex-shrink:0;font-size:13px;
+}
+.absentee-info{flex:1}
+.absentee-name{font-size:12px;font-weight:700;color:var(--text)}
+.absentee-id{font-size:10px;color:var(--muted)}
+.absentee-count{background:var(--red);color:white;padding:3px 8px;border-radius:10px;font-size:11px;font-weight:800}
+
+/* View Toggle */
+.viewToggle{display:flex;gap:8px;justify-content:center;margin:10px}
+.viewBtn{
+  padding:8px 16px;
+  border-radius:8px;
+  border:2px solid var(--border);
+  background:var(--card);
+  color:var(--text);
+  cursor:pointer;
+  font-weight:700;
+  font-size:12px;
+  transition:all .3s;
+}
+.viewBtn.active{background:var(--blue);color:white;border-color:var(--blue)}
+
+/* Table */
+table{
+  width:98%;
+  margin:10px auto;
+  border-collapse:collapse;
+  background:var(--card);
+  color:var(--text);
+  font-size:12px;
+  box-shadow:var(--shadow);
+  border-radius:10px;
+  overflow:hidden;
+}
+th,td{border:1px solid var(--border);padding:6px;text-align:center}
+th{background:var(--gradient-1);color:white;font-weight:700;font-size:11px}
+tr:nth-child(even){background:var(--card2)}
+.totalRow{background:var(--gradient-4);color:#064e3b;font-weight:bold}
+
+/* Detail Boxes */
+.detailBox{
+  background:var(--card);
+  border:1px solid var(--border);
+  border-radius:10px;
+  padding:10px;
+  margin:8px 10px;
+  display:none;
+  box-shadow:var(--shadow);
+}
+.detailBox h4{margin:0 0 8px 0;color:var(--blue);font-size:13px}
+.detailRow{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:6px}
+.detailRow input{font-size:12px;padding:6px}
+
+/* Person Cards */
+.personDetails{
+  display:grid;
+  grid-template-columns:repeat(auto-fill,minmax(280px,1fr));
+  gap:10px;
+  margin:10px;
+}
+.personCard{
+  background:var(--card);
+  border:2px solid var(--border);
+  border-radius:10px;
+  padding:12px;
+  box-shadow:var(--shadow);
+}
+.personCard.leave{border-left:4px solid var(--orange)}
+.personCard.absent{border-left:4px solid var(--red)}
+.personCard.medical{border-left:4px solid var(--purple)}
+.personCard.offday{border-left:4px solid var(--blue)}
+.personHeader{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;padding-bottom:6px;border-bottom:1px solid var(--border)}
+.personName{font-weight:700;font-size:13px;color:var(--blue)}
+.personId{background:rgba(102,126,234,0.15);color:var(--blue);padding:3px 6px;border-radius:5px;font-size:10px;font-weight:700}
+.personStats{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-top:6px}
+.statItem{text-align:center;padding:6px;border-radius:6px;background:var(--card2)}
+.statItem b{display:block;font-size:16px;margin-top:3px}
+.statItem.leave b{color:var(--orange)}
+.statItem.absent b{color:var(--red)}
+.statItem.medical b{color:var(--purple)}
+.statItem.offday b{color:var(--blue)}
+.statItem span{font-size:9px;color:var(--muted);font-weight:700}
+
+/* Report Filters */
+.reportFilters{
+  background:var(--card);
+  border:1px solid var(--border);
+  border-radius:14px;
+  padding:12px;
+  margin:10px;
+  display:none;
+  grid-template-columns:repeat(4,1fr);
+  gap:8px;
+  box-shadow:var(--shadow);
+}
+
+/* Theme Toggle */
+.themeToggle{
+  position:fixed;
+  top:15px;right:15px;
+  z-index:1000;
+  background:var(--gradient-3);
+  color:#0c4a6e;
+  border:none;
+  padding:8px 14px;
+  border-radius:50px;
+  cursor:pointer;
+  font-weight:700;
+  font-size:12px;
+  box-shadow:var(--shadow-lg);
+  transition:all .3s;
+}
+.themeToggle:hover{transform:scale(1.1)}
+
+/* Modal */
+.modal{
+  display:none;
+  position:fixed;
+  top:0;left:0;right:0;bottom:0;
+  background:rgba(0,0,0,0.7);
+  z-index:2000;
+  animation:fadeIn .3s ease;
+  overflow-y:auto;
+}
+.modal-content{
+  background:var(--card);
+  margin:20px auto;
+  border-radius:16px;
+  max-width:900px;
+  max-height:90vh;
+  overflow-y:auto;
+  animation:slideUp .4s ease;
+}
+.modal-header{
+  background:var(--gradient-1);
+  color:white;
+  padding:14px 18px;
+  position:sticky;
+  top:0;
+  z-index:10;
+  border-radius:16px 16px 0 0;
+}
+.modal-title{font-size:15px;font-weight:800}
+.modal-close{
+  position:absolute;
+  top:14px;right:18px;
+  background:rgba(255,255,255,0.2);
+  border:none;
+  color:white;
+  width:30px;height:30px;
+  border-radius:50%;
+  cursor:pointer;
+  font-size:16px;
+  display:flex;align-items:center;justify-content:center;
+}
+.modal-body{padding:16px}
+
+/* Heatmap */
+.heatmap-calendar{
+  display:grid;
+  grid-template-columns:repeat(7,1fr);
+  gap:5px;
+  margin-top:12px;
+}
+.heatmap-day-header{text-align:center;font-size:10px;font-weight:700;color:var(--muted);padding:6px}
+.heatmap-day{
+  aspect-ratio:1;
+  border-radius:6px;
+  display:flex;align-items:center;justify-content:center;
+  font-size:11px;font-weight:700;
+  cursor:pointer;
+  transition:all .3s;
+}
+.heatmap-day:hover{transform:scale(1.15);z-index:10;box-shadow:0 4px 12px rgba(0,0,0,0.2)}
+.heatmap-day.excellent{background:#10b981;color:white}
+.heatmap-day.good{background:#34d399;color:white}
+.heatmap-day.average{background:#fbbf24;color:white}
+.heatmap-day.poor{background:#ef4444;color:white}
+.heatmap-day.off{background:var(--border);color:var(--muted)}
+
+/* Toast */
+.toast{
+  position:fixed;
+  right:15px;bottom:90px;
+  background:var(--gradient-4);
+  color:#064e3b;
+  padding:10px 18px;
+  border-radius:10px;
+  font-weight:700;
+  font-size:12px;
+  display:none;
+  box-shadow:var(--shadow-lg);
+  animation:slideIn .3s ease;
+  z-index:9999;
+}
+@keyframes slideIn{from{transform:translateX(400px);opacity:0}to{transform:translateX(0);opacity:1}}
+
+/* Action Bar */
+.action-bar{
+  position:fixed;
+  bottom:0;left:0;right:0;
+  background:var(--card);
+  padding:8px;
+  box-shadow:0 -4px 20px rgba(0,0,0,0.1);
+  display:flex;
+  gap:6px;
+  overflow-x:auto;
+  z-index:100;
+  border-top:1px solid var(--border);
+}
+.action-btn{
+  flex:1;
+  min-width:70px;
+  padding:8px 10px;
+  border:none;
+  border-radius:8px;
+  font-weight:700;
+  font-size:11px;
+  cursor:pointer;
+  transition:all .3s;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap:4px;
+  color:white;
+  margin:0;
+}
+.action-btn:hover{transform:translateY(-3px);box-shadow:0 6px 20px rgba(0,0,0,0.15)}
+
+/* Responsive */
+@media(max-width:900px){
+  .controls,.reportFilters,.detailRow{grid-template-columns:repeat(2,1fr)}
+  .kpi{grid-template-columns:repeat(3,1fr)}
+  .charts-grid{grid-template-columns:1fr}
+  .dept-grid{grid-template-columns:repeat(2,1fr)}
+  .personDetails{grid-template-columns:1fr}
+}
+@media(max-width:600px){
+  .kpi{grid-template-columns:repeat(2,1fr)}
+  .controls,.reportFilters{grid-template-columns:1fr}
+  .dept-grid{grid-template-columns:1fr}
+  .header h2{font-size:18px}
+}
+
+@media print{
+  body{background:white;color:black;padding-bottom:0}
+  .controls,.btnArea,.noPrint,.detailBox,.reportFilters,.themeToggle,.personDetails,.viewToggle,.cacheStatusBar,.action-bar,.themeToggle,.absentees-list,.dept-grid,.charts-grid,.modal{display:none!important}
+  table{width:100%;font-size:10px;box-shadow:none}
+  .chart-card{width:100%;margin:6px 0;box-shadow:none}
+  .header{border:none;box-shadow:none}
+  .kpi{grid-template-columns:repeat(6,1fr)}
+}
+</style>
 </head>
+
 <body>
 
-    <!-- Header -->
-    <div class="premium-header">
-        <div class="brand-text">🏭 GMS TEXTILES LTD</div>
-        <div class="sub-text">📊 Smart Manpower Dashboard | Billing Section</div>
+<button class="themeToggle" onclick="toggleTheme()">🌙 / ☀️</button>
+
+<div class="header">
+  <h2>🏭 GMS TEXTILES LTD</h2>
+  <h4>Tansutrapur, Kaliakair, Gazipur | Billing Section</h4>
+  <h3>📊 Smart Manpower Dashboard</h3>
+</div>
+
+<!-- Cache Status Bar -->
+<div class="cacheStatusBar">
+  <div class="cacheDot"></div>
+  <span id="cacheStatusText">📦 Cache Ready</span>
+  <span>🔥 Reads: <b id="readCounter">0</b></span>
+  <span>💾 Saved: <b id="savedReads">0</b></span>
+  <span> <b id="syncStatus">Active</b></span>
+</div>
+
+<!-- Controls -->
+<div class="controls noPrint">
+  <div><label>📅 Report Date</label><input type="date" id="reportDate"></div>
+  <div><label>🏢 Company</label>
+    <select id="company">
+      <option>GMS TEXTILES LTD</option>
+      <option>GMS COMPOSITE KNITTING</option>
+    </select>
+  </div>
+  <div><label>📂 MCD / Department</label>
+    <select id="mcd">
+      <option>GREY FABRIC MCD</option><option>SHIPMENT MCD</option><option>BILLING SECTION</option>
+      <option>OUTER WEAR MCD</option><option>YARN MCD</option><option>PRINTING MCD</option>
+      <option>JHUT MCD</option><option>GENERAL MCD</option><option>ACCESSORIES MCD</option>
+      <option>LEFTOVER MCD</option><option>FINISH FABRIC MCD</option><option>YARN DYEING MCD</option>
+      <option>CHEMICAL MCD</option><option>GENERAL TECHNICAL MCD</option>
+    </select>
+  </div>
+  <div><label>👥 Total Manpower</label><input type="number" id="totalManpower" value="0" oninput="calculatePresent()"></div>
+  <div><label>🏖 Leave</label><input type="number" id="leaveQty" value="0" oninput="calculatePresent();generateDetailBoxes('leave')"></div>
+  <div><label>❌ Absent</label><input type="number" id="absentQty" value="0" oninput="calculatePresent();generateDetailBoxes('absent')"></div>
+  <div><label>🏥 Medical</label><input type="number" id="medicalQty" value="0" oninput="calculatePresent();generateDetailBoxes('medical')"></div>
+  <div><label>📅 Off Day</label><input type="number" id="offDayQty" value="0" oninput="calculatePresent();generateDetailBoxes('offday')"></div>
+  <div><label>✅ Today Present</label><input type="number" id="presentQty" value="0" readonly style="background:rgba(16,185,129,0.15);border-color:var(--green);color:var(--green);font-weight:800"></div>
+  <div style="display:flex;align-items:end;gap:4px;flex-wrap:wrap">
+    <button class="save" onclick="saveReport()">💾 Save</button>
+    <button class="show" onclick="loadReport()">🔍 Show</button>
+    <button class="show" onclick="toggleReportFilters()">📊 Filter</button>
+  </div>
+</div>
+
+<!-- Detail Boxes -->
+<div id="leaveBox" class="detailBox"><h4>🏖 Leave Details</h4><div id="leaveDetails"></div></div>
+<div id="absentBox" class="detailBox"><h4>❌ Absent Details</h4><div id="absentDetails"></div></div>
+<div id="medicalBox" class="detailBox"><h4>🏥 Medical Leave Details</h4><div id="medicalDetails"></div></div>
+<div id="offDayBox" class="detailBox"><h4>📅 Off Day Details</h4><div id="offDayDetails"></div></div>
+
+<!-- Report Filters -->
+<div id="reportFilters" class="reportFilters">
+  <div><label>From Date</label><input type="date" id="filterFrom"></div>
+  <div><label>To Date</label><input type="date" id="filterTo"></div>
+  <div><label>Company Filter</label>
+    <select id="filterCompany"><option value="">All Companies</option><option>GMS TEXTILES LTD</option><option>GMS COMPOSITE KNITTING</option></select>
+  </div>
+  <div><label>MCD Filter</label>
+    <select id="filterMcd"><option value="">All MCD</option>
+      <option>GREY FABRIC MCD</option><option>SHIPMENT MCD</option><option>BILLING SECTION</option>
+      <option>OUTER WEAR MCD</option><option>YARN MCD</option><option>PRINTING MCD</option>
+      <option>JHUT MCD</option><option>GENERAL MCD</option><option>ACCESSORIES MCD</option>
+      <option>LEFTOVER MCD</option><option>FINISH FABRIC MCD</option><option>YARN DYEING MCD</option>
+      <option>CHEMICAL MCD</option><option>GENERAL TECHNICAL MCD</option>
+    </select>
+  </div>
+  <div><label>🔍 Search by ID Card</label><input type="text" id="searchId" placeholder="Enter ID Card Number"></div>
+  <div><label> Month</label>
+    <select id="filterMonth"><option value="">All Months</option>
+      <option value="01">January</option><option value="02">February</option><option value="03">March</option>
+      <option value="04">April</option><option value="05">May</option><option value="06">June</option>
+      <option value="07">July</option><option value="08">August</option><option value="09">September</option>
+      <option value="10">October</option><option value="11">November</option><option value="12">December</option>
+    </select>
+  </div>
+  <div><label>📆 Year</label>
+    <select id="filterYear"><option value="">All Years</option><option value="2024">2024</option><option value="2025">2025</option><option value="2026">2026</option></select>
+  </div>
+  <div style="display:flex;align-items:end;gap:4px">
+    <button class="show" onclick="loadDetailedReport()">🔍 Apply Filter</button>
+  </div>
+</div>
+
+<!-- KPI Cards -->
+<div class="kpi">
+  <div class="kpiBox"><span>👥 Total</span><b id="kpiTotal">0</b></div>
+  <div class="kpiBox"><span>🏖 Leave</span><b id="kpiLeave" style="color:var(--orange)">0</b></div>
+  <div class="kpiBox"><span>❌ Absent</span><b id="kpiAbsent" style="color:var(--red)">0</b></div>
+  <div class="kpiBox"><span>🏥 Medical</span><b id="kpiMedical" style="color:var(--purple)">0</b></div>
+  <div class="kpiBox"><span>📅 Off Day</span><b id="kpiOffDay" style="color:var(--blue)">0</b></div>
+  <div class="kpiBox"><span>✅ Present</span><b id="kpiPresent" style="color:var(--green)">0</b></div>
+</div>
+
+<!-- Charts Grid -->
+<div class="charts-grid">
+  <div class="chart-card">
+    <div class="chart-header">
+      <div class="chart-title">📊 Attendance Breakdown</div>
+      <div class="chart-badge">Today</div>
     </div>
-
-    <!-- KPI Cards -->
-    <div class="kpi-grid">
-        <div class="kpi-card">
-            <div class="kpi-icon">👥</div>
-            <div class="kpi-value" id="kpiTotal">0</div>
-            <div class="kpi-label">Total Manpower</div>
-            <div class="kpi-change positive">↑ 5% vs last week</div>
-        </div>
-        <div class="kpi-card">
-            <div class="kpi-icon">✅</div>
-            <div class="kpi-value" id="kpiPresent">0</div>
-            <div class="kpi-label">Present Today</div>
-            <div class="kpi-change positive">↑ 3% vs yesterday</div>
-        </div>
-        <div class="kpi-card">
-            <div class="kpi-icon">❌</div>
-            <div class="kpi-value" id="kpiAbsent">0</div>
-            <div class="kpi-label">Absent</div>
-            <div class="kpi-change negative">↑ 2% vs last week</div>
-        </div>
-        <div class="kpi-card">
-            <div class="kpi-icon">🏖</div>
-            <div class="kpi-value" id="kpiLeave">0</div>
-            <div class="kpi-label">On Leave</div>
-            <div class="kpi-change">Stable</div>
-        </div>
-        <div class="kpi-card">
-            <div class="kpi-icon">🏥</div>
-            <div class="kpi-value" id="kpiMedical">0</div>
-            <div class="kpi-label">Medical Leave</div>
-            <div class="kpi-change positive">↓ 1% vs last week</div>
-        </div>
-        <div class="kpi-card">
-            <div class="kpi-icon">📅</div>
-            <div class="kpi-value" id="kpiOffDay">0</div>
-            <div class="kpi-label">Off Day</div>
-            <div class="kpi-change">Weekly Off</div>
-        </div>
+    <div class="chart-container"><canvas id="attendanceChart"></canvas></div>
+  </div>
+  <div class="chart-card">
+    <div class="chart-header">
+      <div class="chart-title">🏢 Department Performance</div>
+      <div class="chart-badge">This Week</div>
     </div>
-
-    <!-- Charts Grid -->
-    <div class="charts-grid">
-        <!-- Attendance Breakdown -->
-        <div class="chart-card">
-            <div class="chart-header">
-                <div class="chart-title">📊 Attendance Breakdown</div>
-                <div class="chart-badge">Today</div>
-            </div>
-            <div class="chart-container">
-                <canvas id="attendanceChart"></canvas>
-            </div>
-        </div>
-
-        <!-- Department Performance -->
-        <div class="chart-card">
-            <div class="chart-header">
-                <div class="chart-title">🏢 Department Performance</div>
-                <div class="chart-badge">This Week</div>
-            </div>
-            <div class="chart-container">
-                <canvas id="deptChart"></canvas>
-            </div>
-        </div>
-
-        <!-- Weekly Trend -->
-        <div class="chart-card">
-            <div class="chart-header">
-                <div class="chart-title">📈 Weekly Trend</div>
-                <div class="chart-badge">7 Days</div>
-            </div>
-            <div class="chart-container">
-                <canvas id="trendChart"></canvas>
-            </div>
-        </div>
-
-        <!-- Attendance Rate -->
-        <div class="chart-card">
-            <div class="chart-header">
-                <div class="chart-title">🎯 Attendance Rate</div>
-                <div class="chart-badge">Target: 90%</div>
-            </div>
-            <div class="chart-container">
-                <canvas id="rateChart"></canvas>
-            </div>
-        </div>
+    <div class="chart-container"><canvas id="deptChart"></canvas></div>
+  </div>
+  <div class="chart-card">
+    <div class="chart-header">
+      <div class="chart-title">📈 Weekly Trend</div>
+      <div class="chart-badge">7 Days</div>
     </div>
-
-    <!-- Department Grid (14 MCDs) -->
-    <div class="section-title" style="padding: 12px 12px 0;">
-        📋 All Departments - Last 7 Days Summary
+    <div class="chart-container"><canvas id="trendChart"></canvas></div>
+  </div>
+  <div class="chart-card">
+    <div class="chart-header">
+      <div class="chart-title">🎯 Attendance Rate</div>
+      <div class="chart-badge">Target: 90%</div>
     </div>
-    <div class="dept-grid" id="deptGrid">
-        <!-- Dynamic content -->
-    </div>
+    <div class="chart-container"><canvas id="rateChart"></canvas></div>
+  </div>
+</div>
 
-    <!-- Top Absentees -->
-    <div class="absentees-list">
-        <div class="section-title">
-            ⚠️ Top Absentees (This Month)
-            <span style="font-size: 11px; color: #64748b; font-weight: 600;">Click to view details</span>
+<!-- MCD Grid -->
+<div class="section-title">🏢 All 14 Departments - Last 30 Days Summary</div>
+<div class="dept-grid" id="deptGrid"></div>
+
+<!-- Top Absentees -->
+<div class="absentees-list">
+  <div class="section-title" style="margin:0 0 10px 0">️ Top Absentees (This Month) <span style="font-size:10px;color:var(--muted);font-weight:600">Click to view details</span></div>
+  <div id="absenteesList"></div>
+</div>
+
+<!-- View Toggle -->
+<div class="viewToggle noPrint">
+  <button class="viewBtn active" onclick="switchView('table')">📋 Table View</button>
+  <button class="viewBtn" onclick="switchView('person')">👤 Person Details</button>
+</div>
+
+<!-- Action Buttons -->
+<div class="btnArea noPrint" style="text-align:center;margin:10px">
+  From: <input type="date" id="fromDate">
+  To: <input type="date" id="toDate">
+  <button class="show" onclick="loadRangeReport()">📅 Date Report</button>
+  <button class="excel" onclick="exportExcel()">📊 Excel</button>
+  <button class="print" onclick="exportPDF()">📄 PDF</button>
+  <button class="home" onclick="location.href='index.html'">🏠 Home</button>
+</div>
+
+<!-- Person Details View -->
+<div id="personDetailsView" class="personDetails" style="display:none"></div>
+
+<!-- Table -->
+<table id="reportTable">
+  <thead>
+    <tr>
+      <th>SL</th><th>📅 Date</th><th>🏢 Company</th><th>📂 MCD</th>
+      <th>👥 Total</th><th> Leave</th><th>❌ Absent</th><th>🏥 Medical</th>
+      <th>📅 Off Day</th><th>✅ Present</th><th> By</th>
+      <th class="noPrint">⚡ Action</th>
+    </tr>
+  </thead>
+  <tbody id="tbody"></tbody>
+  <tfoot>
+    <tr class="totalRow">
+      <td colspan="4">📊 All MCD Total</td>
+      <td id="gtTotal">0</td><td id="gtLeave">0</td><td id="gtAbsent">0</td>
+      <td id="gtMedical">0</td><td id="gtOffDay">0</td><td id="gtPresent">0</td>
+      <td></td><td class="noPrint"></td>
+    </tr>
+  </tfoot>
+</table>
+
+<!-- Heatmap Modal -->
+<div id="heatmapModal" class="modal" onclick="if(event.target===this)closeHeatmap()">
+  <div class="modal-content">
+    <div class="modal-header">
+      <div class="modal-title"> Attendance Heatmap - <span id="heatmapMonth">June 2026</span></div>
+      <button class="modal-close" onclick="closeHeatmap()">×</button>
+    </div>
+    <div class="modal-body">
+      <div style="display:flex;gap:10px;margin-bottom:14px;flex-wrap:wrap">
+        <div style="display:flex;align-items:center;gap:5px"><div style="width:18px;height:18px;background:#10b981;border-radius:4px"></div><span style="font-size:11px">Excellent (&gt;90%)</span></div>
+        <div style="display:flex;align-items:center;gap:5px"><div style="width:18px;height:18px;background:#34d399;border-radius:4px"></div><span style="font-size:11px">Good (80-90%)</span></div>
+        <div style="display:flex;align-items:center;gap:5px"><div style="width:18px;height:18px;background:#fbbf24;border-radius:4px"></div><span style="font-size:11px">Average (70-80%)</span></div>
+        <div style="display:flex;align-items:center;gap:5px"><div style="width:18px;height:18px;background:#ef4444;border-radius:4px"></div><span style="font-size:11px">Poor (&lt;70%)</span></div>
+      </div>
+      <div class="heatmap-calendar" id="heatmapCalendar"></div>
+    </div>
+  </div>
+</div>
+
+<!-- Department Details Modal -->
+<div id="deptModal" class="modal" onclick="if(event.target===this)closeDeptModal()">
+  <div class="modal-content">
+    <div class="modal-header">
+      <div class="modal-title" id="deptModalTitle">📊 Department Details</div>
+      <button class="modal-close" onclick="closeDeptModal()">×</button>
+    </div>
+    <div class="modal-body" id="deptModalBody"></div>
+  </div>
+</div>
+
+<!-- Toast -->
+<div id="toast" class="toast">Saved ✅</div>
+
+<!-- Action Bar (Mobile) -->
+<div class="action-bar noPrint">
+  <button class="action-btn" style="background:var(--gradient-1)" onclick="openReportModal()">📝 Report</button>
+  <button class="action-btn" style="background:var(--gradient-4);color:#064e3b" onclick="loadData()">🔄 Refresh</button>
+  <button class="action-btn" style="background:var(--gradient-2)" onclick="openHeatmap()">📅 Heatmap</button>
+  <button class="action-btn" style="background:var(--gradient-3);color:#0c4a6e" onclick="exportPDF()">📄 PDF</button>
+</div>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-app.js";
+import {
+  getFirestore, collection, addDoc, getDocs, deleteDoc, doc,
+  query, where, setDoc, onSnapshot, orderBy, limit
+} from "https://www.gstatic.com/firebasejs/12.12.1/firebase-firestore.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyD-wBCF5eeWMHobLFOhBzKW7aB2pagz9-w",
+  authDomain: "gms-warehouse-tracker-7f57e.firebaseapp.com",
+  projectId: "gms-warehouse-tracker-7f57e",
+  storageBucket: "gms-warehouse-tracker-7f57e.firebasestorage.app",
+  messagingSenderId: "992250313291",
+  appId: "1:992250313291:web:ee3bceae76d4d53bc26bce"
+};
+
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+
+const user = JSON.parse(localStorage.getItem("gmsUser") || "null");
+if(!user){ window.location.href="login.html"; }
+
+// ================================================================
+//  SMART CACHE MANAGER
+// ================================================================
+window.GMS_CACHE = {
+  CACHE_KEY: 'GMS_SMART_CACHE_V3',
+  READ_COUNT_KEY: 'GMS_READ_COUNT_TODAY',
+  SAVED_COUNT_KEY: 'GMS_SAVED_COUNT_TODAY',
+  READ_DATE_KEY: 'GMS_READ_DATE',
+  CACHE_EXPIRY_MS: 5 * 60 * 1000,
+  
+  getReadCount: function(){
+    var today = new Date().toDateString();
+    if(localStorage.getItem(this.READ_DATE_KEY) !== today){
+      localStorage.setItem(this.READ_DATE_KEY, today);
+      localStorage.setItem(this.READ_COUNT_KEY, '0');
+      localStorage.setItem(this.SAVED_COUNT_KEY, '0');
+    }
+    return parseInt(localStorage.getItem(this.READ_COUNT_KEY) || '0');
+  },
+  getSavedCount: function(){ return parseInt(localStorage.getItem(this.SAVED_COUNT_KEY) || '0'); },
+  incRead: function(n){
+    n = n || 1;
+    var count = this.getReadCount() + n;
+    localStorage.setItem(this.READ_COUNT_KEY, String(count));
+    var el = document.getElementById('readCounter');
+    if(el) el.innerText = count;
+    return count;
+  },
+  incSaved: function(n){
+    n = n || 1;
+    var count = this.getSavedCount() + n;
+    localStorage.setItem(this.SAVED_COUNT_KEY, String(count));
+    var el = document.getElementById('savedReads');
+    if(el) el.innerText = count;
+    return count;
+  },
+  _all: function(){ try{ return JSON.parse(localStorage.getItem(this.CACHE_KEY) || '{}'); } catch(e){ return {}; } },
+  set: function(key, data){
+    var all = this._all();
+    all[key] = { data: data, savedAt: Date.now() };
+    try{ localStorage.setItem(this.CACHE_KEY, JSON.stringify(all)); } catch(e){ console.warn('Cache set failed:', e); }
+  },
+  get: function(key){
+    var all = this._all();
+    var entry = all[key];
+    if(!entry) return null;
+    var age = Date.now() - entry.savedAt;
+    if(age > this.CACHE_EXPIRY_MS){ console.log('⏰ Cache expired:', key); return null; }
+    return entry.data;
+  },
+  invalidate: function(keys){
+    var all = this._all();
+    if(typeof keys === 'string') keys = [keys];
+    keys.forEach(function(k){ delete all[k]; });
+    localStorage.setItem(this.CACHE_KEY, JSON.stringify(all));
+  }
+};
+
+const CACHE_KEYS = { billingManpowerReport: 'billing_mpd_cache_v3' };
+const LOCAL_TIMESTAMPS_KEY = 'GMS_LOCAL_TIMESTAMPS';
+
+async function updateCollectionTimestamp(collectionName){
+  try{ await setDoc(doc(db, 'system_sync', collectionName), { lastUpdated: Date.now() }, { merge: true }); }
+  catch(e){ console.warn('Timestamp update failed:', e); }
+}
+window.updateCollectionTimestamp = updateCollectionTimestamp;
+
+function buildShouldUpdate(remoteTimestamps, forceAll){
+  return function(col){
+    if(forceAll) return true;
+    var local = JSON.parse(localStorage.getItem(LOCAL_TIMESTAMPS_KEY) || '{}');
+    if(!local[col]) return true;
+    var remote = remoteTimestamps[col] || 0;
+    return remote > local[col];
+  };
+}
+
+async function cachedGetDocs(collectionName, cacheKey, shouldUpdate){
+  var statusEl = document.getElementById('cacheStatusText');
+  if(shouldUpdate === false){
+    var cached = window.GMS_CACHE.get(cacheKey);
+    if(cached !== null){
+      if(statusEl) statusEl.innerText = '📦 Cache Hit - 0 Reads!';
+      window.GMS_CACHE.incSaved();
+      return cached;
+    }
+  }
+  var cached2 = window.GMS_CACHE.get(cacheKey);
+  if(cached2 !== null && shouldUpdate !== true){
+    if(statusEl) statusEl.innerText = '📦 Cache Hit';
+    window.GMS_CACHE.incSaved();
+    return cached2;
+  }
+  if(statusEl) statusEl.innerText = '🔥 Firebase Read...';
+  var snap = await getDocs(collection(db, collectionName));
+  var rows = [];
+  snap.forEach(function(d){ rows.push({...d.data(), _docId: d.id}); });
+  window.GMS_CACHE.set(cacheKey, rows);
+  window.GMS_CACHE.incRead(snap.size || 1);
+  return rows;
+}
+
+// ================================================================
+//  CHARTS & DATA
+// ================================================================
+let chart, trendChart, departmentChart, rateChart;
+let currentView='table';
+let allRows=[];
+
+function today(){ return new Date().toISOString().slice(0,10); }
+
+document.getElementById("reportDate").value=today();
+document.getElementById("fromDate").value=today();
+document.getElementById("toDate").value=today();
+document.getElementById("filterFrom").value=today();
+document.getElementById("filterTo").value=today();
+
+// Register datalabels plugin
+Chart.register(ChartDataLabels);
+
+// ================================================================
+// 🎨 THEME TOGGLE
+// ================================================================
+window.toggleTheme=function(){
+  document.body.classList.toggle("dark");
+  localStorage.setItem("billingTheme",document.body.classList.contains("dark")?"dark":"light");
+  renderAllCharts();
+};
+if(localStorage.getItem("billingTheme")==="dark"){ document.body.classList.add("dark"); }
+
+function toast(msg){
+  let t=document.getElementById("toast");
+  t.innerText=msg;
+  t.style.display="block";
+  setTimeout(()=>t.style.display="none",1600);
+}
+
+// ================================================================
+// 📊 CALCULATIONS
+// ================================================================
+window.calculatePresent=function(){
+  let total=Number(document.getElementById("totalManpower").value)||0;
+  let leave=Number(document.getElementById("leaveQty").value)||0;
+  let absent=Number(document.getElementById("absentQty").value)||0;
+  let medical=Number(document.getElementById("medicalQty").value)||0;
+  let offday=Number(document.getElementById("offDayQty").value)||0;
+  let present=total-leave-absent-medical-offday;
+  if(present<0) present=0;
+  document.getElementById("presentQty").value=present;
+};
+
+window.generateDetailBoxes=function(type){
+  let qty=0, container, boxId;
+  if(type==='leave'){ qty=Number(document.getElementById("leaveQty").value)||0; container=document.getElementById("leaveDetails"); boxId="leaveBox"; }
+  else if(type==='absent'){ qty=Number(document.getElementById("absentQty").value)||0; container=document.getElementById("absentDetails"); boxId="absentBox"; }
+  else if(type==='medical'){ qty=Number(document.getElementById("medicalQty").value)||0; container=document.getElementById("medicalDetails"); boxId="medicalBox"; }
+  else if(type==='offday'){ qty=Number(document.getElementById("offDayQty").value)||0; container=document.getElementById("offDayDetails"); boxId="offDayBox"; }
+
+  if(qty>0){
+    document.getElementById(boxId).style.display="block";
+    let html="";
+    for(let i=1; i<=qty; i++){
+      html+=`<div class="detailRow"><input type="text" id="${type}Name${i}" placeholder=" Name ${i}"><input type="text" id="${type}Id${i}" placeholder="🆔 ID Card ${i}"></div>`;
+    }
+    container.innerHTML=html;
+  }else{
+    document.getElementById(boxId).style.display="none";
+    container.innerHTML="";
+  }
+};
+
+window.toggleReportFilters=function(){
+  let filters=document.getElementById("reportFilters");
+  filters.style.display = filters.style.display==="grid" ? "none" : "grid";
+};
+
+window.switchView=function(view){
+  currentView=view;
+  document.querySelectorAll('.viewBtn').forEach(b=>b.classList.remove('active'));
+  event.target.classList.add('active');
+  if(view==='table'){
+    document.getElementById('reportTable').style.display='table';
+    document.getElementById('personDetailsView').style.display='none';
+  }else{
+    document.getElementById('reportTable').style.display='none';
+    document.getElementById('personDetailsView').style.display='grid';
+    renderPersonDetails(allRows);
+  }
+};
+
+// ================================================================
+// 💾 SAVE REPORT
+// ================================================================
+window.saveReport=async function(){
+  calculatePresent();
+  let date=document.getElementById("reportDate").value;
+  let company=document.getElementById("company").value;
+  let mcd=document.getElementById("mcd").value;
+  let total=Number(document.getElementById("totalManpower").value)||0;
+  let leave=Number(document.getElementById("leaveQty").value)||0;
+  let absent=Number(document.getElementById("absentQty").value)||0;
+  let medical=Number(document.getElementById("medicalQty").value)||0;
+  let offday=Number(document.getElementById("offDayQty").value)||0;
+  let present=Number(document.getElementById("presentQty").value)||0;
+
+  let leaveDetails=[], absentDetails=[], medicalDetails=[], offDayDetails=[];
+  for(let i=1; i<=leave; i++){ let name=document.getElementById("leaveName"+i)?.value||""; let idCard=document.getElementById("leaveId"+i)?.value||""; if(name||idCard) leaveDetails.push({name,idCard}); }
+  for(let i=1; i<=absent; i++){ let name=document.getElementById("absentName"+i)?.value||""; let idCard=document.getElementById("absentId"+i)?.value||""; if(name||idCard) absentDetails.push({name,idCard}); }
+  for(let i=1; i<=medical; i++){ let name=document.getElementById("medicalName"+i)?.value||""; let idCard=document.getElementById("medicalId"+i)?.value||""; if(name||idCard) medicalDetails.push({name,idCard}); }
+  for(let i=1; i<=offday; i++){ let name=document.getElementById("offdayName"+i)?.value||""; let idCard=document.getElementById("offdayId"+i)?.value||""; if(name||idCard) offDayDetails.push({name,idCard}); }
+
+  await addDoc(collection(db,"billingManpowerReport"),{
+    date:date, company:company, mcd:mcd,
+    totalManpower:total, leave:leave, absent:absent, medical:medical, offDay:offday, present:present,
+    leaveDetails:leaveDetails, absentDetails:absentDetails, medicalDetails:medicalDetails, offDayDetails:offDayDetails,
+    reportedBy:user.name || user.email || "User", userId:user.id || "", createdAt:new Date().toISOString()
+  });
+
+  await updateCollectionTimestamp('billingManpowerReport');
+  var localTS = JSON.parse(localStorage.getItem(LOCAL_TIMESTAMPS_KEY) || '{}');
+  delete localTS['billingManpowerReport'];
+  localStorage.setItem(LOCAL_TIMESTAMPS_KEY, JSON.stringify(localTS));
+  window.GMS_CACHE.invalidate([CACHE_KEYS.billingManpowerReport]);
+
+  toast("Manpower Report Saved ✅");
+
+  document.getElementById("totalManpower").value=0;
+  document.getElementById("leaveQty").value=0;
+  document.getElementById("absentQty").value=0;
+  document.getElementById("medicalQty").value=0;
+  document.getElementById("offDayQty").value=0;
+  document.getElementById("presentQty").value=0;
+  document.getElementById("leaveBox").style.display="none";
+  document.getElementById("absentBox").style.display="none";
+  document.getElementById("medicalBox").style.display="none";
+  document.getElementById("offDayBox").style.display="none";
+
+  loadReport();
+};
+
+window.loadReport=async function(){
+  let date=document.getElementById("reportDate").value;
+  document.getElementById("fromDate").value=date;
+  document.getElementById("toDate").value=date;
+  loadRangeReport();
+};
+
+// ================================================================
+// 🔥 SMART SELECTIVE LOAD
+// ================================================================
+window.loadRangeReport=async function(){
+  let from=document.getElementById("fromDate").value;
+  let to=document.getElementById("toDate").value;
+  let statusEl = document.getElementById('cacheStatusText');
+  if(statusEl) statusEl.innerText = '🔍 Checking updates...';
+
+  try{
+    var remoteTimestamps = {};
+    try{
+      var syncSnap = await getDocs(collection(db, 'system_sync'));
+      window.GMS_CACHE.incRead(1);
+      syncSnap.forEach(function(d){ remoteTimestamps[d.id] = d.data().lastUpdated || 0; });
+    }catch(e){ console.warn('system_sync read failed:', e); }
+
+    var shouldUpdate = buildShouldUpdate(remoteTimestamps, false);
+    var billingNeedsUpdate = shouldUpdate('billingManpowerReport');
+
+    var rows = await cachedGetDocs('billingManpowerReport', CACHE_KEYS.billingManpowerReport, billingNeedsUpdate);
+
+    var newLocalTS = JSON.parse(localStorage.getItem(LOCAL_TIMESTAMPS_KEY) || '{}');
+    Object.keys(remoteTimestamps).forEach(function(col){ newLocalTS[col] = remoteTimestamps[col]; });
+    localStorage.setItem(LOCAL_TIMESTAMPS_KEY, JSON.stringify(newLocalTS));
+
+    var filteredRows = [];
+    rows.forEach(function(r){ if(r.date >= from && r.date <= to) filteredRows.push(r); });
+    filteredRows.sort((a,b)=>a.date.localeCompare(b.date));
+    allRows = filteredRows;
+
+    if(statusEl) statusEl.innerText = '✅ Loaded ' + (billingNeedsUpdate ? '(Firebase 🔥)' : '(Cache 📦 0 reads)');
+
+    renderTable(filteredRows);
+    renderAllCharts();
+    renderDepartmentGrid();
+    renderTopAbsentees();
+    renderHeatmap();
+
+  }catch(e){
+    console.error('Load error:', e);
+    if(statusEl) statusEl.innerText = '❌ Load error';
+    toast('❌ Load failed: ' + e.message);
+  }
+};
+
+window.loadDetailedReport=async function(){
+  let from=document.getElementById("filterFrom").value;
+  let to=document.getElementById("filterTo").value;
+  let filterComp=document.getElementById("filterCompany").value;
+  let filterMcd=document.getElementById("filterMcd").value;
+  let searchId=document.getElementById("searchId").value.toLowerCase().trim();
+  let filterMonth=document.getElementById("filterMonth").value;
+  let filterYear=document.getElementById("filterYear").value;
+  let statusEl = document.getElementById('cacheStatusText');
+  if(statusEl) statusEl.innerText = ' Filtering...';
+
+  try{
+    var rows = await cachedGetDocs('billingManpowerReport', CACHE_KEYS.billingManpowerReport, false);
+    var filteredRows = [];
+    rows.forEach(function(r){
+      let rowDate=r.date||"";
+      if(rowDate<from || rowDate>to) return;
+      if(filterComp && r.company!==filterComp) return;
+      if(filterMcd && r.mcd!==filterMcd) return;
+      if(filterMonth && rowDate.substring(5,7)!==filterMonth) return;
+      if(filterYear && rowDate.substring(0,4)!==filterYear) return;
+      if(searchId){
+        let found=false;
+        if(r.leaveDetails){ r.leaveDetails.forEach(dt=>{ if((dt.idCard||"").toLowerCase().includes(searchId)) found=true; }); }
+        if(r.absentDetails){ r.absentDetails.forEach(dt=>{ if((dt.idCard||"").toLowerCase().includes(searchId)) found=true; }); }
+        if(r.medicalDetails){ r.medicalDetails.forEach(dt=>{ if((dt.idCard||"").toLowerCase().includes(searchId)) found=true; }); }
+        if(r.offDayDetails){ r.offDayDetails.forEach(dt=>{ if((dt.idCard||"").toLowerCase().includes(searchId)) found=true; }); }
+        if(!found) return;
+      }
+      filteredRows.push(r);
+    });
+    filteredRows.sort((a,b)=>a.date.localeCompare(b.date));
+    allRows = filteredRows;
+    if(statusEl) statusEl.innerText = '✅ Filter applied (Cache )';
+    if(searchId && !filterMcd){
+      renderPersonDetails(filteredRows);
+      document.getElementById('personDetailsView').style.display='grid';
+      document.getElementById('reportTable').style.display='none';
+    }else{
+      renderTable(filteredRows);
+      renderPersonDetails(filteredRows);
+      renderAllCharts();
+      renderDepartmentGrid();
+      renderTopAbsentees();
+      if(currentView==='person'){
+        document.getElementById('personDetailsView').style.display='grid';
+        document.getElementById('reportTable').style.display='none';
+      }
+    }
+  }catch(e){
+    console.error('Filter error:', e);
+    if(statusEl) statusEl.innerText = '❌ Filter error';
+  }
+};
+
+// ================================================================
+// 📊 CHARTS WITH LABELS
+// ================================================================
+function getChartColors(){
+  const isDark = document.body.classList.contains('dark');
+  return {
+    text: isDark ? '#f1f5f9' : '#1e293b',
+    grid: isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.08)',
+    bg: isDark ? '#1e293b' : '#ffffff'
+  };
+}
+
+function renderAllCharts(){
+  const colors = getChartColors();
+  const today = new Date().toISOString().slice(0,10);
+  const todayData = allRows.find(d => d.date === today) || allRows[0] || {};
+  const total = Number(document.getElementById('kpiTotal').innerText) || 0;
+  const leave = Number(document.getElementById('kpiLeave').innerText) || 0;
+  const absent = Number(document.getElementById('kpiAbsent').innerText) || 0;
+  const medical = Number(document.getElementById('kpiMedical').innerText) || 0;
+  const offday = Number(document.getElementById('kpiOffDay').innerText) || 0;
+  const present = Number(document.getElementById('kpiPresent').innerText) || 0;
+
+  // 1. Attendance Breakdown (Doughnut with labels)
+  if(chart) chart.destroy();
+  chart = new Chart(document.getElementById('attendanceChart'), {
+    type: 'doughnut',
+    data: {
+      labels: ['Present','Leave','Absent','Medical','Off Day'],
+      datasets: [{
+        data: [present, leave, absent, medical, offday],
+        backgroundColor: ['#10b981','#f59e0b','#ef4444','#8b5cf6','#3b82f6'],
+        borderWidth: 2,
+        borderColor: colors.bg
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      cutout: '55%',
+      plugins: {
+        legend: { position:'bottom', labels:{ color:colors.text, boxWidth:10, padding:6, font:{size:10} } },
+        datalabels: {
+          color: 'white',
+          font: { weight:'bold', size:10 },
+          formatter: (value, ctx) => {
+            const total = ctx.chart.data.datasets[0].data.reduce((a,b)=>a+b,0);
+            if(total===0) return '';
+            const pct = Math.round((value/total)*100);
+            return pct > 5 ? pct+'%' : '';
+          },
+          anchor: 'center',
+          align: 'center'
+        }
+      }
+    }
+  });
+
+  // 2. Department Performance (Bar with values)
+  if(departmentChart) departmentChart.destroy();
+  const deptData = {};
+  allRows.slice(0, 30).forEach(d => {
+    if(!deptData[d.mcd]) deptData[d.mcd] = { present:0, total:0 };
+    deptData[d.mcd].present += d.present||0;
+    deptData[d.mcd].total += d.totalManpower||0;
+  });
+  const deptLabels = Object.keys(deptData).slice(0, 8);
+  const deptRates = deptLabels.map(mcd => {
+    const data = deptData[mcd];
+    return data.total > 0 ? parseFloat(((data.present/data.total)*100).toFixed(1)) : 0;
+  });
+
+  departmentChart = new Chart(document.getElementById('deptChart'), {
+    type: 'bar',
+    data: {
+      labels: deptLabels.map(l => l.replace(' MCD','').replace(' SECTION','')),
+      datasets: [{
+        label: 'Attendance %',
+        data: deptRates,
+        backgroundColor: deptRates.map(r => r >= 90 ? '#10b981' : r >= 80 ? '#fbbf24' : '#ef4444'),
+        borderRadius: 6,
+        borderSkipped: false
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: { display:false },
+        datalabels: {
+          color: colors.text,
+          font: { weight:'bold', size:9 },
+          anchor: 'end',
+          align: 'top',
+          formatter: v => v + '%'
+        }
+      },
+      scales: {
+        y: { beginAtZero:true, max:100, grid:{color:colors.grid}, ticks:{color:colors.text, font:{size:9}} },
+        x: { grid:{display:false}, ticks:{color:colors.text, font:{size:8}, maxRotation:45, minRotation:45} }
+      }
+    }
+  });
+
+  // 3. Weekly Trend (Line with values)
+  if(trendChart) trendChart.destroy();
+  const last7Days = allRows.slice(0, 7).reverse();
+  const trendLabels = last7Days.map(d => {
+    const date = new Date(d.date);
+    return `${date.getDate()}/${date.getMonth()+1}`;
+  });
+  const trendPresent = last7Days.map(d => d.present||0);
+  const trendAbsent = last7Days.map(d => d.absent||0);
+
+  trendChart = new Chart(document.getElementById('trendChart'), {
+    type: 'line',
+    data: {
+      labels: trendLabels,
+      datasets: [
+        {
+          label: 'Present',
+          data: trendPresent,
+          borderColor: '#10b981',
+          backgroundColor: 'rgba(16,185,129,0.15)',
+          fill: true,
+          tension: 0.4,
+          pointRadius: 4,
+          pointBackgroundColor: '#10b981'
+        },
+        {
+          label: 'Absent',
+          data: trendAbsent,
+          borderColor: '#ef4444',
+          backgroundColor: 'rgba(239,68,68,0.15)',
+          fill: true,
+          tension: 0.4,
+          pointRadius: 4,
+          pointBackgroundColor: '#ef4444'
+        }
+      ]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: { position:'top', labels:{ color:colors.text, boxWidth:10, padding:6, font:{size:9} } },
+        datalabels: {
+          color: colors.text,
+          font: { weight:'bold', size:9 },
+          anchor: 'end',
+          align: 'top',
+          formatter: v => v > 0 ? v : ''
+        }
+      },
+      scales: {
+        y: { beginAtZero:true, grid:{color:colors.grid}, ticks:{color:colors.text, font:{size:9}} },
+        x: { grid:{display:false}, ticks:{color:colors.text, font:{size:9}} }
+      }
+    }
+  });
+
+  // 4. Attendance Rate (Polar with labels)
+  if(rateChart) rateChart.destroy();
+  const rate = todayData.totalManpower ? ((todayData.present/todayData.totalManpower)*100).toFixed(1) : 0;
+
+  rateChart = new Chart(document.getElementById('rateChart'), {
+    type: 'polarArea',
+    data: {
+      labels: ['Attendance Rate', 'Gap to Target'],
+      datasets: [{
+        data: [rate, Math.max(0, 100-rate)],
+        backgroundColor: [
+          rate >= 90 ? '#10b981' : rate >= 80 ? '#fbbf24' : '#ef4444',
+          '#e2e8f0'
+        ],
+        borderWidth: 2,
+        borderColor: colors.bg
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: { position:'bottom', labels:{ color:colors.text, boxWidth:10, padding:6, font:{size:10} } },
+        datalabels: {
+          color: 'white',
+          font: { weight:'bold', size:11 },
+          formatter: (value, ctx) => {
+            if(ctx.dataIndex === 0) return rate + '%';
+            return '';
+          },
+          anchor: 'center',
+          align: 'center'
+        }
+      },
+      scales: {
+        r: { beginAtZero:true, max:100, ticks:{display:false}, grid:{color:colors.grid} }
+      }
+    }
+  });
+}
+
+// ================================================================
+// 🏢 DEPARTMENT GRID (14 MCDs - 30 Days)
+// ================================================================
+function renderDepartmentGrid(){
+  const mcds = [
+    'GREY FABRIC MCD','SHIPMENT MCD','BILLING SECTION','OUTER WEAR MCD',
+    'YARN MCD','PRINTING MCD','JHUT MCD','GENERAL MCD',
+    'ACCESSORIES MCD','LEFTOVER MCD','FINISH FABRIC MCD','YARN DYEING MCD',
+    'CHEMICAL MCD','GENERAL TECHNICAL MCD'
+  ];
+  const last30Days = allRows.slice(0, 30);
+  const grid = document.getElementById('deptGrid');
+  grid.innerHTML = '';
+
+  mcds.forEach(mcd => {
+    const mcdData = last30Days.filter(d => d.mcd === mcd);
+    const totalAbsent = mcdData.reduce((sum, d) => sum + (d.absent||0), 0);
+    const totalLeave = mcdData.reduce((sum, d) => sum + (d.leave||0), 0);
+    const totalMedical = mcdData.reduce((sum, d) => sum + (d.medical||0), 0);
+    const totalPresent = mcdData.reduce((sum, d) => sum + (d.present||0), 0);
+    const totalManpower = mcdData.reduce((sum, d) => sum + (d.totalManpower||0), 0);
+    const avgAttendance = totalManpower > 0 ? ((totalPresent/totalManpower)*100).toFixed(1) : 0;
+    const days = mcdData.length;
+
+    const card = document.createElement('div');
+    card.className = 'dept-card';
+    card.onclick = () => openDeptDetails(mcd, mcdData);
+    card.innerHTML = `
+      <div class="dept-name">${mcd}</div>
+      <div class="dept-stats">
+        <div class="dept-stat">
+          <div class="dept-stat-value" style="color:${avgAttendance>=90?'#10b981':avgAttendance>=80?'#fbbf24':'#ef4444'}">${avgAttendance}%</div>
+          <div class="dept-stat-label">Attendance</div>
         </div>
-        <div id="absenteesList">
-            <!-- Dynamic content -->
+        <div class="dept-stat">
+          <div class="dept-stat-value" style="color:#ef4444">${totalAbsent}</div>
+          <div class="dept-stat-label">Absent (${days}d)</div>
         </div>
+      </div>
+    `;
+    grid.appendChild(card);
+  });
+}
+
+// ================================================================
+// ⚠️ TOP ABSENTEES
+// ================================================================
+function renderTopAbsentees(){
+  const absenteeData = {};
+  allRows.forEach(report => {
+    if(report.absentDetails && report.absentDetails.length > 0){
+      report.absentDetails.forEach(person => {
+        const key = (person.idCard || person.name || '').toLowerCase();
+        if(!key) return;
+        if(!absenteeData[key]){
+          absenteeData[key] = { name:person.name||'Unknown', idCard:person.idCard||'N/A', count:0, dates:[] };
+        }
+        absenteeData[key].count++;
+        absenteeData[key].dates.push(report.date);
+      });
+    }
+  });
+
+  const sorted = Object.values(absenteeData).sort((a,b) => b.count - a.count).slice(0, 5);
+  const container = document.getElementById('absenteesList');
+  container.innerHTML = '';
+
+  if(sorted.length === 0){
+    container.innerHTML = '<div style="text-align:center;padding:16px;color:var(--muted);font-size:12px"> No absence records found</div>';
+    return;
+  }
+
+  sorted.forEach((person, index) => {
+    const item = document.createElement('div');
+    item.className = 'absentee-item';
+    item.onclick = () => showPersonDetails(person);
+    item.innerHTML = `
+      <div class="absentee-avatar">${index+1}</div>
+      <div class="absentee-info">
+        <div class="absentee-name">${person.name}</div>
+        <div class="absentee-id">ID: ${person.idCard}</div>
+      </div>
+      <div class="absentee-count">${person.count} days</div>
+    `;
+    container.appendChild(item);
+  });
+}
+
+function showPersonDetails(person){
+  alert(`${person.name}\nID: ${person.idCard}\nTotal Absent Days: ${person.count}\nDates: ${person.dates.join(', ')}`);
+}
+
+// ================================================================
+// 📅 HEATMAP
+// ================================================================
+function renderHeatmap(){
+  const calendar = document.getElementById('heatmapCalendar');
+  calendar.innerHTML = '';
+  const now = new Date();
+  const year = now.getFullYear();
+  const month = now.getMonth();
+  document.getElementById('heatmapMonth').textContent = now.toLocaleString('default', {month:'long', year:'numeric'});
+
+  const firstDay = new Date(year, month, 1);
+  const lastDay = new Date(year, month+1, 0);
+  const daysInMonth = lastDay.getDate();
+  const startingDay = firstDay.getDay();
+
+  const dayLabels = ['Su','Mo','Tu','We','Th','Fr','Sa'];
+  dayLabels.forEach(day => {
+    const div = document.createElement('div');
+    div.className = 'heatmap-day-header';
+    div.textContent = day;
+    calendar.appendChild(div);
+  });
+
+  for(let i=0; i<startingDay; i++){
+    const div = document.createElement('div');
+    calendar.appendChild(div);
+  }
+
+  for(let day=1; day<=daysInMonth; day++){
+    const dateStr = `${year}-${String(month+1).padStart(2,'0')}-${String(day).padStart(2,'0')}`;
+    const dayData = allRows.find(d => d.date === dateStr);
+    const div = document.createElement('div');
+    div.className = 'heatmap-day';
+    div.textContent = day;
+
+    if(dayData){
+      const rate = (dayData.present/dayData.totalManpower)*100;
+      if(rate >= 90) div.classList.add('excellent');
+      else if(rate >= 80) div.classList.add('good');
+      else if(rate >= 70) div.classList.add('average');
+      else div.classList.add('poor');
+      div.title = `${dateStr}: ${rate.toFixed(1)}% attendance`;
+    }else{
+      div.classList.add('off');
+      div.title = 'No data';
+    }
+    div.onclick = () => showDayDetails(dateStr);
+    calendar.appendChild(div);
+  }
+}
+
+function showDayDetails(dateStr){
+  const dayData = allRows.find(d => d.date === dateStr);
+  if(dayData){
+    alert(` Date: ${dateStr}\n ${dayData.mcd}\n✅ Present: ${dayData.present}\n❌ Absent: ${dayData.absent}\n Leave: ${dayData.leave}\n🏥 Medical: ${dayData.medical}`);
+  }
+}
+
+// ================================================================
+// 📋 TABLE RENDERING
+// ================================================================
+function renderTable(rows){
+  let html="";
+  let gtTotal=0,gtLeave=0,gtAbsent=0,gtMedical=0,gtOffDay=0,gtPresent=0;
+
+  rows.forEach((r,i)=>{
+    gtTotal+=Number(r.totalManpower)||0;
+    gtLeave+=Number(r.leave)||0;
+    gtAbsent+=Number(r.absent)||0;
+    gtMedical+=Number(r.medical)||0;
+    gtOffDay+=Number(r.offDay)||0;
+    gtPresent+=Number(r.present)||0;
+
+    html+=`<tr>
+      <td>${i+1}</td><td>${r.date||""}</td><td>${r.company||""}</td><td>${r.mcd||""}</td>
+      <td>${r.totalManpower||0}</td><td>${r.leave||0}</td><td>${r.absent||0}</td>
+      <td>${r.medical||0}</td><td>${r.offDay||0}</td><td>${r.present||0}</td>
+      <td>${r.reportedBy||""}</td>
+      <td class="noPrint"><button class="del" onclick="deleteRow('${r._docId || r.id}')">🗑</button></td>
+    </tr>`;
+  });
+
+  document.getElementById("tbody").innerHTML=html || `<tr><td colspan="12">📭 No Data Found</td></tr>`;
+  document.getElementById("gtTotal").innerText=gtTotal;
+  document.getElementById("gtLeave").innerText=gtLeave;
+  document.getElementById("gtAbsent").innerText=gtAbsent;
+  document.getElementById("gtMedical").innerText=gtMedical;
+  document.getElementById("gtOffDay").innerText=gtOffDay;
+  document.getElementById("gtPresent").innerText=gtPresent;
+
+  document.getElementById("kpiTotal").innerText=gtTotal;
+  document.getElementById("kpiLeave").innerText=gtLeave;
+  document.getElementById("kpiAbsent").innerText=gtAbsent;
+  document.getElementById("kpiMedical").innerText=gtMedical;
+  document.getElementById("kpiOffDay").innerText=gtOffDay;
+  document.getElementById("kpiPresent").innerText=gtPresent;
+}
+
+function renderPersonDetails(rows){
+  let personData={};
+  rows.forEach(r=>{
+    ['leaveDetails','absentDetails','medicalDetails','offDayDetails'].forEach(type=>{
+      if(r[type] && r[type].length>0){
+        r[type].forEach(d=>{
+          let key=(d.idCard||d.name||"").toLowerCase();
+          if(!key) return;
+          if(!personData[key]){
+            personData[key]={ name:d.name||"Unknown", idCard:d.idCard||"Unknown", leave:0, absent:0, medical:0, offday:0, leaveDates:[], absentDates:[], medicalDates:[], offDayDates:[] };
+          }
+          if(type==='leaveDetails'){ personData[key].leave++; personData[key].leaveDates.push({date:r.date,mcd:r.mcd,company:r.company}); }
+          if(type==='absentDetails'){ personData[key].absent++; personData[key].absentDates.push({date:r.date,mcd:r.mcd,company:r.company}); }
+          if(type==='medicalDetails'){ personData[key].medical++; personData[key].medicalDates.push({date:r.date,mcd:r.mcd,company:r.company}); }
+          if(type==='offDayDetails'){ personData[key].offday++; personData[key].offDayDates.push({date:r.date,mcd:r.mcd,company:r.company}); }
+        });
+      }
+    });
+  });
+
+  let html="";
+  Object.values(personData).forEach(p=>{
+    let totalDays=p.leave+p.absent+p.medical+p.offday;
+    html+=`<div class="personCard ${p.absent>0?'absent':p.leave>0?'leave':p.medical>0?'medical':'offday'}">
+      <div class="personHeader">
+        <div class="personName">👤 ${p.name}</div>
+        <div class="personId">🆔 ${p.idCard}</div>
+      </div>
+      <div class="personStats">
+        <div class="statItem leave"><span>🏖 Leave</span><b>${p.leave}</b></div>
+        <div class="statItem absent"><span>❌ Absent</span><b>${p.absent}</b></div>
+        <div class="statItem medical"><span>🏥 Medical</span><b>${p.medical}</b></div>
+        <div class="statItem offday"><span>📅 Off Day</span><b>${p.offday}</b></div>
+      </div>
+      <div style="margin-top:8px;padding-top:8px;border-top:1px solid var(--border);text-align:center">
+        <b style="color:var(--blue);font-size:16px">📅 Total: ${totalDays} days</b>
+      </div>
+    </div>`;
+  });
+  document.getElementById("personDetailsView").innerHTML=html || '<div style="grid-column:1/-1;text-align:center;padding:30px;color:var(--muted)">📭 No Data Found</div>';
+}
+
+// ================================================================
+// 🗑 DELETE ROW
+// ================================================================
+window.deleteRow=async function(id){
+  if(confirm("🗑 Delete this report?")){
+    await deleteDoc(doc(db,"billingManpowerReport",id));
+    await updateCollectionTimestamp('billingManpowerReport');
+    var localTS = JSON.parse(localStorage.getItem(LOCAL_TIMESTAMPS_KEY) || '{}');
+    delete localTS['billingManpowerReport'];
+    localStorage.setItem(LOCAL_TIMESTAMPS_KEY, JSON.stringify(localTS));
+    window.GMS_CACHE.invalidate([CACHE_KEYS.billingManpowerReport]);
+    toast("Deleted ✅");
+    loadRangeReport();
+  }
+};
+
+// ================================================================
+// 📊 EXPORT
+// ================================================================
+window.exportExcel=function(){
+  let table=document.getElementById("reportTable").outerHTML;
+  let file=new Blob([table],{type:"application/vnd.ms-excel"});
+  let a=document.createElement("a");
+  a.href=URL.createObjectURL(file);
+  a.download="billing-manpower-report.xls";
+  a.click();
+};
+
+window.exportPDF=async function(){
+  const { jsPDF } = window.jspdf;
+  const pdf = new jsPDF('l', 'mm', 'a4');
+  pdf.setFontSize(16);
+  pdf.text('GMS TEXTILES LTD - Smart Manpower Dashboard', 14, 15);
+  pdf.setFontSize(10);
+  pdf.text(`Generated: ${new Date().toLocaleString()}`, 14, 22);
+  pdf.save('gms-smart-dashboard.pdf');
+  toast('PDF Exported ✅');
+};
+
+// ================================================================
+// 📱 MODALS
+// ================================================================
+window.openHeatmap=function(){ document.getElementById('heatmapModal').style.display='block'; };
+window.closeHeatmap=function(){ document.getElementById('heatmapModal').style.display='none'; };
+window.openDeptDetails=function(mcd, data){
+  const modal = document.getElementById('deptModal');
+  const title = document.getElementById('deptModalTitle');
+  const body = document.getElementById('deptModalBody');
+  title.textContent = `📊 ${mcd} - Last 30 Days`;
+
+  const totalAbsent = data.reduce((sum, d) => sum + (d.absent||0), 0);
+  const totalLeave = data.reduce((sum, d) => sum + (d.leave||0), 0);
+  const totalMedical = data.reduce((sum, d) => sum + (d.medical||0), 0);
+  const totalPresent = data.reduce((sum, d) => sum + (d.present||0), 0);
+  const totalManpower = data.reduce((sum, d) => sum + (d.totalManpower||0), 0);
+  const avgAttendance = totalManpower > 0 ? ((totalPresent/totalManpower)*100).toFixed(1) : 0;
+
+  body.innerHTML = `
+    <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-bottom:16px">
+      <div style="background:#f0fdf4;padding:14px;border-radius:10px;text-align:center">
+        <div style="font-size:22px;font-weight:800;color:#10b981">${avgAttendance}%</div>
+        <div style="font-size:11px;color:#64748b">Avg Attendance</div>
+      </div>
+      <div style="background:#fef2f2;padding:14px;border-radius:10px;text-align:center">
+        <div style="font-size:22px;font-weight:800;color:#ef4444">${totalAbsent}</div>
+        <div style="font-size:11px;color:#64748b">Total Absent</div>
+      </div>
+      <div style="background:#fffbeb;padding:14px;border-radius:10px;text-align:center">
+        <div style="font-size:22px;font-weight:800;color:#f59e0b">${totalLeave}</div>
+        <div style="font-size:11px;color:#64748b">Total Leave</div>
+      </div>
+      <div style="background:#f5f3ff;padding:14px;border-radius:10px;text-align:center">
+        <div style="font-size:22px;font-weight:800;color:#8b5cf6">${totalMedical}</div>
+        <div style="font-size:11px;color:#64748b">Medical Leave</div>
+      </div>
     </div>
+    <h3 style="font-size:13px;font-weight:700;margin-bottom:10px">Daily Breakdown</h3>
+    ${data.map(d => `<div style="display:flex;justify-content:space-between;padding:8px;background:var(--card2);border-radius:6px;margin-bottom:6px;font-size:12px">
+      <span style="font-weight:600">${d.date}</span>
+      <span style="color:#10b981">Present: ${d.present}</span>
+      <span style="color:#ef4444">Absent: ${d.absent}</span>
+    </div>`).join('')}
+  `;
+  modal.style.display = 'block';
+};
+window.closeDeptModal=function(){ document.getElementById('deptModal').style.display='none'; };
+window.openReportModal=function(){ window.location.href='billing-manpower-report.html'; };
 
-    <!-- Action Bar -->
-    <div class="action-bar">
-        <button class="action-btn btn-primary" onclick="openReportModal()">
-            <span>📝</span>
-            <span>New Report</span>
-        </button>
-        <button class="action-btn btn-success" onclick="loadData()">
-            <span>🔄</span>
-            <span>Refresh</span>
-        </button>
-        <button class="action-btn btn-warning" onclick="openHeatmap()">
-            <span>📅</span>
-            <span>Heatmap</span>
-        </button>
-        <button class="action-btn btn-info" onclick="exportPDF()">
-            <span>📄</span>
-            <span>PDF</span>
-        </button>
-    </div>
+// ================================================================
+// 🔄 REALTIME SYNC
+// ================================================================
+function setupRealtimeSync(){
+  console.log(' Setting up realtime sync...');
+  var billingCol = collection(db, 'billingManpowerReport');
+  onSnapshot(billingCol, function(snapshot){
+    console.log('🔔 Realtime change detected, docs:', snapshot.size);
+    window.GMS_CACHE.invalidate([CACHE_KEYS.billingManpowerReport]);
+    var localTS = JSON.parse(localStorage.getItem(LOCAL_TIMESTAMPS_KEY) || '{}');
+    delete localTS['billingManpowerReport'];
+    localStorage.setItem(LOCAL_TIMESTAMPS_KEY, JSON.stringify(localTS));
+    var syncStatus = document.getElementById('syncStatus');
+    if(syncStatus){ syncStatus.innerText = 'Updated ✅'; setTimeout(()=>{ if(syncStatus) syncStatus.innerText = 'Active'; }, 2000); }
+    if(!document.hidden){
+      var statusEl = document.getElementById('cacheStatusText');
+      if(statusEl) statusEl.innerText = '🔔 Live update...';
+      loadRangeReport();
+    }
+  });
+  console.log('✅ Realtime sync active');
+}
 
-    <!-- Heatmap Modal -->
-    <div id="heatmapModal" class="modal" onclick="if(event.target===this)closeHeatmap()">
-        <div class="modal-content">
-            <div class="modal-header">
-                <div class="modal-title">📅 Attendance Heatmap - <span id="heatmapMonth">June 2026</span></div>
-                <button class="modal-close" onclick="closeHeatmap()">×</button>
-            </div>
-            <div class="modal-body">
-                <div style="display: flex; gap: 12px; margin-bottom: 16px; flex-wrap: wrap;">
-                    <div style="display: flex; align-items: center; gap: 6px;">
-                        <div style="width: 20px; height: 20px; background: #10b981; border-radius: 4px;"></div>
-                        <span style="font-size: 12px;">Excellent (>90%)</span>
-                    </div>
-                    <div style="display: flex; align-items: center; gap: 6px;">
-                        <div style="width: 20px; height: 20px; background: #34d399; border-radius: 4px;"></div>
-                        <span style="font-size: 12px;">Good (80-90%)</span>
-                    </div>
-                    <div style="display: flex; align-items: center; gap: 6px;">
-                        <div style="width: 20px; height: 20px; background: #fbbf24; border-radius: 4px;"></div>
-                        <span style="font-size: 12px;">Average (70-80%)</span>
-                    </div>
-                    <div style="display: flex; align-items: center; gap: 6px;">
-                        <div style="width: 20px; height: 20px; background: #ef4444; border-radius: 4px;"></div>
-                        <span style="font-size: 12px;">Poor (<70%)</span>
-                    </div>
-                </div>
-                <div class="heatmap-calendar" id="heatmapCalendar"></div>
-            </div>
-        </div>
-    </div>
+// ================================================================
+//  INITIALIZATION
+// ================================================================
+calculatePresent();
+(function(){
+  var c = window.GMS_CACHE.getReadCount();
+  var el = document.getElementById('readCounter');
+  if(el) el.innerText = c;
+  var s = window.GMS_CACHE.getSavedCount();
+  var sel = document.getElementById('savedReads');
+  if(sel) sel.innerText = s;
+})();
 
-    <!-- Department Details Modal -->
-    <div id="deptModal" class="modal" onclick="if(event.target===this)closeDeptModal()">
-        <div class="modal-content">
-            <div class="modal-header">
-                <div class="modal-title" id="deptModalTitle">📊 Department Details</div>
-                <button class="modal-close" onclick="closeDeptModal()">×</button>
-            </div>
-            <div class="modal-body" id="deptModalBody">
-                <!-- Dynamic content -->
-            </div>
-        </div>
-    </div>
+loadReport();
+setupRealtimeSync();
 
-    <!-- Loading -->
-    <div class="loading" id="loading">
-        <div class="spinner"></div>
-        <div class="loading-text">Loading Dashboard...</div>
-    </div>
+document.addEventListener('visibilitychange', function(){
+  if(!document.hidden){ console.log('🔄 Page visible - reloading'); loadRangeReport(); }
+});
 
-    <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-app.js";
-        import {
-            getFirestore,
-            collection,
-            getDocs,
-            query,
-            orderBy,
-            limit
-        } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-firestore.js";
+setInterval(function(){
+  if(!document.hidden){ console.log('⏰ Auto-refresh (60s)'); loadRangeReport(); }
+}, 60000);
 
-        const firebaseConfig = {
-            apiKey: "AIzaSyD-wBCF5eeWMHobLFOhBzKW7aB2pagz9-w",
-            authDomain: "gms-warehouse-tracker-7f57e.firebaseapp.com",
-            projectId: "gms-warehouse-tracker-7f57e",
-            storageBucket: "gms-warehouse-tracker-7f57e.firebasestorage.app",
-            messagingSenderId: "992250313291",
-            appId: "1:992250313291:web:ee3bceae76d4d53bc26bce"
-        };
+console.log('%c═══════════════════════════════════════════', 'color: #10b981; font-weight: bold;');
+console.log('%c  🚀 SMART BILLING DASHBOARD - READY', 'color: #10b981; font-weight: bold; font-size: 14px;');
+console.log('%c═══════════════════════════════════════════', 'color: #10b981; font-weight: bold;');
+console.log('%c  ✅ Charts with Labels: Active', 'color: #667eea;');
+console.log('%c  ✅ 14 MCD Cards (30 days): Active', 'color: #10b981;');
+console.log('%c  ✅ Heatmap Calendar: Active', 'color: #f59e0b;');
+console.log('%c  ✅ Top Absentees: Active', 'color: #ef4444;');
+console.log('%c  ✅ Smart Cache (0 reads): Active', 'color: #8b5cf6;');
+console.log('%c  ✅ Realtime Sync: Active', 'color: #06b6d4;');
+console.log('%c═══════════════════════════════════════════', 'color: #10b981; font-weight: bold;');
+</script>
 
-        const app = initializeApp(firebaseConfig);
-        const db = getFirestore(app);
-
-        let allData = [];
-        let charts = {};
-
-        // Initialize Dashboard
-        async function initDashboard() {
-            showLoading(true);
-            await loadData();
-            showLoading(false);
-        }
-
-        // Load Data from Firebase
-        window.loadData = async function() {
-            try {
-                const q = query(
-                    collection(db, "billingManpowerReport"),
-                    orderBy("date", "desc"),
-                    limit(100)
-                );
-                
-                const snapshot = await getDocs(q);
-                allData = snapshot.docs.map(doc => ({
-                    id: doc.id,
-                    ...doc.data()
-                }));
-
-                updateKPIs();
-                renderCharts();
-                renderDepartmentGrid();
-                renderTopAbsentees();
-                renderHeatmap();
-                
-                // Animate numbers
-                animateNumbers();
-            } catch (error) {
-                console.error("Error loading data:", error);
-                showToast("Failed to load data", "error");
-            }
-        };
-
-        // Update KPIs
-        function updateKPIs() {
-            const today = new Date().toISOString().slice(0, 10);
-            const todayData = allData.find(d => d.date === today);
-
-            if (todayData) {
-                document.getElementById('kpiTotal').textContent = todayData.totalManpower || 0;
-                document.getElementById('kpiPresent').textContent = todayData.present || 0;
-                document.getElementById('kpiAbsent').textContent = todayData.absent || 0;
-                document.getElementById('kpiLeave').textContent = todayData.leave || 0;
-                document.getElementById('kpiMedical').textContent = todayData.medical || 0;
-                document.getElementById('kpiOffDay').textContent = todayData.offDay || 0;
-            } else {
-                // Use latest data
-                const latest = allData[0] || {};
-                document.getElementById('kpiTotal').textContent = latest.totalManpower || 0;
-                document.getElementById('kpiPresent').textContent = latest.present || 0;
-                document.getElementById('kpiAbsent').textContent = latest.absent || 0;
-                document.getElementById('kpiLeave').textContent = latest.leave || 0;
-                document.getElementById('kpiMedical').textContent = latest.medical || 0;
-                document.getElementById('kpiOffDay').textContent = latest.offDay || 0;
-            }
-        }
-
-        // Render Charts
-        function renderCharts() {
-            const today = new Date().toISOString().slice(0, 10);
-            const todayData = allData.find(d => d.date === today) || allData[0] || {};
-
-            // Attendance Breakdown Chart
-            renderAttendanceChart(todayData);
-            
-            // Department Performance Chart
-            renderDeptChart();
-            
-            // Weekly Trend Chart
-            renderTrendChart();
-            
-            // Attendance Rate Chart
-            renderRateChart();
-        }
-
-        function renderAttendanceChart(data) {
-            const ctx = document.getElementById('attendanceChart').getContext('2d');
-            
-            if (charts.attendance) charts.attendance.destroy();
-
-            charts.attendance = new Chart(ctx, {
-                type: 'doughnut',
-                data: {
-                    labels: ['Present', 'Absent', 'Leave', 'Medical', 'Off Day'],
-                    datasets: [{
-                        data: [
-                            data.present || 0,
-                            data.absent || 0,
-                            data.leave || 0,
-                            data.medical || 0,
-                            data.offDay || 0
-                        ],
-                        backgroundColor: [
-                            '#10b981',
-                            '#ef4444',
-                            '#f59e0b',
-                            '#8b5cf6',
-                            '#3b82f6'
-                        ],
-                        borderWidth: 0
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: {
-                        legend: {
-                            position: 'right',
-                            labels: {
-                                boxWidth: 12,
-                                padding: 8,
-                                font: { size: 10 }
-                            }
-                        }
-                    },
-                    cutout: '65%'
-                }
-            });
-        }
-
-        function renderDeptChart() {
-            const ctx = document.getElementById('deptChart').getContext('2d');
-            
-            // Group by MCD
-            const deptData = {};
-            allData.slice(0, 7).forEach(d => {
-                if (!deptData[d.mcd]) {
-                    deptData[d.mcd] = { present: 0, total: 0, count: 0 };
-                }
-                deptData[d.mcd].present += d.present || 0;
-                deptData[d.mcd].total += d.totalManpower || 0;
-                deptData[d.mcd].count++;
-            });
-
-            const labels = Object.keys(deptData).slice(0, 8);
-            const rates = labels.map(mcd => {
-                const data = deptData[mcd];
-                return ((data.present / data.total) * 100).toFixed(1);
-            });
-
-            if (charts.dept) charts.dept.destroy();
-
-            charts.dept = new Chart(ctx, {
-                type: 'bar',
-                data: {
-                    labels: labels,
-                    datasets: [{
-                        label: 'Attendance %',
-                        data: rates,
-                        backgroundColor: '#667eea',
-                        borderRadius: 6
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: {
-                        legend: { display: false }
-                    },
-                    scales: {
-                        y: {
-                            beginAtZero: true,
-                            max: 100,
-                            ticks: { font: { size: 9 } }
-                        },
-                        x: {
-                            ticks: { 
-                                font: { size: 9 },
-                                maxRotation: 45,
-                                minRotation: 45
-                            }
-                        }
-                    }
-                }
-            });
-        }
-
-        function renderTrendChart() {
-            const ctx = document.getElementById('trendChart').getContext('2d');
-            
-            const last7Days = allData.slice(0, 7).reverse();
-            const labels = last7Days.map(d => {
-                const date = new Date(d.date);
-                return `${date.getDate()}/${date.getMonth()+1}`;
-            });
-            const present = last7Days.map(d => d.present || 0);
-            const absent = last7Days.map(d => d.absent || 0);
-
-            if (charts.trend) charts.trend.destroy();
-
-            charts.trend = new Chart(ctx, {
-                type: 'line',
-                data: {
-                    labels: labels,
-                    datasets: [
-                        {
-                            label: 'Present',
-                            data: present,
-                            borderColor: '#10b981',
-                            backgroundColor: 'rgba(16, 185, 129, 0.1)',
-                            fill: true,
-                            tension: 0.4
-                        },
-                        {
-                            label: 'Absent',
-                            data: absent,
-                            borderColor: '#ef4444',
-                            backgroundColor: 'rgba(239, 68, 68, 0.1)',
-                            fill: true,
-                            tension: 0.4
-                        }
-                    ]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: {
-                        legend: {
-                            position: 'top',
-                            labels: {
-                                boxWidth: 12,
-                                padding: 8,
-                                font: { size: 9 }
-                            }
-                        }
-                    },
-                    scales: {
-                        y: {
-                            beginAtZero: true,
-                            ticks: { font: { size: 9 } }
-                        },
-                        x: {
-                            ticks: { font: { size: 9 } }
-                        }
-                    }
-                }
-            });
-        }
-
-        function renderRateChart() {
-            const ctx = document.getElementById('rateChart').getContext('2d');
-            
-            const today = new Date().toISOString().slice(0, 10);
-            const todayData = allData.find(d => d.date === today) || allData[0] || {};
-            const rate = todayData.totalManpower ? 
-                ((todayData.present / todayData.totalManpower) * 100).toFixed(1) : 0;
-
-            if (charts.rate) charts.rate.destroy();
-
-            charts.rate = new Chart(ctx, {
-                type: 'polarArea',
-                data: {
-                    labels: ['Attendance Rate', 'Target Gap'],
-                    datasets: [{
-                        data: [rate, 100 - rate],
-                        backgroundColor: [
-                            rate >= 90 ? '#10b981' : rate >= 80 ? '#fbbf24' : '#ef4444',
-                            '#e2e8f0'
-                        ],
-                        borderWidth: 0
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: {
-                        legend: { display: false }
-                    },
-                    scales: {
-                        r: {
-                            beginAtZero: true,
-                            max: 100,
-                            ticks: { display: false }
-                        }
-                    }
-                }
-            });
-        }
-
-        // Render Department Grid (14 MCDs)
-        function renderDepartmentGrid() {
-            const mcds = [
-                'GREY FABRIC MCD', 'SHIPMENT MCD', 'BILLING SECTION',
-                'OUTER WEAR MCD', 'YARN MCD', 'PRINTING MCD',
-                'JHUT MCD', 'GENERAL MCD', 'ACCESSORIES MCD',
-                'LEFTOVER MCD', 'FINISH FABRIC MCD', 'YARN DYEING MCD',
-                'CHEMICAL MCD', 'GENERAL TECHNICAL MCD'
-            ];
-
-            const last7Days = allData.slice(0, 7);
-            const grid = document.getElementById('deptGrid');
-            grid.innerHTML = '';
-
-            mcds.forEach(mcd => {
-                const mcdData = last7Days.filter(d => d.mcd === mcd);
-                const totalAbsent = mcdData.reduce((sum, d) => sum + (d.absent || 0), 0);
-                const totalLeave = mcdData.reduce((sum, d) => sum + (d.leave || 0), 0);
-                const totalMedical = mcdData.reduce((sum, d) => sum + (d.medical || 0), 0);
-                const avgAttendance = mcdData.length > 0 ? 
-                    ((mcdData.reduce((sum, d) => sum + (d.present || 0), 0) / 
-                      mcdData.reduce((sum, d) => sum + (d.totalManpower || 0), 0)) * 100).toFixed(1) : 0;
-
-                const card = document.createElement('div');
-                card.className = 'dept-card';
-                card.onclick = () => openDeptDetails(mcd, mcdData);
-                card.innerHTML = `
-                    <div class="dept-name">${mcd}</div>
-                    <div class="dept-stats">
-                        <div class="dept-stat">
-                            <div class="dept-stat-value" style="color: ${avgAttendance >= 90 ? '#10b981' : avgAttendance >= 80 ? '#fbbf24' : '#ef4444'}">${avgAttendance}%</div>
-                            <div class="dept-stat-label">Attendance</div>
-                        </div>
-                        <div class="dept-stat">
-                            <div class="dept-stat-value" style="color: #ef4444">${totalAbsent}</div>
-                            <div class="dept-stat-label">Absent (7d)</div>
-                        </div>
-                    </div>
-                `;
-                grid.appendChild(card);
-            });
-        }
-
-        // Render Top Absentees
-        function renderTopAbsentees() {
-            const absenteeData = {};
-            
-            allData.forEach(report => {
-                if (report.absentDetails && report.absentDetails.length > 0) {
-                    report.absentDetails.forEach(person => {
-                        const key = (person.idCard || person.name || '').toLowerCase();
-                        if (!key) return;
-                        
-                        if (!absenteeData[key]) {
-                            absenteeData[key] = {
-                                name: person.name || 'Unknown',
-                                idCard: person.idCard || 'N/A',
-                                count: 0,
-                                dates: []
-                            };
-                        }
-                        absenteeData[key].count++;
-                        absenteeData[key].dates.push(report.date);
-                    });
-                }
-            });
-
-            const sorted = Object.values(absenteeData)
-                .sort((a, b) => b.count - a.count)
-                .slice(0, 5);
-
-            const container = document.getElementById('absenteesList');
-            container.innerHTML = '';
-
-            if (sorted.length === 0) {
-                container.innerHTML = '<div style="text-align: center; padding: 20px; color: #64748b;">No absence records found</div>';
-                return;
-            }
-
-            sorted.forEach((person, index) => {
-                const item = document.createElement('div');
-                item.className = 'absentee-item';
-                item.onclick = () => showPersonDetails(person);
-                item.innerHTML = `
-                    <div class="absentee-avatar">${index + 1}</div>
-                    <div class="absentee-info">
-                        <div class="absentee-name">${person.name}</div>
-                        <div class="absentee-id">ID: ${person.idCard}</div>
-                    </div>
-                    <div class="absentee-count">${person.count} days</div>
-                `;
-                container.appendChild(item);
-            });
-        }
-
-        // Render Heatmap
-        function renderHeatmap() {
-            const calendar = document.getElementById('heatmapCalendar');
-            const now = new Date();
-            const year = now.getFullYear();
-            const month = now.getMonth();
-            
-            document.getElementById('heatmapMonth').textContent = 
-                now.toLocaleString('default', { month: 'long', year: 'numeric' });
-
-            const firstDay = new Date(year, month, 1);
-            const lastDay = new Date(year, month + 1, 0);
-            const daysInMonth = lastDay.getDate();
-            const startingDay = firstDay.getDay();
-
-            const dayLabels = ['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa'];
-            dayLabels.forEach(day => {
-                const div = document.createElement('div');
-                div.className = 'heatmap-day-header';
-                div.textContent = day;
-                calendar.appendChild(div);
-            });
-
-            for (let i = 0; i < startingDay; i++) {
-                const div = document.createElement('div');
-                calendar.appendChild(div);
-            }
-
-            for (let day = 1; day <= daysInMonth; day++) {
-                const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
-                const dayData = allData.find(d => d.date === dateStr);
-                
-                const div = document.createElement('div');
-                div.className = 'heatmap-day';
-                div.textContent = day;
-                
-                if (dayData) {
-                    const rate = (dayData.present / dayData.totalManpower) * 100;
-                    if (rate >= 90) div.classList.add('excellent');
-                    else if (rate >= 80) div.classList.add('good');
-                    else if (rate >= 70) div.classList.add('average');
-                    else div.classList.add('poor');
-                    
-                    div.title = `${dateStr}: ${rate.toFixed(1)}% attendance`;
-                } else {
-                    div.classList.add('off');
-                    div.title = 'No data';
-                }
-                
-                div.onclick = () => showDayDetails(dateStr);
-                calendar.appendChild(div);
-            }
-        }
-
-        // Open Department Details
-        window.openDeptDetails = function(mcd, data) {
-            const modal = document.getElementById('deptModal');
-            const title = document.getElementById('deptModalTitle');
-            const body = document.getElementById('deptModalBody');
-            
-            title.textContent = `📊 ${mcd} - Last 7 Days`;
-            
-            const totalAbsent = data.reduce((sum, d) => sum + (d.absent || 0), 0);
-            const totalLeave = data.reduce((sum, d) => sum + (d.leave || 0), 0);
-            const totalMedical = data.reduce((sum, d) => sum + (d.medical || 0), 0);
-            const avgAttendance = data.length > 0 ? 
-                ((data.reduce((sum, d) => sum + (d.present || 0), 0) / 
-                  data.reduce((sum, d) => sum + (d.totalManpower || 0), 0)) * 100).toFixed(1) : 0;
-
-            body.innerHTML = `
-                <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; margin-bottom: 20px;">
-                    <div style="background: #f0fdf4; padding: 16px; border-radius: 12px; text-align: center;">
-                        <div style="font-size: 24px; font-weight: 800; color: #10b981;">${avgAttendance}%</div>
-                        <div style="font-size: 12px; color: #64748b;">Avg Attendance</div>
-                    </div>
-                    <div style="background: #fef2f2; padding: 16px; border-radius: 12px; text-align: center;">
-                        <div style="font-size: 24px; font-weight: 800; color: #ef4444;">${totalAbsent}</div>
-                        <div style="font-size: 12px; color: #64748b;">Total Absent</div>
-                    </div>
-                    <div style="background: #fffbeb; padding: 16px; border-radius: 12px; text-align: center;">
-                        <div style="font-size: 24px; font-weight: 800; color: #f59e0b;">${totalLeave}</div>
-                        <div style="font-size: 12px; color: #64748b;">Total Leave</div>
-                    </div>
-                    <div style="background: #f5f3ff; padding: 16px; border-radius: 12px; text-align: center;">
-                        <div style="font-size: 24px; font-weight: 800; color: #8b5cf6;">${totalMedical}</div>
-                        <div style="font-size: 12px; color: #64748b;">Medical Leave</div>
-                    </div>
-                </div>
-                <h3 style="font-size: 14px; font-weight: 700; margin-bottom: 12px;">Daily Breakdown</h3>
-                ${data.map(d => `
-                    <div style="display: flex; justify-content: space-between; padding: 10px; background: #f8fafc; border-radius: 8px; margin-bottom: 8px;">
-                        <span style="font-weight: 600;">${d.date}</span>
-                        <span style="color: #10b981;">Present: ${d.present}</span>
-                        <span style="color: #ef4444;">Absent: ${d.absent}</span>
-                    </div>
-                `).join('')}
-            `;
-            
-            modal.style.display = 'block';
-        };
-
-        window.closeDeptModal = function() {
-            document.getElementById('deptModal').style.display = 'none';
-        };
-
-        // Show Person Details
-        function showPersonDetails(person) {
-            alert(`${person.name}\nID: ${person.idCard}\nTotal Absent Days: ${person.count}\nDates: ${person.dates.join(', ')}`);
-        }
-
-        // Show Day Details
-        function showDayDetails(dateStr) {
-            const dayData = allData.find(d => d.date === dateStr);
-            if (dayData) {
-                alert(`Date: ${dateStr}\nPresent: ${dayData.present}\nAbsent: ${dayData.absent}\nLeave: ${dayData.leave}\nMedical: ${dayData.medical}`);
-            }
-        }
-
-        // Modal Functions
-        window.openHeatmap = function() {
-            document.getElementById('heatmapModal').style.display = 'block';
-        };
-
-        window.closeHeatmap = function() {
-            document.getElementById('heatmapModal').style.display = 'none';
-        };
-
-        window.openReportModal = function() {
-            window.location.href = 'billing-manpower.html';
-        };
-
-        // Export PDF
-        window.exportPDF = async function() {
-            const { jsPDF } = window.jspdf;
-            const pdf = new jsPDF('l', 'mm', 'a4');
-            
-            pdf.setFontSize(18);
-            pdf.text('GMS TEXTILES LTD - Smart Dashboard', 14, 15);
-            pdf.setFontSize(10);
-            pdf.text(`Generated: ${new Date().toLocaleString()}`, 14, 22);
-            
-            pdf.save('gms-dashboard.pdf');
-            showToast('PDF Exported Successfully!', 'success');
-        };
-
-        // Loading
-        function showLoading(show) {
-            document.getElementById('loading').classList.toggle('active', show);
-        }
-
-        // Toast
-        function showToast(message, type = 'info') {
-            const toast = document.createElement('div');
-            toast.style.cssText = `
-                position: fixed;
-                top: 20px;
-                right: 20px;
-                background: ${type === 'success' ? '#10b981' : type === 'error' ? '#ef4444' : '#667eea'};
-                color: white;
-                padding: 12px 20px;
-                border-radius: 10px;
-                font-weight: 700;
-                box-shadow: 0 4px 12px rgba(0,0,0,0.2);
-                z-index: 3000;
-                animation: slideIn 0.3s ease;
-            `;
-            toast.textContent = message;
-            document.body.appendChild(toast);
-            setTimeout(() => toast.remove(), 3000);
-        }
-
-        // Animate Numbers
-        function animateNumbers() {
-            document.querySelectorAll('.kpi-value').forEach(el => {
-                el.style.animation = 'none';
-                setTimeout(() => {
-                    el.style.animation = 'pulse 0.5s ease';
-                }, 10);
-            });
-        }
-
-        // Initialize
-        initDashboard();
-
-        // Auto refresh every 30 seconds
-        setInterval(() => {
-            if (!document.hidden) {
-                loadData();
-            }
-        }, 30000);
-    </script>
 </body>
 </html>
