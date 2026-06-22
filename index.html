@@ -934,6 +934,18 @@ color:var(--text);
 <button onclick="openPage('entry',this)">➕ New Entry</button>
 <button onclick="openPage('reports',this)">📑 Reports</button>
 <button id="needleNav" onclick="openPage('needle',this)"> Needle</button>
+
+<!-- 🔽 Needle Composite Section (1-Time Setup) -->
+<div id="needleCompositeSection" style="margin-top:10px; border-top:1px solid rgba(59,130,246,0.15); padding-top:8px; display:none;">
+  <div style="padding:4px 12px 8px; font-size:10px; font-weight:700; color:#cbd5e1; text-transform:uppercase; letter-spacing:1px;">🪡 NEEDLE COMPOSITE</div>
+  <button onclick="location.href='needle-composite.html'">📝 Daily Needle Entry</button>
+  <button onclick="location.href='needle-dashboard-com.html'">📊 Dashboard</button>
+  <button onclick="location.href='ageing-com.html'">📅 Ageing Report</button>
+  <button onclick="location.href='needle-monthly-com.html'">📆 Monthly Report</button>
+  <button onclick="location.href='all-needle-summary-com.html'">📋 All Needle Summary</button>
+  <button onclick="location.href='month_wise_needle_stock_summary-com.html'">📈 Month Wise Stock</button>
+</div>
+
 <button id="adminNav" onclick="location.href='admin.html'"> Admin</button>
 <button id="manpowerNav" onclick="location.href='manpower.html'">👨‍ Manpower</button>
 <button id="roiNav" onclick="location.href='ROI-Report.html'" style="display:none">📊 ROI Report</button>
@@ -947,7 +959,7 @@ color:var(--text);
 <button onclick="location.href='change-password.html'">🔐 Password</button>
 </div>
 <div class="sidebarFooter">
-<button class="themeBtn" onclick="toggleTheme()">🌙 / ☀️ Theme</button>
+<button class="themeBtn" onclick="toggleTheme()">🌙 / ️ Theme</button>
 <button class="logoutBtn" onclick="logout()">🚪 Logout</button>
 </div>
 </div>
@@ -2348,6 +2360,10 @@ if(gmcBox) gmcBox.style.display='none';
 var list=allowedMCDList();
 document.getElementById('entryMcd').innerHTML=list.map(function(x){return '<option>'+x+'</option>';}).join('');
 document.getElementById('reportMcd').innerHTML=list.map(function(x){return '<option>'+x+'</option>';}).join('');
+
+// 🔽 Needle Composite Section Visibility Control
+var ncSec = document.getElementById('needleCompositeSection');
+if(ncSec) ncSec.style.display = (window.userRole==='admin' || window.userRole==='full' || needleAccess===true) ? 'block' : 'none';
 }
 async function cachedGetDocs(collectionName, cacheKey, shouldUpdate){
 if(shouldUpdate === false){
@@ -3048,7 +3064,12 @@ var now=new Date();
 var currentMonth=now.getFullYear()+'-'+String(now.getMonth()+1).padStart(2,'0');
 var prev=new Date(now.getFullYear(),now.getMonth()-1,1);
 var previousMonth=prev.getFullYear()+'-'+String(prev.getMonth()+1).padStart(2,'0');
-var ok=confirm('Clear Old Data?\nKEEP:\n'+currentMonth+'\n'+previousMonth+'\nDELETE: Older months\nBackup: '+backupStatus); if(!ok) return;
+var ok=confirm('Clear Old Data?
+KEEP:
+'+currentMonth+'
+'+previousMonth+'
+DELETE: Older months
+Backup: '+backupStatus); if(!ok) return;
 var cols=['greyFabricStock','accessoriesInventory','billingManpowerReport','dailyPosting','sewingThread','twillTape','accessoriesSample','liveNotices','needleDailyReport','gatePlans','challanGatePass','generalMcdDaily'];
 var deleted=0,kept=0,skipped=0;
 try{
@@ -3066,7 +3087,10 @@ localStorage.setItem('lastClearDate',new Date().toISOString());
 window.GMS_CACHE.clear();
 localStorage.removeItem(LOCAL_TIMESTAMPS_KEY);
 addBackupLog('CLEAR','Deleted: '+deleted+', Kept: '+kept+', Skipped: '+skipped);
-alert('Clear Complete\nDeleted: '+deleted+'\nKept: '+kept+'\nSkipped: '+skipped);
+alert('Clear Complete
+Deleted: '+deleted+'
+Kept: '+kept+'
+Skipped: '+skipped);
 window.loadDashboardStock(true);
 }catch(e){console.log(e);alert('Clear Failed: '+e.message);}
 };
