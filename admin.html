@@ -226,6 +226,12 @@ body.light .checkItem:hover{background:var(--card2)!important;}
         <option value="yes">Needle Access: Yes</option>
       </select>
 
+      <!-- 🔥 NEW: Needle Composite Access -->
+      <select id="needleCompositeAccess">
+        <option value="no">🪡 Needle Composite: No</option>
+        <option value="yes">🪡 Needle Composite: Yes</option>
+      </select>
+
       <select id="manpowerAccess" onchange="toggleManpowerSections()">
         <option value="none">Manpower: None</option>
         <option value="all">Manpower: All MCD</option>
@@ -251,7 +257,7 @@ body.light .checkItem:hover{background:var(--card2)!important;}
 
     <!-- 🔥 Section 2: Manpower MCD Access (Hidden by default) -->
     <div id="manpowerSection" style="display:none; margin-top:16px;">
-      <h3>👨‍💼 Manpower MCD Access (Manpower Module)</h3>
+      <h3>👨‍ Manpower MCD Access (Manpower Module)</h3>
       <div class="smallNote">✅ এখানে টিক করা MCD শুধু Manpower পেজে কাজ করবে। Normal MCD থেকে আলাদা।</div>
       <div id="manpowerMcdChecks" class="mcdBox"></div>
     </div>
@@ -277,7 +283,8 @@ body.light .checkItem:hover{background:var(--card2)!important;}
           <th>Email</th>
           <th>Role</th>
           <th>MCD Access</th>
-          <th>🪡</th>
+          <th>🪡 Needle</th>
+          <th>🪡 Composite</th>
           <th>👨‍ Manpower</th>
           <th>Action</th>
         </tr>
@@ -494,6 +501,7 @@ window.clearForm=function(){
   document.getElementById("password").placeholder = "Password"; // Reset placeholder
   document.getElementById("role").value="user";
   document.getElementById("needleAccess").value="no";
+  document.getElementById("needleCompositeAccess").value="no"; // Reset Needle Composite
   document.getElementById("manpowerAccess").value="none";
   document.getElementById("cmpTextile").checked = false;
   document.getElementById("cmpComposite").checked = false;
@@ -517,6 +525,7 @@ window.saveUser=async function(){
   let normalMCD = getNormalMCD();
   let mpMCD = getManpowerMCD();
   let needleAccess=document.getElementById("needleAccess").value==="yes";
+  let needleCompositeAccess=document.getElementById("needleCompositeAccess").value==="yes"; // NEW
   let manpowerAccess=document.getElementById("manpowerAccess").value;
 
   if(!name || !email){ alert("Name এবং Email লাগবে"); return; }
@@ -531,6 +540,7 @@ window.saveUser=async function(){
     userCompanies: cmps,
     mcdAccess: normalMCD,
     needleAccess: needleAccess,
+    needleCompositeAccess: needleCompositeAccess, // NEW FIELD
     manpowerAccess: manpowerAccessBoolean,
     manpowerAccessLevel: manpowerAccess,
     manpowerMcdAccess: mpMCD,
@@ -592,6 +602,7 @@ window.editUser=function(id){
   
   document.getElementById("role").value=u.role || "user";
   document.getElementById("needleAccess").value=u.needleAccess ? "yes" : "no";
+  document.getElementById("needleCompositeAccess").value=u.needleCompositeAccess ? "yes" : "no"; // NEW
   
   const companies = u.userCompanies || [];
   document.getElementById("cmpTextile").checked = companies.includes("GMS TEXTILES LTD");
@@ -659,6 +670,11 @@ async function loadUsers(){
         </span>`
       ).join('');
 
+      // Needle Composite Badge
+      let needleCompBadge = u.needleCompositeAccess 
+        ? '<span style="color:var(--purple);font-weight:900">✅ Yes</span>' 
+        : '<span style="color:var(--muted)">❌ No</span>';
+
       html+=`
         <tr>
           <td><b>${u.name || ""}</b></td>
@@ -667,6 +683,7 @@ async function loadUsers(){
           <td class="${roleClass}">${u.role || ""}</td>
           <td style="text-align:left">${mcdText}</td>
           <td>${u.needleAccess ? "✅ Yes" : "❌ No"}</td>
+          <td>${needleCompBadge}</td>
           <td>${manpowerText(u)}</td>
           <td>
             <button class="btn orange" onclick="editUser('${d.id}')" style="padding:4px 8px;font-size:11px">✏️</button>
@@ -676,7 +693,7 @@ async function loadUsers(){
       `;
     });
 
-    document.getElementById("userTable").innerHTML=html || '<tr><td colspan="8" style="padding:20px;color:var(--muted)">📭 No users found</td></tr>';
+    document.getElementById("userTable").innerHTML=html || '<tr><td colspan="9" style="padding:20px;color:var(--muted)">📭 No users found</td></tr>';
     document.getElementById("totalUsers").innerText=total;
     document.getElementById("totalAdmin").innerText=admin;
     document.getElementById("totalTextile").innerText=tx;
@@ -685,7 +702,7 @@ async function loadUsers(){
   } catch(err) {
     console.error("Load error:", err);
     document.getElementById("userTable").innerHTML = 
-      `<tr><td colspan="8" style="padding:20px;color:var(--red)">❌ Error loading users</td></tr>`;
+      `<tr><td colspan="9" style="padding:20px;color:var(--red)">❌ Error loading users</td></tr>`;
   }
 }
 
