@@ -1,1 +1,757 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>GMS Composite - Needle Floor Wise Dashboard</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<style>
+:root{
+  --bg:#07111f;
+  --card:#101b2d;
+  --card2:#14233a;
+  --text:#ffffff;
+  --muted:#9fb0c7;
+  --border:#263855;
+  --blue:#2563eb;
+  --green:#22c55e;
+  --red:#ef4444;
+  --yellow:#f59e0b;
+  --chartText:#eef6ff;
+  --chartGrid:rgba(148,163,184,.22);
+  --shadow:0 14px 34px rgba(0,0,0,.28);
+}
+body.light{
+  --bg:#eef3f9;
+  --card:#ffffff;
+  --card2:#f8fafc;
+  --text:#0f172a;
+  --muted:#64748b;
+  --border:#cbd5e1;
+  --chartText:#0f172a;
+  --chartGrid:rgba(15,23,42,.13);
+  --shadow:0 12px 26px rgba(15,23,42,.14);
+}
+*{box-sizing:border-box}
+body{
+  margin:0;
+  background:radial-gradient(circle at top left,rgba(37,99,235,.13),transparent 35%),var(--bg);
+  color:var(--text);
+  font-family:Segoe UI,Inter,Arial,sans-serif;
+  padding:16px;
+  font-weight:650;
+  letter-spacing:.1px;
+}
+.header{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  background:linear-gradient(135deg,var(--card),var(--card2));
+  border:1px solid var(--border);
+  padding:14px 18px;
+  border-radius:20px;
+  margin-bottom:12px;
+  box-shadow:var(--shadow);
+}
+.header h2{margin:0;font-size:21px;font-weight:1000;letter-spacing:.3px}
+.sub{color:var(--muted);font-size:12px;font-weight:900;margin-top:4px}
+button{
+  padding:9px 14px;border:0;border-radius:12px;
+  background:linear-gradient(135deg,#2563eb,#7c3aed);
+  color:white;font-weight:1000;cursor:pointer;margin:3px;
+  box-shadow:0 8px 18px rgba(37,99,235,.25);font-size:12px;
+}
+button:hover{transform:translateY(-1px)}
+.themeBtn{background:linear-gradient(135deg,#f59e0b,#2563eb)}
+.controls{text-align:center;margin:12px 0;font-weight:900;color:var(--text)}
+input[type="month"]{
+  padding:9px 12px;border-radius:10px;border:1px solid var(--border);
+  background:var(--card);color:var(--text);font-weight:900;font-size:13px;
+}
+.kpi{display:grid;grid-template-columns:repeat(5,1fr);gap:12px;margin:14px 0}
+.kpiCard{
+  background:linear-gradient(135deg,var(--card),var(--card2));
+  border:1px solid var(--border);border-radius:20px;padding:15px;
+  box-shadow:var(--shadow);position:relative;overflow:hidden;
+}
+.kpiCard:before{
+  content:"";position:absolute;inset:0;
+  background:linear-gradient(135deg,rgba(56,189,248,.08),rgba(168,85,247,.08));
+  pointer-events:none;
+}
+.label{color:var(--muted);font-size:11px;font-weight:1000;text-transform:uppercase;letter-spacing:.35px;position:relative}
+.value{font-size:26px;font-weight:1000;color:var(--green);margin-top:6px;text-shadow:0 2px 8px rgba(34,197,94,.22);position:relative}
+.alertBox{
+  background:rgba(239,68,68,.13);border:1px solid var(--red);color:#fecaca;
+  padding:11px 13px;border-radius:14px;margin:4px 0;font-size:13px;font-weight:1000;
+  box-shadow:0 8px 18px rgba(239,68,68,.12);
+}
+body.light .alertBox{color:#991b1b}
+.alertOk{
+  background:rgba(34,197,94,.12);border:1px solid #22c55e;color:#bbf7d0;
+  padding:11px 13px;border-radius:14px;margin:8px 0;font-size:13px;font-weight:1000;
+}
+body.light .alertOk{color:#166534}
 
+/* ---- Building Group Tabs ---- */
+.buildingTabs{
+  display:flex;flex-wrap:wrap;gap:8px;margin:14px 0 10px;
+}
+.bTab{
+  padding:7px 14px;border-radius:10px;font-size:12px;font-weight:900;cursor:pointer;
+  background:var(--card);border:1px solid var(--border);color:var(--muted);
+  transition:all .2s;
+}
+.bTab.active,.bTab:hover{
+  background:linear-gradient(135deg,#2563eb,#7c3aed);color:white;border-color:transparent;
+}
+
+/* ---- Charts ---- */
+.chartGrid{display:grid;grid-template-columns:1.5fr 1fr;gap:14px;margin-bottom:14px}
+.chartCard{
+  background:linear-gradient(135deg,var(--card),var(--card2));
+  border:1px solid var(--border);border-radius:22px;padding:14px;
+  box-shadow:var(--shadow);height:320px;position:relative;overflow:hidden;
+}
+.chartCard:before{
+  content:"";position:absolute;inset:0;
+  background:linear-gradient(135deg,rgba(37,99,235,.07),rgba(124,58,237,.06));
+  pointer-events:none;
+}
+.chartCard h3{margin:0 0 8px 0;font-size:15px;font-weight:1000;color:var(--text);position:relative;z-index:1}
+.chartCard canvas{max-height:268px!important;position:relative;z-index:1}
+
+/* ---- Second chart row ---- */
+.chartGrid2{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px}
+
+/* ---- Floor Cards ---- */
+.sectionTitle{
+  font-size:14px;font-weight:1000;color:var(--muted);text-transform:uppercase;
+  letter-spacing:.5px;margin:16px 0 8px;padding-left:4px;
+}
+.floorGrid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:14px}
+.floorBox{
+  background:linear-gradient(135deg,var(--card),var(--card2));
+  border:1px solid var(--border);border-radius:18px;padding:13px;
+  box-shadow:var(--shadow);position:relative;overflow:hidden;
+}
+.floorBox:before{
+  content:"";position:absolute;inset:0;
+  background:linear-gradient(135deg,rgba(34,197,94,.06),rgba(56,189,248,.06));
+  pointer-events:none;
+}
+.floorBox h3{margin:0 0 9px 0;font-size:13px;font-weight:1000;position:relative;line-height:1.3}
+.row{
+  display:flex;justify-content:space-between;border-bottom:1px solid var(--border);
+  padding:6px 0;font-size:11px;font-weight:900;position:relative;
+}
+.row span:last-child{font-weight:1000}
+.ok{color:var(--green)}.low{color:var(--red)}
+.stockMini{height:7px;background:rgba(148,163,184,.20);border-radius:30px;overflow:hidden;margin-top:10px}
+.stockMiniFill{height:100%;border-radius:30px;background:linear-gradient(90deg,#22c55e,#38bdf8,#8b5cf6)}
+.statusBadge{
+  display:inline-block;padding:2px 8px;border-radius:20px;font-size:10px;font-weight:1000;margin-top:8px;
+}
+.statusOk{background:rgba(34,197,94,.18);color:#22c55e}
+.statusLow{background:rgba(239,68,68,.18);color:#ef4444}
+
+/* Loading */
+.loadingWrap{text-align:center;padding:40px;color:var(--muted);font-size:15px;font-weight:900}
+.spinner{
+  display:inline-block;width:36px;height:36px;border:4px solid var(--border);
+  border-top-color:#3b82f6;border-radius:50%;animation:spin 1s linear infinite;margin-bottom:12px;
+}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+@page{size:A4 landscape;margin:8mm}
+@media print{
+  button,.controls,.right,.buildingTabs{display:none!important}
+  body{background:white;color:black}
+  .header,.kpiCard,.chartCard,.floorBox{background:white;color:black;box-shadow:none}
+}
+@media(max-width:1100px){
+  .kpi{grid-template-columns:repeat(3,1fr)}
+  .floorGrid{grid-template-columns:repeat(3,1fr)}
+}
+@media(max-width:900px){
+  body{padding:10px}
+  .header{display:block;text-align:center}
+  .right{margin-top:10px}
+  .kpi{grid-template-columns:repeat(2,1fr)}
+  .chartGrid,.chartGrid2{grid-template-columns:1fr}
+  .chartCard{height:260px}
+  .floorGrid{grid-template-columns:repeat(2,1fr)}
+}
+@media(max-width:480px){
+  .kpi{grid-template-columns:1fr 1fr}
+  .floorGrid{grid-template-columns:1fr 1fr}
+  .header h2{font-size:15px}
+}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div>
+    <h2>🪡 GMS Composite — Needle Floor Wise Dashboard</h2>
+    <div class="sub" id="subInfo">Supabase Live • 28 Floors • Low Stock ≤ 350 pcs</div>
+  </div>
+  <div class="right">
+    <button onclick="loadDashboard()">🔄 Refresh</button>
+    <button onclick="window.print()">🖨 PDF</button>
+    <button onclick="exportExcel()">📊 Excel</button>
+    <button class="themeBtn" onclick="toggleTheme()">🌙/☀️</button>
+    <button onclick="location.href='index.html'">🏠 Home</button>
+  </div>
+</div>
+
+<div class="controls">
+  Month:
+  <input type="month" id="monthInput" onchange="loadDashboard()">
+</div>
+
+<div id="alertArea"></div>
+
+<div class="kpi">
+  <div class="kpiCard">
+    <div class="label">🪡 Total Present Stock</div>
+    <div class="value" id="kpiStock">—</div>
+  </div>
+  <div class="kpiCard">
+    <div class="label">📥 Monthly Receive</div>
+    <div class="value" id="kpiReceive">—</div>
+  </div>
+  <div class="kpiCard">
+    <div class="label">📤 Monthly Delivery</div>
+    <div class="value" id="kpiDelivery">—</div>
+  </div>
+  <div class="kpiCard">
+    <div class="label">⚠️ Low Stock Floors</div>
+    <div class="value" style="color:var(--red)" id="kpiLow">—</div>
+  </div>
+  <div class="kpiCard">
+    <div class="label">🏢 Total Floors</div>
+    <div class="value" id="kpiFloors">28</div>
+  </div>
+</div>
+
+<div class="chartGrid">
+  <div class="chartCard">
+    <h3>📈 Floor Wise Present Stock (Top 14 — NEW)</h3>
+    <canvas id="chartNewFloors"></canvas>
+  </div>
+  <div class="chartCard">
+    <h3>📊 Monthly Receive vs Delivery</h3>
+    <canvas id="chartMonthly"></canvas>
+  </div>
+</div>
+
+<div class="chartGrid2">
+  <div class="chartCard">
+    <h3>📉 Floor Wise Present Stock (RUNNING Floors)</h3>
+    <canvas id="chartRunFloors"></canvas>
+  </div>
+  <div class="chartCard">
+    <h3>🏢 Building Wise Stock Distribution</h3>
+    <canvas id="chartBuilding"></canvas>
+  </div>
+</div>
+
+<!-- Building filter tabs -->
+<div class="buildingTabs" id="buildingTabs"></div>
+
+<div id="floorArea">
+  <div class="loadingWrap">
+    <div class="spinner"></div><br>Loading dashboard...
+  </div>
+</div>
+
+<script type="module">
+import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm";
+
+// ── Supabase Config ──────────────────────────────────────
+const SUPABASE_URL = 'https://hmatleeearcaltguosiz.supabase.co';
+const SUPABASE_KEY = 'sb_publishable_VA7UkQqRwCxdeVwHuxzsjw_dQxOPiIj';
+const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
+const COMPANY_CODE = 'composite';
+const LOW_LIMIT = 350;
+
+// ── 28 Floors grouped by Building ───────────────────────
+const BUILDINGS = {
+  "BUILDING 02": [
+    "A-FLOOR(BUILDING NO-02)_NEW",
+    "A-FLOOR(BUILDING NO-02)_RUNNING",
+    "B-FLOOR(BUILDING NO-02)_NEW",
+    "B-FLOOR(BUILDING NO-02)_RUNNING"
+  ],
+  "BUILDING 04": [
+    "C-FLOOR ( BUILDING NO-04)_NEW",
+    "C-FLOOR ( BUILDING NO-04)_RUNNING",
+    "D-FLOOR ( BUILDING NO -04)_NEW",
+    "D-FLOOR ( BUILDING NO -04)_RUNNING"
+  ],
+  "BUILDING 03": [
+    "E-FLOOR ( BUILDING NO-03)_NEW",
+    "E-FLOOR ( BUILDING NO-03)_RUNNING"
+  ],
+  "BUILDING 01": [
+    "EMB-(BUILDING NO-01)_NEW",
+    "EMB-(BUILDING NO-01)_RUNNING",
+    "TRAINING CENTRE-(BUILDING NO-01)_NEW",
+    "TRAINING CENTRE-(BUILDING NO-01)_RUNNING"
+  ],
+  "BUILDING 6A": [
+    "F-FLOOR (BUILDING NO-6A)_NEW",
+    "F-FLOOR (BUILDING NO-6A)_RUNNING",
+    "G-FLOOR ( BUILDING NO-6A)_NEW",
+    "G-FLOOR ( BUILDING NO-6A)_RUNNING"
+  ],
+  "BUILDING 6B": [
+    "H-FLOOR (BUILDING NO-6B)_NEW",
+    "H-FLOOR (BUILDING NO-6B)_RUNNING",
+    "I-FLOOR (BUILDING NO-06 B)_NEW",
+    "I-FLOOR (BUILDING NO-06 B)_RUNNING"
+  ],
+  "BUILDING 09": [
+    "J-FLOOR(BUILDING NO-09)_NEW",
+    "J-FLOOR(BUILDING NO-09)_RUNNING",
+    "K-FLOOR(BUILDING NO-09)_NEW",
+    "K-FLOOR(BUILDING NO-09)_RUNNING"
+  ],
+  "BUILDING 03 (SAMPLE)": [
+    "SAMPLE-(BUILDING NO-03)_NEW",
+    "SAMPLE-(BUILDING NO-03)_RUNNING"
+  ]
+};
+
+const ALL_FLOORS = Object.values(BUILDINGS).flat();
+
+// Short display names for charts
+function shortName(floor){
+  return floor
+    .replace(/\(BUILDING NO[-\s]?\d+[AB]?\)/gi,'')
+    .replace(/BUILDING NO[-\s]?\d+[AB]?/gi,'')
+    .replace(/_NEW$/,'▸N')
+    .replace(/_RUNNING$/,'▸R')
+    .replace(/\s+/g,' ')
+    .trim();
+}
+
+// ── Chart palette ────────────────────────────────────────
+const PALETTE = [
+  "#38bdf8","#22c55e","#f59e0b","#a855f7","#ef4444","#14b8a6",
+  "#eab308","#6366f1","#ec4899","#84cc16","#06b6d4","#f97316",
+  "#8b5cf6","#10b981","#fb923c","#e879f9","#34d399","#fbbf24",
+  "#60a5fa","#4ade80","#f87171","#c084fc","#2dd4bf","#facc15",
+  "#818cf8","#a3e635","#fb7185","#38bdf8"
+];
+
+function fmt(n){ return Number(n||0).toLocaleString('en-US'); }
+function cText(){ return getComputedStyle(document.body).getPropertyValue('--chartText').trim()||'#fff'; }
+function cGrid(){ return getComputedStyle(document.body).getPropertyValue('--chartGrid').trim()||'rgba(148,163,184,.22)'; }
+
+// Chart instances
+let charts = {};
+
+function destroyChart(id){
+  if(charts[id]){ charts[id].destroy(); delete charts[id]; }
+}
+
+// Value labels plugin
+const valueLabelPlugin = {
+  id:'valueLabelPlugin',
+  afterDatasetsDraw(chart){
+    const {ctx} = chart;
+    ctx.save();
+    ctx.textAlign='center';
+    ctx.fillStyle = cText();
+    ctx.font = '800 10px Segoe UI';
+    chart.data.datasets.forEach((ds,di)=>{
+      const meta = chart.getDatasetMeta(di);
+      meta.data.forEach((bar,i)=>{
+        const v = ds.data[i];
+        if(v == null) return;
+        if(bar.x && bar.y) ctx.fillText(fmt(v), bar.x, bar.y - 6);
+      });
+    });
+    ctx.restore();
+  }
+};
+
+// Doughnut center plugin
+const doughnutCenter = {
+  id:'doughnutCenter',
+  afterDraw(chart){
+    if(chart.config.type !== 'doughnut') return;
+    const {ctx, chartArea:{left,right,top,bottom}} = chart;
+    const total = (chart.data.datasets[0].data||[]).reduce((a,b)=>a+Number(b||0),0);
+    ctx.save();
+    ctx.fillStyle = cText();
+    ctx.textAlign = 'center';
+    ctx.font = '900 17px Segoe UI';
+    ctx.fillText(fmt(total),(left+right)/2,(top+bottom)/2);
+    ctx.font = '800 9px Segoe UI';
+    ctx.fillStyle = '#94a3b8';
+    ctx.fillText('TOTAL',(left+right)/2,(top+bottom)/2+14);
+    ctx.restore();
+  }
+};
+
+function barOpts(title=''){
+  return {
+    responsive:true, maintainAspectRatio:false,
+    plugins:{
+      legend:{display:false},
+      title:{display:!!title,text:title,color:cText(),font:{size:12,weight:'bold'}},
+      tooltip:{backgroundColor:'rgba(15,23,42,.93)',titleColor:'#fff',bodyColor:'#fff',borderColor:'rgba(255,255,255,.15)',borderWidth:1}
+    },
+    scales:{
+      y:{beginAtZero:true,grid:{color:cGrid()},ticks:{color:cText(),font:{size:10,weight:'bold'}}},
+      x:{grid:{display:false},ticks:{color:cText(),font:{size:9,weight:'bold'},maxRotation:35}}
+    }
+  };
+}
+
+// ── State ────────────────────────────────────────────────
+let activeBuildingFilter = 'ALL';
+let dashData = {}; // { floor: { stock, receive, delivery, lastDate } }
+
+// ── Supabase helpers ─────────────────────────────────────
+async function getCompanyId(){
+  const {data} = await supabase.from('companies').select('id').eq('code',COMPANY_CODE).single();
+  return data?.id || null;
+}
+
+async function loadDashboard(){
+  showLoading();
+
+  const month = getMonth();
+  document.getElementById('subInfo').textContent =
+    `Supabase Live • 28 Floors • Low Stock ≤ ${LOW_LIMIT} pcs • Month: ${month}`;
+
+  const companyId = await getCompanyId();
+  if(!companyId){
+    document.getElementById('floorArea').innerHTML =
+      '<div class="loadingWrap" style="color:#ef4444">❌ Company config error. Check Supabase.</div>';
+    return;
+  }
+
+  // Fetch all reports for this company
+  const {data:allReports, error} = await supabase
+    .from('needle_reports')
+    .select('floor, report_date, rows, summary')
+    .eq('company_id', companyId)
+    .order('report_date', {ascending:false});
+
+  if(error){
+    document.getElementById('floorArea').innerHTML =
+      `<div class="loadingWrap" style="color:#ef4444">❌ Load error: ${error.message}</div>`;
+    return;
+  }
+
+  // Process data
+  const latestByFloor = {};
+  const receiveMap = {};
+  const deliveryMap = {};
+  ALL_FLOORS.forEach(f=>{ receiveMap[f]=0; deliveryMap[f]=0; });
+
+  (allReports||[]).forEach(rec=>{
+    const f = rec.floor;
+    if(!ALL_FLOORS.includes(f)) return;
+
+    // Latest record per floor (for present stock)
+    if(!latestByFloor[f]) latestByFloor[f] = rec;
+
+    // Monthly totals
+    if(rec.report_date && rec.report_date.slice(0,7) === month && Array.isArray(rec.rows)){
+      rec.rows.forEach(r=>{
+        receiveMap[f]  += Number(r.receive)  || 0;
+        deliveryMap[f] += Number(r.delivery) || 0;
+      });
+    }
+  });
+
+  // Build dashData
+  dashData = {};
+  ALL_FLOORS.forEach(f=>{
+    let stock = 0;
+    let lastDate = '—';
+    const rec = latestByFloor[f];
+    if(rec && Array.isArray(rec.rows)){
+      rec.rows.forEach(r=> stock += Number(r.present)||0);
+      lastDate = rec.report_date || '—';
+    }
+    dashData[f] = { stock, receive: receiveMap[f], delivery: deliveryMap[f], lastDate };
+  });
+
+  renderKPIs();
+  renderAlerts();
+  renderCharts();
+  renderBuildingTabs();
+  renderFloors();
+}
+
+function getMonth(){
+  const el = document.getElementById('monthInput');
+  if(!el.value){
+    const d = new Date();
+    el.value = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`;
+  }
+  return el.value;
+}
+
+function showLoading(){
+  document.getElementById('floorArea').innerHTML =
+    '<div class="loadingWrap"><div class="spinner"></div><br>Loading data from Supabase...</div>';
+}
+
+// ── KPI Cards ────────────────────────────────────────────
+function renderKPIs(){
+  let totalStock=0, totalRcv=0, totalDel=0, lowCount=0;
+  ALL_FLOORS.forEach(f=>{
+    totalStock += dashData[f].stock;
+    totalRcv   += dashData[f].receive;
+    totalDel   += dashData[f].delivery;
+    if(dashData[f].stock <= LOW_LIMIT) lowCount++;
+  });
+  document.getElementById('kpiStock').textContent   = fmt(totalStock);
+  document.getElementById('kpiReceive').textContent = fmt(totalRcv);
+  document.getElementById('kpiDelivery').textContent= fmt(totalDel);
+  document.getElementById('kpiLow').textContent     = lowCount;
+  document.getElementById('kpiFloors').textContent  = '28';
+}
+
+// ── Alert Box ────────────────────────────────────────────
+function renderAlerts(){
+  const lowFloors = ALL_FLOORS.filter(f=> dashData[f].stock <= LOW_LIMIT);
+  const box = document.getElementById('alertArea');
+  if(!lowFloors.length){
+    box.innerHTML = '<div class="alertOk">✅ সব floor এর stock ঠিক আছে (≥ 350 pcs)</div>';
+    return;
+  }
+  box.innerHTML = lowFloors.map(f=>`
+    <div class="alertBox">
+      ⚠️ <b>${f}</b> — Present: <b>${fmt(dashData[f].stock)}</b> pcs (Limit: ${LOW_LIMIT})
+    </div>
+  `).join('');
+}
+
+// ── Charts ───────────────────────────────────────────────
+function renderCharts(){
+  // NEW floors
+  const newFloors = ALL_FLOORS.filter(f=>f.endsWith('_NEW'));
+  const runFloors = ALL_FLOORS.filter(f=>f.endsWith('_RUNNING'));
+
+  // Chart 1: NEW floors bar
+  destroyChart('newFloors');
+  charts['newFloors'] = new Chart(document.getElementById('chartNewFloors'),{
+    type:'bar',
+    data:{
+      labels: newFloors.map(f=>shortName(f)),
+      datasets:[{
+        label:'Present Stock',
+        data: newFloors.map(f=>dashData[f].stock),
+        backgroundColor: PALETTE.slice(0,newFloors.length),
+        borderColor: PALETTE.slice(0,newFloors.length),
+        borderWidth:1, borderRadius:8
+      }]
+    },
+    options: barOpts(),
+    plugins:[valueLabelPlugin]
+  });
+
+  // Chart 2: Monthly Receive vs Delivery doughnut
+  const totalRcv = ALL_FLOORS.reduce((a,f)=>a+dashData[f].receive,0);
+  const totalDel = ALL_FLOORS.reduce((a,f)=>a+dashData[f].delivery,0);
+  destroyChart('monthly');
+  charts['monthly'] = new Chart(document.getElementById('chartMonthly'),{
+    type:'doughnut',
+    data:{
+      labels:['Receive','Delivery'],
+      datasets:[{
+        data:[totalRcv, totalDel],
+        backgroundColor:['#22c55e','#ef4444'],
+        borderColor:['#22c55e','#ef4444'],
+        borderWidth:1
+      }]
+    },
+    options:{
+      responsive:true, maintainAspectRatio:false, cutout:'65%',
+      plugins:{
+        legend:{position:'bottom',labels:{color:cText(),font:{family:'Segoe UI',size:12,weight:'bold'},boxWidth:12}},
+        tooltip:{backgroundColor:'rgba(15,23,42,.92)',titleColor:'#fff',bodyColor:'#fff'}
+      }
+    },
+    plugins:[doughnutCenter]
+  });
+
+  // Chart 3: RUNNING floors bar
+  destroyChart('runFloors');
+  charts['runFloors'] = new Chart(document.getElementById('chartRunFloors'),{
+    type:'bar',
+    data:{
+      labels: runFloors.map(f=>shortName(f)),
+      datasets:[{
+        label:'Present Stock',
+        data: runFloors.map(f=>dashData[f].stock),
+        backgroundColor: PALETTE.slice(0,runFloors.length).map(c=>c+'cc'),
+        borderColor: PALETTE.slice(0,runFloors.length),
+        borderWidth:1, borderRadius:8
+      }]
+    },
+    options: barOpts(),
+    plugins:[valueLabelPlugin]
+  });
+
+  // Chart 4: Building wise distribution doughnut
+  const buildingNames = Object.keys(BUILDINGS);
+  const buildingStocks = buildingNames.map(b=>
+    BUILDINGS[b].reduce((s,f)=>s+(dashData[f]?.stock||0),0)
+  );
+  destroyChart('building');
+  charts['building'] = new Chart(document.getElementById('chartBuilding'),{
+    type:'doughnut',
+    data:{
+      labels: buildingNames,
+      datasets:[{
+        data: buildingStocks,
+        backgroundColor: PALETTE.slice(0,buildingNames.length),
+        borderColor: PALETTE.slice(0,buildingNames.length),
+        borderWidth:1
+      }]
+    },
+    options:{
+      responsive:true, maintainAspectRatio:false, cutout:'60%',
+      plugins:{
+        legend:{position:'bottom',labels:{color:cText(),font:{size:10,weight:'bold'},boxWidth:10,padding:6}},
+        tooltip:{backgroundColor:'rgba(15,23,42,.92)',titleColor:'#fff',bodyColor:'#fff'}
+      }
+    },
+    plugins:[doughnutCenter]
+  });
+}
+
+// ── Building Tabs ────────────────────────────────────────
+function renderBuildingTabs(){
+  const container = document.getElementById('buildingTabs');
+  const allBuildings = ['ALL', ...Object.keys(BUILDINGS)];
+  container.innerHTML = allBuildings.map(b=>`
+    <div class="bTab ${b===activeBuildingFilter?'active':''}" onclick="window._setFilter('${b}')">
+      ${b==='ALL' ? '🏭 All Buildings' : '🏢 '+b}
+    </div>
+  `).join('');
+}
+
+window._setFilter = function(b){
+  activeBuildingFilter = b;
+  renderBuildingTabs();
+  renderFloors();
+};
+
+// ── Floor Cards ──────────────────────────────────────────
+function renderFloors(){
+  const floorsToShow = activeBuildingFilter === 'ALL'
+    ? ALL_FLOORS
+    : BUILDINGS[activeBuildingFilter] || ALL_FLOORS;
+
+  // Group by building for rendering
+  const grouped = {};
+  if(activeBuildingFilter === 'ALL'){
+    Object.entries(BUILDINGS).forEach(([b,floors])=>{
+      grouped[b] = floors;
+    });
+  } else {
+    grouped[activeBuildingFilter] = floorsToShow;
+  }
+
+  let html = '';
+  Object.entries(grouped).forEach(([building, floors])=>{
+    html += `<div class="sectionTitle">🏢 ${building}</div>`;
+    html += `<div class="floorGrid">`;
+    floors.forEach(floor=>{
+      const d = dashData[floor];
+      const isLow = d.stock <= LOW_LIMIT;
+      const pct = Math.min(100, Math.max(5, d.stock / 20));
+      const isNew = floor.endsWith('_NEW');
+      const tag = isNew
+        ? '<span style="background:rgba(34,197,94,.2);color:#22c55e;padding:1px 6px;border-radius:8px;font-size:9px">NEW</span>'
+        : '<span style="background:rgba(56,189,248,.2);color:#38bdf8;padding:1px 6px;border-radius:8px;font-size:9px">RUNNING</span>';
+
+      html += `
+        <div class="floorBox">
+          <h3>${tag} ${floor.replace(/_NEW$/,'').replace(/_RUNNING$/,'').replace(/\s+/g,' ').trim()}</h3>
+          <div class="row">
+            <span>📦 Present</span>
+            <span class="${isLow?'low':'ok'}">${fmt(d.stock)}</span>
+          </div>
+          <div class="row">
+            <span>📥 Receive</span>
+            <span>${fmt(d.receive)}</span>
+          </div>
+          <div class="row">
+            <span>📤 Delivery</span>
+            <span>${fmt(d.delivery)}</span>
+          </div>
+          <div class="row">
+            <span>📅 Last Posted</span>
+            <span style="color:var(--muted);font-size:10px">${d.lastDate}</span>
+          </div>
+          <div class="stockMini">
+            <div class="stockMiniFill" style="width:${pct}%"></div>
+          </div>
+          <span class="statusBadge ${isLow?'statusLow':'statusOk'}">
+            ${isLow ? '⚠️ LOW STOCK' : '✅ OK'}
+          </span>
+        </div>
+      `;
+    });
+    html += `</div>`;
+  });
+
+  document.getElementById('floorArea').innerHTML = html;
+}
+
+// ── Theme ────────────────────────────────────────────────
+window.toggleTheme = function(){
+  document.body.classList.toggle('light');
+  localStorage.setItem('ndTheme', document.body.classList.contains('light')?'light':'dark');
+  setTimeout(()=>{ renderCharts(); }, 100);
+};
+if(localStorage.getItem('ndTheme')==='light') document.body.classList.add('light');
+
+// ── Excel Export ─────────────────────────────────────────
+window.exportExcel = function(){
+  let rows = `<tr><th>Floor</th><th>Type</th><th>Building</th><th>Present Stock</th><th>Monthly Receive</th><th>Monthly Delivery</th><th>Last Posted</th><th>Status</th></tr>`;
+  ALL_FLOORS.forEach(f=>{
+    const d = dashData[f];
+    const isLow = d.stock <= LOW_LIMIT;
+    const building = Object.entries(BUILDINGS).find(([,v])=>v.includes(f))?.[0]||'';
+    rows += `<tr>
+      <td>${f.replace(/_NEW$/,'').replace(/_RUNNING$/,'')}</td>
+      <td>${f.endsWith('_NEW')?'NEW':'RUNNING'}</td>
+      <td>${building}</td>
+      <td>${d.stock}</td>
+      <td>${d.receive}</td>
+      <td>${d.delivery}</td>
+      <td>${d.lastDate}</td>
+      <td>${isLow?'LOW STOCK':'OK'}</td>
+    </tr>`;
+  });
+  const html = `<table border="1" style="border-collapse:collapse">${rows}</table>`;
+  const blob = new Blob([`<html><body>${html}</body></html>`],{type:'application/vnd.ms-excel'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = `needle-composite-dashboard-${getMonth()}.xls`;
+  a.click();
+};
+
+// ── Expose & Init ────────────────────────────────────────
+window.loadDashboard = loadDashboard;
+
+// Set default month & load
+(function(){
+  getMonth();
+  loadDashboard();
+})();
+</script>
+</body>
+</html>
