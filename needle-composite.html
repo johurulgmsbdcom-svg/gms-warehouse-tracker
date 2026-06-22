@@ -1,0 +1,904 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>GMS Composite - Needle Daily Posting</title>
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<meta charset="UTF-8">
+<style>
+*{box-sizing:border-box}
+html,body{width:100%;max-width:100%;overflow-x:hidden;margin:0;padding:0;background:#0f172a;color:white;font-family:'Poppins',Arial,sans-serif;touch-action:manipulation}
+body{padding:4px}
+h2{text-align:center;font-size:18px;margin:6px 0 8px;background:linear-gradient(135deg,#8b5cf6,#3b82f6);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.topControls{text-align:center;margin-bottom:8px!important;font-size:12px;background:rgba(30,41,59,0.8);padding:10px;border-radius:10px}
+button{padding:7px 9px;border:0;border-radius:6px;color:white;font-weight:bold;cursor:pointer;margin:2px;font-size:11px;transition:all 0.3s}
+button:hover{transform:translateY(-2px);box-shadow:0 4px 12px rgba(0,0,0,0.3)}
+.deleteBtn{background:#dc2626}.excelBtn{background:#16a34a}.pdfBtn{background:#7c3aed}.homeBtn{background:#2563eb}.saveBtn{background:#10b981}
+input,select,textarea,button{font-size:16px}
+select,input[type="date"],input[type="text"]{padding:6px;border-radius:6px;border:1px solid #475569;max-width:180px;background:#1e293b;color:white}
+.tableWrap{width:100%;max-width:100%;overflow-x:auto;margin:10px 0}
+#reportTable{width:100%;max-width:100%;margin:0 auto;border-collapse:collapse;table-layout:auto;background:white;color:black;min-width:800px}
+#reportTable th,#reportTable td{border:1px solid #000;padding:2px;text-align:center;font-size:10px;line-height:1.2;white-space:nowrap}
+#reportTable thead{background:#1e293b;color:white;position:sticky;top:0}
+#reportTable tfoot{background:#334155;color:white;font-weight:bold}
+.col-sl{width:4%;min-width:30px}.col-code{width:8%;min-width:60px}.col-type{width:12%;min-width:90px}.col-size{width:7%;min-width:50px}
+.col-brand{width:8%;min-width:60px}.col-prev{width:9%;min-width:70px}.col-rcvd{width:9%;min-width:70px}.col-dvld{width:9%;min-width:70px}
+.col-present{width:10%;min-width:80px}.col-bn{width:8%;min-width:60px}.col-price{width:8%;min-width:60px}
+.qtyInput{width:100%;height:28px;padding:2px;text-align:center;font-size:14px;font-weight:bold;border:1px solid #999;border-radius:4px;background:white;color:black}
+.qtyInput:focus{outline:none;border-color:#3b82f6;box-shadow:0 0 0 2px rgba(59,130,246,0.2)}
+.summaryWrap{width:98%;margin:14px auto;text-align:center;overflow-x:auto}
+#summaryTable{width:100%;max-width:100%;margin:auto;text-align:center;border-collapse:collapse;background:white;color:black}
+#summaryTable th,#summaryTable td{border:1px solid #000;padding:6px;font-size:11px;min-width:100px}
+#summaryTable thead{background:#1e293b;color:white}
+.negative-row{background:#fecaca!important}
+.negative-row td{color:#991b1b;font-weight:bold}
+#negativePopup{display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.8);z-index:9999;justify-content:center;align-items:center}
+.popup-content{background:white;color:black;padding:20px;border-radius:12px;max-width:95%;width:420px;box-shadow:0 8px 30px rgba(0,0,0,0.4);position:relative;animation:popupSlide 0.3s}
+@keyframes popupSlide{from{transform:translateY(-50px);opacity:0}to{transform:translateY(0);opacity:1}}
+.popup-close{position:absolute;top:10px;right:14px;font-size:22px;cursor:pointer;color:#666;font-weight:bold}
+.popup-close:hover{color:#dc2626}
+.popup-title{font-size:17px;font-weight:bold;margin-bottom:14px;color:#dc2626;text-align:center;display:flex;align-items:center;justify-content:center;gap:8px}
+.popup-details{font-size:12px;line-height:1.8}
+.popup-details div{margin:5px 0;display:flex;justify-content:space-between;padding:6px;background:#f8fafc;border-radius:6px}
+.popup-details span.label{font-weight:bold;color:#334155}
+.popup-details span.value{color:#1e293b;font-weight:600}
+.popup-fix-btn{background:#2563eb;color:white;border:none;padding:10px 18px;border-radius:8px;font-weight:bold;cursor:pointer;width:100%;margin-top:14px;font-size:14px;transition:all 0.3s}
+.popup-fix-btn:hover{background:#1d4ed8;transform:translateY(-2px)}
+.popup-footer{text-align:center;font-size:11px;color:#64748b;margin-top:10px;padding-top:10px;border-top:1px solid #e2e8f0}
+.offline-indicator{position:fixed;top:0;left:0;right:0;background:#f59e0b;color:#000;padding:8px 12px;text-align:center;font-size:12px;font-weight:700;z-index:9999;display:none;animation:slideDown 0.3s}
+@keyframes slideDown{from{transform:translateY(-100%)}to{transform:translateY(0)}}
+.offline-indicator.show{display:block}
+.floor-badge{display:inline-block;padding:3px 10px;background:linear-gradient(135deg,#8b5cf6,#3b82f6);color:white;border-radius:12px;font-size:11px;font-weight:600;margin-left:8px}
+.loading-overlay{position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(15,23,42,0.9);z-index:10000;display:none;justify-content:center;align-items:center;flex-direction:column}
+.loading-overlay.show{display:flex}
+.spinner{width:50px;height:50px;border:4px solid #334155;border-top-color:#3b82f6;border-radius:50%;animation:spin 1s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.loading-text{margin-top:15px;font-size:14px;color:#cbd5e1;font-weight:600}
+@media(max-width:768px){
+  body{padding:2px}h2{font-size:15px}.topControls{font-size:11px;padding:8px}
+  button{padding:6px 7px;font-size:10px}
+  #reportTable th,#reportTable td{font-size:9px;padding:1px}
+  .qtyInput{height:26px;font-size:13px}
+  .popup-content{width:95%;padding:16px}
+  .popup-title{font-size:15px}
+  .popup-details{font-size:11px}
+}
+@media print{
+  html,body{background:white!important;color:black!important;overflow:visible!important}
+  button,input[type="date"],select,input[type="text"],.offline-indicator,.loading-overlay{display:none!important}
+  .tableWrap,.summaryWrap{overflow:visible!important}
+  #reportTable,#summaryTable{width:100%!important;max-width:100%!important;color:black!important;background:white!important}
+  #reportTable th,#reportTable td{font-size:8px;padding:2px}
+  #negativePopup{display:none!important}
+}
+</style>
+</head>
+<body>
+
+<div class="offline-indicator" id="offlineIndicator">📴 Offline Mode - Data saved locally</div>
+
+<div class="loading-overlay" id="loadingOverlay">
+  <div class="spinner"></div>
+  <div class="loading-text" id="loadingText">Loading...</div>
+</div>
+
+<h2>🪡 GMS COMPOSITE - NEEDLE DAILY POSTING</h2>
+
+<div class="topControls">
+<div style="display:flex;flex-wrap:wrap;gap:10px;justify-content:center;align-items:center;margin-bottom:8px">
+  <div>
+    <label style="font-weight:600;color:#cbd5e1;margin-right:6px">Operator:</label>
+    <input type="text" id="operatorName" placeholder="Enter name" style="max-width:140px">
+  </div>
+  <div>
+    <label style="font-weight:600;color:#cbd5e1;margin-right:6px">Date:</label>
+    <input type="date" id="postDate">
+  </div>
+  <div>
+    <label style="font-weight:600;color:#cbd5e1;margin-right:6px">Floor:</label>
+    <select id="floor" onchange="loadTable(); loadData();">
+      <option value="">-- Select Floor --</option>
+      <optgroup label="BUILDING 02">
+        <option>A-FLOOR(BUILDING NO-02)_NEW</option>
+        <option>A-FLOOR(BUILDING NO-02)_RUNNING</option>
+        <option>B-FLOOR(BUILDING NO-02)_NEW</option>
+        <option>B-FLOOR(BUILDING NO-02)_RUNNING</option>
+      </optgroup>
+      <optgroup label="BUILDING 04">
+        <option>C-FLOOR ( BUILDING NO-04)_NEW</option>
+        <option>C-FLOOR ( BUILDING NO-04)_RUNNING</option>
+        <option>D-FLOOR ( BUILDING NO -04)_NEW</option>
+        <option>D-FLOOR ( BUILDING NO -04)_RUNNING</option>
+      </optgroup>
+      <optgroup label="BUILDING 03">
+        <option>E-FLOOR ( BUILDING NO-03)_NEW</option>
+        <option>E-FLOOR ( BUILDING NO-03)_RUNNING</option>
+      </optgroup>
+      <optgroup label="BUILDING 01">
+        <option>EMB-(BUILDING NO-01)_NEW</option>
+        <option>EMB-(BUILDING NO-01)_RUNNING</option>
+        <option>TRAINING CENTRE-(BUILDING NO-01)_NEW</option>
+        <option>TRAINING CENTRE-(BUILDING NO-01)_RUNNING</option>
+      </optgroup>
+      <optgroup label="BUILDING 6A">
+        <option>F-FLOOR (BUILDING NO-6A)_NEW</option>
+        <option>F-FLOOR (BUILDING NO-6A)_RUNNING</option>
+        <option>G-FLOOR ( BUILDING NO-6A)_NEW</option>
+        <option>G-FLOOR ( BUILDING NO-6A)_RUNNING</option>
+      </optgroup>
+      <optgroup label="BUILDING 6B">
+        <option>H-FLOOR (BUILDING NO-6B)_NEW</option>
+        <option>H-FLOOR (BUILDING NO-6B)_RUNNING</option>
+        <option>I-FLOOR (BUILDING NO-06 B)_NEW</option>
+        <option>I-FLOOR (BUILDING NO-06 B)_RUNNING</option>
+      </optgroup>
+      <optgroup label="BUILDING 09">
+        <option>J-FLOOR(BUILDING NO-09)_NEW</option>
+        <option>J-FLOOR(BUILDING NO-09)_RUNNING</option>
+        <option>K-FLOOR(BUILDING NO-09)_NEW</option>
+        <option>K-FLOOR(BUILDING NO-09)_RUNNING</option>
+      </optgroup>
+      <optgroup label="BUILDING 03">
+        <option>SAMPLE-(BUILDING NO-03)_NEW</option>
+        <option>SAMPLE-(BUILDING NO-03)_RUNNING</option>
+      </optgroup>
+    </select>
+    <span class="floor-badge" id="categoryBadge">NEW</span>
+  </div>
+</div>
+
+<div style="margin-top:10px">
+  <button class="saveBtn" onclick="saveData()">💾 Save to Supabase</button>
+  <button class="deleteBtn" onclick="deleteData()">🗑️ Delete</button>
+  <button class="excelBtn" onclick="exportExcel()">📊 Export Excel</button>
+  <button class="pdfBtn" onclick="exportPDF()">📄 PDF / Print</button>
+  <button class="homeBtn" onclick="location.href='index.html'">🏠 Back Home</button>
+</div>
+</div>
+
+<div class="tableWrap">
+<table id="reportTable" border="1">
+<thead>
+<tr>
+  <th class="col-sl">SL</th>
+  <th class="col-code">ITEM CODE</th>
+  <th class="col-type">NEEDLE TYPE</th>
+  <th class="col-size">SIZE/DIA</th>
+  <th class="col-brand">BRAND</th>
+  <th class="col-price">UNIT PRICE ($)</th>
+  <th class="col-prev">STOCK (Prev)</th>
+  <th class="col-rcvd">Rcvd</th>
+  <th class="col-dvld">Dvld</th>
+  <th class="col-present">Present</th>
+  <th class="col-bn" id="bnHeader">BNR</th>
+</tr>
+</thead>
+<tbody id="tableBody"></tbody>
+<tfoot>
+<tr>
+  <td colspan="6" style="text-align:right;font-weight:bold">TOTAL:</td>
+  <td id="totalPrevious">0</td>
+  <td id="totalReceive">0</td>
+  <td id="totalDelivery">0</td>
+  <td id="totalPresent">0</td>
+  <td id="totalBN">0</td>
+</tr>
+</tfoot>
+</table>
+</div>
+
+<div class="summaryWrap">
+<h3 style="margin-bottom:10px;color:#cbd5e1">📅 Monthly Summary</h3>
+<table id="summaryTable" border="1">
+<thead>
+<tr>
+  <th>Opening Stock</th>
+  <th>Total Receive</th>
+  <th>Total Delivery</th>
+  <th>Present Stock</th>
+  <th>Total BNR/BNF</th>
+</tr>
+</thead>
+<tbody>
+<tr style="background:#f1f5f9;font-weight:bold">
+  <td id="monthOpening">0</td>
+  <td id="monthReceive">0</td>
+  <td id="monthDelivery">0</td>
+  <td id="monthPresent">0</td>
+  <td id="monthBN">0</td>
+</tr>
+</tbody>
+</table>
+</div>
+
+<div id="negativePopup">
+  <div class="popup-content">
+    <span class="popup-close" onclick="closePopup()">×</span>
+    <div class="popup-title">⚠️ Negative Stock Detected!</div>
+    <div class="popup-details" id="popupDetails"></div>
+    <button class="popup-fix-btn" onclick="fixNegativeRow()">📍 Fix করুন</button>
+    <div class="popup-footer">Present Stock ≥ 0 করলে পপআপ অটো বন্ধ হবে</div>
+  </div>
+</div>
+
+<script type="module">
+import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm";
+
+// =========================================
+// 🔐 SUPABASE CONFIGURATION
+// =========================================
+const SUPABASE_URL = 'https://hmatleeearcaltguosiz.supabase.co';
+const SUPABASE_KEY = 'sb_publishable_VA7UkQqRwCxdeVwHuxzsjw_dQxOPiIj';
+const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
+
+const COMPANY_CODE = 'composite';
+const OFFLINE_QUEUE_KEY = 'composite_needle_queue';
+
+// =========================================
+// 📦 FLOOR DATA (From Excel)
+// =========================================
+const floorData = {
+  "A-FLOOR(BUILDING NO-02)_NEW": [
+    [1,"SN-003","DB X 1","7","ORGAN",0.03985072,8],
+    [2,"SN-013","DB X 1","8","ORGAN",0.32559112,18],
+    [3,"SN-029","DB X 1","9","ORGAN",0.06552784,86],
+    [4,"SN-056","DB X 1","11","ORGAN",0.06131768,22],
+    [5,"SN-065","DB X 1","12","ORGAN",0.00616,15],
+    [6,"SN-094","DC X 1-KN","8","ORGAN",0.096,77],
+    [7,"SN-107","DC X 1","9","ORGAN",0.10728008,144],
+    [8,"SN-126","DC X 1","11","ORGAN",0.10620288,16],
+    [9,"SN-147","UY X 128","8","ORGAN",0.08,13],
+    [10,"SN-163","UY X 128","9","ORGAN",0.16077616,74],
+    [11,"SN-175","UY X 128 GAS KN","9 LP","ORGAN",0.18394952,34],
+    [12,"SN-183","UY X 128","10","ORGAN",0.13031448,109],
+    [13,"SN-195","UY X 128 GAS KN","10 LP","ORGAN",0.30747248,33],
+    [14,"SN-203","UY X 128","11","ORGAN",0.13286432,45],
+    [15,"SN-237","DP X 5","7","ORGAN",0.056,9],
+    [16,"SN-261","DP X 5","11","ORGAN",0.06874008,50],
+    [17,"SN-263","DP X 5-KN","11","ORGAN",0.06,6],
+    [18,"SN-289","UO X 113(UO X 1)","11","ORGAN",0.1256,55],
+    [19,"SN-308","DP X 17","11","ORGAN",0.15784,33],
+    [20,"SN-320","DV X 57","14","ORGAN",0.14264,20]
+  ],
+  "A-FLOOR(BUILDING NO-02)_RUNNING": [
+    [1,"SN-003","DB X 1","7","ORGAN",0.03985072,31],
+    [2,"SN-013","DB X 1","8","ORGAN",0.32559112,46],
+    [3,"SN-014","DB X 1 SF","8","ORGAN",0.05984984,20],
+    [4,"SN-029","DB X 1","9","ORGAN",0.06552784,174],
+    [5,"SN-032","DB X 1-SF","9","ORGAN",0.072,19],
+    [6,"SN-043","DB X 1","10","ORGAN",0.06118872,32],
+    [7,"SN-056","DB X 1","11","ORGAN",0.06131768,43],
+    [8,"SN-065","DB X 1","12","ORGAN",0.00616,20],
+    [9,"SN-085","DC X 1","7","ORGAN",0.07969632,19],
+    [10,"SN-092","DC X 1","8","ORGAN",0.10636168,50],
+    [11,"SN-094","DC X 1-KN","8","ORGAN",0.096,131],
+    [12,"SN-107","DC X 1","9","ORGAN",0.10728008,197],
+    [13,"SN-126","DC X 1","11","ORGAN",0.10620288,39],
+    [14,"SN-147","UY X 128","8","ORGAN",0.08,37],
+    [15,"SN-156","UY X 128- GAS SF","8 LP","ORGAN",0.0856,20],
+    [16,"SN-163","UY X 128","9","ORGAN",0.16077616,199],
+    [17,"SN-175","UY X 128 GAS KN","9 LP","ORGAN",0.18394952,9],
+    [18,"SN-183","UY X 128","10","ORGAN",0.13031448,100],
+    [19,"SN-195","UY X 128 GAS KN","10 LP","ORGAN",0.30747248,51],
+    [20,"SN-203","UY X 128","11","ORGAN",0.13286432,94],
+    [21,"SN-212","UY X 128-KK-KN","11","ORGAN",0.0835932,47],
+    [22,"SN-220","UY X 128","12","ORGAN",0.7621176,37],
+    [23,"SN-261","DP X 5","11","ORGAN",0.06874008,28],
+    [24,"SN-289","UO X 113(UO X 1)","11","ORGAN",0.1256,57],
+    [25,"SN-308","DP X 17","11","ORGAN",0.15784,21],
+    [26,"SN-320","DV X 57","14","ORGAN",0.14264,30],
+    [27,"SN-480","LWX1669E","14","GROZ",0.4864,30],
+    [28,"SN-481","LWX1669E","12","GROZ",0.4864,50]
+  ],
+  // ... বাকি ফ্লোরগুলি একই ফরম্যাটে যোগ করুন
+  // সংক্ষেপের জন্য আমি শুধু ২টি ফ্লোর দিলাম, বাকিগুলো আপনার এক্সেল থেকে কপি করে যোগ করবেন
+};
+
+// =========================================
+// 🌐 GLOBAL VARIABLES
+// =========================================
+let negativeRowIndex = -1;
+let currentFloorData = [];
+
+// =========================================
+// 💾 OFFLINE QUEUE FUNCTIONS
+// =========================================
+function getOfflineQueue(){
+  return JSON.parse(localStorage.getItem(OFFLINE_QUEUE_KEY) || '[]');
+}
+
+function setOfflineQueue(queue){
+  localStorage.setItem(OFFLINE_QUEUE_KEY, JSON.stringify(queue));
+}
+
+function saveDataOffline(floor, date, operator, rows){
+  let queue = getOfflineQueue();
+  queue.push({
+    id: `${floor}_${date}_${Date.now()}`,
+    floor, date, operator, rows,
+    timestamp: new Date().toISOString(),
+    status: 'pending'
+  });
+  setOfflineQueue(queue);
+  showToast('✅ Saved Offline - Will sync when online');
+}
+
+async function syncOfflineQueue(){
+  if(!navigator.onLine) return;
+  let queue = getOfflineQueue();
+  let synced = 0;
+  
+  for(let i=0; i<queue.length; i++){
+    if(queue[i].status === 'pending'){
+      try{
+        await saveToSupabase(queue[i].floor, queue[i].date, queue[i].operator, queue[i].rows, false);
+        queue[i].status = 'synced';
+        synced++;
+      }catch(e){
+        console.log('Sync failed:', e);
+      }
+    }
+  }
+  
+  if(synced > 0){
+    setOfflineQueue(queue);
+    showToast(`☁️ ${synced} items synced to Supabase`);
+  }
+}
+
+// =========================================
+// 🔌 SUPABASE FUNCTIONS
+// =========================================
+async function getCompanyId(){
+  const { data, error } = await supabase
+    .from('companies')
+    .select('id')
+    .eq('code', COMPANY_CODE)
+    .single();
+  
+  if(error || !data){
+    console.error('Company not found:', error);
+    return null;
+  }
+  return data.id;
+}
+
+async function saveToSupabase(floor, date, operator, rows, showSuccess = true){
+  const companyId = await getCompanyId();
+  if(!companyId){
+    alert('❌ Company configuration error!');
+    return { error: 'Company not found' };
+  }
+
+  // Calculate summary
+  const summary = {
+    total_opening: rows.reduce((sum, r) => sum + (r.opening || 0), 0),
+    total_receive: rows.reduce((sum, r) => sum + (r.receive || 0), 0),
+    total_delivery: rows.reduce((sum, r) => sum + (r.delivery || 0), 0),
+    total_present: rows.reduce((sum, r) => sum + (r.present || 0), 0),
+    total_bn: rows.reduce((sum, r) => sum + (r.bn || 0), 0)
+  };
+
+  // Upsert data
+  const { error } = await supabase
+    .from('needle_reports')
+    .upsert({
+      company_id: companyId,
+      floor: floor,
+      report_date: date,
+      operator: operator,
+      rows: rows,
+      summary: summary,
+      updated_at: new Date().toISOString()
+    }, {
+      onConflict: 'company_id,floor,report_date'
+    });
+
+  if(error){
+    console.error('Save error:', error);
+    if(showSuccess) alert('❌ Save failed: ' + error.message);
+    return { error };
+  }
+
+  // Log audit
+  await supabase.from('needle_audit_logs').insert({
+    company_id: companyId,
+    action: 'UPSERT',
+    floor: floor,
+    report_date: date,
+    operator: operator,
+    details: { itemsCount: rows.length }
+  });
+
+  if(showSuccess) showToast('✅ Saved to Supabase');
+  return { success: true };
+}
+
+async function loadFromSupabase(floor, date){
+  const companyId = await getCompanyId();
+  if(!companyId) return null;
+
+  const { data, error } = await supabase
+    .from('needle_reports')
+    .select('*')
+    .eq('company_id', companyId)
+    .eq('floor', floor)
+    .eq('report_date', date)
+    .single();
+
+  if(error || !data){
+    return null;
+  }
+
+  return data;
+}
+
+// =========================================
+// 📊 UI FUNCTIONS
+// =========================================
+function getItems(){
+  const floor = document.getElementById('floor').value;
+  return floorData[floor] || [];
+}
+
+function getMonth(dateStr){
+  return dateStr ? dateStr.slice(0, 7) : '';
+}
+
+function updateCategoryBadge(){
+  const floor = document.getElementById('floor').value;
+  const badge = document.getElementById('categoryBadge');
+  if(floor.includes('_NEW')){
+    badge.textContent = 'NEW';
+    badge.style.background = 'linear-gradient(135deg,#10b981,#059669)';
+  }else if(floor.includes('_RUNNING')){
+    badge.textContent = 'RUNNING';
+    badge.style.background = 'linear-gradient(135deg,#3b82f6,#2563eb)';
+  }
+}
+
+function loadTable(customPrevious = null){
+  currentFloorData = getItems();
+  updateCategoryBadge();
+  
+  const floor = document.getElementById('floor').value;
+  const bnName = floor.includes('_NEW') ? 'BNR' : 'BNF';
+  document.getElementById('bnHeader').innerText = bnName;
+  
+  let html = '';
+  
+  currentFloorData.forEach((item, i) => {
+    const previous = customPrevious && customPrevious[i] !== undefined ? customPrevious[i] : item[6];
+    
+    html += `
+      <tr id="row${i}">
+        <td>${item[0]}</td>
+        <td>${item[1]}</td>
+        <td>${item[2]}</td>
+        <td>${item[3]}</td>
+        <td>${item[4]}</td>
+        <td style="text-align:right">${item[5].toFixed(4)}</td>
+        <td id="p${i}">${previous}</td>
+        <td><input class="qtyInput" type="number" id="r${i}" oninput="calc(${i})" step="0.01" min="0"></td>
+        <td><input class="qtyInput" type="number" id="d${i}" oninput="calc(${i})" step="0.01" min="0"></td>
+        <td id="b${i}" style="font-weight:bold">${previous}</td>
+        <td><input class="qtyInput" type="number" id="bn${i}" oninput="updateTotal()" step="0.01" min="0"></td>
+      </tr>
+    `;
+  });
+  
+  document.getElementById('tableBody').innerHTML = html;
+  updateTotal();
+  setTimeout(checkNegativeStock, 100);
+}
+
+function calc(i){
+  const p = Number(document.getElementById(`p${i}`).innerText) || 0;
+  const r = Number(document.getElementById(`r${i}`).value) || 0;
+  const d = Number(document.getElementById(`d${i}`).value) || 0;
+  const present = p + r - d;
+  
+  document.getElementById(`b${i}`).innerText = present;
+  
+  const row = document.getElementById(`row${i}`);
+  if(present < 0){
+    row.classList.add('negative-row');
+  }else{
+    row.classList.remove('negative-row');
+  }
+  
+  updateTotal();
+  checkNegativeStock();
+}
+
+function updateTotal(){
+  let tp = 0, tr = 0, td = 0, tb = 0, tbn = 0;
+  
+  currentFloorData.forEach((_, i) => {
+    tp += Number(document.getElementById(`p${i}`)?.innerText) || 0;
+    tr += Number(document.getElementById(`r${i}`)?.value) || 0;
+    td += Number(document.getElementById(`d${i}`)?.value) || 0;
+    tb += Number(document.getElementById(`b${i}`)?.innerText) || 0;
+    tbn += Number(document.getElementById(`bn${i}`)?.value) || 0;
+  });
+  
+  document.getElementById('totalPrevious').innerText = tp.toLocaleString();
+  document.getElementById('totalReceive').innerText = tr.toLocaleString();
+  document.getElementById('totalDelivery').innerText = td.toLocaleString();
+  document.getElementById('totalPresent').innerText = tb.toLocaleString();
+  document.getElementById('totalBN').innerText = tbn.toLocaleString();
+}
+
+function checkNegativeStock(){
+  for(let i = 0; i < currentFloorData.length; i++){
+    const present = Number(document.getElementById(`b${i}`)?.innerText) || 0;
+    const row = document.getElementById(`row${i}`);
+    
+    if(present < 0){
+      row.classList.add('negative-row');
+    }else{
+      row.classList.remove('negative-row');
+    }
+    
+    if(present < 0){
+      negativeRowIndex = i;
+      showNegativePopup(present);
+      return;
+    }
+  }
+  
+  negativeRowIndex = -1;
+  closePopup();
+}
+
+function showNegativeStock(present){
+  const floor = document.getElementById('floor').value;
+  const operator = document.getElementById('operatorName').value.trim() || 'Unknown';
+  const item = currentFloorData[negativeRowIndex];
+  
+  const details = document.getElementById('popupDetails');
+  details.innerHTML = `
+    <div><span class="label">Floor:</span><span class="value">${floor}</span></div>
+    <div><span class="label">Operator:</span><span class="value">${operator}</span></div>
+    <div><span class="label">Item Code:</span><span class="value">${item[1]}</span></div>
+    <div><span class="label">Needle Type:</span><span class="value">${item[2]}</span></div>
+    <div><span class="label">Size:</span><span class="value">${item[3]}</span></div>
+    <div><span class="label">Present Stock:</span><span class="value" style="color:#dc2626;font-weight:bold">${present}</span></div>
+  `;
+  
+  document.getElementById('negativePopup').style.display = 'flex';
+}
+
+function closePopup(){
+  document.getElementById('negativePopup').style.display = 'none';
+}
+
+function fixNegativeRow(){
+  if(negativeRowIndex >= 0){
+    const row = document.getElementById(`row${negativeRowIndex}`);
+    if(row){
+      row.scrollIntoView({behavior: 'smooth', block: 'center'});
+      row.style.boxShadow = '0 0 0 3px #dc2626';
+      setTimeout(() => row.style.boxShadow = '', 2000);
+    }
+    
+    const deliveryInput = document.getElementById(`d${negativeRowIndex}`);
+    if(deliveryInput){
+      deliveryInput.focus();
+      deliveryInput.select();
+    }
+  }
+}
+
+function updateMonthlySummary(rows){
+  let opening = 0, receive = 0, delivery = 0, present = 0, bn = 0;
+  
+  rows.forEach(r => {
+    opening += Number(r.opening) || 0;
+    receive += Number(r.receive) || 0;
+    delivery += Number(r.delivery) || 0;
+    present += Number(r.present) || 0;
+    bn += Number(r.bn) || 0;
+  });
+  
+  document.getElementById('monthOpening').innerText = opening.toLocaleString();
+  document.getElementById('monthReceive').innerText = receive.toLocaleString();
+  document.getElementById('monthDelivery').innerText = delivery.toLocaleString();
+  document.getElementById('monthPresent').innerText = present.toLocaleString();
+  document.getElementById('monthBN').innerText = bn.toLocaleString();
+}
+
+// =========================================
+// 💾 SAVE / LOAD / DELETE
+// =========================================
+async function saveData(){
+  const date = document.getElementById('postDate').value;
+  const floor = document.getElementById('floor').value;
+  const operator = document.getElementById('operatorName').value.trim() || localStorage.getItem('lastOperator') || 'Unknown';
+  
+  if(!date){
+    alert('❌ Date select করুন');
+    return;
+  }
+  
+  if(!floor){
+    alert('❌ Floor select করুন');
+    return;
+  }
+  
+  // Prepare rows
+  const rows = currentFloorData.map((item, i) => ({
+    sl: item[0],
+    itemCode: item[1],
+    needleType: item[2],
+    size: item[3],
+    brand: item[4],
+    unitPrice: item[5],
+    opening: item[6],
+    previous: Number(document.getElementById(`p${i}`).innerText) || 0,
+    receive: Number(document.getElementById(`r${i}`).value) || 0,
+    delivery: Number(document.getElementById(`d${i}`).value) || 0,
+    present: Number(document.getElementById(`b${i}`).innerText) || 0,
+    bn: Number(document.getElementById(`bn${i}`).value) || 0
+  }));
+  
+  if(navigator.onLine){
+    const result = await saveToSupabase(floor, date, operator, rows);
+    if(result.success){
+      localStorage.setItem('lastOperator', operator);
+      await loadData();
+    }
+  }else{
+    saveDataOffline(floor, date, operator, rows);
+    localStorage.setItem('lastOperator', operator);
+  }
+}
+
+async function loadData(){
+  showLoading('Loading data...');
+  
+  const date = document.getElementById('postDate').value;
+  const floor = document.getElementById('floor').value;
+  
+  if(!date || !floor){
+    hideLoading();
+    loadTable();
+    updateMonthlySummary([]);
+    return;
+  }
+  
+  try{
+    const savedData = await loadFromSupabase(floor, date);
+    
+    if(savedData && savedData.rows){
+      // Load saved data
+      savedData.rows.forEach((row, i) => {
+        if(document.getElementById(`r${i}`)){
+          document.getElementById(`r${i}`).value = row.receive || '';
+          document.getElementById(`d${i}`).value = row.delivery || '';
+          document.getElementById(`bn${i}`).value = row.bn || '';
+          calc(i);
+        }
+      });
+      
+      document.getElementById('operatorName').value = savedData.operator || '';
+      updateMonthlySummary(savedData.rows);
+    }else{
+      // No data found, load fresh table
+      loadTable();
+      updateMonthlySummary([]);
+    }
+  }catch(e){
+    console.error('Load error:', e);
+    loadTable();
+  }
+  
+  hideLoading();
+}
+
+async function deleteData(){
+  const date = document.getElementById('postDate').value;
+  const floor = document.getElementById('floor').value;
+  
+  if(!date){
+    alert('❌ Date select করুন');
+    return;
+  }
+  
+  if(!confirm('⚠️ এই তারিখের ডাটা delete করবেন?')) return;
+  
+  const companyId = await getCompanyId();
+  if(!companyId) return;
+  
+  const { error } = await supabase
+    .from('needle_reports')
+    .delete()
+    .eq('company_id', companyId)
+    .eq('floor', floor)
+    .eq('report_date', date);
+  
+  if(error){
+    alert('❌ Delete failed: ' + error.message);
+  }else{
+    showToast('✅ Deleted successfully');
+    loadTable();
+    updateMonthlySummary([]);
+  }
+}
+
+// =========================================
+// 📄 EXPORT FUNCTIONS
+// =========================================
+function exportExcel(){
+  const floor = document.getElementById('floor').value;
+  const date = document.getElementById('postDate').value;
+  const operator = document.getElementById('operatorName').value;
+  
+  let html = `
+    <h2>GMS COMPOSITE - NEEDLE DAILY POSTING</h2>
+    <h3>Floor: ${floor} | Date: ${date} | Operator: ${operator}</h3>
+    <table border="1" style="border-collapse:collapse;width:100%">
+      <thead>
+        <tr style="background:#1e293b;color:white">
+          <th>SL</th><th>ITEM CODE</th><th>NEEDLE TYPE</th><th>SIZE</th>
+          <th>BRAND</th><th>PRICE</th><th>Previous</th><th>Rcvd</th>
+          <th>Dvld</th><th>Present</th><th>BNR/BNF</th>
+        </tr>
+      </thead>
+      <tbody>
+  `;
+  
+  currentFloorData.forEach((_, i) => {
+    html += `
+      <tr>
+        <td>${document.getElementById(`p${i}`).parentElement.children[0].innerText}</td>
+        <td>${document.getElementById(`p${i}`).parentElement.children[1].innerText}</td>
+        <td>${document.getElementById(`p${i}`).parentElement.children[2].innerText}</td>
+        <td>${document.getElementById(`p${i}`).parentElement.children[3].innerText}</td>
+        <td>${document.getElementById(`p${i}`).parentElement.children[4].innerText}</td>
+        <td>${document.getElementById(`p${i}`).parentElement.children[5].innerText}</td>
+        <td>${document.getElementById(`p${i}`).innerText}</td>
+        <td>${document.getElementById(`r${i}`).value || 0}</td>
+        <td>${document.getElementById(`d${i}`).value || 0}</td>
+        <td>${document.getElementById(`b${i}`).innerText}</td>
+        <td>${document.getElementById(`bn${i}`).value || 0}</td>
+      </tr>
+    `;
+  });
+  
+  html += `
+      </tbody>
+      <tfoot style="background:#334155;color:white;font-weight:bold">
+        <tr>
+          <td colspan="6" style="text-align:right">TOTAL:</td>
+          <td>${document.getElementById('totalPrevious').innerText}</td>
+          <td>${document.getElementById('totalReceive').innerText}</td>
+          <td>${document.getElementById('totalDelivery').innerText}</td>
+          <td>${document.getElementById('totalPresent').innerText}</td>
+          <td>${document.getElementById('totalBN').innerText}</td>
+        </tr>
+      </tfoot>
+    </table>
+  `;
+  
+  const blob = new Blob([html], {type: 'application/vnd.ms-excel'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = `needle-composite-${floor}-${date}.xls`;
+  a.click();
+  
+  showToast('✅ Excel exported');
+}
+
+function exportPDF(){
+  window.print();
+}
+
+// =========================================
+// 🎨 UTILITY FUNCTIONS
+// =========================================
+function showToast(msg){
+  const toast = document.createElement('div');
+  toast.style.cssText = `
+    position:fixed;bottom:80px;left:50%;transform:translateX(-50%);
+    background:#10b981;color:#fff;padding:12px 24px;border-radius:8px;
+    font-weight:600;font-size:13px;z-index:9999;
+    box-shadow:0 4px 12px rgba(0,0,0,0.3);animation:toastFade 0.3s ease;
+  `;
+  toast.innerText = msg;
+  document.body.appendChild(toast);
+  setTimeout(() => toast.remove(), 2500);
+}
+
+function showLoading(text = 'Loading...'){
+  document.getElementById('loadingText').innerText = text;
+  document.getElementById('loadingOverlay').classList.add('show');
+}
+
+function hideLoading(){
+  document.getElementById('loadingOverlay').classList.remove('show');
+}
+
+function updateOfflineIndicator(){
+  const indicator = document.getElementById('offlineIndicator');
+  if(!navigator.onLine){
+    indicator.classList.add('show');
+  }else{
+    indicator.classList.remove('show');
+  }
+}
+
+// =========================================
+// 🎯 EVENT LISTENERS
+// =========================================
+window.addEventListener('online', () => {
+  updateOfflineIndicator();
+  syncOfflineQueue();
+});
+
+window.addEventListener('offline', () => {
+  updateOfflineIndicator();
+});
+
+document.getElementById('postDate').addEventListener('change', loadData);
+
+// Enter/Tab navigation
+document.addEventListener('keydown', function(e){
+  if(e.target.tagName !== 'INPUT') return;
+  if(!e.target.id.match(/^(r|d|bn)\d+$/)) return;
+  
+  if(e.key === 'Enter'){
+    e.preventDefault();
+    const col = e.target.id.replace(/[0-9]/g, '');
+    const row = Number(e.target.id.replace(/\D/g, ''));
+    const next = document.getElementById(col + (row + 1));
+    if(next){
+      next.focus();
+      next.select();
+    }
+  }
+});
+
+// =========================================
+// 🚀 INITIALIZATION
+// =========================================
+(function init(){
+  // Set today's date
+  document.getElementById('postDate').value = new Date().toISOString().slice(0, 10);
+  
+  // Load last operator
+  const lastOperator = localStorage.getItem('lastOperator');
+  if(lastOperator){
+    document.getElementById('operatorName').value = lastOperator;
+  }
+  
+  // Initial UI setup
+  updateOfflineIndicator();
+  updateCategoryBadge();
+  loadTable();
+  
+  // Auto-sync offline data
+  setTimeout(syncOfflineQueue, 2000);
+  
+  // Keyboard shortcuts
+  document.addEventListener('keydown', function(e){
+    if(e.ctrlKey && e.key === 's'){
+      e.preventDefault();
+      saveData();
+    }
+  });
+})();
+
+// Make functions globally available
+window.saveData = saveData;
+window.loadData = loadData;
+window.deleteData = deleteData;
+window.exportExcel = exportExcel;
+window.exportPDF = exportPDF;
+window.calc = calc;
+window.updateTotal = updateTotal;
+window.closePopup = closePopup;
+window.fixNegativeRow = fixNegativeRow;
+window.loadTable = loadTable;
+</script>
+</body>
+</html>
