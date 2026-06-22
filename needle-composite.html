@@ -15,7 +15,8 @@ body.light h2{background:linear-gradient(135deg,#3b82f6,#8b5cf6);-webkit-backgro
 body.light .topControls{background:rgba(241,245,249,0.9)}
 button{padding:6px 8px;border:0;border-radius:6px;color:white;font-weight:bold;cursor:pointer;margin:2px;font-size:10px;transition:all 0.3s}
 button:hover{transform:translateY(-2px);box-shadow:0 4px 12px rgba(0,0,0,0.3)}
-.deleteBtn{background:#dc2626}.excelBtn{background:#16a34a}.pdfBtn{background:#7c3aed}.homeBtn{background:#2563eb}.saveBtn{background:#10b981}.themeBtn{background:#64748b}
+button:active{transform:translateY(0)}
+.deleteBtn{background:#dc2626}.excelBtn{background:#16a34a}.pdfBtn{background:#7c3aed}.homeBtn{background:#2563eb}.saveBtn{background:#10b981}.themeBtn{background:#64748b}.refreshBtn{background:#f59e0b}
 input,select,textarea,button{font-size:13px}
 select,input[type="date"],input[type="text"]{padding:4px;border-radius:6px;border:1px solid #475569;max-width:150px;background:#1e293b;color:white}
 body.light select,body.light input[type="date"],body.light input[type="text"]{background:#f1f5f9;color:#0f172a;border-color:#cbd5e1}
@@ -55,6 +56,8 @@ body.light #summaryTable thead{background:#334155}
 @keyframes slideDown{from{transform:translateY(-100%)}to{transform:translateY(0)}}
 .floor-badge{display:inline-block;padding:2px 8px;background:linear-gradient(135deg,#8b5cf6,#3b82f6);color:white;border-radius:10px;font-size:10px;font-weight:600;margin-left:6px}
 .carry-badge{display:inline-block;padding:2px 8px;background:linear-gradient(135deg,#f59e0b,#d97706);color:#000;border-radius:10px;font-size:9px;font-weight:700;margin-left:6px}
+.carry-info{display:block;margin-top:4px;font-size:10px;color:#fbbf24;text-align:center;font-weight:600}
+body.light .carry-info{color:#b45309}
 .loading-overlay{position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(15,23,42,0.9);z-index:10000;display:none;justify-content:center;align-items:center;flex-direction:column}
 body.light .loading-overlay{background:rgba(248,250,252,0.9)}
 .loading-overlay.show{display:flex}
@@ -63,24 +66,51 @@ body.light .loading-overlay{background:rgba(248,250,252,0.9)}
 .loading-text{margin-top:15px;font-size:14px;color:#cbd5e1;font-weight:600}
 body.light .loading-text{color:#475569}
 .theme-toggle{position:fixed;top:6px;right:6px;z-index:1000}
+.last-sync{text-align:center;font-size:9px;color:#94a3b8;margin-top:3px}
+body.light .last-sync{color:#64748b}
 @media(max-width:480px){
-  body{padding:1px}h2{font-size:13px;margin:3px 0 4px}
-  .topControls{font-size:10px;padding:5px}
-  button{padding:5px 6px;font-size:9px;margin:1px}
-  select,input[type="date"],input[type="text"]{max-width:100px;padding:3px;font-size:11px}
-  #reportTable th,#reportTable td{font-size:7px;padding:0px;line-height:1}
-  .qtyInput{height:20px;font-size:9px}
-  .popup-content{width:95%;padding:16px}
-  .popup-title{font-size:15px}
-  .popup-details{font-size:11px}
-  .col-sl{width:4%}.col-code{width:9%}.col-type{width:12%}.col-size{width:6%}
-  .col-brand{width:7%}.col-price{width:7%}.col-prev{width:9%}.col-rcvd{width:10%}.col-dvld{width:10%}
-  .col-present{width:11%}.col-bn{width:9%}
-  #summaryTable th,#summaryTable td{font-size:8px;padding:2px}
+  body{padding:1px}
+  h2{font-size:11px;margin:2px 0 3px;letter-spacing:-0.3px}
+  .topControls{font-size:9px;padding:4px;border-radius:6px}
+  .topControls > div{margin-bottom:4px!important;gap:3px!important}
+  button{padding:3px 4px;font-size:8px;margin:1px;border-radius:4px}
+  select,input[type="date"],input[type="text"]{max-width:75px;padding:2px;font-size:9px;border-radius:4px}
+  label{font-size:8px!important;margin-right:2px!important}
+  .floor-badge{font-size:7px;padding:1px 4px;margin-left:3px}
+  .carry-badge{font-size:7px;padding:1px 4px;margin-left:3px}
+  .carry-info{font-size:8px;margin-top:2px}
+  .last-sync{font-size:7px;margin-top:2px}
+  .tableWrap{margin:3px 0}
+  #reportTable th,#reportTable td{font-size:6.5px;padding:0 1px;line-height:1;border-width:0.5px}
+  .qtyInput{height:18px;font-size:8px;padding:0;border-radius:1px}
+  .popup-content{width:95%;padding:12px}
+  .popup-title{font-size:13px}
+  .popup-details{font-size:10px}
+  .popup-details div{padding:4px}
+  /* Compact columns - সব ১১টা কলাম একসাথে ফিট হবে */
+  .col-sl{width:3.5%}
+  .col-code{width:8%}
+  .col-type{width:11%}
+  .col-size{width:4.5%}
+  .col-brand{width:7.5%}
+  .col-price{width:6.5%}
+  .col-prev{width:7.5%}
+  .col-rcvd{width:9.5%}
+  .col-dvld{width:9.5%}
+  .col-present{width:11%}
+  .col-bn{width:9.5%}
+  /* Total = 88% - কিছু মার্জিন রাখা হয়েছে যাতে শেষ কলাম কাটা না পড়ে */
+  #summaryTable th,#summaryTable td{font-size:7px;padding:1.5px}
+  .summaryWrap{margin:6px auto}
+  h3{font-size:11px!important;margin:4px 0!important}
+  .offline-indicator{font-size:9px;padding:3px 6px}
+  .loading-text{font-size:11px;margin-top:8px}
+  .spinner{width:30px;height:30px;border-width:3px}
+  .theme-toggle button{padding:3px 6px;font-size:10px}
 }
 @media print{
   html,body{background:white!important;color:black!important;overflow:visible!important}
-  button,input[type="date"],select,input[type="text"],.offline-indicator,.loading-overlay,.theme-toggle{display:none!important}
+  button,input[type="date"],select,input[type="text"],.offline-indicator,.loading-overlay,.theme-toggle,.last-sync{display:none!important}
   .tableWrap,.summaryWrap{overflow:visible!important}
   #reportTable,#summaryTable{width:100%!important;max-width:100%!important;color:black!important;background:white!important}
   #reportTable th,#reportTable td{font-size:8px;padding:2px}
@@ -166,14 +196,17 @@ body.light .loading-text{color:#475569}
     <span class="carry-badge" id="carryBadge" style="display:none">⏪ Carried</span>
   </div>
 </div>
+<div class="carry-info" id="carryInfo" style="display:none"></div>
 
 <div style="margin-top:6px">
   <button class="saveBtn" onclick="saveData()">💾 Save</button>
+  <button class="refreshBtn" onclick="manualRefresh()">🔄 Refresh</button>
   <button class="deleteBtn" onclick="deleteData()">🗑️ Delete</button>
   <button class="excelBtn" onclick="exportExcel()">📊 Excel</button>
   <button class="pdfBtn" onclick="exportPDF()">📄 PDF</button>
   <button class="homeBtn" onclick="location.href='index.html'">🏠 Home</button>
 </div>
+<div class="last-sync" id="lastSync"></div>
 </div>
 
 <div class="tableWrap">
@@ -253,6 +286,37 @@ const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
 
 const COMPANY_CODE = 'composite';
 const OFFLINE_QUEUE_KEY = 'composite_needle_queue';
+
+// =========================================
+// 💾 LOCALSTORAGE CACHE - Carry-forward এর জন্য অত্যন্ত গুরুত্বপূর্ণ
+// প্রতিটি সেভ (বা ইনপুট পরিবর্তন) এ localStorage এ কপি রাখা হয়,
+// যাতে পরের দিনের carry-forward ১০০% reliable হয় (Supabase বা ইন্টারনেট ছাড়াও)
+// =========================================
+const REPORT_CACHE_KEY = 'composite_needle_reports_v2';
+
+function getReportCache(){
+  try { return JSON.parse(localStorage.getItem(REPORT_CACHE_KEY) || '{}'); }
+  catch(e){ console.error('Cache read error:', e); return {}; }
+}
+
+function setReportCacheEntry(floor, date, data){
+  try{
+    const cache = getReportCache();
+    const key = `${floor}__${date}`;
+    cache[key] = { ...data, cachedAt: new Date().toISOString() };
+    localStorage.setItem(REPORT_CACHE_KEY, JSON.stringify(cache));
+    return true;
+  }catch(e){
+    console.error('Cache write error:', e);
+    return false;
+  }
+}
+
+function getReportCacheEntry(floor, date){
+  const cache = getReportCache();
+  const key = `${floor}__${date}`;
+  return cache[key] || null;
+}
 
 // =========================================
 // 📦 FLOOR DATA (All 28 Floors from Excel)
@@ -874,6 +938,7 @@ const floorData = {
 // =========================================
 let negativeRowIndex = -1;
 let currentFloorData = [];
+let currentCarrySource = null;  // 'opening' | 'cache' | 'supabase' | 'saved'
 
 // =========================================
 // 💾 OFFLINE QUEUE FUNCTIONS
@@ -996,36 +1061,59 @@ async function loadFromSupabase(floor, date){
     .eq('company_id', companyId)
     .eq('floor', floor)
     .eq('report_date', date)
-    .maybeSingle();   // <-- maybeSingle() ব্যবহার করায় ডাটা না থাকলে 406 error আসবে না, null আসবে
+    .maybeSingle();
 
   if(error){
     console.error('loadFromSupabase error:', error);
     return null;
   }
 
-  return data; // data হবে either the row, or null (0 rows পেলে)
+  return data;
 }
 
 // =========================================
-// ⏪ PREVIOUS-DAY CARRY-FORWARD LOGIC
-// (আজকের Present Stock = কালকের Previous Stock, মাস পরিবর্তন হলেও কাজ করবে)
+// ⏪ PREVIOUS-DAY CARRY-FORWARD LOGIC (Fixed & Bulletproof)
 // =========================================
 function getPrevDateStr(dateStr){
-  const d = new Date(dateStr + 'T00:00:00');
-  d.setDate(d.getDate() - 1);
-  const y = d.getFullYear();
-  const m = String(d.getMonth() + 1).padStart(2, '0');
-  const day = String(d.getDate()).padStart(2, '0');
-  return `${y}-${m}-${day}`;
+  // UTC ব্যবহার করায় timezone সমস্যা এড়ানো হচ্ছে — মাস/বছর পরিবর্তন ঠিকমতো কাজ করবে
+  if(!dateStr) return null;
+  const parts = dateStr.split('-');
+  if(parts.length !== 3) return null;
+  const y = parseInt(parts[0], 10);
+  const m = parseInt(parts[1], 10);
+  const d = parseInt(parts[2], 10);
+  const date = new Date(Date.UTC(y, m - 1, d));
+  date.setUTCDate(date.getUTCDate() - 1);
+  const yy = date.getUTCFullYear();
+  const mm = String(date.getUTCMonth() + 1).padStart(2, '0');
+  const dd = String(date.getUTCDate()).padStart(2, '0');
+  return `${yy}-${mm}-${dd}`;
 }
 
 async function getPreviousDayPresentArray(floor, date){
   const prevDate = getPrevDateStr(date);
-  const prevRecord = await loadFromSupabase(floor, prevDate);
-  if(prevRecord && prevRecord.rows && prevRecord.rows.length){
-    return prevRecord.rows.map(r => Number(r.present) || 0);
-  }
-  return null; // আগের দিনের ডাটা নেই
+  if(!prevDate) return null;
+
+  // ১. আগে LocalStorage cache চেক করি (সবচেয়ে দ্রুত ও নির্ভরযোগ্য)
+  try{
+    const cached = getReportCacheEntry(floor, prevDate);
+    if(cached && cached.rows && cached.rows.length){
+      return cached.rows.map(r => Number(r.present) || 0);
+    }
+  }catch(e){ console.warn('Cache lookup failed:', e); }
+
+  // ২. তারপর Supabase চেক করি (cross-device sync)
+  try{
+    const prevRecord = await loadFromSupabase(floor, prevDate);
+    if(prevRecord && prevRecord.rows && prevRecord.rows.length){
+      const presentArr = prevRecord.rows.map(r => Number(r.present) || 0);
+      // Cache এ সংরক্ষণ করি যাতে পরের বার দ্রুত পাওয়া যায়
+      setReportCacheEntry(floor, prevDate, { rows: prevRecord.rows, operator: prevRecord.operator });
+      return presentArr;
+    }
+  }catch(e){ console.warn('Supabase lookup failed:', e); }
+
+  return null; // আগের দিনের ডাটা কোথাও নেই
 }
 
 // =========================================
@@ -1048,7 +1136,31 @@ function updateCategoryBadge(){
   }
 }
 
-function loadTable(customPrevious = null){
+function updateCarryIndicator(source, prevDate){
+  const badge = document.getElementById('carryBadge');
+  const info = document.getElementById('carryInfo');
+  
+  if(source === 'cache' || source === 'supabase'){
+    badge.style.display = 'inline-block';
+    badge.textContent = source === 'cache' ? '⏪ Carried (Local)' : '⏪ Carried (Cloud)';
+    badge.style.background = source === 'cache' 
+      ? 'linear-gradient(135deg,#10b981,#059669)' 
+      : 'linear-gradient(135deg,#f59e0b,#d97706)';
+    info.style.display = 'block';
+    info.innerHTML = `✅ Previous Day (${prevDate}) Present Stock auto-carried as Today's Previous`;
+    currentCarrySource = source;
+  }else if(source === 'saved'){
+    badge.style.display = 'none';
+    info.style.display = 'none';
+    currentCarrySource = 'saved';
+  }else{
+    badge.style.display = 'none';
+    info.style.display = 'none';
+    currentCarrySource = 'opening';
+  }
+}
+
+function loadTable(customPrevious = null, customSource = null){
   currentFloorData = getItems();
   updateCategoryBadge();
   
@@ -1059,7 +1171,15 @@ function loadTable(customPrevious = null){
   let html = '';
   
   currentFloorData.forEach((item, i) => {
-    const previous = (customPrevious && customPrevious[i] !== undefined) ? customPrevious[i] : item[6];
+    let previous;
+    if(Array.isArray(customPrevious) && customPrevious[i] !== undefined){
+      previous = Number(customPrevious[i]) || 0;
+    }else if(Array.isArray(customPrevious) && customPrevious.length === currentFloorData.length){
+      // কিছু কারণে customPrevious এ সব ভ্যালু থাকলে
+      previous = Number(customPrevious[i]) || 0;
+    }else{
+      previous = Number(item[6]) || 0;
+    }
     
     html += `
       <tr id="row${i}">
@@ -1080,7 +1200,40 @@ function loadTable(customPrevious = null){
   
   document.getElementById('tableBody').innerHTML = html;
   updateTotal();
+  updateCarryIndicator(customSource || null, getPrevDateStr(document.getElementById('postDate').value));
   setTimeout(checkNegativeStock, 100);
+}
+
+function autoSaveDraft(){
+  const date = document.getElementById('postDate').value;
+  const floor = document.getElementById('floor').value;
+  if(!date || !floor || !currentFloorData.length) return;
+  
+  const operator = document.getElementById('operatorName').value.trim() || localStorage.getItem('lastOperator') || 'Unknown';
+  
+  const rows = currentFloorData.map((item, i) => {
+    const pEl = document.getElementById(`p${i}`);
+    const rEl = document.getElementById(`r${i}`);
+    const dEl = document.getElementById(`d${i}`);
+    const bEl = document.getElementById(`b${i}`);
+    const bnEl = document.getElementById(`bn${i}`);
+    return {
+      sl: item[0],
+      itemCode: item[1],
+      needleType: item[2],
+      size: item[3],
+      brand: item[4],
+      unitPrice: item[5],
+      opening: item[6],
+      previous: pEl ? (Number(pEl.innerText) || 0) : 0,
+      receive: rEl ? (Number(rEl.value) || 0) : 0,
+      delivery: dEl ? (Number(dEl.value) || 0) : 0,
+      present: bEl ? (Number(bEl.innerText) || 0) : 0,
+      bn: bnEl ? (Number(bnEl.value) || 0) : 0
+    };
+  });
+  
+  setReportCacheEntry(floor, date, { operator, rows, isDraft: true });
 }
 
 function calc(i){
@@ -1100,6 +1253,10 @@ function calc(i){
   
   updateTotal();
   checkNegativeStock();
+  
+  // প্রতিটি ইনপুট পরিবর্তনের পর auto-save draft (carry-forward reliable রাখার জন্য)
+  clearTimeout(window._autoSaveTimer);
+  window._autoSaveTimer = setTimeout(autoSaveDraft, 300);
 }
 
 function updateTotal(){
@@ -1199,6 +1356,11 @@ function updateMonthlySummary(rows){
   document.getElementById('monthBN').innerText = bn.toLocaleString();
 }
 
+function updateLastSync(text){
+  const el = document.getElementById('lastSync');
+  if(el) el.textContent = text;
+}
+
 // =========================================
 // 💾 SAVE / LOAD / DELETE
 // =========================================
@@ -1232,21 +1394,24 @@ async function saveData(){
     bn: Number(document.getElementById(`bn${i}`).value) || 0
   }));
   
+  // Always save to localStorage cache first (instant & reliable)
+  setReportCacheEntry(floor, date, { operator, rows, isDraft: false, savedAt: new Date().toISOString() });
+  localStorage.setItem('lastOperator', operator);
+  updateLastSync(`💾 Saved locally at ${new Date().toLocaleTimeString()}`);
+  
   if(navigator.onLine){
     const result = await saveToSupabase(floor, date, operator, rows);
     if(result.success){
-      localStorage.setItem('lastOperator', operator);
-      await loadData();
+      updateLastSync(`☁️ Synced to Supabase at ${new Date().toLocaleTimeString()}`);
+      await loadData(); // refresh to show saved status
     }
   }else{
     saveDataOffline(floor, date, operator, rows);
-    localStorage.setItem('lastOperator', operator);
   }
 }
 
 async function loadData(){
   showLoading('Loading data...');
-  document.getElementById('carryBadge').style.display = 'none';
   
   const date = document.getElementById('postDate').value;
   const floor = document.getElementById('floor').value;
@@ -1259,13 +1424,28 @@ async function loadData(){
   }
   
   try{
-    // ১. আজকের তারিখে আগেই সেভ করা ডাটা আছে কিনা চেক
-    const savedData = await loadFromSupabase(floor, date);
+    // ১. আজকের তারিখে আগেই সেভ করা ডাটা আছে কিনা চেক (LocalStorage first, then Supabase)
+    let savedData = getReportCacheEntry(floor, date);
+    let dataSource = 'cache';
+    
+    if(!savedData || !savedData.rows || !savedData.rows.length){
+      savedData = await loadFromSupabase(floor, date);
+      dataSource = 'supabase';
+      
+      // সেভ হলে cache এ কপি করি
+      if(savedData && savedData.rows && savedData.rows.length){
+        setReportCacheEntry(floor, date, { 
+          operator: savedData.operator, 
+          rows: savedData.rows, 
+          isDraft: false 
+        });
+      }
+    }
     
     if(savedData && savedData.rows && savedData.rows.length){
-      // আগের সেভ করা ডাটা পাওয়া গেছে -> সেটাই দেখাও
+      // আগের সেভ করা ডাটা পাওয়া গেছে
       const previousArr = savedData.rows.map(r => Number(r.previous) || 0);
-      loadTable(previousArr);
+      loadTable(previousArr, 'saved');
       
       savedData.rows.forEach((row, i) => {
         if(document.getElementById(`r${i}`)){
@@ -1276,17 +1456,46 @@ async function loadData(){
         }
       });
       
-      document.getElementById('operatorName').value = savedData.operator || document.getElementById('operatorName').value;
+      if(savedData.operator){
+        document.getElementById('operatorName').value = savedData.operator;
+      }
       updateMonthlySummary(savedData.rows);
+      updateLastSync(`📂 Loaded from ${dataSource === 'cache' ? 'local cache' : 'Supabase'} at ${new Date().toLocaleTimeString()}`);
     }else{
-      // ২. আজকের ডাটা নেই -> আগের দিনের Present Stock কে আজকের Previous বানাও
-      const prevPresentArr = await getPreviousDayPresentArray(floor, date);
+      // ২. আজকের ডাটা নেই -> আগের দিনের Present Stock থেকে carry-forward করি
+      const prevDate = getPrevDateStr(date);
       
-      if(prevPresentArr){
-        loadTable(prevPresentArr); // ⏪ Carry-forward থেকে আসা Previous
-        document.getElementById('carryBadge').style.display = 'inline-block';
+      // ২ক. আগে LocalStorage এ আগের দিনের ডাটা আছে কিনা দেখি
+      let prevPresentArr = null;
+      let prevSource = null;
+      
+      const cachedPrev = getReportCacheEntry(floor, prevDate);
+      if(cachedPrev && cachedPrev.rows && cachedPrev.rows.length){
+        prevPresentArr = cachedPrev.rows.map(r => Number(r.present) || 0);
+        prevSource = 'cache';
       }else{
-        loadTable(); // আগের দিনের ডাটাও নেই -> default Opening Stock ব্যবহার হবে
+        // ২খ. Supabase থেকে আগের দিনের ডাটা আনি
+        try{
+          const prevRecord = await loadFromSupabase(floor, prevDate);
+          if(prevRecord && prevRecord.rows && prevRecord.rows.length){
+            prevPresentArr = prevRecord.rows.map(r => Number(r.present) || 0);
+            prevSource = 'supabase';
+            setReportCacheEntry(floor, prevDate, { 
+              operator: prevRecord.operator, 
+              rows: prevRecord.rows, 
+              isDraft: false 
+            });
+          }
+        }catch(e){ console.warn('Supabase carry-forward failed:', e); }
+      }
+      
+      if(prevPresentArr && prevPresentArr.length === currentFloorData.length){
+        loadTable(prevPresentArr, prevSource);
+        updateLastSync(`⏪ Carried from ${prevDate} (${prevSource}) at ${new Date().toLocaleTimeString()}`);
+        showToast(`⏪ Previous day (${prevDate}) stock auto-carried!`);
+      }else{
+        loadTable(); // আগের দিনের ডাটাও নেই বা row count mismatch -> default opening
+        updateLastSync(`📋 Original opening stock loaded at ${new Date().toLocaleTimeString()}`);
       }
       updateMonthlySummary([]);
     }
@@ -1296,6 +1505,12 @@ async function loadData(){
   }
   
   hideLoading();
+}
+
+async function manualRefresh(){
+  showLoading('Refreshing...');
+  await loadData();
+  showToast('🔄 Refreshed!');
 }
 
 function onFloorChange(){
@@ -1313,22 +1528,33 @@ async function deleteData(){
   
   if(!confirm('⚠️ এই তারিখের ডাটা delete করবেন?')) return;
   
+  // LocalStorage থেকে মুছে ফেলি
+  try{
+    const cache = getReportCache();
+    delete cache[`${floor}__${date}`];
+    localStorage.setItem(REPORT_CACHE_KEY, JSON.stringify(cache));
+  }catch(e){}
+  
+  // Supabase থেকে মুছে ফেলি
   const companyId = await getCompanyId();
-  if(!companyId) return;
-  
-  const { error } = await supabase
-    .from('needle_reports')
-    .delete()
-    .eq('company_id', companyId)
-    .eq('floor', floor)
-    .eq('report_date', date);
-  
-  if(error){
-    alert('❌ Delete failed: ' + error.message);
+  if(companyId){
+    const { error } = await supabase
+      .from('needle_reports')
+      .delete()
+      .eq('company_id', companyId)
+      .eq('floor', floor)
+      .eq('report_date', date);
+    
+    if(error){
+      alert('❌ Delete failed: ' + error.message);
+    }else{
+      showToast('✅ Deleted successfully');
+    }
   }else{
-    showToast('✅ Deleted successfully');
-    loadData();
+    showToast('✅ Deleted from local cache');
   }
+  
+  loadData();
 }
 
 // =========================================
@@ -1410,6 +1636,7 @@ function showToast(msg){
     background:#10b981;color:#fff;padding:12px 24px;border-radius:8px;
     font-weight:600;font-size:13px;z-index:9999;
     box-shadow:0 4px 12px rgba(0,0,0,0.3);animation:toastFade 0.3s ease;
+    max-width:90%;text-align:center;
   `;
   toast.innerText = msg;
   document.body.appendChild(toast);
@@ -1512,6 +1739,7 @@ window.fixNegativeRow = fixNegativeRow;
 window.loadTable = loadTable;
 window.toggleTheme = toggleTheme;
 window.onFloorChange = onFloorChange;
+window.manualRefresh = manualRefresh;
 </script>
 </body>
 </html>
