@@ -6,528 +6,130 @@
 <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
-
 <style>
 :root{
-  --bg:#f5f7fa;
-  --card:#ffffff;
-  --card2:#f8fafc;
-  --text:#1e293b;
-  --muted:#64748b;
-  --border:#e2e8f0;
-  --blue:#667eea;
-  --blue-dark:#5a67d8;
-  --green:#10b981;
-  --red:#ef4444;
-  --orange:#f59e0b;
-  --purple:#8b5cf6;
-  --pink:#ec4899;
-  --cyan:#06b6d4;
-  --shadow:0 4px 20px rgba(0,0,0,0.06);
-  --shadow-lg:0 10px 40px rgba(0,0,0,0.1);
+  --bg:#f5f7fa;--card:#ffffff;--card2:#f8fafc;--text:#1e293b;--muted:#64748b;--border:#e2e8f0;
+  --blue:#667eea;--green:#10b981;--red:#ef4444;--orange:#f59e0b;--purple:#8b5cf6;--cyan:#06b6d4;
+  --shadow:0 4px 20px rgba(0,0,0,0.06);--shadow-lg:0 10px 40px rgba(0,0,0,0.1);
   --gradient-1:linear-gradient(135deg,#667eea 0%,#764ba2 100%);
   --gradient-2:linear-gradient(135deg,#f093fb 0%,#f5576c 100%);
   --gradient-3:linear-gradient(135deg,#4facfe 0%,#00f2fe 100%);
   --gradient-4:linear-gradient(135deg,#43e97b 0%,#38f9d7 100%);
 }
 body.dark{
-  --bg:#0f172a;
-  --card:#1e293b;
-  --card2:#334155;
-  --text:#f1f5f9;
-  --muted:#94a3b8;
-  --border:#475569;
-  --shadow:0 4px 20px rgba(0,0,0,0.3);
-  --shadow-lg:0 10px 40px rgba(0,0,0,0.4);
+  --bg:#0f172a;--card:#1e293b;--card2:#334155;--text:#f1f5f9;--muted:#94a3b8;--border:#475569;
+  --shadow:0 4px 20px rgba(0,0,0,0.3);--shadow-lg:0 10px 40px rgba(0,0,0,0.4);
 }
 *{box-sizing:border-box}
-body{
-  margin:0;
-  background:var(--bg);
-  color:var(--text);
-  font-family:'Segoe UI',system-ui,-apple-system,sans-serif;
-  transition:all .3s ease;
-  padding-bottom:80px;
-}
-
-/* Header */
-.header{
-  text-align:center;
-  padding:16px 12px;
-  background:var(--gradient-1);
-  color:white;
-  box-shadow:var(--shadow-lg);
-  position:relative;
-  overflow:hidden;
-  animation:slideDown .6s ease;
-}
-.header::before{
-  content:'';
-  position:absolute;
-  top:-50%;right:-10%;
-  width:300px;height:300px;
-  background:rgba(255,255,255,0.1);
-  border-radius:50%;
-  animation:float 6s ease-in-out infinite;
-}
+body{margin:0;background:var(--bg);color:var(--text);font-family:'Segoe UI',system-ui,sans-serif;transition:all .3s;padding-bottom:80px}
+.header{text-align:center;padding:16px 12px;background:var(--gradient-1);color:white;box-shadow:var(--shadow-lg);position:relative;overflow:hidden;animation:slideDown .6s}
+.header::before{content:'';position:absolute;top:-50%;right:-10%;width:300px;height:300px;background:rgba(255,255,255,0.1);border-radius:50%;animation:float 6s infinite}
 @keyframes slideDown{from{transform:translateY(-100%);opacity:0}to{transform:translateY(0);opacity:1}}
 @keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-20px)}}
-@keyframes glow{0%,100%{text-shadow:0 0 20px rgba(255,255,255,0.5)}50%{text-shadow:0 0 30px rgba(255,255,255,0.8),0 0 40px rgba(255,255,255,0.6)}}
-.header h2{
-  font-size:22px;
-  font-weight:800;
-  letter-spacing:1px;
-  margin:2px;
-  animation:glow 2s ease-in-out infinite;
-  position:relative;
-  z-index:1;
-}
+@keyframes glow{0%,100%{text-shadow:0 0 20px rgba(255,255,255,0.5)}50%{text-shadow:0 0 30px rgba(255,255,255,0.8)}}
+.header h2{font-size:22px;font-weight:800;letter-spacing:1px;margin:2px;animation:glow 2s infinite;position:relative;z-index:1}
 .header h3,.header h4{margin:2px;position:relative;z-index:1;font-weight:600}
-.header h4{font-size:12px;opacity:0.9}
-.header h3{font-size:14px}
-
-/* Cache Bar */
-.cacheStatusBar{
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  gap:8px;
-  padding:6px 10px;
-  font-size:10px;
-  font-weight:700;
-  background:linear-gradient(90deg,#10b981,#059669);
-  color:white;
-  flex-wrap:wrap;
-  position:sticky;
-  top:0;
-  z-index:100;
-}
-.cacheStatusBar .cacheDot{
-  width:7px;height:7px;border-radius:50%;
-  background:white;
-  animation:livePulse 2s infinite;
-}
-@keyframes livePulse{0%{box-shadow:0 0 0 0 rgba(255,255,255,0.7);transform:scale(1)}70%{box-shadow:0 0 0 6px rgba(255,255,255,0);transform:scale(1.1)}100%{box-shadow:0 0 0 0 rgba(255,255,255,0);transform:scale(1)}}
-.cacheStatusBar span{
-  background:rgba(255,255,255,0.2);
-  padding:2px 8px;
-  border-radius:10px;
-  backdrop-filter:blur(10px);
-}
-
-/* Controls */
-.controls{
-  background:var(--card);
-  border:1px solid var(--border);
-  border-radius:14px;
-  padding:12px;
-  margin:10px;
-  display:grid;
-  grid-template-columns:repeat(4,1fr);
-  gap:8px;
-  box-shadow:var(--shadow);
-}
+.header h4{font-size:12px;opacity:0.9}.header h3{font-size:14px}
+.cacheStatusBar{display:flex;align-items:center;justify-content:center;gap:8px;padding:6px 10px;font-size:10px;font-weight:700;background:linear-gradient(90deg,#10b981,#059669);color:white;flex-wrap:wrap;position:sticky;top:0;z-index:100}
+.cacheStatusBar .cacheDot{width:7px;height:7px;border-radius:50%;background:white;animation:livePulse 2s infinite}
+@keyframes livePulse{0%{box-shadow:0 0 0 0 rgba(255,255,255,0.7)}70%{box-shadow:0 0 0 6px rgba(255,255,255,0)}100%{box-shadow:0 0 0 0 rgba(255,255,255,0)}}
+.cacheStatusBar span{background:rgba(255,255,255,0.2);padding:2px 8px;border-radius:10px}
+.controls{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:12px;margin:10px;display:grid;grid-template-columns:repeat(4,1fr);gap:8px;box-shadow:var(--shadow)}
 label{font-size:10px;color:var(--muted);font-weight:700;display:block;margin-bottom:3px}
-input,select{
-  width:100%;
-  padding:8px;
-  border-radius:8px;
-  border:1px solid var(--border);
-  background:var(--bg);
-  color:var(--text);
-  font-size:13px;
-  transition:all .3s;
-}
+input,select{width:100%;padding:8px;border-radius:8px;border:1px solid var(--border);background:var(--bg);color:var(--text);font-size:13px}
 input:focus,select:focus{outline:none;border-color:var(--blue);box-shadow:0 0 0 2px rgba(102,126,234,0.2)}
-button{
-  padding:8px 12px;
-  border:0;
-  border-radius:8px;
-  color:white;
-  font-weight:700;
-  cursor:pointer;
-  margin:3px;
-  font-size:12px;
-  transition:all .3s;
-}
+button{padding:8px 12px;border:0;border-radius:8px;color:white;font-weight:700;cursor:pointer;margin:3px;font-size:12px;transition:all .3s}
 button:hover{transform:translateY(-2px);box-shadow:0 4px 12px rgba(0,0,0,0.2)}
-.save{background:var(--gradient-4);color:#064e3b}
-.show{background:var(--gradient-1)}
-.excel{background:linear-gradient(135deg,#059669,#047857)}
-.print{background:var(--gradient-2)}
-.home{background:linear-gradient(135deg,#0f766e,#115e59)}
-.del{background:linear-gradient(135deg,#ef4444,#dc2626)}
-.theme{background:var(--gradient-3);color:#0c4a6e}
-
-/* KPI Grid */
-.kpi{
-  display:grid;
-  grid-template-columns:repeat(6,1fr);
-  gap:8px;
-  margin:10px;
-  animation:fadeIn .8s ease .2s both;
-}
+.save{background:var(--gradient-4);color:#064e3b}.show{background:var(--gradient-1)}
+.excel{background:linear-gradient(135deg,#059669,#047857)}.print{background:var(--gradient-2)}
+.home{background:linear-gradient(135deg,#0f766e,#115e59)}.del{background:linear-gradient(135deg,#ef4444,#dc2626)}
+.kpi{display:grid;grid-template-columns:repeat(6,1fr);gap:8px;margin:10px;animation:fadeIn .8s .2s both}
 @keyframes fadeIn{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
-.kpiBox{
-  background:var(--card);
-  border:1px solid var(--border);
-  border-radius:12px;
-  padding:10px;
-  text-align:center;
-  box-shadow:var(--shadow);
-  transition:all .3s;
-  border-left:4px solid var(--blue);
-  animation:slideUp .5s ease backwards;
-}
-.kpiBox:nth-child(1){animation-delay:.1s;border-left-color:var(--blue)}
-.kpiBox:nth-child(2){animation-delay:.2s;border-left-color:var(--green)}
-.kpiBox:nth-child(3){animation-delay:.3s;border-left-color:var(--red)}
-.kpiBox:nth-child(4){animation-delay:.4s;border-left-color:var(--purple)}
-.kpiBox:nth-child(5){animation-delay:.5s;border-left-color:var(--orange)}
-.kpiBox:nth-child(6){animation-delay:.6s;border-left-color:var(--cyan)}
+.kpiBox{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:10px;text-align:center;box-shadow:var(--shadow);transition:all .3s;border-left:4px solid var(--blue);animation:slideUp .5s backwards}
+.kpiBox:nth-child(1){animation-delay:.1s;border-left-color:var(--blue)}.kpiBox:nth-child(2){animation-delay:.2s;border-left-color:var(--green)}
+.kpiBox:nth-child(3){animation-delay:.3s;border-left-color:var(--red)}.kpiBox:nth-child(4){animation-delay:.4s;border-left-color:var(--purple)}
+.kpiBox:nth-child(5){animation-delay:.5s;border-left-color:var(--orange)}.kpiBox:nth-child(6){animation-delay:.6s;border-left-color:var(--cyan)}
 @keyframes slideUp{from{opacity:0;transform:translateY(30px)}to{opacity:1;transform:translateY(0)}}
 .kpiBox:hover{transform:translateY(-4px);box-shadow:var(--shadow-lg)}
 .kpiBox span{color:var(--muted);font-size:10px;font-weight:700}
 .kpiBox b{display:block;color:var(--text);font-size:20px;margin-top:4px;font-weight:800}
-
-/* Charts Grid */
-.charts-grid{
-  display:grid;
-  grid-template-columns:repeat(2,1fr);
-  gap:10px;
-  margin:10px;
-  animation:fadeIn .8s ease .4s both;
-}
-.chart-card{
-  background:var(--card);
-  border:1px solid var(--border);
-  border-radius:14px;
-  padding:12px;
-  box-shadow:var(--shadow);
-  transition:all .3s;
-}
+.charts-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin:10px;animation:fadeIn .8s .4s both}
+.chart-card{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:12px;box-shadow:var(--shadow);transition:all .3s}
 .chart-card:hover{box-shadow:var(--shadow-lg);transform:translateY(-2px)}
 .chart-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px}
 .chart-title{font-size:12px;font-weight:700;color:var(--text)}
 .chart-badge{background:var(--gradient-1);color:white;padding:2px 8px;border-radius:10px;font-size:9px;font-weight:700}
-.chart-container{position:relative;height:180px}
-
-/* MCD Grid */
-.section-title{
-  font-size:13px;
-  font-weight:800;
-  color:var(--text);
-  margin:12px 10px 8px;
-  display:flex;
-  align-items:center;
-  gap:6px;
-}
-.dept-grid{
-  display:grid;
-  grid-template-columns:repeat(auto-fill,minmax(140px,1fr));
-  gap:8px;
-  margin:0 10px 10px;
-  animation:fadeIn .8s ease .6s both;
-}
-.dept-card{
-  background:var(--card);
-  border:1px solid var(--border);
-  border-radius:10px;
-  padding:10px;
-  box-shadow:var(--shadow);
-  cursor:pointer;
-  transition:all .3s;
-}
+.chart-container{position:relative;height:200px}
+.section-title{font-size:13px;font-weight:800;color:var(--text);margin:12px 10px 8px;display:flex;align-items:center;gap:6px}
+.dept-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:8px;margin:0 10px 10px;animation:fadeIn .8s .6s both}
+.dept-card{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:10px;box-shadow:var(--shadow);cursor:pointer;transition:all .3s}
 .dept-card:hover{border-color:var(--blue);transform:scale(1.03);box-shadow:var(--shadow-lg)}
 .dept-name{font-size:9px;font-weight:700;color:var(--text);margin-bottom:6px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .dept-stats{display:grid;grid-template-columns:1fr 1fr;gap:4px}
 .dept-stat{text-align:center;padding:5px;border-radius:6px;background:var(--card2)}
 .dept-stat-value{font-size:14px;font-weight:800;color:var(--blue)}
 .dept-stat-label{font-size:8px;color:var(--muted);margin-top:1px}
-
-/* Absentees List */
-.absentees-list{
-  background:var(--card);
-  border:1px solid var(--border);
-  border-radius:14px;
-  padding:12px;
-  margin:10px;
-  box-shadow:var(--shadow);
-  animation:fadeIn .8s ease .8s both;
-}
-.absentee-item{
-  display:flex;
-  align-items:center;
-  padding:8px;
-  border-radius:8px;
-  background:var(--card2);
-  margin-bottom:6px;
-  cursor:pointer;
-  transition:all .3s;
-  border-left:3px solid var(--red);
-}
+.absentees-list{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:12px;margin:10px;box-shadow:var(--shadow);animation:fadeIn .8s .8s both}
+.absentee-item{display:flex;align-items:center;padding:8px;border-radius:8px;background:var(--card2);margin-bottom:6px;cursor:pointer;transition:all .3s;border-left:3px solid var(--red)}
 .absentee-item:hover{background:rgba(239,68,68,0.1);transform:translateX(4px)}
-.absentee-avatar{
-  width:34px;height:34px;border-radius:50%;
-  background:var(--gradient-2);
-  display:flex;align-items:center;justify-content:center;
-  color:white;font-weight:800;margin-right:10px;flex-shrink:0;font-size:13px;
-}
-.absentee-info{flex:1}
-.absentee-name{font-size:12px;font-weight:700;color:var(--text)}
+.absentee-avatar{width:34px;height:34px;border-radius:50%;background:var(--gradient-2);display:flex;align-items:center;justify-content:center;color:white;font-weight:800;margin-right:10px;flex-shrink:0;font-size:13px}
+.absentee-info{flex:1;min-width:0}
+.absentee-name{font-size:12px;font-weight:700;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .absentee-id{font-size:10px;color:var(--muted)}
-.absentee-count{background:var(--red);color:white;padding:3px 8px;border-radius:10px;font-size:11px;font-weight:800}
-
-/* View Toggle */
+.absentee-mcd{font-size:9px;color:var(--blue);font-weight:700;background:rgba(102,126,234,0.1);padding:2px 6px;border-radius:4px;margin-top:2px;display:inline-block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%}
+.absentee-count{background:var(--red);color:white;padding:3px 8px;border-radius:10px;font-size:11px;font-weight:800;flex-shrink:0}
 .viewToggle{display:flex;gap:8px;justify-content:center;margin:10px}
-.viewBtn{
-  padding:8px 16px;
-  border-radius:8px;
-  border:2px solid var(--border);
-  background:var(--card);
-  color:var(--text);
-  cursor:pointer;
-  font-weight:700;
-  font-size:12px;
-  transition:all .3s;
-}
+.viewBtn{padding:8px 16px;border-radius:8px;border:2px solid var(--border);background:var(--card);color:var(--text);cursor:pointer;font-weight:700;font-size:12px}
 .viewBtn.active{background:var(--blue);color:white;border-color:var(--blue)}
-
-/* Table */
-table{
-  width:98%;
-  margin:10px auto;
-  border-collapse:collapse;
-  background:var(--card);
-  color:var(--text);
-  font-size:12px;
-  box-shadow:var(--shadow);
-  border-radius:10px;
-  overflow:hidden;
-}
+table{width:98%;margin:10px auto;border-collapse:collapse;background:var(--card);color:var(--text);font-size:12px;box-shadow:var(--shadow);border-radius:10px;overflow:hidden}
 th,td{border:1px solid var(--border);padding:6px;text-align:center}
 th{background:var(--gradient-1);color:white;font-weight:700;font-size:11px}
 tr:nth-child(even){background:var(--card2)}
 .totalRow{background:var(--gradient-4);color:#064e3b;font-weight:bold}
-
-/* Detail Boxes */
-.detailBox{
-  background:var(--card);
-  border:1px solid var(--border);
-  border-radius:10px;
-  padding:10px;
-  margin:8px 10px;
-  display:none;
-  box-shadow:var(--shadow);
-}
+.detailBox{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:10px;margin:8px 10px;display:none;box-shadow:var(--shadow)}
 .detailBox h4{margin:0 0 8px 0;color:var(--blue);font-size:13px}
 .detailRow{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:6px}
 .detailRow input{font-size:12px;padding:6px}
-
-/* Person Cards */
-.personDetails{
-  display:grid;
-  grid-template-columns:repeat(auto-fill,minmax(280px,1fr));
-  gap:10px;
-  margin:10px;
-}
-.personCard{
-  background:var(--card);
-  border:2px solid var(--border);
-  border-radius:10px;
-  padding:12px;
-  box-shadow:var(--shadow);
-}
-.personCard.leave{border-left:4px solid var(--orange)}
-.personCard.absent{border-left:4px solid var(--red)}
-.personCard.medical{border-left:4px solid var(--purple)}
-.personCard.offday{border-left:4px solid var(--blue)}
+.personDetails{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:10px;margin:10px}
+.personCard{background:var(--card);border:2px solid var(--border);border-radius:10px;padding:12px;box-shadow:var(--shadow)}
+.personCard.leave{border-left:4px solid var(--orange)}.personCard.absent{border-left:4px solid var(--red)}
+.personCard.medical{border-left:4px solid var(--purple)}.personCard.offday{border-left:4px solid var(--blue)}
 .personHeader{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;padding-bottom:6px;border-bottom:1px solid var(--border)}
 .personName{font-weight:700;font-size:13px;color:var(--blue)}
 .personId{background:rgba(102,126,234,0.15);color:var(--blue);padding:3px 6px;border-radius:5px;font-size:10px;font-weight:700}
 .personStats{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-top:6px}
 .statItem{text-align:center;padding:6px;border-radius:6px;background:var(--card2)}
 .statItem b{display:block;font-size:16px;margin-top:3px}
-.statItem.leave b{color:var(--orange)}
-.statItem.absent b{color:var(--red)}
-.statItem.medical b{color:var(--purple)}
-.statItem.offday b{color:var(--blue)}
+.statItem.leave b{color:var(--orange)}.statItem.absent b{color:var(--red)}
+.statItem.medical b{color:var(--purple)}.statItem.offday b{color:var(--blue)}
 .statItem span{font-size:9px;color:var(--muted);font-weight:700}
-
-/* Report Filters */
-.reportFilters{
-  background:var(--card);
-  border:1px solid var(--border);
-  border-radius:14px;
-  padding:12px;
-  margin:10px;
-  display:none;
-  grid-template-columns:repeat(4,1fr);
-  gap:8px;
-  box-shadow:var(--shadow);
-}
-
-/* Theme Toggle */
-.themeToggle{
-  position:fixed;
-  top:15px;right:15px;
-  z-index:1000;
-  background:var(--gradient-3);
-  color:#0c4a6e;
-  border:none;
-  padding:8px 14px;
-  border-radius:50px;
-  cursor:pointer;
-  font-weight:700;
-  font-size:12px;
-  box-shadow:var(--shadow-lg);
-  transition:all .3s;
-}
+.reportFilters{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:12px;margin:10px;display:none;grid-template-columns:repeat(4,1fr);gap:8px;box-shadow:var(--shadow)}
+.themeToggle{position:fixed;top:15px;right:15px;z-index:1000;background:var(--gradient-3);color:#0c4a6e;border:none;padding:8px 14px;border-radius:50px;cursor:pointer;font-weight:700;font-size:12px;box-shadow:var(--shadow-lg)}
 .themeToggle:hover{transform:scale(1.1)}
-
-/* Modal */
-.modal{
-  display:none;
-  position:fixed;
-  top:0;left:0;right:0;bottom:0;
-  background:rgba(0,0,0,0.7);
-  z-index:2000;
-  animation:fadeIn .3s ease;
-  overflow-y:auto;
-}
-.modal-content{
-  background:var(--card);
-  margin:20px auto;
-  border-radius:16px;
-  max-width:900px;
-  max-height:90vh;
-  overflow-y:auto;
-  animation:slideUp .4s ease;
-}
-.modal-header{
-  background:var(--gradient-1);
-  color:white;
-  padding:14px 18px;
-  position:sticky;
-  top:0;
-  z-index:10;
-  border-radius:16px 16px 0 0;
-}
+.modal{display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.7);z-index:2000;overflow-y:auto}
+.modal-content{background:var(--card);margin:20px auto;border-radius:16px;max-width:900px;max-height:90vh;overflow-y:auto;animation:slideUp .4s}
+.modal-header{background:var(--gradient-1);color:white;padding:14px 18px;position:sticky;top:0;z-index:10;border-radius:16px 16px 0 0}
 .modal-title{font-size:15px;font-weight:800}
-.modal-close{
-  position:absolute;
-  top:14px;right:18px;
-  background:rgba(255,255,255,0.2);
-  border:none;
-  color:white;
-  width:30px;height:30px;
-  border-radius:50%;
-  cursor:pointer;
-  font-size:16px;
-  display:flex;align-items:center;justify-content:center;
-}
+.modal-close{position:absolute;top:14px;right:18px;background:rgba(255,255,255,0.2);border:none;color:white;width:30px;height:30px;border-radius:50%;cursor:pointer;font-size:16px;display:flex;align-items:center;justify-content:center}
 .modal-body{padding:16px}
-
-/* Heatmap */
-.heatmap-calendar{
-  display:grid;
-  grid-template-columns:repeat(7,1fr);
-  gap:5px;
-  margin-top:12px;
-}
+.heatmap-calendar{display:grid;grid-template-columns:repeat(7,1fr);gap:5px;margin-top:12px}
 .heatmap-day-header{text-align:center;font-size:10px;font-weight:700;color:var(--muted);padding:6px}
-.heatmap-day{
-  aspect-ratio:1;
-  border-radius:6px;
-  display:flex;align-items:center;justify-content:center;
-  font-size:11px;font-weight:700;
-  cursor:pointer;
-  transition:all .3s;
-}
+.heatmap-day{aspect-ratio:1;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;cursor:pointer;transition:all .3s}
 .heatmap-day:hover{transform:scale(1.15);z-index:10;box-shadow:0 4px 12px rgba(0,0,0,0.2)}
-.heatmap-day.excellent{background:#10b981;color:white}
-.heatmap-day.good{background:#34d399;color:white}
-.heatmap-day.average{background:#fbbf24;color:white}
-.heatmap-day.poor{background:#ef4444;color:white}
+.heatmap-day.excellent{background:#10b981;color:white}.heatmap-day.good{background:#34d399;color:white}
+.heatmap-day.average{background:#fbbf24;color:white}.heatmap-day.poor{background:#ef4444;color:white}
 .heatmap-day.off{background:var(--border);color:var(--muted)}
-
-/* Toast */
-.toast{
-  position:fixed;
-  right:15px;bottom:90px;
-  background:var(--gradient-4);
-  color:#064e3b;
-  padding:10px 18px;
-  border-radius:10px;
-  font-weight:700;
-  font-size:12px;
-  display:none;
-  box-shadow:var(--shadow-lg);
-  animation:slideIn .3s ease;
-  z-index:9999;
-}
+.toast{position:fixed;right:15px;bottom:90px;background:var(--gradient-4);color:#064e3b;padding:10px 18px;border-radius:10px;font-weight:700;font-size:12px;display:none;box-shadow:var(--shadow-lg);animation:slideIn .3s;z-index:9999}
 @keyframes slideIn{from{transform:translateX(400px);opacity:0}to{transform:translateX(0);opacity:1}}
-
-/* Action Bar */
-.action-bar{
-  position:fixed;
-  bottom:0;left:0;right:0;
-  background:var(--card);
-  padding:8px;
-  box-shadow:0 -4px 20px rgba(0,0,0,0.1);
-  display:flex;
-  gap:6px;
-  overflow-x:auto;
-  z-index:100;
-  border-top:1px solid var(--border);
-}
-.action-btn{
-  flex:1;
-  min-width:70px;
-  padding:8px 10px;
-  border:none;
-  border-radius:8px;
-  font-weight:700;
-  font-size:11px;
-  cursor:pointer;
-  transition:all .3s;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  gap:4px;
-  color:white;
-  margin:0;
-}
+.action-bar{position:fixed;bottom:0;left:0;right:0;background:var(--card);padding:8px;box-shadow:0 -4px 20px rgba(0,0,0,0.1);display:flex;gap:6px;overflow-x:auto;z-index:100;border-top:1px solid var(--border)}
+.action-btn{flex:1;min-width:70px;padding:8px 10px;border:none;border-radius:8px;font-weight:700;font-size:11px;cursor:pointer;transition:all .3s;display:flex;align-items:center;justify-content:center;gap:4px;color:white;margin:0}
 .action-btn:hover{transform:translateY(-3px);box-shadow:0 6px 20px rgba(0,0,0,0.15)}
-
-/* Responsive */
-@media(max-width:900px){
-  .controls,.reportFilters,.detailRow{grid-template-columns:repeat(2,1fr)}
-  .kpi{grid-template-columns:repeat(3,1fr)}
-  .charts-grid{grid-template-columns:1fr}
-  .dept-grid{grid-template-columns:repeat(2,1fr)}
-  .personDetails{grid-template-columns:1fr}
-}
-@media(max-width:600px){
-  .kpi{grid-template-columns:repeat(2,1fr)}
-  .controls,.reportFilters{grid-template-columns:1fr}
-  .dept-grid{grid-template-columns:1fr}
-  .header h2{font-size:18px}
-}
-
-@media print{
-  body{background:white;color:black;padding-bottom:0}
-  .controls,.btnArea,.noPrint,.detailBox,.reportFilters,.themeToggle,.personDetails,.viewToggle,.cacheStatusBar,.action-bar,.themeToggle,.absentees-list,.dept-grid,.charts-grid,.modal{display:none!important}
-  table{width:100%;font-size:10px;box-shadow:none}
-  .chart-card{width:100%;margin:6px 0;box-shadow:none}
-  .header{border:none;box-shadow:none}
-  .kpi{grid-template-columns:repeat(6,1fr)}
-}
+@media(max-width:900px){.controls,.reportFilters,.detailRow{grid-template-columns:repeat(2,1fr)}.kpi{grid-template-columns:repeat(3,1fr)}.charts-grid{grid-template-columns:1fr}.dept-grid{grid-template-columns:repeat(2,1fr)}}
+@media(max-width:600px){.kpi{grid-template-columns:repeat(2,1fr)}.controls,.reportFilters{grid-template-columns:1fr}.dept-grid{grid-template-columns:1fr}.header h2{font-size:18px}}
+@media print{body{background:white;color:black;padding-bottom:0}.controls,.btnArea,.noPrint,.detailBox,.reportFilters,.themeToggle,.personDetails,.viewToggle,.cacheStatusBar,.action-bar,.modal{display:none!important}table{width:100%;font-size:10px;box-shadow:none}.header{border:none;box-shadow:none}}
 </style>
 </head>
-
 <body>
 
 <button class="themeToggle" onclick="toggleTheme()">🌙 / ☀️</button>
@@ -538,35 +140,20 @@ tr:nth-child(even){background:var(--card2)}
   <h3>📊 Smart Manpower Dashboard</h3>
 </div>
 
-<!-- Cache Status Bar -->
 <div class="cacheStatusBar">
   <div class="cacheDot"></div>
   <span id="cacheStatusText">📦 Cache Ready</span>
   <span>🔥 Reads: <b id="readCounter">0</b></span>
   <span>💾 Saved: <b id="savedReads">0</b></span>
-  <span> <b id="syncStatus">Active</b></span>
+  <span>🔄 <b id="syncStatus">Active</b></span>
 </div>
 
-<!-- Controls -->
 <div class="controls noPrint">
   <div><label>📅 Report Date</label><input type="date" id="reportDate"></div>
-  <div><label>🏢 Company</label>
-    <select id="company">
-      <option>GMS TEXTILES LTD</option>
-      <option>GMS COMPOSITE KNITTING</option>
-    </select>
-  </div>
-  <div><label>📂 MCD / Department</label>
-    <select id="mcd">
-      <option>GREY FABRIC MCD</option><option>SHIPMENT MCD</option><option>BILLING SECTION</option>
-      <option>OUTER WEAR MCD</option><option>YARN MCD</option><option>PRINTING MCD</option>
-      <option>JHUT MCD</option><option>GENERAL MCD</option><option>ACCESSORIES MCD</option>
-      <option>LEFTOVER MCD</option><option>FINISH FABRIC MCD</option><option>YARN DYEING MCD</option>
-      <option>CHEMICAL MCD</option><option>GENERAL TECHNICAL MCD</option>
-    </select>
-  </div>
+  <div><label>🏢 Company</label><select id="company"><option>GMS TEXTILES LTD</option><option>GMS COMPOSITE KNITTING</option></select></div>
+  <div><label>📂 MCD / Department</label><select id="mcd"><option>GREY FABRIC MCD</option><option>SHIPMENT MCD</option><option>BILLING SECTION</option><option>OUTER WEAR MCD</option><option>YARN MCD</option><option>PRINTING MCD</option><option>JHUT MCD</option><option>GENERAL MCD</option><option>ACCESSORIES MCD</option><option>LEFTOVER MCD</option><option>FINISH FABRIC MCD</option><option>YARN DYEING MCD</option><option>CHEMICAL MCD</option><option>GENERAL TECHNICAL MCD</option></select></div>
   <div><label>👥 Total Manpower</label><input type="number" id="totalManpower" value="0" oninput="calculatePresent()"></div>
-  <div><label>🏖 Leave</label><input type="number" id="leaveQty" value="0" oninput="calculatePresent();generateDetailBoxes('leave')"></div>
+  <div><label> Leave</label><input type="number" id="leaveQty" value="0" oninput="calculatePresent();generateDetailBoxes('leave')"></div>
   <div><label>❌ Absent</label><input type="number" id="absentQty" value="0" oninput="calculatePresent();generateDetailBoxes('absent')"></div>
   <div><label>🏥 Medical</label><input type="number" id="medicalQty" value="0" oninput="calculatePresent();generateDetailBoxes('medical')"></div>
   <div><label>📅 Off Day</label><input type="number" id="offDayQty" value="0" oninput="calculatePresent();generateDetailBoxes('offday')"></div>
@@ -578,130 +165,87 @@ tr:nth-child(even){background:var(--card2)}
   </div>
 </div>
 
-<!-- Detail Boxes -->
-<div id="leaveBox" class="detailBox"><h4>🏖 Leave Details</h4><div id="leaveDetails"></div></div>
+<div id="leaveBox" class="detailBox"><h4> Leave Details</h4><div id="leaveDetails"></div></div>
 <div id="absentBox" class="detailBox"><h4>❌ Absent Details</h4><div id="absentDetails"></div></div>
 <div id="medicalBox" class="detailBox"><h4>🏥 Medical Leave Details</h4><div id="medicalDetails"></div></div>
 <div id="offDayBox" class="detailBox"><h4>📅 Off Day Details</h4><div id="offDayDetails"></div></div>
 
-<!-- Report Filters -->
 <div id="reportFilters" class="reportFilters">
   <div><label>From Date</label><input type="date" id="filterFrom"></div>
   <div><label>To Date</label><input type="date" id="filterTo"></div>
-  <div><label>Company Filter</label>
-    <select id="filterCompany"><option value="">All Companies</option><option>GMS TEXTILES LTD</option><option>GMS COMPOSITE KNITTING</option></select>
-  </div>
-  <div><label>MCD Filter</label>
-    <select id="filterMcd"><option value="">All MCD</option>
-      <option>GREY FABRIC MCD</option><option>SHIPMENT MCD</option><option>BILLING SECTION</option>
-      <option>OUTER WEAR MCD</option><option>YARN MCD</option><option>PRINTING MCD</option>
-      <option>JHUT MCD</option><option>GENERAL MCD</option><option>ACCESSORIES MCD</option>
-      <option>LEFTOVER MCD</option><option>FINISH FABRIC MCD</option><option>YARN DYEING MCD</option>
-      <option>CHEMICAL MCD</option><option>GENERAL TECHNICAL MCD</option>
-    </select>
-  </div>
+  <div><label>Company Filter</label><select id="filterCompany"><option value="">All Companies</option><option>GMS TEXTILES LTD</option><option>GMS COMPOSITE KNITTING</option></select></div>
+  <div><label>MCD Filter</label><select id="filterMcd"><option value="">All MCD</option><option>GREY FABRIC MCD</option><option>SHIPMENT MCD</option><option>BILLING SECTION</option><option>OUTER WEAR MCD</option><option>YARN MCD</option><option>PRINTING MCD</option><option>JHUT MCD</option><option>GENERAL MCD</option><option>ACCESSORIES MCD</option><option>LEFTOVER MCD</option><option>FINISH FABRIC MCD</option><option>YARN DYEING MCD</option><option>CHEMICAL MCD</option><option>GENERAL TECHNICAL MCD</option></select></div>
   <div><label>🔍 Search by ID Card</label><input type="text" id="searchId" placeholder="Enter ID Card Number"></div>
-  <div><label> Month</label>
-    <select id="filterMonth"><option value="">All Months</option>
-      <option value="01">January</option><option value="02">February</option><option value="03">March</option>
-      <option value="04">April</option><option value="05">May</option><option value="06">June</option>
-      <option value="07">July</option><option value="08">August</option><option value="09">September</option>
-      <option value="10">October</option><option value="11">November</option><option value="12">December</option>
-    </select>
-  </div>
-  <div><label>📆 Year</label>
-    <select id="filterYear"><option value="">All Years</option><option value="2024">2024</option><option value="2025">2025</option><option value="2026">2026</option></select>
-  </div>
-  <div style="display:flex;align-items:end;gap:4px">
-    <button class="show" onclick="loadDetailedReport()">🔍 Apply Filter</button>
-  </div>
+  <div><label>📅 Month</label><select id="filterMonth"><option value="">All Months</option><option value="01">January</option><option value="02">February</option><option value="03">March</option><option value="04">April</option><option value="05">May</option><option value="06">June</option><option value="07">July</option><option value="08">August</option><option value="09">September</option><option value="10">October</option><option value="11">November</option><option value="12">December</option></select></div>
+  <div><label>📆 Year</label><select id="filterYear"><option value="">All Years</option><option value="2024">2024</option><option value="2025">2025</option><option value="2026">2026</option></select></div>
+  <div style="display:flex;align-items:end;gap:4px"><button class="show" onclick="loadDetailedReport()">🔍 Apply Filter</button></div>
 </div>
 
-<!-- KPI Cards -->
 <div class="kpi">
-  <div class="kpiBox"><span>👥 Total</span><b id="kpiTotal">0</b></div>
+  <div class="kpiBox"><span> Total</span><b id="kpiTotal">0</b></div>
   <div class="kpiBox"><span>🏖 Leave</span><b id="kpiLeave" style="color:var(--orange)">0</b></div>
-  <div class="kpiBox"><span>❌ Absent</span><b id="kpiAbsent" style="color:var(--red)">0</b></div>
+  <div class="kpiBox"><span> Absent</span><b id="kpiAbsent" style="color:var(--red)">0</b></div>
   <div class="kpiBox"><span>🏥 Medical</span><b id="kpiMedical" style="color:var(--purple)">0</b></div>
   <div class="kpiBox"><span>📅 Off Day</span><b id="kpiOffDay" style="color:var(--blue)">0</b></div>
   <div class="kpiBox"><span>✅ Present</span><b id="kpiPresent" style="color:var(--green)">0</b></div>
 </div>
 
-<!-- Charts Grid -->
 <div class="charts-grid">
   <div class="chart-card">
-    <div class="chart-header">
-      <div class="chart-title">📊 Attendance Breakdown</div>
-      <div class="chart-badge">Today</div>
-    </div>
+    <div class="chart-header"><div class="chart-title">📊 Attendance Breakdown</div><div class="chart-badge">Today</div></div>
     <div class="chart-container"><canvas id="attendanceChart"></canvas></div>
   </div>
   <div class="chart-card">
-    <div class="chart-header">
-      <div class="chart-title">🏢 Department Performance</div>
-      <div class="chart-badge">This Week</div>
-    </div>
+    <div class="chart-header"><div class="chart-title"> Department Absence Rate (30 Days)</div><div class="chart-badge">1 Month</div></div>
     <div class="chart-container"><canvas id="deptChart"></canvas></div>
   </div>
   <div class="chart-card">
-    <div class="chart-header">
-      <div class="chart-title">📈 Weekly Trend</div>
-      <div class="chart-badge">7 Days</div>
-    </div>
+    <div class="chart-header"><div class="chart-title">📈 Weekly Trend</div><div class="chart-badge">7 Days</div></div>
     <div class="chart-container"><canvas id="trendChart"></canvas></div>
   </div>
   <div class="chart-card">
-    <div class="chart-header">
-      <div class="chart-title">🎯 Attendance Rate</div>
-      <div class="chart-badge">Target: 90%</div>
-    </div>
+    <div class="chart-header"><div class="chart-title"> Attendance Rate</div><div class="chart-badge">Target: 90%</div></div>
     <div class="chart-container"><canvas id="rateChart"></canvas></div>
   </div>
 </div>
 
-<!-- MCD Grid -->
-<div class="section-title">🏢 All 14 Departments - Last 30 Days Summary</div>
+<div class="section-title"> All 14 Departments - Last 30 Days Summary</div>
 <div class="dept-grid" id="deptGrid"></div>
 
-<!-- Top Absentees -->
 <div class="absentees-list">
-  <div class="section-title" style="margin:0 0 10px 0">️ Top Absentees (This Month) <span style="font-size:10px;color:var(--muted);font-weight:600">Click to view details</span></div>
+  <div class="section-title" style="margin:0 0 10px 0">⚠️ Top Absentees (This Month) <span style="font-size:10px;color:var(--muted);font-weight:600">Click to view details</span></div>
   <div id="absenteesList"></div>
 </div>
 
-<!-- View Toggle -->
 <div class="viewToggle noPrint">
   <button class="viewBtn active" onclick="switchView('table')">📋 Table View</button>
   <button class="viewBtn" onclick="switchView('person')">👤 Person Details</button>
 </div>
 
-<!-- Action Buttons -->
 <div class="btnArea noPrint" style="text-align:center;margin:10px">
   From: <input type="date" id="fromDate">
   To: <input type="date" id="toDate">
-  <button class="show" onclick="loadRangeReport()">📅 Date Report</button>
+  <button class="show" onclick="loadRangeReport()"> Date Report</button>
   <button class="excel" onclick="exportExcel()">📊 Excel</button>
   <button class="print" onclick="exportPDF()">📄 PDF</button>
   <button class="home" onclick="location.href='index.html'">🏠 Home</button>
 </div>
 
-<!-- Person Details View -->
 <div id="personDetailsView" class="personDetails" style="display:none"></div>
 
-<!-- Table -->
 <table id="reportTable">
   <thead>
     <tr>
-      <th>SL</th><th>📅 Date</th><th>🏢 Company</th><th>📂 MCD</th>
-      <th>👥 Total</th><th> Leave</th><th>❌ Absent</th><th>🏥 Medical</th>
-      <th>📅 Off Day</th><th>✅ Present</th><th> By</th>
-      <th class="noPrint">⚡ Action</th>
+      <th>SL</th><th>📅 Date</th><th> Company</th><th>📂 MCD</th>
+      <th>👥 Total</th><th>🏖 Leave</th><th>❌ Absent</th><th>🏥 Medical</th>
+      <th>📅 Off Day</th><th>✅ Present</th><th>👤 By</th>
+      <th class="noPrint"> Action</th>
     </tr>
   </thead>
   <tbody id="tbody"></tbody>
   <tfoot>
     <tr class="totalRow">
-      <td colspan="4">📊 All MCD Total</td>
+      <td colspan="4"> All MCD Total</td>
       <td id="gtTotal">0</td><td id="gtLeave">0</td><td id="gtAbsent">0</td>
       <td id="gtMedical">0</td><td id="gtOffDay">0</td><td id="gtPresent">0</td>
       <td></td><td class="noPrint"></td>
@@ -709,7 +253,6 @@ tr:nth-child(even){background:var(--card2)}
   </tfoot>
 </table>
 
-<!-- Heatmap Modal -->
 <div id="heatmapModal" class="modal" onclick="if(event.target===this)closeHeatmap()">
   <div class="modal-content">
     <div class="modal-header">
@@ -718,17 +261,16 @@ tr:nth-child(even){background:var(--card2)}
     </div>
     <div class="modal-body">
       <div style="display:flex;gap:10px;margin-bottom:14px;flex-wrap:wrap">
-        <div style="display:flex;align-items:center;gap:5px"><div style="width:18px;height:18px;background:#10b981;border-radius:4px"></div><span style="font-size:11px">Excellent (&gt;90%)</span></div>
+        <div style="display:flex;align-items:center;gap:5px"><div style="width:18px;height:18px;background:#10b981;border-radius:4px"></div><span style="font-size:11px">Excellent (>90%)</span></div>
         <div style="display:flex;align-items:center;gap:5px"><div style="width:18px;height:18px;background:#34d399;border-radius:4px"></div><span style="font-size:11px">Good (80-90%)</span></div>
         <div style="display:flex;align-items:center;gap:5px"><div style="width:18px;height:18px;background:#fbbf24;border-radius:4px"></div><span style="font-size:11px">Average (70-80%)</span></div>
-        <div style="display:flex;align-items:center;gap:5px"><div style="width:18px;height:18px;background:#ef4444;border-radius:4px"></div><span style="font-size:11px">Poor (&lt;70%)</span></div>
+        <div style="display:flex;align-items:center;gap:5px"><div style="width:18px;height:18px;background:#ef4444;border-radius:4px"></div><span style="font-size:11px">Poor (<70%)</span></div>
       </div>
       <div class="heatmap-calendar" id="heatmapCalendar"></div>
     </div>
   </div>
 </div>
 
-<!-- Department Details Modal -->
 <div id="deptModal" class="modal" onclick="if(event.target===this)closeDeptModal()">
   <div class="modal-content">
     <div class="modal-header">
@@ -739,23 +281,18 @@ tr:nth-child(even){background:var(--card2)}
   </div>
 </div>
 
-<!-- Toast -->
 <div id="toast" class="toast">Saved ✅</div>
 
-<!-- Action Bar (Mobile) -->
 <div class="action-bar noPrint">
   <button class="action-btn" style="background:var(--gradient-1)" onclick="openReportModal()">📝 Report</button>
   <button class="action-btn" style="background:var(--gradient-4);color:#064e3b" onclick="loadData()">🔄 Refresh</button>
-  <button class="action-btn" style="background:var(--gradient-2)" onclick="openHeatmap()">📅 Heatmap</button>
+  <button class="action-btn" style="background:var(--gradient-2)" onclick="openHeatmap()"> Heatmap</button>
   <button class="action-btn" style="background:var(--gradient-3);color:#0c4a6e" onclick="exportPDF()">📄 PDF</button>
 </div>
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-app.js";
-import {
-  getFirestore, collection, addDoc, getDocs, deleteDoc, doc,
-  query, where, setDoc, onSnapshot, orderBy, limit
-} from "https://www.gstatic.com/firebasejs/12.12.1/firebase-firestore.js";
+import { getFirestore, collection, addDoc, getDocs, deleteDoc, doc, query, where, setDoc, onSnapshot, orderBy, limit } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-firestore.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyD-wBCF5eeWMHobLFOhBzKW7aB2pagz9-w",
@@ -768,20 +305,15 @@ const firebaseConfig = {
 
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
-
 const user = JSON.parse(localStorage.getItem("gmsUser") || "null");
 if(!user){ window.location.href="login.html"; }
 
-// ================================================================
-//  SMART CACHE MANAGER
-// ================================================================
 window.GMS_CACHE = {
-  CACHE_KEY: 'GMS_SMART_CACHE_V3',
+  CACHE_KEY: 'GMS_SMART_CACHE_V5',
   READ_COUNT_KEY: 'GMS_READ_COUNT_TODAY',
   SAVED_COUNT_KEY: 'GMS_SAVED_COUNT_TODAY',
   READ_DATE_KEY: 'GMS_READ_DATE',
   CACHE_EXPIRY_MS: 5 * 60 * 1000,
-  
   getReadCount: function(){
     var today = new Date().toDateString();
     if(localStorage.getItem(this.READ_DATE_KEY) !== today){
@@ -812,14 +344,14 @@ window.GMS_CACHE = {
   set: function(key, data){
     var all = this._all();
     all[key] = { data: data, savedAt: Date.now() };
-    try{ localStorage.setItem(this.CACHE_KEY, JSON.stringify(all)); } catch(e){ console.warn('Cache set failed:', e); }
+    try{ localStorage.setItem(this.CACHE_KEY, JSON.stringify(all)); } catch(e){}
   },
   get: function(key){
     var all = this._all();
     var entry = all[key];
     if(!entry) return null;
     var age = Date.now() - entry.savedAt;
-    if(age > this.CACHE_EXPIRY_MS){ console.log('⏰ Cache expired:', key); return null; }
+    if(age > this.CACHE_EXPIRY_MS) return null;
     return entry.data;
   },
   invalidate: function(keys){
@@ -830,12 +362,11 @@ window.GMS_CACHE = {
   }
 };
 
-const CACHE_KEYS = { billingManpowerReport: 'billing_mpd_cache_v3' };
+const CACHE_KEYS = { billingManpowerReport: 'billing_mpd_cache_v5' };
 const LOCAL_TIMESTAMPS_KEY = 'GMS_LOCAL_TIMESTAMPS';
 
 async function updateCollectionTimestamp(collectionName){
-  try{ await setDoc(doc(db, 'system_sync', collectionName), { lastUpdated: Date.now() }, { merge: true }); }
-  catch(e){ console.warn('Timestamp update failed:', e); }
+  try{ await setDoc(doc(db, 'system_sync', collectionName), { lastUpdated: Date.now() }, { merge: true }); } catch(e){}
 }
 window.updateCollectionTimestamp = updateCollectionTimestamp;
 
@@ -874,9 +405,6 @@ async function cachedGetDocs(collectionName, cacheKey, shouldUpdate){
   return rows;
 }
 
-// ================================================================
-//  CHARTS & DATA
-// ================================================================
 let chart, trendChart, departmentChart, rateChart;
 let currentView='table';
 let allRows=[];
@@ -889,12 +417,8 @@ document.getElementById("toDate").value=today();
 document.getElementById("filterFrom").value=today();
 document.getElementById("filterTo").value=today();
 
-// Register datalabels plugin
 Chart.register(ChartDataLabels);
 
-// ================================================================
-// 🎨 THEME TOGGLE
-// ================================================================
 window.toggleTheme=function(){
   document.body.classList.toggle("dark");
   localStorage.setItem("billingTheme",document.body.classList.contains("dark")?"dark":"light");
@@ -909,9 +433,6 @@ function toast(msg){
   setTimeout(()=>t.style.display="none",1600);
 }
 
-// ================================================================
-// 📊 CALCULATIONS
-// ================================================================
 window.calculatePresent=function(){
   let total=Number(document.getElementById("totalManpower").value)||0;
   let leave=Number(document.getElementById("leaveQty").value)||0;
@@ -929,12 +450,11 @@ window.generateDetailBoxes=function(type){
   else if(type==='absent'){ qty=Number(document.getElementById("absentQty").value)||0; container=document.getElementById("absentDetails"); boxId="absentBox"; }
   else if(type==='medical'){ qty=Number(document.getElementById("medicalQty").value)||0; container=document.getElementById("medicalDetails"); boxId="medicalBox"; }
   else if(type==='offday'){ qty=Number(document.getElementById("offDayQty").value)||0; container=document.getElementById("offDayDetails"); boxId="offDayBox"; }
-
   if(qty>0){
     document.getElementById(boxId).style.display="block";
     let html="";
     for(let i=1; i<=qty; i++){
-      html+=`<div class="detailRow"><input type="text" id="${type}Name${i}" placeholder=" Name ${i}"><input type="text" id="${type}Id${i}" placeholder="🆔 ID Card ${i}"></div>`;
+      html+=`<div class="detailRow"><input type="text" id="${type}Name${i}" placeholder="👤 Name ${i}"><input type="text" id="${type}Id${i}" placeholder="🆔 ID Card ${i}"></div>`;
     }
     container.innerHTML=html;
   }else{
@@ -962,9 +482,6 @@ window.switchView=function(view){
   }
 };
 
-// ================================================================
-// 💾 SAVE REPORT
-// ================================================================
 window.saveReport=async function(){
   calculatePresent();
   let date=document.getElementById("reportDate").value;
@@ -1019,9 +536,6 @@ window.loadReport=async function(){
   loadRangeReport();
 };
 
-// ================================================================
-// 🔥 SMART SELECTIVE LOAD
-// ================================================================
 window.loadRangeReport=async function(){
   let from=document.getElementById("fromDate").value;
   let to=document.getElementById("toDate").value;
@@ -1074,7 +588,7 @@ window.loadDetailedReport=async function(){
   let filterMonth=document.getElementById("filterMonth").value;
   let filterYear=document.getElementById("filterYear").value;
   let statusEl = document.getElementById('cacheStatusText');
-  if(statusEl) statusEl.innerText = ' Filtering...';
+  if(statusEl) statusEl.innerText = '🔍 Filtering...';
 
   try{
     var rows = await cachedGetDocs('billingManpowerReport', CACHE_KEYS.billingManpowerReport, false);
@@ -1098,7 +612,7 @@ window.loadDetailedReport=async function(){
     });
     filteredRows.sort((a,b)=>a.date.localeCompare(b.date));
     allRows = filteredRows;
-    if(statusEl) statusEl.innerText = '✅ Filter applied (Cache )';
+    if(statusEl) statusEl.innerText = '✅ Filter applied (Cache 📦)';
     if(searchId && !filterMcd){
       renderPersonDetails(filteredRows);
       document.getElementById('personDetailsView').style.display='grid';
@@ -1120,9 +634,6 @@ window.loadDetailedReport=async function(){
   }
 };
 
-// ================================================================
-// 📊 CHARTS WITH LABELS
-// ================================================================
 function getChartColors(){
   const isDark = document.body.classList.contains('dark');
   return {
@@ -1134,8 +645,8 @@ function getChartColors(){
 
 function renderAllCharts(){
   const colors = getChartColors();
-  const today = new Date().toISOString().slice(0,10);
-  const todayData = allRows.find(d => d.date === today) || allRows[0] || {};
+  const todayStr = new Date().toISOString().slice(0,10);
+  const todayData = allRows.find(d => d.date === todayStr) || allRows[0] || {};
   const total = Number(document.getElementById('kpiTotal').innerText) || 0;
   const leave = Number(document.getElementById('kpiLeave').innerText) || 0;
   const absent = Number(document.getElementById('kpiAbsent').innerText) || 0;
@@ -1143,7 +654,7 @@ function renderAllCharts(){
   const offday = Number(document.getElementById('kpiOffDay').innerText) || 0;
   const present = Number(document.getElementById('kpiPresent').innerText) || 0;
 
-  // 1. Attendance Breakdown (Doughnut with labels)
+  // 1. Attendance Breakdown
   if(chart) chart.destroy();
   chart = new Chart(document.getElementById('attendanceChart'), {
     type: 'doughnut',
@@ -1166,10 +677,10 @@ function renderAllCharts(){
           color: 'white',
           font: { weight:'bold', size:10 },
           formatter: (value, ctx) => {
-            const total = ctx.chart.data.datasets[0].data.reduce((a,b)=>a+b,0);
-            if(total===0) return '';
-            const pct = Math.round((value/total)*100);
-            return pct > 5 ? pct+'%' : '';
+            const sum = ctx.chart.data.datasets[0].data.reduce((a,b)=>a+b,0);
+            if(sum===0) return '';
+            const pct = Math.round((value/sum)*100);
+            return pct > 5 ? value+' ('+pct+'%)' : '';
           },
           anchor: 'center',
           align: 'center'
@@ -1178,7 +689,7 @@ function renderAllCharts(){
     }
   });
 
-  // 2. Department Performance (Bar with values)
+  // 2. Department Absence Rate (30 Days) - Formula: (Total - Present) / Total * 100
   if(departmentChart) departmentChart.destroy();
   const deptData = {};
   allRows.slice(0, 30).forEach(d => {
@@ -1186,10 +697,11 @@ function renderAllCharts(){
     deptData[d.mcd].present += d.present||0;
     deptData[d.mcd].total += d.totalManpower||0;
   });
-  const deptLabels = Object.keys(deptData).slice(0, 8);
-  const deptRates = deptLabels.map(mcd => {
+  const deptLabels = Object.keys(deptData).slice(0, 14);
+  const deptAbsenceRates = deptLabels.map(mcd => {
     const data = deptData[mcd];
-    return data.total > 0 ? parseFloat(((data.present/data.total)*100).toFixed(1)) : 0;
+    // ✅ FORMULA: (Total Manpower - Present) / Total Manpower * 100
+    return data.total > 0 ? parseFloat((((data.total - data.present)/data.total)*100).toFixed(1)) : 0;
   });
 
   departmentChart = new Chart(document.getElementById('deptChart'), {
@@ -1197,9 +709,9 @@ function renderAllCharts(){
     data: {
       labels: deptLabels.map(l => l.replace(' MCD','').replace(' SECTION','')),
       datasets: [{
-        label: 'Attendance %',
-        data: deptRates,
-        backgroundColor: deptRates.map(r => r >= 90 ? '#10b981' : r >= 80 ? '#fbbf24' : '#ef4444'),
+        label: 'Absence Rate %',
+        data: deptAbsenceRates,
+        backgroundColor: deptAbsenceRates.map(r => r <= 10 ? '#10b981' : r <= 20 ? '#fbbf24' : '#ef4444'),
         borderRadius: 6,
         borderSkipped: false
       }]
@@ -1218,13 +730,13 @@ function renderAllCharts(){
         }
       },
       scales: {
-        y: { beginAtZero:true, max:100, grid:{color:colors.grid}, ticks:{color:colors.text, font:{size:9}} },
+        y: { beginAtZero:true, max:100, grid:{color:colors.grid}, ticks:{color:colors.text, font:{size:9}, callback: v => v+'%'} },
         x: { grid:{display:false}, ticks:{color:colors.text, font:{size:8}, maxRotation:45, minRotation:45} }
       }
     }
   });
 
-  // 3. Weekly Trend (Line with values)
+  // 3. Weekly Trend
   if(trendChart) trendChart.destroy();
   const last7Days = allRows.slice(0, 7).reverse();
   const trendLabels = last7Days.map(d => {
@@ -1281,7 +793,7 @@ function renderAllCharts(){
     }
   });
 
-  // 4. Attendance Rate (Polar with labels)
+  // 4. Attendance Rate
   if(rateChart) rateChart.destroy();
   const rate = todayData.totalManpower ? ((todayData.present/todayData.totalManpower)*100).toFixed(1) : 0;
 
@@ -1322,9 +834,6 @@ function renderAllCharts(){
   });
 }
 
-// ================================================================
-// 🏢 DEPARTMENT GRID (14 MCDs - 30 Days)
-// ================================================================
 function renderDepartmentGrid(){
   const mcds = [
     'GREY FABRIC MCD','SHIPMENT MCD','BILLING SECTION','OUTER WEAR MCD',
@@ -1343,7 +852,7 @@ function renderDepartmentGrid(){
     const totalMedical = mcdData.reduce((sum, d) => sum + (d.medical||0), 0);
     const totalPresent = mcdData.reduce((sum, d) => sum + (d.present||0), 0);
     const totalManpower = mcdData.reduce((sum, d) => sum + (d.totalManpower||0), 0);
-    const avgAttendance = totalManpower > 0 ? ((totalPresent/totalManpower)*100).toFixed(1) : 0;
+    const absenceRate = totalManpower > 0 ? (((totalManpower - totalPresent)/totalManpower)*100).toFixed(1) : 0;
     const days = mcdData.length;
 
     const card = document.createElement('div');
@@ -1353,8 +862,8 @@ function renderDepartmentGrid(){
       <div class="dept-name">${mcd}</div>
       <div class="dept-stats">
         <div class="dept-stat">
-          <div class="dept-stat-value" style="color:${avgAttendance>=90?'#10b981':avgAttendance>=80?'#fbbf24':'#ef4444'}">${avgAttendance}%</div>
-          <div class="dept-stat-label">Attendance</div>
+          <div class="dept-stat-value" style="color:${absenceRate<=10?'#10b981':absenceRate<=20?'#fbbf24':'#ef4444'}">${absenceRate}%</div>
+          <div class="dept-stat-label">Absence Rate</div>
         </div>
         <div class="dept-stat">
           <div class="dept-stat-value" style="color:#ef4444">${totalAbsent}</div>
@@ -1366,9 +875,6 @@ function renderDepartmentGrid(){
   });
 }
 
-// ================================================================
-// ⚠️ TOP ABSENTEES
-// ================================================================
 function renderTopAbsentees(){
   const absenteeData = {};
   allRows.forEach(report => {
@@ -1377,10 +883,11 @@ function renderTopAbsentees(){
         const key = (person.idCard || person.name || '').toLowerCase();
         if(!key) return;
         if(!absenteeData[key]){
-          absenteeData[key] = { name:person.name||'Unknown', idCard:person.idCard||'N/A', count:0, dates:[] };
+          absenteeData[key] = { name:person.name||'Unknown', idCard:person.idCard||'N/A', count:0, dates:[], mcds:new Set() };
         }
         absenteeData[key].count++;
         absenteeData[key].dates.push(report.date);
+        if(report.mcd) absenteeData[key].mcds.add(report.mcd);
       });
     }
   });
@@ -1390,11 +897,12 @@ function renderTopAbsentees(){
   container.innerHTML = '';
 
   if(sorted.length === 0){
-    container.innerHTML = '<div style="text-align:center;padding:16px;color:var(--muted);font-size:12px"> No absence records found</div>';
+    container.innerHTML = '<div style="text-align:center;padding:16px;color:var(--muted);font-size:12px">📭 No absence records found</div>';
     return;
   }
 
   sorted.forEach((person, index) => {
+    const mcdList = Array.from(person.mcds).join(', ');
     const item = document.createElement('div');
     item.className = 'absentee-item';
     item.onclick = () => showPersonDetails(person);
@@ -1403,6 +911,7 @@ function renderTopAbsentees(){
       <div class="absentee-info">
         <div class="absentee-name">${person.name}</div>
         <div class="absentee-id">ID: ${person.idCard}</div>
+        <div class="absentee-mcd">🏢 ${mcdList || 'N/A'}</div>
       </div>
       <div class="absentee-count">${person.count} days</div>
     `;
@@ -1411,12 +920,10 @@ function renderTopAbsentees(){
 }
 
 function showPersonDetails(person){
-  alert(`${person.name}\nID: ${person.idCard}\nTotal Absent Days: ${person.count}\nDates: ${person.dates.join(', ')}`);
+  const mcdList = Array.from(person.mcds).join(', ');
+  alert(`👤 ${person.name}\n🆔 ID: ${person.idCard}\n🏢 MCD: ${mcdList}\n📅 Total Absent Days: ${person.count}\n Dates: ${person.dates.join(', ')}`);
 }
 
-// ================================================================
-// 📅 HEATMAP
-// ================================================================
 function renderHeatmap(){
   const calendar = document.getElementById('heatmapCalendar');
   calendar.innerHTML = '';
@@ -1469,13 +976,10 @@ function renderHeatmap(){
 function showDayDetails(dateStr){
   const dayData = allRows.find(d => d.date === dateStr);
   if(dayData){
-    alert(` Date: ${dateStr}\n ${dayData.mcd}\n✅ Present: ${dayData.present}\n❌ Absent: ${dayData.absent}\n Leave: ${dayData.leave}\n🏥 Medical: ${dayData.medical}`);
+    alert(`📅 Date: ${dateStr}\n📂 ${dayData.mcd}\n✅ Present: ${dayData.present}\n❌ Absent: ${dayData.absent}\n🏖 Leave: ${dayData.leave}\n🏥 Medical: ${dayData.medical}`);
   }
 }
 
-// ================================================================
-// 📋 TABLE RENDERING
-// ================================================================
 function renderTable(rows){
   let html="";
   let gtTotal=0,gtLeave=0,gtAbsent=0,gtMedical=0,gtOffDay=0,gtPresent=0;
@@ -1555,9 +1059,6 @@ function renderPersonDetails(rows){
   document.getElementById("personDetailsView").innerHTML=html || '<div style="grid-column:1/-1;text-align:center;padding:30px;color:var(--muted)">📭 No Data Found</div>';
 }
 
-// ================================================================
-// 🗑 DELETE ROW
-// ================================================================
 window.deleteRow=async function(id){
   if(confirm("🗑 Delete this report?")){
     await deleteDoc(doc(db,"billingManpowerReport",id));
@@ -1571,9 +1072,6 @@ window.deleteRow=async function(id){
   }
 };
 
-// ================================================================
-// 📊 EXPORT
-// ================================================================
 window.exportExcel=function(){
   let table=document.getElementById("reportTable").outerHTML;
   let file=new Blob([table],{type:"application/vnd.ms-excel"});
@@ -1584,19 +1082,132 @@ window.exportExcel=function(){
 };
 
 window.exportPDF=async function(){
-  const { jsPDF } = window.jspdf;
-  const pdf = new jsPDF('l', 'mm', 'a4');
-  pdf.setFontSize(16);
-  pdf.text('GMS TEXTILES LTD - Smart Manpower Dashboard', 14, 15);
-  pdf.setFontSize(10);
-  pdf.text(`Generated: ${new Date().toLocaleString()}`, 14, 22);
-  pdf.save('gms-smart-dashboard.pdf');
-  toast('PDF Exported ✅');
+  toast('📄 Generating PDF...');
+  
+  try{
+    const { jsPDF } = window.jspdf;
+    const pdf = new jsPDF('l', 'mm', 'a4');
+    
+    // Header
+    pdf.setFillColor(102, 126, 234);
+    pdf.rect(0, 0, 297, 25, 'F');
+    pdf.setTextColor(255, 255, 255);
+    pdf.setFontSize(18);
+    pdf.text('GMS TEXTILES LTD - Smart Manpower Dashboard', 14, 12);
+    pdf.setFontSize(10);
+    pdf.text(`Generated: ${new Date().toLocaleString()}`, 14, 20);
+    
+    // KPI Section
+    pdf.setTextColor(30, 41, 59);
+    pdf.setFontSize(12);
+    pdf.text('📊 Key Performance Indicators', 14, 35);
+    
+    const kpiData = [
+      { label: 'Total', value: document.getElementById('kpiTotal').innerText },
+      { label: 'Present', value: document.getElementById('kpiPresent').innerText },
+      { label: 'Absent', value: document.getElementById('kpiAbsent').innerText },
+      { label: 'Leave', value: document.getElementById('kpiLeave').innerText },
+      { label: 'Medical', value: document.getElementById('kpiMedical').innerText },
+      { label: 'Off Day', value: document.getElementById('kpiOffDay').innerText }
+    ];
+    
+    let kpiX = 14;
+    kpiData.forEach((kpi, idx) => {
+      pdf.setFillColor(248, 250, 252);
+      pdf.roundedRect(kpiX, 40, 42, 20, 2, 2, 'F');
+      pdf.setFontSize(9);
+      pdf.text(kpi.label, kpiX + 3, 48);
+      pdf.setFontSize(14);
+      pdf.setFont(undefined, 'bold');
+      pdf.text(kpi.value, kpiX + 3, 56);
+      pdf.setFont(undefined, 'normal');
+      kpiX += 46;
+    });
+    
+    // Charts as images
+    let yPos = 70;
+    const chartIds = ['attendanceChart', 'deptChart', 'trendChart', 'rateChart'];
+    const chartTitles = ['Attendance Breakdown', 'Department Absence Rate (30 Days)', 'Weekly Trend', 'Attendance Rate'];
+    
+    for(let i = 0; i < chartIds.length; i++){
+      const canvas = document.getElementById(chartIds[i]);
+      if(canvas){
+        const imgData = canvas.toDataURL('image/png');
+        const xPos = (i % 2 === 0) ? 14 : 155;
+        if(i % 2 === 0 && i > 0) yPos += 55;
+        
+        pdf.setFontSize(10);
+        pdf.setFont(undefined, 'bold');
+        pdf.text(chartTitles[i], xPos, yPos);
+        pdf.setFont(undefined, 'normal');
+        
+        pdf.addImage(imgData, 'PNG', xPos, yPos + 3, 130, 45);
+      }
+    }
+    
+    // Department Grid
+    yPos += 60;
+    pdf.setFontSize(12);
+    pdf.setFont(undefined, 'bold');
+    pdf.text('🏢 All 14 Departments - Last 30 Days Summary', 14, yPos);
+    pdf.setFont(undefined, 'normal');
+    yPos += 8;
+    
+    const deptCards = document.querySelectorAll('.dept-card');
+    let deptX = 14;
+    let deptCount = 0;
+    deptCards.forEach((card, idx) => {
+      const name = card.querySelector('.dept-name')?.innerText || '';
+      const values = card.querySelectorAll('.dept-stat-value');
+      const rate = values[0]?.innerText || '0%';
+      const absent = values[1]?.innerText || '0';
+      
+      pdf.setFillColor(248, 250, 252);
+      pdf.roundedRect(deptX, yPos, 65, 18, 2, 2, 'F');
+      pdf.setFontSize(7);
+      pdf.text(name.substring(0, 20), deptX + 2, yPos + 6);
+      pdf.setFontSize(8);
+      pdf.text(`Rate: ${rate} | Absent: ${absent}`, deptX + 2, yPos + 14);
+      
+      deptX += 68;
+      deptCount++;
+      if(deptCount % 4 === 0){
+        deptX = 14;
+        yPos += 20;
+      }
+    });
+    
+    // Top Absentees
+    yPos += 25;
+    pdf.setFontSize(12);
+    pdf.setFont(undefined, 'bold');
+    pdf.text('⚠️ Top Absentees (This Month)', 14, yPos);
+    pdf.setFont(undefined, 'normal');
+    yPos += 8;
+    
+    const absenteeItems = document.querySelectorAll('.absentee-item');
+    absenteeItems.forEach((item, idx) => {
+      if(idx >= 5) return;
+      const name = item.querySelector('.absentee-name')?.innerText || '';
+      const id = item.querySelector('.absentee-id')?.innerText || '';
+      const mcd = item.querySelector('.absentee-mcd')?.innerText || '';
+      const count = item.querySelector('.absentee-count')?.innerText || '';
+      
+      pdf.setFillColor(254, 242, 242);
+      pdf.roundedRect(14, yPos, 270, 8, 1, 1, 'F');
+      pdf.setFontSize(8);
+      pdf.text(`${idx+1}. ${name} | ${id} | ${mcd} | ${count}`, 16, yPos + 5);
+      yPos += 10;
+    });
+    
+    pdf.save('gms-smart-dashboard.pdf');
+    toast('PDF Exported ✅');
+  }catch(e){
+    console.error('PDF export error:', e);
+    toast('❌ PDF export failed');
+  }
 };
 
-// ================================================================
-// 📱 MODALS
-// ================================================================
 window.openHeatmap=function(){ document.getElementById('heatmapModal').style.display='block'; };
 window.closeHeatmap=function(){ document.getElementById('heatmapModal').style.display='none'; };
 window.openDeptDetails=function(mcd, data){
@@ -1610,13 +1221,13 @@ window.openDeptDetails=function(mcd, data){
   const totalMedical = data.reduce((sum, d) => sum + (d.medical||0), 0);
   const totalPresent = data.reduce((sum, d) => sum + (d.present||0), 0);
   const totalManpower = data.reduce((sum, d) => sum + (d.totalManpower||0), 0);
-  const avgAttendance = totalManpower > 0 ? ((totalPresent/totalManpower)*100).toFixed(1) : 0;
+  const absenceRate = totalManpower > 0 ? (((totalManpower - totalPresent)/totalManpower)*100).toFixed(1) : 0;
 
   body.innerHTML = `
     <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-bottom:16px">
-      <div style="background:#f0fdf4;padding:14px;border-radius:10px;text-align:center">
-        <div style="font-size:22px;font-weight:800;color:#10b981">${avgAttendance}%</div>
-        <div style="font-size:11px;color:#64748b">Avg Attendance</div>
+      <div style="background:#fef2f2;padding:14px;border-radius:10px;text-align:center">
+        <div style="font-size:22px;font-weight:800;color:#ef4444">${absenceRate}%</div>
+        <div style="font-size:11px;color:#64748b">Absence Rate</div>
       </div>
       <div style="background:#fef2f2;padding:14px;border-radius:10px;text-align:center">
         <div style="font-size:22px;font-weight:800;color:#ef4444">${totalAbsent}</div>
@@ -1642,10 +1253,8 @@ window.openDeptDetails=function(mcd, data){
 };
 window.closeDeptModal=function(){ document.getElementById('deptModal').style.display='none'; };
 window.openReportModal=function(){ window.location.href='billing-manpower-report.html'; };
+window.loadData=function(){ loadRangeReport(); };
 
-// ================================================================
-// 🔄 REALTIME SYNC
-// ================================================================
 function setupRealtimeSync(){
   console.log(' Setting up realtime sync...');
   var billingCol = collection(db, 'billingManpowerReport');
@@ -1666,9 +1275,6 @@ function setupRealtimeSync(){
   console.log('✅ Realtime sync active');
 }
 
-// ================================================================
-//  INITIALIZATION
-// ================================================================
 calculatePresent();
 (function(){
   var c = window.GMS_CACHE.getReadCount();
@@ -1696,9 +1302,9 @@ console.log('%c═════════════════════�
 console.log('%c  ✅ Charts with Labels: Active', 'color: #667eea;');
 console.log('%c  ✅ 14 MCD Cards (30 days): Active', 'color: #10b981;');
 console.log('%c  ✅ Heatmap Calendar: Active', 'color: #f59e0b;');
-console.log('%c  ✅ Top Absentees: Active', 'color: #ef4444;');
+console.log('%c  ✅ Top Absentees with MCD: Active', 'color: #ef4444;');
 console.log('%c  ✅ Smart Cache (0 reads): Active', 'color: #8b5cf6;');
-console.log('%c  ✅ Realtime Sync: Active', 'color: #06b6d4;');
+console.log('%c  ✅ PDF Export with Dashboard: Active', 'color: #06b6d4;');
 console.log('%c═══════════════════════════════════════════', 'color: #10b981; font-weight: bold;');
 </script>
 
