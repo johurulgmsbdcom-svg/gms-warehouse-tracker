@@ -1,10 +1,14 @@
 <!DOCTYPE html>
 <html>
 <head>
-<title>Billing Manpower Report</title>
+<title>Smart Manpower Dashboard</title>
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<meta name="theme-color" content="#2563eb">
+<link rel="manifest" href="manifest.json">
 
 <style>
 :root{
@@ -37,12 +41,15 @@ body{
   font-family:Segoe UI,Arial,sans-serif;
   transition:all .3s ease;
 }
+
+/* Header */
 .header{
   text-align:center;
   padding:14px;
   background:linear-gradient(135deg,var(--card),var(--card2));
   border-bottom:2px solid var(--blue);
   box-shadow:var(--shadow);
+  position:relative;
 }
 .header h2,.header h3,.header h4{margin:2px}
 .header h2{
@@ -51,7 +58,7 @@ body{
   text-shadow:0 0 20px rgba(37,99,235,.5);
 }
 
-/* ===== CACHE STATUS BAR ===== */
+/* Cache Status Bar */
 .cacheStatusBar{
   display:flex;
   align-items:center;
@@ -98,6 +105,7 @@ body{
   border:1px solid rgba(34,197,94,.3);
 }
 
+/* Controls */
 .controls{
   background:linear-gradient(135deg,var(--card),var(--card2));
   border:1px solid var(--border);
@@ -153,6 +161,7 @@ button:hover{
 .add{background:linear-gradient(135deg,var(--orange),#d97706)}
 .theme{background:linear-gradient(135deg,#f59e0b,#d97706)}
 
+/* KPI Cards */
 .kpi{
   display:grid;
   grid-template-columns:repeat(6,1fr);
@@ -167,6 +176,8 @@ button:hover{
   text-align:center;
   box-shadow:var(--shadow);
   transition:all .3s;
+  position:relative;
+  overflow:hidden;
 }
 .kpiBox:hover{
   transform:translateY(-5px);
@@ -181,7 +192,99 @@ button:hover{
   color:var(--green);
   font-size:22px;
   margin-top:6px;
+  transition:all .5s ease;
 }
+.kpiBox.animate b{
+  animation:kpiPulse .5s ease;
+}
+@keyframes kpiPulse{
+  0%{transform:scale(1)}
+  50%{transform:scale(1.2)}
+  100%{transform:scale(1)}
+}
+
+/* Smart Dashboard Grid */
+.dashboardGrid{
+  display:grid;
+  grid-template-columns:2fr 1fr;
+  gap:12px;
+  margin:12px;
+}
+.dashboardBox{
+  background:linear-gradient(135deg,var(--card),var(--card2));
+  border:1px solid var(--border);
+  border-radius:16px;
+  padding:14px;
+  box-shadow:var(--shadow);
+}
+.dashboardBox h3{
+  margin:0 0 12px 0;
+  color:var(--blue);
+  font-size:16px;
+}
+
+/* Heatmap Calendar */
+.heatmapCalendar{
+  display:grid;
+  grid-template-columns:repeat(7,1fr);
+  gap:4px;
+  margin-top:10px;
+}
+.heatmapDay{
+  aspect-ratio:1;
+  border-radius:6px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-size:11px;
+  font-weight:700;
+  cursor:pointer;
+  transition:all .3s;
+  position:relative;
+}
+.heatmapDay:hover{
+  transform:scale(1.1);
+  z-index:10;
+}
+.heatmapDay.excellent{background:var(--green);color:white}
+.heatmapDay.good{background:#86efac;color:#064e3b}
+.heatmapDay.average{background:var(--orange);color:white}
+.heatmapDay.poor{background:var(--red);color:white}
+.heatmapDay.off{background:var(--muted);color:white;opacity:.5}
+.heatmapDayLabel{
+  text-align:center;
+  font-size:10px;
+  font-weight:900;
+  color:var(--muted);
+  padding:4px;
+}
+
+/* Alert Box */
+.alertBox{
+  background:linear-gradient(135deg,rgba(239,68,68,.1),rgba(239,68,68,.05));
+  border:2px solid var(--red);
+  border-radius:12px;
+  padding:12px;
+  margin:12px;
+  display:none;
+  animation:alertPulse 2s infinite;
+}
+@keyframes alertPulse{
+  0%,100%{box-shadow:0 0 0 0 rgba(239,68,68,.5)}
+  50%{box-shadow:0 0 0 10px rgba(239,68,68,0)}
+}
+.alertBox h4{
+  margin:0 0 8px 0;
+  color:var(--red);
+  font-size:14px;
+}
+.alertBox ul{
+  margin:0;
+  padding-left:20px;
+  font-size:12px;
+}
+
+/* Chart Box */
 .chartBox{
   background:var(--card);
   color:var(--text);
@@ -191,6 +294,8 @@ button:hover{
   border:1px solid var(--border);
   box-shadow:var(--shadow);
 }
+
+/* Table */
 table{
   width:98%;
   margin:12px auto;
@@ -223,6 +328,8 @@ body.light tr:nth-child(even){
   color:white;
   font-weight:bold;
 }
+
+/* Toast */
 .toast{
   position:fixed;
   right:20px;
@@ -333,40 +440,8 @@ body.light tr:nth-child(even){
   color:var(--muted);
   font-weight:700;
 }
-.dateList{
-  margin-top:8px;
-  font-size:11px;
-  color:var(--muted);
-  max-height:100px;
-  overflow-y:auto;
-}
-.dateList b{
-  color:var(--text);
-  display:block;
-  margin:4px 0;
-}
 
-.reportFilters{
-  background:linear-gradient(135deg,var(--card),var(--card2));
-  border:1px solid var(--border);
-  border-radius:18px;
-  padding:14px;
-  margin:12px;
-  display:none;
-  grid-template-columns:repeat(4,1fr);
-  gap:10px;
-  box-shadow:var(--shadow);
-}
-.smartChart{
-  background:var(--card);
-  color:var(--text);
-  border-radius:16px;
-  padding:12px;
-  margin:12px;
-  display:none;
-  border:1px solid var(--border);
-  box-shadow:var(--shadow);
-}
+/* Theme Toggle */
 .themeToggle{
   position:fixed;
   top:20px;
@@ -385,6 +460,8 @@ body.light tr:nth-child(even){
 .themeToggle:hover{
   transform:scale(1.1);
 }
+
+/* View Toggle */
 .viewToggle{
   display:flex;
   gap:10px;
@@ -406,16 +483,93 @@ body.light tr:nth-child(even){
   color:white;
   border-color:var(--blue);
 }
-@page{
-  size:A4 landscape;
-  margin:8mm;
+
+/* Prediction Box */
+.predictionBox{
+  background:linear-gradient(135deg,rgba(139,92,246,.1),rgba(139,92,246,.05));
+  border:2px solid var(--purple);
+  border-radius:12px;
+  padding:12px;
+  margin:12px;
 }
+.predictionBox h4{
+  margin:0 0 8px 0;
+  color:var(--purple);
+  font-size:14px;
+}
+.predictionItem{
+  display:flex;
+  justify-content:space-between;
+  padding:6px 0;
+  border-bottom:1px solid var(--border);
+  font-size:12px;
+}
+.predictionItem:last-child{
+  border-bottom:none;
+}
+
+/* Keyboard Shortcuts Modal */
+.shortcutsModal{
+  position:fixed;
+  top:0;
+  left:0;
+  width:100%;
+  height:100%;
+  background:rgba(0,0,0,.8);
+  display:none;
+  align-items:center;
+  justify-content:center;
+  z-index:10000;
+}
+.shortcutsContent{
+  background:var(--card);
+  border-radius:16px;
+  padding:24px;
+  max-width:500px;
+  width:90%;
+  max-height:80vh;
+  overflow-y:auto;
+}
+.shortcutsContent h3{
+  margin:0 0 16px 0;
+  color:var(--blue);
+}
+.shortcutItem{
+  display:flex;
+  justify-content:space-between;
+  padding:8px 0;
+  border-bottom:1px solid var(--border);
+}
+.shortcutKey{
+  background:var(--bg);
+  padding:4px 8px;
+  border-radius:4px;
+  font-family:monospace;
+  font-weight:700;
+}
+
+/* Responsive */
+@media(max-width:900px){
+  .controls,.kpi,.detailRow,.personStats{
+    grid-template-columns:1fr;
+  }
+  .kpi{
+    grid-template-columns:repeat(3,1fr);
+  }
+  .dashboardGrid{
+    grid-template-columns:1fr;
+  }
+  .personDetails{
+    grid-template-columns:1fr;
+  }
+}
+
 @media print{
   body{
     background:white;
     color:black;
   }
-  .controls,.btnArea,.noPrint,.detailBox,.reportFilters,.smartChart,.themeToggle,.personDetails,.viewToggle,.cacheStatusBar{
+  .controls,.btnArea,.noPrint,.detailBox,.themeToggle,.personDetails,.viewToggle,.cacheStatusBar,.alertBox,.predictionBox{
     display:none!important;
   }
   table{
@@ -433,17 +587,6 @@ body.light tr:nth-child(even){
     box-shadow:none;
   }
 }
-@media(max-width:900px){
-  .controls,.kpi,.reportFilters,.detailRow,.personStats{
-    grid-template-columns:1fr;
-  }
-  .kpi{
-    grid-template-columns:repeat(3,1fr);
-  }
-  .personDetails{
-    grid-template-columns:1fr;
-  }
-}
 </style>
 </head>
 
@@ -455,18 +598,25 @@ body.light tr:nth-child(even){
   <h2>🏭 GMS TEXTILES LTD</h2>
   <h4>Tansutrapur, Kaliakair, Gazipur</h4>
   <h4>Billing Section</h4>
-  <h3>📊 Daily Manpower Attendance Report</h3>
+  <h3>📊 Smart Manpower Dashboard</h3>
 </div>
 
-<!-- ===== CACHE STATUS BAR (NEW) ===== -->
+<!-- Cache Status Bar -->
 <div class="cacheStatusBar">
   <div class="cacheDot"></div>
   <span id="cacheStatusText">📦 Cache Ready</span>
-  <span class="cacheReadCount"><i class="fas fa-fire"></i> Today Reads: <b id="readCounter">0</b></span>
-  <span class="roiBadge"><i class="fas fa-chart-line"></i> ROI: <b id="roiStatus">Active</b></span>
-  <span class="syncStatus"><i class="fas fa-sync"></i> Sync: <b id="syncStatus">Active</b></span>
+  <span class="cacheReadCount">🔥 Today Reads: <b id="readCounter">0</b></span>
+  <span class="roiBadge">📈 ROI: <b id="roiStatus">Active</b></span>
+  <span class="syncStatus">🔄 Sync: <b id="syncStatus">Active</b></span>
 </div>
 
+<!-- Alert Box -->
+<div id="alertBox" class="alertBox">
+  <h4>⚠️ Smart Alerts</h4>
+  <ul id="alertList"></ul>
+</div>
+
+<!-- Controls -->
 <div class="controls noPrint">
   <div>
     <label>📅 Report Date</label>
@@ -534,7 +684,7 @@ body.light tr:nth-child(even){
   <div style="display:flex;align-items:end;gap:5px;flex-wrap:wrap">
     <button class="save" onclick="saveReport()">💾 Save</button>
     <button class="show" onclick="loadReport()">🔍 Show</button>
-    <button class="show" onclick="toggleReportFilters()">📊 Report Filter</button>
+    <button class="show" onclick="showShortcuts()">⌨️ Shortcuts</button>
   </div>
 </div>
 
@@ -559,97 +709,7 @@ body.light tr:nth-child(even){
   <div id="offDayDetails"></div>
 </div>
 
-<!-- Report Filters -->
-<div id="reportFilters" class="reportFilters">
-  <div>
-    <label>From Date</label>
-    <input type="date" id="filterFrom">
-  </div>
-  <div>
-    <label>To Date</label>
-    <input type="date" id="filterTo">
-  </div>
-  <div>
-    <label>Company Filter</label>
-    <select id="filterCompany">
-      <option value="">All Companies</option>
-      <option>GMS TEXTILES LTD</option>
-      <option>GMS COMPOSITE KNITTING</option>
-    </select>
-  </div>
-  <div>
-    <label>MCD Filter</label>
-    <select id="filterMcd">
-      <option value="">All MCD</option>
-      <option>GREY FABRIC MCD</option>
-      <option>SHIPMENT MCD</option>
-      <option>BILLING SECTION</option>
-      <option>OUTER WEAR MCD</option>
-      <option>YARN MCD</option>
-      <option>PRINTING MCD</option>
-      <option>JHUT MCD</option>
-      <option>GENERAL MCD</option>
-      <option>ACCESSORIES MCD</option>
-      <option>LEFTOVER MCD</option>
-      <option>FINISH FABRIC MCD</option>
-      <option>YARN DYEING MCD</option>
-      <option>CHEMICAL MCD</option>
-      <option>GENERAL TECHNICAL MCD</option>
-    </select>
-  </div>
-  <div>
-    <label>🔍 Search by ID Card</label>
-    <input type="text" id="searchId" placeholder="Enter ID Card Number">
-  </div>
-  <div>
-    <label>📅 Month</label>
-    <select id="filterMonth">
-      <option value="">All Months</option>
-      <option value="01">January</option>
-      <option value="02">February</option>
-      <option value="03">March</option>
-      <option value="04">April</option>
-      <option value="05">May</option>
-      <option value="06">June</option>
-      <option value="07">July</option>
-      <option value="08">August</option>
-      <option value="09">September</option>
-      <option value="10">October</option>
-      <option value="11">November</option>
-      <option value="12">December</option>
-    </select>
-  </div>
-  <div>
-    <label>📆 Year</label>
-    <select id="filterYear">
-      <option value="">All Years</option>
-      <option value="2024">2024</option>
-      <option value="2025">2025</option>
-      <option value="2026">2026</option>
-    </select>
-  </div>
-  <div style="display:flex;align-items:end;gap:5px">
-    <button class="show" onclick="loadDetailedReport()">🔍 Apply Filter</button>
-  </div>
-</div>
-
-<div class="viewToggle noPrint">
-  <button class="viewBtn active" onclick="switchView('table')">📋 Table View</button>
-  <button class="viewBtn" onclick="switchView('person')">👤 Person Details</button>
-</div>
-
-<div class="btnArea" style="text-align:center">
-  From:
-  <input type="date" id="fromDate">
-  To:
-  <input type="date" id="toDate">
-
-  <button class="show" onclick="loadRangeReport()">📅 Date Report</button>
-  <button class="excel" onclick="exportExcel()">📊 Excel</button>
-  <button class="print" onclick="window.print()">🖨 PDF / Print</button>
-  <button class="home" onclick="location.href='index.html'">🏠 Home</button>
-</div>
-
+<!-- KPI Cards -->
 <div class="kpi">
   <div class="kpiBox"><span>👥 Total</span><b id="kpiTotal">0</b></div>
   <div class="kpiBox"><span>🏖 Leave</span><b id="kpiLeave" style="color:var(--orange)">0</b></div>
@@ -659,17 +719,64 @@ body.light tr:nth-child(even){
   <div class="kpiBox"><span>✅ Present</span><b id="kpiPresent" style="color:var(--green)">0</b></div>
 </div>
 
-<div class="chartBox">
-  <canvas id="manpowerChart" height="80"></canvas>
+<!-- Smart Dashboard Grid -->
+<div class="dashboardGrid">
+  <!-- Heatmap Calendar -->
+  <div class="dashboardBox">
+    <h3>📅 Attendance Heatmap - <span id="heatmapMonth">June 2026</span></h3>
+    <div class="heatmapCalendar" id="heatmapCalendar"></div>
+    <div style="margin-top:10px;font-size:11px;color:var(--muted)">
+      <span style="color:var(--green)">● Excellent (>90%)</span> |
+      <span style="color:#86efac">● Good (80-90%)</span> |
+      <span style="color:var(--orange)">● Average (70-80%)</span> |
+      <span style="color:var(--red)">● Poor (<70%)</span>
+    </div>
+  </div>
+
+  <!-- Prediction Box -->
+  <div class="dashboardBox predictionBox">
+    <h3>🔮 Smart Predictions</h3>
+    <div id="predictionContent"></div>
+  </div>
 </div>
 
-<div id="smartChartBox" class="smartChart">
-  <canvas id="smartChart" height="100"></canvas>
+<!-- Charts -->
+<div class="dashboardGrid">
+  <div class="chartBox">
+    <canvas id="manpowerChart" height="80"></canvas>
+  </div>
+  <div class="chartBox">
+    <canvas id="trendChart" height="80"></canvas>
+  </div>
+</div>
+
+<div class="chartBox">
+  <canvas id="departmentChart" height="60"></canvas>
+</div>
+
+<!-- View Toggle -->
+<div class="viewToggle noPrint">
+  <button class="viewBtn active" onclick="switchView('table')">📋 Table View</button>
+  <button class="viewBtn" onclick="switchView('person')">👤 Person Details</button>
+</div>
+
+<!-- Action Buttons -->
+<div class="btnArea" style="text-align:center">
+  From:
+  <input type="date" id="fromDate">
+  To:
+  <input type="date" id="toDate">
+
+  <button class="show" onclick="loadRangeReport()">📅 Date Report</button>
+  <button class="excel" onclick="exportExcel()">📊 Excel</button>
+  <button class="print" onclick="exportPDF()">📄 PDF</button>
+  <button class="home" onclick="location.href='index.html'">🏠 Home</button>
 </div>
 
 <!-- Person Details View -->
 <div id="personDetailsView" class="personDetails" style="display:none"></div>
 
+<!-- Table -->
 <table id="reportTable">
   <thead>
     <tr>
@@ -703,11 +810,46 @@ body.light tr:nth-child(even){
   </tfoot>
 </table>
 
+<!-- Toast -->
 <div id="toast" class="toast">Saved ✅</div>
 
-<!-- ================================================================
-🔥 FIREBASE MODULE + GATE PLAN LOGIC + ROI TRACKING + SMART CACHE
-================================================================ -->
+<!-- Keyboard Shortcuts Modal -->
+<div id="shortcutsModal" class="shortcutsModal" onclick="if(event.target===this)closeShortcuts()">
+  <div class="shortcutsContent">
+    <h3>⌨️ Keyboard Shortcuts</h3>
+    <div class="shortcutItem">
+      <span>Save Report</span>
+      <span class="shortcutKey">Ctrl + S</span>
+    </div>
+    <div class="shortcutItem">
+      <span>Load Report</span>
+      <span class="shortcutKey">Ctrl + L</span>
+    </div>
+    <div class="shortcutItem">
+      <span>Export PDF</span>
+      <span class="shortcutKey">Ctrl + P</span>
+    </div>
+    <div class="shortcutItem">
+      <span>Export Excel</span>
+      <span class="shortcutKey">Ctrl + E</span>
+    </div>
+    <div class="shortcutItem">
+      <span>Toggle Theme</span>
+      <span class="shortcutKey">Ctrl + T</span>
+    </div>
+    <div class="shortcutItem">
+      <span>Close Modal</span>
+      <span class="shortcutKey">Esc</span>
+    </div>
+    <div class="shortcutItem">
+      <span>Show Shortcuts</span>
+      <span class="shortcutKey">?</span>
+    </div>
+    <button class="show" onclick="closeShortcuts()" style="margin-top:16px;width:100%">Close</button>
+  </div>
+</div>
+
+<!-- Firebase Module -->
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-app.js";
 import {
@@ -717,8 +859,6 @@ import {
   getDocs,
   deleteDoc,
   doc,
-  query,
-  where,
   setDoc,
   onSnapshot
 } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-firestore.js";
@@ -741,13 +881,13 @@ if(!user){
 }
 
 // ================================================================
-// 📦 SMART CACHE MANAGER — Gate Plan এর মতো
+// 📦 SMART CACHE MANAGER
 // ================================================================
 window.GMS_CACHE = {
   CACHE_KEY: 'GMS_SMART_CACHE',
   READ_COUNT_KEY: 'GMS_READ_COUNT_TODAY',
   READ_DATE_KEY: 'GMS_READ_COUNT_DATE',
-  CACHE_EXPIRY_MS: 5 * 60 * 1000, // ★ 5 minutes cache expiry
+  CACHE_EXPIRY_MS: 5 * 60 * 1000,
   
   getReadCount: function(){
     var today = new Date().toDateString();
@@ -784,10 +924,9 @@ window.GMS_CACHE = {
     var entry = all[key];
     if(!entry) return null;
     
-    // ★ NEW: Check cache expiry (5 minutes)
     var age = Date.now() - entry.savedAt;
     if(age > this.CACHE_EXPIRY_MS){
-      console.log('⏰ Cache expired for:', key, 'Age:', Math.round(age/1000), 'seconds');
+      console.log('⏰ Cache expired for:', key);
       return null;
     }
     
@@ -799,39 +938,25 @@ window.GMS_CACHE = {
     if(typeof keys === 'string') keys = [keys];
     keys.forEach(function(k){ delete all[k]; });
     localStorage.setItem(this.CACHE_KEY, JSON.stringify(all));
-  },
-  
-  clear: function(){
-    localStorage.removeItem(this.CACHE_KEY);
   }
 };
 
-// ================================================================
-// 🔑 CACHE KEYS & TIMESTAMPS
-// ================================================================
 const CACHE_KEYS = {
   billingManpowerReport: 'billing_mpd_cache'
 };
 const LOCAL_TIMESTAMPS_KEY = 'GMS_LOCAL_TIMESTAMPS';
 
-// ================================================================
-// 🕐 TIMESTAMP HELPER — Firebase system_sync collection এ লেখে
-// ================================================================
 async function updateCollectionTimestamp(collectionName){
   try{
     await setDoc(doc(db, 'system_sync', collectionName), { 
       lastUpdated: Date.now() 
     }, { merge: true });
-    console.log('🕐 Timestamp updated for:', collectionName);
   }catch(e){
     console.warn('Timestamp update failed:', e);
   }
 }
 window.updateCollectionTimestamp = updateCollectionTimestamp;
 
-// ================================================================
-// 🔍 shouldUpdate — Firebase vs local timestamp তুলনা
-// ================================================================
 function buildShouldUpdate(remoteTimestamps, forceAll){
   return function(col){
     if(forceAll) return true;
@@ -842,33 +967,24 @@ function buildShouldUpdate(remoteTimestamps, forceAll){
   };
 }
 
-// ================================================================
-// 📦 SMART SELECTIVE CACHE — শুধু পরিবর্তিত data Firebase থেকে
-// ================================================================
 async function cachedGetDocs(collectionName, cacheKey, shouldUpdate){
   var statusEl = document.getElementById('cacheStatusText');
   
-  // shouldUpdate=false → cache থেকে নাও (0 Firebase read!)
   if(shouldUpdate === false){
     var cached = window.GMS_CACHE.get(cacheKey);
     if(cached !== null){
-      if(statusEl) statusEl.innerText = '📦 Cache: ' + collectionName + ' ✅ (no change)';
-      console.log('📦 Selective cache hit (0 Firebase read):', cacheKey);
+      if(statusEl) statusEl.innerText = '📦 Cache: ' + collectionName + ' ✅';
       return cached;
     }
   }
   
-  // shouldUpdate=true বা cache নেই → Firebase read
   var cached2 = window.GMS_CACHE.get(cacheKey);
   if(cached2 !== null && shouldUpdate !== true){
     if(statusEl) statusEl.innerText = '📦 Cache: ' + collectionName + ' ✅';
-    console.log('📦 Cache hit:', cacheKey);
     return cached2;
   }
   
-  // 🔥 Firebase read
   if(statusEl) statusEl.innerText = '🔥 Firebase: ' + collectionName + ' 🔥';
-  console.log('🔥 Firebase read (selective):', cacheKey);
   
   var snap = await getDocs(collection(db, collectionName));
   var rows = [];
@@ -883,74 +999,9 @@ async function cachedGetDocs(collectionName, cacheKey, shouldUpdate){
 }
 
 // ================================================================
-// 🔥 ROI TRACKING FUNCTIONS
+// 📊 CHARTS & DATA
 // ================================================================
-window.trackReportActivity = function(mcd, reportName){
-  try{
-    var activity = JSON.parse(localStorage.getItem('report_activity') || '[]');
-    activity.push({
-      mcd: mcd,
-      report: reportName,
-      user: user ? (user.name || 'Unknown') : 'Unknown',
-      date: new Date().toISOString().slice(0,10),
-      timestamp: new Date().toISOString(),
-      company: document.getElementById('company')?.value || 'GMS TEXTILES LTD'
-    });
-    if(activity.length > 1000) activity.splice(0, activity.length - 1000);
-    localStorage.setItem('report_activity', JSON.stringify(activity));
-    console.log('📊 Report activity tracked:', mcd, reportName);
-    
-    var roiStatus = document.getElementById('roiStatus');
-    if(roiStatus) roiStatus.innerText = 'Tracked ✅';
-    setTimeout(function(){ if(roiStatus) roiStatus.innerText = 'Active'; }, 2000);
-  }catch(e){
-    console.warn('trackReportActivity error:', e);
-  }
-};
-
-function autoSaveToROI(company, mcd){
-  try{
-    var autoReports = JSON.parse(localStorage.getItem('gms_all_reports') || '[]');
-    var exists = autoReports.find(function(r){
-      return r.mcd === mcd && r.company === company;
-    });
-    if(!exists){
-      autoReports.push({
-        mcd: mcd,
-        company: company,
-        report: 'Billing Manpower Report',
-        users: 1,
-        usagePct: 100,
-        addedAt: new Date().toISOString()
-      });
-      localStorage.setItem('gms_all_reports', JSON.stringify(autoReports));
-      console.log('🔄 Auto-saved to ROI:', mcd, company);
-    }
-  }catch(e){
-    console.warn('autoSaveToROI error:', e);
-  }
-}
-
-window.trackButtonUsage = function(buttonName, mcd){
-  try{
-    var activity = JSON.parse(localStorage.getItem('gms_button_activity') || '[]');
-    activity.push({
-      button: buttonName,
-      mcd: mcd || 'BILLING SECTION',
-      user: user ? (user.name || 'Unknown') : 'Unknown',
-      date: new Date().toISOString().slice(0,10),
-      timestamp: new Date().toISOString()
-    });
-    localStorage.setItem('gms_button_activity', JSON.stringify(activity));
-  }catch(e){
-    console.warn('trackButtonUsage error:', e);
-  }
-};
-
-// ================================================================
-// 📊 CHART & DATA VARS
-// ================================================================
-let chart, smartChart;
+let chart, trendChart, departmentChart;
 let currentView='table';
 let allRows=[];
 
@@ -961,8 +1012,6 @@ function today(){
 document.getElementById("reportDate").value=today();
 document.getElementById("fromDate").value=today();
 document.getElementById("toDate").value=today();
-document.getElementById("filterFrom").value=today();
-document.getElementById("filterTo").value=today();
 
 // ================================================================
 // 🎨 THEME TOGGLE
@@ -971,14 +1020,9 @@ window.toggleTheme=function(){
   document.body.classList.toggle("light");
   localStorage.setItem("billingTheme",document.body.classList.contains("light")?"light":"dark");
   if(chart) chart.destroy();
-  if(smartChart) smartChart.destroy();
-  let total=Number(document.getElementById("kpiTotal").innerText)||0;
-  let leave=Number(document.getElementById("kpiLeave").innerText)||0;
-  let absent=Number(document.getElementById("kpiAbsent").innerText)||0;
-  let medical=Number(document.getElementById("kpiMedical").innerText)||0;
-  let offday=Number(document.getElementById("kpiOffDay").innerText)||0;
-  let present=Number(document.getElementById("kpiPresent").innerText)||0;
-  renderChart(total,leave,absent,medical,offday,present);
+  if(trendChart) trendChart.destroy();
+  if(departmentChart) departmentChart.destroy();
+  renderAllCharts();
 };
 
 if(localStorage.getItem("billingTheme")==="light"){
@@ -992,6 +1036,9 @@ function toast(msg){
   setTimeout(()=>t.style.display="none",1600);
 }
 
+// ================================================================
+// 📊 CALCULATIONS
+// ================================================================
 window.calculatePresent=function(){
   let total=Number(document.getElementById("totalManpower").value)||0;
   let leave=Number(document.getElementById("leaveQty").value)||0;
@@ -1044,15 +1091,6 @@ window.generateDetailBoxes=function(type){
   }
 };
 
-window.toggleReportFilters=function(){
-  let filters=document.getElementById("reportFilters");
-  if(filters.style.display==="grid"){
-    filters.style.display="none";
-  }else{
-    filters.style.display="grid";
-  }
-};
-
 window.switchView=function(view){
   currentView=view;
   document.querySelectorAll('.viewBtn').forEach(b=>b.classList.remove('active'));
@@ -1069,7 +1107,7 @@ window.switchView=function(view){
 };
 
 // ================================================================
-// 💾 SAVE REPORT — Firebase write + Timestamp update + ROI tracking
+// 💾 SAVE REPORT
 // ================================================================
 window.saveReport=async function(){
   calculatePresent();
@@ -1125,21 +1163,13 @@ window.saveReport=async function(){
     createdAt:new Date().toISOString()
   });
 
-  // 🔥 Timestamp update — পরের বার cache skip হবে
   await updateCollectionTimestamp('billingManpowerReport');
   
-  // 🔥 Local timestamp মুছে দাও — পরের বার fresh load হবে
   var localTS = JSON.parse(localStorage.getItem(LOCAL_TIMESTAMPS_KEY) || '{}');
   delete localTS['billingManpowerReport'];
   localStorage.setItem(LOCAL_TIMESTAMPS_KEY, JSON.stringify(localTS));
   
-  // 🔥 Cache invalidate — fresh data দরকার
   window.GMS_CACHE.invalidate([CACHE_KEYS.billingManpowerReport]);
-
-  // 🔥 ROI Tracking
-  window.trackReportActivity(mcd, 'Billing Manpower Report');
-  autoSaveToROI(company, mcd);
-  window.trackButtonUsage('Save Report', mcd);
 
   toast("Manpower Report Saved ✅");
 
@@ -1165,7 +1195,7 @@ window.loadReport=async function(){
 };
 
 // ================================================================
-// 🔥 SMART SELECTIVE LOAD — Gate Plan এর মতো
+// 🔥 SMART SELECTIVE LOAD
 // ================================================================
 window.loadRangeReport=async function(){
   let from=document.getElementById("fromDate").value;
@@ -1175,7 +1205,6 @@ window.loadRangeReport=async function(){
   if(statusEl) statusEl.innerText = '🔍 Checking updates...';
 
   try{
-    // STEP 1: Firebase থেকে system_sync পড়ো (মাত্র 1 read)
     var remoteTimestamps = {};
     try{
       var syncSnap = await getDocs(collection(db, 'system_sync'));
@@ -1183,34 +1212,25 @@ window.loadRangeReport=async function(){
       syncSnap.forEach(function(d){ 
         remoteTimestamps[d.id] = d.data().lastUpdated || 0; 
       });
-      console.log('🕐 Remote timestamps fetched:', Object.keys(remoteTimestamps).length, 'collections');
     }catch(e){
-      console.warn('system_sync read failed, using full cache:', e);
+      console.warn('system_sync read failed:', e);
     }
 
-    // STEP 2: shouldUpdate function তৈরি করো
     var shouldUpdate = buildShouldUpdate(remoteTimestamps, false);
     var billingNeedsUpdate = shouldUpdate('billingManpowerReport');
-    
-    console.log('📊 Selective Load Plan:', {
-      billingManpowerReport: billingNeedsUpdate ? '🔥Firebase' : '📦Cache'
-    });
 
-    // STEP 3: Smart cache থেকে data নাও
     var rows = await cachedGetDocs(
       'billingManpowerReport', 
       CACHE_KEYS.billingManpowerReport, 
       billingNeedsUpdate
     );
 
-    // STEP 4: Local timestamps আপডেট করো
     var newLocalTS = JSON.parse(localStorage.getItem(LOCAL_TIMESTAMPS_KEY) || '{}');
     Object.keys(remoteTimestamps).forEach(function(col){
       newLocalTS[col] = remoteTimestamps[col];
     });
     localStorage.setItem(LOCAL_TIMESTAMPS_KEY, JSON.stringify(newLocalTS));
 
-    // STEP 5: Date range filter apply করো
     var filteredRows = [];
     rows.forEach(function(r){
       if(r.date >= from && r.date <= to){
@@ -1224,6 +1244,10 @@ window.loadRangeReport=async function(){
     if(statusEl) statusEl.innerText = '✅ Report loaded ' + (billingNeedsUpdate ? '(Firebase 🔥)' : '(Cache 📦)');
     
     renderTable(filteredRows);
+    renderHeatmapCalendar(filteredRows);
+    renderPredictions(filteredRows);
+    checkAlerts(filteredRows);
+    renderAllCharts();
     
   }catch(e){
     console.error('Load error:', e);
@@ -1232,71 +1256,307 @@ window.loadRangeReport=async function(){
   }
 };
 
-window.loadDetailedReport=async function(){
-  let from=document.getElementById("filterFrom").value;
-  let to=document.getElementById("filterTo").value;
-  let filterComp=document.getElementById("filterCompany").value;
-  let filterMcd=document.getElementById("filterMcd").value;
-  let searchId=document.getElementById("searchId").value.toLowerCase().trim();
-  let filterMonth=document.getElementById("filterMonth").value;
-  let filterYear=document.getElementById("filterYear").value;
-  let statusEl = document.getElementById('cacheStatusText');
+// ================================================================
+// 📅 HEATMAP CALENDAR
+// ================================================================
+function renderHeatmapCalendar(rows){
+  const calendar = document.getElementById('heatmapCalendar');
+  const now = new Date();
+  const year = now.getFullYear();
+  const month = now.getMonth();
   
-  if(statusEl) statusEl.innerText = '🔍 Filtering...';
-
-  try{
-    // Smart cache থেকে data নাও
-    var rows = await cachedGetDocs(
-      'billingManpowerReport', 
-      CACHE_KEYS.billingManpowerReport, 
-      false
-    );
-
-    var filteredRows = [];
-    rows.forEach(function(r){
-      let rowDate=r.date||"";
-      
-      if(rowDate<from || rowDate>to) return;
-      if(filterComp && r.company!==filterComp) return;
-      if(filterMcd && r.mcd!==filterMcd) return;
-      if(filterMonth && rowDate.substring(5,7)!==filterMonth) return;
-      if(filterYear && rowDate.substring(0,4)!==filterYear) return;
-      
-      if(searchId){
-        let found=false;
-        if(r.leaveDetails){ r.leaveDetails.forEach(dt=>{ if((dt.idCard||"").toLowerCase().includes(searchId)) found=true; }); }
-        if(r.absentDetails){ r.absentDetails.forEach(dt=>{ if((dt.idCard||"").toLowerCase().includes(searchId)) found=true; }); }
-        if(r.medicalDetails){ r.medicalDetails.forEach(dt=>{ if((dt.idCard||"").toLowerCase().includes(searchId)) found=true; }); }
-        if(r.offDayDetails){ r.offDayDetails.forEach(dt=>{ if((dt.idCard||"").toLowerCase().includes(searchId)) found=true; }); }
-        if(!found) return;
-      }
-      
-      filteredRows.push(r);
-    });
-
-    filteredRows.sort((a,b)=>a.date.localeCompare(b.date));
-    allRows = filteredRows;
+  document.getElementById('heatmapMonth').innerText = now.toLocaleString('default', {month:'long', year:'numeric'});
+  
+  const firstDay = new Date(year, month, 1);
+  const lastDay = new Date(year, month + 1, 0);
+  const daysInMonth = lastDay.getDate();
+  const startingDay = firstDay.getDay();
+  
+  let html = '';
+  
+  // Day labels
+  const dayLabels = ['Su','Mo','Tu','We','Th','Fr','Sa'];
+  dayLabels.forEach(d => {
+    html += `<div class="heatmapDayLabel">${d}</div>`;
+  });
+  
+  // Empty cells before first day
+  for(let i = 0; i < startingDay; i++){
+    html += '<div class="heatmapDay"></div>';
+  }
+  
+  // Days of month
+  for(let day = 1; day <= daysInMonth; day++){
+    const dateStr = `${year}-${String(month+1).padStart(2,'0')}-${String(day).padStart(2,'0')}`;
+    const dayData = rows.find(r => r.date === dateStr);
     
-    if(statusEl) statusEl.innerText = '✅ Filter applied (Cache 📦)';
+    let className = 'off';
+    let tooltip = 'No data';
     
-    if(searchId && !filterMcd){
-      renderPersonDetails(filteredRows);
-      document.getElementById('personDetailsView').style.display='grid';
-      document.getElementById('reportTable').style.display='none';
-    }else{
-      renderTable(filteredRows);
-      renderPersonDetails(filteredRows);
-      if(currentView==='person'){
-        document.getElementById('personDetailsView').style.display='grid';
-        document.getElementById('reportTable').style.display='none';
+    if(dayData){
+      const attendanceRate = dayData.present / dayData.totalManpower;
+      if(attendanceRate >= 0.9) className = 'excellent';
+      else if(attendanceRate >= 0.8) className = 'good';
+      else if(attendanceRate >= 0.7) className = 'average';
+      else className = 'poor';
+      
+      tooltip = `${dateStr}: ${Math.round(attendanceRate*100)}% attendance`;
+    }
+    
+    html += `<div class="heatmapDay ${className}" title="${tooltip}">${day}</div>`;
+  }
+  
+  calendar.innerHTML = html;
+}
+
+// ================================================================
+// 🔮 PREDICTIONS
+// ================================================================
+function renderPredictions(rows){
+  const content = document.getElementById('predictionContent');
+  
+  if(rows.length < 7){
+    content.innerHTML = '<div style="text-align:center;color:var(--muted);padding:20px">Need at least 7 days of data for predictions</div>';
+    return;
+  }
+  
+  // Calculate averages
+  const avgAbsent = rows.reduce((s,r) => s + (r.absent||0), 0) / rows.length;
+  const avgLeave = rows.reduce((s,r) => s + (r.leave||0), 0) / rows.length;
+  const avgMedical = rows.reduce((s,r) => s + (r.medical||0), 0) / rows.length;
+  
+  // Trend calculation
+  const recentWeek = rows.slice(-7);
+  const previousWeek = rows.slice(-14, -7);
+  
+  const recentAvg = recentWeek.reduce((s,r) => s + (r.absent||0), 0) / 7;
+  const previousAvg = previousWeek.length > 0 ? previousWeek.reduce((s,r) => s + (r.absent||0), 0) / 7 : recentAvg;
+  
+  const trend = recentAvg > previousAvg ? '📈 Increasing' : recentAvg < previousAvg ? '📉 Decreasing' : '➡️ Stable';
+  
+  // Predict next week
+  const predictedAbsent = Math.round(recentAvg * 1.1);
+  
+  let html = `
+    <div class="predictionItem">
+      <span>Avg Daily Absent</span>
+      <b style="color:var(--red)">${avgAbsent.toFixed(1)}</b>
+    </div>
+    <div class="predictionItem">
+      <span>Avg Daily Leave</span>
+      <b style="color:var(--orange)">${avgLeave.toFixed(1)}</b>
+    </div>
+    <div class="predictionItem">
+      <span>Avg Medical</span>
+      <b style="color:var(--purple)">${avgMedical.toFixed(1)}</b>
+    </div>
+    <div class="predictionItem">
+      <span>Trend</span>
+      <b>${trend}</b>
+    </div>
+    <div class="predictionItem">
+      <span>Next Week Prediction</span>
+      <b style="color:var(--blue)">~${predictedAbsent} absent/day</b>
+    </div>
+  `;
+  
+  content.innerHTML = html;
+}
+
+// ================================================================
+// ⚠️ ALERTS
+// ================================================================
+function checkAlerts(rows){
+  const alertBox = document.getElementById('alertBox');
+  const alertList = document.getElementById('alertList');
+  
+  const todayStr = today();
+  const todayData = rows.find(r => r.date === todayStr);
+  
+  let alerts = [];
+  
+  if(todayData){
+    const absentRate = todayData.absent / todayData.totalManpower;
+    if(absentRate > 0.2){
+      alerts.push(`⚠️ High absence today: ${todayData.absent} (${Math.round(absentRate*100)}%)`);
+    }
+    
+    if(todayData.medical > 3){
+      alerts.push(`🏥 Multiple medical leaves: ${todayData.medical} people`);
+    }
+  }
+  
+  // Check for patterns
+  const last7Days = rows.slice(-7);
+  if(last7Days.length === 7){
+    const avgAbsent = last7Days.reduce((s,r) => s + (r.absent||0), 0) / 7;
+    if(avgAbsent > 5){
+      alerts.push(`📊 High average absence this week: ${avgAbsent.toFixed(1)}/day`);
+    }
+  }
+  
+  if(alerts.length > 0){
+    alertBox.style.display = 'block';
+    alertList.innerHTML = alerts.map(a => `<li>${a}</li>`).join('');
+  }else{
+    alertBox.style.display = 'none';
+  }
+}
+
+// ================================================================
+// 📊 CHARTS
+// ================================================================
+function renderAllCharts(){
+  const isLight = document.body.classList.contains('light');
+  const textColor = isLight ? '#1e293b' : '#ffffff';
+  
+  // Main Chart
+  if(chart) chart.destroy();
+  const total = Number(document.getElementById('kpiTotal').innerText) || 0;
+  const leave = Number(document.getElementById('kpiLeave').innerText) || 0;
+  const absent = Number(document.getElementById('kpiAbsent').innerText) || 0;
+  const medical = Number(document.getElementById('kpiMedical').innerText) || 0;
+  const offday = Number(document.getElementById('kpiOffDay').innerText) || 0;
+  const present = Number(document.getElementById('kpiPresent').innerText) || 0;
+  
+  chart = new Chart(document.getElementById('manpowerChart'), {
+    type: 'bar',
+    data: {
+      labels: ['Total','Leave','Absent','Medical','Off Day','Present'],
+      datasets: [{
+        label: 'Manpower',
+        data: [total,leave,absent,medical,offday,present],
+        backgroundColor: ['#3b82f6','#f59e0b','#ef4444','#8b5cf6','#6366f1','#22c55e'],
+        borderWidth: 1,
+        borderRadius: 10
+      }]
+    },
+    options: {
+      responsive: true,
+      plugins: {
+        legend: {display: false},
+        title: {
+          display: true,
+          text: '📊 Billing Section Manpower Summary',
+          color: textColor,
+          font: {size: 16, weight: '700'}
+        }
+      },
+      scales: {
+        y: {
+          beginAtZero: true,
+          grid: {color: isLight ? 'rgba(0,0,0,.1)' : 'rgba(255,255,255,.1)'},
+          ticks: {color: textColor}
+        },
+        x: {
+          grid: {display: false},
+          ticks: {color: textColor}
+        }
       }
     }
-  }catch(e){
-    console.error('Filter error:', e);
-    if(statusEl) statusEl.innerText = '❌ Filter error';
-  }
-};
+  });
+  
+  // Trend Chart
+  if(trendChart) trendChart.destroy();
+  const last14Days = allRows.slice(-14);
+  
+  trendChart = new Chart(document.getElementById('trendChart'), {
+    type: 'line',
+    data: {
+      labels: last14Days.map(r => r.date?.substring(5) || ''),
+      datasets: [
+        {
+          label: 'Present',
+          data: last14Days.map(r => r.present || 0),
+          borderColor: '#22c55e',
+          backgroundColor: 'rgba(34,197,94,.1)',
+          tension: 0.4,
+          fill: true
+        },
+        {
+          label: 'Absent',
+          data: last14Days.map(r => r.absent || 0),
+          borderColor: '#ef4444',
+          backgroundColor: 'rgba(239,68,68,.1)',
+          tension: 0.4,
+          fill: true
+        }
+      ]
+    },
+    options: {
+      responsive: true,
+      plugins: {
+        title: {
+          display: true,
+          text: '📈 14-Day Trend',
+          color: textColor,
+          font: {size: 16, weight: '700'}
+        }
+      },
+      scales: {
+        y: {
+          beginAtZero: true,
+          grid: {color: isLight ? 'rgba(0,0,0,.1)' : 'rgba(255,255,255,.1)'},
+          ticks: {color: textColor}
+        },
+        x: {
+          grid: {display: false},
+          ticks: {color: textColor}
+        }
+      }
+    }
+  });
+  
+  // Department Chart
+  if(departmentChart) departmentChart.destroy();
+  const deptData = {};
+  allRows.forEach(r => {
+    if(!deptData[r.mcd]) deptData[r.mcd] = {present: 0, total: 0};
+    deptData[r.mcd].present += r.present || 0;
+    deptData[r.mcd].total += r.totalManpower || 0;
+  });
+  
+  const deptLabels = Object.keys(deptData);
+  const deptRates = deptLabels.map(d => Math.round((deptData[d].present / deptData[d].total) * 100));
+  
+  departmentChart = new Chart(document.getElementById('departmentChart'), {
+    type: 'radar',
+    data: {
+      labels: deptLabels,
+      datasets: [{
+        label: 'Attendance Rate %',
+        data: deptRates,
+        backgroundColor: 'rgba(37,99,235,.2)',
+        borderColor: '#2563eb',
+        pointBackgroundColor: '#2563eb'
+      }]
+    },
+    options: {
+      responsive: true,
+      plugins: {
+        title: {
+          display: true,
+          text: '🏢 Department Comparison',
+          color: textColor,
+          font: {size: 16, weight: '700'}
+        }
+      },
+      scales: {
+        r: {
+          beginAtZero: true,
+          max: 100,
+          grid: {color: isLight ? 'rgba(0,0,0,.1)' : 'rgba(255,255,255,.1)'},
+          pointLabels: {color: textColor},
+          ticks: {color: textColor, backdropColor: 'transparent'}
+        }
+      }
+    }
+  });
+}
 
+// ================================================================
+// 📋 TABLE RENDERING
+// ================================================================
 function renderTable(rows){
   let html="";
   let gtTotal=0,gtLeave=0,gtAbsent=0,gtMedical=0,gtOffDay=0,gtPresent=0;
@@ -1338,14 +1598,25 @@ function renderTable(rows){
   document.getElementById("gtOffDay").innerText=gtOffDay;
   document.getElementById("gtPresent").innerText=gtPresent;
 
-  document.getElementById("kpiTotal").innerText=gtTotal;
-  document.getElementById("kpiLeave").innerText=gtLeave;
-  document.getElementById("kpiAbsent").innerText=gtAbsent;
-  document.getElementById("kpiMedical").innerText=gtMedical;
-  document.getElementById("kpiOffDay").innerText=gtOffDay;
-  document.getElementById("kpiPresent").innerText=gtPresent;
+  // Animate KPI updates
+  animateKPI('kpiTotal', gtTotal);
+  animateKPI('kpiLeave', gtLeave);
+  animateKPI('kpiAbsent', gtAbsent);
+  animateKPI('kpiMedical', gtMedical);
+  animateKPI('kpiOffDay', gtOffDay);
+  animateKPI('kpiPresent', gtPresent);
+}
 
-  renderChart(gtTotal,gtLeave,gtAbsent,gtMedical,gtOffDay,gtPresent);
+function animateKPI(elementId, newValue){
+  const element = document.getElementById(elementId);
+  const oldValue = Number(element.innerText) || 0;
+  
+  if(oldValue !== newValue){
+    element.parentElement.classList.add('animate');
+    setTimeout(() => element.parentElement.classList.remove('animate'), 500);
+  }
+  
+  element.innerText = newValue;
 }
 
 function renderPersonDetails(rows){
@@ -1465,58 +1736,13 @@ function renderPersonDetails(rows){
   document.getElementById("personDetailsView").innerHTML=html || '<div style="grid-column:1/-1;text-align:center;padding:40px;color:var(--muted)">📭 No Data Found</div>';
 }
 
-function renderChart(total,leave,absent,medical,offday,present){
-  if(chart) chart.destroy();
-  
-  const isLight=document.body.classList.contains("light");
-  const textColor=isLight?"#1e293b":"#ffffff";
-
-  chart=new Chart(document.getElementById("manpowerChart"),{
-    type:"bar",
-    data:{
-      labels:["Total","Leave","Absent","Medical","Off Day","Present"],
-      datasets:[{
-        label:"Manpower",
-        data:[total,leave,absent,medical,offday,present],
-        backgroundColor:["#3b82f6","#f59e0b","#ef4444","#8b5cf6","#6366f1","#22c55e"],
-        borderWidth:1,
-        borderRadius:10
-      }]
-    },
-    options:{
-      responsive:true,
-      plugins:{
-        legend:{display:false},
-        title:{
-          display:true,
-          text:"📊 Billing Section Manpower Summary",
-          color:textColor,
-          font:{size:16,weight:"700"}
-        }
-      },
-      scales:{
-        y:{
-          beginAtZero:true,
-          grid:{color:isLight?"rgba(0,0,0,.1)":"rgba(255,255,255,.1)"},
-          ticks:{color:textColor}
-        },
-        x:{
-          grid:{display:false},
-          ticks:{color:textColor}
-        }
-      }
-    }
-  });
-}
-
 // ================================================================
-// 🗑 DELETE ROW — Firebase delete + Timestamp update + Cache invalidate
+// 🗑 DELETE ROW
 // ================================================================
 window.deleteRow=async function(id){
   if(confirm("🗑 Delete this report?")){
     await deleteDoc(doc(db,"billingManpowerReport",id));
     
-    // 🔥 Timestamp update + Cache invalidate
     await updateCollectionTimestamp('billingManpowerReport');
     var localTS = JSON.parse(localStorage.getItem(LOCAL_TIMESTAMPS_KEY) || '{}');
     delete localTS['billingManpowerReport'];
@@ -1528,6 +1754,9 @@ window.deleteRow=async function(id){
   }
 };
 
+// ================================================================
+// 📊 EXPORT FUNCTIONS
+// ================================================================
 window.exportExcel=function(){
   let table=document.getElementById("reportTable").outerHTML;
   let file=new Blob([table],{type:"application/vnd.ms-excel"});
@@ -1537,63 +1766,91 @@ window.exportExcel=function(){
   a.click();
 };
 
+window.exportPDF=async function(){
+  const { jsPDF } = window.jspdf;
+  const pdf = new jsPDF('l', 'mm', 'a4');
+  
+  // Add title
+  pdf.setFontSize(18);
+  pdf.text('GMS TEXTILES LTD - Billing Manpower Report', 14, 15);
+  pdf.setFontSize(10);
+  pdf.text(`Generated: ${new Date().toLocaleString()}`, 14, 22);
+  
+  // Add table
+  const table = document.getElementById('reportTable');
+  const canvas = await html2canvas(table, {scale: 2});
+  const imgData = canvas.toDataURL('image/png');
+  const imgWidth = 280;
+  const imgHeight = canvas.height * imgWidth / canvas.width;
+  
+  pdf.addImage(imgData, 'PNG', 14, 30, imgWidth, imgHeight);
+  
+  pdf.save('billing-manpower-report.pdf');
+  toast('PDF Exported ✅');
+};
+
 // ================================================================
-// 🔄 REALTIME SYNC — Gate Plan এর মতো onSnapshot listener
+// ⌨️ KEYBOARD SHORTCUTS
+// ================================================================
+window.showShortcuts=function(){
+  document.getElementById('shortcutsModal').style.display='flex';
+};
+
+window.closeShortcuts=function(){
+  document.getElementById('shortcutsModal').style.display='none';
+};
+
+document.addEventListener('keydown', (e) => {
+  if(e.ctrlKey && e.key === 's'){
+    e.preventDefault();
+    saveReport();
+  }
+  if(e.ctrlKey && e.key === 'l'){
+    e.preventDefault();
+    loadReport();
+  }
+  if(e.ctrlKey && e.key === 'p'){
+    e.preventDefault();
+    exportPDF();
+  }
+  if(e.ctrlKey && e.key === 'e'){
+    e.preventDefault();
+    exportExcel();
+  }
+  if(e.ctrlKey && e.key === 't'){
+    e.preventDefault();
+    toggleTheme();
+  }
+  if(e.key === 'Escape'){
+    closeShortcuts();
+  }
+  if(e.key === '?'){
+    showShortcuts();
+  }
+});
+
+// ================================================================
+// 🔄 REALTIME SYNC
 // ================================================================
 function setupRealtimeSync(){
-  console.log('🔔 Setting up realtime sync for billingManpowerReport...');
-  
-  // ★ NEW: billingManpowerReport collection এ onSnapshot listener
   var billingCol = collection(db, 'billingManpowerReport');
   onSnapshot(billingCol, function(snapshot){
-    console.log('🔔 Realtime: billingManpowerReport changed, docs:', snapshot.size);
-    
-    // Cache invalidate করো
     window.GMS_CACHE.invalidate([CACHE_KEYS.billingManpowerReport]);
     
-    // Local timestamp মুছে ফেলো
     var localTS = JSON.parse(localStorage.getItem(LOCAL_TIMESTAMPS_KEY) || '{}');
     delete localTS['billingManpowerReport'];
     localStorage.setItem(LOCAL_TIMESTAMPS_KEY, JSON.stringify(localTS));
     
-    // Status update
     var syncStatus = document.getElementById('syncStatus');
     if(syncStatus){
       syncStatus.innerText = 'Updated ✅';
       setTimeout(function(){ if(syncStatus) syncStatus.innerText = 'Active'; }, 2000);
     }
     
-    // যদি page active থাকে, তাহলে reload করো
     if(!document.hidden){
-      console.log('🔄 Reloading report due to realtime change...');
-      var statusEl = document.getElementById('cacheStatusText');
-      if(statusEl) statusEl.innerText = '🔔 Realtime update detected...';
       loadRangeReport();
     }
   });
-  
-  // system_sync collection এও listener
-  var syncCol = collection(db, 'system_sync');
-  onSnapshot(syncCol, function(snapshot){
-    var remoteTS = {};
-    snapshot.forEach(function(d){ 
-      remoteTS[d.id] = d.data().lastUpdated || 0; 
-    });
-    
-    var localTS = JSON.parse(localStorage.getItem(LOCAL_TIMESTAMPS_KEY) || '{}');
-    var changed = Object.keys(remoteTS).filter(function(col){
-      return !localTS[col] || remoteTS[col] > localTS[col];
-    });
-    
-    if(changed.length > 0 && changed.includes('billingManpowerReport')){
-      console.log('🔔 Realtime: system_sync changed for billingManpowerReport');
-      if(!document.hidden){
-        loadRangeReport();
-      }
-    }
-  });
-  
-  console.log('✅ Realtime sync setup complete');
 }
 
 // ================================================================
@@ -1601,45 +1858,36 @@ function setupRealtimeSync(){
 // ================================================================
 calculatePresent();
 
-// Read counter init
 (function(){
   var c = window.GMS_CACHE.getReadCount();
   var el = document.getElementById('readCounter');
   if(el) el.innerText = c;
 })();
 
-// Smart load
 loadReport();
-
-// Realtime sync setup
 setupRealtimeSync();
 
-// ★ NEW: Page visibility change এ auto refresh
 document.addEventListener('visibilitychange', function(){
   if(!document.hidden){
-    console.log('🔄 Page visible — reloading report...');
     loadRangeReport();
   }
 });
 
-// ★ NEW: প্রতি 30 সেকেন্ড পর auto refresh
 setInterval(function(){
   if(!document.hidden){
-    console.log('⏰ Auto-refresh triggered (30 seconds)');
     loadRangeReport();
   }
 }, 30000);
 
-// Console log
 console.log('%c═══════════════════════════════════════════', 'color: #22c55e; font-weight: bold;');
-console.log('%c  📊 BILLING MANPOWER REPORT - READY', 'color: #22c55e; font-weight: bold; font-size: 14px;');
+console.log('%c  🚀 SMART DASHBOARD - READY', 'color: #22c55e; font-weight: bold; font-size: 14px;');
 console.log('%c═══════════════════════════════════════════', 'color: #22c55e; font-weight: bold;');
-console.log('%c  ✅ Smart Selective Cache: Active', 'color: #3b82f6;');
-console.log('%c  ✅ Realtime Sync: Active', 'color: #22c55e;');
-console.log('%c  ✅ ROI Tracking: Active', 'color: #8b5cf6;');
-console.log('%c  ✅ Cache Expiry: 5 minutes', 'color: #f59e0b;');
-console.log('%c  ✅ Auto Refresh: Every 30 seconds', 'color: #f59e0b;');
-console.log('%c  ✅ Firebase Reads Minimized: Yes', 'color: #f59e0b;');
+console.log('%c  ✅ Heatmap Calendar: Active', 'color: #3b82f6;');
+console.log('%c  ✅ Predictions: Active', 'color: #8b5cf6;');
+console.log('%c  ✅ Alerts: Active', 'color: #ef4444;');
+console.log('%c  ✅ Real-time Sync: Active', 'color: #22c55e;');
+console.log('%c  ✅ Keyboard Shortcuts: Active', 'color: #f59e0b;');
+console.log('%c  ✅ PDF Export: Active', 'color: #06b6d4;');
 console.log('%c═══════════════════════════════════════════', 'color: #22c55e; font-weight: bold;');
 </script>
 
