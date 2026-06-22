@@ -7,28 +7,35 @@
 <style>
 *{box-sizing:border-box}
 html,body{width:100%;max-width:100%;overflow-x:hidden;margin:0;padding:0;background:#0f172a;color:white;font-family:'Poppins',Arial,sans-serif;touch-action:manipulation}
+body.light{background:#f8fafc;color:#0f172a}
 body{padding:4px}
 h2{text-align:center;font-size:18px;margin:6px 0 8px;background:linear-gradient(135deg,#8b5cf6,#3b82f6);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+body.light h2{background:linear-gradient(135deg,#3b82f6,#8b5cf6);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
 .topControls{text-align:center;margin-bottom:8px!important;font-size:12px;background:rgba(30,41,59,0.8);padding:10px;border-radius:10px}
+body.light .topControls{background:rgba(241,245,249,0.9)}
 button{padding:7px 9px;border:0;border-radius:6px;color:white;font-weight:bold;cursor:pointer;margin:2px;font-size:11px;transition:all 0.3s}
 button:hover{transform:translateY(-2px);box-shadow:0 4px 12px rgba(0,0,0,0.3)}
-.deleteBtn{background:#dc2626}.excelBtn{background:#16a34a}.pdfBtn{background:#7c3aed}.homeBtn{background:#2563eb}.saveBtn{background:#10b981}
+.deleteBtn{background:#dc2626}.excelBtn{background:#16a34a}.pdfBtn{background:#7c3aed}.homeBtn{background:#2563eb}.saveBtn{background:#10b981}.themeBtn{background:#64748b}
 input,select,textarea,button{font-size:16px}
 select,input[type="date"],input[type="text"]{padding:6px;border-radius:6px;border:1px solid #475569;max-width:180px;background:#1e293b;color:white}
+body.light select,body.light input[type="date"],body.light input[type="text"]{background:#f1f5f9;color:#0f172a;border-color:#cbd5e1}
 .tableWrap{width:100%;max-width:100%;overflow-x:auto;margin:10px 0}
-#reportTable{width:100%;max-width:100%;margin:0 auto;border-collapse:collapse;table-layout:auto;background:white;color:black;min-width:800px}
-#reportTable th,#reportTable td{border:1px solid #000;padding:2px;text-align:center;font-size:10px;line-height:1.2;white-space:nowrap}
+#reportTable{width:100%;max-width:100%;margin:0 auto;border-collapse:collapse;table-layout:fixed;background:white;color:black;min-width:600px}
+#reportTable th,#reportTable td{border:1px solid #000;padding:2px;text-align:center;font-size:10px;line-height:1.2;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 #reportTable thead{background:#1e293b;color:white;position:sticky;top:0}
+body.light #reportTable thead{background:#334155}
 #reportTable tfoot{background:#334155;color:white;font-weight:bold}
-.col-sl{width:4%;min-width:30px}.col-code{width:8%;min-width:60px}.col-type{width:12%;min-width:90px}.col-size{width:7%;min-width:50px}
-.col-brand{width:8%;min-width:60px}.col-prev{width:9%;min-width:70px}.col-rcvd{width:9%;min-width:70px}.col-dvld{width:9%;min-width:70px}
-.col-present{width:10%;min-width:80px}.col-bn{width:8%;min-width:60px}.col-price{width:8%;min-width:60px}
+.col-sl{width:5%}.col-code{width:10%}.col-type{width:15%}.col-size{width:8%}
+.col-brand{width:10%}.col-price{width:8%}.col-prev{width:8%}.col-rcvd{width:8%}.col-dvld{width:8%}
+.col-present{width:10%}.col-bn{width:10%}
 .qtyInput{width:100%;height:28px;padding:2px;text-align:center;font-size:14px;font-weight:bold;border:1px solid #999;border-radius:4px;background:white;color:black}
+body.light .qtyInput{background:#f8fafc}
 .qtyInput:focus{outline:none;border-color:#3b82f6;box-shadow:0 0 0 2px rgba(59,130,246,0.2)}
 .summaryWrap{width:98%;margin:14px auto;text-align:center;overflow-x:auto}
 #summaryTable{width:100%;max-width:100%;margin:auto;text-align:center;border-collapse:collapse;background:white;color:black}
 #summaryTable th,#summaryTable td{border:1px solid #000;padding:6px;font-size:11px;min-width:100px}
 #summaryTable thead{background:#1e293b;color:white}
+body.light #summaryTable thead{background:#334155}
 .negative-row{background:#fecaca!important}
 .negative-row td{color:#991b1b;font-weight:bold}
 #negativePopup{display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.8);z-index:9999;justify-content:center;align-items:center}
@@ -48,10 +55,13 @@ select,input[type="date"],input[type="text"]{padding:6px;border-radius:6px;borde
 @keyframes slideDown{from{transform:translateY(-100%)}to{transform:translateY(0)}}
 .floor-badge{display:inline-block;padding:3px 10px;background:linear-gradient(135deg,#8b5cf6,#3b82f6);color:white;border-radius:12px;font-size:11px;font-weight:600;margin-left:8px}
 .loading-overlay{position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(15,23,42,0.9);z-index:10000;display:none;justify-content:center;align-items:center;flex-direction:column}
+body.light .loading-overlay{background:rgba(248,250,252,0.9)}
 .loading-overlay.show{display:flex}
 .spinner{width:50px;height:50px;border:4px solid #334155;border-top-color:#3b82f6;border-radius:50%;animation:spin 1s linear infinite}
 @keyframes spin{to{transform:rotate(360deg)}}
 .loading-text{margin-top:15px;font-size:14px;color:#cbd5e1;font-weight:600}
+body.light .loading-text{color:#475569}
+.theme-toggle{position:fixed;top:10px;right:10px;z-index:1000}
 @media(max-width:768px){
   body{padding:2px}h2{font-size:15px}.topControls{font-size:11px;padding:8px}
   button{padding:6px 7px;font-size:10px}
@@ -60,10 +70,13 @@ select,input[type="date"],input[type="text"]{padding:6px;border-radius:6px;borde
   .popup-content{width:95%;padding:16px}
   .popup-title{font-size:15px}
   .popup-details{font-size:11px}
+  .col-sl{width:6%}.col-code{width:12%}.col-type{width:18%}.col-size{width:10%}
+  .col-brand{width:12%}.col-price{width:8%}.col-prev{width:8%}.col-rcvd{width:8%}.col-dvld{width:8%}
+  .col-present{width:10%}.col-bn{width:10%}
 }
 @media print{
   html,body{background:white!important;color:black!important;overflow:visible!important}
-  button,input[type="date"],select,input[type="text"],.offline-indicator,.loading-overlay{display:none!important}
+  button,input[type="date"],select,input[type="text"],.offline-indicator,.loading-overlay,.theme-toggle{display:none!important}
   .tableWrap,.summaryWrap{overflow:visible!important}
   #reportTable,#summaryTable{width:100%!important;max-width:100%!important;color:black!important;background:white!important}
   #reportTable th,#reportTable td{font-size:8px;padding:2px}
@@ -78,6 +91,10 @@ select,input[type="date"],input[type="text"]{padding:6px;border-radius:6px;borde
 <div class="loading-overlay" id="loadingOverlay">
   <div class="spinner"></div>
   <div class="loading-text" id="loadingText">Loading...</div>
+</div>
+
+<div class="theme-toggle">
+  <button class="themeBtn" onclick="toggleTheme()">🌙 / ☀️</button>
 </div>
 
 <h2>🪡 GMS COMPOSITE - NEEDLE DAILY POSTING</h2>
@@ -163,8 +180,8 @@ select,input[type="date"],input[type="text"]{padding:6px;border-radius:6px;borde
   <th class="col-type">NEEDLE TYPE</th>
   <th class="col-size">SIZE/DIA</th>
   <th class="col-brand">BRAND</th>
-  <th class="col-price">UNIT PRICE ($)</th>
-  <th class="col-prev">STOCK (Prev)</th>
+  <th class="col-price">PRICE ($)</th>
+  <th class="col-prev">Prev</th>
   <th class="col-rcvd">Rcvd</th>
   <th class="col-dvld">Dvld</th>
   <th class="col-present">Present</th>
@@ -903,53 +920,23 @@ async function syncOfflineQueue(){
 // 🔌 SUPABASE FUNCTIONS
 // =========================================
 async function getCompanyId(){
-  // Check cache first
-  const cached = localStorage.getItem('company_id_' + COMPANY_CODE);
-  if(cached){
-    return cached;
-  }
-  
-  // Try to find company
   const { data, error } = await supabase
     .from('companies')
     .select('id')
     .eq('code', COMPANY_CODE)
-    .maybeSingle();
-  
-  if(data && data.id){
-    localStorage.setItem('company_id_' + COMPANY_CODE, data.id);
-    return data.id;
-  }
-  
-  // Auto-create company if missing
-  console.warn('Company not found, auto-creating...');
-  const { data: created, error: createError } = await supabase
-    .from('companies')
-    .insert({
-      code: COMPANY_CODE,
-      name: 'GMS Composite Knitting Ind Ltd',
-      created_at: new Date().toISOString()
-    })
-    .select('id')
     .single();
   
-  if(createError){
-    console.error('Auto-create failed:', createError);
+  if(error || !data){
+    console.error('Company not found:', error);
     return null;
   }
-  
-  if(created && created.id){
-    localStorage.setItem('company_id_' + COMPANY_CODE, created.id);
-    return created.id;
-  }
-  
-  return null;
+  return data.id;
 }
 
 async function saveToSupabase(floor, date, operator, rows, showSuccess = true){
   const companyId = await getCompanyId();
   if(!companyId){
-    alert('❌ Company setup failed!\n\nProbable causes:\n1. Supabase e "companies" table create hoyni\n2. RLS policy block korche\n3. Wrong API key\n\nConsole e detail dekhun (F12).');
+    alert('❌ Company configuration error!');
     return { error: 'Company not found' };
   }
 
@@ -1285,10 +1272,7 @@ async function deleteData(){
   if(!confirm('⚠️ এই তারিখের ডাটা delete করবেন?')) return;
   
   const companyId = await getCompanyId();
-  if(!companyId){
-    alert('❌ Company setup missing! F12 te console check korun.');
-    return;
-  }
+  if(!companyId) return;
   
   const { error } = await supabase
     .from('needle_reports')
@@ -1409,6 +1393,12 @@ function updateOfflineIndicator(){
   }
 }
 
+function toggleTheme(){
+  document.body.classList.toggle('light');
+  const isLight = document.body.classList.contains('light');
+  localStorage.setItem('theme', isLight ? 'light' : 'dark');
+}
+
 // =========================================
 // 🎯 EVENT LISTENERS
 // =========================================
@@ -1450,6 +1440,11 @@ document.addEventListener('keydown', function(e){
     document.getElementById('operatorName').value = lastOperator;
   }
   
+  const savedTheme = localStorage.getItem('theme');
+  if(savedTheme === 'light'){
+    document.body.classList.add('light');
+  }
+  
   updateOfflineIndicator();
   updateCategoryBadge();
   loadTable();
@@ -1474,6 +1469,7 @@ window.updateTotal = updateTotal;
 window.closePopup = closePopup;
 window.fixNegativeRow = fixNegativeRow;
 window.loadTable = loadTable;
+window.toggleTheme = toggleTheme;
 </script>
 </body>
 </html>
