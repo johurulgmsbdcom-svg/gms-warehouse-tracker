@@ -3,7 +3,6 @@
 <head>
 <title>Needle Daily Posting</title>
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
-<link rel="manifest" href="/manifest.json">
 <meta name="theme-color" content="#0f172a">
 <style>
 *{box-sizing:border-box}
@@ -11,152 +10,324 @@ html,body{width:100%;max-width:100%;overflow-x:hidden;margin:0;padding:0;backgro
 body{padding:4px}
 h2{text-align:center;font-size:17px;margin:6px 0 8px}
 .topControls{text-align:center;margin-bottom:8px!important;font-size:12px}
-button{padding:7px 9px;border:0;border-radius:6px;color:white;font-weight:bold;cursor:pointer;margin:2px;font-size:11px}
-.deleteBtn{background:#dc2626}.excelBtn{background:#16a34a}.pdfBtn{background:#7c3aed}.homeBtn{background:#2563eb}.saveBtn{background:green}
-input,select,textarea,button{font-size:16px}
-select,input[type="date"],input[type="text"]{padding:5px;border-radius:5px;border:1px solid #999;max-width:150px}
+button{padding:7px 9px;border:0;border-radius:6px;color:white;font-weight:bold;cursor:pointer;margin:2px;font-size:11px;transition:all .2s}
+button:hover{opacity:.85;transform:translateY(-1px)}
+button:active{transform:translateY(0)}
+.deleteBtn{background:#dc2626}.excelBtn{background:#16a34a}.pdfBtn{background:#7c3aed}
+.homeBtn{background:#2563eb}.saveBtn{background:#059669}.trfBtn{background:#f59e0b;color:#000}
+.reqSearchBtn{background:#8b5cf6}
+input,select,textarea{font-size:16px}
+select,input[type="date"],input[type="text"]{padding:5px;border-radius:5px;border:1px solid #999;max-width:150px;background:#1e293b;color:white}
 .tableWrap{width:100%;max-width:100%;overflow-x:hidden}
 #reportTable{width:100%;max-width:100%;margin:0 auto;border-collapse:collapse;table-layout:fixed;background:white;color:black}
 #reportTable th,#reportTable td{border:1px solid #000;padding:1px;text-align:center;font-size:10px;line-height:1.08;white-space:nowrap;overflow:hidden}
-#reportTable thead{background:#1e293b;color:white}
+#reportTable thead{background:#1e293b;color:white;position:sticky;top:0;z-index:2}
 #reportTable tfoot{background:#334155;color:white;font-weight:bold}
-.col-sl{width:6%;font-size:9px!important}.col-type{width:22%;font-size:10px!important}.col-size{width:8%;font-size:10px!important}
-.col-prev{width:12%}.col-rcvd{width:11%}.col-dvld{width:11%}.col-present{width:14%}.col-bn{width:10%}
-.qtyInput{width:100%;height:24px;padding:1px;text-align:center;font-size:16px;font-weight:bold;border:1px solid #999;border-radius:3px;background:white;color:black;-webkit-text-size-adjust:100%}
+.col-sl{width:5%}.col-type{width:21%}.col-size{width:8%}
+.col-prev{width:11%}.col-rcvd{width:10%}.col-dvld{width:10%}.col-present{width:12%}.col-bn{width:9%}.col-trf{width:14%}
+.qtyInput{width:100%;height:24px;padding:1px;text-align:center;font-size:16px;font-weight:bold;border:1px solid #999;border-radius:3px;background:white;color:black}
+.req-tag{display:block;font-size:7px;color:#059669;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.trf-tag{display:block;font-size:7px;color:#7c3aed;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.trfRowBtn{background:#f59e0b;color:#000;border:none;border-radius:3px;padding:2px 4px;font-size:9px;font-weight:bold;cursor:pointer;width:100%;line-height:1.3}
 .summaryWrap{width:100%;max-width:100%;overflow-x:hidden}
 #summaryTable{width:100%;max-width:100%;margin:auto;text-align:center;border-collapse:collapse;table-layout:fixed;background:white;color:black}
 #summaryTable th,#summaryTable td{border:1px solid #000;padding:2px;font-size:10px}
-
+#summaryTable thead{background:#1e293b;color:white}
 .negative-row{background:#fecaca!important}
 .negative-row td{color:#991b1b;font-weight:bold}
+.carry-info{display:block;margin:2px 0 4px;font-size:10px;color:#fbbf24;text-align:center;font-weight:600}
 
-#negativePopup{display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.7);z-index:9999;justify-content:center;align-items:center}
-.popup-content{background:white;color:black;padding:16px;border-radius:10px;max-width:95%;width:400px;box-shadow:0 4px 20px rgba(0,0,0,0.3);position:relative}
-.popup-close{position:absolute;top:8px;right:12px;font-size:20px;cursor:pointer;color:#666;font-weight:bold}
+/* ======= ALL POPUPS ======= */
+.popup-overlay{display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.78);z-index:9998;justify-content:center;align-items:center}
+.popup-overlay.active{display:flex}
+.popup-box{background:white;color:black;padding:16px;border-radius:12px;max-width:95%;width:400px;box-shadow:0 8px 30px rgba(0,0,0,0.4);position:relative;animation:popSlide .22s}
+@keyframes popSlide{from{transform:translateY(-30px);opacity:0}to{transform:translateY(0);opacity:1}}
+.popup-close{position:absolute;top:8px;right:12px;font-size:22px;cursor:pointer;color:#666;font-weight:bold}
 .popup-close:hover{color:#dc2626}
-.popup-title{font-size:16px;font-weight:bold;margin-bottom:12px;color:#dc2626;text-align:center}
+.popup-title{font-size:15px;font-weight:bold;margin-bottom:12px;text-align:center}
+.popup-title.danger{color:#dc2626}
+.popup-title.trf{color:#d97706}
+.popup-title.req{color:#7c3aed}
+.popup-title.search{color:#2563eb}
+.popup-field{margin:8px 0;text-align:left}
+.popup-field label{display:block;font-size:11px;font-weight:600;color:#334155;margin-bottom:3px}
+.popup-field input,.popup-field select{width:100%;max-width:100%;background:#f8fafc;color:#0f172a;border:1.5px solid #cbd5e1;padding:7px;border-radius:6px;font-size:13px}
+.popup-btn{width:100%;margin-top:10px;padding:10px;border:none;border-radius:8px;font-weight:bold;font-size:14px;cursor:pointer;transition:all .2s}
+.popup-btn:hover{opacity:.88;transform:translateY(-1px)}
+.popup-btn.blue{background:#2563eb;color:white}
+.popup-btn.green{background:#059669;color:white}
+.popup-btn.amber{background:#f59e0b;color:#000}
+.popup-item-info{background:#f1f5f9;border-radius:6px;padding:8px;margin-bottom:10px;font-size:11px;color:#334155;font-weight:600}
+.popup-footer{text-align:center;font-size:10px;color:#64748b;margin-top:8px}
+
+/* negative popup details */
 .popup-details{font-size:12px;line-height:1.6}
-.popup-details div{margin:4px 0;display:flex;justify-content:space-between}
+.popup-details div{margin:4px 0;display:flex;justify-content:space-between;padding:3px;background:#f8fafc;border-radius:4px}
 .popup-details span.label{font-weight:bold;color:#334155}
 .popup-details span.value{color:#1e293b;font-weight:500}
-.popup-fix-btn{background:#2563eb;color:white;border:none;padding:8px 16px;border-radius:6px;font-weight:bold;cursor:pointer;width:100%;margin-top:12px;font-size:13px}
-.popup-fix-btn:hover{background:#1d4ed8}
-.popup-footer{text-align:center;font-size:11px;color:#64748b;margin-top:8px}
 
-.offline-indicator{
-  position:fixed;top:0;left:0;right:0;background:#f59e0b;color:#000;padding:6px 12px;text-align:center;font-size:12px;font-weight:600;z-index:9999;display:none;
-}
-.offline-indicator.show{display:block;}
+/* Transfer popup wide */
+#transferPopup .popup-box{width:420px}
 
-/* 🔥 ROI Tracking Indicator */
-.roi-tracker-indicator{
-  position:fixed;bottom:10px;right:10px;background:rgba(16,185,129,0.9);color:#fff;padding:6px 12px;border-radius:20px;font-size:10px;font-weight:600;z-index:9998;display:flex;align-items:center;gap:6px;box-shadow:0 4px 12px rgba(0,0,0,0.3);
-}
-.roi-tracker-indicator .roi-dot{width:6px;height:6px;background:#fff;border-radius:50%;animation:roiPulse 1.5s infinite;}
-@keyframes roiPulse{0%,100%{opacity:1;}50%{opacity:0.3;}}
+/* Req Search popup */
+#reqSearchPopup .popup-box{width:480px;max-height:90vh;overflow-y:auto}
+.search-results{margin-top:10px;max-height:50vh;overflow-y:auto}
+.search-result-item{background:#f1f5f9;border-radius:6px;padding:8px;margin:5px 0;cursor:pointer;border:2px solid transparent;transition:all .2s}
+.search-result-item:hover{border-color:#3b82f6;background:#dbeafe}
+.search-result-item .sri-floor{font-weight:bold;color:#1e293b;font-size:12px}
+.search-result-item .sri-date{color:#2563eb;font-size:11px}
+.search-result-item .sri-items{color:#059669;font-size:10px;margin-top:2px}
+.no-results{text-align:center;color:#94a3b8;padding:20px;font-size:13px}
+
+/* Transfer report popup */
+#trfReportPopup .popup-box{width:95%;max-width:680px;max-height:90vh;overflow-y:auto}
+#trfReportTable{width:100%;border-collapse:collapse;font-size:10px;color:black}
+#trfReportTable th{background:#1e293b;color:white;padding:5px;border:1px solid #000}
+#trfReportTable td{border:1px solid #ccc;padding:4px;text-align:center}
+#trfReportTable tr:nth-child(even){background:#f1f5f9}
+#trfReportTable tfoot td{background:#334155;color:white;font-weight:bold}
+
+/* Floor navigation modal (transfer target) */
+#floorNavPopup .popup-box{width:420px}
+.floor-nav-list{max-height:55vh;overflow-y:auto;margin-top:10px}
+.floor-nav-item{background:#f1f5f9;border-radius:6px;padding:10px;margin:4px 0;cursor:pointer;display:flex;justify-content:space-between;align-items:center;border:2px solid transparent;transition:all .2s}
+.floor-nav-item:hover{border-color:#f59e0b;background:#fef3c7}
+.floor-nav-item .fni-name{font-weight:bold;color:#1e293b;font-size:12px}
+.floor-nav-item .fni-match{color:#059669;font-size:10px}
+.floor-nav-item .fni-arrow{font-size:16px;color:#f59e0b}
+
+.offline-indicator{position:fixed;top:0;left:0;right:0;background:#f59e0b;color:#000;padding:6px 12px;text-align:center;font-size:12px;font-weight:600;z-index:9999;display:none}
+.offline-indicator.show{display:block}
+.roi-tracker-indicator{position:fixed;bottom:10px;right:10px;background:rgba(16,185,129,0.9);color:#fff;padding:6px 12px;border-radius:20px;font-size:10px;font-weight:600;z-index:9998;display:flex;align-items:center;gap:6px;box-shadow:0 4px 12px rgba(0,0,0,0.3)}
+.roi-dot{width:6px;height:6px;background:#fff;border-radius:50%;animation:roiPulse 1.5s infinite}
+@keyframes roiPulse{0%,100%{opacity:1}50%{opacity:.3}}
+
+/* Req No Floor Banner */
+.floor-req-banner{display:none;background:linear-gradient(135deg,#059669,#10b981);color:white;padding:5px 12px;border-radius:6px;font-size:11px;font-weight:700;text-align:center;margin:4px 0;cursor:pointer}
 
 @media(max-width:480px){
-  body{padding:2px}h2{font-size:15px;margin:4px 0}.topControls{font-size:11px}
-  button{padding:6px 7px;font-size:10px}
-  #reportTable th,#reportTable td{font-size:9px;padding:1px 0}
-  .col-sl{width:6%;font-size:8px!important}.col-type{width:22%;font-size:9px!important}.col-size{width:8%;font-size:9px!important}
-  .col-prev{width:12%}.col-rcvd{width:11%}.col-dvld{width:11%}.col-present{width:14%}.col-bn{width:10%}
-  .qtyInput{height:22px;font-size:16px}
-  .popup-content{width:95%;padding:12px}
-  .popup-title{font-size:14px}
-  .popup-details{font-size:11px}
-  .roi-tracker-indicator{font-size:9px;padding:4px 8px;bottom:5px;right:5px;}
+  body{padding:2px}h2{font-size:14px;margin:3px 0}
+  button{padding:5px 6px;font-size:9px;margin:1px}
+  select,input[type="date"],input[type="text"]{max-width:90px;font-size:13px;padding:3px}
+  #reportTable th,#reportTable td{font-size:8px;padding:0}
+  .col-type{width:19%}.col-trf{width:12%}
+  .qtyInput{height:22px;font-size:14px}
+  .trfRowBtn{font-size:8px;padding:1px 2px}
+  .req-tag,.trf-tag{font-size:6px}
 }
 @media print{
   html,body{background:white!important;color:black!important;overflow:visible!important}
-  button,input[type="date"],select,input[type="text"]{display:none!important}
+  button,.offline-indicator,.roi-tracker-indicator,.floor-req-banner{display:none!important}
   .tableWrap,.summaryWrap{overflow:visible!important}
-  #reportTable,#summaryTable{width:100%!important;max-width:100%!important;color:black!important;background:white!important}
+  #reportTable,#summaryTable{width:100%!important;color:black!important;background:white!important}
   #reportTable th,#reportTable td{font-size:7px;padding:1px}
-  #negativePopup{display:none!important}
-  .offline-indicator{display:none!important}
-  .roi-tracker-indicator{display:none!important}
+  .popup-overlay{display:none!important}
 }
 </style>
 </head>
 <body>
 
 <div class="offline-indicator" id="offlineIndicator">📴 Offline Mode - Data saved locally</div>
-
-<!-- 🔥 ROI Tracking Indicator -->
-<div class="roi-tracker-indicator" id="roiTrackerIndicator" title="ROI Tracking Active">
-  <div class="roi-dot"></div>
-  <span>ROI Tracking Active</span>
+<div class="roi-tracker-indicator" id="roiTrackerIndicator">
+  <div class="roi-dot"></div><span>ROI Tracking Active</span>
 </div>
 
-<h2 style="text-align:center;">Needle Daily Posting</h2>
+<!-- ===== NEGATIVE STOCK POPUP ===== -->
+<div class="popup-overlay" id="negPopup">
+  <div class="popup-box">
+    <span class="popup-close" onclick="closeNegPopup()">×</span>
+    <div class="popup-title danger">⚠️ Negative Stock Detected!</div>
+    <div class="popup-details" id="negDetails"></div>
+    <button class="popup-btn blue" onclick="fixNegativeRow()">📍 Fix করুন</button>
+    <div class="popup-footer">Present Stock ≥ 0 করলে পপআপ অটো বন্ধ হবে</div>
+  </div>
+</div>
+
+<!-- ===== REQ NO POPUP (first rcvd entry) ===== -->
+<div class="popup-overlay" id="reqPopup">
+  <div class="popup-box">
+    <span class="popup-close" onclick="cancelReqPopup()">×</span>
+    <div class="popup-title req">📋 Requisition Number</div>
+    <div id="reqItemInfo" class="popup-item-info"></div>
+    <div class="popup-field">
+      <label>Requisition No. (বাধ্যতামূলক):</label>
+      <input type="text" id="reqNoInput" placeholder="যেমন: REQ-2025-001" autocomplete="off">
+    </div>
+    <button class="popup-btn green" onclick="confirmReqNo()">✅ Confirm</button>
+    <div class="popup-footer">এই নম্বর এই floor এর সব row-এ apply হবে</div>
+  </div>
+</div>
+
+<!-- ===== TRANSFER POPUP ===== -->
+<div class="popup-overlay" id="transferPopup">
+  <div class="popup-box">
+    <span class="popup-close" onclick="closeTransferPopup()">×</span>
+    <div class="popup-title trf">🔄 Floor Transfer</div>
+    <div id="trfItemInfo" class="popup-item-info"></div>
+    <div class="popup-field">
+      <label>To Floor (কোথায় পাঠাবেন):</label>
+      <select id="trfToFloor"></select>
+    </div>
+    <div class="popup-field">
+      <label>Qty (কত পিস):</label>
+      <input type="number" id="trfQty" min="1" step="1" placeholder="যেমন: 50">
+    </div>
+    <div class="popup-field">
+      <label>Receiver Name:</label>
+      <input type="text" id="trfReceiver" placeholder="যিনি নেবেন তার নাম">
+    </div>
+    <div class="popup-field">
+      <label>Requisition No.:</label>
+      <input type="text" id="trfReqNo" placeholder="যেমন: REQ-2025-001">
+    </div>
+    <button class="popup-btn amber" onclick="confirmTransfer()">✅ Transfer করুন</button>
+    <div class="popup-footer">এই floor এ Dvld বাড়বে, To Floor এ Rcvd যোগ হবে</div>
+  </div>
+</div>
+
+<!-- ===== FLOOR NAV POPUP (select which floor to open) ===== -->
+<div class="popup-overlay" id="floorNavPopup">
+  <div class="popup-box">
+    <span class="popup-close" onclick="closeFloorNavPopup()">×</span>
+    <div class="popup-title trf">🔄 Transfer — To Floor নির্বাচন করুন</div>
+    <div id="floorNavItemInfo" class="popup-item-info"></div>
+    <div class="popup-field">
+      <label>Item match আছে এমন floors:</label>
+    </div>
+    <div class="floor-nav-list" id="floorNavList"></div>
+    <div class="popup-footer">Floor select করলে সেই floor এর entry page খুলবে, item auto-match হবে</div>
+  </div>
+</div>
+
+<!-- ===== REQ SEARCH POPUP ===== -->
+<div class="popup-overlay" id="reqSearchPopup">
+  <div class="popup-box">
+    <span class="popup-close" onclick="closeReqSearchPopup()">×</span>
+    <div class="popup-title search">🔍 Requisition Search</div>
+    <div class="popup-field">
+      <label>Requisition Number দিন:</label>
+      <input type="text" id="reqSearchInput" placeholder="যেমন: REQ-2025-001" autocomplete="off" oninput="liveReqSearch()">
+    </div>
+    <div class="search-results" id="reqSearchResults">
+      <div class="no-results">Requisition number দিয়ে search করুন</div>
+    </div>
+    <div class="popup-footer" id="reqSearchFooter"></div>
+  </div>
+</div>
+
+<!-- ===== TRANSFER REPORT POPUP ===== -->
+<div class="popup-overlay" id="trfReportPopup">
+  <div class="popup-box">
+    <span class="popup-close" onclick="closeTrfReportPopup()">×</span>
+    <div class="popup-title trf">🚚 Transfer Report</div>
+    <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px">
+      <input type="date" id="trfRpFrom" style="flex:1;min-width:110px;max-width:none;background:#f1f5f9;color:#0f172a;border:1px solid #cbd5e1;padding:5px;border-radius:6px">
+      <input type="date" id="trfRpTo" style="flex:1;min-width:110px;max-width:none;background:#f1f5f9;color:#0f172a;border:1px solid #cbd5e1;padding:5px;border-radius:6px">
+      <button onclick="loadTrfReport()" style="background:#2563eb;color:white;padding:5px 10px;border-radius:6px;border:none;font-weight:bold;cursor:pointer">🔍 Search</button>
+    </div>
+    <div style="overflow-x:auto">
+      <table id="trfReportTable">
+        <thead>
+          <tr><th>Date</th><th>From</th><th>To</th><th>Type</th><th>Size</th><th>Qty</th><th>Receiver</th><th>Req No</th></tr>
+        </thead>
+        <tbody id="trfReportBody"></tbody>
+        <tfoot>
+          <tr><td colspan="5" style="text-align:right;padding:4px">Grand Total:</td>
+          <td id="trfGrandTotal">0</td><td colspan="2">-</td></tr>
+        </tfoot>
+      </table>
+    </div>
+    <div class="popup-footer" id="trfReportFooter"></div>
+  </div>
+</div>
+
+<h2>🪡 Needle Daily Posting</h2>
 
 <div class="topControls">
-Operator: <input type="text" id="operatorName" placeholder="Enter name" style="max-width:120px;">
-Date: <input type="date" id="postDate">
-
-Floor:
-<select id="floor" onchange="loadTable(); loadData();">
-<option>Kadom R</option><option>Kadom N</option><option>Shapla R</option><option>Shapla N</option>
-<option>Poddo R</option><option>Poddo N</option><option>Belly R</option><option>Belly N</option>
-<option>Sample R</option><option>Sample N</option><option>EMBROIDERY R</option><option>EMBROIDERY N</option>
-</select>
-<br><br>
-<button class="saveBtn" onclick="saveData()">💾 Save Data</button>
-<button class="deleteBtn" onclick="deleteData()">Delete Data</button>
-<button class="excelBtn" onclick="exportExcel()">Export Excel</button>
-<button class="pdfBtn" onclick="exportPDF()">PDF / Print</button>
-<button class="homeBtn" onclick="location.href='index.html'">Back Home</button>
+  <div style="display:flex;flex-wrap:wrap;gap:5px;justify-content:center;align-items:center;margin-bottom:6px">
+    <div>Operator: <input type="text" id="operatorName" placeholder="Name" style="max-width:110px"></div>
+    <div>Date: <input type="date" id="postDate"></div>
+    <div>Floor:
+      <select id="floor" onchange="onFloorChange()">
+        <option>Kadom R</option><option>Kadom N</option>
+        <option>Shapla R</option><option>Shapla N</option>
+        <option>Poddo R</option><option>Poddo N</option>
+        <option>Belly R</option><option>Belly N</option>
+        <option>Sample R</option><option>Sample N</option>
+        <option>EMBROIDERY R</option><option>EMBROIDERY N</option>
+      </select>
+    </div>
+  </div>
+  <div class="floor-req-banner" id="floorReqBanner" onclick="changeFloorReqNo()">
+    📋 Req No: <span id="floorReqDisplay"></span> &nbsp;(ক্লিক করে পরিবর্তন করুন)
+  </div>
+  <div id="carryInfo" class="carry-info" style="display:none"></div>
+  <div style="margin-top:4px">
+    <button class="saveBtn" onclick="saveData()">💾 Save</button>
+    <button class="deleteBtn" onclick="deleteData()">🗑️ Delete</button>
+    <button class="excelBtn" onclick="exportExcel()">📊 Excel</button>
+    <button class="pdfBtn" onclick="exportPDF()">📄 PDF</button>
+    <button class="trfBtn" onclick="showTrfReport()">🚚 Transfers</button>
+    <button class="reqSearchBtn" onclick="openReqSearchPopup()">🔍 Req Search</button>
+    <button class="homeBtn" onclick="location.href='index.html'">🏠 Home</button>
+  </div>
 </div>
 
 <div class="tableWrap">
-<table id="reportTable" border="1">
-<thead style="background:#1e293b;">
+<table id="reportTable">
+<thead>
 <tr>
-<th class="col-sl">SL</th><th class="col-type">Needle Type</th><th class="col-size">Size</th>
-<th class="col-prev">Previous</th><th class="col-rcvd">Rcvd</th><th class="col-dvld">Dvld</th>
-<th class="col-present">Present</th><th class="col-bn" id="bnHeader">BNR</th>
+  <th class="col-sl">SL</th>
+  <th class="col-type">Needle Type</th>
+  <th class="col-size">Size</th>
+  <th class="col-prev">Prev</th>
+  <th class="col-rcvd">Rcvd</th>
+  <th class="col-dvld">Dvld</th>
+  <th class="col-present">Present</th>
+  <th class="col-bn" id="bnHeader">BNR</th>
+  <th class="col-trf">Transfer</th>
 </tr>
 </thead>
 <tbody id="tableBody"></tbody>
-<tfoot style="background:#334155;font-weight:bold;">
+<tfoot>
 <tr>
-<td colspan="3">TOTAL</td><td id="totalPrevious">0</td><td id="totalReceive">0</td><td id="totalDelivery">0</td><td id="totalPresent">0</td><td id="totalBN">0</td>
+  <td colspan="3">TOTAL</td>
+  <td id="totalPrevious">0</td>
+  <td id="totalReceive">0</td>
+  <td id="totalDelivery">0</td>
+  <td id="totalPresent">0</td>
+  <td id="totalBN">0</td>
+  <td>-</td>
 </tr>
 </tfoot>
 </table>
 </div>
 
-<div style="width:98%;margin:14px auto;text-align:center;">
-<h3>Monthly Summary</h3>
-<div class="summaryWrap">
-<table id="summaryTable" border="1">
-<thead style="background:#1e293b;">
-<tr><th>Opening</th><th>Total Receive</th><th>Total Delivery</th><th>Present Stock</th><th id="monthBNHeader">Total BNR</th></tr>
-</thead>
-<tbody>
-<tr style="background:#334155;font-weight:bold;">
-<td id="monthOpening">0</td><td id="monthReceive">0</td><td id="monthDelivery">0</td><td id="monthPresent">0</td><td id="monthBN">0</td>
-</tr>
-</tbody>
-</table>
-</div>
-</div>
-
-<div id="negativePopup">
-  <div class="popup-content">
-    <span class="popup-close" onclick="closePopup()">❌</span>
-    <div class="popup-title">⚠️ Negative Stock Detected!</div>
-    <div class="popup-details" id="popupDetails"></div>
-    <button class="popup-fix-btn" onclick="fixNegativeRow()">📍 Fix করুন</button>
-    <div class="popup-footer">Present Stock ≥ 0 করলে পপআপ অটো বন্ধ হবে</div>
+<div style="width:98%;margin:14px auto;text-align:center">
+  <h3>Monthly Summary</h3>
+  <div class="summaryWrap">
+    <table id="summaryTable">
+      <thead><tr>
+        <th>Opening</th><th>Total Receive</th><th>Total Delivery</th><th>Present Stock</th><th id="monthBNHeader">Total BNR</th>
+      </tr></thead>
+      <tbody><tr>
+        <td id="monthOpening">0</td><td id="monthReceive">0</td><td id="monthDelivery">0</td><td id="monthPresent">0</td><td id="monthBN">0</td>
+      </tr></tbody>
+    </table>
   </div>
 </div>
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-app.js";
-import { getFirestore, doc, setDoc, getDoc, deleteDoc, collection, getDocs, addDoc, serverTimestamp, enableIndexedDbPersistence } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-firestore.js";
+import {
+  getFirestore, doc, setDoc, getDoc, deleteDoc,
+  collection, getDocs, addDoc, query, where,
+  orderBy, serverTimestamp, enableIndexedDbPersistence
+} from "https://www.gstatic.com/firebasejs/12.12.1/firebase-firestore.js";
 
+// =========================================
+// 🔥 FIREBASE CONFIG
+// =========================================
 const firebaseConfig = {
   apiKey: "AIzaSyD-wBCF5eeWMHobLFOhBzKW7aB2pagz9-w",
   authDomain: "gms-warehouse-tracker-7f57e.firebaseapp.com",
@@ -165,71 +336,17 @@ const firebaseConfig = {
   messagingSenderId: "992250313291",
   appId: "1:992250313291:web:ee3bceae76d4d53bc26bce"
 };
-
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
-enableIndexedDbPersistence(db).catch((err) => {
-  if (err.code == 'failed-precondition') {
-    console.log('Multiple tabs open, persistence can only be enabled in one tab at a time.');
-  } else if (err.code == 'unimplemented') {
-    console.log('Browser does not support persistence.');
-  }
+enableIndexedDbPersistence(db).catch(err => {
+  if(err.code === 'failed-precondition') console.log('Multiple tabs open');
+  else if(err.code === 'unimplemented') console.log('Browser no persistence');
 });
 
-// ================================================================
-// 🔥 ROI ACTIVITY TRACKER — শুধু localStorage এ save (Firebase read/write নেই)
-// ================================================================
-function trackNeedleActivity(type, user, minutes, extraData){
-  try{
-    var activity = JSON.parse(localStorage.getItem('gms_needle_activity') || '[]');
-    
-    var floor = document.getElementById('floor') ? document.getElementById('floor').value : 'Unknown';
-    var date = new Date().toISOString().slice(0,10);
-    var company = localStorage.getItem('gmsSelectedCompany') || 'GMS TEXTILES LTD';
-    
-    activity.push({
-      type: type || 'entry',
-      user: user || 'Unknown',
-      floor: floor,
-      date: date,
-      minutes: minutes || 5,
-      timestamp: new Date().toISOString(),
-      company: company,
-      extra: extraData || {}
-    });
-    
-    // শুধু শেষ ১০০০টি entry রাখব (localStorage ভর্তি হওয়া ঠেকাতে)
-    if(activity.length > 1000){
-      activity = activity.slice(activity.length - 1000);
-    }
-    
-    localStorage.setItem('gms_needle_activity', JSON.stringify(activity));
-    console.log('🪡 Needle activity tracked:', type, user, 'floor:', floor);
-    
-    // ROI Report-কে notify করুন (যদি একই browser এ খোলা থাকে)
-    try{
-      window.dispatchEvent(new Event('storage'));
-    }catch(e){}
-    
-  }catch(e){
-    console.warn('trackNeedleActivity error:', e);
-  }
-}
-
-// Global-এ expose করুন
-window.trackNeedleActivity = trackNeedleActivity;
-
-// ================================================================
-// 🔥 PAGE LOAD TRACKING — Page ওপেন হলে track হবে
-// ================================================================
-(function(){
-  try{
-    var user = localStorage.getItem('lastOperator') || 'Unknown';
-    trackNeedleActivity('page_view', user, 1, {action: 'opened_needle_page'});
-  }catch(e){}
-})();
-
+// =========================================
+// 📦 FLOOR DATA
+// =========================================
 const floorData = {
 "Kadom R": [
 [1,"DBX1","7",25],[2,"DBX1","8",1],[3,"DBX1- KN","8",0],[4,"DBX1- NS","8",0],
@@ -454,581 +571,855 @@ const floorData = {
 [64,"UYX128-KK","8",0],[65,"UOX113","9SPD",0],[66,"UOX113","11SPI",0]
 ]};
 
+// =========================================
+// 🌐 GLOBAL STATE
+// =========================================
 let negativeRowIndex = -1;
 let dynamicOpening = null;
+let currentItems = [];
 
-function getPreviousMonth(monthStr){
-  let parts = monthStr.split("-");
-  let year = parseInt(parts[0]);
-  let mon = parseInt(parts[1]);
-  mon -= 1;
-  if(mon < 1){ mon = 12; year -= 1; }
-  return `${year}-${String(mon).padStart(2, '0')}`;
-}
+// Requisition
+let floorReqNo = null;
+let rowReqNo = {};
+let pendingReqIndex = null;
+
+// Transfer
+let pendingTrfIndex = null;       // for direct transfer popup
+let pendingFloorNavItem = null;   // {needleType, size, fromFloor} for floor-nav popup
+
+// Transfer tracking per row
+let rowTransferOut = {}; // rowTransferOut[i] = [{toFloor, qty, receiver, reqNo}]
+let rowTransferIn  = {}; // rowTransferIn[i]  = [{fromFloor, qty, receiver, reqNo}]
 
 const OFFLINE_QUEUE_KEY = "needle_posting_queue";
-function getOfflineQueue(){ return JSON.parse(localStorage.getItem(OFFLINE_QUEUE_KEY) || "[]"); }
-function setOfflineQueue(q){ localStorage.setItem(OFFLINE_QUEUE_KEY, JSON.stringify(q)); }
+const TRANSFER_LOCAL_KEY = "needle_transfers_local";
 
-async function updateDashboardNeedleState(floor, rows) {
-  const company = localStorage.getItem('gmsSelectedCompany') || 'GMS TEXTILES LTD';
-  const companyKey = company.replace(/\s+/g, "_");
-  const stateDocRef = doc(db, "systemState", "dashboard_" + companyKey);
-  
-  let currentNeedleState = { total: 0, floorStocks: {} };
-  try {
-    const stateDocSnap = await getDoc(stateDocRef);
-    if (stateDocSnap.exists()) {
-      const stateData = stateDocSnap.data();
-      if (stateData.needle) {
-        currentNeedleState = stateData.needle;
-      }
-    }
-  } catch(e) { console.log("State fetch error:", e); }
-
-  if (!currentNeedleState.floorStocks) {
-    currentNeedleState.floorStocks = {};
-  }
-
-  let totalPresentVal = 0;
-  rows.forEach(r => totalPresentVal += Number(r.present) || 0);
-  currentNeedleState.floorStocks[floor] = totalPresentVal;
-
-  let newGrandTotal = 0;
-  const defaultFloors = ["Kadom R", "Kadom N", "Shapla R", "Shapla N", "Poddo R", "Poddo N", "Belly R", "Belly N", "Sample R", "Sample N", "EMBROIDERY R", "EMBROIDERY N"];
-  defaultFloors.forEach(f => {
-    if (currentNeedleState.floorStocks[f] === undefined) {
-      let opSum = 0;
-      if (floorData[f]) {
-        floorData[f].forEach(row => opSum += Number(row[3]) || 0);
-      }
-      currentNeedleState.floorStocks[f] = opSum;
-    }
-    newGrandTotal += currentNeedleState.floorStocks[f];
-  });
-  currentNeedleState.total = newGrandTotal;
-
-  try {
-    await setDoc(stateDocRef, {
-      needle: currentNeedleState,
-      lastUpdated: {
-        needle: new Date().toISOString()
-      }
-    }, { merge: true });
-    console.log("[State Update] Dashboard state tracker updated.");
-  } catch(e) {
-    console.error("Dashboard tracker state update failed:", e);
-  }
+// =========================================
+// 🔥 ROI TRACKING
+// =========================================
+function trackActivity(type, extra={}){
+  try{
+    const user = document.getElementById('operatorName').value.trim() || localStorage.getItem('lastOperator') || 'Unknown';
+    const floor = document.getElementById('floor').value;
+    const activity = JSON.parse(localStorage.getItem('gms_needle_activity')||'[]');
+    activity.push({ type, user, floor, date: new Date().toISOString().slice(0,10), timestamp: new Date().toISOString(), ...extra });
+    if(activity.length > 1000) activity.splice(0, activity.length - 1000);
+    localStorage.setItem('gms_needle_activity', JSON.stringify(activity));
+  }catch(e){}
 }
 
-function saveDataOffline(floor, date, operator, rows){
-  let queue = getOfflineQueue();
-  queue.push({
-    id: `${floor}_${date}_${Date.now()}`,
-    floor, date, operator, rows,
-    timestamp: new Date().toISOString(),
-    status: "pending"
-  });
-  setOfflineQueue(queue);
-  showToast("✅ Saved Offline - Will sync when online");
-  
-  // 🔥 Offline save হলেও track হবে
-  trackNeedleActivity('save_offline', operator, 5, {
-    floor: floor,
-    date: date,
-    itemsCount: rows.length
-  });
+// =========================================
+// 🛠️ HELPERS
+// =========================================
+function getMonth(date){ return date.slice(0,7); }
+function getPrevMonth(m){
+  let [y,mo] = m.split('-').map(Number);
+  mo--; if(mo<1){mo=12;y--;}
+  return `${y}-${String(mo).padStart(2,'0')}`;
 }
-
-async function syncOfflineQueue(){
-  if(!navigator.onLine) return;
-  let queue = getOfflineQueue();
-  let synced = 0;
-  for(let i=0; i<queue.length; i++){
-    if(queue[i].status === "pending"){
-      try{
-        await setDoc(doc(db,"dailyPosting",queue[i].id), {
-          date: queue[i].date,
-          month: getMonth(queue[i].date),
-          floor: queue[i].floor,
-          rows: queue[i].rows,
-          operator: queue[i].operator,
-          updatedAt: serverTimestamp()
-        });
-        queue[i].status = "synced";
-        synced++;
-        
-        await updateDashboardNeedleState(queue[i].floor, queue[i].rows);
-        
-        // 🔥 Sync হলে track হবে
-        trackNeedleActivity('sync_offline', queue[i].operator, 2, {
-          floor: queue[i].floor,
-          date: queue[i].date,
-          itemsCount: queue[i].rows ? queue[i].rows.length : 0
-        });
-      }catch(e){ console.log("Sync failed:", e); }
-    }
-  }
-  if(synced > 0){
-    setOfflineQueue(queue);
-    showToast(`☁️ ${synced} items synced to Firebase`);
-  }
-}
-
-function showToast(msg){
-  let t = document.createElement("div");
-  t.style.cssText = "position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:#10b981;color:#fff;padding:10px 20px;border-radius:8px;font-weight:600;z-index:9999;animation:fadeIn 0.3s";
-  t.innerText = msg;
-  document.body.appendChild(t);
-  setTimeout(()=>t.remove(), 2500);
-}
-
-function updateOfflineIndicator(){
-  let ind = document.getElementById("offlineIndicator");
-  if(!navigator.onLine){ ind.classList.add("show"); }
-  else{ ind.classList.remove("show"); }
-}
-
-window.addEventListener("online", ()=>{ updateOfflineIndicator(); syncOfflineQueue(); });
-window.addEventListener("offline", ()=>{ updateOfflineIndicator(); });
-
 function getItems(){
-  let floor=document.getElementById("floor").value;
-  return floorData[floor] || [];
+  return floorData[document.getElementById('floor').value] || [];
+}
+function updateBNHeader(){
+  const floor = document.getElementById('floor').value;
+  const nm = floor.includes('N') ? 'BNF' : 'BNR';
+  document.getElementById('bnHeader').innerText = nm;
+  document.getElementById('monthBNHeader').innerText = 'Total ' + nm;
+}
+function showToast(msg, color='#10b981'){
+  const t = document.createElement('div');
+  t.style.cssText=`position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:${color};color:#fff;padding:10px 20px;border-radius:8px;font-weight:600;z-index:10000;font-size:13px;max-width:90%;text-align:center`;
+  t.innerText = msg; document.body.appendChild(t);
+  setTimeout(()=>t.remove(), 2800);
+}
+function updateOfflineIndicator(){
+  document.getElementById('offlineIndicator').classList.toggle('show', !navigator.onLine);
 }
 
-function getMonth(date){return date.slice(0,7);}
-
+// =========================================
+// 🏗️ LOAD TABLE
+// =========================================
 function loadTable(customPrevious=null){
-  let items=getItems();
-  let floor=document.getElementById("floor").value;
-  let bnName = floor.includes("N") ? "BNF" : "BNR";
-  document.getElementById("bnHeader").innerText = bnName;
-  document.getElementById("monthBNHeader").innerText = "Total " + bnName;
-  let html="";
+  currentItems = getItems();
+  updateBNHeader();
+  rowReqNo = {}; rowTransferOut = {}; rowTransferIn = {};
+  floorReqNo = null;
+  updateFloorReqBanner();
+  document.getElementById('carryInfo').style.display = 'none';
 
-  items.forEach((item,i)=>{
-    let previous;
-    if(customPrevious && customPrevious[i] !== undefined){
-      previous = customPrevious[i];
-    } else if(dynamicOpening && dynamicOpening[i] !== undefined){
-      previous = dynamicOpening[i];
-    } else {
-      previous = item[3];
-    }
-    
-    html+=`
+  let html = '';
+  currentItems.forEach((item, i) => {
+    const prev = (customPrevious && customPrevious[i] !== undefined)
+      ? (Number(customPrevious[i]) || 0)
+      : (dynamicOpening && dynamicOpening[i] !== undefined ? Number(dynamicOpening[i]) : Number(item[3]) || 0);
+    html += `
     <tr id="row${i}">
       <td class="col-sl">${item[0]}</td>
-      <td class="col-type">${item[1]}</td>
+      <td class="col-type" style="cursor:pointer;text-decoration:underline;color:#1e40af;font-weight:600"
+          onclick="openFloorNavFromItem(${i})" title="Click to transfer this item">${item[1]}</td>
       <td class="col-size">${item[2]}</td>
-      <td class="col-prev" id="p${i}">${previous}</td>
-      <td class="col-rcvd"><input class="qtyInput" type="number" id="r${i}" oninput="calc(${i})"></td>
-      <td class="col-dvld"><input class="qtyInput" type="number" id="d${i}" oninput="calc(${i})"></td>
-      <td class="col-present" id="b${i}">${previous}</td>
-      <td class="col-bn"><input class="qtyInput" type="number" id="bn${i}" oninput="updateTotal()"></td>
+      <td class="col-prev" id="p${i}">${prev}</td>
+      <td class="col-rcvd">
+        <input class="qtyInput" type="number" id="r${i}" oninput="calc(${i})" onblur="checkReqNo(${i})" min="0" step="1">
+        <span class="req-tag" id="reqTag${i}"></span>
+      </td>
+      <td class="col-dvld">
+        <input class="qtyInput" type="number" id="d${i}" oninput="calc(${i})" min="0" step="1">
+        <span class="trf-tag" id="trfOutTag${i}"></span>
+      </td>
+      <td class="col-present" id="b${i}" style="font-weight:bold">${prev}</td>
+      <td class="col-bn"><input class="qtyInput" type="number" id="bn${i}" oninput="updateTotal()" min="0" step="1"></td>
+      <td class="col-trf">
+        <button class="trfRowBtn" onclick="openTransferPopup(${i})">🔄 Trf</button>
+        <span class="trf-tag" id="trfInTag${i}"></span>
+      </td>
     </tr>`;
   });
-
-  document.getElementById("tableBody").innerHTML=html;
+  document.getElementById('tableBody').innerHTML = html;
   updateTotal();
   setTimeout(checkNegativeStock, 100);
 }
 
+// =========================================
+// 🧮 CALC & TOTAL
+// =========================================
 function calc(i){
-  let p=Number(document.getElementById("p"+i).innerText)||0;
-  let r=Number(document.getElementById("r"+i).value)||0;
-  let d=Number(document.getElementById("d"+i).value)||0;
-  let present = p+r-d;
-  document.getElementById("b"+i).innerText = present;
-  
-  let row = document.getElementById("row"+i);
-  if(present < 0){
-    row.classList.add("negative-row");
-  } else {
-    row.classList.remove("negative-row");
-  }
-  
+  const p = Number(document.getElementById(`p${i}`).innerText)||0;
+  const r = Number(document.getElementById(`r${i}`).value)||0;
+  const d = Number(document.getElementById(`d${i}`).value)||0;
+  const present = p + r - d;
+  document.getElementById(`b${i}`).innerText = present;
+  document.getElementById(`row${i}`).classList.toggle('negative-row', present < 0);
   updateTotal();
   checkNegativeStock();
 }
 
 function updateTotal(){
-  let items=getItems();
   let tp=0,tr=0,td=0,tb=0,tbn=0;
-
-  for(let i=0;i<items.length;i++){
-    tp+=Number(document.getElementById("p"+i)?.innerText)||0;
-    tr+=Number(document.getElementById("r"+i)?.value)||0;
-    td+=Number(document.getElementById("d"+i)?.value)||0;
-    tb+=Number(document.getElementById("b"+i)?.innerText)||0;
-    tbn+=Number(document.getElementById("bn"+i)?.value)||0;
-  }
-
-  document.getElementById("totalPrevious").innerText=tp;
-  document.getElementById("totalReceive").innerText=tr;
-  document.getElementById("totalDelivery").innerText=td;
-  document.getElementById("totalPresent").innerText=tb;
-  document.getElementById("totalBN").innerText=tbn;
+  currentItems.forEach((_,i)=>{
+    tp += Number(document.getElementById(`p${i}`)?.innerText)||0;
+    tr += Number(document.getElementById(`r${i}`)?.value)||0;
+    td += Number(document.getElementById(`d${i}`)?.value)||0;
+    tb += Number(document.getElementById(`b${i}`)?.innerText)||0;
+    tbn += Number(document.getElementById(`bn${i}`)?.value)||0;
+  });
+  document.getElementById('totalPrevious').innerText = tp;
+  document.getElementById('totalReceive').innerText  = tr;
+  document.getElementById('totalDelivery').innerText = td;
+  document.getElementById('totalPresent').innerText  = tb;
+  document.getElementById('totalBN').innerText       = tbn;
 }
 
+// =========================================
+// ⚠️ NEGATIVE STOCK
+// =========================================
 function checkNegativeStock(){
-  let items = getItems();
-  let floor = document.getElementById("floor").value;
-  let operator = document.getElementById("operatorName").value.trim() || "Unknown";
-  
-  for(let i=0; i<items.length; i++){
-    let present = Number(document.getElementById("b"+i)?.innerText) || 0;
-    
-    let row = document.getElementById("row"+i);
-    if(present < 0){
-      row.classList.add("negative-row");
-    } else {
-      row.classList.remove("negative-row");
-    }
-    
-    if(present < 0){
+  for(let i=0;i<currentItems.length;i++){
+    const present = Number(document.getElementById(`b${i}`)?.innerText)||0;
+    document.getElementById(`row${i}`)?.classList.toggle('negative-row', present < 0);
+    if(present < 0 && negativeRowIndex < 0){
       negativeRowIndex = i;
-      showNegativePopup(floor, operator, items[i][0], items[i][1], items[i][2], present);
-      return; 
+      const floor = document.getElementById('floor').value;
+      const op = document.getElementById('operatorName').value.trim()||'Unknown';
+      document.getElementById('negDetails').innerHTML = `
+        <div><span class="label">Floor:</span><span class="value">${floor}</span></div>
+        <div><span class="label">Operator:</span><span class="value">${op}</span></div>
+        <div><span class="label">SL:</span><span class="value">${currentItems[i][0]}</span></div>
+        <div><span class="label">Needle Type:</span><span class="value">${currentItems[i][1]}</span></div>
+        <div><span class="label">Size:</span><span class="value">${currentItems[i][2]}</span></div>
+        <div><span class="label">Present:</span><span class="value" style="color:#dc2626;font-weight:bold">${present}</span></div>`;
+      document.getElementById('negPopup').classList.add('active');
+      return;
     }
   }
-  
   negativeRowIndex = -1;
-  closePopup();
+  document.getElementById('negPopup').classList.remove('active');
 }
-
-function showNegativePopup(floor, operator, sl, needleType, size, stockValue){
-  let popup = document.getElementById("negativePopup");
-  let details = document.getElementById("popupDetails");
-  
-  details.innerHTML = `
-    <div><span class="label">Floor:</span><span class="value">${floor}</span></div>
-    <div><span class="label">Operator:</span><span class="value">${operator}</span></div>
-    <div><span class="label">SL:</span><span class="value">${sl}</span></div>
-    <div><span class="label">Needle Type:</span><span class="value">${needleType}</span></div>
-    <div><span class="label">Size:</span><span class="value">${size}</span></div>
-    <div><span class="label">Present Stock:</span><span class="value" style="color:#dc2626;font-weight:bold">${stockValue}</span></div>
-  `;
-  
-  popup.style.display = "flex";
-}
-
-function closePopup(){
-  document.getElementById("negativePopup").style.display = "none";
-}
-
+function closeNegPopup(){ document.getElementById('negPopup').classList.remove('active'); }
 function fixNegativeRow(){
   if(negativeRowIndex >= 0){
-    let row = document.getElementById("row"+negativeRowIndex);
-    if(row){
-      row.scrollIntoView({behavior:"smooth", block:"center"});
-      row.style.boxShadow = "0 0 0 3px #dc2626";
-      setTimeout(() => row.style.boxShadow = "", 2000);
-    }
-    
-    let deliveryInput = document.getElementById("d"+negativeRowIndex);
-    if(deliveryInput){
-      deliveryInput.focus();
-      deliveryInput.select();
-    }
+    const row = document.getElementById(`row${negativeRowIndex}`);
+    if(row){ row.scrollIntoView({behavior:'smooth',block:'center'}); row.style.boxShadow='0 0 0 3px #dc2626'; setTimeout(()=>row.style.boxShadow='',2000); }
+    const d = document.getElementById(`d${negativeRowIndex}`);
+    if(d){ d.focus(); d.select(); }
   }
 }
 
-// 🔥 MAIN SAVE FUNCTION — Save হলে ROI tracking হবে
-async function saveData(){
-  let date=document.getElementById("postDate").value;
-  let floor=document.getElementById("floor").value;
-  let operator=document.getElementById("operatorName").value.trim() || localStorage.getItem("lastOperator") || "Unknown";
-  let items=getItems();
-
-  if(!date){alert("Date select koro");return;}
-
-  let rows=[];
-  for(let i=0;i<items.length;i++){
-    let openingVal = (dynamicOpening && dynamicOpening[i] !== undefined) ? dynamicOpening[i] : (Number(items[i][3]) || 0);
-    
-    rows.push({
-      sl:items[i][0],needleType:items[i][1],size:items[i][2],
-      opening:openingVal,
-      previous:Number(document.getElementById("p"+i).innerText)||0,
-      receive:Number(document.getElementById("r"+i).value)||0,
-      delivery:Number(document.getElementById("d"+i).value)||0,
-      present:Number(document.getElementById("b"+i).innerText)||0,
-      bn:Number(document.getElementById("bn"+i).value)||0
+// =========================================
+// 📋 REQUISITION LOGIC
+// =========================================
+function updateFloorReqBanner(){
+  const banner = document.getElementById('floorReqBanner');
+  if(floorReqNo){ banner.style.display='block'; document.getElementById('floorReqDisplay').textContent = floorReqNo; }
+  else { banner.style.display='none'; }
+}
+function changeFloorReqNo(){
+  const newNo = prompt('নতুন Requisition Number:', floorReqNo||'');
+  if(newNo && newNo.trim()){
+    floorReqNo = newNo.trim();
+    currentItems.forEach((_,i)=>{
+      if(Number(document.getElementById(`r${i}`)?.value) > 0){ rowReqNo[i]=floorReqNo; const t=document.getElementById(`reqTag${i}`); if(t) t.textContent='📋 '+floorReqNo; }
     });
+    updateFloorReqBanner();
+    showToast('✅ Req No updated: '+floorReqNo);
   }
-
-  let docRef = doc(db,"dailyPosting",floor+"_"+date);
-  let oldDoc = await getDoc(docRef);
-  let action = oldDoc.exists() ? "UPDATE" : "CREATE";
-  let details = {};
-
-  if(action === "UPDATE"){
-    let oldRows = oldDoc.data().rows || [];
-    let changed = [];
-    for(let i=0; i<rows.length; i++){
-      let old = oldRows[i] || {};
-      let neu = rows[i];
-      if(JSON.stringify(old) !== JSON.stringify(neu)){
-        changed.push({sl: neu.sl, type: neu.needleType, size: neu.size, oldRcv: old.receive, newRcv: neu.receive, oldDlv: old.delivery, newDlv: neu.delivery});
-      }
+}
+function checkReqNo(i){
+  const val = Number(document.getElementById(`r${i}`)?.value)||0;
+  if(val <= 0) return;
+  if(rowReqNo[i]) return;
+  if(floorReqNo){ rowReqNo[i]=floorReqNo; const t=document.getElementById(`reqTag${i}`); if(t) t.textContent='📋 '+floorReqNo; return; }
+  // Show popup
+  pendingReqIndex = i;
+  const item = currentItems[i];
+  document.getElementById('reqItemInfo').innerHTML = `<b>${item[1]}</b> | Size: ${item[2]} | Rcvd: <b>${val}</b><br><small style="color:#059669">এই নম্বর এই floor এর সব row-এ apply হবে</small>`;
+  document.getElementById('reqNoInput').value = '';
+  document.getElementById('reqPopup').classList.add('active');
+  setTimeout(()=>document.getElementById('reqNoInput').focus(), 100);
+}
+function confirmReqNo(){
+  const reqNo = document.getElementById('reqNoInput').value.trim();
+  if(!reqNo){ alert('❌ Requisition Number দিন!'); return; }
+  floorReqNo = reqNo;
+  if(pendingReqIndex !== null){
+    rowReqNo[pendingReqIndex] = reqNo;
+    const t = document.getElementById(`reqTag${pendingReqIndex}`);
+    if(t) t.textContent = '📋 '+reqNo;
+  }
+  // Apply to already-filled rows
+  currentItems.forEach((_,i)=>{
+    if(Number(document.getElementById(`r${i}`)?.value) > 0 && !rowReqNo[i]){
+      rowReqNo[i] = reqNo;
+      const t = document.getElementById(`reqTag${i}`); if(t) t.textContent = '📋 '+reqNo;
     }
-    details = {changedItems: changed, count: changed.length};
-  } else {
-    details = {totalItems: rows.length, msg: "New posting"};
-  }
-
-  if(navigator.onLine){
-    try{
-      await setDoc(docRef,{
-        date:date,month:getMonth(date),floor:floor,rows:rows,operator:operator,updatedAt: serverTimestamp()
-      });
-      
-      await updateDashboardNeedleState(floor, rows);
-
-      try {
-        await addDoc(collection(db, "auditLogs"), {
-          action: action,floor: floor,date: date,operator: operator,timestamp: serverTimestamp(),details: details
-        });
-      } catch(e) { console.error("Audit log error:", e); }
-      showToast("✅ Saved to Firebase");
-      
-      // 🔥 Firebase save হলে track হবে
-      trackNeedleActivity('save', operator, 5, {
-        floor: floor,
-        date: date,
-        action: action,
-        itemsCount: rows.length,
-        changedCount: details.count || 0
-      });
-    }catch(err){
-      console.log("Firebase save failed, saving offline:", err);
-      saveDataOffline(floor, date, operator, rows);
-    }
-  }else{
-    saveDataOffline(floor, date, operator, rows);
-  }
-
-  localStorage.setItem("lastOperator", operator);
-  await loadData();
-  syncOfflineQueue();
+  });
+  updateFloorReqBanner();
+  document.getElementById('reqPopup').classList.remove('active');
+  pendingReqIndex = null;
+  showToast('✅ Req No saved!');
+}
+function cancelReqPopup(){
+  if(pendingReqIndex !== null){ const inp = document.getElementById(`r${pendingReqIndex}`); if(inp){ inp.value=''; calc(pendingReqIndex); } }
+  document.getElementById('reqPopup').classList.remove('active');
+  pendingReqIndex = null;
 }
 
-async function deleteData(){
-  let date=document.getElementById("postDate").value;
-  let floor=document.getElementById("floor").value;
-  let operator=document.getElementById("operatorName").value.trim() || localStorage.getItem("lastOperator") || "Unknown";
+// =========================================
+// 🔄 TRANSFER — ITEM CLICK (Floor Nav)
+// =========================================
+// Called when user clicks on needle type name in table
+function openFloorNavFromItem(rowIdx){
+  const item = currentItems[rowIdx];
+  const fromFloor = document.getElementById('floor').value;
+  const needleType = item[1];
+  const size = item[2];
 
-  if(!date){alert("Date select koro");return;}
-  if(!confirm("Ei date er data delete korba?")) return;
+  pendingFloorNavItem = { rowIdx, needleType, size, fromFloor };
 
-  let docRef = doc(db,"dailyPosting",floor+"_"+date);
-  let oldDoc = await getDoc(docRef);
-  
-  if(oldDoc.exists()){
-    try {
-      await addDoc(collection(db, "auditLogs"), {
-        action: "DELETE",floor: floor,date: date,operator: operator,timestamp: serverTimestamp(),
-        details: { deletedFloor: floor, deletedDate: date, itemsCount: oldDoc.data().rows?.length || 0 }
-      });
-    } catch(e) { console.error("Audit log error:", e); }
-  }
-  
-  await deleteDoc(docRef);
-  
-  let items = getItems();
-  let emptyRows = items.map(item => ({ present: item[3] }));
-  await updateDashboardNeedleState(floor, emptyRows);
-
-  // 🔥 Delete হলে track হবে
-  trackNeedleActivity('delete', operator, 3, {
-    floor: floor,
-    date: date,
-    itemsCount: oldDoc.exists() ? (oldDoc.data().rows?.length || 0) : 0
+  // Find floors that have matching item (same needleType + size)
+  const allFloors = Object.keys(floorData);
+  const matchingFloors = [];
+  allFloors.forEach(f => {
+    if(f === fromFloor) return;
+    const items = floorData[f];
+    const matchIdx = items.findIndex(it => it[1]===needleType && it[2]===size);
+    if(matchIdx >= 0) matchingFloors.push({floor:f, matchIdx, item:items[matchIdx]});
   });
 
-  await loadData();
-  alert("Deleted Successfully");
+  document.getElementById('floorNavItemInfo').innerHTML =
+    `<b>${needleType}</b> | Size: ${size}<br><small style="color:#059669">아래 Floor 중 match আছে: ${matchingFloors.length} টি</small>`;
+
+  let html = '';
+  if(matchingFloors.length === 0){
+    html = '<div class="no-results">কোনো floor-এ এই item match পাওয়া যায়নি।<br>সরাসরি Transfer করতে 🔄 Trf বাটন ব্যবহার করুন।</div>';
+  } else {
+    matchingFloors.forEach(m => {
+      html += `<div class="floor-nav-item" onclick="selectFloorNavTarget('${m.floor}')">
+        <div>
+          <div class="fni-name">📍 ${m.floor}</div>
+          <div class="fni-match">✅ Item match: SL ${m.item[0]} | Opening: ${m.item[3]}</div>
+        </div>
+        <div class="fni-arrow">→</div>
+      </div>`;
+    });
+  }
+  document.getElementById('floorNavList').innerHTML = html;
+  document.getElementById('floorNavPopup').classList.add('active');
 }
 
-async function loadData(){
-  let date=document.getElementById("postDate").value;
-  let floor=document.getElementById("floor").value;
-  let items=getItems();
+function selectFloorNavTarget(toFloor){
+  // Close floor nav popup, open transfer popup with toFloor pre-selected
+  document.getElementById('floorNavPopup').classList.remove('active');
+  if(!pendingFloorNavItem) return;
+  const { rowIdx } = pendingFloorNavItem;
+  openTransferPopupWithFloor(rowIdx, toFloor);
+}
+function closeFloorNavPopup(){
+  document.getElementById('floorNavPopup').classList.remove('active');
+  pendingFloorNavItem = null;
+}
 
-  if(!date){
-    dynamicOpening = null;
-    loadTable();
-    showMonthlySummary(0,0,0,0,0);
-    document.getElementById("operatorName").value = localStorage.getItem("lastOperator") || "";
+// =========================================
+// 🔄 TRANSFER POPUP (direct row button)
+// =========================================
+function openTransferPopup(i){
+  pendingTrfIndex = i;
+  const item = currentItems[i];
+  const fromFloor = document.getElementById('floor').value;
+  const presentNow = Number(document.getElementById(`b${i}`).innerText)||0;
+
+  document.getElementById('trfItemInfo').innerHTML =
+    `<b>${item[1]}</b> | Size: ${item[2]}<br>Present Stock: <b style="color:${presentNow<0?'#dc2626':'#059669'}">${presentNow}</b>`;
+
+  // Populate floor dropdown — only floors that have matching item (auto-match)
+  const sel = document.getElementById('trfToFloor');
+  sel.innerHTML = '<option value="">-- To Floor নির্বাচন করুন --</option>';
+  Object.keys(floorData).filter(f=>f!==fromFloor).forEach(f=>{
+    const hasMatch = floorData[f].some(it=>it[1]===item[1] && it[2]===item[2]);
+    const label = hasMatch ? `✅ ${f}` : f;
+    sel.innerHTML += `<option value="${f}" ${hasMatch?'style="font-weight:bold;color:#059669"':''}>${label}</option>`;
+  });
+
+  document.getElementById('trfQty').value = '';
+  document.getElementById('trfReceiver').value = '';
+  document.getElementById('trfReqNo').value = floorReqNo || '';
+  document.getElementById('transferPopup').classList.add('active');
+}
+
+function openTransferPopupWithFloor(i, preFloor){
+  openTransferPopup(i);
+  document.getElementById('trfToFloor').value = preFloor;
+}
+
+function closeTransferPopup(){
+  document.getElementById('transferPopup').classList.remove('active');
+  pendingTrfIndex = null;
+}
+
+async function confirmTransfer(){
+  const i = pendingTrfIndex;
+  if(i === null) return;
+  const toFloor = document.getElementById('trfToFloor').value;
+  const qty = Number(document.getElementById('trfQty').value)||0;
+  const receiver = document.getElementById('trfReceiver').value.trim();
+  const reqNo = document.getElementById('trfReqNo').value.trim();
+  const fromFloor = document.getElementById('floor').value;
+  const date = document.getElementById('postDate').value;
+  const operator = document.getElementById('operatorName').value.trim() || localStorage.getItem('lastOperator') || 'Unknown';
+  const item = currentItems[i];
+
+  if(!toFloor){ alert('❌ To Floor নির্বাচন করুন!'); return; }
+  if(qty <= 0){ alert('❌ Qty দিন!'); return; }
+  if(!receiver){ alert('❌ Receiver Name দিন!'); return; }
+  if(!reqNo){ alert('❌ Requisition No. দিন!'); return; }
+  if(!date){ alert('❌ Date select করুন!'); return; }
+
+  const presentNow = Number(document.getElementById(`b${i}`).innerText)||0;
+  if(qty > presentNow && !confirm(`⚠️ Present Stock মাত্র ${presentNow}, ${qty} transfer করবেন?`)) return;
+
+  closeTransferPopup();
+
+  // Update current floor: Dvld += qty
+  const dEl = document.getElementById(`d${i}`);
+  dEl.value = (Number(dEl.value)||0) + qty;
+  calc(i);
+
+  if(!rowTransferOut[i]) rowTransferOut[i] = [];
+  rowTransferOut[i].push({toFloor, qty, receiver, reqNo});
+  const trfOutTag = document.getElementById(`trfOutTag${i}`);
+  if(trfOutTag){ const last=rowTransferOut[i][rowTransferOut[i].length-1]; trfOutTag.textContent=`→${last.toFloor.substring(0,8)} (${last.qty})`; }
+
+  // -------------------------------------------------------
+  // Update To Floor: load/create its doc, find matching row, add Rcvd
+  // -------------------------------------------------------
+  const toDocId = `${toFloor}_${date}`;
+  let toRows = null;
+
+  try{
+    if(navigator.onLine){
+      const toSnap = await getDoc(doc(db, 'dailyPosting', toDocId));
+      if(toSnap.exists()){ toRows = toSnap.data().rows; }
+    }
+  }catch(e){}
+
+  // If no data yet for toFloor on this date, build from defaults
+  if(!toRows){
+    toRows = (floorData[toFloor]||[]).map(it=>({
+      sl:it[0], needleType:it[1], size:it[2], opening:it[3],
+      previous:it[3], receive:0, delivery:0, present:it[3], bn:0, receiveReqNo:'', transferIn:[], transferOut:[]
+    }));
+  }
+
+  // Find matching item in toFloor
+  const toItems = floorData[toFloor] || [];
+  const toItemIdx = toItems.findIndex(it => it[1]===item[1] && it[2]===item[2]);
+  if(toItemIdx >= 0 && toRows[toItemIdx]){
+    toRows[toItemIdx].receive = (Number(toRows[toItemIdx].receive)||0) + qty;
+    toRows[toItemIdx].present = (Number(toRows[toItemIdx].previous)||0) + (Number(toRows[toItemIdx].receive)||0) - (Number(toRows[toItemIdx].delivery)||0);
+    toRows[toItemIdx].receiveReqNo = reqNo;
+    if(!toRows[toItemIdx].transferIn) toRows[toItemIdx].transferIn = [];
+    toRows[toItemIdx].transferIn.push({fromFloor, qty, receiver, reqNo, date});
+  } else {
+    showToast(`⚠️ To Floor-এ ${item[1]} (Size ${item[2]}) match পাওয়া যায়নি!`, '#f59e0b');
+  }
+
+  // Save to toFloor Firebase
+  if(navigator.onLine){
+    try{
+      await setDoc(doc(db,'dailyPosting',toDocId), {
+        date, month: getMonth(date), floor: toFloor,
+        rows: toRows, operator: 'Transfer-In',
+        updatedAt: serverTimestamp()
+      }, {merge:true});
+    }catch(e){ console.error('To floor save error:', e); }
+  }
+
+  // Save transfer record
+  const trf = { date, fromFloor, toFloor, needleType: item[1], size: item[2], qty, receiver, reqNo, operator, createdAt: new Date().toISOString() };
+  // Local
+  const local = JSON.parse(localStorage.getItem(TRANSFER_LOCAL_KEY)||'[]');
+  local.push({...trf, id: Date.now()});
+  localStorage.setItem(TRANSFER_LOCAL_KEY, JSON.stringify(local));
+  // Firebase
+  if(navigator.onLine){
+    try{
+      await addDoc(collection(db,'needleTransfers'), {
+        ...trf, createdAt: serverTimestamp()
+      });
+    }catch(e){ console.error('Transfer record save error:', e); }
+  }
+
+  trackActivity('transfer', {fromFloor, toFloor, needleType:item[1], qty});
+  showToast(`✅ Transfer: ${qty}pcs ${item[1]} → ${toFloor}`);
+}
+
+// =========================================
+// 🔍 REQUISITION SEARCH POPUP
+// =========================================
+function openReqSearchPopup(){
+  document.getElementById('reqSearchInput').value = '';
+  document.getElementById('reqSearchResults').innerHTML = '<div class="no-results">Requisition number দিয়ে search করুন</div>';
+  document.getElementById('reqSearchFooter').textContent = '';
+  document.getElementById('reqSearchPopup').classList.add('active');
+  setTimeout(()=>document.getElementById('reqSearchInput').focus(), 100);
+}
+function closeReqSearchPopup(){ document.getElementById('reqSearchPopup').classList.remove('active'); }
+
+async function liveReqSearch(){
+  const term = document.getElementById('reqSearchInput').value.trim();
+  if(!term || term.length < 2){
+    document.getElementById('reqSearchResults').innerHTML = '<div class="no-results">আরও অক্ষর দিন...</div>';
     return;
   }
 
-  let month=getMonth(date);
-  let prevMonth = getPreviousMonth(month);
-  
-  let snap=await getDocs(collection(db,"dailyPosting"));
-  let monthRows=[];
-  let prevMonthRows=[];
+  document.getElementById('reqSearchResults').innerHTML = '<div class="no-results">🔍 Searching...</div>';
 
-  snap.forEach(docSnap=>{
-    let data=docSnap.data();
-    if(data.floor===floor){
-      if(data.month===month && data.date<=date){
-        monthRows.push(data);
-      }
-      if(data.month===prevMonth){
-        prevMonthRows.push(data);
-      }
+  const results = [];
+
+  // 1. Search Firebase
+  if(navigator.onLine){
+    try{
+      const snap = await getDocs(collection(db,'dailyPosting'));
+      snap.forEach(docSnap => {
+        const data = docSnap.data();
+        if(!data.rows) return;
+        const matchedItems = [];
+        data.rows.forEach(row => {
+          if(row.receiveReqNo && row.receiveReqNo.toLowerCase().includes(term.toLowerCase()) && row.receive > 0){
+            matchedItems.push({needleType:row.needleType, size:row.size, qty:row.receive});
+          }
+        });
+        if(matchedItems.length > 0){
+          results.push({ floor:data.floor, date:data.date, operator:data.operator||'', items:matchedItems, source:'Firebase' });
+        }
+      });
+    }catch(e){ console.error('Req search Firebase error:', e); }
+  }
+
+  // 2. Search local transfers
+  const local = JSON.parse(localStorage.getItem(TRANSFER_LOCAL_KEY)||'[]');
+  local.forEach(t => {
+    if(t.reqNo && t.reqNo.toLowerCase().includes(term.toLowerCase())){
+      const existing = results.find(r=>r.floor===t.toFloor && r.date===t.date);
+      if(existing){ existing.items.push({needleType:t.needleType, size:t.size, qty:t.qty, fromFloor:t.fromFloor}); }
+      else{ results.push({floor:t.toFloor, date:t.date, operator:t.receiver||'', items:[{needleType:t.needleType, size:t.size, qty:t.qty, fromFloor:t.fromFloor}], source:'Local'}); }
+    }
+  });
+
+  renderReqSearchResults(results, term);
+}
+
+function renderReqSearchResults(results, term){
+  const container = document.getElementById('reqSearchResults');
+  document.getElementById('reqSearchFooter').textContent = `${results.length} result(s) found for "${term}"`;
+  if(!results.length){ container.innerHTML = '<div class="no-results">কোনো result পাওয়া যায়নি।<br>অন্য number দিয়ে try করুন।</div>'; return; }
+
+  let html = '';
+  results.forEach((r,idx) => {
+    const itemSummary = r.items.slice(0,3).map(it=>`${it.needleType} Size ${it.size} (${it.qty})`).join(', ') + (r.items.length>3 ? ` +${r.items.length-3} more` : '');
+    html += `<div class="search-result-item" onclick="goToReqFloor('${r.floor}','${r.date}')">
+      <div class="sri-floor">📍 ${r.floor} <span style="font-size:10px;color:#64748b">(${r.source})</span></div>
+      <div class="sri-date">📅 ${r.date} | 👤 ${r.operator||'-'}</div>
+      <div class="sri-items">🪡 ${itemSummary}</div>
+    </div>`;
+  });
+  container.innerHTML = html;
+}
+
+function goToReqFloor(floor, date){
+  closeReqSearchPopup();
+  document.getElementById('floor').value = floor;
+  document.getElementById('postDate').value = date;
+  onFloorChange();
+  showToast(`📍 ${floor} | ${date} এ navigate হচ্ছে...`);
+}
+
+// =========================================
+// 🚚 TRANSFER REPORT
+// =========================================
+function showTrfReport(){
+  const today = new Date().toISOString().slice(0,10);
+  document.getElementById('trfRpFrom').value = today.slice(0,8)+'01';
+  document.getElementById('trfRpTo').value = today;
+  document.getElementById('trfReportPopup').classList.add('active');
+  loadTrfReport();
+}
+function closeTrfReportPopup(){ document.getElementById('trfReportPopup').classList.remove('active'); }
+
+async function loadTrfReport(){
+  const from = document.getElementById('trfRpFrom').value;
+  const to = document.getElementById('trfRpTo').value;
+  if(!from||!to){ alert('তারিখ দিন'); return; }
+
+  document.getElementById('trfReportBody').innerHTML = '<tr><td colspan="8" style="padding:10px;color:#64748b">Loading...</td></tr>';
+
+  let transfers = [];
+
+  if(navigator.onLine){
+    try{
+      const snap = await getDocs(collection(db,'needleTransfers'));
+      snap.forEach(d=>{
+        const t = d.data();
+        const tDate = t.date || (t.createdAt?.toDate?.()?.toISOString()?.slice(0,10));
+        if(tDate >= from && tDate <= to) transfers.push({...t, date:tDate});
+      });
+    }catch(e){ console.error(e); }
+  }
+
+  if(!transfers.length){
+    const local = JSON.parse(localStorage.getItem(TRANSFER_LOCAL_KEY)||'[]');
+    transfers = local.filter(t => t.date >= from && t.date <= to);
+  }
+
+  transfers.sort((a,b)=>(a.date||'').localeCompare(b.date||''));
+
+  if(!transfers.length){
+    document.getElementById('trfReportBody').innerHTML = '<tr><td colspan="8" style="padding:10px;color:#94a3b8;text-align:center">এই period এ কোনো transfer নেই</td></tr>';
+    document.getElementById('trfGrandTotal').innerText = '0';
+    document.getElementById('trfReportFooter').textContent = '0 records';
+    return;
+  }
+
+  let grandTotal = 0;
+  let html = '';
+  transfers.forEach(t => {
+    const qty = Number(t.qty)||0;
+    grandTotal += qty;
+    html += `<tr>
+      <td>${t.date||'-'}</td>
+      <td style="font-size:9px">${(t.fromFloor||'').substring(0,10)}</td>
+      <td style="font-size:9px">${(t.toFloor||'').substring(0,10)}</td>
+      <td>${t.needleType||''}</td>
+      <td>${t.size||''}</td>
+      <td><b>${qty}</b></td>
+      <td style="font-size:9px">${t.receiver||''}</td>
+      <td style="font-size:9px">${t.reqNo||''}</td>
+    </tr>`;
+  });
+  document.getElementById('trfReportBody').innerHTML = html;
+  document.getElementById('trfGrandTotal').innerText = grandTotal;
+  document.getElementById('trfReportFooter').textContent = `${transfers.length} records | Total: ${grandTotal} pcs`;
+}
+
+// =========================================
+// 💾 SAVE / LOAD / DELETE
+// =========================================
+const OFFLINE_KEY = OFFLINE_QUEUE_KEY;
+function getOfflineQueue(){ return JSON.parse(localStorage.getItem(OFFLINE_KEY)||'[]'); }
+function setOfflineQueue(q){ localStorage.setItem(OFFLINE_KEY, JSON.stringify(q)); }
+
+async function updateDashboardState(floor, rows){
+  const company = localStorage.getItem('gmsSelectedCompany')||'GMS TEXTILES LTD';
+  const companyKey = company.replace(/\s+/g,'_');
+  const stateRef = doc(db,'systemState','dashboard_'+companyKey);
+  try{
+    let state = {total:0, floorStocks:{}};
+    const snap = await getDoc(stateRef);
+    if(snap.exists() && snap.data().needle) state = snap.data().needle;
+    if(!state.floorStocks) state.floorStocks = {};
+    let totalPresent = 0;
+    rows.forEach(r => totalPresent += Number(r.present)||0);
+    state.floorStocks[floor] = totalPresent;
+    let grand = 0;
+    Object.keys(floorData).forEach(f => {
+      if(state.floorStocks[f]===undefined){ state.floorStocks[f] = (floorData[f]||[]).reduce((s,r)=>s+(Number(r[3])||0),0); }
+      grand += state.floorStocks[f];
+    });
+    state.total = grand;
+    await setDoc(stateRef, {needle: state, lastUpdated:{needle:new Date().toISOString()}}, {merge:true});
+  }catch(e){ console.error('Dashboard state error:', e); }
+}
+
+function buildRows(){
+  return currentItems.map((item,i) => ({
+    sl: item[0], needleType: item[1], size: item[2],
+    opening: (dynamicOpening && dynamicOpening[i] !== undefined) ? dynamicOpening[i] : Number(item[3])||0,
+    previous: Number(document.getElementById(`p${i}`)?.innerText)||0,
+    receive: Number(document.getElementById(`r${i}`)?.value)||0,
+    delivery: Number(document.getElementById(`d${i}`)?.value)||0,
+    present: Number(document.getElementById(`b${i}`)?.innerText)||0,
+    bn: Number(document.getElementById(`bn${i}`)?.value)||0,
+    receiveReqNo: rowReqNo[i]||'',
+    transferOut: rowTransferOut[i]||[],
+    transferIn: rowTransferIn[i]||[]
+  }));
+}
+
+async function saveData(){
+  const date = document.getElementById('postDate').value;
+  const floor = document.getElementById('floor').value;
+  const operator = document.getElementById('operatorName').value.trim() || localStorage.getItem('lastOperator') || 'Unknown';
+  if(!date){ alert('❌ Date select করুন'); return; }
+
+  // Validate req nos
+  for(let i=0;i<currentItems.length;i++){
+    const r = Number(document.getElementById(`r${i}`)?.value)||0;
+    if(r > 0 && !rowReqNo[i]){
+      if(floorReqNo){ rowReqNo[i]=floorReqNo; const t=document.getElementById(`reqTag${i}`); if(t) t.textContent='📋 '+floorReqNo; }
+      else{ alert(`❌ Row ${i+1} (${currentItems[i][1]}) এর Rcvd-এর জন্য Req No দিন!`); checkReqNo(i); return; }
+    }
+  }
+
+  const rows = buildRows();
+  const docId = `${floor}_${date}`;
+
+  if(navigator.onLine){
+    try{
+      const oldSnap = await getDoc(doc(db,'dailyPosting',docId));
+      const action = oldSnap.exists() ? 'UPDATE' : 'CREATE';
+      await setDoc(doc(db,'dailyPosting',docId), {date, month:getMonth(date), floor, rows, operator, updatedAt:serverTimestamp()});
+      await updateDashboardState(floor, rows);
+      try{ await addDoc(collection(db,'auditLogs'), {action, floor, date, operator, timestamp:serverTimestamp(), details:{itemsCount:rows.length}}); }catch(e){}
+      showToast('✅ Saved to Firebase');
+      trackActivity('save', {action, itemsCount:rows.length});
+    }catch(e){
+      console.error('Firebase save failed:', e);
+      const q = getOfflineQueue(); q.push({id:`${docId}_${Date.now()}`,floor,date,operator,rows,timestamp:new Date().toISOString(),status:'pending'}); setOfflineQueue(q);
+      showToast('✅ Saved Offline', '#f59e0b');
+    }
+  }else{
+    const q = getOfflineQueue(); q.push({id:`${docId}_${Date.now()}`,floor,date,operator,rows,timestamp:new Date().toISOString(),status:'pending'}); setOfflineQueue(q);
+    showToast('✅ Saved Offline', '#f59e0b');
+    trackActivity('save_offline', {itemsCount:rows.length});
+  }
+
+  localStorage.setItem('lastOperator', operator);
+  await loadData();
+}
+
+async function deleteData(){
+  const date = document.getElementById('postDate').value;
+  const floor = document.getElementById('floor').value;
+  const operator = document.getElementById('operatorName').value.trim() || localStorage.getItem('lastOperator') || 'Unknown';
+  if(!date){ alert('❌ Date select করুন'); return; }
+  if(!confirm('⚠️ এই date এর data delete করবেন?')) return;
+  const docId = `${floor}_${date}`;
+  try{
+    const oldSnap = await getDoc(doc(db,'dailyPosting',docId));
+    if(oldSnap.exists()){ try{ await addDoc(collection(db,'auditLogs'), {action:'DELETE',floor,date,operator,timestamp:serverTimestamp()}); }catch(e){} }
+    await deleteDoc(doc(db,'dailyPosting',docId));
+    const emptyRows = currentItems.map(it=>({present:it[3]}));
+    await updateDashboardState(floor, emptyRows);
+    trackActivity('delete');
+    showToast('✅ Deleted');
+  }catch(e){ console.error(e); showToast('❌ Delete failed','#dc2626'); }
+  await loadData();
+}
+
+async function loadData(){
+  const date = document.getElementById('postDate').value;
+  const floor = document.getElementById('floor').value;
+  const items = getItems();
+
+  // Reset state
+  rowReqNo = {}; rowTransferOut = {}; rowTransferIn = {};
+  floorReqNo = null; updateFloorReqBanner();
+
+  if(!date){ dynamicOpening=null; loadTable(); showMonthlySummary(0,0,0,0,0); document.getElementById('operatorName').value=localStorage.getItem('lastOperator')||''; return; }
+
+  const month = getMonth(date);
+  const prevMonth = getPrevMonth(month);
+
+  let allSnap;
+  try{ allSnap = await getDocs(collection(db,'dailyPosting')); }
+  catch(e){ console.error(e); loadTable(); return; }
+
+  const monthRows = [], prevMonthRows = [];
+  allSnap.forEach(docSnap=>{
+    const data = docSnap.data();
+    if(data.floor === floor){
+      if(data.month === month && data.date <= date) monthRows.push(data);
+      if(data.month === prevMonth) prevMonthRows.push(data);
     }
   });
 
   prevMonthRows.sort((a,b)=>a.date.localeCompare(b.date));
-  let lastDayOfPrevMonth = prevMonthRows.length > 0 ? prevMonthRows[prevMonthRows.length - 1] : null;
-  
-  dynamicOpening = [];
-  for(let i=0; i<items.length; i++){
-    if(lastDayOfPrevMonth && lastDayOfPrevMonth.rows && lastDayOfPrevMonth.rows[i]){
-      dynamicOpening[i] = Number(lastDayOfPrevMonth.rows[i].present) || 0;
-    } else {
-      dynamicOpening[i] = Number(items[i][3]) || 0;
-    }
-  }
+  const lastPrevMonth = prevMonthRows.length > 0 ? prevMonthRows[prevMonthRows.length-1] : null;
+  dynamicOpening = items.map((it,i) => lastPrevMonth?.rows?.[i] ? Number(lastPrevMonth.rows[i].present)||0 : Number(it[3])||0);
 
   monthRows.sort((a,b)=>a.date.localeCompare(b.date));
-  let todayData=null;
-  monthRows.forEach(row=>{if(row.date===date) todayData=row;});
+  const todayData = monthRows.find(r=>r.date===date) || null;
 
-  let monthlyReceive=Array(items.length).fill(0);
-  let monthlyDelivery=Array(items.length).fill(0);
-  let monthlyBN=Array(items.length).fill(0);
-
+  const monthlyReceive = Array(items.length).fill(0);
+  const monthlyDelivery = Array(items.length).fill(0);
+  const monthlyBN = Array(items.length).fill(0);
   monthRows.forEach(day=>{
-    if(day.rows){
-      day.rows.forEach((row,i)=>{
-        monthlyReceive[i]+=Number(row.receive)||0;
-        monthlyDelivery[i]+=Number(row.delivery)||0;
-        monthlyBN[i]+=Number(row.bn)||0;
-      });
-    }
+    if(day.rows) day.rows.forEach((row,i)=>{ monthlyReceive[i]+=Number(row.receive)||0; monthlyDelivery[i]+=Number(row.delivery)||0; monthlyBN[i]+=Number(row.bn)||0; });
   });
 
-  let todayReceive=Array(items.length).fill(0);
-  let todayDelivery=Array(items.length).fill(0);
-  let todayBN=Array(items.length).fill(0);
+  const todayReceive = Array(items.length).fill(0);
+  const todayDelivery = Array(items.length).fill(0);
+  const todayBN = Array(items.length).fill(0);
+  if(todayData?.rows) todayData.rows.forEach((row,i)=>{ todayReceive[i]=Number(row.receive)||0; todayDelivery[i]=Number(row.delivery)||0; todayBN[i]=Number(row.bn)||0; });
 
-  if(todayData && todayData.rows){
-    todayData.rows.forEach((row,i)=>{
-      todayReceive[i]=Number(row.receive)||0;
-      todayDelivery[i]=Number(row.delivery)||0;
-      todayBN[i]=Number(row.bn)||0;
-    });
-  }
-
-  let previousList=[];
-  for(let i=0;i<items.length;i++){
-    let opening = dynamicOpening[i];
-    let beforeReceive=monthlyReceive[i]-todayReceive[i];
-    let beforeDelivery=monthlyDelivery[i]-todayDelivery[i];
-    previousList[i]=opening+beforeReceive-beforeDelivery;
-  }
+  const previousList = items.map((_,i) => dynamicOpening[i] + (monthlyReceive[i]-todayReceive[i]) - (monthlyDelivery[i]-todayDelivery[i]));
 
   loadTable(previousList);
-  document.getElementById("operatorName").value = todayData?.operator || localStorage.getItem("lastOperator") || "";
+  document.getElementById('operatorName').value = todayData?.operator || localStorage.getItem('lastOperator') || '';
 
-  for(let i=0;i<items.length;i++){
-    document.getElementById("r"+i).value = todayReceive[i] || "";
-    document.getElementById("d"+i).value = todayDelivery[i] || "";
-    document.getElementById("bn"+i).value = todayBN[i] || "";
-    calc(i); 
+  // Restore saved values
+  if(todayData?.rows){
+    todayData.rows.forEach((row,i)=>{
+      if(!document.getElementById(`r${i}`)) return;
+      document.getElementById(`r${i}`).value = todayReceive[i] || '';
+      document.getElementById(`d${i}`).value = todayDelivery[i] || '';
+      document.getElementById(`bn${i}`).value = todayBN[i] || '';
+
+      // Restore req no
+      if(row.receiveReqNo){
+        rowReqNo[i] = row.receiveReqNo;
+        const t = document.getElementById(`reqTag${i}`); if(t) t.textContent = '📋 '+row.receiveReqNo;
+        if(!floorReqNo) floorReqNo = row.receiveReqNo;
+      }
+
+      // Restore transfer tags
+      if(row.transferOut?.length){ rowTransferOut[i]=row.transferOut; const last=row.transferOut[row.transferOut.length-1]; const tag=document.getElementById(`trfOutTag${i}`); if(tag) tag.textContent=`→${last.toFloor.substring(0,8)} (${last.qty})`; }
+      if(row.transferIn?.length){ rowTransferIn[i]=row.transferIn; const last=row.transferIn[row.transferIn.length-1]; const tag=document.getElementById(`trfInTag${i}`); if(tag) tag.textContent=`←${last.fromFloor.substring(0,8)} (${last.qty})`; }
+
+      calc(i);
+    });
+    updateFloorReqBanner();
   }
 
-  updateMonthlySummary(monthlyReceive,monthlyDelivery,monthlyBN,dynamicOpening);
+  updateMonthlySummary(monthlyReceive, monthlyDelivery, monthlyBN, dynamicOpening);
   setTimeout(checkNegativeStock, 200);
 }
 
-function updateMonthlySummary(monthlyReceive,monthlyDelivery,monthlyBN,openingValues=null){
-  let items=getItems();
-  let opening=0, receive=0, delivery=0, present=0, bn=0;
-  for(let i=0;i<items.length;i++){
-    let op = (openingValues && openingValues[i] !== undefined) ? Number(openingValues[i]) : (Number(items[i][3]) || 0);
-    let r=Number(monthlyReceive[i])||0;
-    let d=Number(monthlyDelivery[i])||0;
-    opening+=op;receive+=r;delivery+=d;present+=op+r-d;bn+=Number(monthlyBN[i])||0;
-  }
-  showMonthlySummary(opening,receive,delivery,present,bn);
+function onFloorChange(){ loadTable(); loadData(); }
+
+function updateMonthlySummary(recv, dlvr, bn, opening){
+  let o=0,r=0,d=0,p=0,b=0;
+  currentItems.forEach((_,i)=>{ const op=(opening?.[i]??Number(currentItems[i][3]))||0; o+=op; r+=Number(recv[i])||0; d+=Number(dlvr[i])||0; p+=op+(Number(recv[i])||0)-(Number(dlvr[i])||0); b+=Number(bn[i])||0; });
+  showMonthlySummary(o,r,d,p,b);
+}
+function showMonthlySummary(o,r,d,p,b){
+  document.getElementById('monthOpening').innerText=o;
+  document.getElementById('monthReceive').innerText=r;
+  document.getElementById('monthDelivery').innerText=d;
+  document.getElementById('monthPresent').innerText=p;
+  document.getElementById('monthBN').innerText=b;
 }
 
-function showMonthlySummary(opening,receive,delivery,present,bn){
-  document.getElementById("monthOpening").innerText=opening;
-  document.getElementById("monthReceive").innerText=receive;
-  document.getElementById("monthDelivery").innerText=delivery;
-  document.getElementById("monthPresent").innerText=present;
-  document.getElementById("monthBN").innerText=bn;
-}
-
+// =========================================
+// 📊 EXPORT
+// =========================================
 function exportExcel(){
-  let title=`<h2>Needle Daily Posting</h2><h3>Floor: ${document.getElementById("floor").value}</h3><h3>Date: ${document.getElementById("postDate").value}</h3>`;
-  let table1=document.getElementById("reportTable").outerHTML;
-  let table2=document.getElementById("summaryTable").outerHTML;
-  let file=new Blob([title+table1+"<br>"+table2],{type:"application/vnd.ms-excel"});
-  let a=document.createElement("a");a.href=URL.createObjectURL(file);a.download="needle-report.xls";a.click();
-  
-  // 🔥 Export হলে track হবে
-  trackNeedleActivity('export_excel', localStorage.getItem("lastOperator") || 'Unknown', 2, {
-    floor: document.getElementById("floor").value,
-    date: document.getElementById("postDate").value
-  });
+  const floor=document.getElementById('floor').value, date=document.getElementById('postDate').value;
+  const title=`<h2>Needle Daily Posting</h2><h3>Floor: ${floor}</h3><h3>Date: ${date}</h3>`;
+  const t1=document.getElementById('reportTable').outerHTML, t2=document.getElementById('summaryTable').outerHTML;
+  const blob=new Blob([title+t1+'<br>'+t2],{type:'application/vnd.ms-excel'});
+  const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download=`needle-${floor}-${date}.xls`; a.click();
+  trackActivity('export_excel');
 }
+function exportPDF(){ window.print(); trackActivity('export_pdf'); }
 
-function exportPDF(){
-  window.print();
-  
-  // 🔥 Print হলে track হবে
-  trackNeedleActivity('export_pdf', localStorage.getItem("lastOperator") || 'Unknown', 2, {
-    floor: document.getElementById("floor").value,
-    date: document.getElementById("postDate").value
-  });
-}
-
-document.getElementById("postDate").addEventListener("change",loadData);
-
-window.loadTable=loadTable;window.calc=calc;window.updateTotal=updateTotal;
-window.saveData=saveData;window.deleteData=deleteData;window.loadData=loadData;
-window.exportExcel=exportExcel;window.exportPDF=exportPDF;
-window.checkNegativeStock=checkNegativeStock;window.closePopup=closePopup;window.fixNegativeRow=fixNegativeRow;
-window.syncOfflineQueue=syncOfflineQueue;window.updateOfflineIndicator=updateOfflineIndicator;
-
-document.addEventListener("keydown", function(e){
-  if(e.target.tagName !== "INPUT") return;
-  if(!e.target.id.match(/^(r|d|bn)\d+$/)) return;
-  if(e.key === "Tab") return;
-  if(e.key === "Enter"){
-    e.preventDefault();
-    let col = e.target.id.replace(/[0-9]/g, "");
-    let row = Number(e.target.id.replace(/\D/g, ""));
-    let next = document.getElementById(col + (row + 1));
-    if(next){next.focus();next.select();}
-  }
-});
-
-updateOfflineIndicator();
-loadTable();
-setTimeout(syncOfflineQueue, 1000);
-
-// 🔥 ROI Tracker Status Update
-setInterval(function(){
-  try{
-    var activity = JSON.parse(localStorage.getItem('gms_needle_activity') || '[]');
-    var today = new Date().toISOString().slice(0,10);
-    var todayCount = activity.filter(a => a.date === today).length;
-    var indicator = document.getElementById('roiTrackerIndicator');
-    if(indicator){
-      indicator.title = `Today: ${todayCount} activities tracked | Total: ${activity.length}`;
+// =========================================
+// 🔄 OFFLINE SYNC
+// =========================================
+async function syncOfflineQueue(){
+  if(!navigator.onLine) return;
+  const queue = getOfflineQueue();
+  let synced = 0;
+  for(let i=0;i<queue.length;i++){
+    if(queue[i].status==='pending'){
+      try{
+        await setDoc(doc(db,'dailyPosting',queue[i].id), {date:queue[i].date,month:getMonth(queue[i].date),floor:queue[i].floor,rows:queue[i].rows,operator:queue[i].operator,updatedAt:serverTimestamp()});
+        queue[i].status='synced'; synced++;
+        await updateDashboardState(queue[i].floor, queue[i].rows);
+      }catch(e){}
     }
-  }catch(e){}
-}, 5000);
+  }
+  if(synced>0){ setOfflineQueue(queue); showToast(`☁️ ${synced} items synced to Firebase`); }
+}
+
+// =========================================
+// 🚀 INIT
+// =========================================
+(function init(){
+  const today = new Date().toISOString().slice(0,10);
+  document.getElementById('postDate').value = today;
+  const op = localStorage.getItem('lastOperator');
+  if(op) document.getElementById('operatorName').value = op;
+  updateOfflineIndicator();
+  loadTable();
+  setTimeout(syncOfflineQueue, 1000);
+  trackActivity('page_view');
+
+  document.getElementById('postDate').addEventListener('change', loadData);
+
+  document.addEventListener('keydown', e=>{
+    if(e.target.tagName!=='INPUT') return;
+    if(!e.target.id.match(/^(r|d|bn)\d+$/)) return;
+    if(e.key==='Enter'){
+      e.preventDefault();
+      const col=e.target.id.replace(/[0-9]/g,'');
+      const row=Number(e.target.id.replace(/\D/g,''));
+      const next=document.getElementById(col+(row+1));
+      if(next){next.focus();next.select();}
+    }
+    if(e.ctrlKey && e.key==='s'){ e.preventDefault(); saveData(); }
+  });
+
+  setInterval(()=>{
+    try{ const act=JSON.parse(localStorage.getItem('gms_needle_activity')||'[]'); const tod=new Date().toISOString().slice(0,10); const cnt=act.filter(a=>a.date===tod).length; document.getElementById('roiTrackerIndicator').title=`Today: ${cnt} activities | Total: ${act.length}`; }catch(e){}
+  }, 5000);
+})();
+
+window.addEventListener('online', ()=>{ updateOfflineIndicator(); syncOfflineQueue(); });
+window.addEventListener('offline', updateOfflineIndicator);
+
+// Expose globals
+window.saveData=saveData; window.deleteData=deleteData; window.loadData=loadData;
+window.loadTable=loadTable; window.calc=calc; window.updateTotal=updateTotal;
+window.exportExcel=exportExcel; window.exportPDF=exportPDF;
+window.closeNegPopup=closeNegPopup; window.fixNegativeRow=fixNegativeRow;
+window.checkReqNo=checkReqNo; window.confirmReqNo=confirmReqNo; window.cancelReqPopup=cancelReqPopup;
+window.changeFloorReqNo=changeFloorReqNo; window.updateFloorReqBanner=updateFloorReqBanner;
+window.openTransferPopup=openTransferPopup; window.closeTransferPopup=closeTransferPopup; window.confirmTransfer=confirmTransfer;
+window.openFloorNavFromItem=openFloorNavFromItem; window.selectFloorNavTarget=selectFloorNavTarget; window.closeFloorNavPopup=closeFloorNavPopup;
+window.openReqSearchPopup=openReqSearchPopup; window.closeReqSearchPopup=closeReqSearchPopup; window.liveReqSearch=liveReqSearch; window.goToReqFloor=goToReqFloor;
+window.showTrfReport=showTrfReport; window.closeTrfReportPopup=closeTrfReportPopup; window.loadTrfReport=loadTrfReport;
+window.onFloorChange=onFloorChange;
 </script>
 </body>
 </html>
