@@ -1,220 +1,636 @@
 <!DOCTYPE html>
 <html>
 <head>
-<title>Billing Manpower Report - Smart Dashboard</title>
+<title>Billing Manpower Report</title>
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+
 <style>
 :root{
-  --bg:#f5f7fa;--card:#ffffff;--card2:#f8fafc;--text:#1e293b;--muted:#64748b;--border:#e2e8f0;
-  --blue:#667eea;--green:#10b981;--red:#ef4444;--orange:#f59e0b;--purple:#8b5cf6;--cyan:#06b6d4;
-  --shadow:0 4px 20px rgba(0,0,0,0.06);--shadow-lg:0 10px 40px rgba(0,0,0,0.1);
-  --gradient-1:linear-gradient(135deg,#667eea 0%,#764ba2 100%);
-  --gradient-2:linear-gradient(135deg,#f093fb 0%,#f5576c 100%);
-  --gradient-3:linear-gradient(135deg,#4facfe 0%,#00f2fe 100%);
-  --gradient-4:linear-gradient(135deg,#43e97b 0%,#38f9d7 100%);
+  --bg:#07111f;
+  --card:#101b2d;
+  --card2:#14233a;
+  --text:#ffffff;
+  --muted:#9fb0c7;
+  --border:#263855;
+  --blue:#2563eb;
+  --green:#22c55e;
+  --red:#ef4444;
+  --orange:#f59e0b;
+  --purple:#8b5cf6;
+  --shadow:0 10px 40px rgba(0,0,0,.4);
 }
-body.dark{
-  --bg:#0f172a;--card:#1e293b;--card2:#334155;--text:#f1f5f9;--muted:#94a3b8;--border:#475569;
-  --shadow:0 4px 20px rgba(0,0,0,0.3);--shadow-lg:0 10px 40px rgba(0,0,0,0.4);
+body.light{
+  --bg:#f8fafc;
+  --card:#ffffff;
+  --card2:#f1f5f9;
+  --text:#1e293b;
+  --muted:#64748b;
+  --border:#cbd5e1;
+  --shadow:0 10px 40px rgba(0,0,0,.1);
 }
-*{box-sizing:border-box}
-body{margin:0;background:var(--bg);color:var(--text);font-family:'Segoe UI',system-ui,sans-serif;transition:all .3s;padding-bottom:80px}
-.header{text-align:center;padding:16px 12px;background:var(--gradient-1);color:white;box-shadow:var(--shadow-lg);position:relative;overflow:hidden;animation:slideDown .6s}
-.header::before{content:'';position:absolute;top:-50%;right:-10%;width:300px;height:300px;background:rgba(255,255,255,0.1);border-radius:50%;animation:float 6s infinite}
-@keyframes slideDown{from{transform:translateY(-100%);opacity:0}to{transform:translateY(0);opacity:1}}
-@keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-20px)}}
-@keyframes glow{0%,100%{text-shadow:0 0 20px rgba(255,255,255,0.5)}50%{text-shadow:0 0 30px rgba(255,255,255,0.8)}}
-.header h2{font-size:22px;font-weight:800;letter-spacing:1px;margin:2px;animation:glow 2s infinite;position:relative;z-index:1}
-.header h3,.header h4{margin:2px;position:relative;z-index:1;font-weight:600}
-.header h4{font-size:12px;opacity:0.9}.header h3{font-size:14px}
-.cacheStatusBar{display:flex;align-items:center;justify-content:center;gap:8px;padding:6px 10px;font-size:10px;font-weight:700;background:linear-gradient(90deg,#10b981,#059669);color:white;flex-wrap:wrap;position:sticky;top:0;z-index:100}
-.cacheStatusBar .cacheDot{width:7px;height:7px;border-radius:50%;background:white;animation:livePulse 2s infinite}
-@keyframes livePulse{0%{box-shadow:0 0 0 0 rgba(255,255,255,0.7)}70%{box-shadow:0 0 0 6px rgba(255,255,255,0)}100%{box-shadow:0 0 0 0 rgba(255,255,255,0)}}
-.cacheStatusBar span{background:rgba(255,255,255,0.2);padding:2px 8px;border-radius:10px}
-.controls{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:12px;margin:10px;display:grid;grid-template-columns:repeat(4,1fr);gap:8px;box-shadow:var(--shadow)}
-label{font-size:10px;color:var(--muted);font-weight:700;display:block;margin-bottom:3px}
-input,select{width:100%;padding:8px;border-radius:8px;border:1px solid var(--border);background:var(--bg);color:var(--text);font-size:13px}
-input:focus,select:focus{outline:none;border-color:var(--blue);box-shadow:0 0 0 2px rgba(102,126,234,0.2)}
-button{padding:8px 12px;border:0;border-radius:8px;color:white;font-weight:700;cursor:pointer;margin:3px;font-size:12px;transition:all .3s}
-button:hover{transform:translateY(-2px);box-shadow:0 4px 12px rgba(0,0,0,0.2)}
-.save{background:var(--gradient-4);color:#064e3b}.show{background:var(--gradient-1)}
-.excel{background:linear-gradient(135deg,#059669,#047857)}.print{background:var(--gradient-2)}
-.home{background:linear-gradient(135deg,#0f766e,#115e59)}.del{background:linear-gradient(135deg,#ef4444,#dc2626)}
-.kpi{display:grid;grid-template-columns:repeat(6,1fr);gap:8px;margin:10px;animation:fadeIn .8s .2s both}
-@keyframes fadeIn{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
-.kpiBox{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:10px;text-align:center;box-shadow:var(--shadow);transition:all .3s;border-left:4px solid var(--blue);animation:slideUp .5s backwards}
-.kpiBox:nth-child(1){animation-delay:.1s;border-left-color:var(--blue)}.kpiBox:nth-child(2){animation-delay:.2s;border-left-color:var(--green)}
-.kpiBox:nth-child(3){animation-delay:.3s;border-left-color:var(--red)}.kpiBox:nth-child(4){animation-delay:.4s;border-left-color:var(--purple)}
-.kpiBox:nth-child(5){animation-delay:.5s;border-left-color:var(--orange)}.kpiBox:nth-child(6){animation-delay:.6s;border-left-color:var(--cyan)}
-@keyframes slideUp{from{opacity:0;transform:translateY(30px)}to{opacity:1;transform:translateY(0)}}
-.kpiBox:hover{transform:translateY(-4px);box-shadow:var(--shadow-lg)}
-.kpiBox span{color:var(--muted);font-size:10px;font-weight:700}
-.kpiBox b{display:block;color:var(--text);font-size:20px;margin-top:4px;font-weight:800}
-.charts-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin:10px;animation:fadeIn .8s .4s both}
-.chart-card{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:12px;box-shadow:var(--shadow);transition:all .3s}
-.chart-card:hover{box-shadow:var(--shadow-lg);transform:translateY(-2px)}
-.chart-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px}
-.chart-title{font-size:12px;font-weight:700;color:var(--text)}
-.chart-badge{background:var(--gradient-1);color:white;padding:2px 8px;border-radius:10px;font-size:9px;font-weight:700}
-.chart-container{position:relative;height:200px}
-.section-title{font-size:13px;font-weight:800;color:var(--text);margin:12px 10px 8px;display:flex;align-items:center;gap:6px}
-.dept-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:8px;margin:0 10px 10px;animation:fadeIn .8s .6s both}
-.dept-card{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:10px;box-shadow:var(--shadow);cursor:pointer;transition:all .3s}
-.dept-card:hover{border-color:var(--blue);transform:scale(1.03);box-shadow:var(--shadow-lg)}
-.dept-name{font-size:9px;font-weight:700;color:var(--text);margin-bottom:6px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.dept-stats{display:grid;grid-template-columns:1fr 1fr;gap:4px}
-.dept-stat{text-align:center;padding:5px;border-radius:6px;background:var(--card2)}
-.dept-stat-value{font-size:14px;font-weight:800;color:var(--blue)}
-.dept-stat-label{font-size:8px;color:var(--muted);margin-top:1px}
-.absentees-list{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:12px;margin:10px;box-shadow:var(--shadow);animation:fadeIn .8s .8s both}
-.absentee-item{display:flex;align-items:center;padding:8px;border-radius:8px;background:var(--card2);margin-bottom:6px;cursor:pointer;transition:all .3s;border-left:3px solid var(--red)}
-.absentee-item:hover{background:rgba(239,68,68,0.1);transform:translateX(4px)}
-.absentee-avatar{width:34px;height:34px;border-radius:50%;background:var(--gradient-2);display:flex;align-items:center;justify-content:center;color:white;font-weight:800;margin-right:10px;flex-shrink:0;font-size:13px}
-.absentee-info{flex:1;min-width:0}
-.absentee-name{font-size:12px;font-weight:700;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.absentee-id{font-size:10px;color:var(--muted)}
-.absentee-mcd{font-size:9px;color:var(--blue);font-weight:700;background:rgba(102,126,234,0.1);padding:2px 6px;border-radius:4px;margin-top:2px;display:inline-block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%}
-.absentee-count{background:var(--red);color:white;padding:3px 8px;border-radius:10px;font-size:11px;font-weight:800;flex-shrink:0}
-.viewToggle{display:flex;gap:8px;justify-content:center;margin:10px}
-.viewBtn{padding:8px 16px;border-radius:8px;border:2px solid var(--border);background:var(--card);color:var(--text);cursor:pointer;font-weight:700;font-size:12px}
-.viewBtn.active{background:var(--blue);color:white;border-color:var(--blue)}
-table{width:98%;margin:10px auto;border-collapse:collapse;background:var(--card);color:var(--text);font-size:12px;box-shadow:var(--shadow);border-radius:10px;overflow:hidden}
-th,td{border:1px solid var(--border);padding:6px;text-align:center}
-th{background:var(--gradient-1);color:white;font-weight:700;font-size:11px}
-tr:nth-child(even){background:var(--card2)}
-.totalRow{background:var(--gradient-4);color:#064e3b;font-weight:bold}
-.detailBox{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:10px;margin:8px 10px;display:none;box-shadow:var(--shadow)}
-.detailBox h4{margin:0 0 8px 0;color:var(--blue);font-size:13px}
-.detailRow{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:6px}
-.detailRow input{font-size:12px;padding:6px}
-.personDetails{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:10px;margin:10px}
-.personCard{background:var(--card);border:2px solid var(--border);border-radius:10px;padding:12px;box-shadow:var(--shadow)}
-.personCard.leave{border-left:4px solid var(--orange)}.personCard.absent{border-left:4px solid var(--red)}
-.personCard.medical{border-left:4px solid var(--purple)}.personCard.offday{border-left:4px solid var(--blue)}
-.personHeader{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;padding-bottom:6px;border-bottom:1px solid var(--border)}
-.personName{font-weight:700;font-size:13px;color:var(--blue)}
-.personId{background:rgba(102,126,234,0.15);color:var(--blue);padding:3px 6px;border-radius:5px;font-size:10px;font-weight:700}
-.personStats{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-top:6px}
-.statItem{text-align:center;padding:6px;border-radius:6px;background:var(--card2)}
-.statItem b{display:block;font-size:16px;margin-top:3px}
-.statItem.leave b{color:var(--orange)}.statItem.absent b{color:var(--red)}
-.statItem.medical b{color:var(--purple)}.statItem.offday b{color:var(--blue)}
-.statItem span{font-size:9px;color:var(--muted);font-weight:700}
-.reportFilters{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:12px;margin:10px;display:none;grid-template-columns:repeat(4,1fr);gap:8px;box-shadow:var(--shadow)}
-.themeToggle{position:fixed;top:15px;right:15px;z-index:1000;background:var(--gradient-3);color:#0c4a6e;border:none;padding:8px 14px;border-radius:50px;cursor:pointer;font-weight:700;font-size:12px;box-shadow:var(--shadow-lg)}
-.themeToggle:hover{transform:scale(1.1)}
-.modal{display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.7);z-index:2000;overflow-y:auto}
-.modal-content{background:var(--card);margin:20px auto;border-radius:16px;max-width:900px;max-height:90vh;overflow-y:auto;animation:slideUp .4s}
-.modal-header{background:var(--gradient-1);color:white;padding:14px 18px;position:sticky;top:0;z-index:10;border-radius:16px 16px 0 0}
-.modal-title{font-size:15px;font-weight:800}
-.modal-close{position:absolute;top:14px;right:18px;background:rgba(255,255,255,0.2);border:none;color:white;width:30px;height:30px;border-radius:50%;cursor:pointer;font-size:16px;display:flex;align-items:center;justify-content:center}
-.modal-body{padding:16px}
-.heatmap-calendar{display:grid;grid-template-columns:repeat(7,1fr);gap:5px;margin-top:12px}
-.heatmap-day-header{text-align:center;font-size:10px;font-weight:700;color:var(--muted);padding:6px}
-.heatmap-day{aspect-ratio:1;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;cursor:pointer;transition:all .3s}
-.heatmap-day:hover{transform:scale(1.15);z-index:10;box-shadow:0 4px 12px rgba(0,0,0,0.2)}
-.heatmap-day.excellent{background:#10b981;color:white}.heatmap-day.good{background:#34d399;color:white}
-.heatmap-day.average{background:#fbbf24;color:white}.heatmap-day.poor{background:#ef4444;color:white}
-.heatmap-day.off{background:var(--border);color:var(--muted)}
-.toast{position:fixed;right:15px;bottom:90px;background:var(--gradient-4);color:#064e3b;padding:10px 18px;border-radius:10px;font-weight:700;font-size:12px;display:none;box-shadow:var(--shadow-lg);animation:slideIn .3s;z-index:9999}
-@keyframes slideIn{from{transform:translateX(400px);opacity:0}to{transform:translateX(0);opacity:1}}
-.action-bar{position:fixed;bottom:0;left:0;right:0;background:var(--card);padding:8px;box-shadow:0 -4px 20px rgba(0,0,0,0.1);display:flex;gap:6px;overflow-x:auto;z-index:100;border-top:1px solid var(--border)}
-.action-btn{flex:1;min-width:70px;padding:8px 10px;border:none;border-radius:8px;font-weight:700;font-size:11px;cursor:pointer;transition:all .3s;display:flex;align-items:center;justify-content:center;gap:4px;color:white;margin:0}
-.action-btn:hover{transform:translateY(-3px);box-shadow:0 6px 20px rgba(0,0,0,0.15)}
-@media(max-width:900px){.controls,.reportFilters,.detailRow{grid-template-columns:repeat(2,1fr)}.kpi{grid-template-columns:repeat(3,1fr)}.charts-grid{grid-template-columns:1fr}.dept-grid{grid-template-columns:repeat(2,1fr)}}
-@media(max-width:600px){.kpi{grid-template-columns:repeat(2,1fr)}.controls,.reportFilters{grid-template-columns:1fr}.dept-grid{grid-template-columns:1fr}.header h2{font-size:18px}}
-@media print{body{background:white;color:black;padding-bottom:0}.controls,.btnArea,.noPrint,.detailBox,.reportFilters,.themeToggle,.personDetails,.viewToggle,.cacheStatusBar,.action-bar,.modal{display:none!important}table{width:100%;font-size:10px;box-shadow:none}.header{border:none;box-shadow:none}}
+body{
+  margin:0;
+  background:var(--bg);
+  color:var(--text);
+  font-family:Segoe UI,Arial,sans-serif;
+  transition:all .3s ease;
+}
+.header{
+  text-align:center;
+  padding:14px;
+  background:linear-gradient(135deg,var(--card),var(--card2));
+  border-bottom:2px solid var(--blue);
+  box-shadow:var(--shadow);
+}
+.header h2,.header h3,.header h4{margin:2px}
+.header h2{
+  color:var(--blue);
+  font-size:24px;
+  text-shadow:0 0 20px rgba(37,99,235,.5);
+}
+
+/* ===== CACHE STATUS BAR ===== */
+.cacheStatusBar{
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap:10px;
+  padding:6px 12px;
+  font-size:11px;
+  font-weight:700;
+  background:linear-gradient(90deg,rgba(34,197,94,.1),rgba(59,130,246,.1));
+  border-bottom:1px solid var(--border);
+  color:var(--muted);
+  flex-wrap:wrap;
+}
+.cacheStatusBar .cacheDot{
+  width:8px;height:8px;border-radius:50%;
+  background:var(--green);
+  animation:livePulse 2s infinite;
+  box-shadow:0 0 8px var(--green);
+}
+@keyframes livePulse{
+  0%{box-shadow:0 0 0 0 rgba(34,197,94,.7);transform:scale(1)}
+  70%{box-shadow:0 0 0 8px rgba(34,197,94,0);transform:scale(1.1)}
+  100%{box-shadow:0 0 0 0 rgba(34,197,94,0);transform:scale(1)}
+}
+.cacheStatusBar .cacheReadCount{
+  color:var(--blue);font-weight:900;
+  padding:3px 10px;
+  background:rgba(37,99,235,.15);
+  border-radius:12px;
+  border:1px solid rgba(37,99,235,.3);
+}
+.cacheStatusBar .roiBadge{
+  color:var(--purple);font-weight:900;
+  padding:3px 10px;
+  background:rgba(139,92,246,.15);
+  border-radius:12px;
+  border:1px solid rgba(139,92,246,.3);
+}
+.cacheStatusBar .syncStatus{
+  color:var(--green);font-weight:900;
+  padding:3px 10px;
+  background:rgba(34,197,94,.15);
+  border-radius:12px;
+  border:1px solid rgba(34,197,94,.3);
+}
+
+.controls{
+  background:linear-gradient(135deg,var(--card),var(--card2));
+  border:1px solid var(--border);
+  border-radius:18px;
+  padding:14px;
+  margin:12px;
+  display:grid;
+  grid-template-columns:repeat(4,1fr);
+  gap:10px;
+  box-shadow:var(--shadow);
+}
+label{
+  font-size:12px;
+  color:var(--muted);
+  font-weight:900;
+}
+input,select{
+  width:100%;
+  padding:11px;
+  border-radius:10px;
+  border:1px solid var(--border);
+  background:var(--bg);
+  color:var(--text);
+  font-size:16px;
+  box-sizing:border-box;
+  transition:all .3s;
+}
+input:focus,select:focus{
+  outline:none;
+  border-color:var(--blue);
+  box-shadow:0 0 0 3px rgba(37,99,235,.1);
+}
+button{
+  padding:11px 16px;
+  border:0;
+  border-radius:10px;
+  color:white;
+  font-weight:900;
+  cursor:pointer;
+  margin:4px;
+  transition:all .3s;
+}
+button:hover{
+  transform:translateY(-2px);
+  box-shadow:0 4px 12px rgba(0,0,0,.3);
+}
+.save{background:linear-gradient(135deg,var(--green),#059669)}
+.show{background:linear-gradient(135deg,var(--blue),#1d4ed8)}
+.excel{background:linear-gradient(135deg,#059669,#047857)}
+.print{background:linear-gradient(135deg,var(--purple),#7c3aed)}
+.home{background:linear-gradient(135deg,#0f766e,#115e59)}
+.del{background:linear-gradient(135deg,var(--red),#dc2626)}
+.add{background:linear-gradient(135deg,var(--orange),#d97706)}
+.theme{background:linear-gradient(135deg,#f59e0b,#d97706)}
+
+.kpi{
+  display:grid;
+  grid-template-columns:repeat(6,1fr);
+  gap:12px;
+  margin:12px;
+}
+.kpiBox{
+  background:linear-gradient(135deg,var(--card),var(--card2));
+  border:1px solid var(--border);
+  border-radius:16px;
+  padding:14px;
+  text-align:center;
+  box-shadow:var(--shadow);
+  transition:all .3s;
+}
+.kpiBox:hover{
+  transform:translateY(-5px);
+}
+.kpiBox span{
+  color:var(--muted);
+  font-size:12px;
+  font-weight:900;
+}
+.kpiBox b{
+  display:block;
+  color:var(--green);
+  font-size:22px;
+  margin-top:6px;
+}
+.chartBox{
+  background:var(--card);
+  color:var(--text);
+  border-radius:16px;
+  padding:12px;
+  margin:12px;
+  border:1px solid var(--border);
+  box-shadow:var(--shadow);
+}
+table{
+  width:98%;
+  margin:12px auto;
+  border-collapse:collapse;
+  background:var(--card);
+  color:var(--text);
+  font-size:13px;
+  box-shadow:var(--shadow);
+  border-radius:12px;
+  overflow:hidden;
+}
+th,td{
+  border:1px solid var(--border);
+  padding:7px;
+  text-align:center;
+}
+th{
+  background:linear-gradient(135deg,var(--blue),var(--purple));
+  color:white;
+  font-weight:700;
+}
+tr:nth-child(even){
+  background:rgba(255,255,255,.05);
+}
+body.light tr:nth-child(even){
+  background:rgba(0,0,0,.02);
+}
+.totalRow{
+  background:linear-gradient(135deg,#16a34a,#059669);
+  color:white;
+  font-weight:bold;
+}
+.toast{
+  position:fixed;
+  right:20px;
+  bottom:20px;
+  background:linear-gradient(135deg,var(--green),#059669);
+  color:white;
+  padding:12px 20px;
+  border-radius:10px;
+  font-weight:bold;
+  display:none;
+  box-shadow:0 4px 12px rgba(0,0,0,.3);
+  animation:slideIn .3s ease;
+  z-index:9999;
+}
+@keyframes slideIn{
+  from{transform:translateX(400px);opacity:0}
+  to{transform:translateX(0);opacity:1}
+}
+
+/* Detail Boxes */
+.detailBox{
+  background:linear-gradient(135deg,var(--card),var(--card2));
+  border:1px solid var(--border);
+  border-radius:12px;
+  padding:12px;
+  margin:8px 12px;
+  display:none;
+  box-shadow:var(--shadow);
+}
+.detailBox h4{
+  margin:0 0 10px 0;
+  color:var(--blue);
+  font-size:14px;
+}
+.detailRow{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:10px;
+  margin-bottom:8px;
+}
+.detailRow input{
+  font-size:14px;
+  padding:8px;
+}
+
+/* Person Detail Cards */
+.personDetails{
+  display:grid;
+  grid-template-columns:repeat(auto-fill,minmax(300px,1fr));
+  gap:12px;
+  margin:12px;
+}
+.personCard{
+  background:linear-gradient(135deg,var(--card),var(--card2));
+  border:2px solid var(--border);
+  border-radius:12px;
+  padding:14px;
+  box-shadow:var(--shadow);
+}
+.personCard.leave{border-left:4px solid var(--orange)}
+.personCard.absent{border-left:4px solid var(--red)}
+.personCard.medical{border-left:4px solid var(--purple)}
+.personCard.offday{border-left:4px solid var(--blue)}
+.personHeader{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  margin-bottom:10px;
+  padding-bottom:8px;
+  border-bottom:1px solid var(--border);
+}
+.personName{
+  font-weight:700;
+  font-size:15px;
+  color:var(--blue);
+}
+.personId{
+  background:rgba(37,99,235,.2);
+  color:var(--blue);
+  padding:4px 8px;
+  border-radius:6px;
+  font-size:11px;
+  font-weight:700;
+}
+.personStats{
+  display:grid;
+  grid-template-columns:repeat(4,1fr);
+  gap:8px;
+  margin-top:8px;
+}
+.statItem{
+  text-align:center;
+  padding:8px;
+  border-radius:8px;
+  background:rgba(255,255,255,.05);
+}
+.statItem b{
+  display:block;
+  font-size:18px;
+  margin-top:4px;
+}
+.statItem.leave b{color:var(--orange)}
+.statItem.absent b{color:var(--red)}
+.statItem.medical b{color:var(--purple)}
+.statItem.offday b{color:var(--blue)}
+.statItem span{
+  font-size:10px;
+  color:var(--muted);
+  font-weight:700;
+}
+.dateList{
+  margin-top:8px;
+  font-size:11px;
+  color:var(--muted);
+  max-height:100px;
+  overflow-y:auto;
+}
+.dateList b{
+  color:var(--text);
+  display:block;
+  margin:4px 0;
+}
+
+.reportFilters{
+  background:linear-gradient(135deg,var(--card),var(--card2));
+  border:1px solid var(--border);
+  border-radius:18px;
+  padding:14px;
+  margin:12px;
+  display:none;
+  grid-template-columns:repeat(4,1fr);
+  gap:10px;
+  box-shadow:var(--shadow);
+}
+.smartChart{
+  background:var(--card);
+  color:var(--text);
+  border-radius:16px;
+  padding:12px;
+  margin:12px;
+  display:none;
+  border:1px solid var(--border);
+  box-shadow:var(--shadow);
+}
+.themeToggle{
+  position:fixed;
+  top:20px;
+  right:20px;
+  z-index:1000;
+  background:linear-gradient(135deg,var(--blue),var(--purple));
+  color:white;
+  border:none;
+  padding:10px 16px;
+  border-radius:50px;
+  cursor:pointer;
+  font-weight:700;
+  box-shadow:0 4px 12px rgba(0,0,0,.3);
+  transition:all .3s;
+}
+.themeToggle:hover{
+  transform:scale(1.1);
+}
+.viewToggle{
+  display:flex;
+  gap:10px;
+  justify-content:center;
+  margin:12px;
+}
+.viewBtn{
+  padding:10px 20px;
+  border-radius:8px;
+  border:2px solid var(--border);
+  background:var(--card);
+  color:var(--text);
+  cursor:pointer;
+  font-weight:700;
+  transition:all .3s;
+}
+.viewBtn.active{
+  background:var(--blue);
+  color:white;
+  border-color:var(--blue);
+}
+@page{
+  size:A4 landscape;
+  margin:8mm;
+}
+@media print{
+  body{
+    background:white;
+    color:black;
+  }
+  .controls,.btnArea,.noPrint,.detailBox,.reportFilters,.smartChart,.themeToggle,.personDetails,.viewToggle,.cacheStatusBar{
+    display:none!important;
+  }
+  table{
+    width:100%;
+    font-size:11px;
+    box-shadow:none;
+  }
+  .chartBox{
+    width:100%;
+    margin:8px 0;
+    box-shadow:none;
+  }
+  .header{
+    border:none;
+    box-shadow:none;
+  }
+}
+@media(max-width:900px){
+  .controls,.kpi,.reportFilters,.detailRow,.personStats{
+    grid-template-columns:1fr;
+  }
+  .kpi{
+    grid-template-columns:repeat(3,1fr);
+  }
+  .personDetails{
+    grid-template-columns:1fr;
+  }
+}
 </style>
 </head>
+
 <body>
 
-<button class="themeToggle" onclick="toggleTheme()">🌙 / ☀️</button>
+<button class="themeToggle" onclick="toggleTheme()">🌙 / ☀️ Theme</button>
 
 <div class="header">
   <h2>🏭 GMS TEXTILES LTD</h2>
-  <h4>Tansutrapur, Kaliakair, Gazipur | Billing Section</h4>
-  <h3>📊 Smart Manpower Dashboard</h3>
+  <h4>Tansutrapur, Kaliakair, Gazipur</h4>
+  <h4>Billing Section</h4>
+  <h3>📊 Daily Manpower Attendance Report</h3>
 </div>
 
+<!-- ===== CACHE STATUS BAR (NEW) ===== -->
 <div class="cacheStatusBar">
   <div class="cacheDot"></div>
   <span id="cacheStatusText">📦 Cache Ready</span>
-  <span>🔥 Reads: <b id="readCounter">0</b></span>
-  <span>💾 Saved: <b id="savedReads">0</b></span>
-  <span>🔄 <b id="syncStatus">Active</b></span>
+  <span class="cacheReadCount"><i class="fas fa-fire"></i> Today Reads: <b id="readCounter">0</b></span>
+  <span class="roiBadge"><i class="fas fa-chart-line"></i> ROI: <b id="roiStatus">Active</b></span>
+  <span class="syncStatus"><i class="fas fa-sync"></i> Sync: <b id="syncStatus">Active</b></span>
 </div>
 
 <div class="controls noPrint">
-  <div><label>📅 Report Date</label><input type="date" id="reportDate"></div>
-  <div><label>🏢 Company</label><select id="company"><option>GMS TEXTILES LTD</option><option>GMS COMPOSITE KNITTING</option></select></div>
-  <div><label>📂 MCD / Department</label><select id="mcd"><option>GREY FABRIC MCD</option><option>SHIPMENT MCD</option><option>BILLING SECTION</option><option>OUTER WEAR MCD</option><option>YARN MCD</option><option>PRINTING MCD</option><option>JHUT MCD</option><option>GENERAL MCD</option><option>ACCESSORIES MCD</option><option>LEFTOVER MCD</option><option>FINISH FABRIC MCD</option><option>YARN DYEING MCD</option><option>CHEMICAL MCD</option><option>GENERAL TECHNICAL MCD</option></select></div>
-  <div><label>👥 Total Manpower</label><input type="number" id="totalManpower" value="0" oninput="calculatePresent()"></div>
-  <div><label> Leave</label><input type="number" id="leaveQty" value="0" oninput="calculatePresent();generateDetailBoxes('leave')"></div>
-  <div><label>❌ Absent</label><input type="number" id="absentQty" value="0" oninput="calculatePresent();generateDetailBoxes('absent')"></div>
-  <div><label>🏥 Medical</label><input type="number" id="medicalQty" value="0" oninput="calculatePresent();generateDetailBoxes('medical')"></div>
-  <div><label>📅 Off Day</label><input type="number" id="offDayQty" value="0" oninput="calculatePresent();generateDetailBoxes('offday')"></div>
-  <div><label>✅ Today Present</label><input type="number" id="presentQty" value="0" readonly style="background:rgba(16,185,129,0.15);border-color:var(--green);color:var(--green);font-weight:800"></div>
-  <div style="display:flex;align-items:end;gap:4px;flex-wrap:wrap">
+  <div>
+    <label>📅 Report Date</label>
+    <input type="date" id="reportDate">
+  </div>
+
+  <div>
+    <label>🏢 Company</label>
+    <select id="company">
+      <option>GMS TEXTILES LTD</option>
+      <option>GMS COMPOSITE KNITTING</option>
+    </select>
+  </div>
+
+  <div>
+    <label>📂 MCD / Department</label>
+    <select id="mcd">
+      <option>GREY FABRIC MCD</option>
+      <option>SHIPMENT MCD</option>
+      <option>BILLING SECTION</option>
+      <option>OUTER WEAR MCD</option>
+      <option>YARN MCD</option>
+      <option>PRINTING MCD</option>
+      <option>JHUT MCD</option>
+      <option>GENERAL MCD</option>
+      <option>ACCESSORIES MCD</option>
+      <option>LEFTOVER MCD</option>
+      <option>FINISH FABRIC MCD</option>
+      <option>YARN DYEING MCD</option>
+      <option>CHEMICAL MCD</option>
+      <option>GENERAL TECHNICAL MCD</option>
+    </select>
+  </div>
+
+  <div>
+    <label>👥 Total Manpower</label>
+    <input type="number" id="totalManpower" value="0" oninput="calculatePresent()">
+  </div>
+
+  <div>
+    <label>🏖 Leave</label>
+    <input type="number" id="leaveQty" value="0" oninput="calculatePresent(); generateDetailBoxes('leave')">
+  </div>
+
+  <div>
+    <label>❌ Absent</label>
+    <input type="number" id="absentQty" value="0" oninput="calculatePresent(); generateDetailBoxes('absent')">
+  </div>
+
+  <div>
+    <label>🏥 Medical</label>
+    <input type="number" id="medicalQty" value="0" oninput="calculatePresent(); generateDetailBoxes('medical')">
+  </div>
+
+  <div>
+    <label>📅 Off Day</label>
+    <input type="number" id="offDayQty" value="0" oninput="calculatePresent(); generateDetailBoxes('offday')">
+  </div>
+
+  <div>
+    <label>✅ Today Present</label>
+    <input type="number" id="presentQty" value="0" readonly style="background:rgba(34,197,94,.2);border-color:var(--green);color:var(--green);font-weight:900">
+  </div>
+
+  <div style="display:flex;align-items:end;gap:5px;flex-wrap:wrap">
     <button class="save" onclick="saveReport()">💾 Save</button>
     <button class="show" onclick="loadReport()">🔍 Show</button>
-    <button class="show" onclick="toggleReportFilters()">📊 Filter</button>
+    <button class="show" onclick="toggleReportFilters()">📊 Report Filter</button>
   </div>
 </div>
 
-<div id="leaveBox" class="detailBox"><h4> Leave Details</h4><div id="leaveDetails"></div></div>
-<div id="absentBox" class="detailBox"><h4>❌ Absent Details</h4><div id="absentDetails"></div></div>
-<div id="medicalBox" class="detailBox"><h4>🏥 Medical Leave Details</h4><div id="medicalDetails"></div></div>
-<div id="offDayBox" class="detailBox"><h4>📅 Off Day Details</h4><div id="offDayDetails"></div></div>
+<!-- Dynamic Detail Boxes -->
+<div id="leaveBox" class="detailBox">
+  <h4>🏖 Leave Details</h4>
+  <div id="leaveDetails"></div>
+</div>
 
+<div id="absentBox" class="detailBox">
+  <h4>❌ Absent Details</h4>
+  <div id="absentDetails"></div>
+</div>
+
+<div id="medicalBox" class="detailBox">
+  <h4>🏥 Medical Leave Details</h4>
+  <div id="medicalDetails"></div>
+</div>
+
+<div id="offDayBox" class="detailBox">
+  <h4>📅 Off Day Details</h4>
+  <div id="offDayDetails"></div>
+</div>
+
+<!-- Report Filters -->
 <div id="reportFilters" class="reportFilters">
-  <div><label>From Date</label><input type="date" id="filterFrom"></div>
-  <div><label>To Date</label><input type="date" id="filterTo"></div>
-  <div><label>Company Filter</label><select id="filterCompany"><option value="">All Companies</option><option>GMS TEXTILES LTD</option><option>GMS COMPOSITE KNITTING</option></select></div>
-  <div><label>MCD Filter</label><select id="filterMcd"><option value="">All MCD</option><option>GREY FABRIC MCD</option><option>SHIPMENT MCD</option><option>BILLING SECTION</option><option>OUTER WEAR MCD</option><option>YARN MCD</option><option>PRINTING MCD</option><option>JHUT MCD</option><option>GENERAL MCD</option><option>ACCESSORIES MCD</option><option>LEFTOVER MCD</option><option>FINISH FABRIC MCD</option><option>YARN DYEING MCD</option><option>CHEMICAL MCD</option><option>GENERAL TECHNICAL MCD</option></select></div>
-  <div><label>🔍 Search by ID Card</label><input type="text" id="searchId" placeholder="Enter ID Card Number"></div>
-  <div><label>📅 Month</label><select id="filterMonth"><option value="">All Months</option><option value="01">January</option><option value="02">February</option><option value="03">March</option><option value="04">April</option><option value="05">May</option><option value="06">June</option><option value="07">July</option><option value="08">August</option><option value="09">September</option><option value="10">October</option><option value="11">November</option><option value="12">December</option></select></div>
-  <div><label>📆 Year</label><select id="filterYear"><option value="">All Years</option><option value="2024">2024</option><option value="2025">2025</option><option value="2026">2026</option></select></div>
-  <div style="display:flex;align-items:end;gap:4px"><button class="show" onclick="loadDetailedReport()">🔍 Apply Filter</button></div>
-</div>
-
-<div class="kpi">
-  <div class="kpiBox"><span> Total</span><b id="kpiTotal">0</b></div>
-  <div class="kpiBox"><span>🏖 Leave</span><b id="kpiLeave" style="color:var(--orange)">0</b></div>
-  <div class="kpiBox"><span> Absent</span><b id="kpiAbsent" style="color:var(--red)">0</b></div>
-  <div class="kpiBox"><span>🏥 Medical</span><b id="kpiMedical" style="color:var(--purple)">0</b></div>
-  <div class="kpiBox"><span>📅 Off Day</span><b id="kpiOffDay" style="color:var(--blue)">0</b></div>
-  <div class="kpiBox"><span>✅ Present</span><b id="kpiPresent" style="color:var(--green)">0</b></div>
-</div>
-
-<div class="charts-grid">
-  <div class="chart-card">
-    <div class="chart-header"><div class="chart-title">📊 Attendance Breakdown</div><div class="chart-badge">Today</div></div>
-    <div class="chart-container"><canvas id="attendanceChart"></canvas></div>
+  <div>
+    <label>From Date</label>
+    <input type="date" id="filterFrom">
   </div>
-  <div class="chart-card">
-    <div class="chart-header"><div class="chart-title"> Department Absence Rate (30 Days)</div><div class="chart-badge">1 Month</div></div>
-    <div class="chart-container"><canvas id="deptChart"></canvas></div>
+  <div>
+    <label>To Date</label>
+    <input type="date" id="filterTo">
   </div>
-  <div class="chart-card">
-    <div class="chart-header"><div class="chart-title">📈 Weekly Trend</div><div class="chart-badge">7 Days</div></div>
-    <div class="chart-container"><canvas id="trendChart"></canvas></div>
+  <div>
+    <label>Company Filter</label>
+    <select id="filterCompany">
+      <option value="">All Companies</option>
+      <option>GMS TEXTILES LTD</option>
+      <option>GMS COMPOSITE KNITTING</option>
+    </select>
   </div>
-  <div class="chart-card">
-    <div class="chart-header"><div class="chart-title"> Attendance Rate</div><div class="chart-badge">Target: 90%</div></div>
-    <div class="chart-container"><canvas id="rateChart"></canvas></div>
+  <div>
+    <label>MCD Filter</label>
+    <select id="filterMcd">
+      <option value="">All MCD</option>
+      <option>GREY FABRIC MCD</option>
+      <option>SHIPMENT MCD</option>
+      <option>BILLING SECTION</option>
+      <option>OUTER WEAR MCD</option>
+      <option>YARN MCD</option>
+      <option>PRINTING MCD</option>
+      <option>JHUT MCD</option>
+      <option>GENERAL MCD</option>
+      <option>ACCESSORIES MCD</option>
+      <option>LEFTOVER MCD</option>
+      <option>FINISH FABRIC MCD</option>
+      <option>YARN DYEING MCD</option>
+      <option>CHEMICAL MCD</option>
+      <option>GENERAL TECHNICAL MCD</option>
+    </select>
   </div>
-</div>
-
-<div class="section-title"> All 14 Departments - Last 30 Days Summary</div>
-<div class="dept-grid" id="deptGrid"></div>
-
-<div class="absentees-list">
-  <div class="section-title" style="margin:0 0 10px 0">⚠️ Top Absentees (This Month) <span style="font-size:10px;color:var(--muted);font-weight:600">Click to view details</span></div>
-  <div id="absenteesList"></div>
+  <div>
+    <label>🔍 Search by ID Card</label>
+    <input type="text" id="searchId" placeholder="Enter ID Card Number">
+  </div>
+  <div>
+    <label>📅 Month</label>
+    <select id="filterMonth">
+      <option value="">All Months</option>
+      <option value="01">January</option>
+      <option value="02">February</option>
+      <option value="03">March</option>
+      <option value="04">April</option>
+      <option value="05">May</option>
+      <option value="06">June</option>
+      <option value="07">July</option>
+      <option value="08">August</option>
+      <option value="09">September</option>
+      <option value="10">October</option>
+      <option value="11">November</option>
+      <option value="12">December</option>
+    </select>
+  </div>
+  <div>
+    <label>📆 Year</label>
+    <select id="filterYear">
+      <option value="">All Years</option>
+      <option value="2024">2024</option>
+      <option value="2025">2025</option>
+      <option value="2026">2026</option>
+    </select>
+  </div>
+  <div style="display:flex;align-items:end;gap:5px">
+    <button class="show" onclick="loadDetailedReport()">🔍 Apply Filter</button>
+  </div>
 </div>
 
 <div class="viewToggle noPrint">
@@ -222,77 +638,90 @@ tr:nth-child(even){background:var(--card2)}
   <button class="viewBtn" onclick="switchView('person')">👤 Person Details</button>
 </div>
 
-<div class="btnArea noPrint" style="text-align:center;margin:10px">
-  From: <input type="date" id="fromDate">
-  To: <input type="date" id="toDate">
-  <button class="show" onclick="loadRangeReport()"> Date Report</button>
+<div class="btnArea" style="text-align:center">
+  From:
+  <input type="date" id="fromDate">
+  To:
+  <input type="date" id="toDate">
+
+  <button class="show" onclick="loadRangeReport()">📅 Date Report</button>
   <button class="excel" onclick="exportExcel()">📊 Excel</button>
-  <button class="print" onclick="exportPDF()">📄 PDF</button>
+  <button class="print" onclick="window.print()">🖨 PDF / Print</button>
   <button class="home" onclick="location.href='index.html'">🏠 Home</button>
 </div>
 
+<div class="kpi">
+  <div class="kpiBox"><span>👥 Total</span><b id="kpiTotal">0</b></div>
+  <div class="kpiBox"><span>🏖 Leave</span><b id="kpiLeave" style="color:var(--orange)">0</b></div>
+  <div class="kpiBox"><span>❌ Absent</span><b id="kpiAbsent" style="color:var(--red)">0</b></div>
+  <div class="kpiBox"><span>🏥 Medical</span><b id="kpiMedical" style="color:var(--purple)">0</b></div>
+  <div class="kpiBox"><span>📅 Off Day</span><b id="kpiOffDay" style="color:var(--blue)">0</b></div>
+  <div class="kpiBox"><span>✅ Present</span><b id="kpiPresent" style="color:var(--green)">0</b></div>
+</div>
+
+<div class="chartBox">
+  <canvas id="manpowerChart" height="80"></canvas>
+</div>
+
+<div id="smartChartBox" class="smartChart">
+  <canvas id="smartChart" height="100"></canvas>
+</div>
+
+<!-- Person Details View -->
 <div id="personDetailsView" class="personDetails" style="display:none"></div>
 
 <table id="reportTable">
   <thead>
     <tr>
-      <th>SL</th><th>📅 Date</th><th> Company</th><th>📂 MCD</th>
-      <th>👥 Total</th><th>🏖 Leave</th><th>❌ Absent</th><th>🏥 Medical</th>
-      <th>📅 Off Day</th><th>✅ Present</th><th>👤 By</th>
-      <th class="noPrint"> Action</th>
+      <th>SL</th>
+      <th>📅 Date</th>
+      <th>🏢 Company</th>
+      <th>📂 MCD</th>
+      <th>👥 Total</th>
+      <th>🏖 Leave</th>
+      <th>❌ Absent</th>
+      <th>🏥 Medical</th>
+      <th>📅 Off Day</th>
+      <th>✅ Present</th>
+      <th>👤 By</th>
+      <th class="noPrint">⚡ Action</th>
     </tr>
   </thead>
   <tbody id="tbody"></tbody>
   <tfoot>
     <tr class="totalRow">
-      <td colspan="4"> All MCD Total</td>
-      <td id="gtTotal">0</td><td id="gtLeave">0</td><td id="gtAbsent">0</td>
-      <td id="gtMedical">0</td><td id="gtOffDay">0</td><td id="gtPresent">0</td>
-      <td></td><td class="noPrint"></td>
+      <td colspan="4">📊 All MCD Total</td>
+      <td id="gtTotal">0</td>
+      <td id="gtLeave">0</td>
+      <td id="gtAbsent">0</td>
+      <td id="gtMedical">0</td>
+      <td id="gtOffDay">0</td>
+      <td id="gtPresent">0</td>
+      <td></td>
+      <td class="noPrint"></td>
     </tr>
   </tfoot>
 </table>
 
-<div id="heatmapModal" class="modal" onclick="if(event.target===this)closeHeatmap()">
-  <div class="modal-content">
-    <div class="modal-header">
-      <div class="modal-title"> Attendance Heatmap - <span id="heatmapMonth">June 2026</span></div>
-      <button class="modal-close" onclick="closeHeatmap()">×</button>
-    </div>
-    <div class="modal-body">
-      <div style="display:flex;gap:10px;margin-bottom:14px;flex-wrap:wrap">
-        <div style="display:flex;align-items:center;gap:5px"><div style="width:18px;height:18px;background:#10b981;border-radius:4px"></div><span style="font-size:11px">Excellent (>90%)</span></div>
-        <div style="display:flex;align-items:center;gap:5px"><div style="width:18px;height:18px;background:#34d399;border-radius:4px"></div><span style="font-size:11px">Good (80-90%)</span></div>
-        <div style="display:flex;align-items:center;gap:5px"><div style="width:18px;height:18px;background:#fbbf24;border-radius:4px"></div><span style="font-size:11px">Average (70-80%)</span></div>
-        <div style="display:flex;align-items:center;gap:5px"><div style="width:18px;height:18px;background:#ef4444;border-radius:4px"></div><span style="font-size:11px">Poor (<70%)</span></div>
-      </div>
-      <div class="heatmap-calendar" id="heatmapCalendar"></div>
-    </div>
-  </div>
-</div>
-
-<div id="deptModal" class="modal" onclick="if(event.target===this)closeDeptModal()">
-  <div class="modal-content">
-    <div class="modal-header">
-      <div class="modal-title" id="deptModalTitle">📊 Department Details</div>
-      <button class="modal-close" onclick="closeDeptModal()">×</button>
-    </div>
-    <div class="modal-body" id="deptModalBody"></div>
-  </div>
-</div>
-
 <div id="toast" class="toast">Saved ✅</div>
 
-<div class="action-bar noPrint">
-  <button class="action-btn" style="background:var(--gradient-1)" onclick="openReportModal()">📝 Report</button>
-  <button class="action-btn" style="background:var(--gradient-4);color:#064e3b" onclick="loadData()">🔄 Refresh</button>
-  <button class="action-btn" style="background:var(--gradient-2)" onclick="openHeatmap()"> Heatmap</button>
-  <button class="action-btn" style="background:var(--gradient-3);color:#0c4a6e" onclick="exportPDF()">📄 PDF</button>
-</div>
-
+<!-- ================================================================
+🔥 FIREBASE MODULE + GATE PLAN LOGIC + ROI TRACKING + SMART CACHE
+================================================================ -->
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-app.js";
-import { getFirestore, collection, addDoc, getDocs, deleteDoc, doc, query, where, setDoc, onSnapshot, orderBy, limit } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-firestore.js";
+import {
+  getFirestore,
+  collection,
+  addDoc,
+  getDocs,
+  deleteDoc,
+  doc,
+  query,
+  where,
+  setDoc,
+  onSnapshot
+} from "https://www.gstatic.com/firebasejs/12.12.1/firebase-firestore.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyD-wBCF5eeWMHobLFOhBzKW7aB2pagz9-w",
@@ -305,25 +734,30 @@ const firebaseConfig = {
 
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
-const user = JSON.parse(localStorage.getItem("gmsUser") || "null");
-if(!user){ window.location.href="login.html"; }
 
+const user = JSON.parse(localStorage.getItem("gmsUser") || "null");
+if(!user){
+  window.location.href="login.html";
+}
+
+// ================================================================
+// 📦 SMART CACHE MANAGER — Gate Plan এর মতো
+// ================================================================
 window.GMS_CACHE = {
-  CACHE_KEY: 'GMS_SMART_CACHE_V5',
+  CACHE_KEY: 'GMS_SMART_CACHE',
   READ_COUNT_KEY: 'GMS_READ_COUNT_TODAY',
-  SAVED_COUNT_KEY: 'GMS_SAVED_COUNT_TODAY',
-  READ_DATE_KEY: 'GMS_READ_DATE',
-  CACHE_EXPIRY_MS: 5 * 60 * 1000,
+  READ_DATE_KEY: 'GMS_READ_COUNT_DATE',
+  CACHE_EXPIRY_MS: 5 * 60 * 1000, // ★ 5 minutes cache expiry
+  
   getReadCount: function(){
     var today = new Date().toDateString();
     if(localStorage.getItem(this.READ_DATE_KEY) !== today){
       localStorage.setItem(this.READ_DATE_KEY, today);
       localStorage.setItem(this.READ_COUNT_KEY, '0');
-      localStorage.setItem(this.SAVED_COUNT_KEY, '0');
     }
     return parseInt(localStorage.getItem(this.READ_COUNT_KEY) || '0');
   },
-  getSavedCount: function(){ return parseInt(localStorage.getItem(this.SAVED_COUNT_KEY) || '0'); },
+  
   incRead: function(n){
     n = n || 1;
     var count = this.getReadCount() + n;
@@ -332,44 +766,72 @@ window.GMS_CACHE = {
     if(el) el.innerText = count;
     return count;
   },
-  incSaved: function(n){
-    n = n || 1;
-    var count = this.getSavedCount() + n;
-    localStorage.setItem(this.SAVED_COUNT_KEY, String(count));
-    var el = document.getElementById('savedReads');
-    if(el) el.innerText = count;
-    return count;
+  
+  _all: function(){
+    try{ return JSON.parse(localStorage.getItem(this.CACHE_KEY) || '{}'); }
+    catch(e){ return {}; }
   },
-  _all: function(){ try{ return JSON.parse(localStorage.getItem(this.CACHE_KEY) || '{}'); } catch(e){ return {}; } },
+  
   set: function(key, data){
     var all = this._all();
     all[key] = { data: data, savedAt: Date.now() };
-    try{ localStorage.setItem(this.CACHE_KEY, JSON.stringify(all)); } catch(e){}
+    try{ localStorage.setItem(this.CACHE_KEY, JSON.stringify(all)); }
+    catch(e){ console.warn('Cache set failed:', e); }
   },
+  
   get: function(key){
     var all = this._all();
     var entry = all[key];
     if(!entry) return null;
+    
+    // ★ NEW: Check cache expiry (5 minutes)
     var age = Date.now() - entry.savedAt;
-    if(age > this.CACHE_EXPIRY_MS) return null;
+    if(age > this.CACHE_EXPIRY_MS){
+      console.log('⏰ Cache expired for:', key, 'Age:', Math.round(age/1000), 'seconds');
+      return null;
+    }
+    
     return entry.data;
   },
+  
   invalidate: function(keys){
     var all = this._all();
     if(typeof keys === 'string') keys = [keys];
     keys.forEach(function(k){ delete all[k]; });
     localStorage.setItem(this.CACHE_KEY, JSON.stringify(all));
+  },
+  
+  clear: function(){
+    localStorage.removeItem(this.CACHE_KEY);
   }
 };
 
-const CACHE_KEYS = { billingManpowerReport: 'billing_mpd_cache_v5' };
+// ================================================================
+// 🔑 CACHE KEYS & TIMESTAMPS
+// ================================================================
+const CACHE_KEYS = {
+  billingManpowerReport: 'billing_mpd_cache'
+};
 const LOCAL_TIMESTAMPS_KEY = 'GMS_LOCAL_TIMESTAMPS';
 
+// ================================================================
+// 🕐 TIMESTAMP HELPER — Firebase system_sync collection এ লেখে
+// ================================================================
 async function updateCollectionTimestamp(collectionName){
-  try{ await setDoc(doc(db, 'system_sync', collectionName), { lastUpdated: Date.now() }, { merge: true }); } catch(e){}
+  try{
+    await setDoc(doc(db, 'system_sync', collectionName), { 
+      lastUpdated: Date.now() 
+    }, { merge: true });
+    console.log('🕐 Timestamp updated for:', collectionName);
+  }catch(e){
+    console.warn('Timestamp update failed:', e);
+  }
 }
 window.updateCollectionTimestamp = updateCollectionTimestamp;
 
+// ================================================================
+// 🔍 shouldUpdate — Firebase vs local timestamp তুলনা
+// ================================================================
 function buildShouldUpdate(remoteTimestamps, forceAll){
   return function(col){
     if(forceAll) return true;
@@ -380,36 +842,121 @@ function buildShouldUpdate(remoteTimestamps, forceAll){
   };
 }
 
+// ================================================================
+// 📦 SMART SELECTIVE CACHE — শুধু পরিবর্তিত data Firebase থেকে
+// ================================================================
 async function cachedGetDocs(collectionName, cacheKey, shouldUpdate){
   var statusEl = document.getElementById('cacheStatusText');
+  
+  // shouldUpdate=false → cache থেকে নাও (0 Firebase read!)
   if(shouldUpdate === false){
     var cached = window.GMS_CACHE.get(cacheKey);
     if(cached !== null){
-      if(statusEl) statusEl.innerText = '📦 Cache Hit - 0 Reads!';
-      window.GMS_CACHE.incSaved();
+      if(statusEl) statusEl.innerText = '📦 Cache: ' + collectionName + ' ✅ (no change)';
+      console.log('📦 Selective cache hit (0 Firebase read):', cacheKey);
       return cached;
     }
   }
+  
+  // shouldUpdate=true বা cache নেই → Firebase read
   var cached2 = window.GMS_CACHE.get(cacheKey);
   if(cached2 !== null && shouldUpdate !== true){
-    if(statusEl) statusEl.innerText = '📦 Cache Hit';
-    window.GMS_CACHE.incSaved();
+    if(statusEl) statusEl.innerText = '📦 Cache: ' + collectionName + ' ✅';
+    console.log('📦 Cache hit:', cacheKey);
     return cached2;
   }
-  if(statusEl) statusEl.innerText = '🔥 Firebase Read...';
+  
+  // 🔥 Firebase read
+  if(statusEl) statusEl.innerText = '🔥 Firebase: ' + collectionName + ' 🔥';
+  console.log('🔥 Firebase read (selective):', cacheKey);
+  
   var snap = await getDocs(collection(db, collectionName));
   var rows = [];
-  snap.forEach(function(d){ rows.push({...d.data(), _docId: d.id}); });
+  snap.forEach(function(d){ 
+    rows.push({...d.data(), _docId: d.id}); 
+  });
+  
   window.GMS_CACHE.set(cacheKey, rows);
   window.GMS_CACHE.incRead(snap.size || 1);
+  
   return rows;
 }
 
-let chart, trendChart, departmentChart, rateChart;
+// ================================================================
+// 🔥 ROI TRACKING FUNCTIONS
+// ================================================================
+window.trackReportActivity = function(mcd, reportName){
+  try{
+    var activity = JSON.parse(localStorage.getItem('report_activity') || '[]');
+    activity.push({
+      mcd: mcd,
+      report: reportName,
+      user: user ? (user.name || 'Unknown') : 'Unknown',
+      date: new Date().toISOString().slice(0,10),
+      timestamp: new Date().toISOString(),
+      company: document.getElementById('company')?.value || 'GMS TEXTILES LTD'
+    });
+    if(activity.length > 1000) activity.splice(0, activity.length - 1000);
+    localStorage.setItem('report_activity', JSON.stringify(activity));
+    console.log('📊 Report activity tracked:', mcd, reportName);
+    
+    var roiStatus = document.getElementById('roiStatus');
+    if(roiStatus) roiStatus.innerText = 'Tracked ✅';
+    setTimeout(function(){ if(roiStatus) roiStatus.innerText = 'Active'; }, 2000);
+  }catch(e){
+    console.warn('trackReportActivity error:', e);
+  }
+};
+
+function autoSaveToROI(company, mcd){
+  try{
+    var autoReports = JSON.parse(localStorage.getItem('gms_all_reports') || '[]');
+    var exists = autoReports.find(function(r){
+      return r.mcd === mcd && r.company === company;
+    });
+    if(!exists){
+      autoReports.push({
+        mcd: mcd,
+        company: company,
+        report: 'Billing Manpower Report',
+        users: 1,
+        usagePct: 100,
+        addedAt: new Date().toISOString()
+      });
+      localStorage.setItem('gms_all_reports', JSON.stringify(autoReports));
+      console.log('🔄 Auto-saved to ROI:', mcd, company);
+    }
+  }catch(e){
+    console.warn('autoSaveToROI error:', e);
+  }
+}
+
+window.trackButtonUsage = function(buttonName, mcd){
+  try{
+    var activity = JSON.parse(localStorage.getItem('gms_button_activity') || '[]');
+    activity.push({
+      button: buttonName,
+      mcd: mcd || 'BILLING SECTION',
+      user: user ? (user.name || 'Unknown') : 'Unknown',
+      date: new Date().toISOString().slice(0,10),
+      timestamp: new Date().toISOString()
+    });
+    localStorage.setItem('gms_button_activity', JSON.stringify(activity));
+  }catch(e){
+    console.warn('trackButtonUsage error:', e);
+  }
+};
+
+// ================================================================
+// 📊 CHART & DATA VARS
+// ================================================================
+let chart, smartChart;
 let currentView='table';
 let allRows=[];
 
-function today(){ return new Date().toISOString().slice(0,10); }
+function today(){
+  return new Date().toISOString().slice(0,10);
+}
 
 document.getElementById("reportDate").value=today();
 document.getElementById("fromDate").value=today();
@@ -417,14 +964,26 @@ document.getElementById("toDate").value=today();
 document.getElementById("filterFrom").value=today();
 document.getElementById("filterTo").value=today();
 
-Chart.register(ChartDataLabels);
-
+// ================================================================
+// 🎨 THEME TOGGLE
+// ================================================================
 window.toggleTheme=function(){
-  document.body.classList.toggle("dark");
-  localStorage.setItem("billingTheme",document.body.classList.contains("dark")?"dark":"light");
-  renderAllCharts();
+  document.body.classList.toggle("light");
+  localStorage.setItem("billingTheme",document.body.classList.contains("light")?"light":"dark");
+  if(chart) chart.destroy();
+  if(smartChart) smartChart.destroy();
+  let total=Number(document.getElementById("kpiTotal").innerText)||0;
+  let leave=Number(document.getElementById("kpiLeave").innerText)||0;
+  let absent=Number(document.getElementById("kpiAbsent").innerText)||0;
+  let medical=Number(document.getElementById("kpiMedical").innerText)||0;
+  let offday=Number(document.getElementById("kpiOffDay").innerText)||0;
+  let present=Number(document.getElementById("kpiPresent").innerText)||0;
+  renderChart(total,leave,absent,medical,offday,present);
 };
-if(localStorage.getItem("billingTheme")==="dark"){ document.body.classList.add("dark"); }
+
+if(localStorage.getItem("billingTheme")==="light"){
+  document.body.classList.add("light");
+}
 
 function toast(msg){
   let t=document.getElementById("toast");
@@ -440,21 +999,43 @@ window.calculatePresent=function(){
   let medical=Number(document.getElementById("medicalQty").value)||0;
   let offday=Number(document.getElementById("offDayQty").value)||0;
   let present=total-leave-absent-medical-offday;
+
   if(present<0) present=0;
+
   document.getElementById("presentQty").value=present;
 };
 
 window.generateDetailBoxes=function(type){
   let qty=0, container, boxId;
-  if(type==='leave'){ qty=Number(document.getElementById("leaveQty").value)||0; container=document.getElementById("leaveDetails"); boxId="leaveBox"; }
-  else if(type==='absent'){ qty=Number(document.getElementById("absentQty").value)||0; container=document.getElementById("absentDetails"); boxId="absentBox"; }
-  else if(type==='medical'){ qty=Number(document.getElementById("medicalQty").value)||0; container=document.getElementById("medicalDetails"); boxId="medicalBox"; }
-  else if(type==='offday'){ qty=Number(document.getElementById("offDayQty").value)||0; container=document.getElementById("offDayDetails"); boxId="offDayBox"; }
+  
+  if(type==='leave'){
+    qty=Number(document.getElementById("leaveQty").value)||0;
+    container=document.getElementById("leaveDetails");
+    boxId="leaveBox";
+  }else if(type==='absent'){
+    qty=Number(document.getElementById("absentQty").value)||0;
+    container=document.getElementById("absentDetails");
+    boxId="absentBox";
+  }else if(type==='medical'){
+    qty=Number(document.getElementById("medicalQty").value)||0;
+    container=document.getElementById("medicalDetails");
+    boxId="medicalBox";
+  }else if(type==='offday'){
+    qty=Number(document.getElementById("offDayQty").value)||0;
+    container=document.getElementById("offDayDetails");
+    boxId="offDayBox";
+  }
+
   if(qty>0){
     document.getElementById(boxId).style.display="block";
     let html="";
     for(let i=1; i<=qty; i++){
-      html+=`<div class="detailRow"><input type="text" id="${type}Name${i}" placeholder="👤 Name ${i}"><input type="text" id="${type}Id${i}" placeholder="🆔 ID Card ${i}"></div>`;
+      html+=`
+        <div class="detailRow">
+          <input type="text" id="${type}Name${i}" placeholder="👤 Name ${i}">
+          <input type="text" id="${type}Id${i}" placeholder="🆔 ID Card ${i}">
+        </div>
+      `;
     }
     container.innerHTML=html;
   }else{
@@ -465,13 +1046,18 @@ window.generateDetailBoxes=function(type){
 
 window.toggleReportFilters=function(){
   let filters=document.getElementById("reportFilters");
-  filters.style.display = filters.style.display==="grid" ? "none" : "grid";
+  if(filters.style.display==="grid"){
+    filters.style.display="none";
+  }else{
+    filters.style.display="grid";
+  }
 };
 
 window.switchView=function(view){
   currentView=view;
   document.querySelectorAll('.viewBtn').forEach(b=>b.classList.remove('active'));
   event.target.classList.add('active');
+  
   if(view==='table'){
     document.getElementById('reportTable').style.display='table';
     document.getElementById('personDetailsView').style.display='none';
@@ -482,8 +1068,12 @@ window.switchView=function(view){
   }
 };
 
+// ================================================================
+// 💾 SAVE REPORT — Firebase write + Timestamp update + ROI tracking
+// ================================================================
 window.saveReport=async function(){
   calculatePresent();
+
   let date=document.getElementById("reportDate").value;
   let company=document.getElementById("company").value;
   let mcd=document.getElementById("mcd").value;
@@ -495,23 +1085,61 @@ window.saveReport=async function(){
   let present=Number(document.getElementById("presentQty").value)||0;
 
   let leaveDetails=[], absentDetails=[], medicalDetails=[], offDayDetails=[];
-  for(let i=1; i<=leave; i++){ let name=document.getElementById("leaveName"+i)?.value||""; let idCard=document.getElementById("leaveId"+i)?.value||""; if(name||idCard) leaveDetails.push({name,idCard}); }
-  for(let i=1; i<=absent; i++){ let name=document.getElementById("absentName"+i)?.value||""; let idCard=document.getElementById("absentId"+i)?.value||""; if(name||idCard) absentDetails.push({name,idCard}); }
-  for(let i=1; i<=medical; i++){ let name=document.getElementById("medicalName"+i)?.value||""; let idCard=document.getElementById("medicalId"+i)?.value||""; if(name||idCard) medicalDetails.push({name,idCard}); }
-  for(let i=1; i<=offday; i++){ let name=document.getElementById("offdayName"+i)?.value||""; let idCard=document.getElementById("offdayId"+i)?.value||""; if(name||idCard) offDayDetails.push({name,idCard}); }
+  for(let i=1; i<=leave; i++){
+    let name=document.getElementById("leaveName"+i)?.value||"";
+    let idCard=document.getElementById("leaveId"+i)?.value||"";
+    if(name || idCard) leaveDetails.push({name, idCard});
+  }
+  for(let i=1; i<=absent; i++){
+    let name=document.getElementById("absentName"+i)?.value||"";
+    let idCard=document.getElementById("absentId"+i)?.value||"";
+    if(name || idCard) absentDetails.push({name, idCard});
+  }
+  for(let i=1; i<=medical; i++){
+    let name=document.getElementById("medicalName"+i)?.value||"";
+    let idCard=document.getElementById("medicalId"+i)?.value||"";
+    if(name || idCard) medicalDetails.push({name, idCard});
+  }
+  for(let i=1; i<=offday; i++){
+    let name=document.getElementById("offdayName"+i)?.value||"";
+    let idCard=document.getElementById("offdayId"+i)?.value||"";
+    if(name || idCard) offDayDetails.push({name, idCard});
+  }
 
   await addDoc(collection(db,"billingManpowerReport"),{
-    date:date, company:company, mcd:mcd,
-    totalManpower:total, leave:leave, absent:absent, medical:medical, offDay:offday, present:present,
-    leaveDetails:leaveDetails, absentDetails:absentDetails, medicalDetails:medicalDetails, offDayDetails:offDayDetails,
-    reportedBy:user.name || user.email || "User", userId:user.id || "", createdAt:new Date().toISOString()
+    date:date,
+    company:company,
+    mcd:mcd,
+    totalManpower:total,
+    leave:leave,
+    absent:absent,
+    medical:medical,
+    offDay:offday,
+    present:present,
+    leaveDetails:leaveDetails,
+    absentDetails:absentDetails,
+    medicalDetails:medicalDetails,
+    offDayDetails:offDayDetails,
+    reportedBy:user.name || user.email || "User",
+    userId:user.id || "",
+    createdAt:new Date().toISOString()
   });
 
+  // 🔥 Timestamp update — পরের বার cache skip হবে
   await updateCollectionTimestamp('billingManpowerReport');
+  
+  // 🔥 Local timestamp মুছে দাও — পরের বার fresh load হবে
   var localTS = JSON.parse(localStorage.getItem(LOCAL_TIMESTAMPS_KEY) || '{}');
   delete localTS['billingManpowerReport'];
   localStorage.setItem(LOCAL_TIMESTAMPS_KEY, JSON.stringify(localTS));
+  
+  // 🔥 Cache invalidate — fresh data দরকার
   window.GMS_CACHE.invalidate([CACHE_KEYS.billingManpowerReport]);
+
+  // 🔥 ROI Tracking
+  window.trackReportActivity(mcd, 'Billing Manpower Report');
+  autoSaveToROI(company, mcd);
+  window.trackButtonUsage('Save Report', mcd);
 
   toast("Manpower Report Saved ✅");
 
@@ -536,42 +1164,67 @@ window.loadReport=async function(){
   loadRangeReport();
 };
 
+// ================================================================
+// 🔥 SMART SELECTIVE LOAD — Gate Plan এর মতো
+// ================================================================
 window.loadRangeReport=async function(){
   let from=document.getElementById("fromDate").value;
   let to=document.getElementById("toDate").value;
   let statusEl = document.getElementById('cacheStatusText');
+  
   if(statusEl) statusEl.innerText = '🔍 Checking updates...';
 
   try{
+    // STEP 1: Firebase থেকে system_sync পড়ো (মাত্র 1 read)
     var remoteTimestamps = {};
     try{
       var syncSnap = await getDocs(collection(db, 'system_sync'));
       window.GMS_CACHE.incRead(1);
-      syncSnap.forEach(function(d){ remoteTimestamps[d.id] = d.data().lastUpdated || 0; });
-    }catch(e){ console.warn('system_sync read failed:', e); }
+      syncSnap.forEach(function(d){ 
+        remoteTimestamps[d.id] = d.data().lastUpdated || 0; 
+      });
+      console.log('🕐 Remote timestamps fetched:', Object.keys(remoteTimestamps).length, 'collections');
+    }catch(e){
+      console.warn('system_sync read failed, using full cache:', e);
+    }
 
+    // STEP 2: shouldUpdate function তৈরি করো
     var shouldUpdate = buildShouldUpdate(remoteTimestamps, false);
     var billingNeedsUpdate = shouldUpdate('billingManpowerReport');
+    
+    console.log('📊 Selective Load Plan:', {
+      billingManpowerReport: billingNeedsUpdate ? '🔥Firebase' : '📦Cache'
+    });
 
-    var rows = await cachedGetDocs('billingManpowerReport', CACHE_KEYS.billingManpowerReport, billingNeedsUpdate);
+    // STEP 3: Smart cache থেকে data নাও
+    var rows = await cachedGetDocs(
+      'billingManpowerReport', 
+      CACHE_KEYS.billingManpowerReport, 
+      billingNeedsUpdate
+    );
 
+    // STEP 4: Local timestamps আপডেট করো
     var newLocalTS = JSON.parse(localStorage.getItem(LOCAL_TIMESTAMPS_KEY) || '{}');
-    Object.keys(remoteTimestamps).forEach(function(col){ newLocalTS[col] = remoteTimestamps[col]; });
+    Object.keys(remoteTimestamps).forEach(function(col){
+      newLocalTS[col] = remoteTimestamps[col];
+    });
     localStorage.setItem(LOCAL_TIMESTAMPS_KEY, JSON.stringify(newLocalTS));
 
+    // STEP 5: Date range filter apply করো
     var filteredRows = [];
-    rows.forEach(function(r){ if(r.date >= from && r.date <= to) filteredRows.push(r); });
+    rows.forEach(function(r){
+      if(r.date >= from && r.date <= to){
+        filteredRows.push(r);
+      }
+    });
+
     filteredRows.sort((a,b)=>a.date.localeCompare(b.date));
     allRows = filteredRows;
-
-    if(statusEl) statusEl.innerText = '✅ Loaded ' + (billingNeedsUpdate ? '(Firebase 🔥)' : '(Cache 📦 0 reads)');
-
+    
+    if(statusEl) statusEl.innerText = '✅ Report loaded ' + (billingNeedsUpdate ? '(Firebase 🔥)' : '(Cache 📦)');
+    
     renderTable(filteredRows);
-    renderAllCharts();
-    renderDepartmentGrid();
-    renderTopAbsentees();
-    renderHeatmap();
-
+    
   }catch(e){
     console.error('Load error:', e);
     if(statusEl) statusEl.innerText = '❌ Load error';
@@ -588,18 +1241,27 @@ window.loadDetailedReport=async function(){
   let filterMonth=document.getElementById("filterMonth").value;
   let filterYear=document.getElementById("filterYear").value;
   let statusEl = document.getElementById('cacheStatusText');
+  
   if(statusEl) statusEl.innerText = '🔍 Filtering...';
 
   try{
-    var rows = await cachedGetDocs('billingManpowerReport', CACHE_KEYS.billingManpowerReport, false);
+    // Smart cache থেকে data নাও
+    var rows = await cachedGetDocs(
+      'billingManpowerReport', 
+      CACHE_KEYS.billingManpowerReport, 
+      false
+    );
+
     var filteredRows = [];
     rows.forEach(function(r){
       let rowDate=r.date||"";
+      
       if(rowDate<from || rowDate>to) return;
       if(filterComp && r.company!==filterComp) return;
       if(filterMcd && r.mcd!==filterMcd) return;
       if(filterMonth && rowDate.substring(5,7)!==filterMonth) return;
       if(filterYear && rowDate.substring(0,4)!==filterYear) return;
+      
       if(searchId){
         let found=false;
         if(r.leaveDetails){ r.leaveDetails.forEach(dt=>{ if((dt.idCard||"").toLowerCase().includes(searchId)) found=true; }); }
@@ -608,11 +1270,15 @@ window.loadDetailedReport=async function(){
         if(r.offDayDetails){ r.offDayDetails.forEach(dt=>{ if((dt.idCard||"").toLowerCase().includes(searchId)) found=true; }); }
         if(!found) return;
       }
+      
       filteredRows.push(r);
     });
+
     filteredRows.sort((a,b)=>a.date.localeCompare(b.date));
     allRows = filteredRows;
+    
     if(statusEl) statusEl.innerText = '✅ Filter applied (Cache 📦)';
+    
     if(searchId && !filterMcd){
       renderPersonDetails(filteredRows);
       document.getElementById('personDetailsView').style.display='grid';
@@ -620,9 +1286,6 @@ window.loadDetailedReport=async function(){
     }else{
       renderTable(filteredRows);
       renderPersonDetails(filteredRows);
-      renderAllCharts();
-      renderDepartmentGrid();
-      renderTopAbsentees();
       if(currentView==='person'){
         document.getElementById('personDetailsView').style.display='grid';
         document.getElementById('reportTable').style.display='none';
@@ -633,352 +1296,6 @@ window.loadDetailedReport=async function(){
     if(statusEl) statusEl.innerText = '❌ Filter error';
   }
 };
-
-function getChartColors(){
-  const isDark = document.body.classList.contains('dark');
-  return {
-    text: isDark ? '#f1f5f9' : '#1e293b',
-    grid: isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.08)',
-    bg: isDark ? '#1e293b' : '#ffffff'
-  };
-}
-
-function renderAllCharts(){
-  const colors = getChartColors();
-  const todayStr = new Date().toISOString().slice(0,10);
-  const todayData = allRows.find(d => d.date === todayStr) || allRows[0] || {};
-  const total = Number(document.getElementById('kpiTotal').innerText) || 0;
-  const leave = Number(document.getElementById('kpiLeave').innerText) || 0;
-  const absent = Number(document.getElementById('kpiAbsent').innerText) || 0;
-  const medical = Number(document.getElementById('kpiMedical').innerText) || 0;
-  const offday = Number(document.getElementById('kpiOffDay').innerText) || 0;
-  const present = Number(document.getElementById('kpiPresent').innerText) || 0;
-
-  // 1. Attendance Breakdown
-  if(chart) chart.destroy();
-  chart = new Chart(document.getElementById('attendanceChart'), {
-    type: 'doughnut',
-    data: {
-      labels: ['Present','Leave','Absent','Medical','Off Day'],
-      datasets: [{
-        data: [present, leave, absent, medical, offday],
-        backgroundColor: ['#10b981','#f59e0b','#ef4444','#8b5cf6','#3b82f6'],
-        borderWidth: 2,
-        borderColor: colors.bg
-      }]
-    },
-    options: {
-      responsive: true,
-      maintainAspectRatio: false,
-      cutout: '55%',
-      plugins: {
-        legend: { position:'bottom', labels:{ color:colors.text, boxWidth:10, padding:6, font:{size:10} } },
-        datalabels: {
-          color: 'white',
-          font: { weight:'bold', size:10 },
-          formatter: (value, ctx) => {
-            const sum = ctx.chart.data.datasets[0].data.reduce((a,b)=>a+b,0);
-            if(sum===0) return '';
-            const pct = Math.round((value/sum)*100);
-            return pct > 5 ? value+' ('+pct+'%)' : '';
-          },
-          anchor: 'center',
-          align: 'center'
-        }
-      }
-    }
-  });
-
-  // 2. Department Absence Rate (30 Days) - Formula: (Total - Present) / Total * 100
-  if(departmentChart) departmentChart.destroy();
-  const deptData = {};
-  allRows.slice(0, 30).forEach(d => {
-    if(!deptData[d.mcd]) deptData[d.mcd] = { present:0, total:0 };
-    deptData[d.mcd].present += d.present||0;
-    deptData[d.mcd].total += d.totalManpower||0;
-  });
-  const deptLabels = Object.keys(deptData).slice(0, 14);
-  const deptAbsenceRates = deptLabels.map(mcd => {
-    const data = deptData[mcd];
-    // ✅ FORMULA: (Total Manpower - Present) / Total Manpower * 100
-    return data.total > 0 ? parseFloat((((data.total - data.present)/data.total)*100).toFixed(1)) : 0;
-  });
-
-  departmentChart = new Chart(document.getElementById('deptChart'), {
-    type: 'bar',
-    data: {
-      labels: deptLabels.map(l => l.replace(' MCD','').replace(' SECTION','')),
-      datasets: [{
-        label: 'Absence Rate %',
-        data: deptAbsenceRates,
-        backgroundColor: deptAbsenceRates.map(r => r <= 10 ? '#10b981' : r <= 20 ? '#fbbf24' : '#ef4444'),
-        borderRadius: 6,
-        borderSkipped: false
-      }]
-    },
-    options: {
-      responsive: true,
-      maintainAspectRatio: false,
-      plugins: {
-        legend: { display:false },
-        datalabels: {
-          color: colors.text,
-          font: { weight:'bold', size:9 },
-          anchor: 'end',
-          align: 'top',
-          formatter: v => v + '%'
-        }
-      },
-      scales: {
-        y: { beginAtZero:true, max:100, grid:{color:colors.grid}, ticks:{color:colors.text, font:{size:9}, callback: v => v+'%'} },
-        x: { grid:{display:false}, ticks:{color:colors.text, font:{size:8}, maxRotation:45, minRotation:45} }
-      }
-    }
-  });
-
-  // 3. Weekly Trend
-  if(trendChart) trendChart.destroy();
-  const last7Days = allRows.slice(0, 7).reverse();
-  const trendLabels = last7Days.map(d => {
-    const date = new Date(d.date);
-    return `${date.getDate()}/${date.getMonth()+1}`;
-  });
-  const trendPresent = last7Days.map(d => d.present||0);
-  const trendAbsent = last7Days.map(d => d.absent||0);
-
-  trendChart = new Chart(document.getElementById('trendChart'), {
-    type: 'line',
-    data: {
-      labels: trendLabels,
-      datasets: [
-        {
-          label: 'Present',
-          data: trendPresent,
-          borderColor: '#10b981',
-          backgroundColor: 'rgba(16,185,129,0.15)',
-          fill: true,
-          tension: 0.4,
-          pointRadius: 4,
-          pointBackgroundColor: '#10b981'
-        },
-        {
-          label: 'Absent',
-          data: trendAbsent,
-          borderColor: '#ef4444',
-          backgroundColor: 'rgba(239,68,68,0.15)',
-          fill: true,
-          tension: 0.4,
-          pointRadius: 4,
-          pointBackgroundColor: '#ef4444'
-        }
-      ]
-    },
-    options: {
-      responsive: true,
-      maintainAspectRatio: false,
-      plugins: {
-        legend: { position:'top', labels:{ color:colors.text, boxWidth:10, padding:6, font:{size:9} } },
-        datalabels: {
-          color: colors.text,
-          font: { weight:'bold', size:9 },
-          anchor: 'end',
-          align: 'top',
-          formatter: v => v > 0 ? v : ''
-        }
-      },
-      scales: {
-        y: { beginAtZero:true, grid:{color:colors.grid}, ticks:{color:colors.text, font:{size:9}} },
-        x: { grid:{display:false}, ticks:{color:colors.text, font:{size:9}} }
-      }
-    }
-  });
-
-  // 4. Attendance Rate
-  if(rateChart) rateChart.destroy();
-  const rate = todayData.totalManpower ? ((todayData.present/todayData.totalManpower)*100).toFixed(1) : 0;
-
-  rateChart = new Chart(document.getElementById('rateChart'), {
-    type: 'polarArea',
-    data: {
-      labels: ['Attendance Rate', 'Gap to Target'],
-      datasets: [{
-        data: [rate, Math.max(0, 100-rate)],
-        backgroundColor: [
-          rate >= 90 ? '#10b981' : rate >= 80 ? '#fbbf24' : '#ef4444',
-          '#e2e8f0'
-        ],
-        borderWidth: 2,
-        borderColor: colors.bg
-      }]
-    },
-    options: {
-      responsive: true,
-      maintainAspectRatio: false,
-      plugins: {
-        legend: { position:'bottom', labels:{ color:colors.text, boxWidth:10, padding:6, font:{size:10} } },
-        datalabels: {
-          color: 'white',
-          font: { weight:'bold', size:11 },
-          formatter: (value, ctx) => {
-            if(ctx.dataIndex === 0) return rate + '%';
-            return '';
-          },
-          anchor: 'center',
-          align: 'center'
-        }
-      },
-      scales: {
-        r: { beginAtZero:true, max:100, ticks:{display:false}, grid:{color:colors.grid} }
-      }
-    }
-  });
-}
-
-function renderDepartmentGrid(){
-  const mcds = [
-    'GREY FABRIC MCD','SHIPMENT MCD','BILLING SECTION','OUTER WEAR MCD',
-    'YARN MCD','PRINTING MCD','JHUT MCD','GENERAL MCD',
-    'ACCESSORIES MCD','LEFTOVER MCD','FINISH FABRIC MCD','YARN DYEING MCD',
-    'CHEMICAL MCD','GENERAL TECHNICAL MCD'
-  ];
-  const last30Days = allRows.slice(0, 30);
-  const grid = document.getElementById('deptGrid');
-  grid.innerHTML = '';
-
-  mcds.forEach(mcd => {
-    const mcdData = last30Days.filter(d => d.mcd === mcd);
-    const totalAbsent = mcdData.reduce((sum, d) => sum + (d.absent||0), 0);
-    const totalLeave = mcdData.reduce((sum, d) => sum + (d.leave||0), 0);
-    const totalMedical = mcdData.reduce((sum, d) => sum + (d.medical||0), 0);
-    const totalPresent = mcdData.reduce((sum, d) => sum + (d.present||0), 0);
-    const totalManpower = mcdData.reduce((sum, d) => sum + (d.totalManpower||0), 0);
-    const absenceRate = totalManpower > 0 ? (((totalManpower - totalPresent)/totalManpower)*100).toFixed(1) : 0;
-    const days = mcdData.length;
-
-    const card = document.createElement('div');
-    card.className = 'dept-card';
-    card.onclick = () => openDeptDetails(mcd, mcdData);
-    card.innerHTML = `
-      <div class="dept-name">${mcd}</div>
-      <div class="dept-stats">
-        <div class="dept-stat">
-          <div class="dept-stat-value" style="color:${absenceRate<=10?'#10b981':absenceRate<=20?'#fbbf24':'#ef4444'}">${absenceRate}%</div>
-          <div class="dept-stat-label">Absence Rate</div>
-        </div>
-        <div class="dept-stat">
-          <div class="dept-stat-value" style="color:#ef4444">${totalAbsent}</div>
-          <div class="dept-stat-label">Absent (${days}d)</div>
-        </div>
-      </div>
-    `;
-    grid.appendChild(card);
-  });
-}
-
-function renderTopAbsentees(){
-  const absenteeData = {};
-  allRows.forEach(report => {
-    if(report.absentDetails && report.absentDetails.length > 0){
-      report.absentDetails.forEach(person => {
-        const key = (person.idCard || person.name || '').toLowerCase();
-        if(!key) return;
-        if(!absenteeData[key]){
-          absenteeData[key] = { name:person.name||'Unknown', idCard:person.idCard||'N/A', count:0, dates:[], mcds:new Set() };
-        }
-        absenteeData[key].count++;
-        absenteeData[key].dates.push(report.date);
-        if(report.mcd) absenteeData[key].mcds.add(report.mcd);
-      });
-    }
-  });
-
-  const sorted = Object.values(absenteeData).sort((a,b) => b.count - a.count).slice(0, 5);
-  const container = document.getElementById('absenteesList');
-  container.innerHTML = '';
-
-  if(sorted.length === 0){
-    container.innerHTML = '<div style="text-align:center;padding:16px;color:var(--muted);font-size:12px">📭 No absence records found</div>';
-    return;
-  }
-
-  sorted.forEach((person, index) => {
-    const mcdList = Array.from(person.mcds).join(', ');
-    const item = document.createElement('div');
-    item.className = 'absentee-item';
-    item.onclick = () => showPersonDetails(person);
-    item.innerHTML = `
-      <div class="absentee-avatar">${index+1}</div>
-      <div class="absentee-info">
-        <div class="absentee-name">${person.name}</div>
-        <div class="absentee-id">ID: ${person.idCard}</div>
-        <div class="absentee-mcd">🏢 ${mcdList || 'N/A'}</div>
-      </div>
-      <div class="absentee-count">${person.count} days</div>
-    `;
-    container.appendChild(item);
-  });
-}
-
-function showPersonDetails(person){
-  const mcdList = Array.from(person.mcds).join(', ');
-  alert(`👤 ${person.name}\n🆔 ID: ${person.idCard}\n🏢 MCD: ${mcdList}\n📅 Total Absent Days: ${person.count}\n Dates: ${person.dates.join(', ')}`);
-}
-
-function renderHeatmap(){
-  const calendar = document.getElementById('heatmapCalendar');
-  calendar.innerHTML = '';
-  const now = new Date();
-  const year = now.getFullYear();
-  const month = now.getMonth();
-  document.getElementById('heatmapMonth').textContent = now.toLocaleString('default', {month:'long', year:'numeric'});
-
-  const firstDay = new Date(year, month, 1);
-  const lastDay = new Date(year, month+1, 0);
-  const daysInMonth = lastDay.getDate();
-  const startingDay = firstDay.getDay();
-
-  const dayLabels = ['Su','Mo','Tu','We','Th','Fr','Sa'];
-  dayLabels.forEach(day => {
-    const div = document.createElement('div');
-    div.className = 'heatmap-day-header';
-    div.textContent = day;
-    calendar.appendChild(div);
-  });
-
-  for(let i=0; i<startingDay; i++){
-    const div = document.createElement('div');
-    calendar.appendChild(div);
-  }
-
-  for(let day=1; day<=daysInMonth; day++){
-    const dateStr = `${year}-${String(month+1).padStart(2,'0')}-${String(day).padStart(2,'0')}`;
-    const dayData = allRows.find(d => d.date === dateStr);
-    const div = document.createElement('div');
-    div.className = 'heatmap-day';
-    div.textContent = day;
-
-    if(dayData){
-      const rate = (dayData.present/dayData.totalManpower)*100;
-      if(rate >= 90) div.classList.add('excellent');
-      else if(rate >= 80) div.classList.add('good');
-      else if(rate >= 70) div.classList.add('average');
-      else div.classList.add('poor');
-      div.title = `${dateStr}: ${rate.toFixed(1)}% attendance`;
-    }else{
-      div.classList.add('off');
-      div.title = 'No data';
-    }
-    div.onclick = () => showDayDetails(dateStr);
-    calendar.appendChild(div);
-  }
-}
-
-function showDayDetails(dateStr){
-  const dayData = allRows.find(d => d.date === dateStr);
-  if(dayData){
-    alert(`📅 Date: ${dateStr}\n📂 ${dayData.mcd}\n✅ Present: ${dayData.present}\n❌ Absent: ${dayData.absent}\n🏖 Leave: ${dayData.leave}\n🏥 Medical: ${dayData.medical}`);
-  }
-}
 
 function renderTable(rows){
   let html="";
@@ -992,16 +1309,28 @@ function renderTable(rows){
     gtOffDay+=Number(r.offDay)||0;
     gtPresent+=Number(r.present)||0;
 
-    html+=`<tr>
-      <td>${i+1}</td><td>${r.date||""}</td><td>${r.company||""}</td><td>${r.mcd||""}</td>
-      <td>${r.totalManpower||0}</td><td>${r.leave||0}</td><td>${r.absent||0}</td>
-      <td>${r.medical||0}</td><td>${r.offDay||0}</td><td>${r.present||0}</td>
-      <td>${r.reportedBy||""}</td>
-      <td class="noPrint"><button class="del" onclick="deleteRow('${r._docId || r.id}')">🗑</button></td>
-    </tr>`;
+    html+=`
+      <tr>
+        <td>${i+1}</td>
+        <td>${r.date||""}</td>
+        <td>${r.company||""}</td>
+        <td>${r.mcd||""}</td>
+        <td>${r.totalManpower||0}</td>
+        <td>${r.leave||0}</td>
+        <td>${r.absent||0}</td>
+        <td>${r.medical||0}</td>
+        <td>${r.offDay||0}</td>
+        <td>${r.present||0}</td>
+        <td>${r.reportedBy||""}</td>
+        <td class="noPrint">
+          <button class="del" onclick="deleteRow('${r._docId || r.id}')">🗑 Delete</button>
+        </td>
+      </tr>
+    `;
   });
 
   document.getElementById("tbody").innerHTML=html || `<tr><td colspan="12">📭 No Data Found</td></tr>`;
+
   document.getElementById("gtTotal").innerText=gtTotal;
   document.getElementById("gtLeave").innerText=gtLeave;
   document.getElementById("gtAbsent").innerText=gtAbsent;
@@ -1015,58 +1344,185 @@ function renderTable(rows){
   document.getElementById("kpiMedical").innerText=gtMedical;
   document.getElementById("kpiOffDay").innerText=gtOffDay;
   document.getElementById("kpiPresent").innerText=gtPresent;
+
+  renderChart(gtTotal,gtLeave,gtAbsent,gtMedical,gtOffDay,gtPresent);
 }
 
 function renderPersonDetails(rows){
   let personData={};
+  
   rows.forEach(r=>{
-    ['leaveDetails','absentDetails','medicalDetails','offDayDetails'].forEach(type=>{
-      if(r[type] && r[type].length>0){
-        r[type].forEach(d=>{
-          let key=(d.idCard||d.name||"").toLowerCase();
-          if(!key) return;
-          if(!personData[key]){
-            personData[key]={ name:d.name||"Unknown", idCard:d.idCard||"Unknown", leave:0, absent:0, medical:0, offday:0, leaveDates:[], absentDates:[], medicalDates:[], offDayDates:[] };
-          }
-          if(type==='leaveDetails'){ personData[key].leave++; personData[key].leaveDates.push({date:r.date,mcd:r.mcd,company:r.company}); }
-          if(type==='absentDetails'){ personData[key].absent++; personData[key].absentDates.push({date:r.date,mcd:r.mcd,company:r.company}); }
-          if(type==='medicalDetails'){ personData[key].medical++; personData[key].medicalDates.push({date:r.date,mcd:r.mcd,company:r.company}); }
-          if(type==='offDayDetails'){ personData[key].offday++; personData[key].offDayDates.push({date:r.date,mcd:r.mcd,company:r.company}); }
-        });
-      }
-    });
+    if(r.leaveDetails && r.leaveDetails.length>0){
+      r.leaveDetails.forEach(d=>{
+        let key=(d.idCard||d.name||"").toLowerCase();
+        if(!key) return;
+        if(!personData[key]){
+          personData[key]={
+            name:d.name||"Unknown",
+            idCard:d.idCard||"Unknown",
+            leave:0,absent:0,medical:0,offday:0,
+            leaveDates:[],absentDates:[],medicalDates:[],offDayDates:[]
+          };
+        }
+        personData[key].leave++;
+        personData[key].leaveDates.push({date:r.date,mcd:r.mcd,company:r.company});
+      });
+    }
+    if(r.absentDetails && r.absentDetails.length>0){
+      r.absentDetails.forEach(d=>{
+        let key=(d.idCard||d.name||"").toLowerCase();
+        if(!key) return;
+        if(!personData[key]){
+          personData[key]={
+            name:d.name||"Unknown",
+            idCard:d.idCard||"Unknown",
+            leave:0,absent:0,medical:0,offday:0,
+            leaveDates:[],absentDates:[],medicalDates:[],offDayDates:[]
+          };
+        }
+        personData[key].absent++;
+        personData[key].absentDates.push({date:r.date,mcd:r.mcd,company:r.company});
+      });
+    }
+    if(r.medicalDetails && r.medicalDetails.length>0){
+      r.medicalDetails.forEach(d=>{
+        let key=(d.idCard||d.name||"").toLowerCase();
+        if(!key) return;
+        if(!personData[key]){
+          personData[key]={
+            name:d.name||"Unknown",
+            idCard:d.idCard||"Unknown",
+            leave:0,absent:0,medical:0,offday:0,
+            leaveDates:[],absentDates:[],medicalDates:[],offDayDates:[]
+          };
+        }
+        personData[key].medical++;
+        personData[key].medicalDates.push({date:r.date,mcd:r.mcd,company:r.company});
+      });
+    }
+    if(r.offDayDetails && r.offDayDetails.length>0){
+      r.offDayDetails.forEach(d=>{
+        let key=(d.idCard||d.name||"").toLowerCase();
+        if(!key) return;
+        if(!personData[key]){
+          personData[key]={
+            name:d.name||"Unknown",
+            idCard:d.idCard||"Unknown",
+            leave:0,absent:0,medical:0,offday:0,
+            leaveDates:[],absentDates:[],medicalDates:[],offDayDates:[]
+          };
+        }
+        personData[key].offday++;
+        personData[key].offDayDates.push({date:r.date,mcd:r.mcd,company:r.company});
+      });
+    }
   });
-
+  
   let html="";
   Object.values(personData).forEach(p=>{
     let totalDays=p.leave+p.absent+p.medical+p.offday;
-    html+=`<div class="personCard ${p.absent>0?'absent':p.leave>0?'leave':p.medical>0?'medical':'offday'}">
-      <div class="personHeader">
-        <div class="personName">👤 ${p.name}</div>
-        <div class="personId">🆔 ${p.idCard}</div>
+    
+    let leaveDatesHtml=p.leaveDates.map(d=>`<b>${d.date}</b> ${d.mcd} (${d.company})`).join('');
+    let absentDatesHtml=p.absentDates.map(d=>`<b>${d.date}</b> ${d.mcd} (${d.company})`).join('');
+    let medicalDatesHtml=p.medicalDates.map(d=>`<b>${d.date}</b> ${d.mcd} (${d.company})`).join('');
+    let offDayDatesHtml=p.offDayDates.map(d=>`<b>${d.date}</b> ${d.mcd} (${d.company})`).join('');
+    
+    html+=`
+      <div class="personCard">
+        <div class="personHeader">
+          <div class="personName">👤 ${p.name}</div>
+          <div class="personId">🆔 ${p.idCard}</div>
+        </div>
+        <div class="personStats">
+          <div class="statItem leave">
+            <span>🏖 Leave</span>
+            <b>${p.leave}</b>
+          </div>
+          <div class="statItem absent">
+            <span>❌ Absent</span>
+            <b>${p.absent}</b>
+          </div>
+          <div class="statItem medical">
+            <span>🏥 Medical</span>
+            <b>${p.medical}</b>
+          </div>
+          <div class="statItem offday">
+            <span>📅 Off Day</span>
+            <b>${p.offday}</b>
+          </div>
+        </div>
+        <div style="margin-top:10px;padding-top:10px;border-top:1px solid var(--border);text-align:center">
+          <b style="color:var(--blue);font-size:18px">📅 Total Days: ${totalDays}</b>
+        </div>
+        ${p.leave>0?`<div class="dateList"><b>🏖 Leave Dates:</b>${leaveDatesHtml}</div>`:''}
+        ${p.absent>0?`<div class="dateList"><b>❌ Absent Dates:</b>${absentDatesHtml}</div>`:''}
+        ${p.medical>0?`<div class="dateList"><b>🏥 Medical Dates:</b>${medicalDatesHtml}</div>`:''}
+        ${p.offday>0?`<div class="dateList"><b>📅 Off Day Dates:</b>${offDayDatesHtml}</div>`:''}
       </div>
-      <div class="personStats">
-        <div class="statItem leave"><span>🏖 Leave</span><b>${p.leave}</b></div>
-        <div class="statItem absent"><span>❌ Absent</span><b>${p.absent}</b></div>
-        <div class="statItem medical"><span>🏥 Medical</span><b>${p.medical}</b></div>
-        <div class="statItem offday"><span>📅 Off Day</span><b>${p.offday}</b></div>
-      </div>
-      <div style="margin-top:8px;padding-top:8px;border-top:1px solid var(--border);text-align:center">
-        <b style="color:var(--blue);font-size:16px">📅 Total: ${totalDays} days</b>
-      </div>
-    </div>`;
+    `;
   });
-  document.getElementById("personDetailsView").innerHTML=html || '<div style="grid-column:1/-1;text-align:center;padding:30px;color:var(--muted)">📭 No Data Found</div>';
+  
+  document.getElementById("personDetailsView").innerHTML=html || '<div style="grid-column:1/-1;text-align:center;padding:40px;color:var(--muted)">📭 No Data Found</div>';
 }
 
+function renderChart(total,leave,absent,medical,offday,present){
+  if(chart) chart.destroy();
+  
+  const isLight=document.body.classList.contains("light");
+  const textColor=isLight?"#1e293b":"#ffffff";
+
+  chart=new Chart(document.getElementById("manpowerChart"),{
+    type:"bar",
+    data:{
+      labels:["Total","Leave","Absent","Medical","Off Day","Present"],
+      datasets:[{
+        label:"Manpower",
+        data:[total,leave,absent,medical,offday,present],
+        backgroundColor:["#3b82f6","#f59e0b","#ef4444","#8b5cf6","#6366f1","#22c55e"],
+        borderWidth:1,
+        borderRadius:10
+      }]
+    },
+    options:{
+      responsive:true,
+      plugins:{
+        legend:{display:false},
+        title:{
+          display:true,
+          text:"📊 Billing Section Manpower Summary",
+          color:textColor,
+          font:{size:16,weight:"700"}
+        }
+      },
+      scales:{
+        y:{
+          beginAtZero:true,
+          grid:{color:isLight?"rgba(0,0,0,.1)":"rgba(255,255,255,.1)"},
+          ticks:{color:textColor}
+        },
+        x:{
+          grid:{display:false},
+          ticks:{color:textColor}
+        }
+      }
+    }
+  });
+}
+
+// ================================================================
+// 🗑 DELETE ROW — Firebase delete + Timestamp update + Cache invalidate
+// ================================================================
 window.deleteRow=async function(id){
   if(confirm("🗑 Delete this report?")){
     await deleteDoc(doc(db,"billingManpowerReport",id));
+    
+    // 🔥 Timestamp update + Cache invalidate
     await updateCollectionTimestamp('billingManpowerReport');
     var localTS = JSON.parse(localStorage.getItem(LOCAL_TIMESTAMPS_KEY) || '{}');
     delete localTS['billingManpowerReport'];
     localStorage.setItem(LOCAL_TIMESTAMPS_KEY, JSON.stringify(localTS));
     window.GMS_CACHE.invalidate([CACHE_KEYS.billingManpowerReport]);
+    
     toast("Deleted ✅");
     loadRangeReport();
   }
@@ -1081,231 +1537,110 @@ window.exportExcel=function(){
   a.click();
 };
 
-window.exportPDF=async function(){
-  toast('📄 Generating PDF...');
-  
-  try{
-    const { jsPDF } = window.jspdf;
-    const pdf = new jsPDF('l', 'mm', 'a4');
-    
-    // Header
-    pdf.setFillColor(102, 126, 234);
-    pdf.rect(0, 0, 297, 25, 'F');
-    pdf.setTextColor(255, 255, 255);
-    pdf.setFontSize(18);
-    pdf.text('GMS TEXTILES LTD - Smart Manpower Dashboard', 14, 12);
-    pdf.setFontSize(10);
-    pdf.text(`Generated: ${new Date().toLocaleString()}`, 14, 20);
-    
-    // KPI Section
-    pdf.setTextColor(30, 41, 59);
-    pdf.setFontSize(12);
-    pdf.text('📊 Key Performance Indicators', 14, 35);
-    
-    const kpiData = [
-      { label: 'Total', value: document.getElementById('kpiTotal').innerText },
-      { label: 'Present', value: document.getElementById('kpiPresent').innerText },
-      { label: 'Absent', value: document.getElementById('kpiAbsent').innerText },
-      { label: 'Leave', value: document.getElementById('kpiLeave').innerText },
-      { label: 'Medical', value: document.getElementById('kpiMedical').innerText },
-      { label: 'Off Day', value: document.getElementById('kpiOffDay').innerText }
-    ];
-    
-    let kpiX = 14;
-    kpiData.forEach((kpi, idx) => {
-      pdf.setFillColor(248, 250, 252);
-      pdf.roundedRect(kpiX, 40, 42, 20, 2, 2, 'F');
-      pdf.setFontSize(9);
-      pdf.text(kpi.label, kpiX + 3, 48);
-      pdf.setFontSize(14);
-      pdf.setFont(undefined, 'bold');
-      pdf.text(kpi.value, kpiX + 3, 56);
-      pdf.setFont(undefined, 'normal');
-      kpiX += 46;
-    });
-    
-    // Charts as images
-    let yPos = 70;
-    const chartIds = ['attendanceChart', 'deptChart', 'trendChart', 'rateChart'];
-    const chartTitles = ['Attendance Breakdown', 'Department Absence Rate (30 Days)', 'Weekly Trend', 'Attendance Rate'];
-    
-    for(let i = 0; i < chartIds.length; i++){
-      const canvas = document.getElementById(chartIds[i]);
-      if(canvas){
-        const imgData = canvas.toDataURL('image/png');
-        const xPos = (i % 2 === 0) ? 14 : 155;
-        if(i % 2 === 0 && i > 0) yPos += 55;
-        
-        pdf.setFontSize(10);
-        pdf.setFont(undefined, 'bold');
-        pdf.text(chartTitles[i], xPos, yPos);
-        pdf.setFont(undefined, 'normal');
-        
-        pdf.addImage(imgData, 'PNG', xPos, yPos + 3, 130, 45);
-      }
-    }
-    
-    // Department Grid
-    yPos += 60;
-    pdf.setFontSize(12);
-    pdf.setFont(undefined, 'bold');
-    pdf.text('🏢 All 14 Departments - Last 30 Days Summary', 14, yPos);
-    pdf.setFont(undefined, 'normal');
-    yPos += 8;
-    
-    const deptCards = document.querySelectorAll('.dept-card');
-    let deptX = 14;
-    let deptCount = 0;
-    deptCards.forEach((card, idx) => {
-      const name = card.querySelector('.dept-name')?.innerText || '';
-      const values = card.querySelectorAll('.dept-stat-value');
-      const rate = values[0]?.innerText || '0%';
-      const absent = values[1]?.innerText || '0';
-      
-      pdf.setFillColor(248, 250, 252);
-      pdf.roundedRect(deptX, yPos, 65, 18, 2, 2, 'F');
-      pdf.setFontSize(7);
-      pdf.text(name.substring(0, 20), deptX + 2, yPos + 6);
-      pdf.setFontSize(8);
-      pdf.text(`Rate: ${rate} | Absent: ${absent}`, deptX + 2, yPos + 14);
-      
-      deptX += 68;
-      deptCount++;
-      if(deptCount % 4 === 0){
-        deptX = 14;
-        yPos += 20;
-      }
-    });
-    
-    // Top Absentees
-    yPos += 25;
-    pdf.setFontSize(12);
-    pdf.setFont(undefined, 'bold');
-    pdf.text('⚠️ Top Absentees (This Month)', 14, yPos);
-    pdf.setFont(undefined, 'normal');
-    yPos += 8;
-    
-    const absenteeItems = document.querySelectorAll('.absentee-item');
-    absenteeItems.forEach((item, idx) => {
-      if(idx >= 5) return;
-      const name = item.querySelector('.absentee-name')?.innerText || '';
-      const id = item.querySelector('.absentee-id')?.innerText || '';
-      const mcd = item.querySelector('.absentee-mcd')?.innerText || '';
-      const count = item.querySelector('.absentee-count')?.innerText || '';
-      
-      pdf.setFillColor(254, 242, 242);
-      pdf.roundedRect(14, yPos, 270, 8, 1, 1, 'F');
-      pdf.setFontSize(8);
-      pdf.text(`${idx+1}. ${name} | ${id} | ${mcd} | ${count}`, 16, yPos + 5);
-      yPos += 10;
-    });
-    
-    pdf.save('gms-smart-dashboard.pdf');
-    toast('PDF Exported ✅');
-  }catch(e){
-    console.error('PDF export error:', e);
-    toast('❌ PDF export failed');
-  }
-};
-
-window.openHeatmap=function(){ document.getElementById('heatmapModal').style.display='block'; };
-window.closeHeatmap=function(){ document.getElementById('heatmapModal').style.display='none'; };
-window.openDeptDetails=function(mcd, data){
-  const modal = document.getElementById('deptModal');
-  const title = document.getElementById('deptModalTitle');
-  const body = document.getElementById('deptModalBody');
-  title.textContent = `📊 ${mcd} - Last 30 Days`;
-
-  const totalAbsent = data.reduce((sum, d) => sum + (d.absent||0), 0);
-  const totalLeave = data.reduce((sum, d) => sum + (d.leave||0), 0);
-  const totalMedical = data.reduce((sum, d) => sum + (d.medical||0), 0);
-  const totalPresent = data.reduce((sum, d) => sum + (d.present||0), 0);
-  const totalManpower = data.reduce((sum, d) => sum + (d.totalManpower||0), 0);
-  const absenceRate = totalManpower > 0 ? (((totalManpower - totalPresent)/totalManpower)*100).toFixed(1) : 0;
-
-  body.innerHTML = `
-    <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-bottom:16px">
-      <div style="background:#fef2f2;padding:14px;border-radius:10px;text-align:center">
-        <div style="font-size:22px;font-weight:800;color:#ef4444">${absenceRate}%</div>
-        <div style="font-size:11px;color:#64748b">Absence Rate</div>
-      </div>
-      <div style="background:#fef2f2;padding:14px;border-radius:10px;text-align:center">
-        <div style="font-size:22px;font-weight:800;color:#ef4444">${totalAbsent}</div>
-        <div style="font-size:11px;color:#64748b">Total Absent</div>
-      </div>
-      <div style="background:#fffbeb;padding:14px;border-radius:10px;text-align:center">
-        <div style="font-size:22px;font-weight:800;color:#f59e0b">${totalLeave}</div>
-        <div style="font-size:11px;color:#64748b">Total Leave</div>
-      </div>
-      <div style="background:#f5f3ff;padding:14px;border-radius:10px;text-align:center">
-        <div style="font-size:22px;font-weight:800;color:#8b5cf6">${totalMedical}</div>
-        <div style="font-size:11px;color:#64748b">Medical Leave</div>
-      </div>
-    </div>
-    <h3 style="font-size:13px;font-weight:700;margin-bottom:10px">Daily Breakdown</h3>
-    ${data.map(d => `<div style="display:flex;justify-content:space-between;padding:8px;background:var(--card2);border-radius:6px;margin-bottom:6px;font-size:12px">
-      <span style="font-weight:600">${d.date}</span>
-      <span style="color:#10b981">Present: ${d.present}</span>
-      <span style="color:#ef4444">Absent: ${d.absent}</span>
-    </div>`).join('')}
-  `;
-  modal.style.display = 'block';
-};
-window.closeDeptModal=function(){ document.getElementById('deptModal').style.display='none'; };
-window.openReportModal=function(){ window.location.href='billing-manpower-report.html'; };
-window.loadData=function(){ loadRangeReport(); };
-
+// ================================================================
+// 🔄 REALTIME SYNC — Gate Plan এর মতো onSnapshot listener
+// ================================================================
 function setupRealtimeSync(){
-  console.log(' Setting up realtime sync...');
+  console.log('🔔 Setting up realtime sync for billingManpowerReport...');
+  
+  // ★ NEW: billingManpowerReport collection এ onSnapshot listener
   var billingCol = collection(db, 'billingManpowerReport');
   onSnapshot(billingCol, function(snapshot){
-    console.log('🔔 Realtime change detected, docs:', snapshot.size);
+    console.log('🔔 Realtime: billingManpowerReport changed, docs:', snapshot.size);
+    
+    // Cache invalidate করো
     window.GMS_CACHE.invalidate([CACHE_KEYS.billingManpowerReport]);
+    
+    // Local timestamp মুছে ফেলো
     var localTS = JSON.parse(localStorage.getItem(LOCAL_TIMESTAMPS_KEY) || '{}');
     delete localTS['billingManpowerReport'];
     localStorage.setItem(LOCAL_TIMESTAMPS_KEY, JSON.stringify(localTS));
+    
+    // Status update
     var syncStatus = document.getElementById('syncStatus');
-    if(syncStatus){ syncStatus.innerText = 'Updated ✅'; setTimeout(()=>{ if(syncStatus) syncStatus.innerText = 'Active'; }, 2000); }
+    if(syncStatus){
+      syncStatus.innerText = 'Updated ✅';
+      setTimeout(function(){ if(syncStatus) syncStatus.innerText = 'Active'; }, 2000);
+    }
+    
+    // যদি page active থাকে, তাহলে reload করো
     if(!document.hidden){
+      console.log('🔄 Reloading report due to realtime change...');
       var statusEl = document.getElementById('cacheStatusText');
-      if(statusEl) statusEl.innerText = '🔔 Live update...';
+      if(statusEl) statusEl.innerText = '🔔 Realtime update detected...';
       loadRangeReport();
     }
   });
-  console.log('✅ Realtime sync active');
+  
+  // system_sync collection এও listener
+  var syncCol = collection(db, 'system_sync');
+  onSnapshot(syncCol, function(snapshot){
+    var remoteTS = {};
+    snapshot.forEach(function(d){ 
+      remoteTS[d.id] = d.data().lastUpdated || 0; 
+    });
+    
+    var localTS = JSON.parse(localStorage.getItem(LOCAL_TIMESTAMPS_KEY) || '{}');
+    var changed = Object.keys(remoteTS).filter(function(col){
+      return !localTS[col] || remoteTS[col] > localTS[col];
+    });
+    
+    if(changed.length > 0 && changed.includes('billingManpowerReport')){
+      console.log('🔔 Realtime: system_sync changed for billingManpowerReport');
+      if(!document.hidden){
+        loadRangeReport();
+      }
+    }
+  });
+  
+  console.log('✅ Realtime sync setup complete');
 }
 
+// ================================================================
+// 🎯 INITIALIZATION
+// ================================================================
 calculatePresent();
+
+// Read counter init
 (function(){
   var c = window.GMS_CACHE.getReadCount();
   var el = document.getElementById('readCounter');
   if(el) el.innerText = c;
-  var s = window.GMS_CACHE.getSavedCount();
-  var sel = document.getElementById('savedReads');
-  if(sel) sel.innerText = s;
 })();
 
+// Smart load
 loadReport();
+
+// Realtime sync setup
 setupRealtimeSync();
 
+// ★ NEW: Page visibility change এ auto refresh
 document.addEventListener('visibilitychange', function(){
-  if(!document.hidden){ console.log('🔄 Page visible - reloading'); loadRangeReport(); }
+  if(!document.hidden){
+    console.log('🔄 Page visible — reloading report...');
+    loadRangeReport();
+  }
 });
 
+// ★ NEW: প্রতি 30 সেকেন্ড পর auto refresh
 setInterval(function(){
-  if(!document.hidden){ console.log('⏰ Auto-refresh (60s)'); loadRangeReport(); }
-}, 60000);
+  if(!document.hidden){
+    console.log('⏰ Auto-refresh triggered (30 seconds)');
+    loadRangeReport();
+  }
+}, 30000);
 
-console.log('%c═══════════════════════════════════════════', 'color: #10b981; font-weight: bold;');
-console.log('%c  🚀 SMART BILLING DASHBOARD - READY', 'color: #10b981; font-weight: bold; font-size: 14px;');
-console.log('%c═══════════════════════════════════════════', 'color: #10b981; font-weight: bold;');
-console.log('%c  ✅ Charts with Labels: Active', 'color: #667eea;');
-console.log('%c  ✅ 14 MCD Cards (30 days): Active', 'color: #10b981;');
-console.log('%c  ✅ Heatmap Calendar: Active', 'color: #f59e0b;');
-console.log('%c  ✅ Top Absentees with MCD: Active', 'color: #ef4444;');
-console.log('%c  ✅ Smart Cache (0 reads): Active', 'color: #8b5cf6;');
-console.log('%c  ✅ PDF Export with Dashboard: Active', 'color: #06b6d4;');
-console.log('%c═══════════════════════════════════════════', 'color: #10b981; font-weight: bold;');
+// Console log
+console.log('%c═══════════════════════════════════════════', 'color: #22c55e; font-weight: bold;');
+console.log('%c  📊 BILLING MANPOWER REPORT - READY', 'color: #22c55e; font-weight: bold; font-size: 14px;');
+console.log('%c═══════════════════════════════════════════', 'color: #22c55e; font-weight: bold;');
+console.log('%c  ✅ Smart Selective Cache: Active', 'color: #3b82f6;');
+console.log('%c  ✅ Realtime Sync: Active', 'color: #22c55e;');
+console.log('%c  ✅ ROI Tracking: Active', 'color: #8b5cf6;');
+console.log('%c  ✅ Cache Expiry: 5 minutes', 'color: #f59e0b;');
+console.log('%c  ✅ Auto Refresh: Every 30 seconds', 'color: #f59e0b;');
+console.log('%c  ✅ Firebase Reads Minimized: Yes', 'color: #f59e0b;');
+console.log('%c═══════════════════════════════════════════', 'color: #22c55e; font-weight: bold;');
 </script>
 
 </body>
