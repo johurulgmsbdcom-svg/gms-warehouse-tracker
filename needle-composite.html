@@ -26,9 +26,16 @@ body.light select,body.light input[type="date"],body.light input[type="text"]{ba
 #reportTable thead{background:#1e293b;color:white;position:sticky;top:0}
 body.light #reportTable thead{background:#334155}
 #reportTable tfoot{background:#334155;color:white;font-weight:bold}
-.col-sl{width:4%}.col-code{width:9%}.col-type{width:13%}.col-size{width:7%}
-.col-brand{width:8%}.col-price{width:7%}.col-prev{width:9%}.col-rcvd{width:9%}.col-dvld{width:9%}
-.col-present{width:10%}.col-bn{width:9%}
+.col-sl{width:3.5%}.col-code{width:8%}.col-type{width:11%}.col-size{width:6%}
+.col-brand{width:7%}.col-price{width:6%}.col-prev{width:8%}.col-rcvd{width:8%}.col-dvld{width:8%}
+.col-present{width:9%}.col-bn{width:8%}.col-transfer{width:7.5%}
+.transferBtn{background:#f59e0b;color:#000;border:none;border-radius:4px;padding:2px 4px;font-size:11px;font-weight:bold;cursor:pointer;width:100%}
+.transfer-tag{display:block;font-size:7px;color:#7c3aed;font-weight:700;margin-top:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#reqPopup,#transferPopup{display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.8);z-index:9998;justify-content:center;align-items:center}
+#reqPopup .popup-content,#transferPopup .popup-content{width:340px}
+.popup-field{margin:10px 0;text-align:left}
+.popup-field label{display:block;font-size:12px;font-weight:600;color:#334155;margin-bottom:4px}
+.popup-field input,.popup-field select{width:100%;max-width:100%;background:#f8fafc;color:#0f172a;border:1px solid #cbd5e1;padding:7px;border-radius:6px;font-size:13px}
 .qtyInput{width:100%;height:24px;padding:1px;text-align:center;font-size:11px;font-weight:bold;border:1px solid #999;border-radius:3px;background:white;color:black}
 body.light .qtyInput{background:#f8fafc}
 .qtyInput:focus{outline:none;border-color:#3b82f6;box-shadow:0 0 0 2px rgba(59,130,246,0.2)}
@@ -88,18 +95,20 @@ body.light .last-sync{color:#64748b}
   .popup-details{font-size:10px}
   .popup-details div{padding:4px}
   /* Compact columns - সব ১১টা কলাম একসাথে ফিট হবে */
-  .col-sl{width:3.5%}
-  .col-code{width:8%}
-  .col-type{width:11%}
-  .col-size{width:4.5%}
-  .col-brand{width:7.5%}
-  .col-price{width:6.5%}
-  .col-prev{width:7.5%}
-  .col-rcvd{width:9.5%}
-  .col-dvld{width:9.5%}
-  .col-present{width:11%}
-  .col-bn{width:9.5%}
-  /* Total = 88% - কিছু মার্জিন রাখা হয়েছে যাতে শেষ কলাম কাটা না পড়ে */
+  .col-sl{width:3%}
+  .col-code{width:7%}
+  .col-type{width:10%}
+  .col-size{width:4%}
+  .col-brand{width:6.5%}
+  .col-price{width:6%}
+  .col-prev{width:6.5%}
+  .col-rcvd{width:8.5%}
+  .col-dvld{width:8.5%}
+  .col-present{width:9.5%}
+  .col-bn{width:8.5%}
+  .col-transfer{width:7%}
+  .transferBtn{padding:1px;font-size:8px}
+  .transfer-tag{font-size:5.5px}
   #summaryTable th,#summaryTable td{font-size:7px;padding:1.5px}
   .summaryWrap{margin:6px auto}
   h3{font-size:11px!important;margin:4px 0!important}
@@ -204,6 +213,7 @@ body.light .last-sync{color:#64748b}
   <button class="deleteBtn" onclick="deleteData()">🗑️ Delete</button>
   <button class="excelBtn" onclick="exportExcel()">📊 Excel</button>
   <button class="pdfBtn" onclick="exportPDF()">📄 PDF</button>
+  <button class="themeBtn" style="background:#7c3aed" onclick="showTransferReport()">🚚 Transfers</button>
   <button class="homeBtn" onclick="location.href='index.html'">🏠 Home</button>
 </div>
 <div class="last-sync" id="lastSync"></div>
@@ -224,6 +234,7 @@ body.light .last-sync{color:#64748b}
   <th class="col-dvld">Dvld</th>
   <th class="col-present">Present</th>
   <th class="col-bn" id="bnHeader">BNR</th>
+  <th class="col-transfer">Trf</th>
 </tr>
 </thead>
 <tbody id="tableBody"></tbody>
@@ -235,6 +246,7 @@ body.light .last-sync{color:#64748b}
   <td id="totalDelivery">0</td>
   <td id="totalPresent">0</td>
   <td id="totalBN">0</td>
+  <td>-</td>
 </tr>
 </tfoot>
 </table>
@@ -271,6 +283,41 @@ body.light .last-sync{color:#64748b}
     <div class="popup-details" id="popupDetails"></div>
     <button class="popup-fix-btn" onclick="fixNegativeRow()">📍 Fix করুন</button>
     <div class="popup-footer">Present Stock ≥ 0 করলে পপআপ অটো বন্ধ হবে</div>
+  </div>
+</div>
+
+<div id="reqPopup">
+  <div class="popup-content">
+    <span class="popup-close" onclick="closeReqPopup()">×</span>
+    <div class="popup-title">📝 Requisition Number</div>
+    <div class="popup-field">
+      <label>Rcvd Qty এর জন্য Requisition No. দিন:</label>
+      <input type="text" id="reqNoInput" placeholder="যেমন: REQ-2026-0456">
+    </div>
+    <button class="popup-fix-btn" onclick="confirmReqNo()">✅ Confirm</button>
+    <div class="popup-footer">Requisition Number না দিলে Rcvd সেভ হবে না</div>
+  </div>
+</div>
+
+<div id="transferPopup">
+  <div class="popup-content">
+    <span class="popup-close" onclick="closeTransferPopup()">×</span>
+    <div class="popup-title">🔄 Floor Transfer</div>
+    <div class="popup-details" id="transferItemInfo" style="margin-bottom:6px"></div>
+    <div class="popup-field">
+      <label>To Floor (কোথায় যাবে):</label>
+      <select id="transferToFloor"></select>
+    </div>
+    <div class="popup-field">
+      <label>Qty:</label>
+      <input type="number" id="transferQty" min="0" step="0.01" placeholder="যত পিস ট্রান্সফার করবেন">
+    </div>
+    <div class="popup-field">
+      <label>Requisition No.:</label>
+      <input type="text" id="transferReqNo" placeholder="যেমন: REQ-2026-0456">
+    </div>
+    <button class="popup-fix-btn" onclick="confirmTransfer()">✅ Transfer Save করুন</button>
+    <div class="popup-footer">সেভ করলে From Floor এ Dvld আর To Floor এ Rcvd একসাথে যুক্ত হবে</div>
   </div>
 </div>
 
@@ -939,6 +986,13 @@ const floorData = {
 let negativeRowIndex = -1;
 let currentFloorData = [];
 let currentCarrySource = null;  // 'opening' | 'cache' | 'supabase' | 'saved'
+let rowReqNo = {};        // row index -> requisition no. (for Rcvd)
+let rowTransferOut = {};  // row index -> {toFloor, qty, reqNo} (last transfer OUT note)
+let rowTransferIn = {};   // row index -> {fromFloor, qty, reqNo} (last transfer IN note)
+let pendingReqIndex = null;
+let pendingTransferIndex = null;
+
+const TRANSFERS_TABLE = 'needle_transfers';
 
 // =========================================
 // 💾 OFFLINE QUEUE FUNCTIONS
