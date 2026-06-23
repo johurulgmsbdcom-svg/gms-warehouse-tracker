@@ -63,6 +63,10 @@ body.light #reportTable thead{background:#334155}
 #reportTable2 tr:nth-child(even){background:#f1f5f9}
 #reportTable2 tfoot td{background:#334155;color:white;font-weight:bold}
 
+/* Floor Req No banner */
+.floor-req-banner{display:none;background:linear-gradient(135deg,#059669,#10b981);color:white;padding:4px 10px;border-radius:6px;font-size:10px;font-weight:700;text-align:center;margin:4px 0;cursor:pointer}
+body.light .floor-req-banner{background:linear-gradient(135deg,#047857,#059669)}
+
 .qtyInput{width:100%;height:24px;padding:1px;text-align:center;font-size:11px;font-weight:bold;border:1px solid #999;border-radius:3px;background:white;color:black}
 body.light .qtyInput{background:#f8fafc}
 .qtyInput:focus{outline:none;border-color:#3b82f6;box-shadow:0 0 0 2px rgba(59,130,246,0.2)}
@@ -116,10 +120,11 @@ body.light .last-sync{color:#64748b}
   #summaryTable th,#summaryTable td{font-size:7px;padding:1.5px}
   .summaryWrap{margin:6px auto}
   h3{font-size:11px!important;margin:4px 0!important}
+  .floor-req-banner{font-size:8px;padding:3px 6px}
 }
 @media print{
   html,body{background:white!important;color:black!important;overflow:visible!important}
-  button,input[type="date"],select,input[type="text"],.offline-indicator,.loading-overlay,.theme-toggle,.last-sync{display:none!important}
+  button,input[type="date"],select,input[type="text"],.offline-indicator,.loading-overlay,.theme-toggle,.last-sync,.floor-req-banner{display:none!important}
   .tableWrap,.summaryWrap{overflow:visible!important}
   #reportTable,#summaryTable{width:100%!important;color:black!important;background:white!important}
   #reportTable th,#reportTable td{font-size:8px;padding:2px}
@@ -204,6 +209,11 @@ body.light .last-sync{color:#64748b}
   </div>
 </div>
 <div class="carry-info" id="carryInfo" style="display:none"></div>
+
+<!-- ✅ NEW: Floor-level Requisition Number banner -->
+<div class="floor-req-banner" id="floorReqBanner" onclick="changeFloorReqNo()">
+  📋 Floor Req No: <span id="floorReqNoDisplay"></span> &nbsp;(পরিবর্তন করতে ক্লিক করুন)
+</div>
 
 <div style="margin-top:6px">
   <button class="saveBtn" onclick="saveData()">💾 Save</button>
@@ -292,7 +302,7 @@ body.light .last-sync{color:#64748b}
       <input type="text" id="reqNoInput" placeholder="যেমন: REQ-2026-0456" autocomplete="off">
     </div>
     <button class="popup-fix-btn" onclick="confirmReqNo()">✅ Confirm করুন</button>
-    <div class="popup-footer">⚠️ Requisition Number ছাড়া Rcvd সেভ হবে না</div>
+    <div class="popup-footer" id="reqPopupFooter">⚠️ এই নম্বর এই floor এর সব row-এ apply হবে — বার বার দিতে হবে না</div>
   </div>
 </div>
 
@@ -742,15 +752,18 @@ let currentFloorData = [];
 // rowReqNo[i] = requisition number for row i's Rcvd entry
 let rowReqNo = {};
 
-// rowTransferOut[i] = array of {toFloor, qty, receiverName, reqNo} - deliveries made from this row
+// ✅ NEW: floorReqNo — একটা floor+date এ একটাই req number, সব row এ apply হবে
+let floorReqNo = null;
+
+// rowTransferOut[i] = array of {toFloor, qty, receiverName, reqNo}
 let rowTransferOut = {};
 
-// rowTransferIn[i] = array of {fromFloor, qty, receiverName, reqNo} - receives from other floors
+// rowTransferIn[i] = array of {fromFloor, qty, receiverName, reqNo}
 let rowTransferIn = {};
 
 // Pending requisition state
 let pendingReqIndex = null;
-let pendingReqValue = null;   // value in input before popup
+let pendingReqValue = null;
 
 // Pending transfer state
 let pendingTransferIndex = null;
@@ -813,7 +826,6 @@ async function loadFromSupabase(floor, date){
   return data;
 }
 
-// Save transfer to Supabase needle_transfers table
 async function saveTransferToSupabase(transfer){
   const companyId = await getCompanyId();
   if(!companyId) return {error:'no company'};
@@ -847,7 +859,7 @@ function getPrevDateStr(dateStr){
 }
 
 // =========================================
-// 📊 UI - updateCategoryBadge, carryIndicator
+// 📊 UI HELPERS
 // =========================================
 function updateCategoryBadge(){
   const floor = document.getElementById('floor').value;
@@ -870,13 +882,47 @@ function updateCarryIndicator(source, prevDate){
   }
 }
 
+// ✅ NEW: floor req no banner update
+function updateFloorReqBanner(){
+  const banner = document.getElementById('floorReqBanner');
+  const display = document.getElementById('floorReqNoDisplay');
+  if(floorReqNo){
+    banner.style.display = 'block';
+    display.textContent = floorReqNo;
+  }else{
+    banner.style.display = 'none';
+  }
+}
+
+// ✅ NEW: user can click banner to change floor req no
+function changeFloorReqNo(){
+  const newNo = prompt('নতুন Requisition Number দিন (এই floor এর সব rcvd-এ apply হবে):', floorReqNo||'');
+  if(newNo && newNo.trim()){
+    floorReqNo = newNo.trim();
+    // সব row-এ apply করো
+    currentFloorData.forEach((_,i)=>{
+      const val = Number(document.getElementById(`r${i}`)?.value)||0;
+      if(val > 0){
+        rowReqNo[i] = floorReqNo;
+        const t = document.getElementById(`reqTag${i}`);
+        if(t) t.textContent = '📋 '+floorReqNo;
+      }
+    });
+    updateFloorReqBanner();
+    showToast('✅ Req No updated: '+floorReqNo);
+  }
+}
+
 // =========================================
 // 🏗️ LOAD TABLE
 // =========================================
 function loadTable(customPrevious=null, customSource=null){
   currentFloorData = getItems();
   updateCategoryBadge();
+  // ✅ Reset state on new table load
   rowReqNo = {}; rowTransferOut = {}; rowTransferIn = {};
+  floorReqNo = null;
+  updateFloorReqBanner();
 
   const floor = document.getElementById('floor').value;
   document.getElementById('bnHeader').innerText = floor.includes('_NEW') ? 'BNR' : 'BNF';
@@ -956,21 +1002,32 @@ function updateTotal(){
 }
 
 // =========================================
-// 📋 REQUISITION POPUP LOGIC
+// ✅ REQUISITION POPUP — NEW LOGIC
 // =========================================
 function checkReqNo(i){
   const val = Number(document.getElementById(`r${i}`).value)||0;
-  if(val > 0 && !rowReqNo[i]){
-    // Save what was typed, open popup
-    pendingReqIndex = i;
-    pendingReqValue = val;
-    const item = currentFloorData[i];
-    document.getElementById('reqItemInfo').innerHTML =
-      `<b>${item[1]}</b> | ${item[2]} | Size: ${item[3]} | Rcvd Qty: <b>${val}</b>`;
-    document.getElementById('reqNoInput').value = '';
-    document.getElementById('reqPopup').style.display = 'flex';
-    setTimeout(()=>document.getElementById('reqNoInput').focus(), 100);
+  if(val <= 0) return; // কোনো value নেই, কিছু করার নেই
+
+  if(rowReqNo[i]) return; // এই row-এ আগেই req no আছে
+
+  // ✅ KEY CHANGE: যদি এই floor+date এ আগে req no দেওয়া হয়ে গেছে, auto-apply করো
+  if(floorReqNo){
+    rowReqNo[i] = floorReqNo;
+    const tag = document.getElementById(`reqTag${i}`);
+    if(tag) tag.textContent = '📋 '+floorReqNo;
+    return; // popup দরকার নেই!
   }
+
+  // প্রথম row-এ Rcvd দিলে — একবারই popup দেখাবে
+  pendingReqIndex = i;
+  pendingReqValue = val;
+  const item = currentFloorData[i];
+  document.getElementById('reqItemInfo').innerHTML =
+    `<b>${item[1]}</b> | ${item[2]} | Size: ${item[3]} | Rcvd Qty: <b>${val}</b><br>
+     <small style="color:#059669;font-weight:600">✅ এই নম্বর এই floor এর বাকি সব row-এও apply হবে</small>`;
+  document.getElementById('reqNoInput').value = '';
+  document.getElementById('reqPopup').style.display = 'flex';
+  setTimeout(()=>document.getElementById('reqNoInput').focus(), 100);
 }
 
 function confirmReqNo(){
@@ -979,13 +1036,32 @@ function confirmReqNo(){
     alert('❌ Requisition Number দিন!');
     return;
   }
+
+  // ✅ Floor-level req no সেট করো — এরপর থেকে popup আর আসবে না
+  floorReqNo = reqNo;
+
+  // Current pending row-এ apply
   rowReqNo[pendingReqIndex] = reqNo;
-  // Update tag display
   const tag = document.getElementById(`reqTag${pendingReqIndex}`);
   if(tag) tag.textContent = '📋 '+reqNo;
+
+  // ✅ বাকি যে row-গুলোতে ইতিমধ্যে Rcvd value আছে কিন্তু req no নেই, সেগুলোতেও apply
+  currentFloorData.forEach((_,i)=>{
+    const val = Number(document.getElementById(`r${i}`)?.value)||0;
+    if(val > 0 && !rowReqNo[i]){
+      rowReqNo[i] = reqNo;
+      const t = document.getElementById(`reqTag${i}`);
+      if(t) t.textContent = '📋 '+reqNo;
+    }
+  });
+
+  // Banner দেখাও
+  updateFloorReqBanner();
+
   document.getElementById('reqPopup').style.display = 'none';
   pendingReqIndex = null;
   pendingReqValue = null;
+  showToast('✅ Req No saved! বাকি সব row-এ auto-apply হবে');
 }
 
 function cancelReqPopup(){
@@ -1012,7 +1088,6 @@ function openTransferPopup(i){
     `<b>${item[1]}</b> | ${item[2]} | Size ${item[3]} | ${item[4]}<br>
      Present Stock: <b style="color:${presentNow<0?'#dc2626':'#059669'}">${presentNow}</b>`;
 
-  // Fill floor dropdown excluding current floor
   const sel = document.getElementById('transferToFloor');
   sel.innerHTML = '<option value="">-- To Floor নির্বাচন করুন --</option>';
   Object.keys(floorData).filter(f=>f!==floor).forEach(f=>{
@@ -1055,25 +1130,19 @@ async function confirmTransfer(){
   showLoading('Saving transfer...');
   closeTransferPopup();
 
-  // ── Step 1: Update FROM floor (add to Dvld) ──
   const dEl = document.getElementById(`d${i}`);
   const oldDvld = Number(dEl.value)||0;
   dEl.value = oldDvld + qty;
   calc(i);
 
-  // Tag on Dvld cell
   if(!rowTransferOut[i]) rowTransferOut[i] = [];
   rowTransferOut[i].push({toFloor, qty, receiverName, reqNo});
   updateTransferOutTag(i);
 
-  // ── Step 2: Update TO floor's report (add Rcvd for matching item) ──
   const toItems = floorData[toFloor] || [];
   const toItemIdx = toItems.findIndex(it => it[1]===item[1] && it[3]===item[3]);
 
   let toFloorData = null;
-  let toFloorCacheKey = `${toFloor}__${date}`;
-
-  // Load existing TO floor data (cache first, then Supabase)
   toFloorData = getReportCacheEntry(toFloor, date);
   if(!toFloorData || !toFloorData.rows || !toFloorData.rows.length){
     try{
@@ -1086,7 +1155,6 @@ async function confirmTransfer(){
   if(toFloorData && toFloorData.rows && toFloorData.rows.length){
     toRows = JSON.parse(JSON.stringify(toFloorData.rows));
   }else{
-    // Build fresh rows from master data
     toRows = toItems.map(it=>({
       sl:it[0], itemCode:it[1], needleType:it[2], size:it[3],
       brand:it[4], unitPrice:it[5], opening:it[6],
@@ -1105,24 +1173,21 @@ async function confirmTransfer(){
     toRows[toItemIdx].transferIn.push({fromFloor, qty, receiverName, reqNo, date});
     toFloorItemFound = true;
   }else{
-    showToast(`⚠️ To Floor তে ${item[1]} (Size ${item[3]}) row পাওয়া যায়নি! Delivery শুধু এই floor এ save হবে।`);
+    showToast(`⚠️ To Floor তে ${item[1]} (Size ${item[3]}) row পাওয়া যায়নি!`);
   }
 
-  // Save to-floor data
   const toOperator = toFloorData ? (toFloorData.operator||'Transfer') : 'Transfer';
   setReportCacheEntry(toFloor, date, {operator:toOperator, rows:toRows, isDraft:true});
   if(navigator.onLine && toFloorItemFound){
     try{ await saveToSupabase(toFloor, date, toOperator, toRows, false); }catch(e){}
   }
 
-  // ── Step 3: Save transfer record ──
   const transfer = {
     date, fromFloor, toFloor,
     itemCode: item[1], needleType: item[2], size: item[3],
     qty, receiverName, reqNo
   };
 
-  // Store in localStorage too
   let storedTransfers = JSON.parse(localStorage.getItem('needle_transfers_local')||'[]');
   storedTransfers.push({...transfer, id: Date.now()});
   localStorage.setItem('needle_transfers_local', JSON.stringify(storedTransfers));
@@ -1175,7 +1240,6 @@ async function loadTransferReport(){
 
   let transfers = [];
 
-  // Try Supabase
   if(navigator.onLine){
     try{
       const companyId = await getCompanyId();
@@ -1191,7 +1255,6 @@ async function loadTransferReport(){
     }catch(e){}
   }
 
-  // Fallback: localStorage
   if(!transfers.length){
     const local = JSON.parse(localStorage.getItem('needle_transfers_local')||'[]');
     transfers = local.filter(t=>t.date>=from && t.date<=to)
@@ -1308,13 +1371,20 @@ async function saveData(){
   if(!date){ alert('❌ Date select করুন'); return; }
   if(!floor){ alert('❌ Floor select করুন'); return; }
 
-  // Check for unsaved requisitions
+  // Check for Rcvd values without req no
   for(let i=0;i<currentFloorData.length;i++){
     const r = Number(document.getElementById(`r${i}`)?.value)||0;
     if(r>0 && !rowReqNo[i]){
-      alert(`❌ Row ${i+1} (${currentFloorData[i][1]}) এর Rcvd ${r} এর জন্য Requisition Number দিন!`);
-      checkReqNo(i);
-      return;
+      // ✅ যদি floorReqNo আছে, auto-apply করো
+      if(floorReqNo){
+        rowReqNo[i] = floorReqNo;
+        const t = document.getElementById(`reqTag${i}`);
+        if(t) t.textContent = '📋 '+floorReqNo;
+      }else{
+        alert(`❌ Row ${i+1} (${currentFloorData[i][1]}) এর Rcvd ${r} এর জন্য Requisition Number দিন!`);
+        checkReqNo(i);
+        return;
+      }
     }
   }
 
@@ -1341,6 +1411,11 @@ async function loadData(){
   showLoading('Loading...');
   const date = document.getElementById('postDate').value;
   const floor = document.getElementById('floor').value;
+
+  // ✅ Reset floor req no on new load
+  floorReqNo = null;
+  updateFloorReqBanner();
+
   if(!date||!floor){ hideLoading(); loadTable(); updateMonthlySummary([]); return; }
 
   try{
@@ -1361,13 +1436,14 @@ async function loadData(){
         document.getElementById(`r${i}`).value = row.receive||'';
         document.getElementById(`d${i}`).value = row.delivery||'';
         document.getElementById(`bn${i}`).value = row.bn||'';
-        // Restore req numbers
+        // ✅ Restore req numbers + detect floorReqNo from saved data
         if(row.receiveReqNo){
           rowReqNo[i] = row.receiveReqNo;
           const tag = document.getElementById(`reqTag${i}`);
           if(tag) tag.textContent = '📋 '+row.receiveReqNo;
+          // ✅ Set floorReqNo from first saved req no found
+          if(!floorReqNo) floorReqNo = row.receiveReqNo;
         }
-        // Restore transfer tags
         if(row.transferOut&&row.transferOut.length){
           rowTransferOut[i] = row.transferOut;
           updateTransferOutTag(i);
@@ -1378,6 +1454,8 @@ async function loadData(){
         }
         calc(i);
       });
+      // ✅ Update banner if req no found
+      updateFloorReqBanner();
       if(savedData.operator) document.getElementById('operatorName').value = savedData.operator;
       updateMonthlySummary(savedData.rows);
       updateLastSync(`📂 Loaded from ${dataSource==='cache'?'local':'Supabase'} at ${new Date().toLocaleTimeString()}`);
@@ -1554,6 +1632,7 @@ window.onFloorChange=onFloorChange; window.manualRefresh=manualRefresh;
 window.checkReqNo=checkReqNo; window.confirmReqNo=confirmReqNo; window.cancelReqPopup=cancelReqPopup;
 window.openTransferPopup=openTransferPopup; window.closeTransferPopup=closeTransferPopup; window.confirmTransfer=confirmTransfer;
 window.showTransferReport=showTransferReport; window.closeReportPopup=closeReportPopup; window.loadTransferReport=loadTransferReport;
+window.changeFloorReqNo=changeFloorReqNo;
 </script>
 </body>
 </html>
