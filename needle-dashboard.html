@@ -4,194 +4,339 @@
 <title>Needle Floor Wise Dashboard</title>
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
-
 <style>
+@import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Inter:wght@400;600;700;900&display=swap');
+
 :root{
-  --bg:#07111f;
-  --card:#101b2d;
-  --card2:#14233a;
-  --text:#ffffff;
-  --muted:#9fb0c7;
-  --border:#263855;
-  --blue:#2563eb;
-  --green:#22c55e;
-  --red:#ef4444;
-  --yellow:#f59e0b;
-  --chartText:#eef6ff;
-  --chartGrid:rgba(148,163,184,.22);
-  --shadow:0 14px 34px rgba(0,0,0,.28);
+  --bg:#040d1a;
+  --bg2:#060f20;
+  --card:#071528;
+  --card2:#0a1c35;
+  --text:#e8f4ff;
+  --muted:#6a9bc3;
+  --border:#1a3a5c;
+  --blue:#00c8ff;
+  --blue2:#0066ff;
+  --green:#00ff88;
+  --red:#ff3366;
+  --yellow:#ffcc00;
+  --purple:#9933ff;
+  --glow-blue:rgba(0,200,255,0.35);
+  --glow-green:rgba(0,255,136,0.3);
+  --glow-red:rgba(255,51,102,0.3);
+  --chartText:#c8e8ff;
+  --chartGrid:rgba(0,180,255,0.12);
+  --shadow:0 0 40px rgba(0,100,200,0.2),0 20px 40px rgba(0,0,0,0.5);
 }
 
-body.light{
-  --bg:#eef3f9;
-  --card:#ffffff;
-  --card2:#f8fafc;
-  --text:#0f172a;
-  --muted:#64748b;
-  --border:#cbd5e1;
-  --chartText:#0f172a;
-  --chartGrid:rgba(15,23,42,.13);
-  --shadow:0 12px 26px rgba(15,23,42,.14);
-}
-
-*{box-sizing:border-box}
+*{box-sizing:border-box;margin:0;padding:0}
 
 body{
-  margin:0;
-  background:radial-gradient(circle at top left,rgba(37,99,235,.13),transparent 35%),var(--bg);
+  background:
+    radial-gradient(ellipse at 20% 10%, rgba(0,80,180,0.18) 0%, transparent 50%),
+    radial-gradient(ellipse at 80% 90%, rgba(80,0,180,0.12) 0%, transparent 50%),
+    var(--bg);
   color:var(--text);
-  font-family:Segoe UI,Inter,Arial,sans-serif;
-  padding:16px;
-  font-weight:650;
-  letter-spacing:.1px;
+  font-family:'Inter',sans-serif;
+  padding:14px;
+  min-height:100vh;
+  overflow-x:hidden;
 }
 
+/* Circuit background */
+body::before{
+  content:"";
+  position:fixed;
+  inset:0;
+  background-image:
+    linear-gradient(rgba(0,150,255,0.04) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(0,150,255,0.04) 1px, transparent 1px);
+  background-size:50px 50px;
+  pointer-events:none;
+  z-index:0;
+}
+
+body::after{
+  content:"";
+  position:fixed;
+  inset:0;
+  background:
+    radial-gradient(circle at 15% 25%, rgba(0,200,255,0.06) 0%, transparent 30%),
+    radial-gradient(circle at 85% 75%, rgba(100,0,255,0.05) 0%, transparent 30%);
+  pointer-events:none;
+  z-index:0;
+}
+
+.page-wrap{position:relative;z-index:1}
+
+/* === HEADER === */
 .header{
   display:flex;
   justify-content:space-between;
   align-items:center;
-  background:linear-gradient(135deg,var(--card),var(--card2));
-  border:1px solid var(--border);
-  padding:14px 18px;
-  border-radius:20px;
-  margin-bottom:12px;
-  box-shadow:var(--shadow);
-}
-
-.header h2{
-  margin:0;
-  font-size:23px;
-  font-weight:1000;
-  letter-spacing:.3px;
-}
-
-.sub{
-  color:var(--muted);
-  font-size:12px;
-  font-weight:900;
-  margin-top:4px;
-}
-
-button{
-  padding:10px 15px;
-  border:0;
-  border-radius:12px;
-  background:linear-gradient(135deg,#2563eb,#7c3aed);
-  color:white;
-  font-weight:1000;
-  cursor:pointer;
-  margin:3px;
-  box-shadow:0 8px 18px rgba(37,99,235,.25);
-}
-
-button:hover{transform:translateY(-1px)}
-.themeBtn{background:linear-gradient(135deg,#f59e0b,#2563eb)}
-
-.controls{
-  text-align:center;
-  margin:12px 0;
-  font-weight:900;
-}
-
-input{
-  padding:10px;
-  border-radius:10px;
-  border:1px solid var(--border);
-  background:var(--card);
-  color:var(--text);
-  font-weight:900;
-}
-
-.kpi{
-  display:grid;
-  grid-template-columns:repeat(4,1fr);
-  gap:12px;
-  margin:14px 0;
-}
-
-.kpiCard{
-  background:linear-gradient(135deg,var(--card),var(--card2));
-  border:1px solid var(--border);
-  border-radius:20px;
-  padding:15px;
-  box-shadow:var(--shadow);
+  background:linear-gradient(135deg, rgba(7,21,40,0.95), rgba(10,28,53,0.9));
+  border:1px solid rgba(0,200,255,0.25);
+  border-top:2px solid var(--blue);
+  padding:14px 20px;
+  border-radius:16px;
+  margin-bottom:14px;
+  box-shadow:0 0 30px rgba(0,200,255,0.15), var(--shadow);
   position:relative;
   overflow:hidden;
 }
 
-.kpiCard:before{
+.header::before{
+  content:"";
+  position:absolute;
+  top:0;left:0;right:0;height:1px;
+  background:linear-gradient(90deg,transparent,var(--blue),var(--purple),transparent);
+}
+
+.header::after{
   content:"";
   position:absolute;
   inset:0;
-  background:linear-gradient(135deg,rgba(56,189,248,.08),rgba(168,85,247,.08));
+  background:linear-gradient(135deg,rgba(0,200,255,0.04),rgba(100,0,255,0.03));
   pointer-events:none;
+}
+
+.header-title{
+  font-family:'Orbitron',monospace;
+  font-size:20px;
+  font-weight:900;
+  letter-spacing:1.5px;
+  background:linear-gradient(90deg, var(--blue), #ffffff, var(--purple));
+  -webkit-background-clip:text;
+  -webkit-text-fill-color:transparent;
+  background-clip:text;
+  text-shadow:none;
+}
+
+.header-sub{
+  color:var(--muted);
+  font-size:11px;
+  font-weight:600;
+  margin-top:5px;
+  letter-spacing:1px;
+  text-transform:uppercase;
+}
+
+.header-sub span{
+  color:var(--green);
+  animation:pulse 2s infinite;
+}
+
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:0.5}}
+
+.btn-group{display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+
+button{
+  padding:8px 14px;
+  border:1px solid rgba(0,200,255,0.3);
+  border-radius:8px;
+  background:rgba(0,100,200,0.2);
+  color:var(--blue);
+  font-family:'Inter',sans-serif;
+  font-weight:700;
+  font-size:12px;
+  cursor:pointer;
+  letter-spacing:0.5px;
+  transition:all 0.2s;
+  position:relative;
+  overflow:hidden;
+}
+
+button::before{
+  content:"";
+  position:absolute;
+  inset:0;
+  background:linear-gradient(135deg,rgba(0,200,255,0),rgba(0,200,255,0.1));
+  opacity:0;
+  transition:opacity 0.2s;
+}
+
+button:hover{
+  border-color:var(--blue);
+  box-shadow:0 0 20px rgba(0,200,255,0.3);
+  transform:translateY(-1px);
+}
+
+button:hover::before{opacity:1}
+
+.btn-refresh{border-color:rgba(0,255,136,0.4);color:var(--green)}
+.btn-refresh:hover{border-color:var(--green);box-shadow:0 0 20px rgba(0,255,136,0.3)}
+.btn-theme{border-color:rgba(255,204,0,0.4);color:var(--yellow)}
+.btn-theme:hover{border-color:var(--yellow);box-shadow:0 0 20px rgba(255,204,0,0.3)}
+.btn-home{border-color:rgba(153,51,255,0.4);color:var(--purple)}
+.btn-home:hover{border-color:var(--purple);box-shadow:0 0 20px rgba(153,51,255,0.3)}
+
+/* === CONTROLS === */
+.controls{
+  text-align:center;
+  margin:10px 0;
+  font-size:12px;
+  color:var(--muted);
+  letter-spacing:1px;
+  text-transform:uppercase;
+  font-weight:700;
+}
+
+input[type="month"]{
+  padding:8px 14px;
+  border-radius:8px;
+  border:1px solid rgba(0,200,255,0.3);
+  background:rgba(0,50,100,0.3);
+  color:var(--blue);
+  font-family:'Inter',sans-serif;
+  font-weight:700;
+  font-size:12px;
+  margin-left:8px;
+  outline:none;
+  letter-spacing:1px;
+}
+
+input[type="month"]:focus{
+  border-color:var(--blue);
+  box-shadow:0 0 15px rgba(0,200,255,0.2);
+}
+
+/* === KPI CARDS === */
+.kpi{
+  display:grid;
+  grid-template-columns:repeat(4,1fr);
+  gap:12px;
+  margin:12px 0;
+}
+
+.kpiCard{
+  background:linear-gradient(135deg,rgba(7,21,40,0.95),rgba(10,28,53,0.9));
+  border:1px solid rgba(0,200,255,0.2);
+  border-radius:14px;
+  padding:16px;
+  box-shadow:var(--shadow);
+  position:relative;
+  overflow:hidden;
+  transition:transform 0.2s, box-shadow 0.2s;
+}
+
+.kpiCard:hover{
+  transform:translateY(-3px);
+  box-shadow:0 0 40px rgba(0,200,255,0.25),var(--shadow);
+}
+
+.kpiCard::before{
+  content:"";
+  position:absolute;
+  top:0;left:0;right:0;height:2px;
+  background:linear-gradient(90deg,transparent,var(--blue),transparent);
+}
+
+.kpiCard:nth-child(2)::before{background:linear-gradient(90deg,transparent,var(--green),transparent)}
+.kpiCard:nth-child(3)::before{background:linear-gradient(90deg,transparent,var(--red),transparent)}
+.kpiCard:nth-child(4)::before{background:linear-gradient(90deg,transparent,var(--yellow),transparent)}
+
+.kpiCard::after{
+  content:"";
+  position:absolute;
+  bottom:-30px;right:-30px;
+  width:100px;height:100px;
+  border-radius:50%;
+  background:radial-gradient(circle,rgba(0,200,255,0.08),transparent 70%);
+  pointer-events:none;
+}
+
+.kpi-icon{
+  font-size:22px;
+  margin-bottom:6px;
+  display:block;
+  filter:drop-shadow(0 0 8px rgba(0,200,255,0.6));
 }
 
 .label{
   color:var(--muted);
-  font-size:12px;
-  font-weight:1000;
+  font-size:10px;
+  font-weight:700;
   text-transform:uppercase;
-  letter-spacing:.35px;
-  position:relative;
+  letter-spacing:1.2px;
 }
 
 .value{
-  font-size:27px;
-  font-weight:1000;
-  color:var(--green);
+  font-family:'Orbitron',monospace;
+  font-size:28px;
+  font-weight:900;
+  color:var(--blue);
   margin-top:6px;
-  text-shadow:0 2px 8px rgba(34,197,94,.22);
-  position:relative;
+  text-shadow:0 0 20px rgba(0,200,255,0.5);
+  letter-spacing:1px;
 }
 
+.kpiCard:nth-child(2) .value{color:var(--green);text-shadow:0 0 20px rgba(0,255,136,0.5)}
+.kpiCard:nth-child(3) .value{color:var(--red);text-shadow:0 0 20px rgba(255,51,102,0.5)}
+.kpiCard:nth-child(4) .value{color:var(--yellow);text-shadow:0 0 20px rgba(255,204,0,0.5)}
+
+/* === ALERTS === */
 .alertBox{
-  background:rgba(239,68,68,.13);
-  border:1px solid var(--red);
-  color:#fecaca;
-  padding:11px 13px;
-  border-radius:14px;
-  margin:8px 0;
-  font-size:13px;
-  font-weight:1000;
-  box-shadow:0 8px 18px rgba(239,68,68,.12);
+  padding:11px 16px;
+  border-radius:10px;
+  margin:6px 0;
+  font-size:12px;
+  font-weight:700;
+  letter-spacing:0.5px;
+  position:relative;
+  overflow:hidden;
 }
 
-body.light .alertBox{color:#991b1b}
+.alertBox.alert-low{
+  background:rgba(255,51,102,0.1);
+  border:1px solid rgba(255,51,102,0.4);
+  color:#ffaabb;
+  box-shadow:0 0 20px rgba(255,51,102,0.1);
+}
 
+.alertBox.alert-ok{
+  background:rgba(0,255,136,0.08);
+  border:1px solid rgba(0,255,136,0.3);
+  color:#aaffcc;
+  box-shadow:0 0 20px rgba(0,255,136,0.1);
+}
+
+/* === CHARTS === */
 .chartGrid{
   display:grid;
-  grid-template-columns:1.4fr .8fr;
+  grid-template-columns:1.5fr 0.8fr;
   gap:14px;
   margin-bottom:14px;
 }
 
 .chartCard{
-  background:linear-gradient(135deg,var(--card),var(--card2));
-  border:1px solid var(--border);
-  border-radius:22px;
-  padding:14px;
+  background:linear-gradient(135deg,rgba(7,21,40,0.95),rgba(10,28,53,0.9));
+  border:1px solid rgba(0,200,255,0.2);
+  border-radius:16px;
+  padding:16px;
   box-shadow:var(--shadow);
   height:310px;
   position:relative;
   overflow:hidden;
 }
 
-.chartCard:before{
+.chartCard::before{
   content:"";
   position:absolute;
-  inset:0;
-  background:linear-gradient(135deg,rgba(37,99,235,.07),rgba(124,58,237,.06));
-  pointer-events:none;
+  top:0;left:0;right:0;height:2px;
+  background:linear-gradient(90deg,transparent,var(--blue),var(--purple),transparent);
 }
 
 .chartCard h3{
-  margin:0 0 8px 0;
-  font-size:16px;
-  font-weight:1000;
-  color:var(--text);
+  margin:0 0 12px 0;
+  font-family:'Orbitron',monospace;
+  font-size:12px;
+  font-weight:700;
+  color:var(--blue);
+  letter-spacing:1.5px;
+  text-transform:uppercase;
   position:relative;
   z-index:1;
+  text-shadow:0 0 15px rgba(0,200,255,0.4);
 }
 
 .chartCard canvas{
@@ -200,6 +345,7 @@ body.light .alertBox{color:#991b1b}
   z-index:1;
 }
 
+/* === FLOOR GRID === */
 .floorGrid{
   display:grid;
   grid-template-columns:repeat(4,1fr);
@@ -207,136 +353,205 @@ body.light .alertBox{color:#991b1b}
 }
 
 .floorBox{
-  background:linear-gradient(135deg,var(--card),var(--card2));
-  border:1px solid var(--border);
-  border-radius:18px;
-  padding:13px;
+  background:linear-gradient(135deg,rgba(7,21,40,0.95),rgba(10,28,53,0.9));
+  border:1px solid rgba(0,200,255,0.2);
+  border-radius:14px;
+  padding:14px;
   box-shadow:var(--shadow);
   position:relative;
   overflow:hidden;
+  transition:transform 0.2s, border-color 0.2s, box-shadow 0.2s;
 }
 
-.floorBox:before{
+.floorBox:hover{
+  transform:translateY(-3px);
+  border-color:rgba(0,200,255,0.5);
+  box-shadow:0 0 30px rgba(0,200,255,0.2),var(--shadow);
+}
+
+.floorBox::before{
   content:"";
   position:absolute;
-  inset:0;
-  background:linear-gradient(135deg,rgba(34,197,94,.06),rgba(56,189,248,.06));
-  pointer-events:none;
+  top:0;left:0;right:0;height:2px;
+  background:linear-gradient(90deg,transparent,var(--blue),transparent);
+  opacity:0.7;
 }
 
+.floorBox.low-stock{border-color:rgba(255,51,102,0.4)}
+.floorBox.low-stock::before{background:linear-gradient(90deg,transparent,var(--red),transparent)}
+.floorBox.low-stock:hover{border-color:rgba(255,51,102,0.7);box-shadow:0 0 30px rgba(255,51,102,0.2),var(--shadow)}
+
 .floorBox h3{
-  margin:0 0 9px 0;
-  font-size:15px;
-  font-weight:1000;
+  margin:0 0 10px 0;
+  font-family:'Orbitron',monospace;
+  font-size:11px;
+  font-weight:700;
+  color:var(--blue);
+  letter-spacing:1.5px;
+  text-transform:uppercase;
+  text-shadow:0 0 10px rgba(0,200,255,0.4);
   position:relative;
 }
+
+.floorBox.low-stock h3{color:var(--red);text-shadow:0 0 10px rgba(255,51,102,0.4)}
 
 .row{
   display:flex;
   justify-content:space-between;
-  border-bottom:1px solid var(--border);
-  padding:7px 0;
-  font-size:12px;
-  font-weight:900;
-  position:relative;
+  align-items:center;
+  border-bottom:1px solid rgba(0,100,200,0.2);
+  padding:6px 0;
+  font-size:11px;
+  font-weight:600;
+  letter-spacing:0.3px;
 }
 
-.row span:last-child{font-weight:1000}
-.ok{color:var(--green)}
-.low{color:var(--red)}
+.row:last-of-type{border-bottom:none}
+.row span:first-child{color:var(--muted);text-transform:uppercase;font-size:10px;letter-spacing:0.8px}
+.row span:last-child{font-weight:700;font-family:'Orbitron',monospace;font-size:12px}
+.ok{color:var(--green);text-shadow:0 0 8px rgba(0,255,136,0.4)}
+.low{color:var(--red);text-shadow:0 0 8px rgba(255,51,102,0.4)}
 
+/* Stock bar */
 .stockMini{
-  height:7px;
-  background:rgba(148,163,184,.20);
+  height:4px;
+  background:rgba(0,100,200,0.2);
   border-radius:30px;
   overflow:hidden;
-  margin-top:10px;
-  position:relative;
+  margin:10px 0 8px 0;
 }
 
 .stockMiniFill{
   height:100%;
   border-radius:30px;
-  background:linear-gradient(90deg,#22c55e,#38bdf8,#8b5cf6);
+  background:linear-gradient(90deg,var(--green),var(--blue),var(--purple));
+  box-shadow:0 0 8px rgba(0,200,255,0.4);
+  transition:width 1s ease;
 }
 
-@page{size:A4 portrait;margin:8mm}
+.floorBox.low-stock .stockMiniFill{
+  background:linear-gradient(90deg,var(--red),#ff8844);
+  box-shadow:0 0 8px rgba(255,51,102,0.4);
+}
+
+.status-badge{
+  display:inline-flex;
+  align-items:center;
+  gap:4px;
+  padding:3px 8px;
+  border-radius:20px;
+  font-size:10px;
+  font-weight:700;
+  letter-spacing:0.5px;
+}
+
+.badge-ok{background:rgba(0,255,136,0.12);border:1px solid rgba(0,255,136,0.3);color:var(--green)}
+.badge-low{background:rgba(255,51,102,0.12);border:1px solid rgba(255,51,102,0.3);color:var(--red)}
+
+/* Corner decorations */
+.corner-tl,.corner-br{position:absolute;width:16px;height:16px}
+.corner-tl{top:8px;left:8px;border-top:2px solid var(--blue);border-left:2px solid var(--blue);opacity:0.5}
+.corner-br{bottom:8px;right:8px;border-bottom:2px solid var(--blue);border-right:2px solid var(--blue);opacity:0.5}
+.floorBox.low-stock .corner-tl,
+.floorBox.low-stock .corner-br{border-color:var(--red)}
+
+/* Scanline overlay */
+.scanline{
+  position:fixed;inset:0;
+  background:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,0,0,0.03) 2px,rgba(0,0,0,0.03) 4px);
+  pointer-events:none;
+  z-index:9999;
+}
+
+@keyframes fadeInUp{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
+.kpiCard,.chartCard,.floorBox{animation:fadeInUp 0.5s ease both}
 
 @media print{
-  button,.controls,.right{display:none!important}
-  body{background:white;color:black}
-  .header,.kpiCard,.chartCard,.floorBox{background:white;color:black;box-shadow:none}
+  button,.controls,.right,.scanline{display:none!important}
 }
 
 @media(max-width:900px){
-  body{padding:10px}
   .header{display:block;text-align:center}
-  .right{margin-top:10px}
-  .kpi,.chartGrid,.floorGrid{grid-template-columns:1fr}
-  .chartCard{height:280px}
+  .btn-group{margin-top:10px;justify-content:center}
+  .kpi,.chartGrid,.floorGrid{grid-template-columns:1fr 1fr}
+  .chartCard{height:250px}
+}
+
+@media(max-width:500px){
+  .kpi,.floorGrid{grid-template-columns:1fr}
+  .chartGrid{grid-template-columns:1fr}
 }
 </style>
 </head>
-
 <body>
+<div class="scanline"></div>
 
+<div class="page-wrap">
+
+<!-- HEADER -->
 <div class="header">
   <div>
-    <h2>🏭 Needle Floor Wise Dashboard</h2>
-    <div class="sub">Firebase Live • Floor Stock • Monthly Summary • Low Stock Alert</div>
+    <div class="header-title">⬡ NEEDLE FLOOR DASHBOARD</div>
+    <div class="header-sub"><span>● LIVE</span> &nbsp;|&nbsp; Floor Stock &nbsp;|&nbsp; Monthly Summary &nbsp;|&nbsp; Alert System</div>
   </div>
-
-  <div class="right">
-    <button onclick="loadDashboard()">🔄 Refresh</button>
-    <button onclick="window.print()">🖨 PDF</button>
-    <button onclick="exportExcel()">📊 Excel</button>
-    <button class="themeBtn" onclick="toggleTheme()">🌙 Dark / ☀️ Light</button>
-    <button onclick="location.href='index.html'">🏠 Home</button>
+  <div class="btn-group right">
+    <button class="btn-refresh" onclick="loadDashboard()">↻ REFRESH</button>
+    <button onclick="window.print()">⊞ PDF</button>
+    <button onclick="exportExcel()">⊟ EXCEL</button>
+    <button class="btn-theme" onclick="toggleTheme()">◐ THEME</button>
+    <button class="btn-home" onclick="location.href='index.html'">⌂ HOME</button>
   </div>
 </div>
 
+<!-- MONTH -->
 <div class="controls">
-  Month:
+  MONTH &nbsp;
   <input type="month" id="monthInput" onchange="loadDashboard()">
 </div>
 
+<!-- ALERTS -->
 <div id="alerts"></div>
 
+<!-- KPI -->
 <div class="kpi">
   <div class="kpiCard">
-    <div class="label">🪡 Total Present Stock</div>
-    <div class="value" id="totalStock">0</div>
+    <span class="kpi-icon">🪡</span>
+    <div class="label">Total Present Stock</div>
+    <div class="value" id="totalStock">—</div>
   </div>
-
   <div class="kpiCard">
-    <div class="label">📥 Monthly Receive</div>
-    <div class="value" id="totalReceive">0</div>
+    <span class="kpi-icon">📥</span>
+    <div class="label">Monthly Receive</div>
+    <div class="value" id="totalReceive">—</div>
   </div>
-
   <div class="kpiCard">
-    <div class="label">📤 Monthly Delivery</div>
-    <div class="value" id="totalDelivery">0</div>
+    <span class="kpi-icon">📤</span>
+    <div class="label">Monthly Delivery</div>
+    <div class="value" id="totalDelivery">—</div>
   </div>
-
   <div class="kpiCard">
-    <div class="label">⚠️ Low Stock Floor</div>
-    <div class="value" id="lowCount">0</div>
+    <span class="kpi-icon">⚠️</span>
+    <div class="label">Low Stock Floors</div>
+    <div class="value" id="lowCount">—</div>
   </div>
 </div>
 
+<!-- CHARTS -->
 <div class="chartGrid">
   <div class="chartCard">
-    <h3>📈 Floor Wise Present Stock</h3>
+    <h3>▣ Floor Wise Present Stock</h3>
     <canvas id="floorChart"></canvas>
   </div>
-
   <div class="chartCard">
-    <h3>📊 Monthly Receive / Delivery</h3>
+    <h3>◎ Monthly Receive / Delivery</h3>
     <canvas id="monthlyChart"></canvas>
   </div>
 </div>
 
+<!-- FLOORS -->
 <div id="floorArea" class="floorGrid"></div>
+
+</div><!-- end page-wrap -->
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-app.js";
@@ -355,45 +570,23 @@ const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
 const FLOOR_OPENING = {
-  "Kadom R":618,
-  "Kadom N":443,
-  "Poddo R":1889,
-  "Poddo N":401,
-  "Shapla R":1171,
-  "Shapla N":573,
-  "Sample R":1138,
-  "Sample N":251,
-  "EMBROIDERY R":1011,
-  "EMBROIDERY N":287,
-  "Belly R":796,
-  "Belly N":335
+  "Kadom R":618,"Kadom N":443,"Poddo R":1889,"Poddo N":401,
+  "Shapla R":1171,"Shapla N":573,"Sample R":1138,"Sample N":251,
+  "EMBROIDERY R":1011,"EMBROIDERY N":287,"Belly R":796,"Belly N":335
 };
-
 const FLOORS = Object.keys(FLOOR_OPENING);
 
-let floorChart=null;
-let monthlyChart=null;
+let floorChart=null, monthlyChart=null;
 
-const chartPalette=[
-  "#38bdf8","#22c55e","#f59e0b","#a855f7","#ef4444","#14b8a6",
-  "#eab308","#6366f1","#ec4899","#84cc16","#06b6d4","#f97316"
+const techPalette=[
+  "#00c8ff","#00ff88","#9933ff","#ffcc00","#ff3366","#00e5ff",
+  "#44ffaa","#cc44ff","#ffaa00","#ff6688","#33ddff","#88ffcc"
 ];
 
-function chartColors(count){
-  return Array.from({length:count},(_,i)=>chartPalette[i%chartPalette.length]);
-}
-
-function chartTextColor(){
-  return getComputedStyle(document.body).getPropertyValue("--chartText").trim() || "#111827";
-}
-
-function chartGridColor(){
-  return getComputedStyle(document.body).getPropertyValue("--chartGrid").trim() || "rgba(148,163,184,.25)";
-}
-
-function fmt(n){
-  return Number(n||0).toLocaleString("en-US");
-}
+function chartColors(n){ return Array.from({length:n},(_,i)=>techPalette[i%techPalette.length]) }
+function chartTextColor(){ return "#c8e8ff" }
+function chartGridColor(){ return "rgba(0,180,255,0.12)" }
+function fmt(n){ return Number(n||0).toLocaleString("en-US") }
 
 const valueLabelPlugin={
   id:"valueLabelPlugin",
@@ -401,20 +594,14 @@ const valueLabelPlugin={
     const {ctx}=chart;
     ctx.save();
     ctx.textAlign="center";
-    ctx.fillStyle=chartTextColor();
-    ctx.font="900 11px Segoe UI";
-
-    chart.data.datasets.forEach((dataset,di)=>{
-      const meta=chart.getDatasetMeta(di);
-      meta.data.forEach((bar,i)=>{
-        const value=dataset.data[i];
-        if(value===undefined || value===null) return;
-        if(bar && bar.x && bar.y){
-          ctx.fillText(fmt(value),bar.x,bar.y-7);
-        }
+    ctx.fillStyle="#00c8ff";
+    ctx.font="bold 10px 'Orbitron', monospace";
+    chart.data.datasets.forEach((ds,di)=>{
+      chart.getDatasetMeta(di).data.forEach((bar,i)=>{
+        const v=ds.data[i];
+        if(v && bar.x && bar.y) ctx.fillText(fmt(v),bar.x,bar.y-6);
       });
     });
-
     ctx.restore();
   }
 };
@@ -424,95 +611,80 @@ const doughnutCenterPlugin={
   afterDraw(chart){
     if(chart.config.type!=="doughnut") return;
     const {ctx,chartArea:{left,right,top,bottom}}=chart;
-    const data=chart.data.datasets[0].data || [];
-    const total=data.reduce((a,b)=>a+Number(b||0),0);
+    const total=(chart.data.datasets[0].data||[]).reduce((a,b)=>a+Number(b||0),0);
     ctx.save();
-    ctx.fillStyle=chartTextColor();
+    ctx.fillStyle="#00c8ff";
     ctx.textAlign="center";
-    ctx.font="900 18px Segoe UI";
-    ctx.fillText(fmt(total), (left+right)/2, (top+bottom)/2);
-    ctx.font="800 10px Segoe UI";
-    ctx.fillText("TOTAL", (left+right)/2, (top+bottom)/2+16);
+    ctx.font="bold 18px 'Orbitron', monospace";
+    ctx.fillText(fmt(total),(left+right)/2,(top+bottom)/2);
+    ctx.font="700 9px 'Inter', sans-serif";
+    ctx.fillStyle="#6a9bc3";
+    ctx.letterSpacing="2px";
+    ctx.fillText("TOTAL",(left+right)/2,(top+bottom)/2+16);
     ctx.restore();
   }
 };
 
-function barOptions(titleText){
+function barOptions(){
   return{
     responsive:true,
     maintainAspectRatio:false,
     plugins:{
       legend:{display:false},
-      title:{display:!!titleText,text:titleText,color:chartTextColor(),font:{family:"Segoe UI",size:13,weight:"bold"}},
-      tooltip:{backgroundColor:"rgba(15,23,42,.92)",titleColor:"#fff",bodyColor:"#fff",borderColor:"rgba(255,255,255,.18)",borderWidth:1}
+      tooltip:{
+        backgroundColor:"rgba(4,13,26,0.95)",
+        titleColor:"#00c8ff",
+        bodyColor:"#c8e8ff",
+        borderColor:"rgba(0,200,255,0.3)",
+        borderWidth:1,
+        titleFont:{family:"Orbitron",size:11},
+        bodyFont:{family:"Inter",size:12,weight:"bold"}
+      }
     },
     scales:{
-      y:{beginAtZero:true,grid:{color:chartGridColor()},ticks:{color:chartTextColor(),font:{family:"Segoe UI",size:11,weight:"bold"}}},
-      x:{grid:{display:false},ticks:{color:chartTextColor(),font:{family:"Segoe UI",size:10,weight:"bold"}}}
+      y:{
+        beginAtZero:true,
+        grid:{color:chartGridColor()},
+        ticks:{color:chartTextColor(),font:{family:"Orbitron",size:9,weight:"bold"}}
+      },
+      x:{
+        grid:{display:false},
+        ticks:{color:chartTextColor(),font:{family:"Inter",size:9,weight:"bold"}}
+      }
     }
   };
 }
 
-function getLowLimit(floor){
-  return floor.includes(" N") ? 300 : 500;
-}
+function getLowLimit(f){ return f.includes(" N")?300:500 }
+function getStatus(f,s){ return s<=getLowLimit(f)?"LOW":"OK" }
 
-function getStatus(floor, stock){
-  return stock <= getLowLimit(floor) ? "⚠️ LOW STOCK" : "✅ OK";
-}
-
-function toggleTheme(){
-  document.body.classList.toggle("light");
-  localStorage.setItem(
-    "needleDashTheme",
-    document.body.classList.contains("light") ? "light" : "dark"
-  );
-  setTimeout(loadDashboard,100);
-}
-
-if(localStorage.getItem("needleDashTheme")==="light"){
-  document.body.classList.add("light");
-}
+function toggleTheme(){ /* reserved */ }
 
 function setDefaultMonth(){
   let m=document.getElementById("monthInput");
   if(!m.value){
     let d=new Date();
-    let y=d.getFullYear();
-    let mo=String(d.getMonth()+1).padStart(2,"0");
-    m.value=`${y}-${mo}`;
+    m.value=`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}`;
   }
 }
 
 async function loadDashboard(){
   setDefaultMonth();
-
   let month=document.getElementById("monthInput").value;
   let snap=await getDocs(collection(db,"dailyPosting"));
 
-  let latestByFloor={};
-  let receiveMap={};
-  let deliveryMap={};
-
-  FLOORS.forEach(f=>{
-    receiveMap[f]=0;
-    deliveryMap[f]=0;
-  });
+  let latestByFloor={},receiveMap={},deliveryMap={};
+  FLOORS.forEach(f=>{ receiveMap[f]=0; deliveryMap[f]=0; });
 
   snap.forEach(docSnap=>{
     let data=docSnap.data();
-
-    if(!data.floor || !Array.isArray(data.rows)) return;
+    if(!data.floor||!Array.isArray(data.rows)) return;
     if(!FLOORS.includes(data.floor)) return;
-
-    let docDate=data.date || data.month || "";
-    if(!docDate && docSnap.id) docDate=docSnap.id;
-
-    if(!latestByFloor[data.floor] || String(docDate) > String(latestByFloor[data.floor].sortDate)){
+    let docDate=data.date||data.month||docSnap.id||"";
+    if(!latestByFloor[data.floor]||String(docDate)>String(latestByFloor[data.floor].sortDate)){
       latestByFloor[data.floor]={...data,sortDate:docDate};
     }
-
-    if(String(docDate).slice(0,7)===month || data.month===month){
+    if(String(docDate).slice(0,7)===month||data.month===month){
       data.rows.forEach(r=>{
         receiveMap[data.floor]+=Number(r.receive)||0;
         deliveryMap[data.floor]+=Number(r.delivery)||0;
@@ -520,30 +692,18 @@ async function loadDashboard(){
     }
   });
 
-  let floorStocks={};
-  let totalStock=0;
-  let totalReceive=0;
-  let totalDelivery=0;
-  let lowFloors=[];
-
+  let floorStocks={},totalStock=0,totalReceive=0,totalDelivery=0,lowFloors=[];
   FLOORS.forEach(floor=>{
     let stock=FLOOR_OPENING[floor];
-
-    if(latestByFloor[floor] && latestByFloor[floor].rows){
+    if(latestByFloor[floor]?.rows){
       stock=0;
-      latestByFloor[floor].rows.forEach(r=>{
-        stock+=Number(r.present)||0;
-      });
+      latestByFloor[floor].rows.forEach(r=>{ stock+=Number(r.present)||0; });
     }
-
     floorStocks[floor]=stock;
     totalStock+=stock;
     totalReceive+=receiveMap[floor];
     totalDelivery+=deliveryMap[floor];
-
-    if(stock <= getLowLimit(floor)){
-      lowFloors.push({floor,stock,limit:getLowLimit(floor)});
-    }
+    if(stock<=getLowLimit(floor)) lowFloors.push({floor,stock,limit:getLowLimit(floor)});
   });
 
   document.getElementById("totalStock").innerText=fmt(totalStock);
@@ -558,79 +718,45 @@ async function loadDashboard(){
 
 function renderAlerts(lowFloors){
   let box=document.getElementById("alerts");
-
   if(lowFloors.length===0){
-    box.innerHTML=`
-      <div class="alertBox" style="background:rgba(34,197,94,.12);border-color:#22c55e;color:#bbf7d0">
-        ✅ All floor stock OK
-      </div>
-    `;
+    box.innerHTML=`<div class="alertBox alert-ok">✅ ALL FLOOR STOCK STATUS NORMAL — No Critical Alerts</div>`;
     return;
   }
-
-  let html="";
-  lowFloors.forEach(x=>{
-    html+=`
-      <div class="alertBox">
-        ⚠️ ${x.floor} LOW STOCK — Present: ${fmt(x.stock)}, Limit: ${fmt(x.limit)}
-      </div>
-    `;
-  });
-
-  box.innerHTML=html;
+  box.innerHTML=lowFloors.map(x=>`
+    <div class="alertBox alert-low">
+      ⚠ ${x.floor} — CRITICAL LOW STOCK &nbsp;|&nbsp; Present: <strong>${fmt(x.stock)}</strong> &nbsp;|&nbsp; Minimum Limit: ${fmt(x.limit)}
+    </div>
+  `).join("");
 }
 
 function renderFloors(floorStocks,receiveMap,deliveryMap){
-  let html="";
-
-  FLOORS.forEach(floor=>{
+  document.getElementById("floorArea").innerHTML=FLOORS.map((floor,i)=>{
     let stock=floorStocks[floor];
     let status=getStatus(floor,stock);
-    let isLow=status.includes("LOW");
-
-    html+=`
-      <div class="floorBox">
-        <h3>🏭 ${floor}</h3>
-
-        <div class="row">
-          <span>Present</span>
-          <span class="${isLow ? 'low' : 'ok'}">${fmt(stock)}</span>
-        </div>
-
-        <div class="row">
-          <span>Receive</span>
-          <span>${fmt(receiveMap[floor])}</span>
-        </div>
-
-        <div class="row">
-          <span>Delivery</span>
-          <span>${fmt(deliveryMap[floor])}</span>
-        </div>
-
-        <div class="row">
-          <span>Limit</span>
-          <span>${fmt(getLowLimit(floor))}</span>
-        </div>
-
-        <div class="stockMini">
-          <div class="stockMiniFill" style="width:${Math.min(100,Math.max(8,stock/20))}%"></div>
-        </div>
-
-        <div class="row">
-          <span>Status</span>
-          <span class="${isLow ? 'low' : 'ok'}">${status}</span>
+    let isLow=status==="LOW";
+    let pct=Math.min(100,Math.max(5,stock/20));
+    let delay=(i*0.05).toFixed(2);
+    return `
+      <div class="floorBox${isLow?" low-stock":""}" style="animation-delay:${delay}s">
+        <div class="corner-tl"></div>
+        <div class="corner-br"></div>
+        <h3>⬡ ${floor}</h3>
+        <div class="row"><span>Present</span><span class="${isLow?'low':'ok'}">${fmt(stock)}</span></div>
+        <div class="row"><span>Receive</span><span style="color:#c8e8ff">${fmt(receiveMap[floor])}</span></div>
+        <div class="row"><span>Delivery</span><span style="color:#c8e8ff">${fmt(deliveryMap[floor])}</span></div>
+        <div class="row"><span>Limit</span><span style="color:var(--muted)">${fmt(getLowLimit(floor))}</span></div>
+        <div class="stockMini"><div class="stockMiniFill" style="width:${pct}%"></div></div>
+        <div style="text-align:right;margin-top:4px">
+          <span class="status-badge ${isLow?'badge-low':'badge-ok'}">${isLow?"⚠ LOW STOCK":"✔ NORMAL"}</span>
         </div>
       </div>
     `;
-  });
-
-  document.getElementById("floorArea").innerHTML=html;
+  }).join("");
 }
 
 function renderCharts(floorStocks,receiveMap,deliveryMap){
   let labels=FLOORS;
   let stockData=labels.map(f=>floorStocks[f]);
-
   let receiveTotal=labels.reduce((a,f)=>a+receiveMap[f],0);
   let deliveryTotal=labels.reduce((a,f)=>a+deliveryMap[f],0);
 
@@ -640,17 +766,18 @@ function renderCharts(floorStocks,receiveMap,deliveryMap){
   floorChart=new Chart(document.getElementById("floorChart"),{
     type:"bar",
     data:{
-      labels:labels,
+      labels,
       datasets:[{
         label:"Present Stock",
         data:stockData,
-        backgroundColor:chartColors(labels.length),
+        backgroundColor:chartColors(labels.length).map(c=>c+"55"),
         borderColor:chartColors(labels.length),
-        borderWidth:1,
-        borderRadius:10
+        borderWidth:2,
+        borderRadius:8,
+        hoverBackgroundColor:chartColors(labels.length).map(c=>c+"99")
       }]
     },
-    options:barOptions("Floor Wise Present Stock"),
+    options:barOptions(),
     plugins:[valueLabelPlugin]
   });
 
@@ -660,9 +787,10 @@ function renderCharts(floorStocks,receiveMap,deliveryMap){
       labels:["Receive","Delivery"],
       datasets:[{
         data:[receiveTotal,deliveryTotal],
-        backgroundColor:["#22c55e","#ef4444"],
-        borderColor:["#22c55e","#ef4444"],
-        borderWidth:1
+        backgroundColor:["rgba(0,255,136,0.2)","rgba(255,51,102,0.2)"],
+        borderColor:["#00ff88","#ff3366"],
+        borderWidth:2,
+        hoverBackgroundColor:["rgba(0,255,136,0.4)","rgba(255,51,102,0.4)"]
       }]
     },
     options:{
@@ -674,14 +802,17 @@ function renderCharts(floorStocks,receiveMap,deliveryMap){
           position:"bottom",
           labels:{
             color:chartTextColor(),
-            font:{family:"Segoe UI",size:12,weight:"bold"},
-            boxWidth:12
+            font:{family:"Orbitron",size:10,weight:"bold"},
+            boxWidth:12,
+            padding:16
           }
         },
         tooltip:{
-          backgroundColor:"rgba(15,23,42,.92)",
-          titleColor:"#fff",
-          bodyColor:"#fff"
+          backgroundColor:"rgba(4,13,26,0.95)",
+          titleColor:"#00c8ff",
+          bodyColor:"#c8e8ff",
+          borderColor:"rgba(0,200,255,0.3)",
+          borderWidth:1
         }
       }
     },
@@ -690,8 +821,7 @@ function renderCharts(floorStocks,receiveMap,deliveryMap){
 }
 
 function exportExcel(){
-  let html=document.body.innerHTML;
-  let file=new Blob([html],{type:"application/vnd.ms-excel"});
+  let file=new Blob([document.body.innerHTML],{type:"application/vnd.ms-excel"});
   let a=document.createElement("a");
   a.href=URL.createObjectURL(file);
   a.download="needle-dashboard.xls";
@@ -704,6 +834,5 @@ window.exportExcel=exportExcel;
 
 loadDashboard();
 </script>
-
 </body>
 </html>
