@@ -16,7 +16,7 @@ body.light .topControls{background:rgba(241,245,249,0.9)}
 button{padding:6px 8px;border:0;border-radius:6px;color:white;font-weight:bold;cursor:pointer;margin:2px;font-size:10px;transition:all 0.3s}
 button:hover{transform:translateY(-2px);box-shadow:0 4px 12px rgba(0,0,0,0.3)}
 button:active{transform:translateY(0)}
-.deleteBtn{background:#dc2626}.excelBtn{background:#16a34a}.pdfBtn{background:#7c3aed}.homeBtn{background:#2563eb}.saveBtn{background:#10b981}.themeBtn{background:#64748b}.refreshBtn{background:#f59e0b}
+.deleteBtn{background:#dc2626}.excelBtn{background:#16a34a}.pdfBtn{background:#7c3aed}.homeBtn{background:#2563eb}.saveBtn{background:#10b981}.themeBtn{background:#64748b}.refreshBtn{background:#f59e0b}.bulkMoveBtn{background:#db2777}
 input,select,textarea,button{font-size:13px}
 select,input[type="date"],input[type="text"]{padding:4px;border-radius:6px;border:1px solid #475569;max-width:150px;background:#1e293b;color:white}
 body.light select,body.light input[type="date"],body.light input[type="text"]{background:#f1f5f9;color:#0f172a;border-color:#cbd5e1}
@@ -34,7 +34,7 @@ body.light #reportTable thead{background:#334155}
 .req-tag{display:block;font-size:6px;color:#059669;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 
 /* ===== POPUPS ===== */
-#reqPopup,#transferPopup,#negativePopup,#reportPopup{display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.82);z-index:9998;justify-content:center;align-items:center}
+#reqPopup,#transferPopup,#negativePopup,#reportPopup,#bulkMovePopup{display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.82);z-index:9998;justify-content:center;align-items:center}
 .popup-content{background:white;color:black;padding:18px;border-radius:12px;max-width:95%;width:380px;box-shadow:0 8px 30px rgba(0,0,0,0.4);position:relative;animation:popupSlide 0.25s}
 @keyframes popupSlide{from{transform:translateY(-40px);opacity:0}to{transform:translateY(0);opacity:1}}
 .popup-close{position:absolute;top:10px;right:14px;font-size:22px;cursor:pointer;color:#666;font-weight:bold}
@@ -45,6 +45,10 @@ body.light #reportTable thead{background:#334155}
 .popup-field input,.popup-field select{width:100%;max-width:100%;background:#f8fafc;color:#0f172a;border:1.5px solid #cbd5e1;padding:7px;border-radius:6px;font-size:13px}
 .popup-fix-btn{background:#2563eb;color:white;border:none;padding:10px 18px;border-radius:8px;font-weight:bold;cursor:pointer;width:100%;margin-top:12px;font-size:14px;transition:all 0.3s}
 .popup-fix-btn:hover{background:#1d4ed8;transform:translateY(-2px)}
+.popup-fix-btn.danger{background:#dc2626}
+.popup-fix-btn.danger:hover{background:#b91c1c}
+.popup-fix-btn.pink{background:#db2777}
+.popup-fix-btn.pink:hover{background:#be185d}
 .popup-footer{text-align:center;font-size:10px;color:#64748b;margin-top:9px;padding-top:9px;border-top:1px solid #e2e8f0}
 .popup-item-info{background:#f1f5f9;border-radius:6px;padding:8px;margin-bottom:10px;font-size:11px;color:#334155;font-weight:600}
 
@@ -62,6 +66,14 @@ body.light #reportTable thead{background:#334155}
 #reportTable2 td{border:1px solid #ccc;padding:4px;text-align:center}
 #reportTable2 tr:nth-child(even){background:#f1f5f9}
 #reportTable2 tfoot td{background:#334155;color:white;font-weight:bold}
+
+/* Bulk Move popup */
+#bulkMovePopup .popup-content{width:95%;max-width:480px}
+.bulk-log{background:#f1f5f9;border-radius:6px;padding:8px;margin-top:10px;font-size:10px;color:#334155;max-height:200px;overflow-y:auto;line-height:1.7;border:1px solid #cbd5e1}
+.bulk-log-line{padding:2px 0;border-bottom:1px solid #e2e8f0}
+.bulk-log-line.ok{color:#059669}
+.bulk-log-line.err{color:#dc2626}
+.bulk-log-line.info{color:#7c3aed}
 
 /* Floor Req No banner */
 .floor-req-banner{display:none;background:linear-gradient(135deg,#059669,#10b981);color:white;padding:4px 10px;border-radius:6px;font-size:10px;font-weight:700;text-align:center;margin:4px 0;cursor:pointer}
@@ -128,7 +140,7 @@ body.light .last-sync{color:#64748b}
   .tableWrap,.summaryWrap{overflow:visible!important}
   #reportTable,#summaryTable{width:100%!important;color:black!important;background:white!important}
   #reportTable th,#reportTable td{font-size:8px;padding:2px}
-  #negativePopup,#reqPopup,#transferPopup,#reportPopup{display:none!important}
+  #negativePopup,#reqPopup,#transferPopup,#reportPopup,#bulkMovePopup{display:none!important}
 }
 </style>
 </head>
@@ -210,7 +222,6 @@ body.light .last-sync{color:#64748b}
 </div>
 <div class="carry-info" id="carryInfo" style="display:none"></div>
 
-<!-- ✅ NEW: Floor-level Requisition Number banner -->
 <div class="floor-req-banner" id="floorReqBanner" onclick="changeFloorReqNo()">
   📋 Floor Req No: <span id="floorReqNoDisplay"></span> &nbsp;(পরিবর্তন করতে ক্লিক করুন)
 </div>
@@ -222,6 +233,7 @@ body.light .last-sync{color:#64748b}
   <button class="excelBtn" onclick="exportExcel()">📊 Excel</button>
   <button class="pdfBtn" onclick="exportPDF()">📄 PDF</button>
   <button class="themeBtn" style="background:#7c3aed" onclick="showTransferReport()">🚚 Transfers</button>
+  <button class="bulkMoveBtn" onclick="showBulkMovePopup()">📦 Date Move</button>
   <button class="homeBtn" onclick="location.href='index.html'">🏠 Home</button>
 </div>
 <div class="last-sync" id="lastSync"></div>
@@ -366,6 +378,35 @@ body.light .last-sync{color:#64748b}
   </div>
 </div>
 
+<!-- ===== BULK DATE MOVE POPUP ===== -->
+<div id="bulkMovePopup">
+  <div class="popup-content">
+    <span class="popup-close" onclick="closeBulkMovePopup()">×</span>
+    <div class="popup-title" style="color:#db2777">📦 Bulk Date Move</div>
+    <div style="background:#fef3c7;border:1px solid #f59e0b;border-radius:6px;padding:10px;margin-bottom:12px;font-size:11px;color:#92400e;line-height:1.6">
+      ⚠️ <b>সতর্কতা:</b> এই অপারেশন সব floor এর নির্বাচিত তারিখের ডাটা <b>TARGET DATE</b> এ move করবে।<br>
+      পুরনো তারিখের ডাটা <b>DELETE</b> হবে। Target date এ আগে থেকে data থাকলে <b>Overwrite</b> হবে।
+    </div>
+    <div class="popup-field">
+      <label>📅 Source Date (যে তারিখ থেকে move করবেন):</label>
+      <input type="date" id="bulkSourceDate" style="background:#f8fafc;color:#0f172a;border:1.5px solid #cbd5e1;padding:7px;border-radius:6px;font-size:13px;width:100%">
+    </div>
+    <div class="popup-field">
+      <label>🎯 Target Date (যে তারিখে নিয়ে যাবেন):</label>
+      <input type="date" id="bulkTargetDate" style="background:#f8fafc;color:#0f172a;border:1.5px solid #cbd5e1;padding:7px;border-radius:6px;font-size:13px;width:100%" value="2022-06-22">
+    </div>
+    <div class="popup-field">
+      <label>🏢 Floor (একটি বা সব):</label>
+      <select id="bulkFloorSelect" style="background:#f8fafc;color:#0f172a;border:1.5px solid #cbd5e1;padding:7px;border-radius:6px;font-size:12px;width:100%">
+        <option value="ALL">— সব Floor —</option>
+      </select>
+    </div>
+    <button class="popup-fix-btn pink" onclick="executeBulkMove()" id="bulkMoveExecBtn">🚀 Move করুন</button>
+    <div class="bulk-log" id="bulkLog" style="display:none"></div>
+    <div class="popup-footer">Supabase + Local Cache দুই জায়গাতেই কাজ করবে</div>
+  </div>
+</div>
+
 <script type="module">
 import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm";
 
@@ -396,6 +437,13 @@ function setReportCacheEntry(floor, date, data){
 }
 function getReportCacheEntry(floor, date){
   return getReportCache()[`${floor}__${date}`] || null;
+}
+function deleteReportCacheEntry(floor, date){
+  try{
+    const c = getReportCache();
+    delete c[`${floor}__${date}`];
+    localStorage.setItem(REPORT_CACHE_KEY, JSON.stringify(c));
+  }catch(e){}
 }
 
 // =========================================
@@ -743,29 +791,19 @@ const floorData = {
   ]
 };
 
+const ALL_FLOORS = Object.keys(floorData);
+
 // =========================================
 // 🌐 GLOBAL STATE
 // =========================================
 let negativeRowIndex = -1;
 let currentFloorData = [];
-
-// rowReqNo[i] = requisition number for row i's Rcvd entry
 let rowReqNo = {};
-
-// ✅ NEW: floorReqNo — একটা floor+date এ একটাই req number, সব row এ apply হবে
 let floorReqNo = null;
-
-// rowTransferOut[i] = array of {toFloor, qty, receiverName, reqNo}
 let rowTransferOut = {};
-
-// rowTransferIn[i] = array of {fromFloor, qty, receiverName, reqNo}
 let rowTransferIn = {};
-
-// Pending requisition state
 let pendingReqIndex = null;
 let pendingReqValue = null;
-
-// Pending transfer state
 let pendingTransferIndex = null;
 
 // =========================================
@@ -826,6 +864,52 @@ async function loadFromSupabase(floor, date){
   return data;
 }
 
+// =========================================
+// 🗑️ DELETE — FIXED with count verification
+// =========================================
+async function deleteDataForFloorDate(floor, date){
+  // 1. Delete from local cache
+  deleteReportCacheEntry(floor, date);
+
+  // 2. Delete from Supabase with proper verification
+  const companyId = await getCompanyId();
+  if(!companyId) return {success:false, error:'Company not found'};
+
+  // First check if record exists
+  const {data:existing} = await supabase.from('needle_reports')
+    .select('id')
+    .eq('company_id', companyId)
+    .eq('floor', floor)
+    .eq('report_date', date)
+    .maybeSingle();
+
+  if(!existing){
+    return {success:true, note:'No record found in Supabase (already deleted or never saved)'};
+  }
+
+  // Now delete using the primary key id for guaranteed deletion
+  const {error, count} = await supabase.from('needle_reports')
+    .delete({count:'exact'})
+    .eq('company_id', companyId)
+    .eq('floor', floor)
+    .eq('report_date', date);
+
+  if(error){
+    console.error('Delete error:', error);
+    // RLS policy might be blocking — give clear message
+    if(error.code === '42501' || error.message?.includes('policy')){
+      return {success:false, error:'RLS Policy Error: Supabase DELETE permission নেই। Supabase dashboard এ needle_reports টেবিলে DELETE policy enable করুন।'};
+    }
+    return {success:false, error: error.message};
+  }
+
+  if(count === 0){
+    return {success:false, error:'RLS Policy সমস্যা: Delete request গেছে কিন্তু কোনো row delete হয়নি। Supabase dashboard এ DELETE policy চেক করুন।'};
+  }
+
+  return {success:true, deletedCount: count};
+}
+
 async function saveTransferToSupabase(transfer){
   const companyId = await getCompanyId();
   if(!companyId) return {error:'no company'};
@@ -882,7 +966,6 @@ function updateCarryIndicator(source, prevDate){
   }
 }
 
-// ✅ NEW: floor req no banner update
 function updateFloorReqBanner(){
   const banner = document.getElementById('floorReqBanner');
   const display = document.getElementById('floorReqNoDisplay');
@@ -894,12 +977,10 @@ function updateFloorReqBanner(){
   }
 }
 
-// ✅ NEW: user can click banner to change floor req no
 function changeFloorReqNo(){
-  const newNo = prompt('নতুন Requisition Number দিন (এই floor এর সব rcvd-এ apply হবে):', floorReqNo||'');
+  const newNo = prompt('নতুন Requisition Number দিন:', floorReqNo||'');
   if(newNo && newNo.trim()){
     floorReqNo = newNo.trim();
-    // সব row-এ apply করো
     currentFloorData.forEach((_,i)=>{
       const val = Number(document.getElementById(`r${i}`)?.value)||0;
       if(val > 0){
@@ -919,7 +1000,6 @@ function changeFloorReqNo(){
 function loadTable(customPrevious=null, customSource=null){
   currentFloorData = getItems();
   updateCategoryBadge();
-  // ✅ Reset state on new table load
   rowReqNo = {}; rowTransferOut = {}; rowTransferIn = {};
   floorReqNo = null;
   updateFloorReqBanner();
@@ -1002,23 +1082,18 @@ function updateTotal(){
 }
 
 // =========================================
-// ✅ REQUISITION POPUP — NEW LOGIC
+// ✅ REQUISITION POPUP
 // =========================================
 function checkReqNo(i){
   const val = Number(document.getElementById(`r${i}`).value)||0;
-  if(val <= 0) return; // কোনো value নেই, কিছু করার নেই
-
-  if(rowReqNo[i]) return; // এই row-এ আগেই req no আছে
-
-  // ✅ KEY CHANGE: যদি এই floor+date এ আগে req no দেওয়া হয়ে গেছে, auto-apply করো
+  if(val <= 0) return;
+  if(rowReqNo[i]) return;
   if(floorReqNo){
     rowReqNo[i] = floorReqNo;
     const tag = document.getElementById(`reqTag${i}`);
     if(tag) tag.textContent = '📋 '+floorReqNo;
-    return; // popup দরকার নেই!
+    return;
   }
-
-  // প্রথম row-এ Rcvd দিলে — একবারই popup দেখাবে
   pendingReqIndex = i;
   pendingReqValue = val;
   const item = currentFloorData[i];
@@ -1032,20 +1107,11 @@ function checkReqNo(i){
 
 function confirmReqNo(){
   const reqNo = document.getElementById('reqNoInput').value.trim();
-  if(!reqNo){
-    alert('❌ Requisition Number দিন!');
-    return;
-  }
-
-  // ✅ Floor-level req no সেট করো — এরপর থেকে popup আর আসবে না
+  if(!reqNo){ alert('❌ Requisition Number দিন!'); return; }
   floorReqNo = reqNo;
-
-  // Current pending row-এ apply
   rowReqNo[pendingReqIndex] = reqNo;
   const tag = document.getElementById(`reqTag${pendingReqIndex}`);
   if(tag) tag.textContent = '📋 '+reqNo;
-
-  // ✅ বাকি যে row-গুলোতে ইতিমধ্যে Rcvd value আছে কিন্তু req no নেই, সেগুলোতেও apply
   currentFloorData.forEach((_,i)=>{
     const val = Number(document.getElementById(`r${i}`)?.value)||0;
     if(val > 0 && !rowReqNo[i]){
@@ -1054,18 +1120,14 @@ function confirmReqNo(){
       if(t) t.textContent = '📋 '+reqNo;
     }
   });
-
-  // Banner দেখাও
   updateFloorReqBanner();
-
   document.getElementById('reqPopup').style.display = 'none';
   pendingReqIndex = null;
   pendingReqValue = null;
-  showToast('✅ Req No saved! বাকি সব row-এ auto-apply হবে');
+  showToast('✅ Req No saved!');
 }
 
 function cancelReqPopup(){
-  // User closed without entering — clear the Rcvd value
   if(pendingReqIndex !== null){
     const inp = document.getElementById(`r${pendingReqIndex}`);
     if(inp){ inp.value = ''; calc(pendingReqIndex); }
@@ -1076,24 +1138,21 @@ function cancelReqPopup(){
 }
 
 // =========================================
-// 🔄 TRANSFER POPUP LOGIC
+// 🔄 TRANSFER POPUP
 // =========================================
 function openTransferPopup(i){
   pendingTransferIndex = i;
   const item = currentFloorData[i];
   const floor = document.getElementById('floor').value;
   const presentNow = Number(document.getElementById(`b${i}`).innerText)||0;
-
   document.getElementById('transferItemInfo').innerHTML =
     `<b>${item[1]}</b> | ${item[2]} | Size ${item[3]} | ${item[4]}<br>
      Present Stock: <b style="color:${presentNow<0?'#dc2626':'#059669'}">${presentNow}</b>`;
-
   const sel = document.getElementById('transferToFloor');
   sel.innerHTML = '<option value="">-- To Floor নির্বাচন করুন --</option>';
   Object.keys(floorData).filter(f=>f!==floor).forEach(f=>{
     sel.innerHTML += `<option value="${f}">${f}</option>`;
   });
-
   document.getElementById('transferQty').value = '';
   document.getElementById('transferReceiverName').value = '';
   document.getElementById('transferReqNo').value = '';
@@ -1108,7 +1167,6 @@ function closeTransferPopup(){
 async function confirmTransfer(){
   const i = pendingTransferIndex;
   if(i===null) return;
-
   const toFloor = document.getElementById('transferToFloor').value;
   const qty = Number(document.getElementById('transferQty').value)||0;
   const receiverName = document.getElementById('transferReceiverName').value.trim();
@@ -1116,32 +1174,25 @@ async function confirmTransfer(){
   const fromFloor = document.getElementById('floor').value;
   const date = document.getElementById('postDate').value;
   const item = currentFloorData[i];
-
   if(!toFloor){ alert('❌ To Floor নির্বাচন করুন!'); return; }
   if(qty<=0){ alert('❌ Qty দিন (0 এর বেশি)!'); return; }
   if(!receiverName){ alert('❌ Receiver Name দিন!'); return; }
   if(!reqNo){ alert('❌ Requisition No. দিন!'); return; }
-
   const presentNow = Number(document.getElementById(`b${i}`).innerText)||0;
   if(qty > presentNow){
     if(!confirm(`⚠️ Present Stock মাত্র ${presentNow}, আপনি ${qty} transfer করতে চান। Continue?`)) return;
   }
-
   showLoading('Saving transfer...');
   closeTransferPopup();
-
   const dEl = document.getElementById(`d${i}`);
   const oldDvld = Number(dEl.value)||0;
   dEl.value = oldDvld + qty;
   calc(i);
-
   if(!rowTransferOut[i]) rowTransferOut[i] = [];
   rowTransferOut[i].push({toFloor, qty, receiverName, reqNo});
   updateTransferOutTag(i);
-
   const toItems = floorData[toFloor] || [];
   const toItemIdx = toItems.findIndex(it => it[1]===item[1] && it[3]===item[3]);
-
   let toFloorData = null;
   toFloorData = getReportCacheEntry(toFloor, date);
   if(!toFloorData || !toFloorData.rows || !toFloorData.rows.length){
@@ -1150,7 +1201,6 @@ async function confirmTransfer(){
       if(sb && sb.rows && sb.rows.length) toFloorData = sb;
     }catch(e){}
   }
-
   let toRows;
   if(toFloorData && toFloorData.rows && toFloorData.rows.length){
     toRows = JSON.parse(JSON.stringify(toFloorData.rows));
@@ -1162,7 +1212,6 @@ async function confirmTransfer(){
       receiveReqNo:'', receiveSource:'', transferIn:[], transferOut:[]
     }));
   }
-
   let toFloorItemFound = false;
   if(toItemIdx >= 0 && toRows[toItemIdx]){
     toRows[toItemIdx].receive = (Number(toRows[toItemIdx].receive)||0) + qty;
@@ -1175,27 +1224,22 @@ async function confirmTransfer(){
   }else{
     showToast(`⚠️ To Floor তে ${item[1]} (Size ${item[3]}) row পাওয়া যায়নি!`);
   }
-
   const toOperator = toFloorData ? (toFloorData.operator||'Transfer') : 'Transfer';
   setReportCacheEntry(toFloor, date, {operator:toOperator, rows:toRows, isDraft:true});
   if(navigator.onLine && toFloorItemFound){
     try{ await saveToSupabase(toFloor, date, toOperator, toRows, false); }catch(e){}
   }
-
   const transfer = {
     date, fromFloor, toFloor,
     itemCode: item[1], needleType: item[2], size: item[3],
     qty, receiverName, reqNo
   };
-
   let storedTransfers = JSON.parse(localStorage.getItem('needle_transfers_local')||'[]');
   storedTransfers.push({...transfer, id: Date.now()});
   localStorage.setItem('needle_transfers_local', JSON.stringify(storedTransfers));
-
   if(navigator.onLine){
     try{ await saveTransferToSupabase(transfer); }catch(e){}
   }
-
   hideLoading();
   showToast(`✅ Transfer: ${qty} pcs ${item[1]} → ${toFloor.split('(')[0].trim()}`);
   autoSaveDraft();
@@ -1235,39 +1279,30 @@ async function loadTransferReport(){
   const from = document.getElementById('rpFrom').value;
   const to = document.getElementById('rpTo').value;
   if(!from||!to){ alert('তারিখ দিন'); return; }
-
   document.getElementById('reportBody2').innerHTML = '<tr><td colspan="9" style="padding:10px;color:#64748b">Loading...</td></tr>';
-
   let transfers = [];
-
   if(navigator.onLine){
     try{
       const companyId = await getCompanyId();
       if(companyId){
         const {data,error} = await supabase.from(TRANSFERS_TABLE)
-          .select('*')
-          .eq('company_id', companyId)
-          .gte('transfer_date', from)
-          .lte('transfer_date', to)
+          .select('*').eq('company_id', companyId)
+          .gte('transfer_date', from).lte('transfer_date', to)
           .order('transfer_date', {ascending:true});
         if(!error && data) transfers = data;
       }
     }catch(e){}
   }
-
   if(!transfers.length){
     const local = JSON.parse(localStorage.getItem('needle_transfers_local')||'[]');
-    transfers = local.filter(t=>t.date>=from && t.date<=to)
-      .sort((a,b)=>a.date.localeCompare(b.date));
+    transfers = local.filter(t=>t.date>=from && t.date<=to).sort((a,b)=>a.date.localeCompare(b.date));
   }
-
   if(!transfers.length){
     document.getElementById('reportBody2').innerHTML = '<tr><td colspan="9" style="padding:10px;color:#94a3b8;text-align:center">এই period এ কোনো transfer নেই</td></tr>';
     document.getElementById('reportGrandTotal').innerText = '0';
     document.getElementById('reportFooter').innerText = '0 records found';
     return;
   }
-
   let grandTotal = 0;
   let html = '';
   transfers.forEach(t=>{
@@ -1285,7 +1320,6 @@ async function loadTransferReport(){
       <td style="font-size:8px">${t.req_no||t.reqNo||''}</td>
     </tr>`;
   });
-
   document.getElementById('reportBody2').innerHTML = html;
   document.getElementById('reportGrandTotal').innerText = grandTotal.toLocaleString();
   document.getElementById('reportFooter').innerText = `${transfers.length} records | Total: ${grandTotal} pcs`;
@@ -1335,6 +1369,181 @@ function fixNegativeRow(){
 }
 
 // =========================================
+// 📦 BULK DATE MOVE — NEW FEATURE
+// =========================================
+function showBulkMovePopup(){
+  // Populate floor select
+  const sel = document.getElementById('bulkFloorSelect');
+  sel.innerHTML = '<option value="ALL">— সব Floor —</option>';
+  ALL_FLOORS.forEach(f => {
+    sel.innerHTML += `<option value="${f}">${f}</option>`;
+  });
+
+  // Default dates
+  const today = new Date().toISOString().slice(0,10);
+  document.getElementById('bulkSourceDate').value = '';
+  document.getElementById('bulkTargetDate').value = '2026-06-22';
+  document.getElementById('bulkLog').style.display = 'none';
+  document.getElementById('bulkLog').innerHTML = '';
+  document.getElementById('bulkMoveExecBtn').disabled = false;
+  document.getElementById('bulkMoveExecBtn').textContent = '🚀 Move করুন';
+
+  document.getElementById('bulkMovePopup').style.display = 'flex';
+}
+
+function closeBulkMovePopup(){
+  document.getElementById('bulkMovePopup').style.display = 'none';
+}
+
+function addBulkLog(msg, type='info'){
+  const log = document.getElementById('bulkLog');
+  log.style.display = 'block';
+  const line = document.createElement('div');
+  line.className = `bulk-log-line ${type}`;
+  line.textContent = msg;
+  log.appendChild(line);
+  log.scrollTop = log.scrollHeight;
+}
+
+async function executeBulkMove(){
+  const sourceDate = document.getElementById('bulkSourceDate').value;
+  const targetDate = document.getElementById('bulkTargetDate').value;
+  const floorSel = document.getElementById('bulkFloorSelect').value;
+
+  if(!sourceDate){ alert('❌ Source Date দিন!'); return; }
+  if(!targetDate){ alert('❌ Target Date দিন!'); return; }
+  if(sourceDate === targetDate){ alert('❌ Source আর Target তারিখ একই হতে পারবে না!'); return; }
+
+  const floorsToProcess = (floorSel === 'ALL') ? ALL_FLOORS : [floorSel];
+
+  const confirmMsg = `⚠️ নিশ্চিত করুন:\n\nSource: ${sourceDate}\nTarget: ${targetDate}\nFloor: ${floorSel === 'ALL' ? 'সব Floor (' + floorsToProcess.length + 'টি)' : floorSel}\n\nSource তারিখের ডাটা Target তারিখে MOVE হবে।\nSource তারিখের ডাটা DELETE হবে।\nTarget তারিখে আগে থেকে ডাটা থাকলে OVERWRITE হবে।\n\nচালিয়ে যাবেন?`;
+
+  if(!confirm(confirmMsg)) return;
+
+  document.getElementById('bulkMoveExecBtn').disabled = true;
+  document.getElementById('bulkMoveExecBtn').textContent = '⏳ Processing...';
+  document.getElementById('bulkLog').innerHTML = '';
+  document.getElementById('bulkLog').style.display = 'block';
+
+  addBulkLog(`🚀 শুরু হচ্ছে: ${sourceDate} → ${targetDate}`, 'info');
+  addBulkLog(`📊 মোট Floor: ${floorsToProcess.length}`, 'info');
+
+  const companyId = await getCompanyId();
+  if(!companyId){
+    addBulkLog('❌ Company ID পাওয়া যায়নি! Supabase config চেক করুন।', 'err');
+    document.getElementById('bulkMoveExecBtn').disabled = false;
+    document.getElementById('bulkMoveExecBtn').textContent = '🚀 Move করুন';
+    return;
+  }
+
+  let successCount = 0;
+  let skipCount = 0;
+  let errorCount = 0;
+
+  for(const floor of floorsToProcess){
+    try{
+      addBulkLog(`🔍 Loading: ${floor.split('(')[0].trim()}...`, 'info');
+
+      // Step 1: Load source data
+      let sourceData = null;
+
+      // Try cache first
+      const cached = getReportCacheEntry(floor, sourceDate);
+      if(cached && cached.rows && cached.rows.length){
+        sourceData = cached;
+        addBulkLog(`  📂 Cache থেকে পাওয়া গেছে`, 'info');
+      }
+
+      // Try Supabase
+      if(!sourceData || !sourceData.rows || !sourceData.rows.length){
+        if(navigator.onLine){
+          const sbData = await loadFromSupabase(floor, sourceDate);
+          if(sbData && sbData.rows && sbData.rows.length){
+            sourceData = sbData;
+            addBulkLog(`  ☁️ Supabase থেকে পাওয়া গেছে`, 'info');
+          }
+        }
+      }
+
+      if(!sourceData || !sourceData.rows || !sourceData.rows.length){
+        addBulkLog(`  ⏭️ Skip: ${floor.split('(')[0].trim()} — ${sourceDate} তারিখে কোনো data নেই`, 'info');
+        skipCount++;
+        continue;
+      }
+
+      // Step 2: Save to target date (overwrite)
+      // Update the rows — keep same data but change report_date
+      const targetRows = JSON.parse(JSON.stringify(sourceData.rows));
+      const operator = sourceData.operator || 'BulkMove';
+
+      // Save to local cache for target date
+      setReportCacheEntry(floor, targetDate, {
+        operator, rows: targetRows, isDraft: false,
+        movedFrom: sourceDate, movedAt: new Date().toISOString()
+      });
+      addBulkLog(`  💾 Target cache saved: ${targetDate}`, 'ok');
+
+      // Save to Supabase for target date
+      if(navigator.onLine){
+        const saveResult = await saveToSupabase(floor, targetDate, operator, targetRows, false);
+        if(saveResult.error){
+          addBulkLog(`  ⚠️ Supabase save warning: ${saveResult.error}`, 'err');
+        } else {
+          addBulkLog(`  ☁️ Supabase target saved`, 'ok');
+        }
+      }
+
+      // Step 3: Delete source date
+      // Delete from local cache
+      deleteReportCacheEntry(floor, sourceDate);
+      addBulkLog(`  🗑️ Local cache deleted: ${sourceDate}`, 'ok');
+
+      // Delete from Supabase
+      if(navigator.onLine){
+        const delResult = await deleteDataForFloorDate(floor, sourceDate);
+        if(delResult.success){
+          if(delResult.deletedCount){
+            addBulkLog(`  ☁️ Supabase deleted (${delResult.deletedCount} row)`, 'ok');
+          } else {
+            addBulkLog(`  ☁️ ${delResult.note || 'Supabase delete ok'}`, 'ok');
+          }
+        } else {
+          addBulkLog(`  ❌ Supabase delete failed: ${delResult.error}`, 'err');
+        }
+      }
+
+      addBulkLog(`  ✅ Done: ${floor.split('(')[0].trim()}`, 'ok');
+      successCount++;
+
+    } catch(e){
+      addBulkLog(`  ❌ Error: ${floor.split('(')[0].trim()} — ${e.message}`, 'err');
+      errorCount++;
+    }
+
+    // Small delay to avoid rate limiting
+    await new Promise(r => setTimeout(r, 150));
+  }
+
+  addBulkLog(``, 'info');
+  addBulkLog(`━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━`, 'info');
+  addBulkLog(`✅ Moved: ${successCount} floors`, 'ok');
+  addBulkLog(`⏭️ Skipped (no data): ${skipCount} floors`, 'info');
+  if(errorCount > 0) addBulkLog(`❌ Errors: ${errorCount} floors`, 'err');
+  addBulkLog(`🎉 Bulk Move সম্পন্ন!`, 'ok');
+
+  document.getElementById('bulkMoveExecBtn').disabled = false;
+  document.getElementById('bulkMoveExecBtn').textContent = '✅ আবার Move করুন';
+
+  // Reload current view if affected
+  const currentDate = document.getElementById('postDate').value;
+  const currentFloor = document.getElementById('floor').value;
+  if(floorsToProcess.includes(currentFloor) && (currentDate === sourceDate || currentDate === targetDate)){
+    showToast('🔄 Current view reloading...');
+    setTimeout(loadData, 500);
+  }
+}
+
+// =========================================
 // 💾 AUTO SAVE DRAFT
 // =========================================
 function autoSaveDraft(){
@@ -1362,7 +1571,7 @@ function buildRows(){
 }
 
 // =========================================
-// 💾 SAVE / LOAD / DELETE
+// 💾 SAVE
 // =========================================
 async function saveData(){
   const date = document.getElementById('postDate').value;
@@ -1370,12 +1579,9 @@ async function saveData(){
   const operator = document.getElementById('operatorName').value.trim()||localStorage.getItem('lastOperator')||'Unknown';
   if(!date){ alert('❌ Date select করুন'); return; }
   if(!floor){ alert('❌ Floor select করুন'); return; }
-
-  // Check for Rcvd values without req no
   for(let i=0;i<currentFloorData.length;i++){
     const r = Number(document.getElementById(`r${i}`)?.value)||0;
     if(r>0 && !rowReqNo[i]){
-      // ✅ যদি floorReqNo আছে, auto-apply করো
       if(floorReqNo){
         rowReqNo[i] = floorReqNo;
         const t = document.getElementById(`reqTag${i}`);
@@ -1387,12 +1593,10 @@ async function saveData(){
       }
     }
   }
-
   const rows = buildRows();
   setReportCacheEntry(floor, date, {operator, rows, isDraft:false, savedAt: new Date().toISOString()});
   localStorage.setItem('lastOperator', operator);
   updateLastSync(`💾 Saved locally at ${new Date().toLocaleTimeString()}`);
-
   if(navigator.onLine){
     const result = await saveToSupabase(floor, date, operator, rows);
     if(result.success){
@@ -1407,17 +1611,16 @@ async function saveData(){
   }
 }
 
+// =========================================
+// 📂 LOAD
+// =========================================
 async function loadData(){
   showLoading('Loading...');
   const date = document.getElementById('postDate').value;
   const floor = document.getElementById('floor').value;
-
-  // ✅ Reset floor req no on new load
   floorReqNo = null;
   updateFloorReqBanner();
-
   if(!date||!floor){ hideLoading(); loadTable(); updateMonthlySummary([]); return; }
-
   try{
     let savedData = getReportCacheEntry(floor, date);
     let dataSource = 'cache';
@@ -1427,7 +1630,6 @@ async function loadData(){
       if(savedData&&savedData.rows&&savedData.rows.length)
         setReportCacheEntry(floor, date, {operator:savedData.operator, rows:savedData.rows, isDraft:false});
     }
-
     if(savedData&&savedData.rows&&savedData.rows.length){
       const previousArr = savedData.rows.map(r=>Number(r.previous)||0);
       loadTable(previousArr, 'saved');
@@ -1436,31 +1638,21 @@ async function loadData(){
         document.getElementById(`r${i}`).value = row.receive||'';
         document.getElementById(`d${i}`).value = row.delivery||'';
         document.getElementById(`bn${i}`).value = row.bn||'';
-        // ✅ Restore req numbers + detect floorReqNo from saved data
         if(row.receiveReqNo){
           rowReqNo[i] = row.receiveReqNo;
           const tag = document.getElementById(`reqTag${i}`);
           if(tag) tag.textContent = '📋 '+row.receiveReqNo;
-          // ✅ Set floorReqNo from first saved req no found
           if(!floorReqNo) floorReqNo = row.receiveReqNo;
         }
-        if(row.transferOut&&row.transferOut.length){
-          rowTransferOut[i] = row.transferOut;
-          updateTransferOutTag(i);
-        }
-        if(row.transferIn&&row.transferIn.length){
-          rowTransferIn[i] = row.transferIn;
-          updateTransferInTag(i);
-        }
+        if(row.transferOut&&row.transferOut.length){ rowTransferOut[i]=row.transferOut; updateTransferOutTag(i); }
+        if(row.transferIn&&row.transferIn.length){ rowTransferIn[i]=row.transferIn; updateTransferInTag(i); }
         calc(i);
       });
-      // ✅ Update banner if req no found
       updateFloorReqBanner();
       if(savedData.operator) document.getElementById('operatorName').value = savedData.operator;
       updateMonthlySummary(savedData.rows);
       updateLastSync(`📂 Loaded from ${dataSource==='cache'?'local':'Supabase'} at ${new Date().toLocaleTimeString()}`);
     }else{
-      // Carry forward from previous day
       const prevDate = getPrevDateStr(date);
       let prevPresentArr = null, prevSource = null;
       const cachedPrev = getReportCacheEntry(floor, prevDate);
@@ -1499,23 +1691,34 @@ async function manualRefresh(){
 
 function onFloorChange(){ loadData(); }
 
+// =========================================
+// 🗑️ DELETE — FIXED
+// =========================================
 async function deleteData(){
   const date = document.getElementById('postDate').value;
   const floor = document.getElementById('floor').value;
   if(!date){ alert('❌ Date select করুন'); return; }
-  if(!confirm('⚠️ এই তারিখের ডাটা delete করবেন?')) return;
-  try{
-    const c = getReportCache();
-    delete c[`${floor}__${date}`];
-    localStorage.setItem(REPORT_CACHE_KEY, JSON.stringify(c));
-  }catch(e){}
-  const companyId = await getCompanyId();
-  if(companyId){
-    const {error} = await supabase.from('needle_reports').delete().eq('company_id',companyId).eq('floor',floor).eq('report_date',date);
-    if(error) alert('❌ Delete failed: '+error.message);
-    else showToast('✅ Deleted');
-  }else showToast('✅ Deleted from local');
-  loadData();
+  if(!floor){ alert('❌ Floor select করুন'); return; }
+  if(!confirm(`⚠️ ${floor}\n${date} তারিখের ডাটা delete করবেন?\n\nএই action undo করা যাবে না।`)) return;
+
+  showLoading('Deleting...');
+
+  const result = await deleteDataForFloorDate(floor, date);
+
+  hideLoading();
+
+  if(result.success){
+    if(result.deletedCount){
+      showToast(`✅ Deleted from Supabase (${result.deletedCount} record) + Local Cache`);
+    } else if(result.note){
+      showToast(`✅ Local Cache deleted. ${result.note}`);
+    } else {
+      showToast('✅ Deleted successfully');
+    }
+    loadData();
+  } else {
+    alert(`❌ Delete failed!\n\n${result.error}\n\nসমাধান: Supabase Dashboard → needle_reports টেবিল → Policies → DELETE policy add করুন:\nCREATE POLICY "Allow delete" ON needle_reports FOR DELETE USING (true);`);
+  }
 }
 
 // =========================================
@@ -1633,6 +1836,7 @@ window.checkReqNo=checkReqNo; window.confirmReqNo=confirmReqNo; window.cancelReq
 window.openTransferPopup=openTransferPopup; window.closeTransferPopup=closeTransferPopup; window.confirmTransfer=confirmTransfer;
 window.showTransferReport=showTransferReport; window.closeReportPopup=closeReportPopup; window.loadTransferReport=loadTransferReport;
 window.changeFloorReqNo=changeFloorReqNo;
+window.showBulkMovePopup=showBulkMovePopup; window.closeBulkMovePopup=closeBulkMovePopup; window.executeBulkMove=executeBulkMove;
 </script>
 </body>
 </html>
