@@ -23,13 +23,9 @@ select,input[type="date"],input[type="text"]{padding:5px;border-radius:5px;borde
 #reportTable th,#reportTable td{border:1px solid #000;padding:1px;text-align:center;font-size:10px;line-height:1.08;white-space:nowrap;overflow:hidden}
 #reportTable thead{background:#1e293b;color:white;position:sticky;top:0;z-index:2}
 #reportTable tfoot{background:#334155;color:white;font-weight:bold}
-
-/* Column Widths Adjusted for Code Column */
-.col-sl{width:4%}.col-code{width:10%}.col-type{width:18%}.col-size{width:7%}
-.col-prev{width:10%}.col-rcvd{width:9%}.col-dvld{width:9%}.col-present{width:11%}.col-bn{width:8%}.col-trf{width:14%}
-
+.col-sl{width:5%}.col-type{width:21%}.col-size{width:8%}
+.col-prev{width:11%}.col-rcvd{width:10%}.col-dvld{width:10%}.col-present{width:12%}.col-bn{width:9%}.col-trf{width:14%}
 .qtyInput{width:100%;height:24px;padding:1px;text-align:center;font-size:16px;font-weight:bold;border:1px solid #999;border-radius:3px;background:white;color:black}
-.codeInput{width:100%;height:22px;padding:1px;text-align:center;font-size:11px;border:1px solid #999;border-radius:3px;background:#fff;color:#000}
 .req-tag{display:block;font-size:7px;color:#059669;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .trf-tag{display:block;font-size:7px;color:#7c3aed;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .trfRowBtn{background:#f59e0b;color:#000;border:none;border-radius:3px;padding:2px 4px;font-size:9px;font-weight:bold;cursor:pointer;width:100%;line-height:1.3}
@@ -114,13 +110,8 @@ select,input[type="date"],input[type="text"]{padding:5px;border-radius:5px;borde
   button{padding:5px 6px;font-size:9px;margin:1px}
   select,input[type="date"],input[type="text"]{max-width:90px;font-size:13px;padding:3px}
   #reportTable th,#reportTable td{font-size:8px;padding:0}
-  
-  /* Mobile Column Adjustments */
-  .col-sl{width:3%}.col-code{width:8%}.col-type{width:16%}.col-size{width:6%}
-  .col-prev{width:9%}.col-rcvd{width:8%}.col-dvld{width:8%}.col-present{width:10%}.col-bn{width:7%}.col-trf{width:12%}
-  
+  .col-type{width:19%}.col-trf{width:12%}
   .qtyInput{height:22px;font-size:14px}
-  .codeInput{height:20px;font-size:10px}
   .trfRowBtn{font-size:8px;padding:1px 2px}
   .req-tag,.trf-tag{font-size:6px}
 }
@@ -131,7 +122,6 @@ select,input[type="date"],input[type="text"]{padding:5px;border-radius:5px;borde
   #reportTable,#summaryTable{width:100%!important;color:black!important;background:white!important}
   #reportTable th,#reportTable td{font-size:7px;padding:1px}
   .popup-overlay{display:none!important}
-  .codeInput{border:none;background:transparent!important;color:black!important}
 }
 </style>
 </head>
@@ -213,13 +203,13 @@ select,input[type="date"],input[type="text"]{padding:5px;border-radius:5px;borde
 <div class="popup-overlay" id="reqSearchPopup">
   <div class="popup-box">
     <span class="popup-close" onclick="closeReqSearchPopup()">×</span>
-    <div class="popup-title search">🔍 Requisition & Code Search</div>
+    <div class="popup-title search">🔍 Requisition Search</div>
     <div class="popup-field">
-      <label>Requisition Number বা Code দিন:</label>
-      <input type="text" id="reqSearchInput" placeholder="যেমন: REQ-2025-001 বা C001" autocomplete="off" oninput="liveReqSearch()">
+      <label>Requisition Number দিন:</label>
+      <input type="text" id="reqSearchInput" placeholder="যেমন: REQ-2025-001" autocomplete="off" oninput="liveReqSearch()">
     </div>
     <div class="search-results" id="reqSearchResults">
-      <div class="no-results">Requisition number বা Code দিয়ে search করুন</div>
+      <div class="no-results">Requisition number দিয়ে search করুন</div>
     </div>
     <div class="popup-footer" id="reqSearchFooter"></div>
   </div>
@@ -238,11 +228,11 @@ select,input[type="date"],input[type="text"]{padding:5px;border-radius:5px;borde
     <div style="overflow-x:auto">
       <table id="trfReportTable">
         <thead>
-          <tr><th>Date</th><th>From</th><th>To</th><th>Code</th><th>Type</th><th>Size</th><th>Qty</th><th>Receiver</th><th>Req No</th></tr>
+          <tr><th>Date</th><th>From</th><th>To</th><th>Type</th><th>Size</th><th>Qty</th><th>Receiver</th><th>Req No</th></tr>
         </thead>
         <tbody id="trfReportBody"></tbody>
         <tfoot>
-          <tr><td colspan="6" style="text-align:right;padding:4px">Grand Total:</td>
+          <tr><td colspan="5" style="text-align:right;padding:4px">Grand Total:</td>
           <td id="trfGrandTotal">0</td><td colspan="2">-</td></tr>
         </tfoot>
       </table>
@@ -278,7 +268,7 @@ select,input[type="date"],input[type="text"]{padding:5px;border-radius:5px;borde
     <button class="excelBtn" onclick="exportExcel()">📊 Excel</button>
     <button class="pdfBtn" onclick="exportPDF()">📄 PDF</button>
     <button class="trfBtn" onclick="showTrfReport()">🚚 Transfers</button>
-    <button class="reqSearchBtn" onclick="openReqSearchPopup()">🔍 Search</button>
+    <button class="reqSearchBtn" onclick="openReqSearchPopup()">🔍 Req Search</button>
     <button class="homeBtn" onclick="location.href='index.html'">🏠 Home</button>
   </div>
 </div>
@@ -288,7 +278,6 @@ select,input[type="date"],input[type="text"]{padding:5px;border-radius:5px;borde
 <thead>
 <tr>
   <th class="col-sl">SL</th>
-  <th class="col-code">Code</th>
   <th class="col-type">Needle Type</th>
   <th class="col-size">Size</th>
   <th class="col-prev">Prev</th>
@@ -302,7 +291,7 @@ select,input[type="date"],input[type="text"]{padding:5px;border-radius:5px;borde
 <tbody id="tableBody"></tbody>
 <tfoot>
 <tr>
-  <td colspan="4">TOTAL</td>
+  <td colspan="3">TOTAL</td>
   <td id="totalPrevious">0</td>
   <td id="totalReceive">0</td>
   <td id="totalDelivery">0</td>
@@ -356,7 +345,7 @@ enableIndexedDbPersistence(db).catch(err => {
 });
 
 // =========================================
-// 📦 FLOOR DATA (12 Floors)
+// 📦 FLOOR DATA
 // =========================================
 const floorData = {
 "Kadom R": [
@@ -384,18 +373,203 @@ const floorData = {
 [78,"UYX128-SF","10LP",0],[79,"UYX128-SAN","10",20],[80,"UYX128-SF","11PD",0],
 [81,"UYX128-SAN","12",20],[82,"DPX5-SF","10PD",0]
 ],
-"Kadom N": [[1,"DBX1","7",16],[2,"DBX1","8",0],[3,"DBX1- KN","8",0],[4,"DBX1- NS","8",0],[5,"DBX1","9",30],[6,"DBX1 -KN","9",0],[7,"DBX1 -NS","9",0],[8,"DBX1 -SF","9B",0],[9,"DBXK5-KK","9B",0],[10,"DBX1","10",0],[11,"DBX1 -KN","10",0],[12,"DBX1 SF","10",0],[13,"DBX1","11",24],[14,"DBX1","12",0],[15,"DBX1","14",0],[16,"DBXK5-KK","9S",0],[17,"DBX1","12SPD",0],[18,"DCX1","7",20],[19,"DCX1","8",0],[20,"DCX1- KN","8",30],[21,"DCX1","9",24],[22,"DCX1 SF","9LP",0],[23,"DCX1","9JPD",0],[24,"DCX1","10",0],[25,"DCX1","11",28],[26,"DCX1","12",10],[27,"DCX1","14",0],[28,"UYX128","7",20],[29,"UYX128","8",0],[30,"UYX128 -KN","8",20],[31,"UYX128","9",2],[32,"UYX128 -KN","9",0],[33,"UYX128 KK- KN","9",0],[34,"UYX128 -NY2","9B",0],[35,"UYX128","10",10],[36,"UYX128 -KN","10PD",0],[37,"UYX128","11",20],[38,"UYX128","11SLP+",0],[39,"UYX128 -KN","11",0],[40,"UYX128 -KN","11HP",0],[41,"UYX128 -KN","11PD",0],[42,"UYX128","12",20],[43,"UYX128","14",0],[44,"UYX128 -NY2","14S",0],[45,"UY/UOX113","9",20],[46,"UY/UOX113","11",10],[47,"UY/UOX113","14",0],[48,"DVX57","14",0],[49,"DPX5","9",20],[50,"DPX5","9SPD",0],[51,"DPX5","10SPD",0],[52,"DPX5","11",25],[53,"DPX5","12",10],[54,"DPX5","14",44],[55,"DPX17","9",20],[56,"DPX17","11",20],[57,"FLX118 -GCS","9",0],[58,"FLX118 -GCS","11",0]],
-"Poddo R": [[1,"DBX1","7",18],[2,"DBX1","8",3],[3,"DBX1- KN","8",0],[4,"DBX1- NS","8",0],[5,"DBX1","9",1],[6,"DBX1 -KN","9",0],[7,"DBX1-KN","09PD",31],[8,"DBX1 -NS","9",0],[9,"DBX1 -SF","9B",0],[10,"DBXK5-KK","9B",0],[11,"DBX1","10",6],[12,"DBX1 KN","10",0],[13,"DBX1","11",2],[14,"DBX1 KK","11J",0],[15,"DBX1","12",10],[16,"DBX1","14",20],[17,"DBXK5-KK","9S",0],[18,"TQX1","16",40],[19,"DCX1","7",44],[20,"DCX1","8",77],[21,"DCX1- KN","8",0],[22,"DCX1","9",27],[23,"DCX1 SF","9AP",0],[24,"DMX13-KN","10",0],[25,"DCX1","10",7],[26,"DCX1","11",3],[27,"DCX1","12",10],[28,"DCX1","14",14],[29,"UYX128","7",30],[30,"UYX128 -KN","8",36],[31,"UYX128","9",49],[32,"UY128","9 SPD",20],[33,"UYX128 -KN","9",0],[34,"UYX128 KK- KN","9",20],[35,"UYX128 -NY2","9B",0],[36,"UYX128","10",59],[37,"UYX128 -KN","10PD",0],[38,"UY128 NY2","10SPD",0],[39,"UYX128","11",19],[40,"UYX128","11SLP+",0],[41,"UYX128 -KN","11HP",40],[42,"UYX128 -KN-KN","11",16],[43,"UYX128","12",1],[44,"UY128++SAN","12",20],[45,"UYX128","14",68],[46,"UYX128 -NY2","14S",0],[47,"UY/UOX113","9",0],[48,"UY/UOX113","11",10],[49,"UY/UOX113","12",12],[50,"UY/UOX113","14",18],[51,"DVX57","14",39],[52,"DPX5","9",40],[53,"DVX57","12",42],[54,"DPX5","11",3],[55,"DPX5","11SPD",0],[56,"DPX5","12",9],[57,"DPX5","12SPD",0],[58,"DPX5","14SPD",0],[59,"DPX5","14",38],[60,"DPX17","9",4],[61,"DPX17","11",18],[62,"FLX118 -GCS","10",33],[63,"FLX118 -GCS","11",0],[64,"DBX1-SF","8LP",24],[65,"DBX1-SF","9LP",0],[66,"DBX1-SF","10LP",185],[67,"DBX1-SF","11LP",0],[68,"DCX1-SF","8LP",0],[69,"DCX1-SF","9AP",13],[70,"DCX1-SF","10LP",0],[71,"DCX1-SF","11LP",8],[72,"UYX128-KN","8LP",0],[73,"UYX128-SF","8LP",81],[74,"UYX128-SAN","9XS",11],[75,"UYX128-SF","9LP",0],[76,"UYX128-KK-KN","9LP",0],[77,"UYX128-SAN","10XS",16],[78,"UYX128-SF","10LP",0],[79,"UYX128-SF","10PD",20],[80,"UYX128-KK-KN","10LP",57],[81,"UYX128-KN","11LP",70],[82,"UYX128-SF","11LP",0],[83,"UYX128-SF","11PD",0],[84,"UYX128-KK-KN","11LP",140],[85,"DPX5-KN","8LP",100],[86,"DPX5-SF","9LP",100],[87,"DPX5-SF","10LP",107],[88,"DPX5-SF","11LP",0]],
-"Poddo N": [[1,"DBX1","7",0],[2,"DBX1","8",0],[3,"DBX1- KN","8",0],[4,"DBX1- NS","8",0],[5,"DBX1","9",3],[6,"DBX1 -KN","9",0],[7,"DBX1 -NS","9",0],[8,"DBX1 -SF","9B",0],[9,"DBXK5-KK","9B",0],[10,"DBX1","10",0],[11,"DBX1 -KN","10",0],[12,"DBX1 SF","10",0],[13,"DBX1","11",0],[14,"DBX1","12",0],[15,"DBX1","14",0],[16,"DBXK5-KK","9S",0],[17,"DBX1","12SPD",0],[18,"DCX1","7",0],[19,"DCX1","8",0],[20,"DCX1- KN","8",0],[21,"DCX1","9",3],[22,"DCX1 SF","9LP",0],[23,"DCX1","9JPD",0],[24,"DCX1","10",0],[25,"DCX1","11",0],[26,"DCX1","12",0],[27,"DCX1","14",0],[28,"UYX128","7",0],[29,"UYX128","8",0],[30,"UYX128","9",0],[31,"UYX128 -KN","8",0],[32,"UYX128 -KN","9",0],[33,"UYX128 KK- KN","9",0],[34,"UYX128 -NY2","9B",0],[35,"UYX128","10",0],[36,"UYX128 -KN","10PD",0],[37,"UYX128","11",0],[38,"UYX128","11SLP+",0],[39,"UYX128 -KN","11",0],[40,"UYX128 -KN","11HP",0],[41,"UYX128 -KN","11PD",0],[42,"UYX128","12",0],[43,"UYX128","14",0],[44,"UYX128 -NY2","14S",0],[45,"UY/UOX113","9",37],[46,"UY/UOX113","11",63],[47,"UY/UOX113","12",50],[48,"UY/UOX113","14",0],[49,"DVX57","14",104],[50,"DPX5","9",60],[51,"DPX5","9SPD",0],[52,"DPX5","10SPD",0],[53,"DPX5","11",9],[54,"DPX5","12",0],[55,"DPX5","12SPD",0],[56,"DPX5","14SPD",0],[57,"DPX5","14",0],[58,"DPX17","9",0],[59,"DPX17","11",56],[60,"FLX118 -GCS","11",16],[61,"DVX57","12",0]],
-"Shapla R": [[1,"DBX1","7",25],[2,"DBX1","8",16],[3,"DBX1- KN","8",0],[4,"DBX1- NS","8",0],[5,"DBX1","9",16],[6,"DBX1 -KN","10",0],[7,"DBX1-KN","9PD",0],[8,"DBX1 -NS","9",0],[9,"DBX1 -SF","9B",0],[10,"DBXK5-KK","9B",50],[11,"DBX1","10",37],[12,"DBX1","11",70],[13,"DBX1","12SPI",0],[14,"DBX1","12",0],[15,"DBX1","14",11],[16,"DBX1","14SPD",30],[17,"DBX1","12SPD",0],[18,"DCX1","7",46],[19,"DCX1","8",14],[20,"DCX1- KN","8",0],[21,"DCX1","9",68],[22,"DCX1 SF","9LP",0],[23,"DMX13-KN","10",0],[24,"DCX1","10",36],[25,"DCX1","11",54],[26,"DCX1","12",10],[27,"DCX1","14",0],[28,"UYX128","7",11],[29,"UYX128 -KN","8",0],[30,"UYX128","9",52],[31,"UY128","9SPD",30],[32,"UYX128 -KN","9",0],[33,"UYX128 KK- KN","9",20],[34,"UYX128 -NY2","9B",0],[35,"UYX128","10",43],[36,"UYX128 -KN-KN","10",30],[37,"UYX128","11",33],[38,"UY128 NY2","10SPD",30],[39,"UYX128 KN","11SLP+",35],[40,"UYX128 -Kk-kn","11",30],[41,"UYX128 -KN","11PD",0],[42,"UYX128","12",23],[43,"UY128++GAS","12",0],[44,"UYX128","14",15],[45,"UYX128 -NY2","14S",0],[46,"UY/UOX113","9",22],[47,"UY/UOX113","11",20],[48,"DVX57","12",0],[49,"UY/UOX113","14",55],[50,"DVX57","14",24],[51,"DPX5","9",9],[52,"DPX5++","9SLP",36],[53,"DPX5","10SPD",22],[54,"DPX5","11",25],[55,"DPX5","11SPD",0],[56,"DPX5","12",26],[57,"DPX5","12SPD",0],[58,"DPX5","14SPD",13],[59,"DPX5","14",0],[60,"DPX17","9",21],[61,"DPX17","11",45],[62,"FLX118 -GCS","9",0],[63,"FLX118 -GCS","11",18]],
-"Shapla N": [[1,"DBX1","7",16],[2,"DBX1","8",0],[3,"DBX1- KN","8",0],[4,"DBX1- NS","8",0],[5,"DBX1","9",27],[6,"DBX1 -KN","9",0],[7,"DBX1 -NS","9",0],[8,"DBX1 -SF","9B",0],[9,"DBXK5-KK","9B",0],[10,"DBX1","10",0],[11,"DBX1 -KN","10",0],[12,"DBX1 SF","10",0],[13,"DBX1","11",29],[14,"DBX1","12",54],[15,"DBX1","14",0],[16,"DBXK5-KK","9S",0],[17,"DBX1","12SPD",0],[18,"DCX1","7",27],[19,"DCX1","8",46],[20,"DCX1- KN","8",0],[21,"DCX1","9",79],[22,"DCX1 SF","9LP",0],[23,"DCX1","9JPD",0],[24,"DCX1","10",0],[25,"DCX1","11",23],[26,"DCX1","12",0],[27,"DCX1","14",0],[28,"UYX128","7",0],[29,"UYX128","8",0],[30,"UYX128 -KN","8",0],[31,"UYX128","9",27],[32,"UYX128 -KN","9",0],[33,"UYX128 KK- KN","9",0],[34,"UYX128 -NY2","9B",0],[35,"UYX128","10",47],[36,"UYX128 -KN","10PD",0],[37,"UYX128","11",5],[38,"UYX128","11SLP+",0],[39,"UYX128 -KN","11",0],[40,"UYX128 -KN","11HP",0],[41,"UYX128 -KN","11PD",0],[42,"UYX128","12",39],[43,"UYX128","14",0],[44,"UYX128 -NY2","14S",0],[45,"UY/UOX113","9",16],[46,"UY/UOX113","11",18],[47,"UY/UOX113","12",0],[48,"UY/UOX113","14",0],[49,"DVX57","14",30],[50,"DPX5","9",24],[51,"DPX5","9SPD",0],[52,"DPX5","10SPD",0],[53,"DPX5","11",10],[54,"DPX5","12",0],[55,"DPX5","12SPD",0],[56,"DPX5","14SPD",0],[57,"DPX5","14",0],[58,"DPX17","9",0],[59,"DPX17","11",6],[60,"FLX118 -GCS","9",0],[61,"FLX118 -GCS","11",50]],
-"Sample R": [[1,"DBX1","7",33],[2,"DBX1","8",51],[3,"DBX1- KN","8",0],[4,"DBX1- NS","8",20],[5,"DBX1","9",7],[6,"DBX1 -KN","9",24],[7,"DBX1 -NS","9",0],[8,"DBX1 -SF","9B",0],[9,"DBXK5-KK","9B",0],[10,"DBX1","10",15],[11,"DBX1 -KN","10",0],[12,"DBX1 SF","10",0],[13,"DBX1","11",43],[14,"DBX1","12",30],[15,"DBX1","14",18],[16,"DBXK5-KK","9S",0],[17,"DBX1","12SPD",0],[18,"DCX1","7",40],[19,"DCX1","8",11],[20,"DCX1- KN","8",50],[21,"DCX1","9",23],[22,"DCX1 SF","9LP",0],[23,"DCX1","9JPD",0],[24,"DCX1","10",11],[25,"DCX1","11",30],[26,"DCX1","12",30],[27,"DCX1","14",26],[28,"UYX128","7",35],[29,"UYX128 KK- KK","8",0],[30,"UYX128 -KN","8",40],[31,"UYX128","9",55],[32,"UYX128 -KN","9",0],[33,"UYX128 KK- KN","9",10],[34,"UYX128 -NY2","9B",0],[35,"UYX128","10",48],[36,"UYX128 -KN","10PD",0],[37,"UYX128","11",13],[38,"UYX128","11SLP+",0],[39,"UYX128 -KN","11",0],[40,"UYX128 -KN","11HP",0],[41,"UYX128 -KN","11PD",0],[42,"UYX128","12",39],[43,"UYX128","14",24],[44,"UYX128 -NY2","14S",0],[45,"UY/UOX113","9",65],[46,"UY/UOX113","11",47],[47,"UY/UOX113","14",25],[48,"DOX558","12",0],[49,"DPX5","9",60],[50,"DPX5","9SPD",0],[51,"DPX5","10SPD",0],[52,"DPX5","11",26],[53,"DPX5","12",0],[54,"DPX5","12SPD",10],[55,"DPX5","14SPD",0],[56,"DPX5","14",31],[57,"DPX17","9",59],[58,"DPX17","11",60],[59,"DVX558","12",0],[60,"FLX118 -GCS","11",29]],
-"Sample N": [[1,"DBX1","7",10],[2,"DBX1","8",0],[3,"DBX1- KN","8",0],[4,"DBX1- NS","8",0],[5,"DBX1","9",23],[6,"DBX1 -KN","9",0],[7,"DBX1 -NS","9",0],[8,"DBX1 -SF","9B",0],[9,"DBXK5-KK","9B",0],[10,"DBX1","10",0],[11,"DBX1 -KN","10",0],[12,"DBX1 SF","10",0],[13,"DBX1","11",20],[14,"DBX1","12",0],[15,"DBX1","14",0],[16,"DBXK5-KK","9S",0],[17,"DBX1","12SPD",0],[18,"DCX1","7",10],[19,"DCX1","8",0],[20,"DCX1- KN","8",0],[21,"DCX1","9",41],[22,"DCX1 SF","9LP",0],[23,"DCX1","9JPD",0],[24,"DCX1","10",0],[25,"DCX1","11",0],[26,"DCX1","12",0],[27,"DCX1","14",0],[28,"UYX128","7",10],[29,"UYX128","8",0],[30,"UYX128 -KN","8",0],[31,"UYX128","9",19],[32,"UYX128 -KN","9",0],[33,"UYX128 KK- KN","9",0],[34,"UYX128 -NY2","9B",0],[35,"UYX128","10",0],[36,"UYX128 -KN","10PD",0],[37,"UYX128","11",20],[38,"UYX128","11SLP+",0],[39,"UYX128 -KN","11",0],[40,"UYX128 -KN","11HP",0],[41,"UYX128 -KN","11PD",0],[42,"UYX128","12",0],[43,"UYX128","14",0],[44,"UYX128 -NY2","14S",0],[45,"UY/UOX113","9",0],[46,"UY/UOX113","11",40],[47,"UY/UOX113","14",0],[48,"DVX57","14",0],[49,"DPX5","9",0],[50,"DPX5","9SPD",0],[51,"DPX5","10SPD",0],[52,"DPX5","11",20],[53,"DPX5","12",0],[54,"DPX5","14",0],[55,"DPX17","9",0],[56,"DPX17","11",20],[57,"FLX118 -GCS","9",0],[58,"FLX118 -GCS","11",18]],
-"EMBROIDERY R": [[1,"DBX1","7",120],[2,"DBX1","8",214],[3,"DBX1","9",234],[4,"DBX1","10",0],[5,"DBX1","11",181],[6,"DBX1","12",0],[7,"DBX1","14",35],[8,"DCX1","9",0],[9,"DCX1","11",37],[10,"DPX5","9",0],[11,"DBXK5KK","9",0],[12,"DBXK5KK","10",20],[13,"DPX5","11",0],[14,"DPX5","14",0],[15,"PHXC70","14",65],[16,"PHXC70","16",39],[17,"TVX64","14",0],[18,"TVX64","16",35],[19,"TQX1","14",0],[20,"TQX1","16",0],[21,"UOX113","14",31],[22,"UOX113","16",0]],
-"EMBROIDERY N": [[1,"DBX1","7",22],[2,"DBX1","8",37],[3,"DBX1","9",36],[4,"DBX1","10",0],[5,"DBX1","11",10],[6,"DBX1","12",0],[7,"DBX1","14",15],[8,"DCX1","9",0],[9,"DCX1","11",68],[10,"DPX5","9",0],[11,"134 SAN DPX5","10",0],[12,"134 SAN DPX5","11",0],[13,"DPX5","11",0],[14,"DPX5","14",0],[15,"PHXC70","14",9],[16,"PHXC70","16",20],[17,"TVX64","14",0],[18,"TVX64","16",28],[19,"TQX1","14",0],[20,"TQX1","16",0],[21,"UOX113","14",42],[22,"UOX113","16",0]],
-"Belly R": [[1,"DBX1","7",7],[2,"DBX1","8",27],[3,"DBX1- KN","8",0],[4,"DBX1-NS","8LP",0],[5,"DBX1","9",100],[6,"DBX1 -KN","10",0],[7,"DBX1-KN","9PD",0],[8,"DBX1 -NS","9",0],[9,"DBX1","10",0],[10,"DBXK5-NS","10",0],[11,"DBX1-SF","10",0],[12,"DBX1","11",54],[13,"DBX1 NS","11J",0],[14,"DBX1","12",33],[15,"DBX1","14",31],[16,"DBXK5-KK","9S",0],[17,"DBX1","12SPD",0],[18,"DCX1","7",0],[19,"DCX1","9",8],[20,"DCX1- KN","8",0],[21,"DCX1","8",0],[22,"DCX1-NS","9",0],[23,"DCX1- KN","9",60],[24,"DCX1","10",14],[25,"DCX1","11",43],[26,"DCX1","12",11],[27,"DCX1","14",13],[28,"UYX128","7",0],[29,"UYX128 -KN","8",0],[30,"UYX128","9",10],[31,"UY128","9SPD",0],[32,"UYX128 -KN","9",0],[33,"UYX128 KK","7",0],[34,"UYX128 -NY2","9B",0],[35,"UYX128","10",20],[36,"DPX5","7",0],[37,"DPX5-NS","11",25],[38,"UYX128","11",23],[39,"DPX5-NS","9",20],[40,"UYX128 -KN","11",0],[41,"UYX128 -KN","11PD",0],[42,"UYX128","12",20],[43,"UY128++GAS","12",0],[44,"UYX128","14",16],[45,"UYX128 -NY2","14S",0],[46,"UY/UOX113","9",0],[47,"UY/UOX113","12",0],[48,"DPX5-NS","10",40],[49,"DCX1-NS","8",0],[50,"DVX57","14",0],[51,"DPX5","9",50],[52,"DPX5","9SLP",0],[53,"DPX5","10SPD",18],[54,"DPX5","11",40],[55,"DPX5","11SPD",0],[56,"DPX5","12",20],[57,"DPX5","12SPD",10],[58,"DPX5","14SPD",20],[59,"DPX5","14",15],[60,"DPX17","9",0],[61,"DPX17","11",28],[62,"FLX118 -GCS","9",0],[63,"FLX118 -GCS","11",0],[64,"UYX128 -KK","8",0],[65,"UOX113","11SPI",20],[66,"DPX5-SF","10LP",0],[67,"DPX5-KN","8LP",0],[68,"DPX5-SF","9LP",0],[69,"DBX1-SF","10LP",0]],
-"Belly N": [[1,"DBX1","7",0],[2,"DBX1","8",12],[3,"DBX1- KN","8",0],[4,"DBX1-SF","8",0],[5,"DBX1","9",12],[6,"DBX1 -KN","9",0],[7,"DBX1 -NS","9",0],[8,"DBX1 -SF","9B",0],[9,"DBXK5-KK","9B",0],[10,"DBX1","10",0],[11,"DBX1 -KN","10",0],[12,"DBX1 SF","10",0],[13,"DBX1","11",21],[14,"DBX1","12",20],[15,"DBX1","14",16],[16,"DBXK5-KK","9S",0],[17,"DBX1","12SPD",0],[18,"DCX1","7",0],[19,"DCX1","8",0],[20,"DCX1- KN","8",0],[21,"DCX1","9",12],[22,"DCX1 SF","9LP",0],[23,"DCX1- KN","9",0],[24,"DCX1","10",0],[25,"DCX1","11",20],[26,"DCX1","12",18],[27,"DCX1","14",20],[28,"UYX128","7",0],[29,"UYX128","8",0],[30,"UYX128 -KN","8",0],[31,"UYX128","9",26],[32,"UYX128","9SPD",0],[33,"UYX128 KK","7",0],[34,"UYX128 KK- KN","9",0],[35,"UYX128 -NY2","9B",0],[36,"UYX128","10",18],[37,"DPX5-KN","9",0],[38,"DPX5","7",0],[39,"UYX128","11",38],[40,"UYX128","11SLP+",0],[41,"UYX128 -KN","11",0],[42,"UYX128 -KN","11HP",0],[43,"UYX128 -KN","11PD",0],[44,"UYX128","12",28],[45,"UYX128","14",0],[46,"UYX128 -NY2","14S",0],[47,"UY/UOX113","9",0],[48,"UY/UOX113","11",0],[49,"UY/UOX113","12",0],[50,"UY/UOX113","14",0],[51,"DVX57","14",0],[52,"DPX5","11",9],[53,"DPX5","9SPD",0],[54,"DPX5","10SPD",0],[55,"DPX5","9",11],[56,"DPX5","12",15],[57,"DPX5","12SPD",0],[58,"DPX5","14SPD",0],[59,"DPX5","14",20],[60,"DPX17","9",0],[61,"DPX17","11",19],[62,"FLX118 -GCS","9",0],[63,"FLX118 -GCS","11",0],[64,"UYX128-KK","8",0],[65,"UOX113","9SPD",0],[66,"UOX113","11SPI",0]]
-};
+"Kadom N": [
+[1,"DBX1","7",16],[2,"DBX1","8",0],[3,"DBX1- KN","8",0],[4,"DBX1- NS","8",0],
+[5,"DBX1","9",30],[6,"DBX1 -KN","9",0],[7,"DBX1 -NS","9",0],[8,"DBX1 -SF","9B",0],
+[9,"DBXK5-KK","9B",0],[10,"DBX1","10",0],[11,"DBX1 -KN","10",0],[12,"DBX1 SF","10",0],
+[13,"DBX1","11",24],[14,"DBX1","12",0],[15,"DBX1","14",0],[16,"DBXK5-KK","9S",0],
+[17,"DBX1","12SPD",0],[18,"DCX1","7",20],[19,"DCX1","8",0],[20,"DCX1- KN","8",30],
+[21,"DCX1","9",24],[22,"DCX1 SF","9LP",0],[23,"DCX1","9JPD",0],[24,"DCX1","10",0],
+[25,"DCX1","11",28],[26,"DCX1","12",10],[27,"DCX1","14",0],[28,"UYX128","7",20],
+[29,"UYX128","8",0],[30,"UYX128 -KN","8",20],[31,"UYX128","9",2],[32,"UYX128 -KN","9",0],
+[33,"UYX128 KK- KN","9",0],[34,"UYX128 -NY2","9B",0],[35,"UYX128","10",10],
+[36,"UYX128 -KN","10PD",0],[37,"UYX128","11",20],[38,"UYX128","11SLP+",0],
+[39,"UYX128 -KN","11",0],[40,"UYX128 -KN","11HP",0],[41,"UYX128 -KN","11PD",0],
+[42,"UYX128","12",20],[43,"UYX128","14",0],[44,"UYX128 -NY2","14S",0],
+[45,"UY/UOX113","9",20],[46,"UY/UOX113","11",10],[47,"UY/UOX113","14",0],
+[48,"DVX57","14",0],[49,"DPX5","9",20],[50,"DPX5","9SPD",0],[51,"DPX5","10SPD",0],
+[52,"DPX5","11",25],[53,"DPX5","12",10],[54,"DPX5","14",44],[55,"DPX17","9",20],
+[56,"DPX17","11",20],[57,"FLX118 -GCS","9",0],[58,"FLX118 -GCS","11",0]
+],
+"Poddo R": [
+[1,"DBX1","7",18],[2,"DBX1","8",3],[3,"DBX1- KN","8",0],[4,"DBX1- NS","8",0],
+[5,"DBX1","9",1],[6,"DBX1 -KN","9",0],[7,"DBX1-KN","09PD",31],[8,"DBX1 -NS","9",0],
+[9,"DBX1 -SF","9B",0],[10,"DBXK5-KK","9B",0],[11,"DBX1","10",6],[12,"DBX1 KN","10",0],
+[13,"DBX1","11",2],[14,"DBX1 KK","11J",0],[15,"DBX1","12",10],[16,"DBX1","14",20],
+[17,"DBXK5-KK","9S",0],[18,"TQX1","16",40],[19,"DCX1","7",44],[20,"DCX1","8",77],
+[21,"DCX1- KN","8",0],[22,"DCX1","9",27],[23,"DCX1 SF","9AP",0],[24,"DMX13-KN","10",0],
+[25,"DCX1","10",7],[26,"DCX1","11",3],[27,"DCX1","12",10],[28,"DCX1","14",14],
+[29,"UYX128","7",30],[30,"UYX128 -KN","8",36],[31,"UYX128","9",49],[32,"UY128","9 SPD",20],
+[33,"UYX128 -KN","9",0],[34,"UYX128 KK- KN","9",20],[35,"UYX128 -NY2","9B",0],
+[36,"UYX128","10",59],[37,"UYX128 -KN","10PD",0],[38,"UY128 NY2","10SPD",0],
+[39,"UYX128","11",19],[40,"UYX128","11SLP+",0],[41,"UYX128 -KN","11HP",40],
+[42,"UYX128 -KN-KN","11",16],[43,"UYX128","12",1],[44,"UY128++SAN","12",20],
+[45,"UYX128","14",68],[46,"UYX128 -NY2","14S",0],[47,"UY/UOX113","9",0],
+[48,"UY/UOX113","11",10],[49,"UY/UOX113","12",12],[50,"UY/UOX113","14",18],
+[51,"DVX57","14",39],[52,"DPX5","9",40],[53,"DVX57","12",42],[54,"DPX5","11",3],
+[55,"DPX5","11SPD",0],[56,"DPX5","12",9],[57,"DPX5","12SPD",0],[58,"DPX5","14SPD",0],
+[59,"DPX5","14",38],[60,"DPX17","9",4],[61,"DPX17","11",18],[62,"FLX118 -GCS","10",33],
+[63,"FLX118 -GCS","11",0],[64,"DBX1-SF","8LP",24],[65,"DBX1-SF","9LP",0],
+[66,"DBX1-SF","10LP",185],[67,"DBX1-SF","11LP",0],[68,"DCX1-SF","8LP",0],
+[69,"DCX1-SF","9AP",13],[70,"DCX1-SF","10LP",0],[71,"DCX1-SF","11LP",8],
+[72,"UYX128-KN","8LP",0],[73,"UYX128-SF","8LP",81],[74,"UYX128-SAN","9XS",11],
+[75,"UYX128-SF","9LP",0],[76,"UYX128-KK-KN","9LP",0],[77,"UYX128-SAN","10XS",16],
+[78,"UYX128-SF","10LP",0],[79,"UYX128-SF","10PD",20],[80,"UYX128-KK-KN","10LP",57],
+[81,"UYX128-KN","11LP",70],[82,"UYX128-SF","11LP",0],[83,"UYX128-SF","11PD",0],
+[84,"UYX128-KK-KN","11LP",140],[85,"DPX5-KN","8LP",100],[86,"DPX5-SF","9LP",100],
+[87,"DPX5-SF","10LP",107],[88,"DPX5-SF","11LP",0]
+],
+"Poddo N": [
+[1,"DBX1","7",0],[2,"DBX1","8",0],[3,"DBX1- KN","8",0],[4,"DBX1- NS","8",0],
+[5,"DBX1","9",3],[6,"DBX1 -KN","9",0],[7,"DBX1 -NS","9",0],[8,"DBX1 -SF","9B",0],
+[9,"DBXK5-KK","9B",0],[10,"DBX1","10",0],[11,"DBX1 -KN","10",0],[12,"DBX1 SF","10",0],
+[13,"DBX1","11",0],[14,"DBX1","12",0],[15,"DBX1","14",0],[16,"DBXK5-KK","9S",0],
+[17,"DBX1","12SPD",0],[18,"DCX1","7",0],[19,"DCX1","8",0],[20,"DCX1- KN","8",0],
+[21,"DCX1","9",3],[22,"DCX1 SF","9LP",0],[23,"DCX1","9JPD",0],[24,"DCX1","10",0],
+[25,"DCX1","11",0],[26,"DCX1","12",0],[27,"DCX1","14",0],[28,"UYX128","7",0],
+[29,"UYX128","8",0],[30,"UYX128","9",0],[31,"UYX128 -KN","8",0],[32,"UYX128 -KN","9",0],
+[33,"UYX128 KK- KN","9",0],[34,"UYX128 -NY2","9B",0],[35,"UYX128","10",0],
+[36,"UYX128 -KN","10PD",0],[37,"UYX128","11",0],[38,"UYX128","11SLP+",0],
+[39,"UYX128 -KN","11",0],[40,"UYX128 -KN","11HP",0],[41,"UYX128 -KN","11PD",0],
+[42,"UYX128","12",0],[43,"UYX128","14",0],[44,"UYX128 -NY2","14S",0],
+[45,"UY/UOX113","9",37],[46,"UY/UOX113","11",63],[47,"UY/UOX113","12",50],
+[48,"UY/UOX113","14",0],[49,"DVX57","14",104],[50,"DPX5","9",60],[51,"DPX5","9SPD",0],
+[52,"DPX5","10SPD",0],[53,"DPX5","11",9],[54,"DPX5","12",0],[55,"DPX5","12SPD",0],
+[56,"DPX5","14SPD",0],[57,"DPX5","14",0],[58,"DPX17","9",0],[59,"DPX17","11",56],
+[60,"FLX118 -GCS","11",16],[61,"DVX57","12",0]
+],
+"Shapla R": [
+[1,"DBX1","7",25],[2,"DBX1","8",16],[3,"DBX1- KN","8",0],[4,"DBX1- NS","8",0],
+[5,"DBX1","9",16],[6,"DBX1 -KN","10",0],[7,"DBX1-KN","9PD",0],[8,"DBX1 -NS","9",0],
+[9,"DBX1 -SF","9B",0],[10,"DBXK5-KK","9B",50],[11,"DBX1","10",37],[12,"DBX1","11",70],
+[13,"DBX1","12SPI",0],[14,"DBX1","12",0],[15,"DBX1","14",11],[16,"DBX1","14SPD",30],
+[17,"DBX1","12SPD",0],[18,"DCX1","7",46],[19,"DCX1","8",14],[20,"DCX1- KN","8",0],
+[21,"DCX1","9",68],[22,"DCX1 SF","9LP",0],[23,"DMX13-KN","10",0],[24,"DCX1","10",36],
+[25,"DCX1","11",54],[26,"DCX1","12",10],[27,"DCX1","14",0],[28,"UYX128","7",11],
+[29,"UYX128 -KN","8",0],[30,"UYX128","9",52],[31,"UY128","9SPD",30],[32,"UYX128 -KN","9",0],
+[33,"UYX128 KK- KN","9",20],[34,"UYX128 -NY2","9B",0],[35,"UYX128","10",43],
+[36,"UYX128 -KN-KN","10",30],[37,"UYX128","11",33],[38,"UY128 NY2","10SPD",30],
+[39,"UYX128 KN","11SLP+",35],[40,"UYX128 -Kk-kn","11",30],[41,"UYX128 -KN","11PD",0],
+[42,"UYX128","12",23],[43,"UY128++GAS","12",0],[44,"UYX128","14",15],[45,"UYX128 -NY2","14S",0],
+[46,"UY/UOX113","9",22],[47,"UY/UOX113","11",20],[48,"DVX57","12",0],[49,"UY/UOX113","14",55],
+[50,"DVX57","14",24],[51,"DPX5","9",9],[52,"DPX5++","9SLP",36],[53,"DPX5","10SPD",22],
+[54,"DPX5","11",25],[55,"DPX5","11SPD",0],[56,"DPX5","12",26],[57,"DPX5","12SPD",0],
+[58,"DPX5","14SPD",13],[59,"DPX5","14",0],[60,"DPX17","9",21],[61,"DPX17","11",45],
+[62,"FLX118 -GCS","9",0],[63,"FLX118 -GCS","11",18]
+],
+"Shapla N": [
+[1,"DBX1","7",16],[2,"DBX1","8",0],[3,"DBX1- KN","8",0],[4,"DBX1- NS","8",0],
+[5,"DBX1","9",27],[6,"DBX1 -KN","9",0],[7,"DBX1 -NS","9",0],[8,"DBX1 -SF","9B",0],
+[9,"DBXK5-KK","9B",0],[10,"DBX1","10",0],[11,"DBX1 -KN","10",0],[12,"DBX1 SF","10",0],
+[13,"DBX1","11",29],[14,"DBX1","12",54],[15,"DBX1","14",0],[16,"DBXK5-KK","9S",0],
+[17,"DBX1","12SPD",0],[18,"DCX1","7",27],[19,"DCX1","8",46],[20,"DCX1- KN","8",0],
+[21,"DCX1","9",79],[22,"DCX1 SF","9LP",0],[23,"DCX1","9JPD",0],[24,"DCX1","10",0],
+[25,"DCX1","11",23],[26,"DCX1","12",0],[27,"DCX1","14",0],[28,"UYX128","7",0],
+[29,"UYX128","8",0],[30,"UYX128 -KN","8",0],[31,"UYX128","9",27],[32,"UYX128 -KN","9",0],
+[33,"UYX128 KK- KN","9",0],[34,"UYX128 -NY2","9B",0],[35,"UYX128","10",47],
+[36,"UYX128 -KN","10PD",0],[37,"UYX128","11",5],[38,"UYX128","11SLP+",0],
+[39,"UYX128 -KN","11",0],[40,"UYX128 -KN","11HP",0],[41,"UYX128 -KN","11PD",0],
+[42,"UYX128","12",39],[43,"UYX128","14",0],[44,"UYX128 -NY2","14S",0],
+[45,"UY/UOX113","9",16],[46,"UY/UOX113","11",18],[47,"UY/UOX113","12",0],
+[48,"UY/UOX113","14",0],[49,"DVX57","14",30],[50,"DPX5","9",24],[51,"DPX5","9SPD",0],
+[52,"DPX5","10SPD",0],[53,"DPX5","11",10],[54,"DPX5","12",0],[55,"DPX5","12SPD",0],
+[56,"DPX5","14SPD",0],[57,"DPX5","14",0],[58,"DPX17","9",0],[59,"DPX17","11",6],
+[60,"FLX118 -GCS","9",0],[61,"FLX118 -GCS","11",50]
+],
+"Sample R": [
+[1,"DBX1","7",33],[2,"DBX1","8",51],[3,"DBX1- KN","8",0],[4,"DBX1- NS","8",20],
+[5,"DBX1","9",7],[6,"DBX1 -KN","9",24],[7,"DBX1 -NS","9",0],[8,"DBX1 -SF","9B",0],
+[9,"DBXK5-KK","9B",0],[10,"DBX1","10",15],[11,"DBX1 -KN","10",0],[12,"DBX1 SF","10",0],
+[13,"DBX1","11",43],[14,"DBX1","12",30],[15,"DBX1","14",18],[16,"DBXK5-KK","9S",0],
+[17,"DBX1","12SPD",0],[18,"DCX1","7",40],[19,"DCX1","8",11],[20,"DCX1- KN","8",50],
+[21,"DCX1","9",23],[22,"DCX1 SF","9LP",0],[23,"DCX1","9JPD",0],[24,"DCX1","10",11],
+[25,"DCX1","11",30],[26,"DCX1","12",30],[27,"DCX1","14",26],[28,"UYX128","7",35],
+[29,"UYX128 KK- KK","8",0],[30,"UYX128 -KN","8",40],[31,"UYX128","9",55],
+[32,"UYX128 -KN","9",0],[33,"UYX128 KK- KN","9",10],[34,"UYX128 -NY2","9B",0],
+[35,"UYX128","10",48],[36,"UYX128 -KN","10PD",0],[37,"UYX128","11",13],
+[38,"UYX128","11SLP+",0],[39,"UYX128 -KN","11",0],[40,"UYX128 -KN","11HP",0],
+[41,"UYX128 -KN","11PD",0],[42,"UYX128","12",39],[43,"UYX128","14",24],
+[44,"UYX128 -NY2","14S",0],[45,"UY/UOX113","9",65],[46,"UY/UOX113","11",47],
+[47,"UY/UOX113","14",25],[48,"DOX558","12",0],[49,"DPX5","9",60],[50,"DPX5","9SPD",0],
+[51,"DPX5","10SPD",0],[52,"DPX5","11",26],[53,"DPX5","12",0],[54,"DPX5","12SPD",10],
+[55,"DPX5","14SPD",0],[56,"DPX5","14",31],[57,"DPX17","9",59],[58,"DPX17","11",60],
+[59,"DVX558","12",0],[60,"FLX118 -GCS","11",29]
+],
+"Sample N": [
+[1,"DBX1","7",10],[2,"DBX1","8",0],[3,"DBX1- KN","8",0],[4,"DBX1- NS","8",0],
+[5,"DBX1","9",23],[6,"DBX1 -KN","9",0],[7,"DBX1 -NS","9",0],[8,"DBX1 -SF","9B",0],
+[9,"DBXK5-KK","9B",0],[10,"DBX1","10",0],[11,"DBX1 -KN","10",0],[12,"DBX1 SF","10",0],
+[13,"DBX1","11",20],[14,"DBX1","12",0],[15,"DBX1","14",0],[16,"DBXK5-KK","9S",0],
+[17,"DBX1","12SPD",0],[18,"DCX1","7",10],[19,"DCX1","8",0],[20,"DCX1- KN","8",0],
+[21,"DCX1","9",41],[22,"DCX1 SF","9LP",0],[23,"DCX1","9JPD",0],[24,"DCX1","10",0],
+[25,"DCX1","11",0],[26,"DCX1","12",0],[27,"DCX1","14",0],[28,"UYX128","7",10],
+[29,"UYX128","8",0],[30,"UYX128 -KN","8",0],[31,"UYX128","9",19],[32,"UYX128 -KN","9",0],
+[33,"UYX128 KK- KN","9",0],[34,"UYX128 -NY2","9B",0],[35,"UYX128","10",0],
+[36,"UYX128 -KN","10PD",0],[37,"UYX128","11",20],[38,"UYX128","11SLP+",0],
+[39,"UYX128 -KN","11",0],[40,"UYX128 -KN","11HP",0],[41,"UYX128 -KN","11PD",0],
+[42,"UYX128","12",0],[43,"UYX128","14",0],[44,"UYX128 -NY2","14S",0],
+[45,"UY/UOX113","9",0],[46,"UY/UOX113","11",40],[47,"UY/UOX113","14",0],
+[48,"DVX57","14",0],[49,"DPX5","9",0],[50,"DPX5","9SPD",0],[51,"DPX5","10SPD",0],
+[52,"DPX5","11",20],[53,"DPX5","12",0],[54,"DPX5","14",0],[55,"DPX17","9",0],
+[56,"DPX17","11",20],[57,"FLX118 -GCS","9",0],[58,"FLX118 -GCS","11",18]
+],
+"EMBROIDERY R": [
+[1,"DBX1","7",120],[2,"DBX1","8",214],[3,"DBX1","9",234],[4,"DBX1","10",0],
+[5,"DBX1","11",181],[6,"DBX1","12",0],[7,"DBX1","14",35],[8,"DCX1","9",0],
+[9,"DCX1","11",37],[10,"DPX5","9",0],[11,"DBXK5KK","9",0],[12,"DBXK5KK","10",20],
+[13,"DPX5","11",0],[14,"DPX5","14",0],[15,"PHXC70","14",65],[16,"PHXC70","16",39],
+[17,"TVX64","14",0],[18,"TVX64","16",35],[19,"TQX1","14",0],[20,"TQX1","16",0],
+[21,"UOX113","14",31],[22,"UOX113","16",0]
+],
+"EMBROIDERY N": [
+[1,"DBX1","7",22],[2,"DBX1","8",37],[3,"DBX1","9",36],[4,"DBX1","10",0],
+[5,"DBX1","11",10],[6,"DBX1","12",0],[7,"DBX1","14",15],[8,"DCX1","9",0],
+[9,"DCX1","11",68],[10,"DPX5","9",0],[11,"134 SAN DPX5","10",0],[12,"134 SAN DPX5","11",0],
+[13,"DPX5","11",0],[14,"DPX5","14",0],[15,"PHXC70","14",9],[16,"PHXC70","16",20],
+[17,"TVX64","14",0],[18,"TVX64","16",28],[19,"TQX1","14",0],[20,"TQX1","16",0],
+[21,"UOX113","14",42],[22,"UOX113","16",0]
+],
+"Belly R": [
+[1,"DBX1","7",7],[2,"DBX1","8",27],[3,"DBX1- KN","8",0],[4,"DBX1-NS","8LP",0],
+[5,"DBX1","9",100],[6,"DBX1 -KN","10",0],[7,"DBX1-KN","9PD",0],[8,"DBX1 -NS","9",0],
+[9,"DBX1","10",0],[10,"DBXK5-NS","10",0],[11,"DBX1-SF","10",0],[12,"DBX1","11",54],
+[13,"DBX1 NS","11J",0],[14,"DBX1","12",33],[15,"DBX1","14",31],[16,"DBXK5-KK","9S",0],
+[17,"DBX1","12SPD",0],[18,"DCX1","7",0],[19,"DCX1","9",8],[20,"DCX1- KN","8",0],
+[21,"DCX1","8",0],[22,"DCX1-NS","9",0],[23,"DCX1- KN","9",60],[24,"DCX1","10",14],
+[25,"DCX1","11",43],[26,"DCX1","12",11],[27,"DCX1","14",13],[28,"UYX128","7",0],
+[29,"UYX128 -KN","8",0],[30,"UYX128","9",10],[31,"UY128","9SPD",0],[32,"UYX128 -KN","9",0],
+[33,"UYX128 KK","7",0],[34,"UYX128 -NY2","9B",0],[35,"UYX128","10",20],
+[36,"DPX5","7",0],[37,"DPX5-NS","11",25],[38,"UYX128","11",23],[39,"DPX5-NS","9",20],
+[40,"UYX128 -KN","11",0],[41,"UYX128 -KN","11PD",0],[42,"UYX128","12",20],
+[43,"UY128++GAS","12",0],[44,"UYX128","14",16],[45,"UYX128 -NY2","14S",0],
+[46,"UY/UOX113","9",0],[47,"UY/UOX113","12",0],[48,"DPX5-NS","10",40],[49,"DCX1-NS","8",0],
+[50,"DVX57","14",0],[51,"DPX5","9",50],[52,"DPX5","9SLP",0],[53,"DPX5","10SPD",18],
+[54,"DPX5","11",40],[55,"DPX5","11SPD",0],[56,"DPX5","12",20],[57,"DPX5","12SPD",10],
+[58,"DPX5","14SPD",20],[59,"DPX5","14",15],[60,"DPX17","9",0],[61,"DPX17","11",28],
+[62,"FLX118 -GCS","9",0],[63,"FLX118 -GCS","11",0],[64,"UYX128 -KK","8",0],
+[65,"UOX113","11SPI",20],[66,"DPX5-SF","10LP",0],[67,"DPX5-KN","8LP",0],
+[68,"DPX5-SF","9LP",0],[69,"DBX1-SF","10LP",0]
+],
+"Belly N": [
+[1,"DBX1","7",0],[2,"DBX1","8",12],[3,"DBX1- KN","8",0],[4,"DBX1-SF","8",0],
+[5,"DBX1","9",12],[6,"DBX1 -KN","9",0],[7,"DBX1 -NS","9",0],[8,"DBX1 -SF","9B",0],
+[9,"DBXK5-KK","9B",0],[10,"DBX1","10",0],[11,"DBX1 -KN","10",0],[12,"DBX1 SF","10",0],
+[13,"DBX1","11",21],[14,"DBX1","12",20],[15,"DBX1","14",16],[16,"DBXK5-KK","9S",0],
+[17,"DBX1","12SPD",0],[18,"DCX1","7",0],[19,"DCX1","8",0],[20,"DCX1- KN","8",0],
+[21,"DCX1","9",12],[22,"DCX1 SF","9LP",0],[23,"DCX1- KN","9",0],[24,"DCX1","10",0],
+[25,"DCX1","11",20],[26,"DCX1","12",18],[27,"DCX1","14",20],[28,"UYX128","7",0],
+[29,"UYX128","8",0],[30,"UYX128 -KN","8",0],[31,"UYX128","9",26],[32,"UYX128","9SPD",0],
+[33,"UYX128 KK","7",0],[34,"UYX128 KK- KN","9",0],[35,"UYX128 -NY2","9B",0],
+[36,"UYX128","10",18],[37,"DPX5-KN","9",0],[38,"DPX5","7",0],[39,"UYX128","11",38],
+[40,"UYX128","11SLP+",0],[41,"UYX128 -KN","11",0],[42,"UYX128 -KN","11HP",0],
+[43,"UYX128 -KN","11PD",0],[44,"UYX128","12",28],[45,"UYX128","14",0],
+[46,"UYX128 -NY2","14S",0],[47,"UY/UOX113","9",0],[48,"UY/UOX113","11",0],
+[49,"UY/UOX113","12",0],[50,"UY/UOX113","14",0],[51,"DVX57","14",0],[52,"DPX5","11",9],
+[53,"DPX5","9SPD",0],[54,"DPX5","10SPD",0],[55,"DPX5","9",11],[56,"DPX5","12",15],
+[57,"DPX5","12SPD",0],[58,"DPX5","14SPD",0],[59,"DPX5","14",20],[60,"DPX17","9",0],
+[61,"DPX17","11",19],[62,"FLX118 -GCS","9",0],[63,"FLX118 -GCS","11",0],
+[64,"UYX128-KK","8",0],[65,"UOX113","9SPD",0],[66,"UOX113","11SPI",0]
+]};
 
 // =========================================
 // 🌐 GLOBAL STATE
@@ -410,12 +584,12 @@ let rowReqNo = {};
 let pendingReqIndex = null;
 
 // Transfer
-let pendingTrfIndex = null;       
-let pendingFloorNavItem = null;   
+let pendingTrfIndex = null;       // for direct transfer popup
+let pendingFloorNavItem = null;   // {needleType, size, fromFloor} for floor-nav popup
 
 // Transfer tracking per row
-let rowTransferOut = {}; 
-let rowTransferIn  = {}; 
+let rowTransferOut = {}; // rowTransferOut[i] = [{toFloor, qty, receiver, reqNo}]
+let rowTransferIn  = {}; // rowTransferIn[i]  = [{fromFloor, qty, receiver, reqNo}]
 
 const OFFLINE_QUEUE_KEY = "needle_posting_queue";
 const TRANSFER_LOCAL_KEY = "needle_transfers_local";
@@ -478,11 +652,9 @@ function loadTable(customPrevious=null){
     const prev = (customPrevious && customPrevious[i] !== undefined)
       ? (Number(customPrevious[i]) || 0)
       : (dynamicOpening && dynamicOpening[i] !== undefined ? Number(dynamicOpening[i]) : Number(item[3]) || 0);
-    
     html += `
     <tr id="row${i}">
       <td class="col-sl">${item[0]}</td>
-      <td class="col-code"><input class="codeInput" type="text" id="c${i}" placeholder="Code"></td>
       <td class="col-type" style="cursor:pointer;text-decoration:underline;color:#1e40af;font-weight:600"
           onclick="openFloorNavFromItem(${i})" title="Click to transfer this item">${item[1]}</td>
       <td class="col-size">${item[2]}</td>
@@ -635,6 +807,7 @@ function cancelReqPopup(){
 // =========================================
 // 🔄 TRANSFER — ITEM CLICK (Floor Nav)
 // =========================================
+// Called when user clicks on needle type name in table
 function openFloorNavFromItem(rowIdx){
   const item = currentItems[rowIdx];
   const fromFloor = document.getElementById('floor').value;
@@ -643,6 +816,7 @@ function openFloorNavFromItem(rowIdx){
 
   pendingFloorNavItem = { rowIdx, needleType, size, fromFloor };
 
+  // Find floors that have matching item (same needleType + size)
   const allFloors = Object.keys(floorData);
   const matchingFloors = [];
   allFloors.forEach(f => {
@@ -653,7 +827,7 @@ function openFloorNavFromItem(rowIdx){
   });
 
   document.getElementById('floorNavItemInfo').innerHTML =
-    `<b>${needleType}</b> | Size: ${size}<br><small style="color:#059669">নিচে Floor 중 match আছে: ${matchingFloors.length} টি</small>`;
+    `<b>${needleType}</b> | Size: ${size}<br><small style="color:#059669">아래 Floor 중 match আছে: ${matchingFloors.length} টি</small>`;
 
   let html = '';
   if(matchingFloors.length === 0){
@@ -674,6 +848,7 @@ function openFloorNavFromItem(rowIdx){
 }
 
 function selectFloorNavTarget(toFloor){
+  // Close floor nav popup, open transfer popup with toFloor pre-selected
   document.getElementById('floorNavPopup').classList.remove('active');
   if(!pendingFloorNavItem) return;
   const { rowIdx } = pendingFloorNavItem;
@@ -696,6 +871,7 @@ function openTransferPopup(i){
   document.getElementById('trfItemInfo').innerHTML =
     `<b>${item[1]}</b> | Size: ${item[2]}<br>Present Stock: <b style="color:${presentNow<0?'#dc2626':'#059669'}">${presentNow}</b>`;
 
+  // Populate floor dropdown — only floors that have matching item (auto-match)
   const sel = document.getElementById('trfToFloor');
   sel.innerHTML = '<option value="">-- To Floor নির্বাচন করুন --</option>';
   Object.keys(floorData).filter(f=>f!==fromFloor).forEach(f=>{
@@ -731,9 +907,6 @@ async function confirmTransfer(){
   const date = document.getElementById('postDate').value;
   const operator = document.getElementById('operatorName').value.trim() || localStorage.getItem('lastOperator') || 'Unknown';
   const item = currentItems[i];
-  
-  // Get Code from input
-  const code = document.getElementById(`c${i}`)?.value || '';
 
   if(!toFloor){ alert('❌ To Floor নির্বাচন করুন!'); return; }
   if(qty <= 0){ alert('❌ Qty দিন!'); return; }
@@ -752,7 +925,7 @@ async function confirmTransfer(){
   calc(i);
 
   if(!rowTransferOut[i]) rowTransferOut[i] = [];
-  rowTransferOut[i].push({toFloor, qty, receiver, reqNo, code});
+  rowTransferOut[i].push({toFloor, qty, receiver, reqNo});
   const trfOutTag = document.getElementById(`trfOutTag${i}`);
   if(trfOutTag){ const last=rowTransferOut[i][rowTransferOut[i].length-1]; trfOutTag.textContent=`→${last.toFloor.substring(0,8)} (${last.qty})`; }
 
@@ -769,26 +942,28 @@ async function confirmTransfer(){
     }
   }catch(e){}
 
+  // If no data yet for toFloor on this date, build from defaults
   if(!toRows){
     toRows = (floorData[toFloor]||[]).map(it=>({
-      sl:it[0], code:'', needleType:it[1], size:it[2], opening:it[3],
+      sl:it[0], needleType:it[1], size:it[2], opening:it[3],
       previous:it[3], receive:0, delivery:0, present:it[3], bn:0, receiveReqNo:'', transferIn:[], transferOut:[]
     }));
   }
 
+  // Find matching item in toFloor
   const toItems = floorData[toFloor] || [];
   const toItemIdx = toItems.findIndex(it => it[1]===item[1] && it[2]===item[2]);
   if(toItemIdx >= 0 && toRows[toItemIdx]){
     toRows[toItemIdx].receive = (Number(toRows[toItemIdx].receive)||0) + qty;
     toRows[toItemIdx].present = (Number(toRows[toItemIdx].previous)||0) + (Number(toRows[toItemIdx].receive)||0) - (Number(toRows[toItemIdx].delivery)||0);
     toRows[toItemIdx].receiveReqNo = reqNo;
-    toRows[toItemIdx].code = code; // Save code to receiving floor
     if(!toRows[toItemIdx].transferIn) toRows[toItemIdx].transferIn = [];
-    toRows[toItemIdx].transferIn.push({fromFloor, qty, receiver, reqNo, date, code});
+    toRows[toItemIdx].transferIn.push({fromFloor, qty, receiver, reqNo, date});
   } else {
     showToast(`⚠️ To Floor-এ ${item[1]} (Size ${item[2]}) match পাওয়া যায়নি!`, '#f59e0b');
   }
 
+  // Save to toFloor Firebase
   if(navigator.onLine){
     try{
       await setDoc(doc(db,'dailyPosting',toDocId), {
@@ -799,11 +974,13 @@ async function confirmTransfer(){
     }catch(e){ console.error('To floor save error:', e); }
   }
 
-  const trf = { date, fromFloor, toFloor, code, needleType: item[1], size: item[2], qty, receiver, reqNo, operator, createdAt: new Date().toISOString() };
+  // Save transfer record
+  const trf = { date, fromFloor, toFloor, needleType: item[1], size: item[2], qty, receiver, reqNo, operator, createdAt: new Date().toISOString() };
+  // Local
   const local = JSON.parse(localStorage.getItem(TRANSFER_LOCAL_KEY)||'[]');
   local.push({...trf, id: Date.now()});
   localStorage.setItem(TRANSFER_LOCAL_KEY, JSON.stringify(local));
-  
+  // Firebase
   if(navigator.onLine){
     try{
       await addDoc(collection(db,'needleTransfers'), {
@@ -817,11 +994,11 @@ async function confirmTransfer(){
 }
 
 // =========================================
-// 🔍 REQUISITION & CODE SEARCH POPUP
+// 🔍 REQUISITION SEARCH POPUP
 // =========================================
 function openReqSearchPopup(){
   document.getElementById('reqSearchInput').value = '';
-  document.getElementById('reqSearchResults').innerHTML = '<div class="no-results">Requisition number বা Code দিয়ে search করুন</div>';
+  document.getElementById('reqSearchResults').innerHTML = '<div class="no-results">Requisition number দিয়ে search করুন</div>';
   document.getElementById('reqSearchFooter').textContent = '';
   document.getElementById('reqSearchPopup').classList.add('active');
   setTimeout(()=>document.getElementById('reqSearchInput').focus(), 100);
@@ -836,8 +1013,10 @@ async function liveReqSearch(){
   }
 
   document.getElementById('reqSearchResults').innerHTML = '<div class="no-results">🔍 Searching...</div>';
+
   const results = [];
 
+  // 1. Search Firebase
   if(navigator.onLine){
     try{
       const snap = await getDocs(collection(db,'dailyPosting'));
@@ -846,10 +1025,8 @@ async function liveReqSearch(){
         if(!data.rows) return;
         const matchedItems = [];
         data.rows.forEach(row => {
-          const matchReq = row.receiveReqNo && row.receiveReqNo.toLowerCase().includes(term.toLowerCase()) && row.receive > 0;
-          const matchCode = row.code && row.code.toLowerCase().includes(term.toLowerCase()) && (row.receive > 0 || row.present > 0);
-          if(matchReq || matchCode){
-            matchedItems.push({needleType:row.needleType, size:row.size, qty:row.receive, code:row.code});
+          if(row.receiveReqNo && row.receiveReqNo.toLowerCase().includes(term.toLowerCase()) && row.receive > 0){
+            matchedItems.push({needleType:row.needleType, size:row.size, qty:row.receive});
           }
         });
         if(matchedItems.length > 0){
@@ -859,14 +1036,13 @@ async function liveReqSearch(){
     }catch(e){ console.error('Req search Firebase error:', e); }
   }
 
+  // 2. Search local transfers
   const local = JSON.parse(localStorage.getItem(TRANSFER_LOCAL_KEY)||'[]');
   local.forEach(t => {
-    const matchReq = t.reqNo && t.reqNo.toLowerCase().includes(term.toLowerCase());
-    const matchCode = t.code && t.code.toLowerCase().includes(term.toLowerCase());
-    if(matchReq || matchCode){
+    if(t.reqNo && t.reqNo.toLowerCase().includes(term.toLowerCase())){
       const existing = results.find(r=>r.floor===t.toFloor && r.date===t.date);
-      if(existing){ existing.items.push({needleType:t.needleType, size:t.size, qty:t.qty, code:t.code, fromFloor:t.fromFloor}); }
-      else{ results.push({floor:t.toFloor, date:t.date, operator:t.receiver||'', items:[{needleType:t.needleType, size:t.size, qty:t.qty, code:t.code, fromFloor:t.fromFloor}], source:'Local'}); }
+      if(existing){ existing.items.push({needleType:t.needleType, size:t.size, qty:t.qty, fromFloor:t.fromFloor}); }
+      else{ results.push({floor:t.toFloor, date:t.date, operator:t.receiver||'', items:[{needleType:t.needleType, size:t.size, qty:t.qty, fromFloor:t.fromFloor}], source:'Local'}); }
     }
   });
 
@@ -876,11 +1052,11 @@ async function liveReqSearch(){
 function renderReqSearchResults(results, term){
   const container = document.getElementById('reqSearchResults');
   document.getElementById('reqSearchFooter').textContent = `${results.length} result(s) found for "${term}"`;
-  if(!results.length){ container.innerHTML = '<div class="no-results">কোনো result পাওয়া যায়নি।<br>অন্য number বা code দিয়ে try করুন।</div>'; return; }
+  if(!results.length){ container.innerHTML = '<div class="no-results">কোনো result পাওয়া যায়নি।<br>অন্য number দিয়ে try করুন।</div>'; return; }
 
   let html = '';
   results.forEach((r,idx) => {
-    const itemSummary = r.items.slice(0,3).map(it=>`${it.code?'['+it.code+'] ':''}${it.needleType} Size ${it.size} (${it.qty})`).join(', ') + (r.items.length>3 ? ` +${r.items.length-3} more` : '');
+    const itemSummary = r.items.slice(0,3).map(it=>`${it.needleType} Size ${it.size} (${it.qty})`).join(', ') + (r.items.length>3 ? ` +${r.items.length-3} more` : '');
     html += `<div class="search-result-item" onclick="goToReqFloor('${r.floor}','${r.date}')">
       <div class="sri-floor">📍 ${r.floor} <span style="font-size:10px;color:#64748b">(${r.source})</span></div>
       <div class="sri-date">📅 ${r.date} | 👤 ${r.operator||'-'}</div>
@@ -915,7 +1091,8 @@ async function loadTrfReport(){
   const to = document.getElementById('trfRpTo').value;
   if(!from||!to){ alert('তারিখ দিন'); return; }
 
-  document.getElementById('trfReportBody').innerHTML = '<tr><td colspan="9" style="padding:10px;color:#64748b">Loading...</td></tr>';
+  document.getElementById('trfReportBody').innerHTML = '<tr><td colspan="8" style="padding:10px;color:#64748b">Loading...</td></tr>';
+
   let transfers = [];
 
   if(navigator.onLine){
@@ -937,7 +1114,7 @@ async function loadTrfReport(){
   transfers.sort((a,b)=>(a.date||'').localeCompare(b.date||''));
 
   if(!transfers.length){
-    document.getElementById('trfReportBody').innerHTML = '<tr><td colspan="9" style="padding:10px;color:#94a3b8;text-align:center">এই period এ কোনো transfer নেই</td></tr>';
+    document.getElementById('trfReportBody').innerHTML = '<tr><td colspan="8" style="padding:10px;color:#94a3b8;text-align:center">এই period এ কোনো transfer নেই</td></tr>';
     document.getElementById('trfGrandTotal').innerText = '0';
     document.getElementById('trfReportFooter').textContent = '0 records';
     return;
@@ -952,7 +1129,6 @@ async function loadTrfReport(){
       <td>${t.date||'-'}</td>
       <td style="font-size:9px">${(t.fromFloor||'').substring(0,10)}</td>
       <td style="font-size:9px">${(t.toFloor||'').substring(0,10)}</td>
-      <td style="font-size:9px;font-weight:bold;color:#7c3aed">${t.code||''}</td>
       <td>${t.needleType||''}</td>
       <td>${t.size||''}</td>
       <td><b>${qty}</b></td>
@@ -996,10 +1172,7 @@ async function updateDashboardState(floor, rows){
 
 function buildRows(){
   return currentItems.map((item,i) => ({
-    sl: item[0],
-    code: document.getElementById(`c${i}`)?.value || '', // Save Code
-    needleType: item[1],
-    size: item[2],
+    sl: item[0], needleType: item[1], size: item[2],
     opening: (dynamicOpening && dynamicOpening[i] !== undefined) ? dynamicOpening[i] : Number(item[3])||0,
     previous: Number(document.getElementById(`p${i}`)?.innerText)||0,
     receive: Number(document.getElementById(`r${i}`)?.value)||0,
@@ -1018,6 +1191,7 @@ async function saveData(){
   const operator = document.getElementById('operatorName').value.trim() || localStorage.getItem('lastOperator') || 'Unknown';
   if(!date){ alert('❌ Date select করুন'); return; }
 
+  // Validate req nos
   for(let i=0;i<currentItems.length;i++){
     const r = Number(document.getElementById(`r${i}`)?.value)||0;
     if(r > 0 && !rowReqNo[i]){
@@ -1077,6 +1251,7 @@ async function loadData(){
   const floor = document.getElementById('floor').value;
   const items = getItems();
 
+  // Reset state
   rowReqNo = {}; rowTransferOut = {}; rowTransferIn = {};
   floorReqNo = null; updateFloorReqBanner();
 
@@ -1115,4 +1290,136 @@ async function loadData(){
   const todayReceive = Array(items.length).fill(0);
   const todayDelivery = Array(items.length).fill(0);
   const todayBN = Array(items.length).fill(0);
-  if(todayData?.rows) todayData.rows.forEach((row,i)=>{ todayRecei
+  if(todayData?.rows) todayData.rows.forEach((row,i)=>{ todayReceive[i]=Number(row.receive)||0; todayDelivery[i]=Number(row.delivery)||0; todayBN[i]=Number(row.bn)||0; });
+
+  const previousList = items.map((_,i) => dynamicOpening[i] + (monthlyReceive[i]-todayReceive[i]) - (monthlyDelivery[i]-todayDelivery[i]));
+
+  loadTable(previousList);
+  document.getElementById('operatorName').value = todayData?.operator || localStorage.getItem('lastOperator') || '';
+
+  // Restore saved values
+  if(todayData?.rows){
+    todayData.rows.forEach((row,i)=>{
+      if(!document.getElementById(`r${i}`)) return;
+      document.getElementById(`r${i}`).value = todayReceive[i] || '';
+      document.getElementById(`d${i}`).value = todayDelivery[i] || '';
+      document.getElementById(`bn${i}`).value = todayBN[i] || '';
+
+      // Restore req no
+      if(row.receiveReqNo){
+        rowReqNo[i] = row.receiveReqNo;
+        const t = document.getElementById(`reqTag${i}`); if(t) t.textContent = '📋 '+row.receiveReqNo;
+        if(!floorReqNo) floorReqNo = row.receiveReqNo;
+      }
+
+      // Restore transfer tags
+      if(row.transferOut?.length){ rowTransferOut[i]=row.transferOut; const last=row.transferOut[row.transferOut.length-1]; const tag=document.getElementById(`trfOutTag${i}`); if(tag) tag.textContent=`→${last.toFloor.substring(0,8)} (${last.qty})`; }
+      if(row.transferIn?.length){ rowTransferIn[i]=row.transferIn; const last=row.transferIn[row.transferIn.length-1]; const tag=document.getElementById(`trfInTag${i}`); if(tag) tag.textContent=`←${last.fromFloor.substring(0,8)} (${last.qty})`; }
+
+      calc(i);
+    });
+    updateFloorReqBanner();
+  }
+
+  updateMonthlySummary(monthlyReceive, monthlyDelivery, monthlyBN, dynamicOpening);
+  setTimeout(checkNegativeStock, 200);
+}
+
+function onFloorChange(){ loadTable(); loadData(); }
+
+function updateMonthlySummary(recv, dlvr, bn, opening){
+  let o=0,r=0,d=0,p=0,b=0;
+  currentItems.forEach((_,i)=>{ const op=(opening?.[i]??Number(currentItems[i][3]))||0; o+=op; r+=Number(recv[i])||0; d+=Number(dlvr[i])||0; p+=op+(Number(recv[i])||0)-(Number(dlvr[i])||0); b+=Number(bn[i])||0; });
+  showMonthlySummary(o,r,d,p,b);
+}
+function showMonthlySummary(o,r,d,p,b){
+  document.getElementById('monthOpening').innerText=o;
+  document.getElementById('monthReceive').innerText=r;
+  document.getElementById('monthDelivery').innerText=d;
+  document.getElementById('monthPresent').innerText=p;
+  document.getElementById('monthBN').innerText=b;
+}
+
+// =========================================
+// 📊 EXPORT
+// =========================================
+function exportExcel(){
+  const floor=document.getElementById('floor').value, date=document.getElementById('postDate').value;
+  const title=`<h2>Needle Daily Posting</h2><h3>Floor: ${floor}</h3><h3>Date: ${date}</h3>`;
+  const t1=document.getElementById('reportTable').outerHTML, t2=document.getElementById('summaryTable').outerHTML;
+  const blob=new Blob([title+t1+'<br>'+t2],{type:'application/vnd.ms-excel'});
+  const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download=`needle-${floor}-${date}.xls`; a.click();
+  trackActivity('export_excel');
+}
+function exportPDF(){ window.print(); trackActivity('export_pdf'); }
+
+// =========================================
+// 🔄 OFFLINE SYNC
+// =========================================
+async function syncOfflineQueue(){
+  if(!navigator.onLine) return;
+  const queue = getOfflineQueue();
+  let synced = 0;
+  for(let i=0;i<queue.length;i++){
+    if(queue[i].status==='pending'){
+      try{
+        await setDoc(doc(db,'dailyPosting',queue[i].id), {date:queue[i].date,month:getMonth(queue[i].date),floor:queue[i].floor,rows:queue[i].rows,operator:queue[i].operator,updatedAt:serverTimestamp()});
+        queue[i].status='synced'; synced++;
+        await updateDashboardState(queue[i].floor, queue[i].rows);
+      }catch(e){}
+    }
+  }
+  if(synced>0){ setOfflineQueue(queue); showToast(`☁️ ${synced} items synced to Firebase`); }
+}
+
+// =========================================
+// 🚀 INIT
+// =========================================
+(function init(){
+  const today = new Date().toISOString().slice(0,10);
+  document.getElementById('postDate').value = today;
+  const op = localStorage.getItem('lastOperator');
+  if(op) document.getElementById('operatorName').value = op;
+  updateOfflineIndicator();
+  loadTable();
+  setTimeout(syncOfflineQueue, 1000);
+  trackActivity('page_view');
+
+  document.getElementById('postDate').addEventListener('change', loadData);
+
+  document.addEventListener('keydown', e=>{
+    if(e.target.tagName!=='INPUT') return;
+    if(!e.target.id.match(/^(r|d|bn)\d+$/)) return;
+    if(e.key==='Enter'){
+      e.preventDefault();
+      const col=e.target.id.replace(/[0-9]/g,'');
+      const row=Number(e.target.id.replace(/\D/g,''));
+      const next=document.getElementById(col+(row+1));
+      if(next){next.focus();next.select();}
+    }
+    if(e.ctrlKey && e.key==='s'){ e.preventDefault(); saveData(); }
+  });
+
+  setInterval(()=>{
+    try{ const act=JSON.parse(localStorage.getItem('gms_needle_activity')||'[]'); const tod=new Date().toISOString().slice(0,10); const cnt=act.filter(a=>a.date===tod).length; document.getElementById('roiTrackerIndicator').title=`Today: ${cnt} activities | Total: ${act.length}`; }catch(e){}
+  }, 5000);
+})();
+
+window.addEventListener('online', ()=>{ updateOfflineIndicator(); syncOfflineQueue(); });
+window.addEventListener('offline', updateOfflineIndicator);
+
+// Expose globals
+window.saveData=saveData; window.deleteData=deleteData; window.loadData=loadData;
+window.loadTable=loadTable; window.calc=calc; window.updateTotal=updateTotal;
+window.exportExcel=exportExcel; window.exportPDF=exportPDF;
+window.closeNegPopup=closeNegPopup; window.fixNegativeRow=fixNegativeRow;
+window.checkReqNo=checkReqNo; window.confirmReqNo=confirmReqNo; window.cancelReqPopup=cancelReqPopup;
+window.changeFloorReqNo=changeFloorReqNo; window.updateFloorReqBanner=updateFloorReqBanner;
+window.openTransferPopup=openTransferPopup; window.closeTransferPopup=closeTransferPopup; window.confirmTransfer=confirmTransfer;
+window.openFloorNavFromItem=openFloorNavFromItem; window.selectFloorNavTarget=selectFloorNavTarget; window.closeFloorNavPopup=closeFloorNavPopup;
+window.openReqSearchPopup=openReqSearchPopup; window.closeReqSearchPopup=closeReqSearchPopup; window.liveReqSearch=liveReqSearch; window.goToReqFloor=goToReqFloor;
+window.showTrfReport=showTrfReport; window.closeTrfReportPopup=closeTrfReportPopup; window.loadTrfReport=loadTrfReport;
+window.onFloorChange=onFloorChange;
+</script>
+</body>
+</html>
