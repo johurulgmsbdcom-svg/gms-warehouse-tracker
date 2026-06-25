@@ -32,7 +32,7 @@ body.light #reportTable thead{background:#334155}
 .transferBtn{background:#f59e0b;color:#000;border:none;border-radius:4px;padding:2px 4px;font-size:10px;font-weight:bold;cursor:pointer;width:100%;line-height:1.2}
 .transfer-tag{display:block;font-size:6.5px;color:#7c3aed;font-weight:700;margin-top:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%}
 .req-tag{display:block;font-size:6px;color:#059669;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-#reqPopup,#transferPopup,#negativePopup,#reportPopup{display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.82);z-index:9998;justify-content:center;align-items:center}
+#reqPopup,#transferPopup,#negativePopup,#reportPopup,#reqSearchPopup{display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.82);z-index:9998;justify-content:center;align-items:center}
 .popup-content{background:white;color:black;padding:18px;border-radius:12px;max-width:95%;width:380px;box-shadow:0 8px 30px rgba(0,0,0,0.4);position:relative;animation:popupSlide 0.25s}
 @keyframes popupSlide{from{transform:translateY(-40px);opacity:0}to{transform:translateY(0);opacity:1}}
 .popup-close{position:absolute;top:10px;right:14px;font-size:22px;cursor:pointer;color:#666;font-weight:bold}
@@ -50,12 +50,12 @@ body.light #reportTable thead{background:#334155}
 .popup-details div{margin:4px 0;display:flex;justify-content:space-between;padding:5px;background:#f8fafc;border-radius:6px}
 .popup-details span.label{font-weight:bold;color:#334155}
 .popup-details span.value{color:#1e293b;font-weight:600}
-#reportPopup .popup-content{width:98%;max-width:700px;max-height:90vh;overflow-y:auto}
-#reportTable2{width:100%;border-collapse:collapse;font-size:10px;color:black}
-#reportTable2 th{background:#1e293b;color:white;padding:5px;border:1px solid #000}
-#reportTable2 td{border:1px solid #ccc;padding:4px;text-align:center}
-#reportTable2 tr:nth-child(even){background:#f1f5f9}
-#reportTable2 tfoot td{background:#334155;color:white;font-weight:bold}
+#reportPopup .popup-content,#reqSearchPopup .popup-content{width:98%;max-width:700px;max-height:90vh;overflow-y:auto}
+#reportTable2,#reqSearchTable{width:100%;border-collapse:collapse;font-size:10px;color:black}
+#reportTable2 th,#reqSearchTable th{background:#1e293b;color:white;padding:5px;border:1px solid #000}
+#reportTable2 td,#reqSearchTable td{border:1px solid #ccc;padding:4px;text-align:center}
+#reportTable2 tr:nth-child(even),#reqSearchTable tr:nth-child(even){background:#f1f5f9}
+#reportTable2 tfoot td,#reqSearchTable tfoot td{background:#334155;color:white;font-weight:bold}
 .floor-req-banner{display:none;background:linear-gradient(135deg,#059669,#10b981);color:white;padding:4px 10px;border-radius:6px;font-size:10px;font-weight:700;text-align:center;margin:4px 0;cursor:pointer}
 body.light .floor-req-banner{background:linear-gradient(135deg,#047857,#059669)}
 .qtyInput{width:100%;height:24px;padding:1px;text-align:center;font-size:11px;font-weight:bold;border:1px solid #999;border-radius:3px;background:white;color:black}
@@ -116,7 +116,7 @@ body.light .last-sync{color:#64748b}
   .tableWrap,.summaryWrap{overflow:visible!important}
   #reportTable,#summaryTable{width:100%!important;color:black!important;background:white!important}
   #reportTable th,#reportTable td{font-size:8px;padding:2px}
-  #negativePopup,#reqPopup,#transferPopup,#reportPopup{display:none!important}
+  #negativePopup,#reqPopup,#transferPopup,#reportPopup,#reqSearchPopup{display:none!important}
 }
 </style>
 </head>
@@ -209,6 +209,7 @@ body.light .last-sync{color:#64748b}
   <button class="excelBtn" onclick="exportExcel()">📊 Excel</button>
   <button class="pdfBtn" onclick="exportPDF()">📄 PDF</button>
   <button class="themeBtn" style="background:#7c3aed" onclick="showTransferReport()">🚚 Transfers</button>
+  <button class="themeBtn" style="background:#0891b2" onclick="showReqSearch()">🔎 Req Search</button>
   <button class="homeBtn" onclick="location.href='index.html'">🏠 Home</button>
 </div>
 <div class="last-sync" id="lastSync"></div>
@@ -353,6 +354,37 @@ body.light .last-sync{color:#64748b}
   </div>
 </div>
 
+<!-- REQUISITION SEARCH POPUP -->
+<div id="reqSearchPopup">
+  <div class="popup-content">
+    <span class="popup-close" onclick="closeReqSearchPopup()">×</span>
+    <div class="popup-title">🔎 Requisition Search</div>
+    <div style="display:flex;gap:6px;margin-bottom:10px;flex-wrap:wrap">
+      <input type="text" id="reqSearchInput" placeholder="Requisition No লিখুন (যেমন: REQ-2026-0456)" style="flex:2;min-width:180px;max-width:none;background:#f1f5f9;color:#0f172a;border:1px solid #cbd5e1;padding:6px;border-radius:6px">
+      <button onclick="searchRequisition()" style="background:#0891b2;padding:6px 12px;border-radius:6px;white-space:nowrap">🔍 Search</button>
+    </div>
+    <div style="overflow-x:auto">
+      <table id="reqSearchTable">
+        <thead>
+          <tr>
+            <th>Date</th><th>Floor</th><th>Source</th>
+            <th>Code</th><th>Type</th><th>Size</th><th>Qty</th><th>Detail</th>
+          </tr>
+        </thead>
+        <tbody id="reqSearchBody"></tbody>
+        <tfoot>
+          <tr>
+            <td colspan="6" style="text-align:right;padding:4px">Grand Total:</td>
+            <td id="reqSearchGrandTotal">0</td>
+            <td>-</td>
+          </tr>
+        </tfoot>
+      </table>
+    </div>
+    <div class="popup-footer" id="reqSearchFooter">Requisition Number লিখে Search চাপুন — Receive ও Transfer সব জায়গায় খুঁজবে</div>
+  </div>
+</div>
+
 <script type="module">
 import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm";
 
@@ -364,6 +396,7 @@ const SUPABASE_KEY = 'sb_publishable_VA7UkQqRwCxdeVwHuxzsjw_dQxOPiIj';
 const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
 const COMPANY_CODE = 'composite';
 const OFFLINE_KEY = 'composite_needle_offline_v3';
+const MAX_CARRY_LOOKBACK_DAYS = 90; // কতদিন পিছনে গিয়ে আগের saved data খুঁজবে
 
 // =========================================
 // 📦 FLOOR DATA
@@ -769,12 +802,28 @@ async function saveToSupabase(floor, date, operator, rows, showSuccess=true){
   return {success:true};
 }
 
-// ✅ সবসময় Supabase থেকে load — এটাই মূল পরিবর্তন
+// ✅ সবসময় Supabase থেকে load
 async function loadFromSupabase(floor, date){
   const companyId = await getCompanyId();
   if(!companyId) return null;
   const {data,error} = await supabase.from('needle_reports').select('*')
     .eq('company_id',companyId).eq('floor',floor).eq('report_date',date).maybeSingle();
+  if(error){ console.error(error); return null; }
+  return data;
+}
+
+// ✅ NEW: নির্দিষ্ট তারিখের ঠিক আগের দিনে data না থাকলে, আরও পিছনে (max 90 দিন) গিয়ে
+// সবশেষ যেদিন save করা হয়েছিল সেই দিনের record খুঁজে আনে — এতে কোনো একদিন miss/skip
+// হয়ে গেলেও carry-forward chain ভাঙবে না এবং ভুলভাবে opening stock এ ফিরে যাবে না।
+async function findLastSavedBefore(floor, date){
+  const companyId = await getCompanyId();
+  if(!companyId) return null;
+  const {data,error} = await supabase.from('needle_reports').select('*')
+    .eq('company_id',companyId).eq('floor',floor)
+    .lt('report_date', date)
+    .order('report_date',{ascending:false})
+    .limit(1)
+    .maybeSingle();
   if(error){ console.error(error); return null; }
   return data;
 }
@@ -808,7 +857,7 @@ function updateCarryIndicator(carried, prevDate){
     badge.style.display='inline-block';
     badge.textContent='⏪ Carried';
     info.style.display='block';
-    info.innerHTML=`✅ আগের দিন (${prevDate}) এর Present Stock আজকের Previous হিসেবে এসেছে`;
+    info.innerHTML=`✅ আগের সেভ করা দিন (${prevDate}) এর Present Stock আজকের Previous হিসেবে এসেছে`;
   }else{
     badge.style.display='none';
     info.style.display='none';
@@ -1179,6 +1228,113 @@ async function loadTransferReport(){
 }
 
 // =========================================
+// 🔎 REQUISITION SEARCH (NEW)
+// =========================================
+function showReqSearch(){
+  document.getElementById('reqSearchInput').value = '';
+  document.getElementById('reqSearchBody').innerHTML = '<tr><td colspan="8" style="padding:10px;color:#94a3b8;text-align:center">Requisition Number লিখে Search চাপুন</td></tr>';
+  document.getElementById('reqSearchGrandTotal').innerText = '0';
+  document.getElementById('reqSearchFooter').innerText = 'Requisition Number লিখে Search চাপুন — Receive ও Transfer সব জায়গায় খুঁজবে';
+  document.getElementById('reqSearchPopup').style.display = 'flex';
+  setTimeout(()=>document.getElementById('reqSearchInput').focus(), 100);
+}
+function closeReqSearchPopup(){
+  document.getElementById('reqSearchPopup').style.display = 'none';
+}
+
+async function searchRequisition(){
+  const q = document.getElementById('reqSearchInput').value.trim();
+  if(!q){ alert('❌ Requisition Number লিখুন'); return; }
+  if(!navigator.onLine){ showToast('📴 Offline — Search করতে Online থাকতে হবে'); return; }
+
+  document.getElementById('reqSearchBody').innerHTML = '<tr><td colspan="8" style="padding:10px;color:#64748b">Searching...</td></tr>';
+
+  try{
+    const companyId = await getCompanyId();
+    if(!companyId){ document.getElementById('reqSearchBody').innerHTML='<tr><td colspan="8">Company error</td></tr>'; return; }
+
+    // সব floor/date এর report রো লোড করে নিজেই filter করা হচ্ছে, কারণ reqNo টা rows(jsonb) এর ভিতরে থাকে
+    const {data, error} = await supabase.from('needle_reports')
+      .select('floor, report_date, rows')
+      .eq('company_id', companyId);
+    if(error){ console.error(error); document.getElementById('reqSearchBody').innerHTML='<tr><td colspan="8">Error: '+error.message+'</td></tr>'; return; }
+
+    const qLower = q.toLowerCase();
+    let results = [];
+
+    (data||[]).forEach(rec=>{
+      if(!rec.rows || !Array.isArray(rec.rows)) return;
+      rec.rows.forEach(row=>{
+        // 1) সরাসরি receive এর সাথে দেওয়া requisition number
+        if(row.receiveReqNo && String(row.receiveReqNo).toLowerCase()===qLower){
+          results.push({
+            date: rec.report_date, floor: rec.floor, source: '📥 Receive',
+            itemCode: row.itemCode, needleType: row.needleType, size: row.size,
+            qty: row.receive, detail: 'Req: '+row.receiveReqNo
+          });
+        }
+        // 2) এই floor থেকে অন্য floor এ transfer-out এর req no
+        if(row.transferOut && row.transferOut.length){
+          row.transferOut.forEach(t=>{
+            if(t.reqNo && String(t.reqNo).toLowerCase()===qLower){
+              results.push({
+                date: rec.report_date, floor: rec.floor, source: '🚚 Transfer Out → '+(t.toFloor||'').split('(')[0].trim(),
+                itemCode: row.itemCode, needleType: row.needleType, size: row.size,
+                qty: t.qty, detail: 'Receiver: '+(t.receiverName||'-')
+              });
+            }
+          });
+        }
+        // 3) অন্য floor থেকে এই floor এ transfer-in এর req no
+        if(row.transferIn && row.transferIn.length){
+          row.transferIn.forEach(t=>{
+            if(t.reqNo && String(t.reqNo).toLowerCase()===qLower){
+              results.push({
+                date: rec.report_date, floor: rec.floor, source: '📦 Transfer In ← '+(t.fromFloor||'').split('(')[0].trim(),
+                itemCode: row.itemCode, needleType: row.needleType, size: row.size,
+                qty: t.qty, detail: 'Receiver: '+(t.receiverName||'-')
+              });
+            }
+          });
+        }
+      });
+    });
+
+    results.sort((a,b)=> a.date.localeCompare(b.date));
+
+    if(!results.length){
+      document.getElementById('reqSearchBody').innerHTML = '<tr><td colspan="8" style="padding:10px;color:#94a3b8;text-align:center">এই Requisition Number এ কোনো রেকর্ড পাওয়া যায়নি</td></tr>';
+      document.getElementById('reqSearchGrandTotal').innerText = '0';
+      document.getElementById('reqSearchFooter').innerText = '0 records found for "'+q+'"';
+      return;
+    }
+
+    let grandTotal = 0;
+    let html = '';
+    results.forEach(r=>{
+      const qty = Number(r.qty)||0;
+      grandTotal += qty;
+      html += `<tr>
+        <td>${r.date}</td>
+        <td style="text-align:left;font-size:8px">${r.floor.replace(/_NEW|_RUNNING/,'')}</td>
+        <td style="text-align:left;font-size:8px">${r.source}</td>
+        <td>${r.itemCode}</td>
+        <td style="font-size:8px">${r.needleType||''}</td>
+        <td>${r.size||''}</td>
+        <td><b>${qty}</b></td>
+        <td style="font-size:8px">${r.detail||''}</td>
+      </tr>`;
+    });
+    document.getElementById('reqSearchBody').innerHTML = html;
+    document.getElementById('reqSearchGrandTotal').innerText = grandTotal.toLocaleString();
+    document.getElementById('reqSearchFooter').innerText = `${results.length} records | Total Qty: ${grandTotal} pcs | Req: "${q}"`;
+  }catch(e){
+    console.error(e);
+    document.getElementById('reqSearchBody').innerHTML = '<tr><td colspan="8">Error: '+e.message+'</td></tr>';
+  }
+}
+
+// =========================================
 // ⚠️ NEGATIVE STOCK
 // =========================================
 function checkNegativeStock(){
@@ -1280,7 +1436,10 @@ async function saveData(){
   }
 }
 
-// ✅ মূল পরিবর্তন: সবসময় Supabase থেকে load
+// ✅ মূল পরিবর্তন: আজকের data না থাকলে শুধু "গতকাল" না খুঁজে, সর্বশেষ যেদিন save
+// হয়েছে (lookback up to ${MAX_CARRY_LOOKBACK_DAYS} দিন) সেদিনের Present কে carry করা হবে।
+// এতে কোনো একদিন entry miss হলেও, বা মাসের শুরুতে গত মাসের শেষ দিনের data না থাকলেও,
+// chain ভেঙে opening stock এ ফিরে যাবে না।
 async function loadData(){
   const date = document.getElementById('postDate').value;
   const floor = document.getElementById('floor').value;
@@ -1307,7 +1466,6 @@ async function loadData(){
 
     if(savedData && savedData.rows && savedData.rows.length){
       // ✅ আজকের ডাটা আছে — সেটা দেখাও
-      const items = getItems();
       const previousArr = savedData.rows.map(r=>Number(r.previous)||0);
       loadTable(previousArr, false, null);
 
@@ -1332,23 +1490,22 @@ async function loadData(){
       updateLastSync(`☁️ Supabase থেকে Loaded — ${new Date().toLocaleTimeString()}`);
 
     }else{
-      // ✅ আজকের ডাটা নেই — আগের দিনের Present carry forward করো
-      const prevDate = getPrevDateStr(date);
+      // ✅ আজকের ডাটা নেই — সবশেষ যেদিন save হয়েছিল তার Present carry forward করো
       let prevData = null;
+      let prevDateUsed = null;
 
-      if(navigator.onLine && prevDate){
-        prevData = await loadFromSupabase(floor, prevDate);
+      if(navigator.onLine){
+        prevData = await findLastSavedBefore(floor, date);
+        if(prevData) prevDateUsed = prevData.report_date;
       }
 
-      // ✅ Carry forward: আগের দিনের present → আজকের previous
       if(prevData && prevData.rows && prevData.rows.length){
-        // ✅ BUG FIX: এখন floor change হওয়ার পরে items load হয়, তাই length match করা দরকার নেই
         const prevPresentArr = prevData.rows.map(r=>Number(r.present)||0);
-        loadTable(prevPresentArr, true, prevDate);
-        updateLastSync(`⏪ ${prevDate} এর Present carry হয়েছে — ${new Date().toLocaleTimeString()}`);
-        showToast(`⏪ আগের দিনের stock carry হয়েছে!`);
+        loadTable(prevPresentArr, true, prevDateUsed);
+        updateLastSync(`⏪ ${prevDateUsed} এর Present carry হয়েছে — ${new Date().toLocaleTimeString()}`);
+        showToast(`⏪ ${prevDateUsed} এর stock carry হয়েছে!`);
       }else{
-        // কোনো আগের দিনের ডাটা নেই — opening stock দেখাও
+        // কোনো আগের saved data নেই — opening stock দেখাও
         loadTable(null, false, null);
         updateLastSync(`📋 Opening stock — ${new Date().toLocaleTimeString()}`);
       }
@@ -1542,6 +1699,7 @@ window.checkReqNo=checkReqNo; window.confirmReqNo=confirmReqNo; window.cancelReq
 window.openTransferPopup=openTransferPopup; window.closeTransferPopup=closeTransferPopup; window.confirmTransfer=confirmTransfer;
 window.showTransferReport=showTransferReport; window.closeReportPopup=closeReportPopup; window.loadTransferReport=loadTransferReport;
 window.changeFloorReqNo=changeFloorReqNo;
+window.showReqSearch=showReqSearch; window.closeReqSearchPopup=closeReqSearchPopup; window.searchRequisition=searchRequisition;
 </script>
 </body>
 </html>
