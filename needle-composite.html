@@ -1424,48 +1424,61 @@ function closeReqSearchPopup(){ document.getElementById('reqSearchPopup').style.
 
 async function searchRequisition(){
   const q=document.getElementById('reqSearchInput').value.trim();
-  if(!q){ alert('❌ Requisition Number লিখুন'); return; }
-  if(!navigator.onLine){ showToast('📴 Offline — Search করতে Online থাকতে হবে'); return; }
-  document.getElementById('reqSearchBody').innerHTML='<tr><td colspan="8" style="padding:10px;color:#64748b">Searching...</td></tr>';
+  if(!q){ alert('Requisition Number লিখুন'); return; }
+  if(!navigator.onLine){ showToast('Offline - Search করতে Online থাকতে হবে'); return; }
+  const tbody=document.getElementById('reqSearchBody');
+  tbody.innerHTML='<tr><td colspan="8" style="padding:10px;color:#64748b;text-align:center">Searching...</td></tr>';
+  document.getElementById('reqSearchGrandTotal').innerText='0';
+  document.getElementById('reqSearchFooter').innerText='Searching...';
   try{
     const companyId=await getCompanyId();
-    if(!companyId){ document.getElementById('reqSearchBody').innerHTML='<tr><td colspan="8">Company error</td></tr>'; return; }
-    const {data,error}=await supabase.from('needle_reports').select('floor,report_date,rows').eq('company_id',companyId);
-    if(error){ document.getElementById('reqSearchBody').innerHTML='<tr><td colspan="8">Error: '+error.message+'</td></tr>'; return; }
+    if(!companyId){ tbody.innerHTML='<tr><td colspan="8" style="color:red;padding:10px">Company error</td></tr>'; return; }
+    // Fetch all pages
+    let allData=[]; let from=0; const pageSize=1000;
+    while(true){
+      const {data,error}=await supabase.from('needle_reports')
+        .select('floor,report_date,rows').eq('company_id',companyId)
+        .order('report_date',{ascending:false}).range(from,from+pageSize-1);
+      if(error){ tbody.innerHTML='<tr><td colspan="8" style="color:red;padding:10px">DB Error: '+error.message+'</td></tr>'; return; }
+      if(!data||data.length===0) break;
+      allData=allData.concat(data);
+      if(data.length<pageSize) break;
+      from+=pageSize;
+    }
     const qLower=q.toLowerCase();
     let results=[];
-    (data||[]).forEach(rec=>{
+    allData.forEach(rec=>{
       if(!rec.rows||!Array.isArray(rec.rows)) return;
       rec.rows.forEach(row=>{
-        if(row.receiveReqNo&&String(row.receiveReqNo).toLowerCase()===qLower)
-          results.push({date:rec.report_date,floor:rec.floor,source:'📥 Receive',itemCode:row.itemCode,needleType:row.needleType,size:row.size,qty:row.receive,detail:'Req: '+row.receiveReqNo});
+        if(row.receiveReqNo&&String(row.receiveReqNo).toLowerCase().includes(qLower)&&(Number(row.receive)||0)>0)
+          results.push({date:rec.report_date,floor:rec.floor,source:'Receive',itemCode:row.itemCode||'',needleType:row.needleType||'',size:row.size||'',qty:Number(row.receive)||0,detail:'Req:'+row.receiveReqNo});
         (row.transferOut||[]).forEach(t=>{
-          if(t.reqNo&&String(t.reqNo).toLowerCase()===qLower)
-            results.push({date:rec.report_date,floor:rec.floor,source:'🚚 Transfer Out → '+(t.toFloor||'').split('(')[0].trim(),itemCode:row.itemCode,needleType:row.needleType,size:row.size,qty:t.qty,detail:'Receiver: '+(t.receiverName||'-')});
+          if(t.reqNo&&String(t.reqNo).toLowerCase().includes(qLower))
+            results.push({date:rec.report_date,floor:rec.floor,source:'TrfOut->'+(t.toFloor||'').split('(')[0].trim().substring(0,10),itemCode:row.itemCode||'',needleType:row.needleType||'',size:row.size||'',qty:Number(t.qty)||0,detail:(t.receiverName||'-')});
         });
         (row.transferIn||[]).forEach(t=>{
-          if(t.reqNo&&String(t.reqNo).toLowerCase()===qLower)
-            results.push({date:rec.report_date,floor:rec.floor,source:'📦 Transfer In ← '+(t.fromFloor||'').split('(')[0].trim(),itemCode:row.itemCode,needleType:row.needleType,size:row.size,qty:t.qty,detail:'Receiver: '+(t.receiverName||'-')});
+          if(t.reqNo&&String(t.reqNo).toLowerCase().includes(qLower))
+            results.push({date:rec.report_date,floor:rec.floor,source:'TrfIn<-'+(t.fromFloor||'').split('(')[0].trim().substring(0,10),itemCode:row.itemCode||'',needleType:row.needleType||'',size:row.size||'',qty:Number(t.qty)||0,detail:(t.receiverName||'-')});
         });
       });
     });
-    results.sort((a,b)=>a.date.localeCompare(b.date));
+    results.sort((a,b)=>b.date.localeCompare(a.date));
     if(!results.length){
-      document.getElementById('reqSearchBody').innerHTML='<tr><td colspan="8" style="padding:10px;color:#94a3b8;text-align:center">কোনো রেকর্ড পাওয়া যায়নি</td></tr>';
-      document.getElementById('reqSearchGrandTotal').innerText='0';
-      document.getElementById('reqSearchFooter').innerText='0 records found for "'+q+'"';
+      tbody.innerHTML='<tr><td colspan="8" style="padding:14px;color:#94a3b8;text-align:center">No records found for "'+q+'" (searched '+allData.length+' reports)</td></tr>';
+      document.getElementById('reqSearchFooter').innerText='0 records found';
       return;
     }
     let grandTotal=0,html='';
     results.forEach(r=>{
       const qty=Number(r.qty)||0; grandTotal+=qty;
-      html+=`<tr><td>${r.date}</td><td style="text-align:left;font-size:8px">${r.floor.replace(/_NEW|_RUNNING/,'')}</td><td style="text-align:left;font-size:8px">${r.source}</td><td>${r.itemCode}</td><td style="font-size:8px">${r.needleType||''}</td><td>${r.size||''}</td><td><b>${qty}</b></td><td style="font-size:8px">${r.detail||''}</td></tr>`;
+      html+='<tr><td>'+r.date+'</td><td style="text-align:left;font-size:8px">'+r.floor.replace(/(_NEW|_RUNNING)/g,'')+'</td><td style="font-size:8px">'+r.source+'</td><td>'+r.itemCode+'</td><td style="font-size:8px">'+r.needleType+'</td><td>'+r.size+'</td><td><b>'+qty+'</b></td><td style="font-size:8px">'+r.detail+'</td></tr>';
     });
-    document.getElementById('reqSearchBody').innerHTML=html;
+    tbody.innerHTML=html;
     document.getElementById('reqSearchGrandTotal').innerText=grandTotal.toLocaleString();
-    document.getElementById('reqSearchFooter').innerText=`${results.length} records | Total Qty: ${grandTotal} pcs | Req: "${q}"`;
+    document.getElementById('reqSearchFooter').innerText=results.length+' records | Total: '+grandTotal+' pcs | Searched '+allData.length+' reports';
   }catch(e){
-    document.getElementById('reqSearchBody').innerHTML='<tr><td colspan="8">Error: '+e.message+'</td></tr>';
+    console.error('searchRequisition error:',e);
+    tbody.innerHTML='<tr><td colspan="8" style="color:red;padding:10px">Error: '+e.message+'</td></tr>';
   }
 }
 
@@ -1647,8 +1660,10 @@ async function loadData(){
 
     }else{
       // ── NO TODAY DATA ──
+      // ✅ FIX: Pass custom rows from prevData so they carry forward to new dates
       console.log(`[loadData] No today data. Carry source: ${prevDateUsed||'opening stock'}`);
-      loadTable(prevMap, [], hasPrevData, prevDateUsed);
+      const customRowsFromPrev = (prevData && prevData.rows) ? prevData.rows.filter(r=>r.isCustom) : [];
+      loadTable(prevMap, customRowsFromPrev, hasPrevData, prevDateUsed);
       updateMonthlySummary([]);
 
       if(hasPrevData){
