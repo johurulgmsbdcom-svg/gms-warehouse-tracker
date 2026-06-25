@@ -86,8 +86,9 @@ body.light .loading-text{color:#475569}
 .theme-toggle{position:fixed;top:6px;right:6px;z-index:1000}
 .last-sync{text-align:center;font-size:9px;color:#94a3b8;margin-top:3px}
 body.light .last-sync{color:#64748b}
-.carry-debug{background:#1e3a5f;border:1px solid #3b82f6;border-radius:6px;padding:5px 10px;font-size:9px;color:#93c5fd;text-align:center;margin:3px 0;display:none}
-body.light .carry-debug{background:#dbeafe;color:#1e40af;border-color:#3b82f6}
+/* ✅ NEW: Carry debug banner - shows which date was used as source */
+.carry-source-bar{background:#1e3a5f;border:1px solid #3b82f6;border-radius:6px;padding:5px 10px;font-size:9px;color:#93c5fd;text-align:center;margin:3px 0;display:none}
+body.light .carry-source-bar{background:#dbeafe;color:#1e40af;border-color:#3b82f6}
 @media(max-width:480px){
   body{padding:1px}
   h2{font-size:11px;margin:2px 0 3px}
@@ -116,7 +117,7 @@ body.light .carry-debug{background:#dbeafe;color:#1e40af;border-color:#3b82f6}
 }
 @media print{
   html,body{background:white!important;color:black!important;overflow:visible!important}
-  button,input[type="date"],select,input[type="text"],.offline-indicator,.loading-overlay,.theme-toggle,.last-sync,.floor-req-banner,.carry-debug{display:none!important}
+  button,input[type="date"],select,input[type="text"],.offline-indicator,.loading-overlay,.theme-toggle,.last-sync,.floor-req-banner,.carry-source-bar{display:none!important}
   .tableWrap,.summaryWrap{overflow:visible!important}
   #reportTable,#summaryTable{width:100%!important;color:black!important;background:white!important}
   #reportTable th,#reportTable td{font-size:8px;padding:2px}
@@ -201,7 +202,8 @@ body.light .carry-debug{background:#dbeafe;color:#1e40af;border-color:#3b82f6}
   </div>
 </div>
 <div class="carry-info" id="carryInfo" style="display:none"></div>
-<div class="carry-debug" id="carryDebug"></div>
+<!-- ✅ NEW: Shows carry source clearly -->
+<div class="carry-source-bar" id="carrySourceBar"></div>
 
 <div class="floor-req-banner" id="floorReqBanner" onclick="changeFloorReqNo()">
   📋 Floor Req No: <span id="floorReqNoDisplay"></span> &nbsp;(পরিবর্তন করতে ক্লিক করুন)
@@ -422,7 +424,7 @@ body.light .carry-debug{background:#dbeafe;color:#1e40af;border-color:#3b82f6}
         </tfoot>
       </table>
     </div>
-    <div class="popup-footer" id="reqSearchFooter">Requisition Number লিখে Search চাপুন — Receive ও Transfer সব জায়গায় খুঁজবে</div>
+    <div class="popup-footer" id="reqSearchFooter">Requisition Number লিখে Search চাপুন</div>
   </div>
 </div>
 
@@ -787,7 +789,6 @@ const floorData = {
 // 🌐 GLOBAL STATE
 // =========================================
 let negativeRowIndex = -1;
-// currentFloorData: array of row objects {sl,itemCode,needleType,size,brand,unitPrice,opening,isCustom}
 let currentFloorData = [];
 let rowReqNo = {};
 let floorReqNo = null;
@@ -851,12 +852,13 @@ async function loadFromSupabase(floor, date){
   return data;
 }
 
-// ✅ KEY FIX: item code + size দিয়ে match করে carry-forward
-// এতে আগে/পরে row যোগ হলেও সঠিক present carry হবে
+// =========================================
+// ✅ FIXED: Always fetch the most recent saved record BEFORE selected date
+// Uses itemCode+size key matching — index-independent
+// =========================================
 async function findLastSavedBefore(floor, date){
   const companyId = await getCompanyId();
   if(!companyId) return null;
-  console.log(`[CarryForward] Searching last saved before ${date} for floor: ${floor}`);
   const {data,error} = await supabase.from('needle_reports')
     .select('floor, report_date, rows, operator')
     .eq('company_id',companyId)
@@ -866,9 +868,22 @@ async function findLastSavedBefore(floor, date){
     .limit(1)
     .maybeSingle();
   if(error){ console.error('[CarryForward] Query error:', error); return null; }
-  if(data) console.log(`[CarryForward] Found: ${data.report_date}`);
-  else console.log('[CarryForward] No previous record → using opening stock');
   return data;
+}
+
+// =========================================
+// 🏗️ BUILD PREVIOUS MAP from last saved rows
+// Key: itemCode__size → present value
+// =========================================
+function buildPrevMap(savedRows){
+  const map = {};
+  if(savedRows && Array.isArray(savedRows)){
+    savedRows.forEach(r => {
+      const key = `${r.itemCode}__${r.size}`;
+      map[key] = Number(r.present) || 0;
+    });
+  }
+  return map;
 }
 
 // =========================================
@@ -885,18 +900,18 @@ function updateCategoryBadge(){
 function updateCarryIndicator(carried, prevDate){
   const badge = document.getElementById('carryBadge');
   const info = document.getElementById('carryInfo');
-  const debug = document.getElementById('carryDebug');
+  const bar = document.getElementById('carrySourceBar');
   if(carried && prevDate){
     badge.style.display='inline-block';
     badge.textContent='⏪ Carried from '+prevDate;
     info.style.display='block';
     info.innerHTML=`✅ ${prevDate} তারিখের Present Stock আজকের Previous হিসেবে carry হয়েছে`;
-    debug.style.display='block';
-    debug.textContent=`🔍 Carry Source: ${prevDate} | আজকের date এর আগে সর্বশেষ save করা দিন`;
+    bar.style.display='block';
+    bar.textContent=`🔍 Carry Source: ${prevDate} — সর্বশেষ save করা দিনের Present → আজকের Previous`;
   }else{
     badge.style.display='none';
     info.style.display='none';
-    debug.style.display='none';
+    bar.style.display='none';
   }
 }
 
@@ -930,14 +945,13 @@ function changeFloorReqNo(){
 
 // =========================================
 // 🏗️ LOAD TABLE
+// prevMap: itemCode__size → previous stock value
+// customRows: extra rows to append (from saved data)
 // =========================================
-// ✅ CRITICAL FIX: এখন prevRows (saved rows) দিয়ে itemCode+size match করে
-// previous সেট করা হয়। Index-based matching বাদ দেওয়া হয়েছে।
-function loadTable(prevRows=null, carried=false, prevDate=null){
+function loadTable(prevMap={}, customRows=[], carried=false, prevDate=null){
   const floor = document.getElementById('floor').value;
   const baseItems = floorData[floor] || [];
 
-  // Convert base items to object format
   currentFloorData = baseItems.map(item => ({
     sl: item[0],
     itemCode: item[1],
@@ -949,23 +963,22 @@ function loadTable(prevRows=null, carried=false, prevDate=null){
     isCustom: false
   }));
 
-  // If prevRows has custom rows, add them
-  if(prevRows && Array.isArray(prevRows)){
-    prevRows.forEach(pr => {
-      if(pr.isCustom){
-        const exists = currentFloorData.find(r => r.itemCode===pr.itemCode && r.size===pr.size);
-        if(!exists){
-          currentFloorData.push({
-            sl: currentFloorData.length+1,
-            itemCode: pr.itemCode,
-            needleType: pr.needleType,
-            size: pr.size,
-            brand: pr.brand,
-            unitPrice: pr.unitPrice||0,
-            opening: pr.opening||0,
-            isCustom: true
-          });
-        }
+  // Add custom rows from saved data that aren't in base
+  if(Array.isArray(customRows)){
+    customRows.forEach(cr => {
+      if(!cr.isCustom) return;
+      const exists = currentFloorData.find(r => r.itemCode===cr.itemCode && r.size===cr.size);
+      if(!exists){
+        currentFloorData.push({
+          sl: currentFloorData.length+1,
+          itemCode: cr.itemCode,
+          needleType: cr.needleType,
+          size: cr.size,
+          brand: cr.brand,
+          unitPrice: cr.unitPrice||0,
+          opening: cr.opening||0,
+          isCustom: true
+        });
       }
     });
   }
@@ -974,33 +987,13 @@ function loadTable(prevRows=null, carried=false, prevDate=null){
   rowReqNo={}; rowTransferOut={}; rowTransferIn={};
   floorReqNo=null;
   updateFloorReqBanner();
-
   document.getElementById('bnHeader').innerText = floor.includes('_NEW') ? 'BNR' : 'BNF';
-
-  // Build prevMap: itemCode+size → present (for carry-forward)
-  const prevMap = {};
-  if(prevRows && Array.isArray(prevRows)){
-    prevRows.forEach(pr => {
-      const key = `${pr.itemCode}__${pr.size}`;
-      prevMap[key] = Number(pr.present) || 0;
-    });
-  }
 
   let html = '';
   currentFloorData.forEach((item, i) => {
-    let previous;
-    if(prevRows && prevRows.length > 0){
-      // ✅ FIXED: use itemCode+size key, NOT index
-      const key = `${item.itemCode}__${item.size}`;
-      if(prevMap.hasOwnProperty(key)){
-        previous = prevMap[key];
-      } else {
-        // new item not in prev record → use opening stock
-        previous = item.opening;
-      }
-    } else {
-      previous = item.opening;
-    }
+    // ✅ CORE FIX: Look up previous by itemCode__size key
+    const key = `${item.itemCode}__${item.size}`;
+    const previous = prevMap.hasOwnProperty(key) ? prevMap[key] : item.opening;
 
     const rowClass = item.isCustom ? 'class="custom-row-indicator"' : '';
     html += `
@@ -1069,20 +1062,14 @@ function confirmAddRow(){
   const unitPrice = parseFloat(document.getElementById('newPrice').value)||0;
   const opening = parseInt(document.getElementById('newOpening').value)||0;
 
-  if(!itemCode){ alert('❌ Item Code দিন (যেমন: SN-999)'); return; }
-  if(!needleType){ alert('❌ Needle Type দিন (যেমন: DB X 1)'); return; }
+  if(!itemCode){ alert('❌ Item Code দিন'); return; }
+  if(!needleType){ alert('❌ Needle Type দিন'); return; }
   if(!size){ alert('❌ Size দিন'); return; }
 
-  // Check duplicate
   const dup = currentFloorData.find(r => r.itemCode===itemCode && r.size===size);
   if(dup){ alert(`❌ ${itemCode} (Size ${size}) ইতিমধ্যে আছে!`); return; }
 
-  // Add to currentFloorData
-  const newRow = {
-    sl: currentFloorData.length+1,
-    itemCode, needleType, size, brand, unitPrice, opening,
-    isCustom: true
-  };
+  const newRow = { sl: currentFloorData.length+1, itemCode, needleType, size, brand, unitPrice, opening, isCustom: true };
   currentFloorData.push(newRow);
 
   const i = currentFloorData.length - 1;
@@ -1091,10 +1078,7 @@ function confirmAddRow(){
   newTr.className = 'custom-row-indicator';
   newTr.innerHTML = `
     <td>${i+1}<br><span style="font-size:5px;color:#92400e">NEW</span></td>
-    <td>${itemCode}</td>
-    <td>${needleType}</td>
-    <td>${size}</td>
-    <td>${brand}</td>
+    <td>${itemCode}</td><td>${needleType}</td><td>${size}</td><td>${brand}</td>
     <td style="text-align:right">${unitPrice.toFixed(4)}</td>
     <td id="p${i}">${opening}</td>
     <td id="rcvdCell${i}">
@@ -1111,48 +1095,34 @@ function confirmAddRow(){
       <button class="transferBtn" onclick="openTransferPopup(${i})">🔄 Trf</button>
       <span class="transfer-tag" id="trfInTag${i}"></span>
     </td>
-    <td>
-      <button class="del-row-btn" onclick="deleteCustomRow(${i})" title="এই row মুছুন">✕</button>
-    </td>`;
+    <td><button class="del-row-btn" onclick="deleteCustomRow(${i})" title="মুছুন">✕</button></td>`;
   document.getElementById('tableBody').appendChild(newTr);
-
   updateTotal();
   closeAddRowPopup();
   showToast(`✅ ${itemCode} (Size ${size}) যোগ হয়েছে!`);
   newTr.scrollIntoView({behavior:'smooth',block:'center'});
-  // Highlight briefly
   newTr.style.boxShadow='0 0 0 3px #0891b2';
   setTimeout(()=>newTr.style.boxShadow='',2000);
 }
 
 function deleteCustomRow(i){
-  if(!currentFloorData[i] || !currentFloorData[i].isCustom){
-    showToast('❌ শুধু নতুন যোগ করা row মুছা যাবে');
-    return;
-  }
+  if(!currentFloorData[i]?.isCustom){ showToast('❌ শুধু নতুন যোগ করা row মুছা যাবে'); return; }
   if(!confirm(`⚠️ ${currentFloorData[i].itemCode} (Size ${currentFloorData[i].size}) মুছবেন?`)) return;
   currentFloorData.splice(i,1);
-  delete rowReqNo[i];
-  delete rowTransferOut[i];
-  delete rowTransferIn[i];
-  // Re-render table with current values preserved
+  delete rowReqNo[i]; delete rowTransferOut[i]; delete rowTransferIn[i];
   rebuildTableKeepingValues();
   showToast('✅ Row মুছা হয়েছে');
 }
 
-// Rebuild table HTML preserving entered values
 function rebuildTableKeepingValues(){
-  // Collect current values before rebuild
   const vals = currentFloorData.map((_,i) => ({
     r: document.getElementById(`r${i}`)?.value||'',
     d: document.getElementById(`d${i}`)?.value||'',
     bn: document.getElementById(`bn${i}`)?.value||'',
     prev: document.getElementById(`p${i}`)?.innerText||'0'
   }));
-
   const floor = document.getElementById('floor').value;
   document.getElementById('bnHeader').innerText = floor.includes('_NEW') ? 'BNR' : 'BNF';
-
   let html = '';
   currentFloorData.forEach((item, i) => {
     const v = vals[i]||{r:'',d:'',bn:'',prev:String(item.opening)};
@@ -1188,7 +1158,6 @@ function rebuildTableKeepingValues(){
       </tr>`;
   });
   document.getElementById('tableBody').innerHTML = html;
-  // Restore transfer tags
   currentFloorData.forEach((_,i)=>{
     if(rowTransferOut[i]) updateTransferOutTag(i);
     if(rowTransferIn[i]) updateTransferInTag(i);
@@ -1270,8 +1239,7 @@ function confirmReqNo(){
   });
   updateFloorReqBanner();
   document.getElementById('reqPopup').style.display = 'none';
-  pendingReqIndex = null;
-  pendingReqValue = null;
+  pendingReqIndex = null; pendingReqValue = null;
   showToast('✅ Req No saved!');
 }
 
@@ -1281,8 +1249,7 @@ function cancelReqPopup(){
     if(inp){ inp.value = ''; calc(pendingReqIndex); }
   }
   document.getElementById('reqPopup').style.display = 'none';
-  pendingReqIndex = null;
-  pendingReqValue = null;
+  pendingReqIndex = null; pendingReqValue = null;
 }
 
 // =========================================
@@ -1301,15 +1268,15 @@ function openTransferPopup(i){
   Object.keys(floorData).filter(f=>f!==floor).forEach(f=>{
     sel.innerHTML += `<option value="${f}">${f}</option>`;
   });
-  document.getElementById('transferQty').value = '';
-  document.getElementById('transferReceiverName').value = '';
-  document.getElementById('transferReqNo').value = '';
-  document.getElementById('transferPopup').style.display = 'flex';
+  document.getElementById('transferQty').value='';
+  document.getElementById('transferReceiverName').value='';
+  document.getElementById('transferReqNo').value='';
+  document.getElementById('transferPopup').style.display='flex';
 }
 
 function closeTransferPopup(){
-  document.getElementById('transferPopup').style.display = 'none';
-  pendingTransferIndex = null;
+  document.getElementById('transferPopup').style.display='none';
+  pendingTransferIndex=null;
 }
 
 async function confirmTransfer(){
@@ -1336,102 +1303,87 @@ async function confirmTransfer(){
   const oldDvld = Number(dEl.value)||0;
   dEl.value = oldDvld + qty;
   calc(i);
-  if(!rowTransferOut[i]) rowTransferOut[i] = [];
+  if(!rowTransferOut[i]) rowTransferOut[i]=[];
   rowTransferOut[i].push({toFloor, qty, receiverName, reqNo});
   updateTransferOutTag(i);
 
   if(navigator.onLine){
     try{
-      const toItems = floorData[toFloor] || [];
+      const toItems = floorData[toFloor]||[];
       const toFloorSaved = await loadFromSupabase(toFloor, date);
       let toRows;
       if(toFloorSaved && toFloorSaved.rows && toFloorSaved.rows.length){
         toRows = JSON.parse(JSON.stringify(toFloorSaved.rows));
       }else{
         toRows = toItems.map(it=>({
-          sl:it[0], itemCode:it[1], needleType:it[2], size:it[3],
-          brand:it[4], unitPrice:it[5], opening:it[6], isCustom:false,
-          previous:it[6], receive:0, delivery:0, present:it[6], bn:0,
-          receiveReqNo:'', transferIn:[], transferOut:[]
+          sl:it[0],itemCode:it[1],needleType:it[2],size:it[3],
+          brand:it[4],unitPrice:it[5],opening:it[6],isCustom:false,
+          previous:it[6],receive:0,delivery:0,present:it[6],bn:0,
+          receiveReqNo:'',transferIn:[],transferOut:[]
         }));
       }
-      const toItemIdx = toRows.findIndex(r => r.itemCode===item.itemCode && r.size===item.size);
-      if(toItemIdx >= 0){
-        toRows[toItemIdx].receive = (Number(toRows[toItemIdx].receive)||0) + qty;
-        toRows[toItemIdx].present = (Number(toRows[toItemIdx].previous)||0) + (Number(toRows[toItemIdx].receive)||0) - (Number(toRows[toItemIdx].delivery)||0);
-        toRows[toItemIdx].receiveReqNo = reqNo;
-        if(!toRows[toItemIdx].transferIn) toRows[toItemIdx].transferIn = [];
-        toRows[toItemIdx].transferIn.push({fromFloor, qty, receiverName, reqNo, date});
+      const toItemIdx = toRows.findIndex(r=>r.itemCode===item.itemCode && r.size===item.size);
+      if(toItemIdx>=0){
+        toRows[toItemIdx].receive=(Number(toRows[toItemIdx].receive)||0)+qty;
+        toRows[toItemIdx].present=(Number(toRows[toItemIdx].previous)||0)+(Number(toRows[toItemIdx].receive)||0)-(Number(toRows[toItemIdx].delivery)||0);
+        toRows[toItemIdx].receiveReqNo=reqNo;
+        if(!toRows[toItemIdx].transferIn) toRows[toItemIdx].transferIn=[];
+        toRows[toItemIdx].transferIn.push({fromFloor,qty,receiverName,reqNo,date});
       }else{
         showToast(`⚠️ To Floor তে ${item.itemCode} (Size ${item.size}) পাওয়া যায়নি`);
       }
-      const toOperator = toFloorSaved ? (toFloorSaved.operator||'Transfer') : 'Transfer';
+      const toOperator = toFloorSaved?(toFloorSaved.operator||'Transfer'):'Transfer';
       await saveToSupabase(toFloor, date, toOperator, toRows, false);
     }catch(e){ console.error('Transfer to-floor update error:', e); }
   }
-
   hideLoading();
   showToast(`✅ Transfer: ${qty} pcs ${item.itemCode} → ${toFloor.split('(')[0].trim()}`);
 }
 
 function updateTransferOutTag(i){
   const tag = document.getElementById(`trfOutTag${i}`);
-  if(!tag || !rowTransferOut[i] || !rowTransferOut[i].length) return;
+  if(!tag||!rowTransferOut[i]||!rowTransferOut[i].length) return;
   const last = rowTransferOut[i][rowTransferOut[i].length-1];
-  tag.textContent = `→${last.toFloor.split('(')[0].trim().substring(0,10)} (${last.qty})`;
+  tag.textContent=`→${last.toFloor.split('(')[0].trim().substring(0,10)} (${last.qty})`;
 }
-
 function updateTransferInTag(i){
   const tag = document.getElementById(`trfInTag${i}`);
-  if(!tag || !rowTransferIn[i] || !rowTransferIn[i].length) return;
+  if(!tag||!rowTransferIn[i]||!rowTransferIn[i].length) return;
   const last = rowTransferIn[i][rowTransferIn[i].length-1];
-  tag.textContent = `←${last.fromFloor.split('(')[0].trim().substring(0,10)} (${last.qty})`;
+  tag.textContent=`←${last.fromFloor.split('(')[0].trim().substring(0,10)} (${last.qty})`;
 }
 
 // =========================================
 // 🚚 TRANSFER REPORT
 // =========================================
 function showTransferReport(){
-  const today = new Date().toISOString().slice(0,10);
-  const firstOfMonth = today.slice(0,8)+'01';
-  document.getElementById('rpFrom').value = firstOfMonth;
-  document.getElementById('rpTo').value = today;
-  document.getElementById('reportPopup').style.display = 'flex';
+  const today=new Date().toISOString().slice(0,10);
+  const firstOfMonth=today.slice(0,8)+'01';
+  document.getElementById('rpFrom').value=firstOfMonth;
+  document.getElementById('rpTo').value=today;
+  document.getElementById('reportPopup').style.display='flex';
   loadTransferReport();
 }
-
-function closeReportPopup(){
-  document.getElementById('reportPopup').style.display = 'none';
-}
+function closeReportPopup(){ document.getElementById('reportPopup').style.display='none'; }
 
 async function loadTransferReport(){
-  const from = document.getElementById('rpFrom').value;
-  const to = document.getElementById('rpTo').value;
+  const from=document.getElementById('rpFrom').value;
+  const to=document.getElementById('rpTo').value;
   if(!from||!to){ alert('তারিখ দিন'); return; }
-  document.getElementById('reportBody2').innerHTML = '<tr><td colspan="9" style="padding:10px;color:#64748b">Loading...</td></tr>';
-
-  let allTransfers = [];
+  document.getElementById('reportBody2').innerHTML='<tr><td colspan="9" style="padding:10px;color:#64748b">Loading...</td></tr>';
+  let allTransfers=[];
   if(navigator.onLine){
     try{
-      const companyId = await getCompanyId();
+      const companyId=await getCompanyId();
       if(companyId){
-        const {data,error} = await supabase.from('needle_reports')
-          .select('floor, report_date, rows')
-          .eq('company_id', companyId)
-          .gte('report_date', from)
-          .lte('report_date', to);
-        if(!error && data){
+        const {data,error}=await supabase.from('needle_reports').select('floor,report_date,rows').eq('company_id',companyId).gte('report_date',from).lte('report_date',to);
+        if(!error&&data){
           data.forEach(rec=>{
-            if(rec.rows && Array.isArray(rec.rows)){
+            if(rec.rows&&Array.isArray(rec.rows)){
               rec.rows.forEach(row=>{
-                if(row.transferOut && row.transferOut.length){
+                if(row.transferOut&&row.transferOut.length){
                   row.transferOut.forEach(t=>{
-                    allTransfers.push({
-                      date: rec.report_date, fromFloor: rec.floor,
-                      toFloor: t.toFloor, itemCode: row.itemCode,
-                      needleType: row.needleType, size: row.size,
-                      qty: t.qty, receiverName: t.receiverName, reqNo: t.reqNo
-                    });
+                    allTransfers.push({date:rec.report_date,fromFloor:rec.floor,toFloor:t.toFloor,itemCode:row.itemCode,needleType:row.needleType,size:row.size,qty:t.qty,receiverName:t.receiverName,reqNo:t.reqNo});
                   });
                 }
               });
@@ -1442,95 +1394,78 @@ async function loadTransferReport(){
       }
     }catch(e){ console.error(e); }
   }
-
   if(!allTransfers.length){
-    document.getElementById('reportBody2').innerHTML = '<tr><td colspan="9" style="padding:10px;color:#94a3b8;text-align:center">এই period এ কোনো transfer নেই</td></tr>';
-    document.getElementById('reportGrandTotal').innerText = '0';
-    document.getElementById('reportFooter').innerText = '0 records found';
+    document.getElementById('reportBody2').innerHTML='<tr><td colspan="9" style="padding:10px;color:#94a3b8;text-align:center">এই period এ কোনো transfer নেই</td></tr>';
+    document.getElementById('reportGrandTotal').innerText='0';
+    document.getElementById('reportFooter').innerText='0 records found';
     return;
   }
-
-  let grandTotal = 0, html = '';
+  let grandTotal=0,html='';
   allTransfers.forEach(t=>{
-    const qty = Number(t.qty)||0;
-    grandTotal += qty;
-    html += `<tr>
-      <td>${t.date}</td>
-      <td style="text-align:left;font-size:8px">${t.fromFloor.replace(/_NEW|_RUNNING/,'')}</td>
-      <td style="text-align:left;font-size:8px">${(t.toFloor||'').replace(/_NEW|_RUNNING/,'')}</td>
-      <td>${t.itemCode}</td><td style="font-size:8px">${t.needleType||''}</td>
-      <td>${t.size||''}</td><td><b>${qty}</b></td>
-      <td style="font-size:8px">${t.receiverName||''}</td>
-      <td style="font-size:8px">${t.reqNo||''}</td>
-    </tr>`;
+    const qty=Number(t.qty)||0; grandTotal+=qty;
+    html+=`<tr><td>${t.date}</td><td style="text-align:left;font-size:8px">${t.fromFloor.replace(/_NEW|_RUNNING/,'')}</td><td style="text-align:left;font-size:8px">${(t.toFloor||'').replace(/_NEW|_RUNNING/,'')}</td><td>${t.itemCode}</td><td style="font-size:8px">${t.needleType||''}</td><td>${t.size||''}</td><td><b>${qty}</b></td><td style="font-size:8px">${t.receiverName||''}</td><td style="font-size:8px">${t.reqNo||''}</td></tr>`;
   });
-  document.getElementById('reportBody2').innerHTML = html;
-  document.getElementById('reportGrandTotal').innerText = grandTotal.toLocaleString();
-  document.getElementById('reportFooter').innerText = `${allTransfers.length} records | Total: ${grandTotal} pcs`;
+  document.getElementById('reportBody2').innerHTML=html;
+  document.getElementById('reportGrandTotal').innerText=grandTotal.toLocaleString();
+  document.getElementById('reportFooter').innerText=`${allTransfers.length} records | Total: ${grandTotal} pcs`;
 }
 
 // =========================================
 // 🔎 REQUISITION SEARCH
 // =========================================
 function showReqSearch(){
-  document.getElementById('reqSearchInput').value = '';
-  document.getElementById('reqSearchBody').innerHTML = '<tr><td colspan="8" style="padding:10px;color:#94a3b8;text-align:center">Requisition Number লিখে Search চাপুন</td></tr>';
-  document.getElementById('reqSearchGrandTotal').innerText = '0';
-  document.getElementById('reqSearchFooter').innerText = 'Requisition Number লিখে Search চাপুন — Receive ও Transfer সব জায়গায় খুঁজবে';
-  document.getElementById('reqSearchPopup').style.display = 'flex';
-  setTimeout(()=>document.getElementById('reqSearchInput').focus(), 100);
+  document.getElementById('reqSearchInput').value='';
+  document.getElementById('reqSearchBody').innerHTML='<tr><td colspan="8" style="padding:10px;color:#94a3b8;text-align:center">Requisition Number লিখে Search চাপুন</td></tr>';
+  document.getElementById('reqSearchGrandTotal').innerText='0';
+  document.getElementById('reqSearchPopup').style.display='flex';
+  setTimeout(()=>document.getElementById('reqSearchInput').focus(),100);
 }
-function closeReqSearchPopup(){
-  document.getElementById('reqSearchPopup').style.display = 'none';
-}
+function closeReqSearchPopup(){ document.getElementById('reqSearchPopup').style.display='none'; }
 
 async function searchRequisition(){
-  const q = document.getElementById('reqSearchInput').value.trim();
+  const q=document.getElementById('reqSearchInput').value.trim();
   if(!q){ alert('❌ Requisition Number লিখুন'); return; }
   if(!navigator.onLine){ showToast('📴 Offline — Search করতে Online থাকতে হবে'); return; }
-  document.getElementById('reqSearchBody').innerHTML = '<tr><td colspan="8" style="padding:10px;color:#64748b">Searching...</td></tr>';
+  document.getElementById('reqSearchBody').innerHTML='<tr><td colspan="8" style="padding:10px;color:#64748b">Searching...</td></tr>';
   try{
-    const companyId = await getCompanyId();
+    const companyId=await getCompanyId();
     if(!companyId){ document.getElementById('reqSearchBody').innerHTML='<tr><td colspan="8">Company error</td></tr>'; return; }
-    const {data, error} = await supabase.from('needle_reports').select('floor, report_date, rows').eq('company_id', companyId);
+    const {data,error}=await supabase.from('needle_reports').select('floor,report_date,rows').eq('company_id',companyId);
     if(error){ document.getElementById('reqSearchBody').innerHTML='<tr><td colspan="8">Error: '+error.message+'</td></tr>'; return; }
-    const qLower = q.toLowerCase();
-    let results = [];
+    const qLower=q.toLowerCase();
+    let results=[];
     (data||[]).forEach(rec=>{
-      if(!rec.rows || !Array.isArray(rec.rows)) return;
+      if(!rec.rows||!Array.isArray(rec.rows)) return;
       rec.rows.forEach(row=>{
-        if(row.receiveReqNo && String(row.receiveReqNo).toLowerCase()===qLower){
+        if(row.receiveReqNo&&String(row.receiveReqNo).toLowerCase()===qLower)
           results.push({date:rec.report_date,floor:rec.floor,source:'📥 Receive',itemCode:row.itemCode,needleType:row.needleType,size:row.size,qty:row.receive,detail:'Req: '+row.receiveReqNo});
-        }
         (row.transferOut||[]).forEach(t=>{
-          if(t.reqNo && String(t.reqNo).toLowerCase()===qLower){
+          if(t.reqNo&&String(t.reqNo).toLowerCase()===qLower)
             results.push({date:rec.report_date,floor:rec.floor,source:'🚚 Transfer Out → '+(t.toFloor||'').split('(')[0].trim(),itemCode:row.itemCode,needleType:row.needleType,size:row.size,qty:t.qty,detail:'Receiver: '+(t.receiverName||'-')});
-          }
         });
         (row.transferIn||[]).forEach(t=>{
-          if(t.reqNo && String(t.reqNo).toLowerCase()===qLower){
+          if(t.reqNo&&String(t.reqNo).toLowerCase()===qLower)
             results.push({date:rec.report_date,floor:rec.floor,source:'📦 Transfer In ← '+(t.fromFloor||'').split('(')[0].trim(),itemCode:row.itemCode,needleType:row.needleType,size:row.size,qty:t.qty,detail:'Receiver: '+(t.receiverName||'-')});
-          }
         });
       });
     });
     results.sort((a,b)=>a.date.localeCompare(b.date));
     if(!results.length){
-      document.getElementById('reqSearchBody').innerHTML = '<tr><td colspan="8" style="padding:10px;color:#94a3b8;text-align:center">কোনো রেকর্ড পাওয়া যায়নি</td></tr>';
-      document.getElementById('reqSearchGrandTotal').innerText = '0';
-      document.getElementById('reqSearchFooter').innerText = '0 records found for "'+q+'"';
+      document.getElementById('reqSearchBody').innerHTML='<tr><td colspan="8" style="padding:10px;color:#94a3b8;text-align:center">কোনো রেকর্ড পাওয়া যায়নি</td></tr>';
+      document.getElementById('reqSearchGrandTotal').innerText='0';
+      document.getElementById('reqSearchFooter').innerText='0 records found for "'+q+'"';
       return;
     }
-    let grandTotal=0, html='';
+    let grandTotal=0,html='';
     results.forEach(r=>{
       const qty=Number(r.qty)||0; grandTotal+=qty;
       html+=`<tr><td>${r.date}</td><td style="text-align:left;font-size:8px">${r.floor.replace(/_NEW|_RUNNING/,'')}</td><td style="text-align:left;font-size:8px">${r.source}</td><td>${r.itemCode}</td><td style="font-size:8px">${r.needleType||''}</td><td>${r.size||''}</td><td><b>${qty}</b></td><td style="font-size:8px">${r.detail||''}</td></tr>`;
     });
-    document.getElementById('reqSearchBody').innerHTML = html;
-    document.getElementById('reqSearchGrandTotal').innerText = grandTotal.toLocaleString();
-    document.getElementById('reqSearchFooter').innerText = `${results.length} records | Total Qty: ${grandTotal} pcs | Req: "${q}"`;
+    document.getElementById('reqSearchBody').innerHTML=html;
+    document.getElementById('reqSearchGrandTotal').innerText=grandTotal.toLocaleString();
+    document.getElementById('reqSearchFooter').innerText=`${results.length} records | Total Qty: ${grandTotal} pcs | Req: "${q}"`;
   }catch(e){
-    document.getElementById('reqSearchBody').innerHTML = '<tr><td colspan="8">Error: '+e.message+'</td></tr>';
+    document.getElementById('reqSearchBody').innerHTML='<tr><td colspan="8">Error: '+e.message+'</td></tr>';
   }
 }
 
@@ -1538,94 +1473,90 @@ async function searchRequisition(){
 // ⚠️ NEGATIVE STOCK
 // =========================================
 function checkNegativeStock(){
-  negativeRowIndex = -1;
+  negativeRowIndex=-1;
   for(let i=0;i<currentFloorData.length;i++){
-    const present = Number(document.getElementById(`b${i}`)?.innerText)||0;
-    const row = document.getElementById(`row${i}`);
+    const present=Number(document.getElementById(`b${i}`)?.innerText)||0;
+    const row=document.getElementById(`row${i}`);
     if(present<0){
-      row && row.classList.add('negative-row');
+      row&&row.classList.add('negative-row');
       if(negativeRowIndex<0){ negativeRowIndex=i; showNegativeStockPopup(present); }
     }else{
-      row && row.classList.remove('negative-row');
+      row&&row.classList.remove('negative-row');
     }
   }
   if(negativeRowIndex<0) closeNegPopup();
 }
 
 function showNegativeStockPopup(present){
-  const floor = document.getElementById('floor').value;
-  const item = currentFloorData[negativeRowIndex];
-  document.getElementById('popupDetails').innerHTML = `
+  const floor=document.getElementById('floor').value;
+  const item=currentFloorData[negativeRowIndex];
+  document.getElementById('popupDetails').innerHTML=`
     <div><span class="label">Floor:</span><span class="value">${floor.split('(')[0].trim()}</span></div>
     <div><span class="label">Item Code:</span><span class="value">${item.itemCode}</span></div>
     <div><span class="label">Type:</span><span class="value">${item.needleType} Size ${item.size}</span></div>
     <div><span class="label">Present:</span><span class="value" style="color:#dc2626;font-weight:bold">${present}</span></div>`;
-  document.getElementById('negativePopup').style.display = 'flex';
+  document.getElementById('negativePopup').style.display='flex';
 }
-
-function closeNegPopup(){ document.getElementById('negativePopup').style.display = 'none'; }
-
+function closeNegPopup(){ document.getElementById('negativePopup').style.display='none'; }
 function fixNegativeRow(){
   if(negativeRowIndex>=0){
-    const row = document.getElementById(`row${negativeRowIndex}`);
+    const row=document.getElementById(`row${negativeRowIndex}`);
     if(row){ row.scrollIntoView({behavior:'smooth',block:'center'}); row.style.boxShadow='0 0 0 3px #dc2626'; setTimeout(()=>row.style.boxShadow='',2000); }
-    const d = document.getElementById(`d${negativeRowIndex}`);
+    const d=document.getElementById(`d${negativeRowIndex}`);
     if(d){ d.focus(); d.select(); }
   }
 }
 
 // =========================================
-// 💾 SAVE / LOAD / DELETE
+// 💾 BUILD ROWS FOR SAVE
 // =========================================
 function buildRows(){
   return currentFloorData.map((item,i)=>({
-    sl: i+1,
-    itemCode: item.itemCode,
-    needleType: item.needleType,
-    size: item.size,
-    brand: item.brand,
-    unitPrice: item.unitPrice,
-    opening: item.opening,
-    isCustom: item.isCustom||false,
-    previous: Number(document.getElementById(`p${i}`)?.innerText)||0,
-    receive: Number(document.getElementById(`r${i}`)?.value)||0,
-    delivery: Number(document.getElementById(`d${i}`)?.value)||0,
-    present: Number(document.getElementById(`b${i}`)?.innerText)||0,
-    bn: Number(document.getElementById(`bn${i}`)?.value)||0,
-    receiveReqNo: rowReqNo[i]||'',
-    transferOut: rowTransferOut[i]||[],
-    transferIn: rowTransferIn[i]||[]
+    sl:i+1,
+    itemCode:item.itemCode, needleType:item.needleType, size:item.size,
+    brand:item.brand, unitPrice:item.unitPrice, opening:item.opening,
+    isCustom:item.isCustom||false,
+    previous:Number(document.getElementById(`p${i}`)?.innerText)||0,
+    receive:Number(document.getElementById(`r${i}`)?.value)||0,
+    delivery:Number(document.getElementById(`d${i}`)?.value)||0,
+    present:Number(document.getElementById(`b${i}`)?.innerText)||0,
+    bn:Number(document.getElementById(`bn${i}`)?.value)||0,
+    receiveReqNo:rowReqNo[i]||'',
+    transferOut:rowTransferOut[i]||[],
+    transferIn:rowTransferIn[i]||[]
   }));
 }
 
+// =========================================
+// 💾 SAVE
+// =========================================
 async function saveData(){
-  const date = document.getElementById('postDate').value;
-  const floor = document.getElementById('floor').value;
-  const operator = document.getElementById('operatorName').value.trim()||localStorage.getItem('lastOperator')||'Unknown';
+  const date=document.getElementById('postDate').value;
+  const floor=document.getElementById('floor').value;
+  const operator=document.getElementById('operatorName').value.trim()||localStorage.getItem('lastOperator')||'Unknown';
   if(!date){ alert('❌ Date select করুন'); return; }
   if(!floor){ alert('❌ Floor select করুন'); return; }
 
   for(let i=0;i<currentFloorData.length;i++){
-    const r = Number(document.getElementById(`r${i}`)?.value)||0;
-    if(r>0 && !rowReqNo[i]){
+    const r=Number(document.getElementById(`r${i}`)?.value)||0;
+    if(r>0&&!rowReqNo[i]){
       if(floorReqNo){
-        rowReqNo[i] = floorReqNo;
-        const t = document.getElementById(`reqTag${i}`);
-        if(t) t.textContent = '📋 '+floorReqNo;
+        rowReqNo[i]=floorReqNo;
+        const t=document.getElementById(`reqTag${i}`);
+        if(t) t.textContent='📋 '+floorReqNo;
       }else{
         alert(`❌ Row ${i+1} (${currentFloorData[i].itemCode}) এর Rcvd ${r} এর জন্য Requisition Number দিন!`);
-        checkReqNo(i);
-        return;
+        checkReqNo(i); return;
       }
     }
   }
 
-  const rows = buildRows();
+  const rows=buildRows();
   localStorage.setItem('lastOperator', operator);
 
   if(navigator.onLine){
     showLoading('Saving...');
-    const result = await saveToSupabase(floor, date, operator, rows);
+    const result=await saveToSupabase(floor, date, operator, rows);
     hideLoading();
     if(result.success) updateLastSync(`☁️ Supabase এ Saved — ${new Date().toLocaleTimeString()}`);
   }else{
@@ -1636,13 +1567,21 @@ async function saveData(){
 }
 
 // =========================================
-// ✅ MAIN loadData — FIXED carry-forward using itemCode+size matching
+// ✅ MAIN loadData — COMPLETELY REWRITTEN
+// 
+// STRATEGY:
+// 1. ALWAYS fetch the last saved record BEFORE selected date (for carry-forward)
+// 2. If today's data exists → restore receive/delivery/bn/reqNo/transfers from it
+//    BUT use carry-forward 'previous' from last-saved record (not from saved 'previous' field)
+// 3. If today's data doesn't exist → show carry-forwarded previous, blank receive/delivery
+// 
+// This ensures 'Previous' column is ALWAYS correct regardless of when data was first saved.
 // =========================================
 async function loadData(){
-  const date = document.getElementById('postDate').value;
-  const floor = document.getElementById('floor').value;
+  const date=document.getElementById('postDate').value;
+  const floor=document.getElementById('floor').value;
   if(!date||!floor){
-    loadTable();
+    loadTable({}, [], false, null);
     updateMonthlySummary([]);
     return;
   }
@@ -1653,74 +1592,78 @@ async function loadData(){
   updateFloorReqBanner();
 
   try{
-    // STEP 1: আজকের data আছে কিনা দেখো
-    let todayData = null;
+    let todayData=null;
+    let prevData=null;
+    let prevDateUsed=null;
+
     if(navigator.onLine){
-      todayData = await loadFromSupabase(floor, date);
+      // ✅ Fetch BOTH in parallel for speed
+      [todayData, prevData] = await Promise.all([
+        loadFromSupabase(floor, date),
+        findLastSavedBefore(floor, date)
+      ]);
+      if(prevData) prevDateUsed=prevData.report_date;
     }else{
-      todayData = getOffline(floor, date);
+      todayData=getOffline(floor, date);
       showToast('📴 Offline — Local data দেখাচ্ছে');
     }
 
-    if(todayData && todayData.rows && todayData.rows.length > 0){
-      // ✅ আজকের data আছে — সরাসরি load করো
-      console.log(`[loadData] Today's data found for ${date}`);
+    // ✅ Build prevMap from last-saved record (ALWAYS use this for Previous column)
+    // This is the KEY fix: Previous = last saved date's Present, matched by itemCode+size
+    const prevMap = prevData ? buildPrevMap(prevData.rows) : {};
+    const hasPrevData = prevData && prevData.rows && prevData.rows.length > 0;
 
-      // Pass today's rows so custom rows get included and previous matches by key
-      loadTable(todayData.rows, false, null);
+    if(todayData && todayData.rows && todayData.rows.length>0){
+      // ── TODAY'S DATA EXISTS ──
+      // Use prevMap for Previous column, restore receive/delivery/bn from saved data
+      console.log(`[loadData] Today's data found. Carry source: ${prevDateUsed||'opening stock'}`);
 
+      // Pass custom rows from today's saved data
+      const customRowsFromToday = todayData.rows.filter(r=>r.isCustom);
+      loadTable(prevMap, customRowsFromToday, hasPrevData, prevDateUsed);
+
+      // Restore entered values from today's saved data
       todayData.rows.forEach((row,i)=>{
-        if(!document.getElementById(`r${i}`)) return;
-        document.getElementById(`r${i}`).value = row.receive||'';
-        document.getElementById(`d${i}`).value = row.delivery||'';
-        document.getElementById(`bn${i}`).value = row.bn||'';
-        calc(i);
+        // Match by itemCode+size for safe restore
+        const idx = currentFloorData.findIndex(r=>r.itemCode===row.itemCode && r.size===row.size);
+        if(idx<0) return;
+        if(document.getElementById(`r${idx}`)) document.getElementById(`r${idx}`).value=row.receive||'';
+        if(document.getElementById(`d${idx}`)) document.getElementById(`d${idx}`).value=row.delivery||'';
+        if(document.getElementById(`bn${idx}`)) document.getElementById(`bn${idx}`).value=row.bn||'';
+        calc(idx);
         if(row.receiveReqNo){
-          rowReqNo[i] = row.receiveReqNo;
-          const tag = document.getElementById(`reqTag${i}`);
-          if(tag) tag.textContent = '📋 '+row.receiveReqNo;
-          if(!floorReqNo) floorReqNo = row.receiveReqNo;
+          rowReqNo[idx]=row.receiveReqNo;
+          const tag=document.getElementById(`reqTag${idx}`);
+          if(tag) tag.textContent='📋 '+row.receiveReqNo;
+          if(!floorReqNo) floorReqNo=row.receiveReqNo;
         }
-        if(row.transferOut && row.transferOut.length){ rowTransferOut[i]=row.transferOut; updateTransferOutTag(i); }
-        if(row.transferIn && row.transferIn.length){ rowTransferIn[i]=row.transferIn; updateTransferInTag(i); }
+        if(row.transferOut&&row.transferOut.length){ rowTransferOut[idx]=row.transferOut; updateTransferOutTag(idx); }
+        if(row.transferIn&&row.transferIn.length){ rowTransferIn[idx]=row.transferIn; updateTransferInTag(idx); }
       });
       updateFloorReqBanner();
-      if(todayData.operator) document.getElementById('operatorName').value = todayData.operator;
+      if(todayData.operator) document.getElementById('operatorName').value=todayData.operator;
       updateMonthlySummary(todayData.rows);
-      updateLastSync(`☁️ Supabase থেকে Loaded — ${new Date().toLocaleTimeString()}`);
+      updateLastSync(`☁️ Loaded — Prev from: ${prevDateUsed||'opening stock'} — ${new Date().toLocaleTimeString()}`);
 
     }else{
-      // STEP 2: আজকের data নেই — সর্বশেষ saved দিনের Present carry forward
-      console.log(`[loadData] No data for ${date} — searching last saved record`);
-      let prevData = null;
-      let prevDateUsed = null;
+      // ── NO TODAY DATA ──
+      console.log(`[loadData] No today data. Carry source: ${prevDateUsed||'opening stock'}`);
+      loadTable(prevMap, [], hasPrevData, prevDateUsed);
+      updateMonthlySummary([]);
 
-      if(navigator.onLine){
-        prevData = await findLastSavedBefore(floor, date);
-        if(prevData) prevDateUsed = prevData.report_date;
-      }
-
-      if(prevData && prevData.rows && prevData.rows.length > 0){
-        // ✅ KEY FIX: Pass prevData.rows, loadTable will match by itemCode+size
-        console.log(`[loadData] Carry-forward from: ${prevDateUsed}`);
-        loadTable(prevData.rows, true, prevDateUsed);
-        updateLastSync(`⏪ ${prevDateUsed} এর Present carry হয়েছে — ${new Date().toLocaleTimeString()}`);
+      if(hasPrevData){
+        updateLastSync(`⏪ ${prevDateUsed} থেকে carry — ${new Date().toLocaleTimeString()}`);
         showToast(`⏪ ${prevDateUsed} তারিখ থেকে stock carry হয়েছে!`);
       }else{
-        // কোনো আগের data নেই
-        console.log(`[loadData] Showing opening stock`);
-        loadTable(null, false, null);
         updateLastSync(`📋 Opening stock দেখাচ্ছে — ${new Date().toLocaleTimeString()}`);
-        showToast('📋 কোনো আগের data নেই — Opening stock দেখাচ্ছে');
+        showToast('📋 Opening stock দেখাচ্ছে');
       }
-      updateMonthlySummary([]);
     }
+
   }catch(e){
     console.error('loadData error:', e);
-    loadTable();
+    loadTable({}, [], false, null);
     showToast('❌ Load error: '+e.message);
-    hideLoading();
-    return;
   }
   hideLoading();
 }
@@ -1734,41 +1677,37 @@ async function manualRefresh(){
 
 async function syncOfflineData(){
   try{
-    const data = JSON.parse(localStorage.getItem(OFFLINE_KEY)||'{}');
-    const keys = Object.keys(data);
-    let synced = 0;
+    const data=JSON.parse(localStorage.getItem(OFFLINE_KEY)||'{}');
+    const keys=Object.keys(data);
+    let synced=0;
     for(const key of keys){
-      const [floor, date] = key.split('__');
-      const entry = data[key];
-      if(entry && !entry.synced){
-        const result = await saveToSupabase(floor, date, entry.operator, entry.rows, false);
+      const [floor,date]=key.split('__');
+      const entry=data[key];
+      if(entry&&!entry.synced){
+        const result=await saveToSupabase(floor,date,entry.operator,entry.rows,false);
         if(result.success){ data[key].synced=true; synced++; }
       }
     }
-    if(synced>0){
-      localStorage.setItem(OFFLINE_KEY, JSON.stringify(data));
-      showToast(`☁️ ${synced}টি offline data sync হয়েছে`);
-    }
+    if(synced>0){ localStorage.setItem(OFFLINE_KEY,JSON.stringify(data)); showToast(`☁️ ${synced}টি offline data sync হয়েছে`); }
   }catch(e){}
 }
 
 function onFloorChange(){ loadData(); }
 
 async function deleteData(){
-  const date = document.getElementById('postDate').value;
-  const floor = document.getElementById('floor').value;
+  const date=document.getElementById('postDate').value;
+  const floor=document.getElementById('floor').value;
   if(!date){ alert('❌ Date select করুন'); return; }
   if(!confirm('⚠️ এই তারিখের ডাটা delete করবেন?')) return;
   try{
-    const data = JSON.parse(localStorage.getItem(OFFLINE_KEY)||'{}');
+    const data=JSON.parse(localStorage.getItem(OFFLINE_KEY)||'{}');
     delete data[`${floor}__${date}`];
-    localStorage.setItem(OFFLINE_KEY, JSON.stringify(data));
+    localStorage.setItem(OFFLINE_KEY,JSON.stringify(data));
   }catch(e){}
   if(navigator.onLine){
-    const companyId = await getCompanyId();
+    const companyId=await getCompanyId();
     if(companyId){
-      const {error} = await supabase.from('needle_reports').delete()
-        .eq('company_id',companyId).eq('floor',floor).eq('report_date',date);
+      const {error}=await supabase.from('needle_reports').delete().eq('company_id',companyId).eq('floor',floor).eq('report_date',date);
       if(error){ alert('❌ Delete failed: '+error.message); return; }
     }
   }
@@ -1782,11 +1721,11 @@ async function deleteData(){
 function updateMonthlySummary(rows){
   let o=0,r=0,d=0,p=0,bn=0;
   rows.forEach(row=>{ o+=Number(row.opening)||0; r+=Number(row.receive)||0; d+=Number(row.delivery)||0; p+=Number(row.present)||0; bn+=Number(row.bn)||0; });
-  document.getElementById('monthOpening').innerText = o.toLocaleString();
-  document.getElementById('monthReceive').innerText = r.toLocaleString();
-  document.getElementById('monthDelivery').innerText = d.toLocaleString();
-  document.getElementById('monthPresent').innerText = p.toLocaleString();
-  document.getElementById('monthBN').innerText = bn.toLocaleString();
+  document.getElementById('monthOpening').innerText=o.toLocaleString();
+  document.getElementById('monthReceive').innerText=r.toLocaleString();
+  document.getElementById('monthDelivery').innerText=d.toLocaleString();
+  document.getElementById('monthPresent').innerText=p.toLocaleString();
+  document.getElementById('monthBN').innerText=bn.toLocaleString();
 }
 
 // =========================================
@@ -1842,24 +1781,24 @@ function hideLoading(){ document.getElementById('loadingOverlay').classList.remo
 function updateLastSync(t){ const el=document.getElementById('lastSync'); if(el) el.textContent=t; }
 function toggleTheme(){
   document.body.classList.toggle('light');
-  localStorage.setItem('theme', document.body.classList.contains('light')?'light':'dark');
+  localStorage.setItem('theme',document.body.classList.contains('light')?'light':'dark');
 }
 function updateOfflineIndicator(){
-  document.getElementById('offlineIndicator').style.display = navigator.onLine?'none':'block';
+  document.getElementById('offlineIndicator').style.display=navigator.onLine?'none':'block';
 }
 
 // =========================================
 // 🚀 INIT
 // =========================================
 (function init(){
-  document.getElementById('postDate').value = new Date().toISOString().slice(0,10);
+  document.getElementById('postDate').value=new Date().toISOString().slice(0,10);
   const op=localStorage.getItem('lastOperator');
   if(op) document.getElementById('operatorName').value=op;
   if(localStorage.getItem('theme')==='light') document.body.classList.add('light');
   updateOfflineIndicator();
   updateCategoryBadge();
-  loadTable();
-  if(navigator.onLine) setTimeout(syncOfflineData, 2000);
+  loadTable({}, [], false, null);
+  if(navigator.onLine) setTimeout(syncOfflineData,2000);
   document.addEventListener('keydown',e=>{
     if(e.ctrlKey&&e.key==='s'){e.preventDefault();saveData();}
   });
