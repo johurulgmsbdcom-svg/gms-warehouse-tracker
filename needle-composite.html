@@ -84,6 +84,9 @@ body.light .loading-text{color:#475569}
 .theme-toggle{position:fixed;top:6px;right:6px;z-index:1000}
 .last-sync{text-align:center;font-size:9px;color:#94a3b8;margin-top:3px}
 body.light .last-sync{color:#64748b}
+/* carry-forward debug banner */
+.carry-debug{background:#1e3a5f;border:1px solid #3b82f6;border-radius:6px;padding:5px 10px;font-size:9px;color:#93c5fd;text-align:center;margin:3px 0;display:none}
+body.light .carry-debug{background:#dbeafe;color:#1e40af;border-color:#3b82f6}
 @media(max-width:480px){
   body{padding:1px}
   h2{font-size:11px;margin:2px 0 3px}
@@ -112,7 +115,7 @@ body.light .last-sync{color:#64748b}
 }
 @media print{
   html,body{background:white!important;color:black!important;overflow:visible!important}
-  button,input[type="date"],select,input[type="text"],.offline-indicator,.loading-overlay,.theme-toggle,.last-sync,.floor-req-banner{display:none!important}
+  button,input[type="date"],select,input[type="text"],.offline-indicator,.loading-overlay,.theme-toggle,.last-sync,.floor-req-banner,.carry-debug{display:none!important}
   .tableWrap,.summaryWrap{overflow:visible!important}
   #reportTable,#summaryTable{width:100%!important;color:black!important;background:white!important}
   #reportTable th,#reportTable td{font-size:8px;padding:2px}
@@ -197,6 +200,7 @@ body.light .last-sync{color:#64748b}
   </div>
 </div>
 <div class="carry-info" id="carryInfo" style="display:none"></div>
+<div class="carry-debug" id="carryDebug"></div>
 
 <div class="floor-req-banner" id="floorReqBanner" onclick="changeFloorReqNo()">
   📋 Floor Req No: <span id="floorReqNoDisplay"></span> &nbsp;(পরিবর্তন করতে ক্লিক করুন)
@@ -396,7 +400,6 @@ const SUPABASE_KEY = 'sb_publishable_VA7UkQqRwCxdeVwHuxzsjw_dQxOPiIj';
 const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
 const COMPANY_CODE = 'composite';
 const OFFLINE_KEY = 'composite_needle_offline_v3';
-const MAX_CARRY_LOOKBACK_DAYS = 90; // কতদিন পিছনে গিয়ে আগের saved data খুঁজবে
 
 // =========================================
 // 📦 FLOOR DATA
@@ -757,7 +760,7 @@ let pendingReqValue = null;
 let pendingTransferIndex = null;
 
 // =========================================
-// 💾 OFFLINE STORAGE (শুধু offline এ ব্যবহার হবে)
+// 💾 OFFLINE STORAGE
 // =========================================
 function saveOffline(floor, date, operator, rows){
   try{
@@ -782,7 +785,6 @@ async function getCompanyId(){
   return data.id;
 }
 
-// ✅ সবসময় Supabase এ save
 async function saveToSupabase(floor, date, operator, rows, showSuccess=true){
   const companyId = await getCompanyId();
   if(!companyId){ alert('❌ Company config error!'); return {error:'no company'}; }
@@ -802,42 +804,40 @@ async function saveToSupabase(floor, date, operator, rows, showSuccess=true){
   return {success:true};
 }
 
-// ✅ সবসময় Supabase থেকে load
 async function loadFromSupabase(floor, date){
   const companyId = await getCompanyId();
   if(!companyId) return null;
   const {data,error} = await supabase.from('needle_reports').select('*')
     .eq('company_id',companyId).eq('floor',floor).eq('report_date',date).maybeSingle();
-  if(error){ console.error(error); return null; }
+  if(error){ console.error('loadFromSupabase error:', error); return null; }
   return data;
 }
 
-// ✅ NEW: নির্দিষ্ট তারিখের ঠিক আগের দিনে data না থাকলে, আরও পিছনে (max 90 দিন) গিয়ে
-// সবশেষ যেদিন save করা হয়েছিল সেই দিনের record খুঁজে আনে — এতে কোনো একদিন miss/skip
-// হয়ে গেলেও carry-forward chain ভাঙবে না এবং ভুলভাবে opening stock এ ফিরে যাবে না।
+// ✅ KEY FIX: এই function টা এখন সবচেয়ে সাম্প্রতিক save করা record খুঁজে,
+// শুধু "গতকাল" না — যেকোনো আগের দিনের, এমনকি ৯০ দিন আগেরও।
+// এতে কোনো দিন skip হলেও chain ভাঙবে না।
 async function findLastSavedBefore(floor, date){
   const companyId = await getCompanyId();
   if(!companyId) return null;
-  const {data,error} = await supabase.from('needle_reports').select('*')
-    .eq('company_id',companyId).eq('floor',floor)
-    .lt('report_date', date)
+  console.log(`[CarryForward] Searching last saved before ${date} for floor: ${floor}`);
+  const {data,error} = await supabase.from('needle_reports')
+    .select('floor, report_date, rows, operator')
+    .eq('company_id',companyId)
+    .eq('floor',floor)
+    .lt('report_date', date)           // strictly less than current date
     .order('report_date',{ascending:false})
     .limit(1)
     .maybeSingle();
-  if(error){ console.error(error); return null; }
+  if(error){
+    console.error('[CarryForward] Query error:', error);
+    return null;
+  }
+  if(data){
+    console.log(`[CarryForward] Found last saved record: ${data.report_date}`);
+  }else{
+    console.log('[CarryForward] No previous saved record found → will use opening stock');
+  }
   return data;
-}
-
-// =========================================
-// ⏪ PREVIOUS DATE
-// =========================================
-function getPrevDateStr(dateStr){
-  if(!dateStr) return null;
-  const parts = dateStr.split('-');
-  if(parts.length!==3) return null;
-  const d = new Date(Date.UTC(+parts[0],+parts[1]-1,+parts[2]));
-  d.setUTCDate(d.getUTCDate()-1);
-  return `${d.getUTCFullYear()}-${String(d.getUTCMonth()+1).padStart(2,'0')}-${String(d.getUTCDate()).padStart(2,'0')}`;
 }
 
 // =========================================
@@ -853,14 +853,18 @@ function updateCategoryBadge(){
 function updateCarryIndicator(carried, prevDate){
   const badge = document.getElementById('carryBadge');
   const info = document.getElementById('carryInfo');
-  if(carried){
+  const debug = document.getElementById('carryDebug');
+  if(carried && prevDate){
     badge.style.display='inline-block';
-    badge.textContent='⏪ Carried';
+    badge.textContent='⏪ Carried from '+prevDate;
     info.style.display='block';
-    info.innerHTML=`✅ আগের সেভ করা দিন (${prevDate}) এর Present Stock আজকের Previous হিসেবে এসেছে`;
+    info.innerHTML=`✅ ${prevDate} তারিখের Present Stock আজকের Previous হিসেবে carry হয়েছে`;
+    debug.style.display='block';
+    debug.textContent=`🔍 Carry Source: ${prevDate} | আজকের date এর আগে সর্বশেষ save করা দিন`;
   }else{
     badge.style.display='none';
     info.style.display='none';
+    debug.style.display='none';
   }
 }
 
@@ -1088,7 +1092,6 @@ async function confirmTransfer(){
   rowTransferOut[i].push({toFloor, qty, receiverName, reqNo});
   updateTransferOutTag(i);
 
-  // ✅ To floor এ Supabase থেকে load করো, update করো, save করো
   if(navigator.onLine){
     try{
       const toItems = floorData[toFloor] || [];
@@ -1159,7 +1162,6 @@ async function loadTransferReport(){
   if(!from||!to){ alert('তারিখ দিন'); return; }
   document.getElementById('reportBody2').innerHTML = '<tr><td colspan="9" style="padding:10px;color:#64748b">Loading...</td></tr>';
 
-  // ✅ Supabase থেকে সব floor এর data পড়ে transfer বের করা হবে
   let allTransfers = [];
   if(navigator.onLine){
     try{
@@ -1228,7 +1230,7 @@ async function loadTransferReport(){
 }
 
 // =========================================
-// 🔎 REQUISITION SEARCH (NEW)
+// 🔎 REQUISITION SEARCH
 // =========================================
 function showReqSearch(){
   document.getElementById('reqSearchInput').value = '';
@@ -1253,7 +1255,6 @@ async function searchRequisition(){
     const companyId = await getCompanyId();
     if(!companyId){ document.getElementById('reqSearchBody').innerHTML='<tr><td colspan="8">Company error</td></tr>'; return; }
 
-    // সব floor/date এর report রো লোড করে নিজেই filter করা হচ্ছে, কারণ reqNo টা rows(jsonb) এর ভিতরে থাকে
     const {data, error} = await supabase.from('needle_reports')
       .select('floor, report_date, rows')
       .eq('company_id', companyId);
@@ -1265,7 +1266,6 @@ async function searchRequisition(){
     (data||[]).forEach(rec=>{
       if(!rec.rows || !Array.isArray(rec.rows)) return;
       rec.rows.forEach(row=>{
-        // 1) সরাসরি receive এর সাথে দেওয়া requisition number
         if(row.receiveReqNo && String(row.receiveReqNo).toLowerCase()===qLower){
           results.push({
             date: rec.report_date, floor: rec.floor, source: '📥 Receive',
@@ -1273,7 +1273,6 @@ async function searchRequisition(){
             qty: row.receive, detail: 'Req: '+row.receiveReqNo
           });
         }
-        // 2) এই floor থেকে অন্য floor এ transfer-out এর req no
         if(row.transferOut && row.transferOut.length){
           row.transferOut.forEach(t=>{
             if(t.reqNo && String(t.reqNo).toLowerCase()===qLower){
@@ -1285,7 +1284,6 @@ async function searchRequisition(){
             }
           });
         }
-        // 3) অন্য floor থেকে এই floor এ transfer-in এর req no
         if(row.transferIn && row.transferIn.length){
           row.transferIn.forEach(t=>{
             if(t.reqNo && String(t.reqNo).toLowerCase()===qLower){
@@ -1402,7 +1400,6 @@ async function saveData(){
   if(!date){ alert('❌ Date select করুন'); return; }
   if(!floor){ alert('❌ Floor select করুন'); return; }
 
-  // Rcvd আছে কিন্তু req no নেই এমন row check
   for(let i=0;i<currentFloorData.length;i++){
     const r = Number(document.getElementById(`r${i}`)?.value)||0;
     if(r>0 && !rowReqNo[i]){
@@ -1429,21 +1426,23 @@ async function saveData(){
       updateLastSync(`☁️ Supabase এ Saved — ${new Date().toLocaleTimeString()}`);
     }
   }else{
-    // Offline — local এ save
     saveOffline(floor, date, operator, rows);
     showToast('📴 Offline — Local এ Save হয়েছে, Online হলে Sync করুন');
     updateLastSync(`📴 Offline saved — ${new Date().toLocaleTimeString()}`);
   }
 }
 
-// ✅ মূল পরিবর্তন: আজকের data না থাকলে শুধু "গতকাল" না খুঁজে, সর্বশেষ যেদিন save
-// হয়েছে (lookback up to ${MAX_CARRY_LOOKBACK_DAYS} দিন) সেদিনের Present কে carry করা হবে।
-// এতে কোনো একদিন entry miss হলেও, বা মাসের শুরুতে গত মাসের শেষ দিনের data না থাকলেও,
-// chain ভেঙে opening stock এ ফিরে যাবে না।
+// =========================================
+// ✅ MAIN loadData — সম্পূর্ণ নতুন carry-forward logic
+// =========================================
 async function loadData(){
   const date = document.getElementById('postDate').value;
   const floor = document.getElementById('floor').value;
-  if(!date||!floor){ loadTable(); updateMonthlySummary([]); return; }
+  if(!date||!floor){
+    loadTable();
+    updateMonthlySummary([]);
+    return;
+  }
 
   showLoading('Loading...');
 
@@ -1453,27 +1452,27 @@ async function loadData(){
   updateFloorReqBanner();
 
   try{
-    let savedData = null;
-
+    // ─── STEP 1: আজকের date এর data আছে কিনা দেখো ───
+    let todayData = null;
     if(navigator.onLine){
-      // ✅ সরাসরি Supabase থেকে load — local cache bypass
-      savedData = await loadFromSupabase(floor, date);
+      todayData = await loadFromSupabase(floor, date);
     }else{
-      // Offline হলে local থেকে
-      savedData = getOffline(floor, date);
+      todayData = getOffline(floor, date);
       showToast('📴 Offline — Local data দেখাচ্ছে');
     }
 
-    if(savedData && savedData.rows && savedData.rows.length){
-      // ✅ আজকের ডাটা আছে — সেটা দেখাও
-      const previousArr = savedData.rows.map(r=>Number(r.previous)||0);
+    if(todayData && todayData.rows && todayData.rows.length > 0){
+      // ✅ আজকের data আছে — সরাসরি load করো
+      console.log(`[loadData] Today's data found for ${date} — loading directly`);
+      const previousArr = todayData.rows.map(r=>Number(r.previous)||0);
       loadTable(previousArr, false, null);
 
-      savedData.rows.forEach((row,i)=>{
+      todayData.rows.forEach((row,i)=>{
         if(!document.getElementById(`r${i}`)) return;
         document.getElementById(`r${i}`).value = row.receive||'';
         document.getElementById(`d${i}`).value = row.delivery||'';
         document.getElementById(`bn${i}`).value = row.bn||'';
+        calc(i);
         if(row.receiveReqNo){
           rowReqNo[i] = row.receiveReqNo;
           const tag = document.getElementById(`reqTag${i}`);
@@ -1482,32 +1481,43 @@ async function loadData(){
         }
         if(row.transferOut && row.transferOut.length){ rowTransferOut[i]=row.transferOut; updateTransferOutTag(i); }
         if(row.transferIn && row.transferIn.length){ rowTransferIn[i]=row.transferIn; updateTransferInTag(i); }
-        calc(i);
       });
       updateFloorReqBanner();
-      if(savedData.operator) document.getElementById('operatorName').value = savedData.operator;
-      updateMonthlySummary(savedData.rows);
+      if(todayData.operator) document.getElementById('operatorName').value = todayData.operator;
+      updateMonthlySummary(todayData.rows);
       updateLastSync(`☁️ Supabase থেকে Loaded — ${new Date().toLocaleTimeString()}`);
 
     }else{
-      // ✅ আজকের ডাটা নেই — সবশেষ যেদিন save হয়েছিল তার Present carry forward করো
+      // ✅ আজকের data নেই — সর্বশেষ save করা দিনের Present carry forward করো
+      console.log(`[loadData] No data for ${date} — searching for last saved record before this date`);
+
       let prevData = null;
       let prevDateUsed = null;
 
       if(navigator.onLine){
+        // ─── KEY FIX: findLastSavedBefore এখন সরাসরি DB query করে সবচেয়ে সাম্প্রতিক record পাবে ───
         prevData = await findLastSavedBefore(floor, date);
-        if(prevData) prevDateUsed = prevData.report_date;
+        if(prevData){
+          prevDateUsed = prevData.report_date;
+          console.log(`[loadData] Will carry forward from: ${prevDateUsed}`);
+        }else{
+          console.log(`[loadData] No previous record at all — using opening stock`);
+        }
       }
 
-      if(prevData && prevData.rows && prevData.rows.length){
-        const prevPresentArr = prevData.rows.map(r=>Number(r.present)||0);
+      if(prevData && prevData.rows && prevData.rows.length > 0){
+        // ✅ আগের সেভ করা দিনের Present গুলো নতুন দিনের Previous হিসেবে ব্যবহার করো
+        const prevPresentArr = prevData.rows.map(r => Number(r.present) || 0);
+        console.log(`[loadData] Carry-forward array (first 3):`, prevPresentArr.slice(0,3));
         loadTable(prevPresentArr, true, prevDateUsed);
         updateLastSync(`⏪ ${prevDateUsed} এর Present carry হয়েছে — ${new Date().toLocaleTimeString()}`);
-        showToast(`⏪ ${prevDateUsed} এর stock carry হয়েছে!`);
+        showToast(`⏪ ${prevDateUsed} তারিখ থেকে stock carry হয়েছে!`);
       }else{
         // কোনো আগের saved data নেই — opening stock দেখাও
+        console.log(`[loadData] Showing opening stock`);
         loadTable(null, false, null);
-        updateLastSync(`📋 Opening stock — ${new Date().toLocaleTimeString()}`);
+        updateLastSync(`📋 Opening stock দেখাচ্ছে — ${new Date().toLocaleTimeString()}`);
+        showToast('📋 কোনো আগের data নেই — Opening stock দেখাচ্ছে');
       }
       updateMonthlySummary([]);
     }
@@ -1515,13 +1525,14 @@ async function loadData(){
     console.error('loadData error:', e);
     loadTable();
     showToast('❌ Load error: '+e.message);
+    hideLoading();
+    return;
   }
   hideLoading();
 }
 
 async function manualRefresh(){
   showLoading('Refreshing...');
-  // Offline sync চেষ্টা
   if(navigator.onLine){
     await syncOfflineData();
   }
@@ -1529,7 +1540,6 @@ async function manualRefresh(){
   showToast('🔄 Refreshed!');
 }
 
-// ✅ Offline এ save করা ডাটা online হলে sync করো
 async function syncOfflineData(){
   try{
     const data = JSON.parse(localStorage.getItem(OFFLINE_KEY)||'{}');
@@ -1558,14 +1568,12 @@ async function deleteData(){
   if(!date){ alert('❌ Date select করুন'); return; }
   if(!confirm('⚠️ এই তারিখের ডাটা delete করবেন?')) return;
 
-  // Local offline data delete
   try{
     const data = JSON.parse(localStorage.getItem(OFFLINE_KEY)||'{}');
     delete data[`${floor}__${date}`];
     localStorage.setItem(OFFLINE_KEY, JSON.stringify(data));
   }catch(e){}
 
-  // Supabase delete
   if(navigator.onLine){
     const companyId = await getCompanyId();
     if(companyId){
@@ -1667,7 +1675,6 @@ function updateOfflineIndicator(){
   updateOfflineIndicator();
   updateCategoryBadge();
   loadTable();
-  // Online হলে offline data sync করো
   if(navigator.onLine) setTimeout(syncOfflineData, 2000);
   document.addEventListener('keydown',e=>{
     if(e.ctrlKey&&e.key==='s'){e.preventDefault();saveData();}
