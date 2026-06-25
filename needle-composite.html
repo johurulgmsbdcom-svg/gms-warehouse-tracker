@@ -16,7 +16,7 @@ body.light .topControls{background:rgba(241,245,249,0.9)}
 button{padding:6px 8px;border:0;border-radius:6px;color:white;font-weight:bold;cursor:pointer;margin:2px;font-size:10px;transition:all 0.3s}
 button:hover{transform:translateY(-2px);box-shadow:0 4px 12px rgba(0,0,0,0.3)}
 button:active{transform:translateY(0)}
-.deleteBtn{background:#dc2626}.excelBtn{background:#16a34a}.pdfBtn{background:#7c3aed}.homeBtn{background:#2563eb}.saveBtn{background:#10b981}.themeBtn{background:#64748b}.refreshBtn{background:#f59e0b}
+.deleteBtn{background:#dc2626}.excelBtn{background:#16a34a}.pdfBtn{background:#7c3aed}.homeBtn{background:#2563eb}.saveBtn{background:#10b981}.themeBtn{background:#64748b}.refreshBtn{background:#f59e0b}.addRowBtn{background:#0891b2}
 input,select,textarea,button{font-size:13px}
 select,input[type="date"],input[type="text"]{padding:4px;border-radius:6px;border:1px solid #475569;max-width:150px;background:#1e293b;color:white}
 body.light select,body.light input[type="date"],body.light input[type="text"]{background:#f1f5f9;color:#0f172a;border-color:#cbd5e1}
@@ -28,11 +28,13 @@ body.light #reportTable thead{background:#334155}
 #reportTable tfoot{background:#334155;color:white;font-weight:bold}
 .col-sl{width:3.5%}.col-code{width:8%}.col-type{width:11%}.col-size{width:6%}
 .col-brand{width:7%}.col-price{width:6%}.col-prev{width:8%}.col-rcvd{width:8%}.col-dvld{width:8%}
-.col-present{width:9%}.col-bn{width:7%}.col-transfer{width:8%}
+.col-present{width:9%}.col-bn{width:7%}.col-transfer{width:8%}.col-del{width:3%}
 .transferBtn{background:#f59e0b;color:#000;border:none;border-radius:4px;padding:2px 4px;font-size:10px;font-weight:bold;cursor:pointer;width:100%;line-height:1.2}
 .transfer-tag{display:block;font-size:6.5px;color:#7c3aed;font-weight:700;margin-top:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%}
 .req-tag{display:block;font-size:6px;color:#059669;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-#reqPopup,#transferPopup,#negativePopup,#reportPopup,#reqSearchPopup{display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.82);z-index:9998;justify-content:center;align-items:center}
+.del-row-btn{background:#dc2626;color:white;border:none;border-radius:3px;padding:1px 3px;font-size:9px;cursor:pointer;width:100%;line-height:1.3}
+.custom-row-indicator{background:#fef3c7;color:#92400e!important}
+#reqPopup,#transferPopup,#negativePopup,#reportPopup,#reqSearchPopup,#addRowPopup{display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.82);z-index:9998;justify-content:center;align-items:center}
 .popup-content{background:white;color:black;padding:18px;border-radius:12px;max-width:95%;width:380px;box-shadow:0 8px 30px rgba(0,0,0,0.4);position:relative;animation:popupSlide 0.25s}
 @keyframes popupSlide{from{transform:translateY(-40px);opacity:0}to{transform:translateY(0);opacity:1}}
 .popup-close{position:absolute;top:10px;right:14px;font-size:22px;cursor:pointer;color:#666;font-weight:bold}
@@ -84,7 +86,6 @@ body.light .loading-text{color:#475569}
 .theme-toggle{position:fixed;top:6px;right:6px;z-index:1000}
 .last-sync{text-align:center;font-size:9px;color:#94a3b8;margin-top:3px}
 body.light .last-sync{color:#64748b}
-/* carry-forward debug banner */
 .carry-debug{background:#1e3a5f;border:1px solid #3b82f6;border-radius:6px;padding:5px 10px;font-size:9px;color:#93c5fd;text-align:center;margin:3px 0;display:none}
 body.light .carry-debug{background:#dbeafe;color:#1e40af;border-color:#3b82f6}
 @media(max-width:480px){
@@ -105,7 +106,7 @@ body.light .carry-debug{background:#dbeafe;color:#1e40af;border-color:#3b82f6}
   .popup-title{font-size:13px}
   .col-sl{width:3%}.col-code{width:7%}.col-type{width:10%}.col-size{width:4%}
   .col-brand{width:6.5%}.col-price{width:5.5%}.col-prev{width:6.5%}.col-rcvd{width:8%}
-  .col-dvld{width:8%}.col-present{width:9%}.col-bn{width:7%}.col-transfer{width:7%}
+  .col-dvld{width:8%}.col-present{width:9%}.col-bn{width:7%}.col-transfer{width:7%}.col-del{width:3%}
   .transferBtn{padding:1px;font-size:7px}
   .transfer-tag{font-size:5px}.req-tag{font-size:5px}
   #summaryTable th,#summaryTable td{font-size:7px;padding:1.5px}
@@ -119,7 +120,7 @@ body.light .carry-debug{background:#dbeafe;color:#1e40af;border-color:#3b82f6}
   .tableWrap,.summaryWrap{overflow:visible!important}
   #reportTable,#summaryTable{width:100%!important;color:black!important;background:white!important}
   #reportTable th,#reportTable td{font-size:8px;padding:2px}
-  #negativePopup,#reqPopup,#transferPopup,#reportPopup,#reqSearchPopup{display:none!important}
+  #negativePopup,#reqPopup,#transferPopup,#reportPopup,#reqSearchPopup,#addRowPopup{display:none!important}
 }
 </style>
 </head>
@@ -210,6 +211,7 @@ body.light .carry-debug{background:#dbeafe;color:#1e40af;border-color:#3b82f6}
   <button class="saveBtn" onclick="saveData()">💾 Save</button>
   <button class="refreshBtn" onclick="manualRefresh()">🔄 Refresh</button>
   <button class="deleteBtn" onclick="deleteData()">🗑️ Delete</button>
+  <button class="addRowBtn" onclick="openAddRowPopup()">➕ Add Row</button>
   <button class="excelBtn" onclick="exportExcel()">📊 Excel</button>
   <button class="pdfBtn" onclick="exportPDF()">📄 PDF</button>
   <button class="themeBtn" style="background:#7c3aed" onclick="showTransferReport()">🚚 Transfers</button>
@@ -235,6 +237,7 @@ body.light .carry-debug{background:#dbeafe;color:#1e40af;border-color:#3b82f6}
   <th class="col-present">Present</th>
   <th class="col-bn" id="bnHeader">BNR</th>
   <th class="col-transfer">Trf</th>
+  <th class="col-del">Del</th>
 </tr>
 </thead>
 <tbody id="tableBody"></tbody>
@@ -246,7 +249,7 @@ body.light .carry-debug{background:#dbeafe;color:#1e40af;border-color:#3b82f6}
   <td id="totalDelivery">0</td>
   <td id="totalPresent">0</td>
   <td id="totalBN">0</td>
-  <td>-</td>
+  <td colspan="2">-</td>
 </tr>
 </tfoot>
 </table>
@@ -325,6 +328,40 @@ body.light .carry-debug{background:#dbeafe;color:#1e40af;border-color:#3b82f6}
   </div>
 </div>
 
+<!-- ADD ROW POPUP -->
+<div id="addRowPopup">
+  <div class="popup-content">
+    <span class="popup-close" onclick="closeAddRowPopup()">×</span>
+    <div class="popup-title">➕ নতুন Needle Row যোগ করুন</div>
+    <div class="popup-field">
+      <label>Item Code (যেমন: SN-999):</label>
+      <input type="text" id="newItemCode" placeholder="SN-XXX" autocomplete="off">
+    </div>
+    <div class="popup-field">
+      <label>Needle Type (যেমন: DB X 1):</label>
+      <input type="text" id="newNeedleType" placeholder="DB X 1" autocomplete="off">
+    </div>
+    <div class="popup-field">
+      <label>Size (যেমন: 9):</label>
+      <input type="text" id="newSize" placeholder="9" autocomplete="off">
+    </div>
+    <div class="popup-field">
+      <label>Brand (যেমন: ORGAN):</label>
+      <input type="text" id="newBrand" placeholder="ORGAN" autocomplete="off">
+    </div>
+    <div class="popup-field">
+      <label>Unit Price (যেমন: 0.0655):</label>
+      <input type="number" id="newPrice" placeholder="0.0000" step="0.0001" min="0" autocomplete="off">
+    </div>
+    <div class="popup-field">
+      <label>Opening Stock (Previous qty):</label>
+      <input type="number" id="newOpening" placeholder="0" step="1" min="0" autocomplete="off">
+    </div>
+    <button class="popup-fix-btn" onclick="confirmAddRow()">✅ Row যোগ করুন</button>
+    <div class="popup-footer">⚠️ নতুন row যোগ করলে শুধু এই তারিখের জন্য থাকবে। Save করলে পরের দিনেও Carry হবে।</div>
+  </div>
+</div>
+
 <!-- TRANSFER REPORT POPUP -->
 <div id="reportPopup">
   <div class="popup-content">
@@ -399,7 +436,7 @@ const SUPABASE_URL = 'https://hmatleeearcaltguosiz.supabase.co';
 const SUPABASE_KEY = 'sb_publishable_VA7UkQqRwCxdeVwHuxzsjw_dQxOPiIj';
 const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
 const COMPANY_CODE = 'composite';
-const OFFLINE_KEY = 'composite_needle_offline_v3';
+const OFFLINE_KEY = 'composite_needle_offline_v4';
 
 // =========================================
 // 📦 FLOOR DATA
@@ -750,6 +787,7 @@ const floorData = {
 // 🌐 GLOBAL STATE
 // =========================================
 let negativeRowIndex = -1;
+// currentFloorData: array of row objects {sl,itemCode,needleType,size,brand,unitPrice,opening,isCustom}
 let currentFloorData = [];
 let rowReqNo = {};
 let floorReqNo = null;
@@ -813,9 +851,8 @@ async function loadFromSupabase(floor, date){
   return data;
 }
 
-// ✅ KEY FIX: এই function টা এখন সবচেয়ে সাম্প্রতিক save করা record খুঁজে,
-// শুধু "গতকাল" না — যেকোনো আগের দিনের, এমনকি ৯০ দিন আগেরও।
-// এতে কোনো দিন skip হলেও chain ভাঙবে না।
+// ✅ KEY FIX: item code + size দিয়ে match করে carry-forward
+// এতে আগে/পরে row যোগ হলেও সঠিক present carry হবে
 async function findLastSavedBefore(floor, date){
   const companyId = await getCompanyId();
   if(!companyId) return null;
@@ -824,19 +861,13 @@ async function findLastSavedBefore(floor, date){
     .select('floor, report_date, rows, operator')
     .eq('company_id',companyId)
     .eq('floor',floor)
-    .lt('report_date', date)           // strictly less than current date
+    .lt('report_date', date)
     .order('report_date',{ascending:false})
     .limit(1)
     .maybeSingle();
-  if(error){
-    console.error('[CarryForward] Query error:', error);
-    return null;
-  }
-  if(data){
-    console.log(`[CarryForward] Found last saved record: ${data.report_date}`);
-  }else{
-    console.log('[CarryForward] No previous saved record found → will use opening stock');
-  }
+  if(error){ console.error('[CarryForward] Query error:', error); return null; }
+  if(data) console.log(`[CarryForward] Found: ${data.report_date}`);
+  else console.log('[CarryForward] No previous record → using opening stock');
   return data;
 }
 
@@ -848,6 +879,7 @@ function updateCategoryBadge(){
   const badge = document.getElementById('categoryBadge');
   if(floor.includes('_NEW')){ badge.textContent='NEW'; badge.style.background='linear-gradient(135deg,#10b981,#059669)'; }
   else if(floor.includes('_RUNNING')){ badge.textContent='RUNNING'; badge.style.background='linear-gradient(135deg,#3b82f6,#2563eb)'; }
+  else { badge.textContent=''; }
 }
 
 function updateCarryIndicator(carried, prevDate){
@@ -899,30 +931,86 @@ function changeFloorReqNo(){
 // =========================================
 // 🏗️ LOAD TABLE
 // =========================================
-function loadTable(customPrevious=null, carried=false, prevDate=null){
-  currentFloorData = getItems();
+// ✅ CRITICAL FIX: এখন prevRows (saved rows) দিয়ে itemCode+size match করে
+// previous সেট করা হয়। Index-based matching বাদ দেওয়া হয়েছে।
+function loadTable(prevRows=null, carried=false, prevDate=null){
+  const floor = document.getElementById('floor').value;
+  const baseItems = floorData[floor] || [];
+
+  // Convert base items to object format
+  currentFloorData = baseItems.map(item => ({
+    sl: item[0],
+    itemCode: item[1],
+    needleType: item[2],
+    size: item[3],
+    brand: item[4],
+    unitPrice: item[5],
+    opening: item[6],
+    isCustom: false
+  }));
+
+  // If prevRows has custom rows, add them
+  if(prevRows && Array.isArray(prevRows)){
+    prevRows.forEach(pr => {
+      if(pr.isCustom){
+        const exists = currentFloorData.find(r => r.itemCode===pr.itemCode && r.size===pr.size);
+        if(!exists){
+          currentFloorData.push({
+            sl: currentFloorData.length+1,
+            itemCode: pr.itemCode,
+            needleType: pr.needleType,
+            size: pr.size,
+            brand: pr.brand,
+            unitPrice: pr.unitPrice||0,
+            opening: pr.opening||0,
+            isCustom: true
+          });
+        }
+      }
+    });
+  }
+
   updateCategoryBadge();
   rowReqNo={}; rowTransferOut={}; rowTransferIn={};
   floorReqNo=null;
   updateFloorReqBanner();
 
-  const floor = document.getElementById('floor').value;
   document.getElementById('bnHeader').innerText = floor.includes('_NEW') ? 'BNR' : 'BNF';
+
+  // Build prevMap: itemCode+size → present (for carry-forward)
+  const prevMap = {};
+  if(prevRows && Array.isArray(prevRows)){
+    prevRows.forEach(pr => {
+      const key = `${pr.itemCode}__${pr.size}`;
+      prevMap[key] = Number(pr.present) || 0;
+    });
+  }
 
   let html = '';
   currentFloorData.forEach((item, i) => {
-    const previous = (Array.isArray(customPrevious) && customPrevious[i]!==undefined)
-      ? (Number(customPrevious[i])||0)
-      : (Number(item[6])||0);
+    let previous;
+    if(prevRows && prevRows.length > 0){
+      // ✅ FIXED: use itemCode+size key, NOT index
+      const key = `${item.itemCode}__${item.size}`;
+      if(prevMap.hasOwnProperty(key)){
+        previous = prevMap[key];
+      } else {
+        // new item not in prev record → use opening stock
+        previous = item.opening;
+      }
+    } else {
+      previous = item.opening;
+    }
 
+    const rowClass = item.isCustom ? 'class="custom-row-indicator"' : '';
     html += `
-      <tr id="row${i}">
-        <td>${item[0]}</td>
-        <td>${item[1]}</td>
-        <td>${item[2]}</td>
-        <td>${item[3]}</td>
-        <td>${item[4]}</td>
-        <td style="text-align:right">${item[5].toFixed(4)}</td>
+      <tr id="row${i}" ${rowClass}>
+        <td>${i+1}${item.isCustom?'<br><span style="font-size:5px;color:#92400e">NEW</span>':''}</td>
+        <td>${item.itemCode}</td>
+        <td>${item.needleType}</td>
+        <td>${item.size}</td>
+        <td>${item.brand}</td>
+        <td style="text-align:right">${Number(item.unitPrice).toFixed(4)}</td>
         <td id="p${i}">${previous}</td>
         <td id="rcvdCell${i}">
           <input class="qtyInput" type="number" id="r${i}" oninput="calc(${i})" onblur="checkReqNo(${i})" step="1" min="0">
@@ -934,8 +1022,16 @@ function loadTable(customPrevious=null, carried=false, prevDate=null){
         </td>
         <td id="b${i}" style="font-weight:bold">${previous}</td>
         <td><input class="qtyInput" type="number" id="bn${i}" oninput="updateTotal()" step="1" min="0"></td>
-        <td><button class="transferBtn" onclick="openTransferPopup(${i})">🔄 Trf</button>
-            <span class="transfer-tag" id="trfInTag${i}"></span></td>
+        <td>
+          <button class="transferBtn" onclick="openTransferPopup(${i})">🔄 Trf</button>
+          <span class="transfer-tag" id="trfInTag${i}"></span>
+        </td>
+        <td>
+          ${item.isCustom
+            ? `<button class="del-row-btn" onclick="deleteCustomRow(${i})" title="এই row মুছুন">✕</button>`
+            : '<span style="font-size:8px;color:#94a3b8">-</span>'
+          }
+        </td>
       </tr>`;
   });
 
@@ -945,17 +1041,169 @@ function loadTable(customPrevious=null, carried=false, prevDate=null){
   setTimeout(checkNegativeStock, 100);
 }
 
-function getItems(){
-  return floorData[document.getElementById('floor').value] || [];
+// =========================================
+// ➕ ADD ROW POPUP
+// =========================================
+function openAddRowPopup(){
+  const floor = document.getElementById('floor').value;
+  if(!floor){ alert('❌ আগে Floor select করুন'); return; }
+  document.getElementById('newItemCode').value='';
+  document.getElementById('newNeedleType').value='';
+  document.getElementById('newSize').value='';
+  document.getElementById('newBrand').value='ORGAN';
+  document.getElementById('newPrice').value='';
+  document.getElementById('newOpening').value='0';
+  document.getElementById('addRowPopup').style.display='flex';
+  setTimeout(()=>document.getElementById('newItemCode').focus(),100);
+}
+
+function closeAddRowPopup(){
+  document.getElementById('addRowPopup').style.display='none';
+}
+
+function confirmAddRow(){
+  const itemCode = document.getElementById('newItemCode').value.trim().toUpperCase();
+  const needleType = document.getElementById('newNeedleType').value.trim().toUpperCase();
+  const size = document.getElementById('newSize').value.trim();
+  const brand = document.getElementById('newBrand').value.trim().toUpperCase();
+  const unitPrice = parseFloat(document.getElementById('newPrice').value)||0;
+  const opening = parseInt(document.getElementById('newOpening').value)||0;
+
+  if(!itemCode){ alert('❌ Item Code দিন (যেমন: SN-999)'); return; }
+  if(!needleType){ alert('❌ Needle Type দিন (যেমন: DB X 1)'); return; }
+  if(!size){ alert('❌ Size দিন'); return; }
+
+  // Check duplicate
+  const dup = currentFloorData.find(r => r.itemCode===itemCode && r.size===size);
+  if(dup){ alert(`❌ ${itemCode} (Size ${size}) ইতিমধ্যে আছে!`); return; }
+
+  // Add to currentFloorData
+  const newRow = {
+    sl: currentFloorData.length+1,
+    itemCode, needleType, size, brand, unitPrice, opening,
+    isCustom: true
+  };
+  currentFloorData.push(newRow);
+
+  const i = currentFloorData.length - 1;
+  const newTr = document.createElement('tr');
+  newTr.id = `row${i}`;
+  newTr.className = 'custom-row-indicator';
+  newTr.innerHTML = `
+    <td>${i+1}<br><span style="font-size:5px;color:#92400e">NEW</span></td>
+    <td>${itemCode}</td>
+    <td>${needleType}</td>
+    <td>${size}</td>
+    <td>${brand}</td>
+    <td style="text-align:right">${unitPrice.toFixed(4)}</td>
+    <td id="p${i}">${opening}</td>
+    <td id="rcvdCell${i}">
+      <input class="qtyInput" type="number" id="r${i}" oninput="calc(${i})" onblur="checkReqNo(${i})" step="1" min="0">
+      <span class="req-tag" id="reqTag${i}"></span>
+    </td>
+    <td id="dvldCell${i}">
+      <input class="qtyInput" type="number" id="d${i}" oninput="calc(${i})" step="1" min="0">
+      <span class="transfer-tag" id="trfOutTag${i}"></span>
+    </td>
+    <td id="b${i}" style="font-weight:bold">${opening}</td>
+    <td><input class="qtyInput" type="number" id="bn${i}" oninput="updateTotal()" step="1" min="0"></td>
+    <td>
+      <button class="transferBtn" onclick="openTransferPopup(${i})">🔄 Trf</button>
+      <span class="transfer-tag" id="trfInTag${i}"></span>
+    </td>
+    <td>
+      <button class="del-row-btn" onclick="deleteCustomRow(${i})" title="এই row মুছুন">✕</button>
+    </td>`;
+  document.getElementById('tableBody').appendChild(newTr);
+
+  updateTotal();
+  closeAddRowPopup();
+  showToast(`✅ ${itemCode} (Size ${size}) যোগ হয়েছে!`);
+  newTr.scrollIntoView({behavior:'smooth',block:'center'});
+  // Highlight briefly
+  newTr.style.boxShadow='0 0 0 3px #0891b2';
+  setTimeout(()=>newTr.style.boxShadow='',2000);
+}
+
+function deleteCustomRow(i){
+  if(!currentFloorData[i] || !currentFloorData[i].isCustom){
+    showToast('❌ শুধু নতুন যোগ করা row মুছা যাবে');
+    return;
+  }
+  if(!confirm(`⚠️ ${currentFloorData[i].itemCode} (Size ${currentFloorData[i].size}) মুছবেন?`)) return;
+  currentFloorData.splice(i,1);
+  delete rowReqNo[i];
+  delete rowTransferOut[i];
+  delete rowTransferIn[i];
+  // Re-render table with current values preserved
+  rebuildTableKeepingValues();
+  showToast('✅ Row মুছা হয়েছে');
+}
+
+// Rebuild table HTML preserving entered values
+function rebuildTableKeepingValues(){
+  // Collect current values before rebuild
+  const vals = currentFloorData.map((_,i) => ({
+    r: document.getElementById(`r${i}`)?.value||'',
+    d: document.getElementById(`d${i}`)?.value||'',
+    bn: document.getElementById(`bn${i}`)?.value||'',
+    prev: document.getElementById(`p${i}`)?.innerText||'0'
+  }));
+
+  const floor = document.getElementById('floor').value;
+  document.getElementById('bnHeader').innerText = floor.includes('_NEW') ? 'BNR' : 'BNF';
+
+  let html = '';
+  currentFloorData.forEach((item, i) => {
+    const v = vals[i]||{r:'',d:'',bn:'',prev:String(item.opening)};
+    const prev = Number(v.prev)||item.opening;
+    const rowClass = item.isCustom ? 'class="custom-row-indicator"' : '';
+    html += `
+      <tr id="row${i}" ${rowClass}>
+        <td>${i+1}${item.isCustom?'<br><span style="font-size:5px;color:#92400e">NEW</span>':''}</td>
+        <td>${item.itemCode}</td><td>${item.needleType}</td><td>${item.size}</td>
+        <td>${item.brand}</td>
+        <td style="text-align:right">${Number(item.unitPrice).toFixed(4)}</td>
+        <td id="p${i}">${prev}</td>
+        <td id="rcvdCell${i}">
+          <input class="qtyInput" type="number" id="r${i}" value="${v.r}" oninput="calc(${i})" onblur="checkReqNo(${i})" step="1" min="0">
+          <span class="req-tag" id="reqTag${i}">${rowReqNo[i]?'📋 '+rowReqNo[i]:''}</span>
+        </td>
+        <td id="dvldCell${i}">
+          <input class="qtyInput" type="number" id="d${i}" value="${v.d}" oninput="calc(${i})" step="1" min="0">
+          <span class="transfer-tag" id="trfOutTag${i}"></span>
+        </td>
+        <td id="b${i}" style="font-weight:bold">${prev + (Number(v.r)||0) - (Number(v.d)||0)}</td>
+        <td><input class="qtyInput" type="number" id="bn${i}" value="${v.bn}" oninput="updateTotal()" step="1" min="0"></td>
+        <td>
+          <button class="transferBtn" onclick="openTransferPopup(${i})">🔄 Trf</button>
+          <span class="transfer-tag" id="trfInTag${i}"></span>
+        </td>
+        <td>
+          ${item.isCustom
+            ? `<button class="del-row-btn" onclick="deleteCustomRow(${i})" title="মুছুন">✕</button>`
+            : '<span style="font-size:8px;color:#94a3b8">-</span>'
+          }
+        </td>
+      </tr>`;
+  });
+  document.getElementById('tableBody').innerHTML = html;
+  // Restore transfer tags
+  currentFloorData.forEach((_,i)=>{
+    if(rowTransferOut[i]) updateTransferOutTag(i);
+    if(rowTransferIn[i]) updateTransferInTag(i);
+  });
+  updateTotal();
+  checkNegativeStock();
 }
 
 // =========================================
 // 🧮 CALC & TOTAL
 // =========================================
 function calc(i){
-  const p = Number(document.getElementById(`p${i}`).innerText)||0;
-  const r = Number(document.getElementById(`r${i}`).value)||0;
-  const d = Number(document.getElementById(`d${i}`).value)||0;
+  const p = Number(document.getElementById(`p${i}`)?.innerText)||0;
+  const r = Number(document.getElementById(`r${i}`)?.value)||0;
+  const d = Number(document.getElementById(`d${i}`)?.value)||0;
   const present = p + r - d;
   document.getElementById(`b${i}`).innerText = present;
   const row = document.getElementById(`row${i}`);
@@ -985,7 +1233,7 @@ function updateTotal(){
 // ✅ REQUISITION POPUP
 // =========================================
 function checkReqNo(i){
-  const val = Number(document.getElementById(`r${i}`).value)||0;
+  const val = Number(document.getElementById(`r${i}`)?.value)||0;
   if(val <= 0) return;
   if(rowReqNo[i]) return;
   if(floorReqNo){
@@ -998,7 +1246,7 @@ function checkReqNo(i){
   pendingReqValue = val;
   const item = currentFloorData[i];
   document.getElementById('reqItemInfo').innerHTML =
-    `<b>${item[1]}</b> | ${item[2]} | Size: ${item[3]} | Rcvd Qty: <b>${val}</b><br>
+    `<b>${item.itemCode}</b> | ${item.needleType} | Size: ${item.size} | Rcvd Qty: <b>${val}</b><br>
      <small style="color:#059669;font-weight:600">✅ এই নম্বর এই floor এর বাকি সব row-এও apply হবে</small>`;
   document.getElementById('reqNoInput').value = '';
   document.getElementById('reqPopup').style.display = 'flex';
@@ -1044,9 +1292,9 @@ function openTransferPopup(i){
   pendingTransferIndex = i;
   const item = currentFloorData[i];
   const floor = document.getElementById('floor').value;
-  const presentNow = Number(document.getElementById(`b${i}`).innerText)||0;
+  const presentNow = Number(document.getElementById(`b${i}`)?.innerText)||0;
   document.getElementById('transferItemInfo').innerHTML =
-    `<b>${item[1]}</b> | ${item[2]} | Size ${item[3]} | ${item[4]}<br>
+    `<b>${item.itemCode}</b> | ${item.needleType} | Size ${item.size} | ${item.brand}<br>
      Present Stock: <b style="color:${presentNow<0?'#dc2626':'#059669'}">${presentNow}</b>`;
   const sel = document.getElementById('transferToFloor');
   sel.innerHTML = '<option value="">-- To Floor নির্বাচন করুন --</option>';
@@ -1078,7 +1326,7 @@ async function confirmTransfer(){
   if(qty<=0){ alert('❌ Qty দিন!'); return; }
   if(!receiverName){ alert('❌ Receiver Name দিন!'); return; }
   if(!reqNo){ alert('❌ Requisition No. দিন!'); return; }
-  const presentNow = Number(document.getElementById(`b${i}`).innerText)||0;
+  const presentNow = Number(document.getElementById(`b${i}`)?.innerText)||0;
   if(qty > presentNow){
     if(!confirm(`⚠️ Present Stock মাত্র ${presentNow}, আপনি ${qty} transfer করতে চান। Continue?`)) return;
   }
@@ -1102,12 +1350,12 @@ async function confirmTransfer(){
       }else{
         toRows = toItems.map(it=>({
           sl:it[0], itemCode:it[1], needleType:it[2], size:it[3],
-          brand:it[4], unitPrice:it[5], opening:it[6],
+          brand:it[4], unitPrice:it[5], opening:it[6], isCustom:false,
           previous:it[6], receive:0, delivery:0, present:it[6], bn:0,
           receiveReqNo:'', transferIn:[], transferOut:[]
         }));
       }
-      const toItemIdx = toRows.findIndex(r => r.itemCode===item[1] && r.size===item[3]);
+      const toItemIdx = toRows.findIndex(r => r.itemCode===item.itemCode && r.size===item.size);
       if(toItemIdx >= 0){
         toRows[toItemIdx].receive = (Number(toRows[toItemIdx].receive)||0) + qty;
         toRows[toItemIdx].present = (Number(toRows[toItemIdx].previous)||0) + (Number(toRows[toItemIdx].receive)||0) - (Number(toRows[toItemIdx].delivery)||0);
@@ -1115,7 +1363,7 @@ async function confirmTransfer(){
         if(!toRows[toItemIdx].transferIn) toRows[toItemIdx].transferIn = [];
         toRows[toItemIdx].transferIn.push({fromFloor, qty, receiverName, reqNo, date});
       }else{
-        showToast(`⚠️ To Floor তে ${item[1]} (Size ${item[3]}) পাওয়া যায়নি`);
+        showToast(`⚠️ To Floor তে ${item.itemCode} (Size ${item.size}) পাওয়া যায়নি`);
       }
       const toOperator = toFloorSaved ? (toFloorSaved.operator||'Transfer') : 'Transfer';
       await saveToSupabase(toFloor, date, toOperator, toRows, false);
@@ -1123,7 +1371,7 @@ async function confirmTransfer(){
   }
 
   hideLoading();
-  showToast(`✅ Transfer: ${qty} pcs ${item[1]} → ${toFloor.split('(')[0].trim()}`);
+  showToast(`✅ Transfer: ${qty} pcs ${item.itemCode} → ${toFloor.split('(')[0].trim()}`);
 }
 
 function updateTransferOutTag(i){
@@ -1179,15 +1427,10 @@ async function loadTransferReport(){
                 if(row.transferOut && row.transferOut.length){
                   row.transferOut.forEach(t=>{
                     allTransfers.push({
-                      date: rec.report_date,
-                      fromFloor: rec.floor,
-                      toFloor: t.toFloor,
-                      itemCode: row.itemCode,
-                      needleType: row.needleType,
-                      size: row.size,
-                      qty: t.qty,
-                      receiverName: t.receiverName,
-                      reqNo: t.reqNo
+                      date: rec.report_date, fromFloor: rec.floor,
+                      toFloor: t.toFloor, itemCode: row.itemCode,
+                      needleType: row.needleType, size: row.size,
+                      qty: t.qty, receiverName: t.receiverName, reqNo: t.reqNo
                     });
                   });
                 }
@@ -1207,19 +1450,16 @@ async function loadTransferReport(){
     return;
   }
 
-  let grandTotal = 0;
-  let html = '';
+  let grandTotal = 0, html = '';
   allTransfers.forEach(t=>{
     const qty = Number(t.qty)||0;
     grandTotal += qty;
     html += `<tr>
       <td>${t.date}</td>
       <td style="text-align:left;font-size:8px">${t.fromFloor.replace(/_NEW|_RUNNING/,'')}</td>
-      <td style="text-align:left;font-size:8px">${t.toFloor.replace(/_NEW|_RUNNING/,'')}</td>
-      <td>${t.itemCode}</td>
-      <td style="font-size:8px">${t.needleType||''}</td>
-      <td>${t.size||''}</td>
-      <td><b>${qty}</b></td>
+      <td style="text-align:left;font-size:8px">${(t.toFloor||'').replace(/_NEW|_RUNNING/,'')}</td>
+      <td>${t.itemCode}</td><td style="font-size:8px">${t.needleType||''}</td>
+      <td>${t.size||''}</td><td><b>${qty}</b></td>
       <td style="font-size:8px">${t.receiverName||''}</td>
       <td style="font-size:8px">${t.reqNo||''}</td>
     </tr>`;
@@ -1248,86 +1488,48 @@ async function searchRequisition(){
   const q = document.getElementById('reqSearchInput').value.trim();
   if(!q){ alert('❌ Requisition Number লিখুন'); return; }
   if(!navigator.onLine){ showToast('📴 Offline — Search করতে Online থাকতে হবে'); return; }
-
   document.getElementById('reqSearchBody').innerHTML = '<tr><td colspan="8" style="padding:10px;color:#64748b">Searching...</td></tr>';
-
   try{
     const companyId = await getCompanyId();
     if(!companyId){ document.getElementById('reqSearchBody').innerHTML='<tr><td colspan="8">Company error</td></tr>'; return; }
-
-    const {data, error} = await supabase.from('needle_reports')
-      .select('floor, report_date, rows')
-      .eq('company_id', companyId);
-    if(error){ console.error(error); document.getElementById('reqSearchBody').innerHTML='<tr><td colspan="8">Error: '+error.message+'</td></tr>'; return; }
-
+    const {data, error} = await supabase.from('needle_reports').select('floor, report_date, rows').eq('company_id', companyId);
+    if(error){ document.getElementById('reqSearchBody').innerHTML='<tr><td colspan="8">Error: '+error.message+'</td></tr>'; return; }
     const qLower = q.toLowerCase();
     let results = [];
-
     (data||[]).forEach(rec=>{
       if(!rec.rows || !Array.isArray(rec.rows)) return;
       rec.rows.forEach(row=>{
         if(row.receiveReqNo && String(row.receiveReqNo).toLowerCase()===qLower){
-          results.push({
-            date: rec.report_date, floor: rec.floor, source: '📥 Receive',
-            itemCode: row.itemCode, needleType: row.needleType, size: row.size,
-            qty: row.receive, detail: 'Req: '+row.receiveReqNo
-          });
+          results.push({date:rec.report_date,floor:rec.floor,source:'📥 Receive',itemCode:row.itemCode,needleType:row.needleType,size:row.size,qty:row.receive,detail:'Req: '+row.receiveReqNo});
         }
-        if(row.transferOut && row.transferOut.length){
-          row.transferOut.forEach(t=>{
-            if(t.reqNo && String(t.reqNo).toLowerCase()===qLower){
-              results.push({
-                date: rec.report_date, floor: rec.floor, source: '🚚 Transfer Out → '+(t.toFloor||'').split('(')[0].trim(),
-                itemCode: row.itemCode, needleType: row.needleType, size: row.size,
-                qty: t.qty, detail: 'Receiver: '+(t.receiverName||'-')
-              });
-            }
-          });
-        }
-        if(row.transferIn && row.transferIn.length){
-          row.transferIn.forEach(t=>{
-            if(t.reqNo && String(t.reqNo).toLowerCase()===qLower){
-              results.push({
-                date: rec.report_date, floor: rec.floor, source: '📦 Transfer In ← '+(t.fromFloor||'').split('(')[0].trim(),
-                itemCode: row.itemCode, needleType: row.needleType, size: row.size,
-                qty: t.qty, detail: 'Receiver: '+(t.receiverName||'-')
-              });
-            }
-          });
-        }
+        (row.transferOut||[]).forEach(t=>{
+          if(t.reqNo && String(t.reqNo).toLowerCase()===qLower){
+            results.push({date:rec.report_date,floor:rec.floor,source:'🚚 Transfer Out → '+(t.toFloor||'').split('(')[0].trim(),itemCode:row.itemCode,needleType:row.needleType,size:row.size,qty:t.qty,detail:'Receiver: '+(t.receiverName||'-')});
+          }
+        });
+        (row.transferIn||[]).forEach(t=>{
+          if(t.reqNo && String(t.reqNo).toLowerCase()===qLower){
+            results.push({date:rec.report_date,floor:rec.floor,source:'📦 Transfer In ← '+(t.fromFloor||'').split('(')[0].trim(),itemCode:row.itemCode,needleType:row.needleType,size:row.size,qty:t.qty,detail:'Receiver: '+(t.receiverName||'-')});
+          }
+        });
       });
     });
-
-    results.sort((a,b)=> a.date.localeCompare(b.date));
-
+    results.sort((a,b)=>a.date.localeCompare(b.date));
     if(!results.length){
-      document.getElementById('reqSearchBody').innerHTML = '<tr><td colspan="8" style="padding:10px;color:#94a3b8;text-align:center">এই Requisition Number এ কোনো রেকর্ড পাওয়া যায়নি</td></tr>';
+      document.getElementById('reqSearchBody').innerHTML = '<tr><td colspan="8" style="padding:10px;color:#94a3b8;text-align:center">কোনো রেকর্ড পাওয়া যায়নি</td></tr>';
       document.getElementById('reqSearchGrandTotal').innerText = '0';
       document.getElementById('reqSearchFooter').innerText = '0 records found for "'+q+'"';
       return;
     }
-
-    let grandTotal = 0;
-    let html = '';
+    let grandTotal=0, html='';
     results.forEach(r=>{
-      const qty = Number(r.qty)||0;
-      grandTotal += qty;
-      html += `<tr>
-        <td>${r.date}</td>
-        <td style="text-align:left;font-size:8px">${r.floor.replace(/_NEW|_RUNNING/,'')}</td>
-        <td style="text-align:left;font-size:8px">${r.source}</td>
-        <td>${r.itemCode}</td>
-        <td style="font-size:8px">${r.needleType||''}</td>
-        <td>${r.size||''}</td>
-        <td><b>${qty}</b></td>
-        <td style="font-size:8px">${r.detail||''}</td>
-      </tr>`;
+      const qty=Number(r.qty)||0; grandTotal+=qty;
+      html+=`<tr><td>${r.date}</td><td style="text-align:left;font-size:8px">${r.floor.replace(/_NEW|_RUNNING/,'')}</td><td style="text-align:left;font-size:8px">${r.source}</td><td>${r.itemCode}</td><td style="font-size:8px">${r.needleType||''}</td><td>${r.size||''}</td><td><b>${qty}</b></td><td style="font-size:8px">${r.detail||''}</td></tr>`;
     });
     document.getElementById('reqSearchBody').innerHTML = html;
     document.getElementById('reqSearchGrandTotal').innerText = grandTotal.toLocaleString();
     document.getElementById('reqSearchFooter').innerText = `${results.length} records | Total Qty: ${grandTotal} pcs | Req: "${q}"`;
   }catch(e){
-    console.error(e);
     document.getElementById('reqSearchBody').innerHTML = '<tr><td colspan="8">Error: '+e.message+'</td></tr>';
   }
 }
@@ -1342,10 +1544,7 @@ function checkNegativeStock(){
     const row = document.getElementById(`row${i}`);
     if(present<0){
       row && row.classList.add('negative-row');
-      if(negativeRowIndex<0){
-        negativeRowIndex = i;
-        showNegativeStockPopup(present);
-      }
+      if(negativeRowIndex<0){ negativeRowIndex=i; showNegativeStockPopup(present); }
     }else{
       row && row.classList.remove('negative-row');
     }
@@ -1358,8 +1557,8 @@ function showNegativeStockPopup(present){
   const item = currentFloorData[negativeRowIndex];
   document.getElementById('popupDetails').innerHTML = `
     <div><span class="label">Floor:</span><span class="value">${floor.split('(')[0].trim()}</span></div>
-    <div><span class="label">Item Code:</span><span class="value">${item[1]}</span></div>
-    <div><span class="label">Type:</span><span class="value">${item[2]} Size ${item[3]}</span></div>
+    <div><span class="label">Item Code:</span><span class="value">${item.itemCode}</span></div>
+    <div><span class="label">Type:</span><span class="value">${item.needleType} Size ${item.size}</span></div>
     <div><span class="label">Present:</span><span class="value" style="color:#dc2626;font-weight:bold">${present}</span></div>`;
   document.getElementById('negativePopup').style.display = 'flex';
 }
@@ -1380,8 +1579,14 @@ function fixNegativeRow(){
 // =========================================
 function buildRows(){
   return currentFloorData.map((item,i)=>({
-    sl:item[0], itemCode:item[1], needleType:item[2], size:item[3],
-    brand:item[4], unitPrice:item[5], opening:item[6],
+    sl: i+1,
+    itemCode: item.itemCode,
+    needleType: item.needleType,
+    size: item.size,
+    brand: item.brand,
+    unitPrice: item.unitPrice,
+    opening: item.opening,
+    isCustom: item.isCustom||false,
     previous: Number(document.getElementById(`p${i}`)?.innerText)||0,
     receive: Number(document.getElementById(`r${i}`)?.value)||0,
     delivery: Number(document.getElementById(`d${i}`)?.value)||0,
@@ -1408,7 +1613,7 @@ async function saveData(){
         const t = document.getElementById(`reqTag${i}`);
         if(t) t.textContent = '📋 '+floorReqNo;
       }else{
-        alert(`❌ Row ${i+1} (${currentFloorData[i][1]}) এর Rcvd ${r} এর জন্য Requisition Number দিন!`);
+        alert(`❌ Row ${i+1} (${currentFloorData[i].itemCode}) এর Rcvd ${r} এর জন্য Requisition Number দিন!`);
         checkReqNo(i);
         return;
       }
@@ -1422,18 +1627,16 @@ async function saveData(){
     showLoading('Saving...');
     const result = await saveToSupabase(floor, date, operator, rows);
     hideLoading();
-    if(result.success){
-      updateLastSync(`☁️ Supabase এ Saved — ${new Date().toLocaleTimeString()}`);
-    }
+    if(result.success) updateLastSync(`☁️ Supabase এ Saved — ${new Date().toLocaleTimeString()}`);
   }else{
     saveOffline(floor, date, operator, rows);
-    showToast('📴 Offline — Local এ Save হয়েছে, Online হলে Sync করুন');
+    showToast('📴 Offline — Local এ Save হয়েছে');
     updateLastSync(`📴 Offline saved — ${new Date().toLocaleTimeString()}`);
   }
 }
 
 // =========================================
-// ✅ MAIN loadData — সম্পূর্ণ নতুন carry-forward logic
+// ✅ MAIN loadData — FIXED carry-forward using itemCode+size matching
 // =========================================
 async function loadData(){
   const date = document.getElementById('postDate').value;
@@ -1445,14 +1648,12 @@ async function loadData(){
   }
 
   showLoading('Loading...');
-
-  // State reset
   rowReqNo={}; rowTransferOut={}; rowTransferIn={};
   floorReqNo=null;
   updateFloorReqBanner();
 
   try{
-    // ─── STEP 1: আজকের date এর data আছে কিনা দেখো ───
+    // STEP 1: আজকের data আছে কিনা দেখো
     let todayData = null;
     if(navigator.onLine){
       todayData = await loadFromSupabase(floor, date);
@@ -1463,9 +1664,10 @@ async function loadData(){
 
     if(todayData && todayData.rows && todayData.rows.length > 0){
       // ✅ আজকের data আছে — সরাসরি load করো
-      console.log(`[loadData] Today's data found for ${date} — loading directly`);
-      const previousArr = todayData.rows.map(r=>Number(r.previous)||0);
-      loadTable(previousArr, false, null);
+      console.log(`[loadData] Today's data found for ${date}`);
+
+      // Pass today's rows so custom rows get included and previous matches by key
+      loadTable(todayData.rows, false, null);
 
       todayData.rows.forEach((row,i)=>{
         if(!document.getElementById(`r${i}`)) return;
@@ -1488,32 +1690,24 @@ async function loadData(){
       updateLastSync(`☁️ Supabase থেকে Loaded — ${new Date().toLocaleTimeString()}`);
 
     }else{
-      // ✅ আজকের data নেই — সর্বশেষ save করা দিনের Present carry forward করো
-      console.log(`[loadData] No data for ${date} — searching for last saved record before this date`);
-
+      // STEP 2: আজকের data নেই — সর্বশেষ saved দিনের Present carry forward
+      console.log(`[loadData] No data for ${date} — searching last saved record`);
       let prevData = null;
       let prevDateUsed = null;
 
       if(navigator.onLine){
-        // ─── KEY FIX: findLastSavedBefore এখন সরাসরি DB query করে সবচেয়ে সাম্প্রতিক record পাবে ───
         prevData = await findLastSavedBefore(floor, date);
-        if(prevData){
-          prevDateUsed = prevData.report_date;
-          console.log(`[loadData] Will carry forward from: ${prevDateUsed}`);
-        }else{
-          console.log(`[loadData] No previous record at all — using opening stock`);
-        }
+        if(prevData) prevDateUsed = prevData.report_date;
       }
 
       if(prevData && prevData.rows && prevData.rows.length > 0){
-        // ✅ আগের সেভ করা দিনের Present গুলো নতুন দিনের Previous হিসেবে ব্যবহার করো
-        const prevPresentArr = prevData.rows.map(r => Number(r.present) || 0);
-        console.log(`[loadData] Carry-forward array (first 3):`, prevPresentArr.slice(0,3));
-        loadTable(prevPresentArr, true, prevDateUsed);
+        // ✅ KEY FIX: Pass prevData.rows, loadTable will match by itemCode+size
+        console.log(`[loadData] Carry-forward from: ${prevDateUsed}`);
+        loadTable(prevData.rows, true, prevDateUsed);
         updateLastSync(`⏪ ${prevDateUsed} এর Present carry হয়েছে — ${new Date().toLocaleTimeString()}`);
         showToast(`⏪ ${prevDateUsed} তারিখ থেকে stock carry হয়েছে!`);
       }else{
-        // কোনো আগের saved data নেই — opening stock দেখাও
+        // কোনো আগের data নেই
         console.log(`[loadData] Showing opening stock`);
         loadTable(null, false, null);
         updateLastSync(`📋 Opening stock দেখাচ্ছে — ${new Date().toLocaleTimeString()}`);
@@ -1533,9 +1727,7 @@ async function loadData(){
 
 async function manualRefresh(){
   showLoading('Refreshing...');
-  if(navigator.onLine){
-    await syncOfflineData();
-  }
+  if(navigator.onLine) await syncOfflineData();
   await loadData();
   showToast('🔄 Refreshed!');
 }
@@ -1550,7 +1742,7 @@ async function syncOfflineData(){
       const entry = data[key];
       if(entry && !entry.synced){
         const result = await saveToSupabase(floor, date, entry.operator, entry.rows, false);
-        if(result.success){ data[key].synced = true; synced++; }
+        if(result.success){ data[key].synced=true; synced++; }
       }
     }
     if(synced>0){
@@ -1567,13 +1759,11 @@ async function deleteData(){
   const floor = document.getElementById('floor').value;
   if(!date){ alert('❌ Date select করুন'); return; }
   if(!confirm('⚠️ এই তারিখের ডাটা delete করবেন?')) return;
-
   try{
     const data = JSON.parse(localStorage.getItem(OFFLINE_KEY)||'{}');
     delete data[`${floor}__${date}`];
     localStorage.setItem(OFFLINE_KEY, JSON.stringify(data));
   }catch(e){}
-
   if(navigator.onLine){
     const companyId = await getCompanyId();
     if(companyId){
@@ -1591,13 +1781,7 @@ async function deleteData(){
 // =========================================
 function updateMonthlySummary(rows){
   let o=0,r=0,d=0,p=0,bn=0;
-  rows.forEach(row=>{
-    o+=Number(row.opening)||0;
-    r+=Number(row.receive)||0;
-    d+=Number(row.delivery)||0;
-    p+=Number(row.present)||0;
-    bn+=Number(row.bn)||0;
-  });
+  rows.forEach(row=>{ o+=Number(row.opening)||0; r+=Number(row.receive)||0; d+=Number(row.delivery)||0; p+=Number(row.present)||0; bn+=Number(row.bn)||0; });
   document.getElementById('monthOpening').innerText = o.toLocaleString();
   document.getElementById('monthReceive').innerText = r.toLocaleString();
   document.getElementById('monthDelivery').innerText = d.toLocaleString();
@@ -1615,25 +1799,25 @@ function exportExcel(){
   let html=`<h2>GMS COMPOSITE - NEEDLE DAILY POSTING</h2><h3>Floor: ${floor} | Date: ${date} | Operator: ${operator}</h3>
   <table border="1" style="border-collapse:collapse"><thead><tr style="background:#1e293b;color:white">
   <th>SL</th><th>CODE</th><th>TYPE</th><th>SIZE</th><th>BRAND</th><th>PRICE</th>
-  <th>Prev</th><th>Rcvd</th><th>ReqNo</th><th>Dvld</th><th>Present</th><th>BNR/BNF</th></tr></thead><tbody>`;
-  currentFloorData.forEach((_,i)=>{
-    html+=`<tr>
-    <td>${currentFloorData[i][0]}</td><td>${currentFloorData[i][1]}</td>
-    <td>${currentFloorData[i][2]}</td><td>${currentFloorData[i][3]}</td><td>${currentFloorData[i][4]}</td>
-    <td>${currentFloorData[i][5].toFixed(4)}</td>
+  <th>Prev</th><th>Rcvd</th><th>ReqNo</th><th>Dvld</th><th>Present</th><th>BNR/BNF</th><th>Custom</th></tr></thead><tbody>`;
+  currentFloorData.forEach((item,i)=>{
+    html+=`<tr ${item.isCustom?'style="background:#fef3c7"':''}>
+    <td>${i+1}</td><td>${item.itemCode}</td><td>${item.needleType}</td><td>${item.size}</td>
+    <td>${item.brand}</td><td>${Number(item.unitPrice).toFixed(4)}</td>
     <td>${document.getElementById(`p${i}`).innerText}</td>
     <td>${document.getElementById(`r${i}`).value||0}</td>
     <td>${rowReqNo[i]||''}</td>
     <td>${document.getElementById(`d${i}`).value||0}</td>
     <td>${document.getElementById(`b${i}`).innerText}</td>
-    <td>${document.getElementById(`bn${i}`).value||0}</td></tr>`;
+    <td>${document.getElementById(`bn${i}`).value||0}</td>
+    <td>${item.isCustom?'YES':''}</td></tr>`;
   });
   html+=`</tbody><tfoot><tr><td colspan="6" style="text-align:right">TOTAL:</td>
   <td>${document.getElementById('totalPrevious').innerText}</td>
   <td>${document.getElementById('totalReceive').innerText}</td><td></td>
   <td>${document.getElementById('totalDelivery').innerText}</td>
   <td>${document.getElementById('totalPresent').innerText}</td>
-  <td>${document.getElementById('totalBN').innerText}</td></tr></tfoot></table>`;
+  <td>${document.getElementById('totalBN').innerText}</td><td></td></tr></tfoot></table>`;
   const blob=new Blob([html],{type:'application/vnd.ms-excel'});
   const a=document.createElement('a'); a.href=URL.createObjectURL(blob);
   a.download=`needle-${floor.split('(')[0].trim()}-${date}.xls`; a.click();
@@ -1695,7 +1879,7 @@ document.addEventListener('keydown',e=>{
   }
 });
 
-// ── EXPOSE GLOBALS ──
+// EXPOSE GLOBALS
 window.saveData=saveData; window.loadData=loadData; window.deleteData=deleteData;
 window.exportExcel=exportExcel; window.exportPDF=exportPDF;
 window.calc=calc; window.updateTotal=updateTotal;
@@ -1707,6 +1891,8 @@ window.openTransferPopup=openTransferPopup; window.closeTransferPopup=closeTrans
 window.showTransferReport=showTransferReport; window.closeReportPopup=closeReportPopup; window.loadTransferReport=loadTransferReport;
 window.changeFloorReqNo=changeFloorReqNo;
 window.showReqSearch=showReqSearch; window.closeReqSearchPopup=closeReqSearchPopup; window.searchRequisition=searchRequisition;
+window.openAddRowPopup=openAddRowPopup; window.closeAddRowPopup=closeAddRowPopup; window.confirmAddRow=confirmAddRow;
+window.deleteCustomRow=deleteCustomRow;
 </script>
 </body>
 </html>
