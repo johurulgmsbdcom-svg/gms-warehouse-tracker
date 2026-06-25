@@ -963,15 +963,10 @@ function loadTable(prevMap={}, customRows=[], carried=false, prevDate=null){
     isCustom: false
   }));
 
-  // Add custom rows from saved data that aren't in base
-  // ✅ FIX: Check by isCustom flag OR by absence from base floorData (handles missing isCustom field)
+  // Add custom rows — customRows array is pre-filtered by loadData (non-base rows only)
   if(Array.isArray(customRows)){
     customRows.forEach(cr => {
       if(!cr || !cr.itemCode) return;
-      // A row is custom if isCustom===true OR if it doesn't exist in base floorData
-      const isCustomRow = cr.isCustom === true;
-      const existsInBase = (floorData[floor]||[]).some(b => b[1]===cr.itemCode && b[3]===cr.size);
-      if(!isCustomRow && existsInBase) return; // skip standard rows
       const existsInCurrent = currentFloorData.find(r => r.itemCode===cr.itemCode && r.size===cr.size);
       if(!existsInCurrent){
         currentFloorData.push({
@@ -1615,7 +1610,6 @@ async function loadData(){
     let prevDateUsed=null;
 
     if(navigator.onLine){
-      // ✅ Fetch BOTH in parallel for speed
       [todayData, prevData] = await Promise.all([
         loadFromSupabase(floor, date),
         findLastSavedBefore(floor, date)
@@ -1626,58 +1620,90 @@ async function loadData(){
       showToast('📴 Offline — Local data দেখাচ্ছে');
     }
 
-    // ✅ Build prevMap from last-saved record (ALWAYS use this for Previous column)
-    // This is the KEY fix: Previous = last saved date's Present, matched by itemCode+size
+    // =========================================================
+    // prevMap: itemCode__size -> present (from LAST saved date)
+    // এটাই আজকের "Previous" column এর value
+    // =========================================================
     const prevMap = prevData ? buildPrevMap(prevData.rows) : {};
-    const hasPrevData = prevData && prevData.rows && prevData.rows.length > 0;
+    const hasPrevData = !!(prevData && prevData.rows && prevData.rows.length > 0);
 
-    if(todayData && todayData.rows && todayData.rows.length>0){
-      // ── TODAY'S DATA EXISTS ──
-      // Use prevMap for Previous column, restore receive/delivery/bn from saved data
-      console.log(`[loadData] Today's data found. Carry source: ${prevDateUsed||'opening stock'}`);
+    // =========================================================
+    // BASE SET: কোন itemCode__size গুলো base floorData তে আছে
+    // =========================================================
+    const baseKeys = new Set((floorData[floor]||[]).map(b => b[1]+'__'+b[3]));
 
-      // Pass ALL saved rows so loadTable can detect custom ones even if flag is missing
-      const customRowsFromToday = todayData.rows || [];
-      loadTable(prevMap, customRowsFromToday, hasPrevData, prevDateUsed);
+    // =========================================================
+    // CUSTOM ROWS COLLECTOR: সব date থেকে custom rows একসাথে
+    // Rule: যে row টা baseKeys এ নেই সেটাই custom
+    // =========================================================
+    const customRowMap = {}; // key -> row object (latest version wins)
 
-      // Restore entered values from today's saved data
-      todayData.rows.forEach((row,i)=>{
-        // Match by itemCode+size for safe restore
-        const idx = currentFloorData.findIndex(r=>r.itemCode===row.itemCode && r.size===row.size);
-        if(idx<0) return;
-        if(document.getElementById(`r${idx}`)) document.getElementById(`r${idx}`).value=row.receive||'';
-        if(document.getElementById(`d${idx}`)) document.getElementById(`d${idx}`).value=row.delivery||'';
-        if(document.getElementById(`bn${idx}`)) document.getElementById(`bn${idx}`).value=row.bn||'';
+    // Step 1: prevData থেকে custom rows নাও
+    if(prevData && prevData.rows){
+      prevData.rows.forEach(r => {
+        const key = r.itemCode+'__'+r.size;
+        if(!baseKeys.has(key)){
+          customRowMap[key] = r; // prevData version
+        }
+      });
+    }
+
+    // Step 2: todayData থেকে custom rows নাও (override করবে prevData version)
+    if(todayData && todayData.rows){
+      todayData.rows.forEach(r => {
+        const key = r.itemCode+'__'+r.size;
+        if(!baseKeys.has(key)){
+          customRowMap[key] = r; // today version (more up to date)
+        }
+      });
+    }
+
+    // Final custom rows list
+    const allCustomRows = Object.values(customRowMap);
+
+    // =========================================================
+    // TABLE RENDER
+    // =========================================================
+    loadTable(prevMap, allCustomRows, hasPrevData, prevDateUsed);
+
+    if(todayData && todayData.rows && todayData.rows.length > 0){
+      // ── আজকের data আছে: receive/delivery/bn restore করো ──
+      console.log('[loadData] Today data found, carry source:', prevDateUsed||'opening');
+
+      todayData.rows.forEach(row => {
+        const idx = currentFloorData.findIndex(r => r.itemCode===row.itemCode && r.size===row.size);
+        if(idx < 0) return;
+        const rEl=document.getElementById('r'+idx);
+        const dEl=document.getElementById('d'+idx);
+        const bnEl=document.getElementById('bn'+idx);
+        if(rEl) rEl.value = row.receive||'';
+        if(dEl) dEl.value = row.delivery||'';
+        if(bnEl) bnEl.value = row.bn||'';
         calc(idx);
         if(row.receiveReqNo){
           rowReqNo[idx]=row.receiveReqNo;
-          const tag=document.getElementById(`reqTag${idx}`);
+          const tag=document.getElementById('reqTag'+idx);
           if(tag) tag.textContent='📋 '+row.receiveReqNo;
           if(!floorReqNo) floorReqNo=row.receiveReqNo;
         }
         if(row.transferOut&&row.transferOut.length){ rowTransferOut[idx]=row.transferOut; updateTransferOutTag(idx); }
         if(row.transferIn&&row.transferIn.length){ rowTransferIn[idx]=row.transferIn; updateTransferInTag(idx); }
       });
+
       updateFloorReqBanner();
       if(todayData.operator) document.getElementById('operatorName').value=todayData.operator;
       updateMonthlySummary(todayData.rows);
-      updateLastSync(`☁️ Loaded — Prev from: ${prevDateUsed||'opening stock'} — ${new Date().toLocaleTimeString()}`);
+      updateLastSync('☁️ Loaded | Prev: '+(prevDateUsed||'opening')+' | '+new Date().toLocaleTimeString());
 
     }else{
-      // ── NO TODAY DATA ──
-      // ✅ FIX: Pass custom rows from prevData so they carry forward to new dates
-      console.log(`[loadData] No today data. Carry source: ${prevDateUsed||'opening stock'}`);
-      // ✅ FIX: Pass ALL saved rows (not just isCustom) so loadTable can detect custom ones
-      // even if isCustom flag is missing/undefined in old saved data
-      const customRowsFromPrev = (prevData && prevData.rows) ? prevData.rows : [];
-      loadTable(prevMap, customRowsFromPrev, hasPrevData, prevDateUsed);
+      // ── আজকের data নেই: carry forward ──
+      console.log('[loadData] No today data, carry from:', prevDateUsed||'opening');
       updateMonthlySummary([]);
-
       if(hasPrevData){
-        updateLastSync(`⏪ ${prevDateUsed} থেকে carry — ${new Date().toLocaleTimeString()}`);
-        showToast(`⏪ ${prevDateUsed} তারিখ থেকে stock carry হয়েছে!`);
+        updateLastSync('⏪ '+prevDateUsed+' থেকে carry — '+new Date().toLocaleTimeString());
+        showToast('⏪ '+prevDateUsed+' তারিখ থেকে stock carry হয়েছে!');
       }else{
-        updateLastSync(`📋 Opening stock দেখাচ্ছে — ${new Date().toLocaleTimeString()}`);
+        updateLastSync('📋 Opening stock — '+new Date().toLocaleTimeString());
         showToast('📋 Opening stock দেখাচ্ছে');
       }
     }
