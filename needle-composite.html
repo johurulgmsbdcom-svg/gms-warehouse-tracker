@@ -964,17 +964,22 @@ function loadTable(prevMap={}, customRows=[], carried=false, prevDate=null){
   }));
 
   // Add custom rows from saved data that aren't in base
+  // ✅ FIX: Check by isCustom flag OR by absence from base floorData (handles missing isCustom field)
   if(Array.isArray(customRows)){
     customRows.forEach(cr => {
-      if(!cr.isCustom) return;
-      const exists = currentFloorData.find(r => r.itemCode===cr.itemCode && r.size===cr.size);
-      if(!exists){
+      if(!cr || !cr.itemCode) return;
+      // A row is custom if isCustom===true OR if it doesn't exist in base floorData
+      const isCustomRow = cr.isCustom === true;
+      const existsInBase = (floorData[floor]||[]).some(b => b[1]===cr.itemCode && b[3]===cr.size);
+      if(!isCustomRow && existsInBase) return; // skip standard rows
+      const existsInCurrent = currentFloorData.find(r => r.itemCode===cr.itemCode && r.size===cr.size);
+      if(!existsInCurrent){
         currentFloorData.push({
           sl: currentFloorData.length+1,
           itemCode: cr.itemCode,
-          needleType: cr.needleType,
+          needleType: cr.needleType||'',
           size: cr.size,
-          brand: cr.brand,
+          brand: cr.brand||'',
           unitPrice: cr.unitPrice||0,
           opening: cr.opening||0,
           isCustom: true
@@ -1631,8 +1636,8 @@ async function loadData(){
       // Use prevMap for Previous column, restore receive/delivery/bn from saved data
       console.log(`[loadData] Today's data found. Carry source: ${prevDateUsed||'opening stock'}`);
 
-      // Pass custom rows from today's saved data
-      const customRowsFromToday = todayData.rows.filter(r=>r.isCustom);
+      // Pass ALL saved rows so loadTable can detect custom ones even if flag is missing
+      const customRowsFromToday = todayData.rows || [];
       loadTable(prevMap, customRowsFromToday, hasPrevData, prevDateUsed);
 
       // Restore entered values from today's saved data
@@ -1662,7 +1667,9 @@ async function loadData(){
       // ── NO TODAY DATA ──
       // ✅ FIX: Pass custom rows from prevData so they carry forward to new dates
       console.log(`[loadData] No today data. Carry source: ${prevDateUsed||'opening stock'}`);
-      const customRowsFromPrev = (prevData && prevData.rows) ? prevData.rows.filter(r=>r.isCustom) : [];
+      // ✅ FIX: Pass ALL saved rows (not just isCustom) so loadTable can detect custom ones
+      // even if isCustom flag is missing/undefined in old saved data
+      const customRowsFromPrev = (prevData && prevData.rows) ? prevData.rows : [];
       loadTable(prevMap, customRowsFromPrev, hasPrevData, prevDateUsed);
       updateMonthlySummary([]);
 
