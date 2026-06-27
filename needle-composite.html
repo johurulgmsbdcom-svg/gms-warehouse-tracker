@@ -75,6 +75,7 @@ body.light #summaryTable thead{background:#334155}
 .offline-indicator{position:fixed;top:0;left:0;right:0;background:#f59e0b;color:#000;padding:6px 10px;text-align:center;font-size:11px;font-weight:700;z-index:9999;display:none;animation:slideDown 0.3s}
 @keyframes slideDown{from{transform:translateY(-100%)}to{transform:translateY(0)}}
 .floor-badge{display:inline-block;padding:2px 8px;background:linear-gradient(135deg,#8b5cf6,#3b82f6);color:white;border-radius:10px;font-size:10px;font-weight:600;margin-left:6px}
+.carry-badge{display:inline-block;padding:2px 8px;background:linear-gradient(135deg,#f59e0b,#d97706);color:#000;border-radius:10px;font-size:9px;font-weight:700;margin-left:6px}
 .carry-info{display:block;margin-top:4px;font-size:10px;color:#fbbf24;text-align:center;font-weight:600}
 body.light .carry-info{color:#b45309}
 .loading-overlay{position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(15,23,42,0.9);z-index:10000;display:none;justify-content:center;align-items:center;flex-direction:column}
@@ -87,12 +88,17 @@ body.light .loading-text{color:#475569}
 .theme-toggle{position:fixed;top:6px;right:6px;z-index:1000}
 .last-sync{text-align:center;font-size:9px;color:#94a3b8;margin-top:3px}
 body.light .last-sync{color:#64748b}
+.carry-source-bar{background:#1e3a5f;border:1px solid #3b82f6;border-radius:6px;padding:5px 10px;font-size:9px;color:#93c5fd;text-align:center;margin:3px 0;display:none}
+body.light .carry-source-bar{background:#dbeafe;color:#1e40af;border-color:#3b82f6}
+/* All Excel Progress */
 .excel-progress-bar{width:100%;background:#e2e8f0;border-radius:6px;height:14px;margin:8px 0;overflow:hidden}
 .excel-progress-fill{height:100%;background:linear-gradient(90deg,#f59e0b,#d97706);border-radius:6px;transition:width 0.3s;width:0%}
-.excel-floor-status{font-size:10px;color:#475569;margin:3px 0;padding:4px 8px;background:#f8fafc;border-radius:4px;text-align:left;max-height:200px;overflow-y:auto}
+.excel-floor-status{font-size:10px;color:#475569;margin:3px 0;padding:4px 8px;background:#f8fafc;border-radius:4px;text-align:left;max-height:180px;overflow-y:auto}
 .excel-floor-status div{padding:2px 0;border-bottom:1px solid #e2e8f0}
 .excel-floor-status div:last-child{border-bottom:none}
-.status-ok{color:#059669}.status-empty{color:#94a3b8}.status-loading{color:#f59e0b}
+.status-ok{color:#059669}
+.status-empty{color:#94a3b8}
+.status-loading{color:#f59e0b}
 @media(max-width:480px){
   body{padding:1px}
   h2{font-size:11px;margin:2px 0 3px}
@@ -101,7 +107,7 @@ body.light .last-sync{color:#64748b}
   button{padding:3px 4px;font-size:8px;margin:1px;border-radius:4px}
   select,input[type="date"],input[type="text"]{max-width:75px;padding:2px;font-size:9px;border-radius:4px}
   label{font-size:8px!important;margin-right:2px!important}
-  .floor-badge{font-size:7px;padding:1px 4px;margin-left:3px}
+  .floor-badge,.carry-badge{font-size:7px;padding:1px 4px;margin-left:3px}
   .carry-info{font-size:8px;margin-top:2px}
   .last-sync{font-size:7px;margin-top:2px}
   .tableWrap{margin:3px 0}
@@ -121,7 +127,7 @@ body.light .last-sync{color:#64748b}
 }
 @media print{
   html,body{background:white!important;color:black!important;overflow:visible!important}
-  button,input[type="date"],select,input[type="text"],.offline-indicator,.loading-overlay,.theme-toggle,.last-sync,.floor-req-banner{display:none!important}
+  button,input[type="date"],select,input[type="text"],.offline-indicator,.loading-overlay,.theme-toggle,.last-sync,.floor-req-banner,.carry-source-bar{display:none!important}
   .tableWrap,.summaryWrap{overflow:visible!important}
   #reportTable,#summaryTable{width:100%!important;color:black!important;background:white!important}
   #reportTable th,#reportTable td{font-size:8px;padding:2px}
@@ -202,9 +208,11 @@ body.light .last-sync{color:#64748b}
       </optgroup>
     </select>
     <span class="floor-badge" id="categoryBadge">NEW</span>
+    <span class="carry-badge" id="carryBadge" style="display:none">⏪ Carried</span>
   </div>
 </div>
 <div class="carry-info" id="carryInfo" style="display:none"></div>
+<div class="carry-source-bar" id="carrySourceBar"></div>
 
 <div class="floor-req-banner" id="floorReqBanner" onclick="changeFloorReqNo()">
   📋 Floor Req No: <span id="floorReqNoDisplay"></span> &nbsp;(পরিবর্তন করতে ক্লিক করুন)
@@ -362,7 +370,7 @@ body.light .last-sync{color:#64748b}
       <input type="number" id="newOpening" placeholder="0" step="1" min="0" autocomplete="off">
     </div>
     <button class="popup-fix-btn" onclick="confirmAddRow()">✅ Row যোগ করুন</button>
-    <div class="popup-footer">⚠️ নতুন row যোগ করলে শুধু এই তারিখের জন্য থাকবে।</div>
+    <div class="popup-footer">⚠️ নতুন row যোগ করলে শুধু এই তারিখের জন্য থাকবে। Save করলে পরের দিনেও Carry হবে।</div>
   </div>
 </div>
 
@@ -405,7 +413,7 @@ body.light .last-sync{color:#64748b}
     <span class="popup-close" onclick="closeReqSearchPopup()">×</span>
     <div class="popup-title">🔎 Requisition Search</div>
     <div style="display:flex;gap:6px;margin-bottom:10px;flex-wrap:wrap">
-      <input type="text" id="reqSearchInput" placeholder="Requisition No লিখুন" style="flex:2;min-width:180px;max-width:none;background:#f1f5f9;color:#0f172a;border:1px solid #cbd5e1;padding:6px;border-radius:6px">
+      <input type="text" id="reqSearchInput" placeholder="Requisition No লিখুন (যেমন: REQ-2026-0456)" style="flex:2;min-width:180px;max-width:none;background:#f1f5f9;color:#0f172a;border:1px solid #cbd5e1;padding:6px;border-radius:6px">
       <button onclick="searchRequisition()" style="background:#0891b2;padding:6px 12px;border-radius:6px;white-space:nowrap">🔍 Search</button>
     </div>
     <div style="overflow-x:auto">
@@ -430,7 +438,7 @@ body.light .last-sync{color:#64748b}
   </div>
 </div>
 
-<!-- ALL FLOORS EXCEL POPUP -->
+<!-- ===== ALL FLOORS EXCEL POPUP ===== -->
 <div id="allExcelPopup">
   <div class="popup-content">
     <span class="popup-close" onclick="closeAllExcelPopup()">×</span>
@@ -442,8 +450,7 @@ body.light .last-sync{color:#64748b}
     <div id="allExcelInfo" style="font-size:11px;color:#475569;margin:6px 0;padding:8px;background:#f1f5f9;border-radius:6px;line-height:1.6">
       ✅ সব <b>28টি Floor</b> এর data একটি Excel এ download হবে<br>
       📋 প্রতিটি floor আলাদা <b>Sheet</b> এ থাকবে<br>
-      📊 একটি <b>SUMMARY</b> sheet সব floor এর total সহ থাকবে<br>
-      ⚡ <b>সঠিক Previous Stock</b> গণনা হবে (মাসের cumulative logic)
+      📊 একটি <b>SUMMARY</b> sheet সব floor এর total সহ থাকবে
     </div>
     <div id="allExcelProgressWrap" style="display:none">
       <div style="font-size:11px;font-weight:600;color:#334155;margin-bottom:4px" id="allExcelProgressLabel">Loading floors...</div>
@@ -814,6 +821,7 @@ const floorData = {
   ]
 };
 
+// All 28 floor names in order
 const ALL_FLOORS = Object.keys(floorData);
 
 // =========================================
@@ -826,16 +834,8 @@ let floorReqNo = null;
 let rowTransferOut = {};
 let rowTransferIn = {};
 let pendingReqIndex = null;
+let pendingReqValue = null;
 let pendingTransferIndex = null;
-
-// ===== মূল পরিবর্তন: মাসের cumulative data ট্র্যাক করা =====
-let dynamicOpening = null;      // মাসের শুরুর opening (prev month এর last present)
-let monthlyReceive = null;      // এই মাসে আজ পর্যন্ত মোট receive (per row)
-let monthlyDelivery = null;     // এই মাসে আজ পর্যন্ত মোট delivery (per row)
-let monthlyBN = null;           // এই মাসে আজ পর্যন্ত মোট BN (per row)
-let todayReceive = null;        // শুধু আজকের receive
-let todayDelivery = null;       // শুধু আজকের delivery
-let todayBN = null;             // শুধু আজকের BN
 
 // =========================================
 // 💾 OFFLINE STORAGE
@@ -891,39 +891,30 @@ async function loadFromSupabase(floor, date){
   return data;
 }
 
-// ===== মূল নতুন function: পুরো মাসের সব data load =====
-async function loadMonthData(floor, month){
+async function findLastSavedBefore(floor, date){
   const companyId = await getCompanyId();
-  if(!companyId) return [];
+  if(!companyId) return null;
   const {data,error} = await supabase.from('needle_reports')
     .select('floor, report_date, rows, operator')
     .eq('company_id',companyId)
     .eq('floor',floor)
-    .like('report_date', month+'%')  // যেমন: '2026-06%'
-    .order('report_date',{ascending:true});
-  if(error){ console.error('[loadMonthData] error:', error); return []; }
-  return data||[];
-}
-
-// আগের মাসের শেষ দিনের data খোঁজো (opening stock এর জন্য)
-async function findPrevMonthLastData(floor, currentMonth){
-  const companyId = await getCompanyId();
-  if(!companyId) return null;
-  // currentMonth = '2026-06', তাই আগের মাস = '2026-05'
-  const [y,m] = currentMonth.split('-').map(Number);
-  let pm = m-1; let py = y;
-  if(pm < 1){ pm = 12; py--; }
-  const prevMonth = `${py}-${String(pm).padStart(2,'0')}`;
-  const {data,error} = await supabase.from('needle_reports')
-    .select('floor, report_date, rows')
-    .eq('company_id',companyId)
-    .eq('floor',floor)
-    .like('report_date', prevMonth+'%')
+    .lt('report_date', date)
     .order('report_date',{ascending:false})
     .limit(1)
     .maybeSingle();
-  if(error){ console.error('[findPrevMonthLastData] error:', error); return null; }
+  if(error){ console.error('[CarryForward] Query error:', error); return null; }
   return data;
+}
+
+function buildPrevMap(savedRows){
+  const map = {};
+  if(savedRows && Array.isArray(savedRows)){
+    savedRows.forEach(r => {
+      const key = `${r.itemCode}__${r.size}`;
+      map[key] = Number(r.present) || 0;
+    });
+  }
+  return map;
 }
 
 // =========================================
@@ -937,11 +928,33 @@ function updateCategoryBadge(){
   else { badge.textContent=''; }
 }
 
+function updateCarryIndicator(carried, prevDate){
+  const badge = document.getElementById('carryBadge');
+  const info = document.getElementById('carryInfo');
+  const bar = document.getElementById('carrySourceBar');
+  if(carried && prevDate){
+    badge.style.display='inline-block';
+    badge.textContent='⏪ Carried from '+prevDate;
+    info.style.display='block';
+    info.innerHTML=`✅ ${prevDate} তারিখের Present Stock আজকের Previous হিসেবে carry হয়েছে`;
+    bar.style.display='block';
+    bar.textContent=`🔍 Carry Source: ${prevDate} — সর্বশেষ save করা দিনের Present → আজকের Previous`;
+  }else{
+    badge.style.display='none';
+    info.style.display='none';
+    bar.style.display='none';
+  }
+}
+
 function updateFloorReqBanner(){
   const banner = document.getElementById('floorReqBanner');
   const display = document.getElementById('floorReqNoDisplay');
-  if(floorReqNo){ banner.style.display='block'; display.textContent=floorReqNo; }
-  else{ banner.style.display='none'; }
+  if(floorReqNo){
+    banner.style.display='block';
+    display.textContent=floorReqNo;
+  }else{
+    banner.style.display='none';
+  }
 }
 
 function changeFloorReqNo(){
@@ -950,7 +963,11 @@ function changeFloorReqNo(){
     floorReqNo = newNo.trim();
     currentFloorData.forEach((_,i)=>{
       const val = Number(document.getElementById(`r${i}`)?.value)||0;
-      if(val > 0){ rowReqNo[i] = floorReqNo; const t = document.getElementById(`reqTag${i}`); if(t) t.textContent = '📋 '+floorReqNo; }
+      if(val > 0){
+        rowReqNo[i] = floorReqNo;
+        const t = document.getElementById(`reqTag${i}`);
+        if(t) t.textContent = '📋 '+floorReqNo;
+      }
     });
     updateFloorReqBanner();
     showToast('✅ Req No updated: '+floorReqNo);
@@ -958,9 +975,9 @@ function changeFloorReqNo(){
 }
 
 // =========================================
-// 🏗️ LOAD TABLE (শুধু UI render করে)
+// 🏗️ LOAD TABLE
 // =========================================
-function loadTable(previousList=null, customRows=[]){
+function loadTable(prevMap={}, customRows=[], carried=false, prevDate=null){
   const floor = document.getElementById('floor').value;
   const baseItems = floorData[floor] || [];
 
@@ -984,17 +1001,14 @@ function loadTable(previousList=null, customRows=[]){
 
   updateCategoryBadge();
   rowReqNo={}; rowTransferOut={}; rowTransferIn={};
-  floorReqNo=null; updateFloorReqBanner();
+  floorReqNo=null;
+  updateFloorReqBanner();
   document.getElementById('bnHeader').innerText = floor.includes('_NEW') ? 'BNR' : 'BNF';
-  document.getElementById('carryInfo').style.display = 'none';
 
   let html = '';
   currentFloorData.forEach((item, i) => {
-    // previousList থেকে previous নাও, না হলে opening ব্যবহার করো
-    const prev = (previousList && previousList[i] !== undefined)
-      ? (Number(previousList[i]) || 0)
-      : (dynamicOpening && dynamicOpening[i] !== undefined ? Number(dynamicOpening[i]) : Number(item.opening) || 0);
-
+    const key = `${item.itemCode}__${item.size}`;
+    const previous = prevMap.hasOwnProperty(key) ? prevMap[key] : item.opening;
     const rowClass = item.isCustom ? 'class="custom-row-indicator"' : '';
     html += `
       <tr id="row${i}" ${rowClass}>
@@ -1002,7 +1016,7 @@ function loadTable(previousList=null, customRows=[]){
         <td>${item.itemCode}</td><td>${item.needleType}</td><td>${item.size}</td>
         <td>${item.brand}</td>
         <td style="text-align:right">${Number(item.unitPrice).toFixed(4)}</td>
-        <td id="p${i}">${prev}</td>
+        <td id="p${i}">${previous}</td>
         <td id="rcvdCell${i}">
           <input class="qtyInput" type="number" id="r${i}" oninput="calc(${i})" onblur="checkReqNo(${i})" step="1" min="0">
           <span class="req-tag" id="reqTag${i}"></span>
@@ -1011,7 +1025,7 @@ function loadTable(previousList=null, customRows=[]){
           <input class="qtyInput" type="number" id="d${i}" oninput="calc(${i})" step="1" min="0">
           <span class="transfer-tag" id="trfOutTag${i}"></span>
         </td>
-        <td id="b${i}" style="font-weight:bold">${prev}</td>
+        <td id="b${i}" style="font-weight:bold">${previous}</td>
         <td><input class="qtyInput" type="number" id="bn${i}" oninput="updateTotal()" step="1" min="0"></td>
         <td>
           <button class="transferBtn" onclick="openTransferPopup(${i})">🔄 Trf</button>
@@ -1025,170 +1039,8 @@ function loadTable(previousList=null, customRows=[]){
 
   document.getElementById('tableBody').innerHTML = html;
   updateTotal();
+  updateCarryIndicator(carried, prevDate);
   setTimeout(checkNegativeStock, 100);
-}
-
-// =========================================
-// ✅ MAIN loadData — Document 2 এর logic অনুসরণ করে
-// =========================================
-async function loadData(){
-  const date = document.getElementById('postDate').value;
-  const floor = document.getElementById('floor').value;
-  if(!date||!floor){ loadTable(); updateMonthlySummary(); return; }
-
-  showLoading('Loading...');
-  rowReqNo={}; rowTransferOut={}; rowTransferIn={};
-  floorReqNo=null; updateFloorReqBanner();
-  dynamicOpening=null; monthlyReceive=null; monthlyDelivery=null; monthlyBN=null;
-  todayReceive=null; todayDelivery=null; todayBN=null;
-
-  try{
-    const month = date.slice(0,7); // যেমন: '2026-06'
-    const items = floorData[floor]||[];
-
-    // ─── ১. আগের মাসের শেষ দিনের data থেকে opening বের করো ───
-    let prevMonthData = null;
-    if(navigator.onLine) prevMonthData = await findPrevMonthLastData(floor, month);
-
-    // dynamicOpening: আগের মাসের last present, না হলে hardcoded opening
-    dynamicOpening = items.map((it,i) => {
-      if(prevMonthData?.rows?.[i]) return Number(prevMonthData.rows[i].present)||0;
-      return Number(it[6])||0;
-    });
-
-    // ─── ২. এই মাসের সব দিনের data load করো ───
-    let allMonthDays = [];
-    if(navigator.onLine) allMonthDays = await loadMonthData(floor, month);
-
-    // আজকের data আলাদা করো
-    const todayData = allMonthDays.find(d => d.report_date === date) || null;
-    // আজকের আগের দিনগুলো
-    const prevDays = allMonthDays.filter(d => d.report_date < date);
-
-    // ─── ৩. এই মাসে আজ পর্যন্ত cumulative totals (Document 2 এর মতো) ───
-    monthlyReceive  = Array(items.length).fill(0);
-    monthlyDelivery = Array(items.length).fill(0);
-    monthlyBN       = Array(items.length).fill(0);
-    todayReceive    = Array(items.length).fill(0);
-    todayDelivery   = Array(items.length).fill(0);
-    todayBN         = Array(items.length).fill(0);
-
-    // সব দিনের sum (আজ সহ)
-    allMonthDays.forEach(day => {
-      if(!day.rows) return;
-      // row match করো itemCode + size দিয়ে
-      day.rows.forEach(row => {
-        const idx = items.findIndex(it => it[1]===row.itemCode && it[3]===row.size);
-        if(idx < 0) return;
-        monthlyReceive[idx]  += Number(row.receive)||0;
-        monthlyDelivery[idx] += Number(row.delivery)||0;
-        monthlyBN[idx]       += Number(row.bn)||0;
-      });
-    });
-
-    // শুধু আজকের values
-    if(todayData?.rows){
-      todayData.rows.forEach(row => {
-        const idx = items.findIndex(it => it[1]===row.itemCode && it[3]===row.size);
-        if(idx < 0) return;
-        todayReceive[idx]  = Number(row.receive)||0;
-        todayDelivery[idx] = Number(row.delivery)||0;
-        todayBN[idx]       = Number(row.bn)||0;
-      });
-    }
-
-    // ─── ৪. Previous = Opening + (মাসের cumulative আজ বাদে) ───
-    // Document 2 এর formula:
-    // previousList[i] = dynamicOpening[i] + (monthlyReceive[i] - todayReceive[i]) - (monthlyDelivery[i] - todayDelivery[i])
-    const previousList = items.map((_,i) => {
-      return dynamicOpening[i]
-        + (monthlyReceive[i] - todayReceive[i])
-        - (monthlyDelivery[i] - todayDelivery[i]);
-    });
-
-    // ─── ৫. Custom rows (custom rows যেগুলো base data তে নেই) ───
-    const baseKeys = new Set(items.map(it => it[1]+'__'+it[3]));
-    const customRowMap = {};
-    allMonthDays.forEach(day => {
-      if(!day.rows) return;
-      day.rows.forEach(r => {
-        const key = r.itemCode+'__'+r.size;
-        if(!baseKeys.has(key)) customRowMap[key] = r;
-      });
-    });
-    const allCustomRows = Object.values(customRowMap);
-
-    // ─── ৬. Table render ───
-    loadTable(previousList, allCustomRows);
-
-    if(prevMonthData){
-      const ci = document.getElementById('carryInfo');
-      ci.style.display='block';
-      ci.textContent=`⏪ Opening: ${prevMonthData.report_date} তারিখের Present Stock থেকে নেওয়া হয়েছে`;
-    }
-
-    // ─── ৭. আজকের saved values restore করো ───
-    if(todayData?.rows){
-      todayData.rows.forEach(row => {
-        const idx = currentFloorData.findIndex(r => r.itemCode===row.itemCode && r.size===row.size);
-        if(idx < 0) return;
-        const rEl=document.getElementById('r'+idx);
-        const dEl=document.getElementById('d'+idx);
-        const bnEl=document.getElementById('bn'+idx);
-        if(rEl) rEl.value = row.receive||'';
-        if(dEl) dEl.value = row.delivery||'';
-        if(bnEl) bnEl.value = row.bn||'';
-        calc(idx);
-        if(row.receiveReqNo){ rowReqNo[idx]=row.receiveReqNo; const t=document.getElementById('reqTag'+idx); if(t) t.textContent='📋 '+row.receiveReqNo; if(!floorReqNo) floorReqNo=row.receiveReqNo; }
-        if(row.transferOut?.length){ rowTransferOut[idx]=row.transferOut; updateTransferOutTag(idx); }
-        if(row.transferIn?.length){ rowTransferIn[idx]=row.transferIn; updateTransferInTag(idx); }
-      });
-      updateFloorReqBanner();
-      if(todayData.operator) document.getElementById('operatorName').value=todayData.operator;
-    }
-
-    // ─── ৮. Monthly Summary update ───
-    updateMonthlySummary();
-    updateLastSync('☁️ Loaded | Month: '+month+' | '+new Date().toLocaleTimeString());
-
-    if(!todayData){
-      showToast('📋 Previous carry হয়েছে — আজকের entry দিন');
-    }
-
-  }catch(e){
-    console.error('loadData error:', e);
-    loadTable();
-    showToast('❌ Load error: '+e.message);
-  }
-  hideLoading();
-}
-
-// =========================================
-// 📊 MONTHLY SUMMARY — cumulative data দিয়ে
-// =========================================
-function updateMonthlySummary(){
-  if(!dynamicOpening||!monthlyReceive||!monthlyDelivery||!monthlyBN){
-    document.getElementById('monthOpening').innerText='0';
-    document.getElementById('monthReceive').innerText='0';
-    document.getElementById('monthDelivery').innerText='0';
-    document.getElementById('monthPresent').innerText='0';
-    document.getElementById('monthBN').innerText='0';
-    return;
-  }
-  let o=0,r=0,d=0,p=0,bn=0;
-  currentFloorData.forEach((_,i) => {
-    const op = dynamicOpening[i]??Number(currentFloorData[i].opening)??0;
-    o  += op;
-    r  += Number(monthlyReceive[i])||0;
-    d  += Number(monthlyDelivery[i])||0;
-    bn += Number(monthlyBN[i])||0;
-    p  += op + (Number(monthlyReceive[i])||0) - (Number(monthlyDelivery[i])||0);
-  });
-  document.getElementById('monthOpening').innerText=o.toLocaleString();
-  document.getElementById('monthReceive').innerText=r.toLocaleString();
-  document.getElementById('monthDelivery').innerText=d.toLocaleString();
-  document.getElementById('monthPresent').innerText=p.toLocaleString();
-  document.getElementById('monthBN').innerText=bn.toLocaleString();
 }
 
 // =========================================
@@ -1197,7 +1049,9 @@ function updateMonthlySummary(){
 function openAddRowPopup(){
   const floor = document.getElementById('floor').value;
   if(!floor){ alert('❌ আগে Floor select করুন'); return; }
-  ['newItemCode','newNeedleType','newSize','newBrand'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('newItemCode').value='';
+  document.getElementById('newNeedleType').value='';
+  document.getElementById('newSize').value='';
   document.getElementById('newBrand').value='ORGAN';
   document.getElementById('newPrice').value='';
   document.getElementById('newOpening').value='0';
@@ -1213,36 +1067,102 @@ function confirmAddRow(){
   const brand = document.getElementById('newBrand').value.trim().toUpperCase();
   const unitPrice = parseFloat(document.getElementById('newPrice').value)||0;
   const opening = parseInt(document.getElementById('newOpening').value)||0;
-  if(!itemCode||!needleType||!size){ alert('❌ Code, Type ও Size দিন'); return; }
-  if(currentFloorData.find(r=>r.itemCode===itemCode&&r.size===size)){ alert(`❌ ${itemCode} (Size ${size}) ইতিমধ্যে আছে!`); return; }
-  const newRow = {sl:currentFloorData.length+1,itemCode,needleType,size,brand,unitPrice,opening,isCustom:true};
+  if(!itemCode){ alert('❌ Item Code দিন'); return; }
+  if(!needleType){ alert('❌ Needle Type দিন'); return; }
+  if(!size){ alert('❌ Size দিন'); return; }
+  const dup = currentFloorData.find(r => r.itemCode===itemCode && r.size===size);
+  if(dup){ alert(`❌ ${itemCode} (Size ${size}) ইতিমধ্যে আছে!`); return; }
+  const newRow = { sl: currentFloorData.length+1, itemCode, needleType, size, brand, unitPrice, opening, isCustom: true };
   currentFloorData.push(newRow);
-  const i = currentFloorData.length-1;
+  const i = currentFloorData.length - 1;
   const newTr = document.createElement('tr');
-  newTr.id=`row${i}`; newTr.className='custom-row-indicator';
-  newTr.innerHTML=`
+  newTr.id = `row${i}`;
+  newTr.className = 'custom-row-indicator';
+  newTr.innerHTML = `
     <td>${i+1}<br><span style="font-size:5px;color:#92400e">NEW</span></td>
     <td>${itemCode}</td><td>${needleType}</td><td>${size}</td><td>${brand}</td>
     <td style="text-align:right">${unitPrice.toFixed(4)}</td>
     <td id="p${i}">${opening}</td>
-    <td id="rcvdCell${i}"><input class="qtyInput" type="number" id="r${i}" oninput="calc(${i})" onblur="checkReqNo(${i})" step="1" min="0"><span class="req-tag" id="reqTag${i}"></span></td>
-    <td id="dvldCell${i}"><input class="qtyInput" type="number" id="d${i}" oninput="calc(${i})" step="1" min="0"><span class="transfer-tag" id="trfOutTag${i}"></span></td>
+    <td id="rcvdCell${i}">
+      <input class="qtyInput" type="number" id="r${i}" oninput="calc(${i})" onblur="checkReqNo(${i})" step="1" min="0">
+      <span class="req-tag" id="reqTag${i}"></span>
+    </td>
+    <td id="dvldCell${i}">
+      <input class="qtyInput" type="number" id="d${i}" oninput="calc(${i})" step="1" min="0">
+      <span class="transfer-tag" id="trfOutTag${i}"></span>
+    </td>
     <td id="b${i}" style="font-weight:bold">${opening}</td>
     <td><input class="qtyInput" type="number" id="bn${i}" oninput="updateTotal()" step="1" min="0"></td>
-    <td><button class="transferBtn" onclick="openTransferPopup(${i})">🔄 Trf</button><span class="transfer-tag" id="trfInTag${i}"></span></td>
-    <td><button class="del-row-btn" onclick="deleteCustomRow(${i})">✕</button></td>`;
+    <td>
+      <button class="transferBtn" onclick="openTransferPopup(${i})">🔄 Trf</button>
+      <span class="transfer-tag" id="trfInTag${i}"></span>
+    </td>
+    <td><button class="del-row-btn" onclick="deleteCustomRow(${i})" title="মুছুন">✕</button></td>`;
   document.getElementById('tableBody').appendChild(newTr);
-  updateTotal(); closeAddRowPopup();
+  updateTotal();
+  closeAddRowPopup();
   showToast(`✅ ${itemCode} (Size ${size}) যোগ হয়েছে!`);
   newTr.scrollIntoView({behavior:'smooth',block:'center'});
+  newTr.style.boxShadow='0 0 0 3px #0891b2';
+  setTimeout(()=>newTr.style.boxShadow='',2000);
 }
 
 function deleteCustomRow(i){
   if(!currentFloorData[i]?.isCustom){ showToast('❌ শুধু নতুন যোগ করা row মুছা যাবে'); return; }
-  if(!confirm(`⚠️ ${currentFloorData[i].itemCode} মুছবেন?`)) return;
+  if(!confirm(`⚠️ ${currentFloorData[i].itemCode} (Size ${currentFloorData[i].size}) মুছবেন?`)) return;
   currentFloorData.splice(i,1);
   delete rowReqNo[i]; delete rowTransferOut[i]; delete rowTransferIn[i];
-  loadData();
+  rebuildTableKeepingValues();
+  showToast('✅ Row মুছা হয়েছে');
+}
+
+function rebuildTableKeepingValues(){
+  const vals = currentFloorData.map((_,i) => ({
+    r: document.getElementById(`r${i}`)?.value||'',
+    d: document.getElementById(`d${i}`)?.value||'',
+    bn: document.getElementById(`bn${i}`)?.value||'',
+    prev: document.getElementById(`p${i}`)?.innerText||'0'
+  }));
+  const floor = document.getElementById('floor').value;
+  document.getElementById('bnHeader').innerText = floor.includes('_NEW') ? 'BNR' : 'BNF';
+  let html = '';
+  currentFloorData.forEach((item, i) => {
+    const v = vals[i]||{r:'',d:'',bn:'',prev:String(item.opening)};
+    const prev = Number(v.prev)||item.opening;
+    const rowClass = item.isCustom ? 'class="custom-row-indicator"' : '';
+    html += `
+      <tr id="row${i}" ${rowClass}>
+        <td>${i+1}${item.isCustom?'<br><span style="font-size:5px;color:#92400e">NEW</span>':''}</td>
+        <td>${item.itemCode}</td><td>${item.needleType}</td><td>${item.size}</td>
+        <td>${item.brand}</td>
+        <td style="text-align:right">${Number(item.unitPrice).toFixed(4)}</td>
+        <td id="p${i}">${prev}</td>
+        <td id="rcvdCell${i}">
+          <input class="qtyInput" type="number" id="r${i}" value="${v.r}" oninput="calc(${i})" onblur="checkReqNo(${i})" step="1" min="0">
+          <span class="req-tag" id="reqTag${i}">${rowReqNo[i]?'📋 '+rowReqNo[i]:''}</span>
+        </td>
+        <td id="dvldCell${i}">
+          <input class="qtyInput" type="number" id="d${i}" value="${v.d}" oninput="calc(${i})" step="1" min="0">
+          <span class="transfer-tag" id="trfOutTag${i}"></span>
+        </td>
+        <td id="b${i}" style="font-weight:bold">${prev + (Number(v.r)||0) - (Number(v.d)||0)}</td>
+        <td><input class="qtyInput" type="number" id="bn${i}" value="${v.bn}" oninput="updateTotal()" step="1" min="0"></td>
+        <td>
+          <button class="transferBtn" onclick="openTransferPopup(${i})">🔄 Trf</button>
+          <span class="transfer-tag" id="trfInTag${i}"></span>
+        </td>
+        <td>${item.isCustom
+          ? `<button class="del-row-btn" onclick="deleteCustomRow(${i})" title="মুছুন">✕</button>`
+          : '<span style="font-size:8px;color:#94a3b8">-</span>'}</td>
+      </tr>`;
+  });
+  document.getElementById('tableBody').innerHTML = html;
+  currentFloorData.forEach((_,i)=>{
+    if(rowTransferOut[i]) updateTransferOutTag(i);
+    if(rowTransferIn[i]) updateTransferInTag(i);
+  });
+  updateTotal();
+  checkNegativeStock();
 }
 
 // =========================================
@@ -1252,9 +1172,9 @@ function calc(i){
   const p = Number(document.getElementById(`p${i}`)?.innerText)||0;
   const r = Number(document.getElementById(`r${i}`)?.value)||0;
   const d = Number(document.getElementById(`d${i}`)?.value)||0;
-  const present = p+r-d;
-  document.getElementById(`b${i}`).innerText=present;
-  const row=document.getElementById(`row${i}`);
+  const present = p + r - d;
+  document.getElementById(`b${i}`).innerText = present;
+  const row = document.getElementById(`row${i}`);
   if(present<0) row.classList.add('negative-row');
   else row.classList.remove('negative-row');
   updateTotal();
@@ -1270,131 +1190,180 @@ function updateTotal(){
     tb += Number(document.getElementById(`b${i}`)?.innerText)||0;
     tbn += Number(document.getElementById(`bn${i}`)?.value)||0;
   });
-  document.getElementById('totalPrevious').innerText=tp.toLocaleString();
-  document.getElementById('totalReceive').innerText=tr.toLocaleString();
-  document.getElementById('totalDelivery').innerText=td.toLocaleString();
-  document.getElementById('totalPresent').innerText=tb.toLocaleString();
-  document.getElementById('totalBN').innerText=tbn.toLocaleString();
+  document.getElementById('totalPrevious').innerText = tp.toLocaleString();
+  document.getElementById('totalReceive').innerText = tr.toLocaleString();
+  document.getElementById('totalDelivery').innerText = td.toLocaleString();
+  document.getElementById('totalPresent').innerText = tb.toLocaleString();
+  document.getElementById('totalBN').innerText = tbn.toLocaleString();
 }
 
 // =========================================
 // ✅ REQUISITION POPUP
 // =========================================
 function checkReqNo(i){
-  const val=Number(document.getElementById(`r${i}`)?.value)||0;
-  if(val<=0) return;
+  const val = Number(document.getElementById(`r${i}`)?.value)||0;
+  if(val <= 0) return;
   if(rowReqNo[i]) return;
-  if(floorReqNo){ rowReqNo[i]=floorReqNo; const t=document.getElementById(`reqTag${i}`); if(t) t.textContent='📋 '+floorReqNo; return; }
-  pendingReqIndex=i;
-  const item=currentFloorData[i];
-  document.getElementById('reqItemInfo').innerHTML=`<b>${item.itemCode}</b> | ${item.needleType} | Size: ${item.size} | Rcvd: <b>${val}</b><br><small style="color:#059669">এই নম্বর এই floor এর সব row-এ apply হবে</small>`;
-  document.getElementById('reqNoInput').value='';
-  document.getElementById('reqPopup').style.display='flex';
-  setTimeout(()=>document.getElementById('reqNoInput').focus(),100);
+  if(floorReqNo){
+    rowReqNo[i] = floorReqNo;
+    const tag = document.getElementById(`reqTag${i}`);
+    if(tag) tag.textContent = '📋 '+floorReqNo;
+    return;
+  }
+  pendingReqIndex = i;
+  pendingReqValue = val;
+  const item = currentFloorData[i];
+  document.getElementById('reqItemInfo').innerHTML =
+    `<b>${item.itemCode}</b> | ${item.needleType} | Size: ${item.size} | Rcvd Qty: <b>${val}</b><br>
+     <small style="color:#059669;font-weight:600">✅ এই নম্বর এই floor এর বাকি সব row-এও apply হবে</small>`;
+  document.getElementById('reqNoInput').value = '';
+  document.getElementById('reqPopup').style.display = 'flex';
+  setTimeout(()=>document.getElementById('reqNoInput').focus(), 100);
 }
+
 function confirmReqNo(){
-  const reqNo=document.getElementById('reqNoInput').value.trim();
+  const reqNo = document.getElementById('reqNoInput').value.trim();
   if(!reqNo){ alert('❌ Requisition Number দিন!'); return; }
-  floorReqNo=reqNo;
-  rowReqNo[pendingReqIndex]=reqNo;
-  const tag=document.getElementById(`reqTag${pendingReqIndex}`); if(tag) tag.textContent='📋 '+reqNo;
+  floorReqNo = reqNo;
+  rowReqNo[pendingReqIndex] = reqNo;
+  const tag = document.getElementById(`reqTag${pendingReqIndex}`);
+  if(tag) tag.textContent = '📋 '+reqNo;
   currentFloorData.forEach((_,i)=>{
-    if(Number(document.getElementById(`r${i}`)?.value)>0&&!rowReqNo[i]){
-      rowReqNo[i]=reqNo; const t=document.getElementById(`reqTag${i}`); if(t) t.textContent='📋 '+reqNo;
+    const val = Number(document.getElementById(`r${i}`)?.value)||0;
+    if(val > 0 && !rowReqNo[i]){
+      rowReqNo[i] = reqNo;
+      const t = document.getElementById(`reqTag${i}`);
+      if(t) t.textContent = '📋 '+reqNo;
     }
   });
   updateFloorReqBanner();
-  document.getElementById('reqPopup').style.display='none';
-  pendingReqIndex=null; showToast('✅ Req No saved!');
+  document.getElementById('reqPopup').style.display = 'none';
+  pendingReqIndex = null; pendingReqValue = null;
+  showToast('✅ Req No saved!');
 }
+
 function cancelReqPopup(){
-  if(pendingReqIndex!==null){ const inp=document.getElementById(`r${pendingReqIndex}`); if(inp){inp.value='';calc(pendingReqIndex);} }
-  document.getElementById('reqPopup').style.display='none';
-  pendingReqIndex=null;
+  if(pendingReqIndex !== null){
+    const inp = document.getElementById(`r${pendingReqIndex}`);
+    if(inp){ inp.value = ''; calc(pendingReqIndex); }
+  }
+  document.getElementById('reqPopup').style.display = 'none';
+  pendingReqIndex = null; pendingReqValue = null;
 }
 
 // =========================================
 // 🔄 TRANSFER POPUP
 // =========================================
 function openTransferPopup(i){
-  pendingTransferIndex=i;
-  const item=currentFloorData[i];
-  const floor=document.getElementById('floor').value;
-  const presentNow=Number(document.getElementById(`b${i}`)?.innerText)||0;
-  document.getElementById('transferItemInfo').innerHTML=`<b>${item.itemCode}</b> | ${item.needleType} | Size ${item.size} | ${item.brand}<br>Present Stock: <b style="color:${presentNow<0?'#dc2626':'#059669'}">${presentNow}</b>`;
-  const sel=document.getElementById('transferToFloor');
-  sel.innerHTML='<option value="">-- To Floor নির্বাচন করুন --</option>';
+  pendingTransferIndex = i;
+  const item = currentFloorData[i];
+  const floor = document.getElementById('floor').value;
+  const presentNow = Number(document.getElementById(`b${i}`)?.innerText)||0;
+  document.getElementById('transferItemInfo').innerHTML =
+    `<b>${item.itemCode}</b> | ${item.needleType} | Size ${item.size} | ${item.brand}<br>
+     Present Stock: <b style="color:${presentNow<0?'#dc2626':'#059669'}">${presentNow}</b>`;
+  const sel = document.getElementById('transferToFloor');
+  sel.innerHTML = '<option value="">-- To Floor নির্বাচন করুন --</option>';
   Object.keys(floorData).filter(f=>f!==floor).forEach(f=>{
-    sel.innerHTML+=`<option value="${f}">${f}</option>`;
+    sel.innerHTML += `<option value="${f}">${f}</option>`;
   });
   document.getElementById('transferQty').value='';
   document.getElementById('transferReceiverName').value='';
   document.getElementById('transferReqNo').value='';
   document.getElementById('transferPopup').style.display='flex';
 }
+
 function closeTransferPopup(){ document.getElementById('transferPopup').style.display='none'; pendingTransferIndex=null; }
 
 async function confirmTransfer(){
-  const i=pendingTransferIndex;
+  const i = pendingTransferIndex;
   if(i===null) return;
-  const toFloor=document.getElementById('transferToFloor').value;
-  const qty=Number(document.getElementById('transferQty').value)||0;
-  const receiverName=document.getElementById('transferReceiverName').value.trim();
-  const reqNo=document.getElementById('transferReqNo').value.trim();
-  const fromFloor=document.getElementById('floor').value;
-  const date=document.getElementById('postDate').value;
-  const item=currentFloorData[i];
+  const toFloor = document.getElementById('transferToFloor').value;
+  const qty = Number(document.getElementById('transferQty').value)||0;
+  const receiverName = document.getElementById('transferReceiverName').value.trim();
+  const reqNo = document.getElementById('transferReqNo').value.trim();
+  const fromFloor = document.getElementById('floor').value;
+  const date = document.getElementById('postDate').value;
+  const item = currentFloorData[i];
   if(!toFloor){ alert('❌ To Floor নির্বাচন করুন!'); return; }
   if(qty<=0){ alert('❌ Qty দিন!'); return; }
   if(!receiverName){ alert('❌ Receiver Name দিন!'); return; }
   if(!reqNo){ alert('❌ Requisition No. দিন!'); return; }
-  const presentNow=Number(document.getElementById(`b${i}`)?.innerText)||0;
-  if(qty>presentNow&&!confirm(`⚠️ Present Stock মাত্র ${presentNow}, আপনি ${qty} transfer করতে চান। Continue?`)) return;
+  const presentNow = Number(document.getElementById(`b${i}`)?.innerText)||0;
+  if(qty > presentNow){
+    if(!confirm(`⚠️ Present Stock মাত্র ${presentNow}, আপনি ${qty} transfer করতে চান। Continue?`)) return;
+  }
   showLoading('Transfer saving...');
   closeTransferPopup();
-  const dEl=document.getElementById(`d${i}`);
-  dEl.value=(Number(dEl.value)||0)+qty; calc(i);
+  const dEl = document.getElementById(`d${i}`);
+  const oldDvld = Number(dEl.value)||0;
+  dEl.value = oldDvld + qty;
+  calc(i);
   if(!rowTransferOut[i]) rowTransferOut[i]=[];
-  rowTransferOut[i].push({toFloor,qty,receiverName,reqNo});
+  rowTransferOut[i].push({toFloor, qty, receiverName, reqNo});
   updateTransferOutTag(i);
   if(navigator.onLine){
     try{
-      const toFloorSaved=await loadFromSupabase(toFloor,date);
-      const toItems=floorData[toFloor]||[];
+      const toItems = floorData[toFloor]||[];
+      const toFloorSaved = await loadFromSupabase(toFloor, date);
       let toRows;
-      if(toFloorSaved?.rows?.length) toRows=JSON.parse(JSON.stringify(toFloorSaved.rows));
-      else toRows=toItems.map(it=>({sl:it[0],itemCode:it[1],needleType:it[2],size:it[3],brand:it[4],unitPrice:it[5],opening:it[6],isCustom:false,previous:it[6],receive:0,delivery:0,present:it[6],bn:0,receiveReqNo:'',transferIn:[],transferOut:[]}));
-      const toItemIdx=toRows.findIndex(r=>r.itemCode===item.itemCode&&r.size===item.size);
+      if(toFloorSaved && toFloorSaved.rows && toFloorSaved.rows.length){
+        toRows = JSON.parse(JSON.stringify(toFloorSaved.rows));
+      }else{
+        toRows = toItems.map(it=>({
+          sl:it[0],itemCode:it[1],needleType:it[2],size:it[3],
+          brand:it[4],unitPrice:it[5],opening:it[6],isCustom:false,
+          previous:it[6],receive:0,delivery:0,present:it[6],bn:0,
+          receiveReqNo:'',transferIn:[],transferOut:[]
+        }));
+      }
+      const toItemIdx = toRows.findIndex(r=>r.itemCode===item.itemCode && r.size===item.size);
       if(toItemIdx>=0){
         toRows[toItemIdx].receive=(Number(toRows[toItemIdx].receive)||0)+qty;
         toRows[toItemIdx].present=(Number(toRows[toItemIdx].previous)||0)+(Number(toRows[toItemIdx].receive)||0)-(Number(toRows[toItemIdx].delivery)||0);
         toRows[toItemIdx].receiveReqNo=reqNo;
         if(!toRows[toItemIdx].transferIn) toRows[toItemIdx].transferIn=[];
         toRows[toItemIdx].transferIn.push({fromFloor,qty,receiverName,reqNo,date});
+      }else{
+        showToast(`⚠️ To Floor তে ${item.itemCode} (Size ${item.size}) পাওয়া যায়নি`);
       }
-      await saveToSupabase(toFloor,date,toFloorSaved?.operator||'Transfer',toRows,false);
-    }catch(e){ console.error('Transfer to-floor error:',e); }
+      const toOperator = toFloorSaved?(toFloorSaved.operator||'Transfer'):'Transfer';
+      await saveToSupabase(toFloor, date, toOperator, toRows, false);
+    }catch(e){ console.error('Transfer to-floor update error:', e); }
   }
   hideLoading();
   showToast(`✅ Transfer: ${qty} pcs ${item.itemCode} → ${toFloor.split('(')[0].trim()}`);
 }
 
-function updateTransferOutTag(i){ const t=document.getElementById(`trfOutTag${i}`); if(!t||!rowTransferOut[i]?.length) return; const last=rowTransferOut[i][rowTransferOut[i].length-1]; t.textContent=`→${last.toFloor.split('(')[0].trim().substring(0,10)} (${last.qty})`; }
-function updateTransferInTag(i){ const t=document.getElementById(`trfInTag${i}`); if(!t||!rowTransferIn[i]?.length) return; const last=rowTransferIn[i][rowTransferIn[i].length-1]; t.textContent=`←${last.fromFloor.split('(')[0].trim().substring(0,10)} (${last.qty})`; }
+function updateTransferOutTag(i){
+  const tag = document.getElementById(`trfOutTag${i}`);
+  if(!tag||!rowTransferOut[i]||!rowTransferOut[i].length) return;
+  const last = rowTransferOut[i][rowTransferOut[i].length-1];
+  tag.textContent=`→${last.toFloor.split('(')[0].trim().substring(0,10)} (${last.qty})`;
+}
+function updateTransferInTag(i){
+  const tag = document.getElementById(`trfInTag${i}`);
+  if(!tag||!rowTransferIn[i]||!rowTransferIn[i].length) return;
+  const last = rowTransferIn[i][rowTransferIn[i].length-1];
+  tag.textContent=`←${last.fromFloor.split('(')[0].trim().substring(0,10)} (${last.qty})`;
+}
 
 // =========================================
 // 🚚 TRANSFER REPORT
 // =========================================
 function showTransferReport(){
   const today=new Date().toISOString().slice(0,10);
-  document.getElementById('rpFrom').value=today.slice(0,8)+'01';
+  const firstOfMonth=today.slice(0,8)+'01';
+  document.getElementById('rpFrom').value=firstOfMonth;
   document.getElementById('rpTo').value=today;
   document.getElementById('reportPopup').style.display='flex';
   loadTransferReport();
 }
 function closeReportPopup(){ document.getElementById('reportPopup').style.display='none'; }
+
 async function loadTransferReport(){
-  const from=document.getElementById('rpFrom').value,to=document.getElementById('rpTo').value;
+  const from=document.getElementById('rpFrom').value;
+  const to=document.getElementById('rpTo').value;
   if(!from||!to){ alert('তারিখ দিন'); return; }
   document.getElementById('reportBody2').innerHTML='<tr><td colspan="9" style="padding:10px;color:#64748b">Loading...</td></tr>';
   let allTransfers=[];
@@ -1405,21 +1374,32 @@ async function loadTransferReport(){
         const {data,error}=await supabase.from('needle_reports').select('floor,report_date,rows').eq('company_id',companyId).gte('report_date',from).lte('report_date',to);
         if(!error&&data){
           data.forEach(rec=>{
-            if(!rec.rows) return;
-            rec.rows.forEach(row=>{
-              (row.transferOut||[]).forEach(t=>{
-                allTransfers.push({date:rec.report_date,fromFloor:rec.floor,toFloor:t.toFloor,itemCode:row.itemCode,needleType:row.needleType,size:row.size,qty:t.qty,receiverName:t.receiverName,reqNo:t.reqNo});
+            if(rec.rows&&Array.isArray(rec.rows)){
+              rec.rows.forEach(row=>{
+                if(row.transferOut&&row.transferOut.length){
+                  row.transferOut.forEach(t=>{
+                    allTransfers.push({date:rec.report_date,fromFloor:rec.floor,toFloor:t.toFloor,itemCode:row.itemCode,needleType:row.needleType,size:row.size,qty:t.qty,receiverName:t.receiverName,reqNo:t.reqNo});
+                  });
+                }
               });
-            });
+            }
           });
           allTransfers.sort((a,b)=>a.date.localeCompare(b.date));
         }
       }
     }catch(e){ console.error(e); }
   }
-  if(!allTransfers.length){ document.getElementById('reportBody2').innerHTML='<tr><td colspan="9" style="padding:10px;color:#94a3b8;text-align:center">এই period এ কোনো transfer নেই</td></tr>'; document.getElementById('reportGrandTotal').innerText='0'; return; }
+  if(!allTransfers.length){
+    document.getElementById('reportBody2').innerHTML='<tr><td colspan="9" style="padding:10px;color:#94a3b8;text-align:center">এই period এ কোনো transfer নেই</td></tr>';
+    document.getElementById('reportGrandTotal').innerText='0';
+    document.getElementById('reportFooter').innerText='0 records found';
+    return;
+  }
   let grandTotal=0,html='';
-  allTransfers.forEach(t=>{ const q=Number(t.qty)||0; grandTotal+=q; html+=`<tr><td>${t.date}</td><td style="font-size:8px">${t.fromFloor.replace(/_NEW|_RUNNING/,'')}</td><td style="font-size:8px">${(t.toFloor||'').replace(/_NEW|_RUNNING/,'')}</td><td>${t.itemCode}</td><td style="font-size:8px">${t.needleType||''}</td><td>${t.size||''}</td><td><b>${q}</b></td><td style="font-size:8px">${t.receiverName||''}</td><td style="font-size:8px">${t.reqNo||''}</td></tr>`; });
+  allTransfers.forEach(t=>{
+    const qty=Number(t.qty)||0; grandTotal+=qty;
+    html+=`<tr><td>${t.date}</td><td style="text-align:left;font-size:8px">${t.fromFloor.replace(/_NEW|_RUNNING/,'')}</td><td style="text-align:left;font-size:8px">${(t.toFloor||'').replace(/_NEW|_RUNNING/,'')}</td><td>${t.itemCode}</td><td style="font-size:8px">${t.needleType||''}</td><td>${t.size||''}</td><td><b>${qty}</b></td><td style="font-size:8px">${t.receiverName||''}</td><td style="font-size:8px">${t.reqNo||''}</td></tr>`;
+  });
   document.getElementById('reportBody2').innerHTML=html;
   document.getElementById('reportGrandTotal').innerText=grandTotal.toLocaleString();
   document.getElementById('reportFooter').innerText=`${allTransfers.length} records | Total: ${grandTotal} pcs`;
@@ -1430,45 +1410,70 @@ async function loadTransferReport(){
 // =========================================
 function showReqSearch(){
   document.getElementById('reqSearchInput').value='';
-  document.getElementById('reqSearchBody').innerHTML='';
+  document.getElementById('reqSearchBody').innerHTML='<tr><td colspan="8" style="padding:10px;color:#94a3b8;text-align:center">Requisition Number লিখে Search চাপুন</td></tr>';
   document.getElementById('reqSearchGrandTotal').innerText='0';
   document.getElementById('reqSearchPopup').style.display='flex';
   setTimeout(()=>document.getElementById('reqSearchInput').focus(),100);
 }
 function closeReqSearchPopup(){ document.getElementById('reqSearchPopup').style.display='none'; }
+
 async function searchRequisition(){
   const q=document.getElementById('reqSearchInput').value.trim();
   if(!q){ alert('Requisition Number লিখুন'); return; }
   if(!navigator.onLine){ showToast('Offline - Search করতে Online থাকতে হবে'); return; }
-  document.getElementById('reqSearchBody').innerHTML='<tr><td colspan="8" style="padding:10px;color:#64748b">Searching...</td></tr>';
+  const tbody=document.getElementById('reqSearchBody');
+  tbody.innerHTML='<tr><td colspan="8" style="padding:10px;color:#64748b;text-align:center">Searching...</td></tr>';
+  document.getElementById('reqSearchGrandTotal').innerText='0';
+  document.getElementById('reqSearchFooter').innerText='Searching...';
   try{
     const companyId=await getCompanyId();
-    if(!companyId) return;
-    let allData=[]; let from=0;
+    if(!companyId){ tbody.innerHTML='<tr><td colspan="8" style="color:red;padding:10px">Company error</td></tr>'; return; }
+    let allData=[]; let from=0; const pageSize=1000;
     while(true){
-      const {data,error}=await supabase.from('needle_reports').select('floor,report_date,rows').eq('company_id',companyId).order('report_date',{ascending:false}).range(from,from+999);
-      if(error||!data?.length) break;
+      const {data,error}=await supabase.from('needle_reports')
+        .select('floor,report_date,rows').eq('company_id',companyId)
+        .order('report_date',{ascending:false}).range(from,from+pageSize-1);
+      if(error){ tbody.innerHTML='<tr><td colspan="8" style="color:red;padding:10px">DB Error: '+error.message+'</td></tr>'; return; }
+      if(!data||data.length===0) break;
       allData=allData.concat(data);
-      if(data.length<1000) break;
-      from+=1000;
+      if(data.length<pageSize) break;
+      from+=pageSize;
     }
-    const qL=q.toLowerCase(); let results=[];
+    const qLower=q.toLowerCase();
+    let results=[];
     allData.forEach(rec=>{
-      if(!rec.rows) return;
+      if(!rec.rows||!Array.isArray(rec.rows)) return;
       rec.rows.forEach(row=>{
-        if(row.receiveReqNo&&String(row.receiveReqNo).toLowerCase().includes(qL)&&(Number(row.receive)||0)>0)
+        if(row.receiveReqNo&&String(row.receiveReqNo).toLowerCase().includes(qLower)&&(Number(row.receive)||0)>0)
           results.push({date:rec.report_date,floor:rec.floor,source:'Receive',itemCode:row.itemCode||'',needleType:row.needleType||'',size:row.size||'',qty:Number(row.receive)||0,detail:'Req:'+row.receiveReqNo});
-        (row.transferOut||[]).forEach(t=>{ if(t.reqNo&&String(t.reqNo).toLowerCase().includes(qL)) results.push({date:rec.report_date,floor:rec.floor,source:'TrfOut',itemCode:row.itemCode||'',needleType:row.needleType||'',size:row.size||'',qty:Number(t.qty)||0,detail:t.receiverName||'-'}); });
+        (row.transferOut||[]).forEach(t=>{
+          if(t.reqNo&&String(t.reqNo).toLowerCase().includes(qLower))
+            results.push({date:rec.report_date,floor:rec.floor,source:'TrfOut->'+(t.toFloor||'').split('(')[0].trim().substring(0,10),itemCode:row.itemCode||'',needleType:row.needleType||'',size:row.size||'',qty:Number(t.qty)||0,detail:(t.receiverName||'-')});
+        });
+        (row.transferIn||[]).forEach(t=>{
+          if(t.reqNo&&String(t.reqNo).toLowerCase().includes(qLower))
+            results.push({date:rec.report_date,floor:rec.floor,source:'TrfIn<-'+(t.fromFloor||'').split('(')[0].trim().substring(0,10),itemCode:row.itemCode||'',needleType:row.needleType||'',size:row.size||'',qty:Number(t.qty)||0,detail:(t.receiverName||'-')});
+        });
       });
     });
     results.sort((a,b)=>b.date.localeCompare(a.date));
-    if(!results.length){ document.getElementById('reqSearchBody').innerHTML=`<tr><td colspan="8" style="padding:14px;color:#94a3b8;text-align:center">No records found</td></tr>`; return; }
+    if(!results.length){
+      tbody.innerHTML='<tr><td colspan="8" style="padding:14px;color:#94a3b8;text-align:center">No records found for "'+q+'" (searched '+allData.length+' reports)</td></tr>';
+      document.getElementById('reqSearchFooter').innerText='0 records found';
+      return;
+    }
     let grandTotal=0,html='';
-    results.forEach(r=>{ const qty=Number(r.qty)||0; grandTotal+=qty; html+=`<tr><td>${r.date}</td><td style="font-size:8px">${r.floor.replace(/(_NEW|_RUNNING)/g,'')}</td><td style="font-size:8px">${r.source}</td><td>${r.itemCode}</td><td style="font-size:8px">${r.needleType}</td><td>${r.size}</td><td><b>${qty}</b></td><td style="font-size:8px">${r.detail}</td></tr>`; });
-    document.getElementById('reqSearchBody').innerHTML=html;
+    results.forEach(r=>{
+      const qty=Number(r.qty)||0; grandTotal+=qty;
+      html+='<tr><td>'+r.date+'</td><td style="text-align:left;font-size:8px">'+r.floor.replace(/(_NEW|_RUNNING)/g,'')+'</td><td style="font-size:8px">'+r.source+'</td><td>'+r.itemCode+'</td><td style="font-size:8px">'+r.needleType+'</td><td>'+r.size+'</td><td><b>'+qty+'</b></td><td style="font-size:8px">'+r.detail+'</td></tr>';
+    });
+    tbody.innerHTML=html;
     document.getElementById('reqSearchGrandTotal').innerText=grandTotal.toLocaleString();
-    document.getElementById('reqSearchFooter').innerText=results.length+' records | Total: '+grandTotal+' pcs';
-  }catch(e){ console.error(e); }
+    document.getElementById('reqSearchFooter').innerText=results.length+' records | Total: '+grandTotal+' pcs | Searched '+allData.length+' reports';
+  }catch(e){
+    console.error('searchRequisition error:',e);
+    tbody.innerHTML='<tr><td colspan="8" style="color:red;padding:10px">Error: '+e.message+'</td></tr>';
+  }
 }
 
 // =========================================
@@ -1480,33 +1485,37 @@ function checkNegativeStock(){
     const present=Number(document.getElementById(`b${i}`)?.innerText)||0;
     const row=document.getElementById(`row${i}`);
     if(present<0){
-      row?.classList.add('negative-row');
-      if(negativeRowIndex<0){
-        negativeRowIndex=i;
-        const floor=document.getElementById('floor').value;
-        const item=currentFloorData[i];
-        document.getElementById('popupDetails').innerHTML=`
-          <div><span class="label">Floor:</span><span class="value">${floor.split('(')[0].trim()}</span></div>
-          <div><span class="label">Item Code:</span><span class="value">${item.itemCode}</span></div>
-          <div><span class="label">Type:</span><span class="value">${item.needleType} Size ${item.size}</span></div>
-          <div><span class="label">Present:</span><span class="value" style="color:#dc2626;font-weight:bold">${present}</span></div>`;
-        document.getElementById('negativePopup').style.display='flex';
-      }
-    }else{ row?.classList.remove('negative-row'); }
+      row&&row.classList.add('negative-row');
+      if(negativeRowIndex<0){ negativeRowIndex=i; showNegativeStockPopup(present); }
+    }else{
+      row&&row.classList.remove('negative-row');
+    }
   }
   if(negativeRowIndex<0) closeNegPopup();
+}
+
+function showNegativeStockPopup(present){
+  const floor=document.getElementById('floor').value;
+  const item=currentFloorData[negativeRowIndex];
+  document.getElementById('popupDetails').innerHTML=`
+    <div><span class="label">Floor:</span><span class="value">${floor.split('(')[0].trim()}</span></div>
+    <div><span class="label">Item Code:</span><span class="value">${item.itemCode}</span></div>
+    <div><span class="label">Type:</span><span class="value">${item.needleType} Size ${item.size}</span></div>
+    <div><span class="label">Present:</span><span class="value" style="color:#dc2626;font-weight:bold">${present}</span></div>`;
+  document.getElementById('negativePopup').style.display='flex';
 }
 function closeNegPopup(){ document.getElementById('negativePopup').style.display='none'; }
 function fixNegativeRow(){
   if(negativeRowIndex>=0){
     const row=document.getElementById(`row${negativeRowIndex}`);
-    if(row){row.scrollIntoView({behavior:'smooth',block:'center'});row.style.boxShadow='0 0 0 3px #dc2626';setTimeout(()=>row.style.boxShadow='',2000);}
-    const d=document.getElementById(`d${negativeRowIndex}`); if(d){d.focus();d.select();}
+    if(row){ row.scrollIntoView({behavior:'smooth',block:'center'}); row.style.boxShadow='0 0 0 3px #dc2626'; setTimeout(()=>row.style.boxShadow='',2000); }
+    const d=document.getElementById(`d${negativeRowIndex}`);
+    if(d){ d.focus(); d.select(); }
   }
 }
 
 // =========================================
-// 💾 BUILD ROWS & SAVE
+// 💾 BUILD ROWS FOR SAVE
 // =========================================
 function buildRows(){
   return currentFloorData.map((item,i)=>({
@@ -1523,6 +1532,9 @@ function buildRows(){
   }));
 }
 
+// =========================================
+// 💾 SAVE
+// =========================================
 async function saveData(){
   const date=document.getElementById('postDate').value;
   const floor=document.getElementById('floor').value;
@@ -1537,381 +1549,89 @@ async function saveData(){
     }
   }
   const rows=buildRows();
-  localStorage.setItem('lastOperator',operator);
+  localStorage.setItem('lastOperator', operator);
   if(navigator.onLine){
     showLoading('Saving...');
-    const result=await saveToSupabase(floor,date,operator,rows);
+    const result=await saveToSupabase(floor, date, operator, rows);
     hideLoading();
-    if(result.success) updateLastSync(`☁️ Saved — ${new Date().toLocaleTimeString()}`);
+    if(result.success) updateLastSync(`☁️ Supabase এ Saved — ${new Date().toLocaleTimeString()}`);
   }else{
-    saveOffline(floor,date,operator,rows);
+    saveOffline(floor, date, operator, rows);
     showToast('📴 Offline — Local এ Save হয়েছে');
+    updateLastSync(`📴 Offline saved — ${new Date().toLocaleTimeString()}`);
   }
-  // save এর পরে monthly summary আবার update করো
-  await loadData();
 }
 
-async function deleteData(){
-  const date=document.getElementById('postDate').value,floor=document.getElementById('floor').value;
-  if(!date){ alert('❌ Date select করুন'); return; }
-  if(!confirm('⚠️ এই তারিখের ডাটা delete করবেন?')) return;
-  if(navigator.onLine){
-    const companyId=await getCompanyId();
-    if(companyId){
-      const {error}=await supabase.from('needle_reports').delete().eq('company_id',companyId).eq('floor',floor).eq('report_date',date);
-      if(error){ alert('❌ Delete failed: '+error.message); return; }
+// =========================================
+// ✅ MAIN loadData
+// =========================================
+async function loadData(){
+  const date=document.getElementById('postDate').value;
+  const floor=document.getElementById('floor').value;
+  if(!date||!floor){ loadTable({}, [], false, null); updateMonthlySummary([]); return; }
+  showLoading('Loading...');
+  rowReqNo={}; rowTransferOut={}; rowTransferIn={};
+  floorReqNo=null;
+  updateFloorReqBanner();
+  try{
+    let todayData=null, prevData=null, prevDateUsed=null;
+    if(navigator.onLine){
+      [todayData, prevData] = await Promise.all([loadFromSupabase(floor, date), findLastSavedBefore(floor, date)]);
+      if(prevData) prevDateUsed=prevData.report_date;
+    }else{
+      todayData=getOffline(floor, date);
+      showToast('📴 Offline — Local data দেখাচ্ছে');
     }
+    const prevMap = prevData ? buildPrevMap(prevData.rows) : {};
+    const hasPrevData = !!(prevData && prevData.rows && prevData.rows.length > 0);
+    const baseKeys = new Set((floorData[floor]||[]).map(b => b[1]+'__'+b[3]));
+    const customRowMap = {};
+    if(prevData && prevData.rows){ prevData.rows.forEach(r=>{ const key=r.itemCode+'__'+r.size; if(!baseKeys.has(key)) customRowMap[key]=r; }); }
+    if(todayData && todayData.rows){ todayData.rows.forEach(r=>{ const key=r.itemCode+'__'+r.size; if(!baseKeys.has(key)) customRowMap[key]=r; }); }
+    const allCustomRows = Object.values(customRowMap);
+    loadTable(prevMap, allCustomRows, hasPrevData, prevDateUsed);
+    if(todayData && todayData.rows && todayData.rows.length > 0){
+      todayData.rows.forEach(row=>{
+        const idx = currentFloorData.findIndex(r=>r.itemCode===row.itemCode && r.size===row.size);
+        if(idx<0) return;
+        const rEl=document.getElementById('r'+idx), dEl=document.getElementById('d'+idx), bnEl=document.getElementById('bn'+idx);
+        if(rEl) rEl.value=row.receive||'';
+        if(dEl) dEl.value=row.delivery||'';
+        if(bnEl) bnEl.value=row.bn||'';
+        calc(idx);
+        if(row.receiveReqNo){ rowReqNo[idx]=row.receiveReqNo; const tag=document.getElementById('reqTag'+idx); if(tag) tag.textContent='📋 '+row.receiveReqNo; if(!floorReqNo) floorReqNo=row.receiveReqNo; }
+        if(row.transferOut&&row.transferOut.length){ rowTransferOut[idx]=row.transferOut; updateTransferOutTag(idx); }
+        if(row.transferIn&&row.transferIn.length){ rowTransferIn[idx]=row.transferIn; updateTransferInTag(idx); }
+      });
+      updateFloorReqBanner();
+      if(todayData.operator) document.getElementById('operatorName').value=todayData.operator;
+      updateMonthlySummary(todayData.rows);
+      updateLastSync('☁️ Loaded | Prev: '+(prevDateUsed||'opening')+' | '+new Date().toLocaleTimeString());
+    }else{
+      updateMonthlySummary([]);
+      if(hasPrevData){ updateLastSync('⏪ '+prevDateUsed+' থেকে carry — '+new Date().toLocaleTimeString()); showToast('⏪ '+prevDateUsed+' তারিখ থেকে stock carry হয়েছে!'); }
+      else{ updateLastSync('📋 Opening stock — '+new Date().toLocaleTimeString()); showToast('📋 Opening stock দেখাচ্ছে'); }
+    }
+  }catch(e){
+    console.error('loadData error:', e);
+    loadTable({}, [], false, null);
+    showToast('❌ Load error: '+e.message);
   }
-  showToast('✅ Deleted'); await loadData();
+  hideLoading();
 }
 
 async function manualRefresh(){
   showLoading('Refreshing...');
+  if(navigator.onLine) await syncOfflineData();
   await loadData();
   showToast('🔄 Refreshed!');
 }
 
-function onFloorChange(){ loadData(); }
-
-// =========================================
-// 📊 EXCEL EXPORT (Single Floor)
-// =========================================
-function exportExcel(){
-  const floor=document.getElementById('floor').value,date=document.getElementById('postDate').value,operator=document.getElementById('operatorName').value;
-  let html=`<h2>GMS COMPOSITE - NEEDLE DAILY POSTING</h2><h3>Floor: ${floor} | Date: ${date} | Operator: ${operator}</h3>
-  <table border="1" style="border-collapse:collapse"><thead><tr style="background:#1e293b;color:white">
-  <th>SL</th><th>CODE</th><th>TYPE</th><th>SIZE</th><th>BRAND</th><th>PRICE</th>
-  <th>Prev</th><th>Rcvd</th><th>ReqNo</th><th>Dvld</th><th>Present</th><th>BNR/BNF</th></tr></thead><tbody>`;
-  currentFloorData.forEach((item,i)=>{
-    const prev=Number(document.getElementById(`p${i}`)?.innerText)||0;
-    const rcvd=Number(document.getElementById(`r${i}`)?.value)||0;
-    const dvld=Number(document.getElementById(`d${i}`)?.value)||0;
-    const present=prev+rcvd-dvld;
-    html+=`<tr ${item.isCustom?'style="background:#fef3c7"':''}><td>${i+1}</td><td>${item.itemCode}</td><td>${item.needleType}</td><td>${item.size}</td><td>${item.brand}</td><td>${Number(item.unitPrice).toFixed(4)}</td><td>${prev}</td><td>${rcvd}</td><td>${rowReqNo[i]||''}</td><td>${dvld}</td><td>${present}</td><td>${document.getElementById(`bn${i}`)?.value||0}</td></tr>`;
-  });
-  html+=`</tbody><tfoot><tr><td colspan="6" style="text-align:right">TOTAL:</td><td>${document.getElementById('totalPrevious').innerText}</td><td>${document.getElementById('totalReceive').innerText}</td><td></td><td>${document.getElementById('totalDelivery').innerText}</td><td>${document.getElementById('totalPresent').innerText}</td><td>${document.getElementById('totalBN').innerText}</td></tr></tfoot></table>`;
-  const blob=new Blob([html],{type:'application/vnd.ms-excel'});
-  const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download=`needle-${floor.split('(')[0].trim()}-${date}.xls`; a.click();
-  showToast('✅ Excel exported');
-}
-function exportPDF(){ window.print(); }
-
-// =========================================
-// 📥 ALL FLOORS EXCEL — সঠিক Previous logic সহ
-// =========================================
-function openAllExcelPopup(){
-  document.getElementById('allExcelDate').value=document.getElementById('postDate').value||new Date().toISOString().slice(0,10);
-  document.getElementById('allExcelProgressWrap').style.display='none';
-  document.getElementById('allExcelDownloadBtn').disabled=false;
-  document.getElementById('allExcelDownloadBtn').textContent='📥 Download All Floors Excel';
-  document.getElementById('allExcelFloorStatus').innerHTML='';
-  document.getElementById('allExcelPopup').style.display='flex';
-}
-function closeAllExcelPopup(){ document.getElementById('allExcelPopup').style.display='none'; }
-
-async function exportAllFloorsExcel(){
-  const date=document.getElementById('allExcelDate').value;
-  if(!date){ alert('❌ Date নির্বাচন করুন!'); return; }
-  if(!navigator.onLine){ alert('❌ Internet connection দরকার!'); return; }
-
-  if(typeof XLSX==='undefined'){
-    showToast('📦 SheetJS loading...');
-    await new Promise((resolve,reject)=>{
-      const s=document.createElement('script');
-      s.src='https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js';
-      s.onload=resolve; s.onerror=()=>reject(new Error('SheetJS load failed'));
-      document.head.appendChild(s);
-    });
-  }
-
-  const btn=document.getElementById('allExcelDownloadBtn');
-  btn.disabled=true; btn.textContent='⏳ Loading...';
-  document.getElementById('allExcelProgressWrap').style.display='block';
-  const statusDiv=document.getElementById('allExcelFloorStatus');
-  const progressFill=document.getElementById('allExcelProgressFill');
-  const progressLabel=document.getElementById('allExcelProgressLabel');
-  statusDiv.innerHTML='';
-
-  try{
-    const companyId=await getCompanyId();
-    if(!companyId){ alert('❌ Company config error!'); btn.disabled=false; btn.textContent='📥 Download All Floors Excel'; return; }
-
-    const month=date.slice(0,7); // যেমন: '2026-06'
-
-    // আগের মাস বের করো
-    const [y,m]=month.split('-').map(Number);
-    let pm=m-1,py=y; if(pm<1){pm=12;py--;}
-    const prevMonth=`${py}-${String(pm).padStart(2,'0')}`;
-
-    progressLabel.textContent='🔄 এই মাসের সব data fetch করছি...';
-    progressFill.style.width='8%';
-
-    // ─── এই মাসের সব floor এর সব দিনের data একসাথে fetch ───
-    const {data:monthAllData,error:e1}=await supabase.from('needle_reports')
-      .select('floor,report_date,rows,operator')
-      .eq('company_id',companyId)
-      .like('report_date',month+'%');
-    if(e1){ alert('❌ Data fetch error: '+e1.message); btn.disabled=false; btn.textContent='📥 Download All Floors Excel'; return; }
-
-    progressLabel.textContent='🔄 আগের মাসের data fetch করছি...';
-    progressFill.style.width='16%';
-
-    // ─── আগের মাসের সব floor এর শেষ দিনের data ───
-    const {data:prevMonthData,error:e2}=await supabase.from('needle_reports')
-      .select('floor,report_date,rows')
-      .eq('company_id',companyId)
-      .like('report_date',prevMonth+'%')
-      .order('report_date',{ascending:false});
-    if(e2){ console.warn('Prev month fetch error:', e2.message); }
-
-    // Map তৈরি করো: floor -> prev month last data
-    const prevMonthMap={};
-    (prevMonthData||[]).forEach(d=>{
-      if(!prevMonthMap[d.floor]) prevMonthMap[d.floor]=d; // already sorted desc, so first = last date
-    });
-
-    // Map তৈরি করো: floor -> আজকের data
-    const todayReportMap={};
-    (monthAllData||[]).filter(d=>d.report_date===date).forEach(d=>{ todayReportMap[d.floor]=d; });
-
-    // Map তৈরি করো: floor -> এই মাসের সব দিনের data (আজ পর্যন্ত)
-    const monthFloorMap={};
-    (monthAllData||[]).forEach(d=>{
-      if(!monthFloorMap[d.floor]) monthFloorMap[d.floor]=[];
-      monthFloorMap[d.floor].push(d);
-    });
-
-    progressFill.style.width='25%';
-    progressLabel.textContent='📊 Excel workbook তৈরি করছি...';
-
-    const wb=XLSX.utils.book_new();
-
-    // ─── SUMMARY SHEET ───
-    const summaryAoa=[];
-    summaryAoa.push(['GMS COMPOSITE — NEEDLE DAILY POSTING — ALL FLOORS']);
-    summaryAoa.push([`Date: ${date}   |   Generated: ${new Date().toLocaleString()}`]);
-    summaryAoa.push([`Note: Previous = Opening + এই মাসের আগের দিনগুলোর cumulative (Document 2 logic)`]);
-    summaryAoa.push([]);
-    summaryAoa.push(['SL','FLOOR NAME','CATEGORY','OPENING','PREVIOUS','RECEIVED','DELIVERY','PRESENT','BNR/BNF','ITEMS','STATUS']);
-
-    let grandOpening=0,grandPrev=0,grandRcvd=0,grandDvld=0,grandPresent=0,grandBN=0;
-
-    for(let fi=0;fi<ALL_FLOORS.length;fi++){
-      const floorName=ALL_FLOORS[fi];
-      const category=floorName.includes('_NEW')?'NEW':'RUNNING';
-      const items=floorData[floorName]||[];
-
-      // ─── Opening: আগের মাসের last present, না হলে hardcoded ───
-      const prevMonthFloor=prevMonthMap[floorName];
-      const dynOpening=items.map((it,i)=>{
-        if(prevMonthFloor?.rows?.[i]) return Number(prevMonthFloor.rows[i].present)||0;
-        return Number(it[6])||0;
-      });
-
-      // ─── এই মাসের cumulative (আজ পর্যন্ত সব দিন) ───
-      const mRcvd=Array(items.length).fill(0);
-      const mDvld=Array(items.length).fill(0);
-      const mBN=Array(items.length).fill(0);
-      const tRcvd=Array(items.length).fill(0);
-      const tDvld=Array(items.length).fill(0);
-      const tBN=Array(items.length).fill(0);
-
-      const floorMonthDays=(monthFloorMap[floorName]||[]).filter(d=>d.report_date<=date);
-      floorMonthDays.forEach(day=>{
-        if(!day.rows) return;
-        day.rows.forEach(row=>{
-          const idx=items.findIndex(it=>it[1]===row.itemCode&&it[3]===row.size);
-          if(idx<0) return;
-          mRcvd[idx]+=Number(row.receive)||0;
-          mDvld[idx]+=Number(row.delivery)||0;
-          mBN[idx]  +=Number(row.bn)||0;
-        });
-      });
-
-      // আজকের values আলাদা
-      const todayFloor=todayReportMap[floorName];
-      if(todayFloor?.rows){
-        todayFloor.rows.forEach(row=>{
-          const idx=items.findIndex(it=>it[1]===row.itemCode&&it[3]===row.size);
-          if(idx<0) return;
-          tRcvd[idx]=Number(row.receive)||0;
-          tDvld[idx]=Number(row.delivery)||0;
-          tBN[idx]  =Number(row.bn)||0;
-        });
-      }
-
-      // ─── Previous = Opening + (মাসের cumulative আজ বাদে) ───
-      const prevList=items.map((_,i)=>dynOpening[i]+(mRcvd[i]-tRcvd[i])-(mDvld[i]-tDvld[i]));
-
-      // Summary totals
-      let fOpening=0,fPrev=0,fRcvd=0,fDvld=0,fPresent=0,fBN=0,itemCount=0,status='';
-
-      if(todayFloor?.rows?.length){
-        // আজকের saved data আছে
-        todayFloor.rows.forEach((row,idx)=>{
-          const i=items.findIndex(it=>it[1]===row.itemCode&&it[3]===row.size);
-          const ii=i>=0?i:idx;
-          fOpening+=dynOpening[ii]||0;
-          fPrev   +=prevList[ii]||0;
-          fRcvd   +=Number(row.receive)||0;
-          fDvld   +=Number(row.delivery)||0;
-          // Present = Previous + Rcvd - Dvld (recalculate করো)
-          fPresent+=(prevList[ii]||0)+(Number(row.receive)||0)-(Number(row.delivery)||0);
-          fBN     +=Number(row.bn)||0;
-        });
-        itemCount=todayFloor.rows.length;
-        status='✅ Data Found';
-      }else{
-        // আজকের data নেই — শুধু Previous দেখাও
-        items.forEach((_,i)=>{
-          fOpening+=dynOpening[i]||0;
-          fPrev   +=prevList[i]||0;
-          fPresent+=prevList[i]||0;
-        });
-        itemCount=items.length;
-        status=floorMonthDays.length>0?'📋 Earlier data (no today)':'📋 Opening Stock';
-      }
-
-      grandOpening+=fOpening; grandPrev+=fPrev; grandRcvd+=fRcvd;
-      grandDvld+=fDvld; grandPresent+=fPresent; grandBN+=fBN;
-
-      summaryAoa.push([fi+1,floorName,category,fOpening,fPrev,fRcvd,fDvld,fPresent,fBN,itemCount,status]);
-
-      const cls=todayFloor?'status-ok':'status-empty';
-      statusDiv.innerHTML+=`<div class="${cls}"><b>${fi+1}. ${floorName.replace(/\s*\(BUILDING[^)]*\)/gi,'').replace(/_NEW|_RUNNING/g,'')}</b> (${category}) — ${status} | Prev:${fPrev} Rcvd:${fRcvd} Dvld:${fDvld} <b>Present:${fPresent}</b></div>`;
-      progressFill.style.width=(25+Math.round((fi+1)/ALL_FLOORS.length*45))+'%';
-      if(fi%5===0) await new Promise(r=>setTimeout(r,10));
-    }
-
-    summaryAoa.push([]);
-    summaryAoa.push(['','GRAND TOTAL ('+ALL_FLOORS.length+' Floors)','',grandOpening,grandPrev,grandRcvd,grandDvld,grandPresent,grandBN,'','']);
-
-    const wsSummary=XLSX.utils.aoa_to_sheet(summaryAoa);
-    wsSummary['!cols']=[{wch:4},{wch:45},{wch:10},{wch:10},{wch:10},{wch:10},{wch:10},{wch:12},{wch:10},{wch:7},{wch:18}];
-    wsSummary['!merges']=[{s:{r:0,c:0},e:{r:0,c:10}},{s:{r:1,c:0},e:{r:1,c:10}},{s:{r:2,c:0},e:{r:2,c:10}}];
-    XLSX.utils.book_append_sheet(wb,wsSummary,'SUMMARY');
-
-    // ─── INDIVIDUAL FLOOR SHEETS ───
-    progressLabel.textContent='Individual floor sheets তৈরি করছি...';
-    progressFill.style.width='72%';
-
-    for(let fi=0;fi<ALL_FLOORS.length;fi++){
-      const floorName=ALL_FLOORS[fi];
-      const category=floorName.includes('_NEW')?'NEW':'RUNNING';
-      const bnLabel=floorName.includes('_NEW')?'BNR':'BNF';
-      const items=floorData[floorName]||[];
-
-      let sheetName=floorName.replace(/\s*\(BUILDING NO[^)]*\)/gi,'').replace(/_NEW/,'_N').replace(/_RUNNING/,'_R').replace(/[\/\\\?\*\[\]:\s]/g,'_').trim().substring(0,31);
-
-      // ─── এই floor এর previous ও cumulative হিসেব করো ───
-      const prevMonthFloor=prevMonthMap[floorName];
-      const dynOpening=items.map((it,i)=>{
-        if(prevMonthFloor?.rows?.[i]) return Number(prevMonthFloor.rows[i].present)||0;
-        return Number(it[6])||0;
-      });
-      const mRcvd=Array(items.length).fill(0);
-      const mDvld=Array(items.length).fill(0);
-      const tRcvd=Array(items.length).fill(0);
-      const tDvld=Array(items.length).fill(0);
-      const tBN=Array(items.length).fill(0);
-
-      const floorMonthDays=(monthFloorMap[floorName]||[]).filter(d=>d.report_date<=date);
-      floorMonthDays.forEach(day=>{
-        if(!day.rows) return;
-        day.rows.forEach(row=>{
-          const idx=items.findIndex(it=>it[1]===row.itemCode&&it[3]===row.size);
-          if(idx<0) return;
-          mRcvd[idx]+=Number(row.receive)||0;
-          mDvld[idx]+=Number(row.delivery)||0;
-        });
-      });
-      const todayFloor=todayReportMap[floorName];
-      if(todayFloor?.rows){
-        todayFloor.rows.forEach(row=>{
-          const idx=items.findIndex(it=>it[1]===row.itemCode&&it[3]===row.size);
-          if(idx<0) return;
-          tRcvd[idx]=Number(row.receive)||0;
-          tDvld[idx]=Number(row.delivery)||0;
-          tBN[idx]  =Number(row.bn)||0;
-        });
-      }
-      const prevList=items.map((_,i)=>dynOpening[i]+(mRcvd[i]-tRcvd[i])-(mDvld[i]-tDvld[i]));
-
-      const sheetAoa=[];
-      sheetAoa.push(['GMS COMPOSITE — NEEDLE DAILY POSTING']);
-      sheetAoa.push(['Floor: '+floorName]);
-      sheetAoa.push(['Date: '+date+'   |   Category: '+category+'   |   Operator: '+(todayFloor?.operator||'-')]);
-      sheetAoa.push([]);
-      sheetAoa.push(['SL','CODE','TYPE','SIZE','BRAND','UNIT PRICE','OPENING','PREVIOUS','RECEIVED','REQ NO','DELIVERY','PRESENT',bnLabel,'CUSTOM']);
-
-      let tOpening=0,tPrev=0,tTRcvd=0,tTDvld=0,tPresent=0,tBNtot=0;
-
-      if(todayFloor?.rows?.length){
-        todayFloor.rows.forEach((row,idx)=>{
-          const i=items.findIndex(it=>it[1]===row.itemCode&&it[3]===row.size);
-          const ii=i>=0?i:idx;
-          const op=dynOpening[ii]||0;
-          const prev=prevList[ii]||0;
-          const rcvd=Number(row.receive)||0;
-          const dvld=Number(row.delivery)||0;
-          const present=prev+rcvd-dvld; // recalculate
-          const bn=Number(row.bn)||0;
-          tOpening+=op; tPrev+=prev; tTRcvd+=rcvd; tTDvld+=dvld; tPresent+=present; tBNtot+=bn;
-          sheetAoa.push([idx+1,row.itemCode||'',row.needleType||'',row.size||'',row.brand||'',Number(row.unitPrice||0).toFixed(4),op,prev,rcvd,row.receiveReqNo||'',dvld,present,bn,row.isCustom?'YES':'']);
-        });
-      }else{
-        items.forEach((it,i)=>{
-          const op=dynOpening[i]||0;
-          const prev=prevList[i]||0;
-          tOpening+=op; tPrev+=prev; tPresent+=prev;
-          sheetAoa.push([i+1,it[1],it[2],it[3],it[4],Number(it[5]).toFixed(4),op,prev,0,'',0,prev,0,'']);
-        });
-      }
-
-      sheetAoa.push([]);
-      sheetAoa.push(['','','','','','','TOTAL →',tPrev,tTRcvd,'',tTDvld,tPresent,tBNtot,'']);
-
-      const ws=XLSX.utils.aoa_to_sheet(sheetAoa);
-      ws['!cols']=[{wch:4},{wch:11},{wch:22},{wch:7},{wch:14},{wch:10},{wch:10},{wch:10},{wch:9},{wch:16},{wch:9},{wch:10},{wch:9},{wch:7}];
-      ws['!merges']=[{s:{r:0,c:0},e:{r:0,c:13}},{s:{r:1,c:0},e:{r:1,c:13}},{s:{r:2,c:0},e:{r:2,c:13}}];
-      XLSX.utils.book_append_sheet(wb,ws,sheetName);
-
-      progressFill.style.width=(72+Math.round((fi+1)/ALL_FLOORS.length*25))+'%';
-      if(fi%5===0) await new Promise(r=>setTimeout(r,5));
-    }
-
-    progressFill.style.width='100%';
-    progressLabel.textContent='✅ Excel তৈরি সম্পন্ন! Downloading...';
-    XLSX.writeFile(wb,'GMS-Needle-AllFloors-'+date+'.xlsx');
-    btn.disabled=false; btn.textContent='✅ Downloaded!';
-    showToast(`✅ ${ALL_FLOORS.length} floors + Summary Excel download হয়েছে!`);
-    setTimeout(()=>{ btn.textContent='📥 Download All Floors Excel'; },3000);
-
-  }catch(e){
-    console.error('exportAllFloorsExcel error:',e);
-    alert('❌ Export error: '+e.message);
-    btn.disabled=false; btn.textContent='📥 Download All Floors Excel';
-  }
-}
-
-// =========================================
-// 🎨 UTILITIES
-// =========================================
-function showToast(msg){
-  const t=document.createElement('div');
-  t.style.cssText='position:fixed;bottom:80px;left:50%;transform:translateX(-50%);background:#10b981;color:#fff;padding:10px 20px;border-radius:8px;font-weight:600;font-size:12px;z-index:9999;box-shadow:0 4px 12px rgba(0,0,0,0.3);max-width:90%;text-align:center';
-  t.innerText=msg; document.body.appendChild(t); setTimeout(()=>t.remove(),2800);
-}
-function showLoading(text='Loading...'){ document.getElementById('loadingText').innerText=text; document.getElementById('loadingOverlay').classList.add('show'); }
-function hideLoading(){ document.getElementById('loadingOverlay').classList.remove('show'); }
-function updateLastSync(t){ const el=document.getElementById('lastSync'); if(el) el.textContent=t; }
-function toggleTheme(){ document.body.classList.toggle('light'); localStorage.setItem('theme',document.body.classList.contains('light')?'light':'dark'); }
-function updateOfflineIndicator(){ document.getElementById('offlineIndicator').style.display=navigator.onLine?'none':'block'; }
-
 async function syncOfflineData(){
   try{
     const data=JSON.parse(localStorage.getItem(OFFLINE_KEY)||'{}');
-    const keys=Object.keys(data); let synced=0;
+    const keys=Object.keys(data);
+    let synced=0;
     for(const key of keys){
       const [floor,date]=key.split('__');
       const entry=data[key];
@@ -1924,6 +1644,345 @@ async function syncOfflineData(){
   }catch(e){}
 }
 
+function onFloorChange(){ loadData(); }
+
+async function deleteData(){
+  const date=document.getElementById('postDate').value;
+  const floor=document.getElementById('floor').value;
+  if(!date){ alert('❌ Date select করুন'); return; }
+  if(!confirm('⚠️ এই তারিখের ডাটা delete করবেন?')) return;
+  try{
+    const data=JSON.parse(localStorage.getItem(OFFLINE_KEY)||'{}');
+    delete data[`${floor}__${date}`];
+    localStorage.setItem(OFFLINE_KEY,JSON.stringify(data));
+  }catch(e){}
+  if(navigator.onLine){
+    const companyId=await getCompanyId();
+    if(companyId){
+      const {error}=await supabase.from('needle_reports').delete().eq('company_id',companyId).eq('floor',floor).eq('report_date',date);
+      if(error){ alert('❌ Delete failed: '+error.message); return; }
+    }
+  }
+  showToast('✅ Deleted');
+  loadData();
+}
+
+// =========================================
+// 📅 MONTHLY SUMMARY
+// =========================================
+function updateMonthlySummary(rows){
+  let o=0,r=0,d=0,p=0,bn=0;
+  rows.forEach(row=>{ o+=Number(row.opening)||0; r+=Number(row.receive)||0; d+=Number(row.delivery)||0; p+=Number(row.present)||0; bn+=Number(row.bn)||0; });
+  document.getElementById('monthOpening').innerText=o.toLocaleString();
+  document.getElementById('monthReceive').innerText=r.toLocaleString();
+  document.getElementById('monthDelivery').innerText=d.toLocaleString();
+  document.getElementById('monthPresent').innerText=p.toLocaleString();
+  document.getElementById('monthBN').innerText=bn.toLocaleString();
+}
+
+// =========================================
+// 📊 SINGLE FLOOR EXCEL EXPORT
+// =========================================
+function exportExcel(){
+  const floor=document.getElementById('floor').value;
+  const date=document.getElementById('postDate').value;
+  const operator=document.getElementById('operatorName').value;
+  let html=`<h2>GMS COMPOSITE - NEEDLE DAILY POSTING</h2><h3>Floor: ${floor} | Date: ${date} | Operator: ${operator}</h3>
+  <table border="1" style="border-collapse:collapse"><thead><tr style="background:#1e293b;color:white">
+  <th>SL</th><th>CODE</th><th>TYPE</th><th>SIZE</th><th>BRAND</th><th>PRICE</th>
+  <th>Prev</th><th>Rcvd</th><th>ReqNo</th><th>Dvld</th><th>Present</th><th>BNR/BNF</th><th>Custom</th></tr></thead><tbody>`;
+  currentFloorData.forEach((item,i)=>{
+    html+=`<tr ${item.isCustom?'style="background:#fef3c7"':''}>
+    <td>${i+1}</td><td>${item.itemCode}</td><td>${item.needleType}</td><td>${item.size}</td>
+    <td>${item.brand}</td><td>${Number(item.unitPrice).toFixed(4)}</td>
+    <td>${document.getElementById(`p${i}`).innerText}</td>
+    <td>${document.getElementById(`r${i}`).value||0}</td>
+    <td>${rowReqNo[i]||''}</td>
+    <td>${document.getElementById(`d${i}`).value||0}</td>
+    <td>${document.getElementById(`b${i}`).innerText}</td>
+    <td>${document.getElementById(`bn${i}`).value||0}</td>
+    <td>${item.isCustom?'YES':''}</td></tr>`;
+  });
+  html+=`</tbody><tfoot><tr><td colspan="6" style="text-align:right">TOTAL:</td>
+  <td>${document.getElementById('totalPrevious').innerText}</td>
+  <td>${document.getElementById('totalReceive').innerText}</td><td></td>
+  <td>${document.getElementById('totalDelivery').innerText}</td>
+  <td>${document.getElementById('totalPresent').innerText}</td>
+  <td>${document.getElementById('totalBN').innerText}</td><td></td></tr></tfoot></table>`;
+  const blob=new Blob([html],{type:'application/vnd.ms-excel'});
+  const a=document.createElement('a'); a.href=URL.createObjectURL(blob);
+  a.download=`needle-${floor.split('(')[0].trim()}-${date}.xls`; a.click();
+  showToast('✅ Excel exported');
+}
+
+function exportPDF(){ window.print(); }
+
+// =========================================
+// 📥 ALL FLOORS EXCEL — POPUP OPEN/CLOSE
+// =========================================
+function openAllExcelPopup(){
+  const currentDate = document.getElementById('postDate').value;
+  document.getElementById('allExcelDate').value = currentDate || new Date().toISOString().slice(0,10);
+  document.getElementById('allExcelProgressWrap').style.display='none';
+  document.getElementById('allExcelDownloadBtn').disabled=false;
+  document.getElementById('allExcelDownloadBtn').textContent='📥 Download All Floors Excel';
+  document.getElementById('allExcelFloorStatus').innerHTML='';
+  document.getElementById('allExcelPopup').style.display='flex';
+}
+function closeAllExcelPopup(){ document.getElementById('allExcelPopup').style.display='none'; }
+
+// =========================================
+// 📥 ALL FLOORS EXCEL — MAIN EXPORT FUNCTION
+// Uses SheetJS (xlsx) loaded from CDN
+// =========================================
+async function exportAllFloorsExcel(){
+  const date = document.getElementById('allExcelDate').value;
+  if(!date){ alert('❌ Date নির্বাচন করুন!'); return; }
+  if(!navigator.onLine){ alert('❌ Internet connection দরকার!'); return; }
+
+  // Load SheetJS if not already loaded
+  if(typeof XLSX === 'undefined'){
+    showToast('📦 SheetJS library loading...');
+    await new Promise((resolve, reject)=>{
+      const s=document.createElement('script');
+      s.src='https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js';
+      s.onload=resolve; s.onerror=()=>reject(new Error('SheetJS load failed'));
+      document.head.appendChild(s);
+    });
+  }
+
+  const btn = document.getElementById('allExcelDownloadBtn');
+  btn.disabled=true;
+  btn.textContent='⏳ Loading...';
+  document.getElementById('allExcelProgressWrap').style.display='block';
+  const statusDiv = document.getElementById('allExcelFloorStatus');
+  const progressFill = document.getElementById('allExcelProgressFill');
+  const progressLabel = document.getElementById('allExcelProgressLabel');
+  statusDiv.innerHTML='';
+
+  try{
+    const companyId = await getCompanyId();
+    if(!companyId){ alert('❌ Company config error!'); btn.disabled=false; btn.textContent='📥 Download All Floors Excel'; return; }
+
+    // Fetch all floors data for this date in one query
+    progressLabel.textContent = '🔄 Supabase থেকে সব floor data fetch করছি...';
+    progressFill.style.width='10%';
+
+    const {data: allReports, error} = await supabase
+      .from('needle_reports')
+      .select('floor, report_date, rows, operator, summary')
+      .eq('company_id', companyId)
+      .eq('report_date', date);
+
+    if(error){ alert('❌ Data fetch error: '+error.message); btn.disabled=false; btn.textContent='📥 Download All Floors Excel'; return; }
+
+    // Build a map: floor -> report
+    const reportMap = {};
+    (allReports||[]).forEach(r=>{ reportMap[r.floor]=r; });
+
+    progressFill.style.width='30%';
+    progressLabel.textContent='📊 Excel workbook তৈরি করছি...';
+
+    const wb = XLSX.utils.book_new();
+
+    // ─── SUMMARY SHEET ───────────────────────────────────────────
+    // Summary: SL | Floor Name | Prev | Rcvd | Dvld | Present Stock | BNR/BNF | Status
+    const summaryRows = [];
+    // Title rows
+    summaryRows.push(['GMS COMPOSITE — NEEDLE DAILY POSTING']);
+    summaryRows.push([`📅 Date: ${date}   |   Generated: ${new Date().toLocaleString()}`]);
+    summaryRows.push(['ALL FLOORS SUMMARY — ' + date]);
+    summaryRows.push([]); // blank
+    summaryRows.push(['SL', 'FLOOR NAME', 'CATEGORY', 'PREVIOUS', 'RECEIVED', 'DELIVERY', 'PRESENT STOCK', 'BNR/BNF', 'ITEMS', 'STATUS']);
+
+    let grandPrev=0, grandRcvd=0, grandDvld=0, grandPresent=0, grandBN=0;
+    let floorNum=0;
+
+    const floorSummaries = [];
+
+    for(let fi=0; fi<ALL_FLOORS.length; fi++){
+      const floorName = ALL_FLOORS[fi];
+      const report = reportMap[floorName];
+      const category = floorName.includes('_NEW') ? 'NEW' : 'RUNNING';
+      const shortName = floorName.replace(/\s*\(BUILDING NO[^)]*\)/gi,'').replace(/_NEW|_RUNNING/g,'').trim();
+
+      let prev=0, rcvd=0, dvld=0, present=0, bn=0, itemCount=0, status='';
+
+      if(report && report.rows && report.rows.length){
+        report.rows.forEach(r=>{
+          prev += Number(r.previous)||0;
+          rcvd += Number(r.receive)||0;
+          dvld += Number(r.delivery)||0;
+          present += Number(r.present)||0;
+          bn += Number(r.bn)||0;
+        });
+        itemCount = report.rows.length;
+        status = '✅ Data Found';
+      }else{
+        // Use opening stock from floorData
+        const baseItems = floorData[floorName]||[];
+        baseItems.forEach(it=>{ prev += Number(it[6])||0; });
+        present = prev;
+        itemCount = baseItems.length;
+        status = '📋 Opening Stock';
+      }
+
+      grandPrev+=prev; grandRcvd+=rcvd; grandDvld+=dvld; grandPresent+=present; grandBN+=bn;
+      floorNum++;
+
+      floorSummaries.push({ floorName, shortName, category, prev, rcvd, dvld, present, bn, itemCount, status });
+      summaryRows.push([floorNum, floorName, category, prev, rcvd, dvld, present, bn, itemCount, status]);
+
+      // Update UI status
+      const statusClass = report ? 'status-ok' : 'status-empty';
+      statusDiv.innerHTML += `<div class="${statusClass}"><b>${floorNum}. ${shortName}</b> (${category}) — ${status} | Items: ${itemCount} | Present: ${present}</div>`;
+      progressFill.style.width = (30 + Math.round((fi+1)/ALL_FLOORS.length*40))+'%';
+      progressLabel.textContent = `${fi+1}/${ALL_FLOORS.length} floors processed...`;
+      // Small delay for UI update
+      if(fi % 5 === 0) await new Promise(r=>setTimeout(r,10));
+    }
+
+    // Grand total row
+    summaryRows.push([]); // blank
+    summaryRows.push(['', 'GRAND TOTAL (28 Floors)', '', grandPrev, grandRcvd, grandDvld, grandPresent, grandBN, '', '']);
+
+    const wsSummary = XLSX.utils.aoa_to_sheet(summaryRows);
+
+    // Column widths for summary
+    wsSummary['!cols'] = [
+      {wch:4},{wch:42},{wch:10},{wch:10},{wch:10},{wch:10},{wch:14},{wch:10},{wch:8},{wch:16}
+    ];
+
+    // Merge title cells
+    wsSummary['!merges'] = [
+      {s:{r:0,c:0},e:{r:0,c:9}},
+      {s:{r:1,c:0},e:{r:1,c:9}},
+      {s:{r:2,c:0},e:{r:2,c:9}},
+    ];
+
+    XLSX.utils.book_append_sheet(wb, wsSummary, 'SUMMARY');
+
+    // ─── INDIVIDUAL FLOOR SHEETS ──────────────────────────────────
+    progressLabel.textContent = 'Generating floor sheets...';
+    progressFill.style.width='72%';
+
+    for(let fi=0; fi<ALL_FLOORS.length; fi++){
+      const floorName = ALL_FLOORS[fi];
+      const report = reportMap[floorName];
+      const category = floorName.includes('_NEW') ? 'NEW' : 'RUNNING';
+      const bnLabel = floorName.includes('_NEW') ? 'BNR' : 'BNF';
+
+      // Sheet name max 31 chars, Excel-safe
+      let sheetName = floorName
+        .replace(/\s*\(BUILDING NO[^)]*\)/gi,'')
+        .replace(/_NEW/,'_N').replace(/_RUNNING/,'_R')
+        .replace(/[\/\\\?\*\[\]]/g,'')
+        .trim()
+        .substring(0,31);
+
+      const sheetRows = [];
+      // Title
+      sheetRows.push(['GMS COMPOSITE — NEEDLE DAILY POSTING']);
+      sheetRows.push([`Floor: ${floorName}`]);
+      sheetRows.push([`Date: ${date}   |   Category: ${category}   |   Operator: ${report?.operator||'-'}`]);
+      sheetRows.push([]);
+      sheetRows.push(['SL','CODE','TYPE','SIZE','BRAND','UNIT PRICE','PREVIOUS','RECEIVED','REQ NO','DELIVERY','PRESENT','BNR/BNF','CUSTOM']);
+
+      let tPrev=0, tRcvd=0, tDvld=0, tPresent=0, tBN=0;
+
+      if(report && report.rows && report.rows.length){
+        report.rows.forEach((row,idx)=>{
+          const prev=Number(row.previous)||0;
+          const rcvd=Number(row.receive)||0;
+          const dvld=Number(row.delivery)||0;
+          const present=Number(row.present)||0;
+          const bn=Number(row.bn)||0;
+          tPrev+=prev; tRcvd+=rcvd; tDvld+=dvld; tPresent+=present; tBN+=bn;
+          sheetRows.push([
+            idx+1,
+            row.itemCode||'', row.needleType||'', row.size||'', row.brand||'',
+            Number(row.unitPrice||0).toFixed(4),
+            prev, rcvd, row.receiveReqNo||'', dvld, present, bn,
+            row.isCustom?'YES':''
+          ]);
+        });
+      }else{
+        // Use opening stock
+        const baseItems = floorData[floorName]||[];
+        baseItems.forEach((it,idx)=>{
+          const prev=Number(it[6])||0;
+          tPrev+=prev; tPresent+=prev;
+          sheetRows.push([
+            idx+1, it[1], it[2], it[3], it[4],
+            Number(it[5]).toFixed(4),
+            prev, 0, '', 0, prev, 0, ''
+          ]);
+        });
+      }
+
+      // Total row
+      sheetRows.push([]);
+      sheetRows.push(['','','','','','TOTAL →', tPrev, tRcvd, '', tDvld, tPresent, tBN, '']);
+
+      const ws = XLSX.utils.aoa_to_sheet(sheetRows);
+      ws['!cols'] = [
+        {wch:4},{wch:11},{wch:22},{wch:7},{wch:14},{wch:10},
+        {wch:10},{wch:9},{wch:16},{wch:9},{wch:10},{wch:9},{wch:7}
+      ];
+      ws['!merges'] = [
+        {s:{r:0,c:0},e:{r:0,c:12}},
+        {s:{r:1,c:0},e:{r:1,c:12}},
+        {s:{r:2,c:0},e:{r:2,c:12}},
+      ];
+
+      XLSX.utils.book_append_sheet(wb, ws, sheetName);
+
+      progressFill.style.width = (72 + Math.round((fi+1)/ALL_FLOORS.length*25))+'%';
+      if(fi % 5 === 0) await new Promise(r=>setTimeout(r,5));
+    }
+
+    progressFill.style.width='100%';
+    progressLabel.textContent='✅ Excel তৈরি সম্পন্ন! Downloading...';
+
+    // Download
+    const fileName = `GMS-Needle-AllFloors-${date}.xlsx`;
+    XLSX.writeFile(wb, fileName);
+
+    btn.disabled=false;
+    btn.textContent='✅ Downloaded!';
+    showToast(`✅ ${ALL_FLOORS.length} floors + Summary sheet সহ Excel download হয়েছে!`);
+    setTimeout(()=>{ btn.textContent='📥 Download All Floors Excel'; }, 3000);
+
+  }catch(e){
+    console.error('exportAllFloorsExcel error:', e);
+    alert('❌ Export error: '+e.message);
+    btn.disabled=false;
+    btn.textContent='📥 Download All Floors Excel';
+  }
+}
+
+// =========================================
+// 🎨 UTILITIES
+// =========================================
+function showToast(msg){
+  const t=document.createElement('div');
+  t.style.cssText='position:fixed;bottom:80px;left:50%;transform:translateX(-50%);background:#10b981;color:#fff;padding:10px 20px;border-radius:8px;font-weight:600;font-size:12px;z-index:9999;box-shadow:0 4px 12px rgba(0,0,0,0.3);max-width:90%;text-align:center';
+  t.innerText=msg; document.body.appendChild(t); setTimeout(()=>t.remove(),2800);
+}
+function showLoading(text='Loading...'){
+  document.getElementById('loadingText').innerText=text;
+  document.getElementById('loadingOverlay').classList.add('show');
+}
+function hideLoading(){ document.getElementById('loadingOverlay').classList.remove('show'); }
+function updateLastSync(t){ const el=document.getElementById('lastSync'); if(el) el.textContent=t; }
+function toggleTheme(){
+  document.body.classList.toggle('light');
+  localStorage.setItem('theme',document.body.classList.contains('light')?'light':'dark');
+}
+function updateOfflineIndicator(){
+  document.getElementById('offlineIndicator').style.display=navigator.onLine?'none':'block';
+}
+
 // =========================================
 // 🚀 INIT
 // =========================================
@@ -1934,6 +1993,7 @@ async function syncOfflineData(){
   if(localStorage.getItem('theme')==='light') document.body.classList.add('light');
   updateOfflineIndicator();
   updateCategoryBadge();
+  loadTable({}, [], false, null);
   if(navigator.onLine) setTimeout(syncOfflineData,2000);
   document.addEventListener('keydown',e=>{ if(e.ctrlKey&&e.key==='s'){e.preventDefault();saveData();} });
 })();
@@ -1941,7 +2001,6 @@ async function syncOfflineData(){
 window.addEventListener('online',()=>{ updateOfflineIndicator(); syncOfflineData(); });
 window.addEventListener('offline',()=>updateOfflineIndicator());
 document.getElementById('postDate').addEventListener('change', loadData);
-document.getElementById('floor').addEventListener('change', loadData);
 document.addEventListener('keydown',e=>{
   if(e.target.tagName!=='INPUT'||!e.target.id.match(/^(r|d|bn)\d+$/)) return;
   if(e.key==='Enter'){
