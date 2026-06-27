@@ -90,13 +90,13 @@ body.light .loading-text{color:#475569}
 body.light .last-sync{color:#64748b}
 .carry-source-bar{background:#1e3a5f;border:1px solid #3b82f6;border-radius:6px;padding:5px 10px;font-size:9px;color:#93c5fd;text-align:center;margin:3px 0;display:none}
 body.light .carry-source-bar{background:#dbeafe;color:#1e40af;border-color:#3b82f6}
-/* All Excel Progress */
 .excel-progress-bar{width:100%;background:#e2e8f0;border-radius:6px;height:14px;margin:8px 0;overflow:hidden}
 .excel-progress-fill{height:100%;background:linear-gradient(90deg,#f59e0b,#d97706);border-radius:6px;transition:width 0.3s;width:0%}
 .excel-floor-status{font-size:10px;color:#475569;margin:3px 0;padding:4px 8px;background:#f8fafc;border-radius:4px;text-align:left;max-height:180px;overflow-y:auto}
 .excel-floor-status div{padding:2px 0;border-bottom:1px solid #e2e8f0}
 .excel-floor-status div:last-child{border-bottom:none}
 .status-ok{color:#059669}
+.status-carry{color:#d97706}
 .status-empty{color:#94a3b8}
 .status-loading{color:#f59e0b}
 @media(max-width:480px){
@@ -450,7 +450,8 @@ body.light .carry-source-bar{background:#dbeafe;color:#1e40af;border-color:#3b82
     <div id="allExcelInfo" style="font-size:11px;color:#475569;margin:6px 0;padding:8px;background:#f1f5f9;border-radius:6px;line-height:1.6">
       ✅ সব <b>28টি Floor</b> এর data একটি Excel এ download হবে<br>
       📋 প্রতিটি floor আলাদা <b>Sheet</b> এ থাকবে<br>
-      📊 একটি <b>SUMMARY</b> sheet সব floor এর total সহ থাকবে
+      📊 একটি <b>SUMMARY</b> sheet সব floor এর total সহ থাকবে<br>
+      ⏪ Data না থাকলে <b>সবচেয়ে কাছের আগের দিনের Present Stock</b> দেখাবে
     </div>
     <div id="allExcelProgressWrap" style="display:none">
       <div style="font-size:11px;font-weight:600;color:#334155;margin-bottom:4px" id="allExcelProgressLabel">Loading floors...</div>
@@ -460,7 +461,7 @@ body.light .carry-source-bar{background:#dbeafe;color:#1e40af;border-color:#3b82
     <button class="popup-fix-btn" id="allExcelDownloadBtn" onclick="exportAllFloorsExcel()" style="background:linear-gradient(135deg,#f59e0b,#d97706);color:#000;font-weight:900;font-size:15px">
       📥 Download All Floors Excel
     </button>
-    <div class="popup-footer">⚠️ Data না থাকলে সেই floor এ Opening Stock দেখাবে</div>
+    <div class="popup-footer">⏪ Data না থাকলে আগের দিনের Present Stock carry হয়ে দেখাবে</div>
   </div>
 </div>
 
@@ -821,7 +822,6 @@ const floorData = {
   ]
 };
 
-// All 28 floor names in order
 const ALL_FLOORS = Object.keys(floorData);
 
 // =========================================
@@ -1718,7 +1718,7 @@ function exportExcel(){
 function exportPDF(){ window.print(); }
 
 // =========================================
-// 📥 ALL FLOORS EXCEL — POPUP OPEN/CLOSE
+// 📥 ALL FLOORS EXCEL — POPUP
 // =========================================
 function openAllExcelPopup(){
   const currentDate = document.getElementById('postDate').value;
@@ -1732,15 +1732,15 @@ function openAllExcelPopup(){
 function closeAllExcelPopup(){ document.getElementById('allExcelPopup').style.display='none'; }
 
 // =========================================
-// 📥 ALL FLOORS EXCEL — MAIN EXPORT FUNCTION
-// Uses SheetJS (xlsx) loaded from CDN
+// 📥 ALL FLOORS EXCEL — MAIN EXPORT
+// ✅ FIX: Data না থাকলে আগের দিনের Present Stock carry হবে
 // =========================================
 async function exportAllFloorsExcel(){
   const date = document.getElementById('allExcelDate').value;
   if(!date){ alert('❌ Date নির্বাচন করুন!'); return; }
   if(!navigator.onLine){ alert('❌ Internet connection দরকার!'); return; }
 
-  // Load SheetJS if not already loaded
+  // Load SheetJS if not loaded
   if(typeof XLSX === 'undefined'){
     showToast('📦 SheetJS library loading...');
     await new Promise((resolve, reject)=>{
@@ -1752,8 +1752,7 @@ async function exportAllFloorsExcel(){
   }
 
   const btn = document.getElementById('allExcelDownloadBtn');
-  btn.disabled=true;
-  btn.textContent='⏳ Loading...';
+  btn.disabled=true; btn.textContent='⏳ Loading...';
   document.getElementById('allExcelProgressWrap').style.display='block';
   const statusDiv = document.getElementById('allExcelFloorStatus');
   const progressFill = document.getElementById('allExcelProgressFill');
@@ -1764,115 +1763,152 @@ async function exportAllFloorsExcel(){
     const companyId = await getCompanyId();
     if(!companyId){ alert('❌ Company config error!'); btn.disabled=false; btn.textContent='📥 Download All Floors Excel'; return; }
 
-    // Fetch all floors data for this date in one query
-    progressLabel.textContent = '🔄 Supabase থেকে সব floor data fetch করছি...';
+    // ─── STEP 1: Fetch today's data for ALL floors in ONE query ───
+    progressLabel.textContent = '🔄 সব floor এর data fetch করছি...';
     progressFill.style.width='10%';
 
-    const {data: allReports, error} = await supabase
+    const {data: todayReports, error: todayError} = await supabase
       .from('needle_reports')
       .select('floor, report_date, rows, operator, summary')
       .eq('company_id', companyId)
       .eq('report_date', date);
 
-    if(error){ alert('❌ Data fetch error: '+error.message); btn.disabled=false; btn.textContent='📥 Download All Floors Excel'; return; }
+    if(todayError){ alert('❌ Data fetch error: '+todayError.message); btn.disabled=false; btn.textContent='📥 Download All Floors Excel'; return; }
 
-    // Build a map: floor -> report
-    const reportMap = {};
-    (allReports||[]).forEach(r=>{ reportMap[r.floor]=r; });
+    // Build map: floor -> today's report
+    const todayMap = {};
+    (todayReports||[]).forEach(r=>{ todayMap[r.floor]=r; });
 
-    progressFill.style.width='30%';
+    progressFill.style.width='20%';
+
+    // ─── STEP 2: Find floors that have NO today data → need carry-forward ───
+    const floorsNeedingCarry = ALL_FLOORS.filter(f => !todayMap[f]);
+
+    progressLabel.textContent = `⏪ ${floorsNeedingCarry.length} floor এর আগের data খুঁজছি...`;
+
+    // For floors needing carry, fetch their latest saved data before this date
+    // Fetch all in ONE batch query for efficiency
+    const carryMap = {}; // floor -> {rows, report_date}
+
+    if(floorsNeedingCarry.length > 0){
+      // Fetch last saved record for each carry-needed floor (before selected date)
+      // We do ONE query getting all records before the date, then pick latest per floor
+      const {data: prevReports, error: prevError} = await supabase
+        .from('needle_reports')
+        .select('floor, report_date, rows, operator')
+        .eq('company_id', companyId)
+        .in('floor', floorsNeedingCarry)
+        .lt('report_date', date)
+        .order('report_date', {ascending: false});
+
+      if(!prevError && prevReports && prevReports.length){
+        // Pick the LATEST record per floor (first occurrence since ordered desc)
+        const seenFloors = new Set();
+        prevReports.forEach(r=>{
+          if(!seenFloors.has(r.floor)){
+            seenFloors.add(r.floor);
+            carryMap[r.floor] = { rows: r.rows, report_date: r.report_date };
+          }
+        });
+      }
+    }
+
+    progressFill.style.width='35%';
     progressLabel.textContent='📊 Excel workbook তৈরি করছি...';
 
     const wb = XLSX.utils.book_new();
 
-    // ─── SUMMARY SHEET ───────────────────────────────────────────
-    // Summary: SL | Floor Name | Prev | Rcvd | Dvld | Present Stock | BNR/BNF | Status
+    // ─── SUMMARY SHEET ─────────────────────────────────────────────
     const summaryRows = [];
-    // Title rows
     summaryRows.push(['GMS COMPOSITE — NEEDLE DAILY POSTING']);
     summaryRows.push([`📅 Date: ${date}   |   Generated: ${new Date().toLocaleString()}`]);
     summaryRows.push(['ALL FLOORS SUMMARY — ' + date]);
-    summaryRows.push([]); // blank
-    summaryRows.push(['SL', 'FLOOR NAME', 'CATEGORY', 'PREVIOUS', 'RECEIVED', 'DELIVERY', 'PRESENT STOCK', 'BNR/BNF', 'ITEMS', 'STATUS']);
+    summaryRows.push([]);
+    summaryRows.push(['SL', 'FLOOR NAME', 'CATEGORY', 'PREVIOUS', 'RECEIVED', 'DELIVERY', 'PRESENT STOCK', 'BNR/BNF', 'ITEMS', 'DATA SOURCE']);
 
     let grandPrev=0, grandRcvd=0, grandDvld=0, grandPresent=0, grandBN=0;
-    let floorNum=0;
-
-    const floorSummaries = [];
 
     for(let fi=0; fi<ALL_FLOORS.length; fi++){
       const floorName = ALL_FLOORS[fi];
-      const report = reportMap[floorName];
       const category = floorName.includes('_NEW') ? 'NEW' : 'RUNNING';
       const shortName = floorName.replace(/\s*\(BUILDING NO[^)]*\)/gi,'').replace(/_NEW|_RUNNING/g,'').trim();
 
-      let prev=0, rcvd=0, dvld=0, present=0, bn=0, itemCount=0, status='';
+      let prev=0, rcvd=0, dvld=0, present=0, bn=0, itemCount=0, dataSource='';
 
-      if(report && report.rows && report.rows.length){
-        report.rows.forEach(r=>{
+      if(todayMap[floorName] && todayMap[floorName].rows && todayMap[floorName].rows.length){
+        // ✅ Today's data exists
+        const rows = todayMap[floorName].rows;
+        rows.forEach(r=>{
           prev += Number(r.previous)||0;
           rcvd += Number(r.receive)||0;
           dvld += Number(r.delivery)||0;
           present += Number(r.present)||0;
           bn += Number(r.bn)||0;
         });
-        itemCount = report.rows.length;
-        status = '✅ Data Found';
-      }else{
-        // Use opening stock from floorData
+        itemCount = rows.length;
+        dataSource = '✅ ' + date;
+      } else if(carryMap[floorName]){
+        // ⏪ Carry from previous date — use Present Stock as the value
+        const rows = carryMap[floorName].rows;
+        const carryDate = carryMap[floorName].report_date;
+        rows.forEach(r=>{
+          // Carry: previous day's Present → today's Previous (and Present since no new activity)
+          const carryPresent = Number(r.present)||0;
+          prev += carryPresent;
+          present += carryPresent;
+          // rcvd, dvld, bn = 0 (no activity today)
+        });
+        itemCount = rows.length;
+        dataSource = '⏪ Carry: ' + carryDate;
+      } else {
+        // 📋 No data at all → use opening stock
         const baseItems = floorData[floorName]||[];
-        baseItems.forEach(it=>{ prev += Number(it[6])||0; });
-        present = prev;
+        baseItems.forEach(it=>{
+          const opening = Number(it[6])||0;
+          prev += opening;
+          present += opening;
+        });
         itemCount = baseItems.length;
-        status = '📋 Opening Stock';
+        dataSource = '📋 Opening Stock';
       }
 
       grandPrev+=prev; grandRcvd+=rcvd; grandDvld+=dvld; grandPresent+=present; grandBN+=bn;
-      floorNum++;
 
-      floorSummaries.push({ floorName, shortName, category, prev, rcvd, dvld, present, bn, itemCount, status });
-      summaryRows.push([floorNum, floorName, category, prev, rcvd, dvld, present, bn, itemCount, status]);
+      summaryRows.push([fi+1, floorName, category, prev, rcvd, dvld, present, bn, itemCount, dataSource]);
 
-      // Update UI status
-      const statusClass = report ? 'status-ok' : 'status-empty';
-      statusDiv.innerHTML += `<div class="${statusClass}"><b>${floorNum}. ${shortName}</b> (${category}) — ${status} | Items: ${itemCount} | Present: ${present}</div>`;
-      progressFill.style.width = (30 + Math.round((fi+1)/ALL_FLOORS.length*40))+'%';
-      progressLabel.textContent = `${fi+1}/${ALL_FLOORS.length} floors processed...`;
-      // Small delay for UI update
-      if(fi % 5 === 0) await new Promise(r=>setTimeout(r,10));
+      // Update status display
+      let statusClass = 'status-ok';
+      if(dataSource.startsWith('⏪')) statusClass = 'status-carry';
+      else if(dataSource.startsWith('📋')) statusClass = 'status-empty';
+
+      statusDiv.innerHTML += `<div class="${statusClass}"><b>${fi+1}. ${shortName}</b> (${category}) — ${dataSource} | Items: ${itemCount} | Present: ${present.toLocaleString()}</div>`;
+      progressFill.style.width = (35 + Math.round((fi+1)/ALL_FLOORS.length*30))+'%';
+      progressLabel.textContent = `Summary: ${fi+1}/${ALL_FLOORS.length}...`;
+      if(fi % 7 === 0) await new Promise(r=>setTimeout(r,5));
     }
 
-    // Grand total row
-    summaryRows.push([]); // blank
+    // Grand total
+    summaryRows.push([]);
     summaryRows.push(['', 'GRAND TOTAL (28 Floors)', '', grandPrev, grandRcvd, grandDvld, grandPresent, grandBN, '', '']);
 
     const wsSummary = XLSX.utils.aoa_to_sheet(summaryRows);
-
-    // Column widths for summary
-    wsSummary['!cols'] = [
-      {wch:4},{wch:42},{wch:10},{wch:10},{wch:10},{wch:10},{wch:14},{wch:10},{wch:8},{wch:16}
-    ];
-
-    // Merge title cells
+    wsSummary['!cols'] = [{wch:4},{wch:44},{wch:10},{wch:10},{wch:10},{wch:10},{wch:14},{wch:10},{wch:8},{wch:20}];
     wsSummary['!merges'] = [
       {s:{r:0,c:0},e:{r:0,c:9}},
       {s:{r:1,c:0},e:{r:1,c:9}},
       {s:{r:2,c:0},e:{r:2,c:9}},
     ];
-
     XLSX.utils.book_append_sheet(wb, wsSummary, 'SUMMARY');
 
-    // ─── INDIVIDUAL FLOOR SHEETS ──────────────────────────────────
-    progressLabel.textContent = 'Generating floor sheets...';
-    progressFill.style.width='72%';
+    // ─── INDIVIDUAL FLOOR SHEETS ────────────────────────────────────
+    progressLabel.textContent = 'Floor sheets তৈরি করছি...';
+    progressFill.style.width='67%';
 
     for(let fi=0; fi<ALL_FLOORS.length; fi++){
       const floorName = ALL_FLOORS[fi];
-      const report = reportMap[floorName];
       const category = floorName.includes('_NEW') ? 'NEW' : 'RUNNING';
       const bnLabel = floorName.includes('_NEW') ? 'BNR' : 'BNF';
 
-      // Sheet name max 31 chars, Excel-safe
       let sheetName = floorName
         .replace(/\s*\(BUILDING NO[^)]*\)/gi,'')
         .replace(/_NEW/,'_N').replace(/_RUNNING/,'_R')
@@ -1881,77 +1917,106 @@ async function exportAllFloorsExcel(){
         .substring(0,31);
 
       const sheetRows = [];
-      // Title
+      let operatorName = '-';
+      let dataSource = '';
+
       sheetRows.push(['GMS COMPOSITE — NEEDLE DAILY POSTING']);
       sheetRows.push([`Floor: ${floorName}`]);
-      sheetRows.push([`Date: ${date}   |   Category: ${category}   |   Operator: ${report?.operator||'-'}`]);
+      // placeholder for row 3 (operator filled below)
+      sheetRows.push(['']);
       sheetRows.push([]);
-      sheetRows.push(['SL','CODE','TYPE','SIZE','BRAND','UNIT PRICE','PREVIOUS','RECEIVED','REQ NO','DELIVERY','PRESENT','BNR/BNF','CUSTOM']);
+      sheetRows.push(['SL','CODE','TYPE','SIZE','BRAND','UNIT PRICE','PREVIOUS','RECEIVED','REQ NO','DELIVERY','PRESENT',bnLabel,'CUSTOM','NOTE']);
 
       let tPrev=0, tRcvd=0, tDvld=0, tPresent=0, tBN=0;
 
-      if(report && report.rows && report.rows.length){
-        report.rows.forEach((row,idx)=>{
-          const prev=Number(row.previous)||0;
-          const rcvd=Number(row.receive)||0;
-          const dvld=Number(row.delivery)||0;
-          const present=Number(row.present)||0;
-          const bn=Number(row.bn)||0;
-          tPrev+=prev; tRcvd+=rcvd; tDvld+=dvld; tPresent+=present; tBN+=bn;
+      if(todayMap[floorName] && todayMap[floorName].rows && todayMap[floorName].rows.length){
+        // ✅ Today's actual data
+        operatorName = todayMap[floorName].operator || '-';
+        dataSource = '✅ Actual data: ' + date;
+        todayMap[floorName].rows.forEach((row,idx)=>{
+          const p=Number(row.previous)||0, r=Number(row.receive)||0;
+          const d=Number(row.delivery)||0, ps=Number(row.present)||0, bn=Number(row.bn)||0;
+          tPrev+=p; tRcvd+=r; tDvld+=d; tPresent+=ps; tBN+=bn;
           sheetRows.push([
-            idx+1,
-            row.itemCode||'', row.needleType||'', row.size||'', row.brand||'',
+            idx+1, row.itemCode||'', row.needleType||'', row.size||'', row.brand||'',
             Number(row.unitPrice||0).toFixed(4),
-            prev, rcvd, row.receiveReqNo||'', dvld, present, bn,
-            row.isCustom?'YES':''
+            p, r, row.receiveReqNo||'', d, ps, bn,
+            row.isCustom?'YES':'', ''
           ]);
         });
-      }else{
-        // Use opening stock
+      } else if(carryMap[floorName]){
+        // ⏪ Carry from previous date
+        const carryDate = carryMap[floorName].report_date;
+        operatorName = 'Carried from ' + carryDate;
+        dataSource = '⏪ Carry from: ' + carryDate;
+        carryMap[floorName].rows.forEach((row,idx)=>{
+          const carryPresent = Number(row.present)||0;
+          tPrev+=carryPresent; tPresent+=carryPresent;
+          sheetRows.push([
+            idx+1, row.itemCode||'', row.needleType||'', row.size||'', row.brand||'',
+            Number(row.unitPrice||0).toFixed(4),
+            carryPresent,  // Previous = last saved Present
+            0, '', 0,
+            carryPresent,  // Present = same (no activity today)
+            0,
+            row.isCustom?'YES':'',
+            '⏪ Carry: '+carryDate
+          ]);
+        });
+      } else {
+        // 📋 Opening stock
+        operatorName = 'Opening Stock';
+        dataSource = '📋 Opening stock (no saved data)';
         const baseItems = floorData[floorName]||[];
         baseItems.forEach((it,idx)=>{
-          const prev=Number(it[6])||0;
-          tPrev+=prev; tPresent+=prev;
+          const opening = Number(it[6])||0;
+          tPrev+=opening; tPresent+=opening;
           sheetRows.push([
             idx+1, it[1], it[2], it[3], it[4],
             Number(it[5]).toFixed(4),
-            prev, 0, '', 0, prev, 0, ''
+            opening, 0, '', 0, opening, 0, '', '📋 Opening'
           ]);
         });
       }
 
+      // Fill row 3 (index 2) with operator/source info
+      sheetRows[2] = [`Date: ${date}   |   Category: ${category}   |   Operator: ${operatorName}   |   Source: ${dataSource}`];
+
       // Total row
       sheetRows.push([]);
-      sheetRows.push(['','','','','','TOTAL →', tPrev, tRcvd, '', tDvld, tPresent, tBN, '']);
+      sheetRows.push(['','','','','','TOTAL →', tPrev, tRcvd, '', tDvld, tPresent, tBN, '', '']);
 
       const ws = XLSX.utils.aoa_to_sheet(sheetRows);
       ws['!cols'] = [
         {wch:4},{wch:11},{wch:22},{wch:7},{wch:14},{wch:10},
-        {wch:10},{wch:9},{wch:16},{wch:9},{wch:10},{wch:9},{wch:7}
+        {wch:10},{wch:9},{wch:16},{wch:9},{wch:10},{wch:9},{wch:7},{wch:22}
       ];
       ws['!merges'] = [
-        {s:{r:0,c:0},e:{r:0,c:12}},
-        {s:{r:1,c:0},e:{r:1,c:12}},
-        {s:{r:2,c:0},e:{r:2,c:12}},
+        {s:{r:0,c:0},e:{r:0,c:13}},
+        {s:{r:1,c:0},e:{r:1,c:13}},
+        {s:{r:2,c:0},e:{r:2,c:13}},
       ];
-
       XLSX.utils.book_append_sheet(wb, ws, sheetName);
 
-      progressFill.style.width = (72 + Math.round((fi+1)/ALL_FLOORS.length*25))+'%';
-      if(fi % 5 === 0) await new Promise(r=>setTimeout(r,5));
+      progressFill.style.width = (67 + Math.round((fi+1)/ALL_FLOORS.length*30))+'%';
+      if(fi % 7 === 0) await new Promise(r=>setTimeout(r,5));
     }
 
     progressFill.style.width='100%';
     progressLabel.textContent='✅ Excel তৈরি সম্পন্ন! Downloading...';
 
-    // Download
     const fileName = `GMS-Needle-AllFloors-${date}.xlsx`;
     XLSX.writeFile(wb, fileName);
 
     btn.disabled=false;
     btn.textContent='✅ Downloaded!';
-    showToast(`✅ ${ALL_FLOORS.length} floors + Summary sheet সহ Excel download হয়েছে!`);
-    setTimeout(()=>{ btn.textContent='📥 Download All Floors Excel'; }, 3000);
+
+    // Count stats
+    const todayCount = ALL_FLOORS.filter(f=>todayMap[f]).length;
+    const carryCount = ALL_FLOORS.filter(f=>!todayMap[f]&&carryMap[f]).length;
+    const openingCount = ALL_FLOORS.filter(f=>!todayMap[f]&&!carryMap[f]).length;
+    showToast(`✅ Downloaded! ✅${todayCount} floors today | ⏪${carryCount} carry | 📋${openingCount} opening`);
+    setTimeout(()=>{ btn.textContent='📥 Download All Floors Excel'; }, 3500);
 
   }catch(e){
     console.error('exportAllFloorsExcel error:', e);
@@ -1967,7 +2032,7 @@ async function exportAllFloorsExcel(){
 function showToast(msg){
   const t=document.createElement('div');
   t.style.cssText='position:fixed;bottom:80px;left:50%;transform:translateX(-50%);background:#10b981;color:#fff;padding:10px 20px;border-radius:8px;font-weight:600;font-size:12px;z-index:9999;box-shadow:0 4px 12px rgba(0,0,0,0.3);max-width:90%;text-align:center';
-  t.innerText=msg; document.body.appendChild(t); setTimeout(()=>t.remove(),2800);
+  t.innerText=msg; document.body.appendChild(t); setTimeout(()=>t.remove(),3000);
 }
 function showLoading(text='Loading...'){
   document.getElementById('loadingText').innerText=text;
