@@ -17,6 +17,7 @@ button{padding:6px 8px;border:0;border-radius:6px;color:white;font-weight:bold;c
 button:hover{transform:translateY(-2px);box-shadow:0 4px 12px rgba(0,0,0,0.3)}
 button:active{transform:translateY(0)}
 .deleteBtn{background:#dc2626}.excelBtn{background:#16a34a}.pdfBtn{background:#7c3aed}.homeBtn{background:#2563eb}.saveBtn{background:#10b981}.themeBtn{background:#64748b}.refreshBtn{background:#f59e0b}.addRowBtn{background:#0891b2}
+.allExcelBtn{background:linear-gradient(135deg,#f59e0b,#d97706);color:#000;font-weight:900;border:2px solid #92400e}
 input,select,textarea,button{font-size:13px}
 select,input[type="date"],input[type="text"]{padding:4px;border-radius:6px;border:1px solid #475569;max-width:150px;background:#1e293b;color:white}
 body.light select,body.light input[type="date"],body.light input[type="text"]{background:#f1f5f9;color:#0f172a;border-color:#cbd5e1}
@@ -34,7 +35,7 @@ body.light #reportTable thead{background:#334155}
 .req-tag{display:block;font-size:6px;color:#059669;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .del-row-btn{background:#dc2626;color:white;border:none;border-radius:3px;padding:1px 3px;font-size:9px;cursor:pointer;width:100%;line-height:1.3}
 .custom-row-indicator{background:#fef3c7;color:#92400e!important}
-#reqPopup,#transferPopup,#negativePopup,#reportPopup,#reqSearchPopup,#addRowPopup{display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.82);z-index:9998;justify-content:center;align-items:center}
+#reqPopup,#transferPopup,#negativePopup,#reportPopup,#reqSearchPopup,#addRowPopup,#allExcelPopup{display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.82);z-index:9998;justify-content:center;align-items:center}
 .popup-content{background:white;color:black;padding:18px;border-radius:12px;max-width:95%;width:380px;box-shadow:0 8px 30px rgba(0,0,0,0.4);position:relative;animation:popupSlide 0.25s}
 @keyframes popupSlide{from{transform:translateY(-40px);opacity:0}to{transform:translateY(0);opacity:1}}
 .popup-close{position:absolute;top:10px;right:14px;font-size:22px;cursor:pointer;color:#666;font-weight:bold}
@@ -53,6 +54,7 @@ body.light #reportTable thead{background:#334155}
 .popup-details span.label{font-weight:bold;color:#334155}
 .popup-details span.value{color:#1e293b;font-weight:600}
 #reportPopup .popup-content,#reqSearchPopup .popup-content{width:98%;max-width:700px;max-height:90vh;overflow-y:auto}
+#allExcelPopup .popup-content{width:96%;max-width:500px}
 #reportTable2,#reqSearchTable{width:100%;border-collapse:collapse;font-size:10px;color:black}
 #reportTable2 th,#reqSearchTable th{background:#1e293b;color:white;padding:5px;border:1px solid #000}
 #reportTable2 td,#reqSearchTable td{border:1px solid #ccc;padding:4px;text-align:center}
@@ -86,9 +88,17 @@ body.light .loading-text{color:#475569}
 .theme-toggle{position:fixed;top:6px;right:6px;z-index:1000}
 .last-sync{text-align:center;font-size:9px;color:#94a3b8;margin-top:3px}
 body.light .last-sync{color:#64748b}
-/* ✅ NEW: Carry debug banner - shows which date was used as source */
 .carry-source-bar{background:#1e3a5f;border:1px solid #3b82f6;border-radius:6px;padding:5px 10px;font-size:9px;color:#93c5fd;text-align:center;margin:3px 0;display:none}
 body.light .carry-source-bar{background:#dbeafe;color:#1e40af;border-color:#3b82f6}
+/* All Excel Progress */
+.excel-progress-bar{width:100%;background:#e2e8f0;border-radius:6px;height:14px;margin:8px 0;overflow:hidden}
+.excel-progress-fill{height:100%;background:linear-gradient(90deg,#f59e0b,#d97706);border-radius:6px;transition:width 0.3s;width:0%}
+.excel-floor-status{font-size:10px;color:#475569;margin:3px 0;padding:4px 8px;background:#f8fafc;border-radius:4px;text-align:left;max-height:180px;overflow-y:auto}
+.excel-floor-status div{padding:2px 0;border-bottom:1px solid #e2e8f0}
+.excel-floor-status div:last-child{border-bottom:none}
+.status-ok{color:#059669}
+.status-empty{color:#94a3b8}
+.status-loading{color:#f59e0b}
 @media(max-width:480px){
   body{padding:1px}
   h2{font-size:11px;margin:2px 0 3px}
@@ -121,7 +131,7 @@ body.light .carry-source-bar{background:#dbeafe;color:#1e40af;border-color:#3b82
   .tableWrap,.summaryWrap{overflow:visible!important}
   #reportTable,#summaryTable{width:100%!important;color:black!important;background:white!important}
   #reportTable th,#reportTable td{font-size:8px;padding:2px}
-  #negativePopup,#reqPopup,#transferPopup,#reportPopup,#reqSearchPopup,#addRowPopup{display:none!important}
+  #negativePopup,#reqPopup,#transferPopup,#reportPopup,#reqSearchPopup,#addRowPopup,#allExcelPopup{display:none!important}
 }
 </style>
 </head>
@@ -202,7 +212,6 @@ body.light .carry-source-bar{background:#dbeafe;color:#1e40af;border-color:#3b82
   </div>
 </div>
 <div class="carry-info" id="carryInfo" style="display:none"></div>
-<!-- ✅ NEW: Shows carry source clearly -->
 <div class="carry-source-bar" id="carrySourceBar"></div>
 
 <div class="floor-req-banner" id="floorReqBanner" onclick="changeFloorReqNo()">
@@ -216,6 +225,7 @@ body.light .carry-source-bar{background:#dbeafe;color:#1e40af;border-color:#3b82
   <button class="addRowBtn" onclick="openAddRowPopup()">➕ Add Row</button>
   <button class="excelBtn" onclick="exportExcel()">📊 Excel</button>
   <button class="pdfBtn" onclick="exportPDF()">📄 PDF</button>
+  <button class="allExcelBtn" onclick="openAllExcelPopup()">📥 All Floors Excel</button>
   <button class="themeBtn" style="background:#7c3aed" onclick="showTransferReport()">🚚 Transfers</button>
   <button class="themeBtn" style="background:#0891b2" onclick="showReqSearch()">🔎 Req Search</button>
   <button class="homeBtn" onclick="location.href='index.html'">🏠 Home</button>
@@ -425,6 +435,32 @@ body.light .carry-source-bar{background:#dbeafe;color:#1e40af;border-color:#3b82
       </table>
     </div>
     <div class="popup-footer" id="reqSearchFooter">Requisition Number লিখে Search চাপুন</div>
+  </div>
+</div>
+
+<!-- ===== ALL FLOORS EXCEL POPUP ===== -->
+<div id="allExcelPopup">
+  <div class="popup-content">
+    <span class="popup-close" onclick="closeAllExcelPopup()">×</span>
+    <div class="popup-title">📥 All Floors Excel Download</div>
+    <div class="popup-field">
+      <label>📅 Date নির্বাচন করুন:</label>
+      <input type="date" id="allExcelDate" style="width:100%;max-width:none;background:#f8fafc;color:#0f172a;border:1.5px solid #cbd5e1;padding:8px;border-radius:6px;font-size:14px">
+    </div>
+    <div id="allExcelInfo" style="font-size:11px;color:#475569;margin:6px 0;padding:8px;background:#f1f5f9;border-radius:6px;line-height:1.6">
+      ✅ সব <b>28টি Floor</b> এর data একটি Excel এ download হবে<br>
+      📋 প্রতিটি floor আলাদা <b>Sheet</b> এ থাকবে<br>
+      📊 একটি <b>SUMMARY</b> sheet সব floor এর total সহ থাকবে
+    </div>
+    <div id="allExcelProgressWrap" style="display:none">
+      <div style="font-size:11px;font-weight:600;color:#334155;margin-bottom:4px" id="allExcelProgressLabel">Loading floors...</div>
+      <div class="excel-progress-bar"><div class="excel-progress-fill" id="allExcelProgressFill"></div></div>
+      <div class="excel-floor-status" id="allExcelFloorStatus"></div>
+    </div>
+    <button class="popup-fix-btn" id="allExcelDownloadBtn" onclick="exportAllFloorsExcel()" style="background:linear-gradient(135deg,#f59e0b,#d97706);color:#000;font-weight:900;font-size:15px">
+      📥 Download All Floors Excel
+    </button>
+    <div class="popup-footer">⚠️ Data না থাকলে সেই floor এ Opening Stock দেখাবে</div>
   </div>
 </div>
 
@@ -785,6 +821,9 @@ const floorData = {
   ]
 };
 
+// All 28 floor names in order
+const ALL_FLOORS = Object.keys(floorData);
+
 // =========================================
 // 🌐 GLOBAL STATE
 // =========================================
@@ -852,10 +891,6 @@ async function loadFromSupabase(floor, date){
   return data;
 }
 
-// =========================================
-// ✅ FIXED: Always fetch the most recent saved record BEFORE selected date
-// Uses itemCode+size key matching — index-independent
-// =========================================
 async function findLastSavedBefore(floor, date){
   const companyId = await getCompanyId();
   if(!companyId) return null;
@@ -871,10 +906,6 @@ async function findLastSavedBefore(floor, date){
   return data;
 }
 
-// =========================================
-// 🏗️ BUILD PREVIOUS MAP from last saved rows
-// Key: itemCode__size → present value
-// =========================================
 function buildPrevMap(savedRows){
   const map = {};
   if(savedRows && Array.isArray(savedRows)){
@@ -945,39 +976,24 @@ function changeFloorReqNo(){
 
 // =========================================
 // 🏗️ LOAD TABLE
-// prevMap: itemCode__size → previous stock value
-// customRows: extra rows to append (from saved data)
 // =========================================
 function loadTable(prevMap={}, customRows=[], carried=false, prevDate=null){
   const floor = document.getElementById('floor').value;
   const baseItems = floorData[floor] || [];
 
   currentFloorData = baseItems.map(item => ({
-    sl: item[0],
-    itemCode: item[1],
-    needleType: item[2],
-    size: item[3],
-    brand: item[4],
-    unitPrice: item[5],
-    opening: item[6],
-    isCustom: false
+    sl: item[0], itemCode: item[1], needleType: item[2], size: item[3],
+    brand: item[4], unitPrice: item[5], opening: item[6], isCustom: false
   }));
 
-  // Add custom rows — customRows array is pre-filtered by loadData (non-base rows only)
   if(Array.isArray(customRows)){
     customRows.forEach(cr => {
       if(!cr || !cr.itemCode) return;
       const existsInCurrent = currentFloorData.find(r => r.itemCode===cr.itemCode && r.size===cr.size);
       if(!existsInCurrent){
         currentFloorData.push({
-          sl: currentFloorData.length+1,
-          itemCode: cr.itemCode,
-          needleType: cr.needleType||'',
-          size: cr.size,
-          brand: cr.brand||'',
-          unitPrice: cr.unitPrice||0,
-          opening: cr.opening||0,
-          isCustom: true
+          sl: currentFloorData.length+1, itemCode: cr.itemCode, needleType: cr.needleType||'',
+          size: cr.size, brand: cr.brand||'', unitPrice: cr.unitPrice||0, opening: cr.opening||0, isCustom: true
         });
       }
     });
@@ -991,17 +1007,13 @@ function loadTable(prevMap={}, customRows=[], carried=false, prevDate=null){
 
   let html = '';
   currentFloorData.forEach((item, i) => {
-    // ✅ CORE FIX: Look up previous by itemCode__size key
     const key = `${item.itemCode}__${item.size}`;
     const previous = prevMap.hasOwnProperty(key) ? prevMap[key] : item.opening;
-
     const rowClass = item.isCustom ? 'class="custom-row-indicator"' : '';
     html += `
       <tr id="row${i}" ${rowClass}>
         <td>${i+1}${item.isCustom?'<br><span style="font-size:5px;color:#92400e">NEW</span>':''}</td>
-        <td>${item.itemCode}</td>
-        <td>${item.needleType}</td>
-        <td>${item.size}</td>
+        <td>${item.itemCode}</td><td>${item.needleType}</td><td>${item.size}</td>
         <td>${item.brand}</td>
         <td style="text-align:right">${Number(item.unitPrice).toFixed(4)}</td>
         <td id="p${i}">${previous}</td>
@@ -1019,12 +1031,9 @@ function loadTable(prevMap={}, customRows=[], carried=false, prevDate=null){
           <button class="transferBtn" onclick="openTransferPopup(${i})">🔄 Trf</button>
           <span class="transfer-tag" id="trfInTag${i}"></span>
         </td>
-        <td>
-          ${item.isCustom
-            ? `<button class="del-row-btn" onclick="deleteCustomRow(${i})" title="এই row মুছুন">✕</button>`
-            : '<span style="font-size:8px;color:#94a3b8">-</span>'
-          }
-        </td>
+        <td>${item.isCustom
+          ? `<button class="del-row-btn" onclick="deleteCustomRow(${i})" title="এই row মুছুন">✕</button>`
+          : '<span style="font-size:8px;color:#94a3b8">-</span>'}</td>
       </tr>`;
   });
 
@@ -1035,7 +1044,7 @@ function loadTable(prevMap={}, customRows=[], carried=false, prevDate=null){
 }
 
 // =========================================
-// ➕ ADD ROW POPUP
+// ➕ ADD ROW
 // =========================================
 function openAddRowPopup(){
   const floor = document.getElementById('floor').value;
@@ -1049,10 +1058,7 @@ function openAddRowPopup(){
   document.getElementById('addRowPopup').style.display='flex';
   setTimeout(()=>document.getElementById('newItemCode').focus(),100);
 }
-
-function closeAddRowPopup(){
-  document.getElementById('addRowPopup').style.display='none';
-}
+function closeAddRowPopup(){ document.getElementById('addRowPopup').style.display='none'; }
 
 function confirmAddRow(){
   const itemCode = document.getElementById('newItemCode').value.trim().toUpperCase();
@@ -1061,17 +1067,13 @@ function confirmAddRow(){
   const brand = document.getElementById('newBrand').value.trim().toUpperCase();
   const unitPrice = parseFloat(document.getElementById('newPrice').value)||0;
   const opening = parseInt(document.getElementById('newOpening').value)||0;
-
   if(!itemCode){ alert('❌ Item Code দিন'); return; }
   if(!needleType){ alert('❌ Needle Type দিন'); return; }
   if(!size){ alert('❌ Size দিন'); return; }
-
   const dup = currentFloorData.find(r => r.itemCode===itemCode && r.size===size);
   if(dup){ alert(`❌ ${itemCode} (Size ${size}) ইতিমধ্যে আছে!`); return; }
-
   const newRow = { sl: currentFloorData.length+1, itemCode, needleType, size, brand, unitPrice, opening, isCustom: true };
   currentFloorData.push(newRow);
-
   const i = currentFloorData.length - 1;
   const newTr = document.createElement('tr');
   newTr.id = `row${i}`;
@@ -1149,12 +1151,9 @@ function rebuildTableKeepingValues(){
           <button class="transferBtn" onclick="openTransferPopup(${i})">🔄 Trf</button>
           <span class="transfer-tag" id="trfInTag${i}"></span>
         </td>
-        <td>
-          ${item.isCustom
-            ? `<button class="del-row-btn" onclick="deleteCustomRow(${i})" title="মুছুন">✕</button>`
-            : '<span style="font-size:8px;color:#94a3b8">-</span>'
-          }
-        </td>
+        <td>${item.isCustom
+          ? `<button class="del-row-btn" onclick="deleteCustomRow(${i})" title="মুছুন">✕</button>`
+          : '<span style="font-size:8px;color:#94a3b8">-</span>'}</td>
       </tr>`;
   });
   document.getElementById('tableBody').innerHTML = html;
@@ -1274,10 +1273,7 @@ function openTransferPopup(i){
   document.getElementById('transferPopup').style.display='flex';
 }
 
-function closeTransferPopup(){
-  document.getElementById('transferPopup').style.display='none';
-  pendingTransferIndex=null;
-}
+function closeTransferPopup(){ document.getElementById('transferPopup').style.display='none'; pendingTransferIndex=null; }
 
 async function confirmTransfer(){
   const i = pendingTransferIndex;
@@ -1306,7 +1302,6 @@ async function confirmTransfer(){
   if(!rowTransferOut[i]) rowTransferOut[i]=[];
   rowTransferOut[i].push({toFloor, qty, receiverName, reqNo});
   updateTransferOutTag(i);
-
   if(navigator.onLine){
     try{
       const toItems = floorData[toFloor]||[];
@@ -1433,7 +1428,6 @@ async function searchRequisition(){
   try{
     const companyId=await getCompanyId();
     if(!companyId){ tbody.innerHTML='<tr><td colspan="8" style="color:red;padding:10px">Company error</td></tr>'; return; }
-    // Fetch all pages
     let allData=[]; let from=0; const pageSize=1000;
     while(true){
       const {data,error}=await supabase.from('needle_reports')
@@ -1525,10 +1519,8 @@ function fixNegativeRow(){
 // =========================================
 function buildRows(){
   return currentFloorData.map((item,i)=>({
-    sl:i+1,
-    itemCode:item.itemCode, needleType:item.needleType, size:item.size,
-    brand:item.brand, unitPrice:item.unitPrice, opening:item.opening,
-    isCustom:item.isCustom||false,
+    sl:i+1, itemCode:item.itemCode, needleType:item.needleType, size:item.size,
+    brand:item.brand, unitPrice:item.unitPrice, opening:item.opening, isCustom:item.isCustom||false,
     previous:Number(document.getElementById(`p${i}`)?.innerText)||0,
     receive:Number(document.getElementById(`r${i}`)?.value)||0,
     delivery:Number(document.getElementById(`d${i}`)?.value)||0,
@@ -1549,24 +1541,15 @@ async function saveData(){
   const operator=document.getElementById('operatorName').value.trim()||localStorage.getItem('lastOperator')||'Unknown';
   if(!date){ alert('❌ Date select করুন'); return; }
   if(!floor){ alert('❌ Floor select করুন'); return; }
-
   for(let i=0;i<currentFloorData.length;i++){
     const r=Number(document.getElementById(`r${i}`)?.value)||0;
     if(r>0&&!rowReqNo[i]){
-      if(floorReqNo){
-        rowReqNo[i]=floorReqNo;
-        const t=document.getElementById(`reqTag${i}`);
-        if(t) t.textContent='📋 '+floorReqNo;
-      }else{
-        alert(`❌ Row ${i+1} (${currentFloorData[i].itemCode}) এর Rcvd ${r} এর জন্য Requisition Number দিন!`);
-        checkReqNo(i); return;
-      }
+      if(floorReqNo){ rowReqNo[i]=floorReqNo; const t=document.getElementById(`reqTag${i}`); if(t) t.textContent='📋 '+floorReqNo; }
+      else{ alert(`❌ Row ${i+1} (${currentFloorData[i].itemCode}) এর Rcvd ${r} এর জন্য Requisition Number দিন!`); checkReqNo(i); return; }
     }
   }
-
   const rows=buildRows();
   localStorage.setItem('lastOperator', operator);
-
   if(navigator.onLine){
     showLoading('Saving...');
     const result=await saveToSupabase(floor, date, operator, rows);
@@ -1580,134 +1563,55 @@ async function saveData(){
 }
 
 // =========================================
-// ✅ MAIN loadData — COMPLETELY REWRITTEN
-// 
-// STRATEGY:
-// 1. ALWAYS fetch the last saved record BEFORE selected date (for carry-forward)
-// 2. If today's data exists → restore receive/delivery/bn/reqNo/transfers from it
-//    BUT use carry-forward 'previous' from last-saved record (not from saved 'previous' field)
-// 3. If today's data doesn't exist → show carry-forwarded previous, blank receive/delivery
-// 
-// This ensures 'Previous' column is ALWAYS correct regardless of when data was first saved.
+// ✅ MAIN loadData
 // =========================================
 async function loadData(){
   const date=document.getElementById('postDate').value;
   const floor=document.getElementById('floor').value;
-  if(!date||!floor){
-    loadTable({}, [], false, null);
-    updateMonthlySummary([]);
-    return;
-  }
-
+  if(!date||!floor){ loadTable({}, [], false, null); updateMonthlySummary([]); return; }
   showLoading('Loading...');
   rowReqNo={}; rowTransferOut={}; rowTransferIn={};
   floorReqNo=null;
   updateFloorReqBanner();
-
   try{
-    let todayData=null;
-    let prevData=null;
-    let prevDateUsed=null;
-
+    let todayData=null, prevData=null, prevDateUsed=null;
     if(navigator.onLine){
-      [todayData, prevData] = await Promise.all([
-        loadFromSupabase(floor, date),
-        findLastSavedBefore(floor, date)
-      ]);
+      [todayData, prevData] = await Promise.all([loadFromSupabase(floor, date), findLastSavedBefore(floor, date)]);
       if(prevData) prevDateUsed=prevData.report_date;
     }else{
       todayData=getOffline(floor, date);
       showToast('📴 Offline — Local data দেখাচ্ছে');
     }
-
-    // =========================================================
-    // prevMap: itemCode__size -> present (from LAST saved date)
-    // এটাই আজকের "Previous" column এর value
-    // =========================================================
     const prevMap = prevData ? buildPrevMap(prevData.rows) : {};
     const hasPrevData = !!(prevData && prevData.rows && prevData.rows.length > 0);
-
-    // =========================================================
-    // BASE SET: কোন itemCode__size গুলো base floorData তে আছে
-    // =========================================================
     const baseKeys = new Set((floorData[floor]||[]).map(b => b[1]+'__'+b[3]));
-
-    // =========================================================
-    // CUSTOM ROWS COLLECTOR: সব date থেকে custom rows একসাথে
-    // Rule: যে row টা baseKeys এ নেই সেটাই custom
-    // =========================================================
-    const customRowMap = {}; // key -> row object (latest version wins)
-
-    // Step 1: prevData থেকে custom rows নাও
-    if(prevData && prevData.rows){
-      prevData.rows.forEach(r => {
-        const key = r.itemCode+'__'+r.size;
-        if(!baseKeys.has(key)){
-          customRowMap[key] = r; // prevData version
-        }
-      });
-    }
-
-    // Step 2: todayData থেকে custom rows নাও (override করবে prevData version)
-    if(todayData && todayData.rows){
-      todayData.rows.forEach(r => {
-        const key = r.itemCode+'__'+r.size;
-        if(!baseKeys.has(key)){
-          customRowMap[key] = r; // today version (more up to date)
-        }
-      });
-    }
-
-    // Final custom rows list
+    const customRowMap = {};
+    if(prevData && prevData.rows){ prevData.rows.forEach(r=>{ const key=r.itemCode+'__'+r.size; if(!baseKeys.has(key)) customRowMap[key]=r; }); }
+    if(todayData && todayData.rows){ todayData.rows.forEach(r=>{ const key=r.itemCode+'__'+r.size; if(!baseKeys.has(key)) customRowMap[key]=r; }); }
     const allCustomRows = Object.values(customRowMap);
-
-    // =========================================================
-    // TABLE RENDER
-    // =========================================================
     loadTable(prevMap, allCustomRows, hasPrevData, prevDateUsed);
-
     if(todayData && todayData.rows && todayData.rows.length > 0){
-      // ── আজকের data আছে: receive/delivery/bn restore করো ──
-      console.log('[loadData] Today data found, carry source:', prevDateUsed||'opening');
-
-      todayData.rows.forEach(row => {
-        const idx = currentFloorData.findIndex(r => r.itemCode===row.itemCode && r.size===row.size);
-        if(idx < 0) return;
-        const rEl=document.getElementById('r'+idx);
-        const dEl=document.getElementById('d'+idx);
-        const bnEl=document.getElementById('bn'+idx);
-        if(rEl) rEl.value = row.receive||'';
-        if(dEl) dEl.value = row.delivery||'';
-        if(bnEl) bnEl.value = row.bn||'';
+      todayData.rows.forEach(row=>{
+        const idx = currentFloorData.findIndex(r=>r.itemCode===row.itemCode && r.size===row.size);
+        if(idx<0) return;
+        const rEl=document.getElementById('r'+idx), dEl=document.getElementById('d'+idx), bnEl=document.getElementById('bn'+idx);
+        if(rEl) rEl.value=row.receive||'';
+        if(dEl) dEl.value=row.delivery||'';
+        if(bnEl) bnEl.value=row.bn||'';
         calc(idx);
-        if(row.receiveReqNo){
-          rowReqNo[idx]=row.receiveReqNo;
-          const tag=document.getElementById('reqTag'+idx);
-          if(tag) tag.textContent='📋 '+row.receiveReqNo;
-          if(!floorReqNo) floorReqNo=row.receiveReqNo;
-        }
+        if(row.receiveReqNo){ rowReqNo[idx]=row.receiveReqNo; const tag=document.getElementById('reqTag'+idx); if(tag) tag.textContent='📋 '+row.receiveReqNo; if(!floorReqNo) floorReqNo=row.receiveReqNo; }
         if(row.transferOut&&row.transferOut.length){ rowTransferOut[idx]=row.transferOut; updateTransferOutTag(idx); }
         if(row.transferIn&&row.transferIn.length){ rowTransferIn[idx]=row.transferIn; updateTransferInTag(idx); }
       });
-
       updateFloorReqBanner();
       if(todayData.operator) document.getElementById('operatorName').value=todayData.operator;
       updateMonthlySummary(todayData.rows);
       updateLastSync('☁️ Loaded | Prev: '+(prevDateUsed||'opening')+' | '+new Date().toLocaleTimeString());
-
     }else{
-      // ── আজকের data নেই: carry forward ──
-      console.log('[loadData] No today data, carry from:', prevDateUsed||'opening');
       updateMonthlySummary([]);
-      if(hasPrevData){
-        updateLastSync('⏪ '+prevDateUsed+' থেকে carry — '+new Date().toLocaleTimeString());
-        showToast('⏪ '+prevDateUsed+' তারিখ থেকে stock carry হয়েছে!');
-      }else{
-        updateLastSync('📋 Opening stock — '+new Date().toLocaleTimeString());
-        showToast('📋 Opening stock দেখাচ্ছে');
-      }
+      if(hasPrevData){ updateLastSync('⏪ '+prevDateUsed+' থেকে carry — '+new Date().toLocaleTimeString()); showToast('⏪ '+prevDateUsed+' তারিখ থেকে stock carry হয়েছে!'); }
+      else{ updateLastSync('📋 Opening stock — '+new Date().toLocaleTimeString()); showToast('📋 Opening stock দেখাচ্ছে'); }
     }
-
   }catch(e){
     console.error('loadData error:', e);
     loadTable({}, [], false, null);
@@ -1777,7 +1681,7 @@ function updateMonthlySummary(rows){
 }
 
 // =========================================
-// 📊 EXPORT
+// 📊 SINGLE FLOOR EXCEL EXPORT
 // =========================================
 function exportExcel(){
   const floor=document.getElementById('floor').value;
@@ -1814,6 +1718,250 @@ function exportExcel(){
 function exportPDF(){ window.print(); }
 
 // =========================================
+// 📥 ALL FLOORS EXCEL — POPUP OPEN/CLOSE
+// =========================================
+function openAllExcelPopup(){
+  const currentDate = document.getElementById('postDate').value;
+  document.getElementById('allExcelDate').value = currentDate || new Date().toISOString().slice(0,10);
+  document.getElementById('allExcelProgressWrap').style.display='none';
+  document.getElementById('allExcelDownloadBtn').disabled=false;
+  document.getElementById('allExcelDownloadBtn').textContent='📥 Download All Floors Excel';
+  document.getElementById('allExcelFloorStatus').innerHTML='';
+  document.getElementById('allExcelPopup').style.display='flex';
+}
+function closeAllExcelPopup(){ document.getElementById('allExcelPopup').style.display='none'; }
+
+// =========================================
+// 📥 ALL FLOORS EXCEL — MAIN EXPORT FUNCTION
+// Uses SheetJS (xlsx) loaded from CDN
+// =========================================
+async function exportAllFloorsExcel(){
+  const date = document.getElementById('allExcelDate').value;
+  if(!date){ alert('❌ Date নির্বাচন করুন!'); return; }
+  if(!navigator.onLine){ alert('❌ Internet connection দরকার!'); return; }
+
+  // Load SheetJS if not already loaded
+  if(typeof XLSX === 'undefined'){
+    showToast('📦 SheetJS library loading...');
+    await new Promise((resolve, reject)=>{
+      const s=document.createElement('script');
+      s.src='https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js';
+      s.onload=resolve; s.onerror=()=>reject(new Error('SheetJS load failed'));
+      document.head.appendChild(s);
+    });
+  }
+
+  const btn = document.getElementById('allExcelDownloadBtn');
+  btn.disabled=true;
+  btn.textContent='⏳ Loading...';
+  document.getElementById('allExcelProgressWrap').style.display='block';
+  const statusDiv = document.getElementById('allExcelFloorStatus');
+  const progressFill = document.getElementById('allExcelProgressFill');
+  const progressLabel = document.getElementById('allExcelProgressLabel');
+  statusDiv.innerHTML='';
+
+  try{
+    const companyId = await getCompanyId();
+    if(!companyId){ alert('❌ Company config error!'); btn.disabled=false; btn.textContent='📥 Download All Floors Excel'; return; }
+
+    // Fetch all floors data for this date in one query
+    progressLabel.textContent = '🔄 Supabase থেকে সব floor data fetch করছি...';
+    progressFill.style.width='10%';
+
+    const {data: allReports, error} = await supabase
+      .from('needle_reports')
+      .select('floor, report_date, rows, operator, summary')
+      .eq('company_id', companyId)
+      .eq('report_date', date);
+
+    if(error){ alert('❌ Data fetch error: '+error.message); btn.disabled=false; btn.textContent='📥 Download All Floors Excel'; return; }
+
+    // Build a map: floor -> report
+    const reportMap = {};
+    (allReports||[]).forEach(r=>{ reportMap[r.floor]=r; });
+
+    progressFill.style.width='30%';
+    progressLabel.textContent='📊 Excel workbook তৈরি করছি...';
+
+    const wb = XLSX.utils.book_new();
+
+    // ─── SUMMARY SHEET ───────────────────────────────────────────
+    // Summary: SL | Floor Name | Prev | Rcvd | Dvld | Present Stock | BNR/BNF | Status
+    const summaryRows = [];
+    // Title rows
+    summaryRows.push(['GMS COMPOSITE — NEEDLE DAILY POSTING']);
+    summaryRows.push([`📅 Date: ${date}   |   Generated: ${new Date().toLocaleString()}`]);
+    summaryRows.push(['ALL FLOORS SUMMARY — ' + date]);
+    summaryRows.push([]); // blank
+    summaryRows.push(['SL', 'FLOOR NAME', 'CATEGORY', 'PREVIOUS', 'RECEIVED', 'DELIVERY', 'PRESENT STOCK', 'BNR/BNF', 'ITEMS', 'STATUS']);
+
+    let grandPrev=0, grandRcvd=0, grandDvld=0, grandPresent=0, grandBN=0;
+    let floorNum=0;
+
+    const floorSummaries = [];
+
+    for(let fi=0; fi<ALL_FLOORS.length; fi++){
+      const floorName = ALL_FLOORS[fi];
+      const report = reportMap[floorName];
+      const category = floorName.includes('_NEW') ? 'NEW' : 'RUNNING';
+      const shortName = floorName.replace(/\s*\(BUILDING NO[^)]*\)/gi,'').replace(/_NEW|_RUNNING/g,'').trim();
+
+      let prev=0, rcvd=0, dvld=0, present=0, bn=0, itemCount=0, status='';
+
+      if(report && report.rows && report.rows.length){
+        report.rows.forEach(r=>{
+          prev += Number(r.previous)||0;
+          rcvd += Number(r.receive)||0;
+          dvld += Number(r.delivery)||0;
+          present += Number(r.present)||0;
+          bn += Number(r.bn)||0;
+        });
+        itemCount = report.rows.length;
+        status = '✅ Data Found';
+      }else{
+        // Use opening stock from floorData
+        const baseItems = floorData[floorName]||[];
+        baseItems.forEach(it=>{ prev += Number(it[6])||0; });
+        present = prev;
+        itemCount = baseItems.length;
+        status = '📋 Opening Stock';
+      }
+
+      grandPrev+=prev; grandRcvd+=rcvd; grandDvld+=dvld; grandPresent+=present; grandBN+=bn;
+      floorNum++;
+
+      floorSummaries.push({ floorName, shortName, category, prev, rcvd, dvld, present, bn, itemCount, status });
+      summaryRows.push([floorNum, floorName, category, prev, rcvd, dvld, present, bn, itemCount, status]);
+
+      // Update UI status
+      const statusClass = report ? 'status-ok' : 'status-empty';
+      statusDiv.innerHTML += `<div class="${statusClass}"><b>${floorNum}. ${shortName}</b> (${category}) — ${status} | Items: ${itemCount} | Present: ${present}</div>`;
+      progressFill.style.width = (30 + Math.round((fi+1)/ALL_FLOORS.length*40))+'%';
+      progressLabel.textContent = `${fi+1}/${ALL_FLOORS.length} floors processed...`;
+      // Small delay for UI update
+      if(fi % 5 === 0) await new Promise(r=>setTimeout(r,10));
+    }
+
+    // Grand total row
+    summaryRows.push([]); // blank
+    summaryRows.push(['', 'GRAND TOTAL (28 Floors)', '', grandPrev, grandRcvd, grandDvld, grandPresent, grandBN, '', '']);
+
+    const wsSummary = XLSX.utils.aoa_to_sheet(summaryRows);
+
+    // Column widths for summary
+    wsSummary['!cols'] = [
+      {wch:4},{wch:42},{wch:10},{wch:10},{wch:10},{wch:10},{wch:14},{wch:10},{wch:8},{wch:16}
+    ];
+
+    // Merge title cells
+    wsSummary['!merges'] = [
+      {s:{r:0,c:0},e:{r:0,c:9}},
+      {s:{r:1,c:0},e:{r:1,c:9}},
+      {s:{r:2,c:0},e:{r:2,c:9}},
+    ];
+
+    XLSX.utils.book_append_sheet(wb, wsSummary, 'SUMMARY');
+
+    // ─── INDIVIDUAL FLOOR SHEETS ──────────────────────────────────
+    progressLabel.textContent = 'Generating floor sheets...';
+    progressFill.style.width='72%';
+
+    for(let fi=0; fi<ALL_FLOORS.length; fi++){
+      const floorName = ALL_FLOORS[fi];
+      const report = reportMap[floorName];
+      const category = floorName.includes('_NEW') ? 'NEW' : 'RUNNING';
+      const bnLabel = floorName.includes('_NEW') ? 'BNR' : 'BNF';
+
+      // Sheet name max 31 chars, Excel-safe
+      let sheetName = floorName
+        .replace(/\s*\(BUILDING NO[^)]*\)/gi,'')
+        .replace(/_NEW/,'_N').replace(/_RUNNING/,'_R')
+        .replace(/[\/\\\?\*\[\]]/g,'')
+        .trim()
+        .substring(0,31);
+
+      const sheetRows = [];
+      // Title
+      sheetRows.push(['GMS COMPOSITE — NEEDLE DAILY POSTING']);
+      sheetRows.push([`Floor: ${floorName}`]);
+      sheetRows.push([`Date: ${date}   |   Category: ${category}   |   Operator: ${report?.operator||'-'}`]);
+      sheetRows.push([]);
+      sheetRows.push(['SL','CODE','TYPE','SIZE','BRAND','UNIT PRICE','PREVIOUS','RECEIVED','REQ NO','DELIVERY','PRESENT','BNR/BNF','CUSTOM']);
+
+      let tPrev=0, tRcvd=0, tDvld=0, tPresent=0, tBN=0;
+
+      if(report && report.rows && report.rows.length){
+        report.rows.forEach((row,idx)=>{
+          const prev=Number(row.previous)||0;
+          const rcvd=Number(row.receive)||0;
+          const dvld=Number(row.delivery)||0;
+          const present=Number(row.present)||0;
+          const bn=Number(row.bn)||0;
+          tPrev+=prev; tRcvd+=rcvd; tDvld+=dvld; tPresent+=present; tBN+=bn;
+          sheetRows.push([
+            idx+1,
+            row.itemCode||'', row.needleType||'', row.size||'', row.brand||'',
+            Number(row.unitPrice||0).toFixed(4),
+            prev, rcvd, row.receiveReqNo||'', dvld, present, bn,
+            row.isCustom?'YES':''
+          ]);
+        });
+      }else{
+        // Use opening stock
+        const baseItems = floorData[floorName]||[];
+        baseItems.forEach((it,idx)=>{
+          const prev=Number(it[6])||0;
+          tPrev+=prev; tPresent+=prev;
+          sheetRows.push([
+            idx+1, it[1], it[2], it[3], it[4],
+            Number(it[5]).toFixed(4),
+            prev, 0, '', 0, prev, 0, ''
+          ]);
+        });
+      }
+
+      // Total row
+      sheetRows.push([]);
+      sheetRows.push(['','','','','','TOTAL →', tPrev, tRcvd, '', tDvld, tPresent, tBN, '']);
+
+      const ws = XLSX.utils.aoa_to_sheet(sheetRows);
+      ws['!cols'] = [
+        {wch:4},{wch:11},{wch:22},{wch:7},{wch:14},{wch:10},
+        {wch:10},{wch:9},{wch:16},{wch:9},{wch:10},{wch:9},{wch:7}
+      ];
+      ws['!merges'] = [
+        {s:{r:0,c:0},e:{r:0,c:12}},
+        {s:{r:1,c:0},e:{r:1,c:12}},
+        {s:{r:2,c:0},e:{r:2,c:12}},
+      ];
+
+      XLSX.utils.book_append_sheet(wb, ws, sheetName);
+
+      progressFill.style.width = (72 + Math.round((fi+1)/ALL_FLOORS.length*25))+'%';
+      if(fi % 5 === 0) await new Promise(r=>setTimeout(r,5));
+    }
+
+    progressFill.style.width='100%';
+    progressLabel.textContent='✅ Excel তৈরি সম্পন্ন! Downloading...';
+
+    // Download
+    const fileName = `GMS-Needle-AllFloors-${date}.xlsx`;
+    XLSX.writeFile(wb, fileName);
+
+    btn.disabled=false;
+    btn.textContent='✅ Downloaded!';
+    showToast(`✅ ${ALL_FLOORS.length} floors + Summary sheet সহ Excel download হয়েছে!`);
+    setTimeout(()=>{ btn.textContent='📥 Download All Floors Excel'; }, 3000);
+
+  }catch(e){
+    console.error('exportAllFloorsExcel error:', e);
+    alert('❌ Export error: '+e.message);
+    btn.disabled=false;
+    btn.textContent='📥 Download All Floors Excel';
+  }
+}
+
+// =========================================
 // 🎨 UTILITIES
 // =========================================
 function showToast(msg){
@@ -1847,9 +1995,7 @@ function updateOfflineIndicator(){
   updateCategoryBadge();
   loadTable({}, [], false, null);
   if(navigator.onLine) setTimeout(syncOfflineData,2000);
-  document.addEventListener('keydown',e=>{
-    if(e.ctrlKey&&e.key==='s'){e.preventDefault();saveData();}
-  });
+  document.addEventListener('keydown',e=>{ if(e.ctrlKey&&e.key==='s'){e.preventDefault();saveData();} });
 })();
 
 window.addEventListener('online',()=>{ updateOfflineIndicator(); syncOfflineData(); });
@@ -1869,6 +2015,8 @@ document.addEventListener('keydown',e=>{
 // EXPOSE GLOBALS
 window.saveData=saveData; window.loadData=loadData; window.deleteData=deleteData;
 window.exportExcel=exportExcel; window.exportPDF=exportPDF;
+window.exportAllFloorsExcel=exportAllFloorsExcel;
+window.openAllExcelPopup=openAllExcelPopup; window.closeAllExcelPopup=closeAllExcelPopup;
 window.calc=calc; window.updateTotal=updateTotal;
 window.closeNegPopup=closeNegPopup; window.fixNegativeRow=fixNegativeRow;
 window.loadTable=loadTable; window.toggleTheme=toggleTheme;
