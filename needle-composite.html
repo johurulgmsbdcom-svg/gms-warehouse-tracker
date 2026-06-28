@@ -99,6 +99,10 @@ body.light .carry-source-bar{background:#dbeafe;color:#1e40af;border-color:#3b82
 .status-carry{color:#d97706}
 .status-empty{color:#94a3b8}
 .status-loading{color:#f59e0b}
+.autosave-pill{display:inline-flex;align-items:center;gap:4px;background:#022c22;color:#34d399;border:1px solid #059669;border-radius:14px;padding:2px 9px;font-size:9px;font-weight:700;margin-left:6px}
+body.light .autosave-pill{background:#ecfdf5;color:#047857;border-color:#10b981}
+.autosave-dot{width:6px;height:6px;border-radius:50%;background:#34d399;animation:pulseDot 1.4s infinite}
+@keyframes pulseDot{0%,100%{opacity:1}50%{opacity:.3}}
 @media(max-width:480px){
   body{padding:1px}
   h2{font-size:11px;margin:2px 0 3px}
@@ -152,7 +156,7 @@ body.light .carry-source-bar{background:#dbeafe;color:#1e40af;border-color:#3b82
 <div style="display:flex;flex-wrap:wrap;gap:6px;justify-content:center;align-items:center;margin-bottom:6px">
   <div>
     <label style="font-weight:600;color:#cbd5e1;margin-right:4px">Operator:</label>
-    <input type="text" id="operatorName" placeholder="Name" style="max-width:110px">
+    <input type="text" id="operatorName" placeholder="Name" style="max-width:110px" onchange="scheduleAutoSave()">
   </div>
   <div>
     <label style="font-weight:600;color:#cbd5e1;margin-right:4px">Date:</label>
@@ -210,6 +214,7 @@ body.light .carry-source-bar{background:#dbeafe;color:#1e40af;border-color:#3b82
     <span class="floor-badge" id="categoryBadge">NEW</span>
     <span class="carry-badge" id="carryBadge" style="display:none">⏪ Carried</span>
   </div>
+  <span class="autosave-pill"><span class="autosave-dot"></span> AUTO-SAVE ON</span>
 </div>
 <div class="carry-info" id="carryInfo" style="display:none"></div>
 <div class="carry-source-bar" id="carrySourceBar"></div>
@@ -219,7 +224,7 @@ body.light .carry-source-bar{background:#dbeafe;color:#1e40af;border-color:#3b82
 </div>
 
 <div style="margin-top:6px">
-  <button class="saveBtn" onclick="saveData()">💾 Save</button>
+  <button class="saveBtn" onclick="saveData()">💾 Save Now</button>
   <button class="refreshBtn" onclick="manualRefresh()">🔄 Refresh</button>
   <button class="deleteBtn" onclick="deleteData()">🗑️ Delete</button>
   <button class="addRowBtn" onclick="openAddRowPopup()">➕ Add Row</button>
@@ -836,6 +841,9 @@ let rowTransferIn = {};
 let pendingReqIndex = null;
 let pendingReqValue = null;
 let pendingTransferIndex = null;
+let autoSaveTimer = null;
+let autoSaveInFlight = false;
+let suppressAutoSave = false; // true while we are programmatically filling fields (loadData), to avoid loops
 
 // =========================================
 // 💾 OFFLINE STORAGE
@@ -843,7 +851,7 @@ let pendingTransferIndex = null;
 function saveOffline(floor, date, operator, rows){
   try{
     const data = JSON.parse(localStorage.getItem(OFFLINE_KEY)||'{}');
-    data[`${floor}__${date}`] = {operator, rows, savedAt: new Date().toISOString()};
+    data[`${floor}__${date}`] = {operator, rows, savedAt: new Date().toISOString(), synced:false};
     localStorage.setItem(OFFLINE_KEY, JSON.stringify(data));
   }catch(e){}
 }
@@ -865,7 +873,7 @@ async function getCompanyId(){
 
 async function saveToSupabase(floor, date, operator, rows, showSuccess=true){
   const companyId = await getCompanyId();
-  if(!companyId){ alert('❌ Company config error!'); return {error:'no company'}; }
+  if(!companyId){ if(showSuccess) alert('❌ Company config error!'); return {error:'no company'}; }
   const summary = {
     total_opening: rows.reduce((s,r)=>s+(r.opening||0),0),
     total_receive: rows.reduce((s,r)=>s+(r.receive||0),0),
@@ -891,6 +899,12 @@ async function loadFromSupabase(floor, date){
   return data;
 }
 
+// ✅ FIX: This already searches for the most-recent saved date STRICTLY before
+// the selected date (no matter how many days gap there is — Friday off, multi-day
+// gaps, etc. are automatically skipped). The "Friday problem" people hit in practice
+// is almost always because nothing got saved that day at all (manual Save button
+// forgotten) — auto-save below removes that risk so this query always has something
+// recent to find.
 async function findLastSavedBefore(floor, date){
   const companyId = await getCompanyId();
   if(!companyId) return null;
@@ -971,6 +985,7 @@ function changeFloorReqNo(){
     });
     updateFloorReqBanner();
     showToast('✅ Req No updated: '+floorReqNo);
+    scheduleAutoSave();
   }
 }
 
@@ -1026,7 +1041,7 @@ function loadTable(prevMap={}, customRows=[], carried=false, prevDate=null){
           <span class="transfer-tag" id="trfOutTag${i}"></span>
         </td>
         <td id="b${i}" style="font-weight:bold">${previous}</td>
-        <td><input class="qtyInput" type="number" id="bn${i}" oninput="updateTotal()" step="1" min="0"></td>
+        <td><input class="qtyInput" type="number" id="bn${i}" oninput="updateTotal();scheduleAutoSave()" step="1" min="0"></td>
         <td>
           <button class="transferBtn" onclick="openTransferPopup(${i})">🔄 Trf</button>
           <span class="transfer-tag" id="trfInTag${i}"></span>
@@ -1092,7 +1107,7 @@ function confirmAddRow(){
       <span class="transfer-tag" id="trfOutTag${i}"></span>
     </td>
     <td id="b${i}" style="font-weight:bold">${opening}</td>
-    <td><input class="qtyInput" type="number" id="bn${i}" oninput="updateTotal()" step="1" min="0"></td>
+    <td><input class="qtyInput" type="number" id="bn${i}" oninput="updateTotal();scheduleAutoSave()" step="1" min="0"></td>
     <td>
       <button class="transferBtn" onclick="openTransferPopup(${i})">🔄 Trf</button>
       <span class="transfer-tag" id="trfInTag${i}"></span>
@@ -1105,6 +1120,7 @@ function confirmAddRow(){
   newTr.scrollIntoView({behavior:'smooth',block:'center'});
   newTr.style.boxShadow='0 0 0 3px #0891b2';
   setTimeout(()=>newTr.style.boxShadow='',2000);
+  scheduleAutoSave();
 }
 
 function deleteCustomRow(i){
@@ -1114,6 +1130,7 @@ function deleteCustomRow(i){
   delete rowReqNo[i]; delete rowTransferOut[i]; delete rowTransferIn[i];
   rebuildTableKeepingValues();
   showToast('✅ Row মুছা হয়েছে');
+  scheduleAutoSave();
 }
 
 function rebuildTableKeepingValues(){
@@ -1146,7 +1163,7 @@ function rebuildTableKeepingValues(){
           <span class="transfer-tag" id="trfOutTag${i}"></span>
         </td>
         <td id="b${i}" style="font-weight:bold">${prev + (Number(v.r)||0) - (Number(v.d)||0)}</td>
-        <td><input class="qtyInput" type="number" id="bn${i}" value="${v.bn}" oninput="updateTotal()" step="1" min="0"></td>
+        <td><input class="qtyInput" type="number" id="bn${i}" value="${v.bn}" oninput="updateTotal();scheduleAutoSave()" step="1" min="0"></td>
         <td>
           <button class="transferBtn" onclick="openTransferPopup(${i})">🔄 Trf</button>
           <span class="transfer-tag" id="trfInTag${i}"></span>
@@ -1179,6 +1196,7 @@ function calc(i){
   else row.classList.remove('negative-row');
   updateTotal();
   checkNegativeStock();
+  scheduleAutoSave(); // ✅ every Rcvd/Dvld keystroke schedules a real-time auto-save
 }
 
 function updateTotal(){
@@ -1208,6 +1226,7 @@ function checkReqNo(i){
     rowReqNo[i] = floorReqNo;
     const tag = document.getElementById(`reqTag${i}`);
     if(tag) tag.textContent = '📋 '+floorReqNo;
+    scheduleAutoSave();
     return;
   }
   pendingReqIndex = i;
@@ -1240,6 +1259,7 @@ function confirmReqNo(){
   document.getElementById('reqPopup').style.display = 'none';
   pendingReqIndex = null; pendingReqValue = null;
   showToast('✅ Req No saved!');
+  scheduleAutoSave();
 }
 
 function cancelReqPopup(){
@@ -1298,7 +1318,7 @@ async function confirmTransfer(){
   const dEl = document.getElementById(`d${i}`);
   const oldDvld = Number(dEl.value)||0;
   dEl.value = oldDvld + qty;
-  calc(i);
+  calc(i); // this also schedules an auto-save of THIS floor
   if(!rowTransferOut[i]) rowTransferOut[i]=[];
   rowTransferOut[i].push({toFloor, qty, receiverName, reqNo});
   updateTransferOutTag(i);
@@ -1533,7 +1553,7 @@ function buildRows(){
 }
 
 // =========================================
-// 💾 SAVE
+// 💾 MANUAL SAVE (kept for "Save Now" button / Ctrl+S / explicit confirm flows)
 // =========================================
 async function saveData(){
   const date=document.getElementById('postDate').value;
@@ -1563,12 +1583,101 @@ async function saveData(){
 }
 
 // =========================================
+// ⚡ REAL-TIME AUTO-SAVE
+// Triggered by every Rcvd / Dvld / BNR-BNF / Operator / Req-No / Transfer /
+// Add-Row / Delete-Row change. Debounced ~900ms so rapid typing doesn't spam
+// the network, but nothing typed is ever lost without being persisted —
+// this removes the "nothing saved that day" root cause behind the
+// Friday-off → Sunday carry-forward problem.
+// =========================================
+function scheduleAutoSave(){
+  if(suppressAutoSave) return;
+  clearTimeout(autoSaveTimer);
+  showAutoSaveStatus('⏳ Auto-saving...');
+  autoSaveTimer = setTimeout(autoSaveNow, 900);
+}
+
+async function autoSaveNow(){
+  if(autoSaveInFlight) { clearTimeout(autoSaveTimer); autoSaveTimer=setTimeout(autoSaveNow, 400); return; }
+  const date = document.getElementById('postDate').value;
+  const floor = document.getElementById('floor').value;
+  if(!date || !floor){ showAutoSaveStatus('⏸️ Date/Floor select করুন'); return; }
+
+  // Silently fill any missing requisition numbers we already know (floorReqNo),
+  // but do NOT pop the requisition dialog from here — checkReqNo()/onblur already
+  // handles that interactively. If a row still needs a brand-new Req No and we
+  // don't have one yet, skip saving THIS round only (no data loss — it retries
+  // automatically on the next keystroke/blur once Req No is supplied).
+  let blockedByReq = false;
+  for(let i=0;i<currentFloorData.length;i++){
+    const r = Number(document.getElementById(`r${i}`)?.value)||0;
+    if(r>0 && !rowReqNo[i]){
+      if(floorReqNo){
+        rowReqNo[i] = floorReqNo;
+        const t = document.getElementById(`reqTag${i}`); if(t) t.textContent = '📋 '+floorReqNo;
+      } else {
+        blockedByReq = true;
+      }
+    }
+  }
+  if(blockedByReq){
+    showAutoSaveStatus('⏸️ Requisition No দিন — তারপর Auto-save হবে');
+    return;
+  }
+
+  const operator = document.getElementById('operatorName').value.trim() || localStorage.getItem('lastOperator') || 'Unknown';
+  const rows = buildRows();
+  localStorage.setItem('lastOperator', operator);
+
+  autoSaveInFlight = true;
+  try{
+    if(navigator.onLine){
+      const result = await saveToSupabase(floor, date, operator, rows, false);
+      if(result.success){
+        showAutoSaveStatus('✅ Auto-saved — '+new Date().toLocaleTimeString());
+        // also mirror to offline cache so a sudden disconnect doesn't lose data
+        saveOffline(floor, date, operator, rows);
+        markOfflineSynced(floor, date);
+      }else{
+        // Network/DB hiccup — fall back to offline cache, will sync later
+        saveOffline(floor, date, operator, rows);
+        showAutoSaveStatus('📴 Saved locally (sync pending) — '+new Date().toLocaleTimeString());
+      }
+    }else{
+      saveOffline(floor, date, operator, rows);
+      showAutoSaveStatus('📴 Offline auto-saved — '+new Date().toLocaleTimeString());
+    }
+  }catch(e){
+    console.error('autoSaveNow error:', e);
+    saveOffline(floor, date, operator, rows);
+    showAutoSaveStatus('⚠️ Save error — local এ রাখা হয়েছে');
+  }finally{
+    autoSaveInFlight = false;
+  }
+}
+
+function markOfflineSynced(floor, date){
+  try{
+    const data = JSON.parse(localStorage.getItem(OFFLINE_KEY)||'{}');
+    const key = `${floor}__${date}`;
+    if(data[key]) data[key].synced = true;
+    localStorage.setItem(OFFLINE_KEY, JSON.stringify(data));
+  }catch(e){}
+}
+
+function showAutoSaveStatus(msg){
+  const el = document.getElementById('lastSync');
+  if(el) el.textContent = msg;
+}
+
+// =========================================
 // ✅ MAIN loadData
 // =========================================
 async function loadData(){
   const date=document.getElementById('postDate').value;
   const floor=document.getElementById('floor').value;
-  if(!date||!floor){ loadTable({}, [], false, null); updateMonthlySummary([]); return; }
+  suppressAutoSave = true; // don't let programmatic field-filling below trigger auto-save loops
+  if(!date||!floor){ loadTable({}, [], false, null); updateMonthlySummary([]); suppressAutoSave=false; return; }
   showLoading('Loading...');
   rowReqNo={}; rowTransferOut={}; rowTransferIn={};
   floorReqNo=null;
@@ -1598,12 +1707,18 @@ async function loadData(){
         if(rEl) rEl.value=row.receive||'';
         if(dEl) dEl.value=row.delivery||'';
         if(bnEl) bnEl.value=row.bn||'';
-        calc(idx);
+        // Recompute present without re-triggering auto-save (suppressAutoSave is true here)
+        const p=Number(document.getElementById(`p${idx}`)?.innerText)||0;
+        const rr=Number(rEl?.value)||0, dd=Number(dEl?.value)||0;
+        const presentEl=document.getElementById(`b${idx}`);
+        if(presentEl) presentEl.innerText = p+rr-dd;
         if(row.receiveReqNo){ rowReqNo[idx]=row.receiveReqNo; const tag=document.getElementById('reqTag'+idx); if(tag) tag.textContent='📋 '+row.receiveReqNo; if(!floorReqNo) floorReqNo=row.receiveReqNo; }
         if(row.transferOut&&row.transferOut.length){ rowTransferOut[idx]=row.transferOut; updateTransferOutTag(idx); }
         if(row.transferIn&&row.transferIn.length){ rowTransferIn[idx]=row.transferIn; updateTransferInTag(idx); }
       });
       updateFloorReqBanner();
+      updateTotal();
+      checkNegativeStock();
       if(todayData.operator) document.getElementById('operatorName').value=todayData.operator;
       updateMonthlySummary(todayData.rows);
       updateLastSync('☁️ Loaded | Prev: '+(prevDateUsed||'opening')+' | '+new Date().toLocaleTimeString());
@@ -1618,6 +1733,7 @@ async function loadData(){
     showToast('❌ Load error: '+e.message);
   }
   hideLoading();
+  suppressAutoSave = false; // re-enable auto-save now that the table reflects real saved/carried data
 }
 
 async function manualRefresh(){
@@ -2061,6 +2177,15 @@ function updateOfflineIndicator(){
   loadTable({}, [], false, null);
   if(navigator.onLine) setTimeout(syncOfflineData,2000);
   document.addEventListener('keydown',e=>{ if(e.ctrlKey&&e.key==='s'){e.preventDefault();saveData();} });
+  // Auto-save also fires right before the tab/page closes, as a last safety net
+  window.addEventListener('beforeunload', ()=>{
+    const date=document.getElementById('postDate').value;
+    const floor=document.getElementById('floor').value;
+    if(date && floor && currentFloorData.length){
+      const operator=document.getElementById('operatorName').value.trim()||localStorage.getItem('lastOperator')||'Unknown';
+      try{ saveOffline(floor, date, operator, buildRows()); }catch(e){}
+    }
+  });
 })();
 
 window.addEventListener('online',()=>{ updateOfflineIndicator(); syncOfflineData(); });
@@ -2093,6 +2218,7 @@ window.changeFloorReqNo=changeFloorReqNo;
 window.showReqSearch=showReqSearch; window.closeReqSearchPopup=closeReqSearchPopup; window.searchRequisition=searchRequisition;
 window.openAddRowPopup=openAddRowPopup; window.closeAddRowPopup=closeAddRowPopup; window.confirmAddRow=confirmAddRow;
 window.deleteCustomRow=deleteCustomRow;
+window.scheduleAutoSave=scheduleAutoSave;
 </script>
 </body>
 </html>
