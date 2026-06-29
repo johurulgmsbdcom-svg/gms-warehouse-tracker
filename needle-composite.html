@@ -103,6 +103,10 @@ body.light .carry-source-bar{background:#dbeafe;color:#1e40af;border-color:#3b82
 body.light .autosave-pill{background:#ecfdf5;color:#047857;border-color:#10b981}
 .autosave-dot{width:6px;height:6px;border-radius:50%;background:#34d399;animation:pulseDot 1.4s infinite}
 @keyframes pulseDot{0%,100%{opacity:1}50%{opacity:.3}}
+/* ✅ NEW: Auto-refresh indicator */
+.autorefresh-pill{display:inline-flex;align-items:center;gap:4px;background:#1e3a5f;color:#93c5fd;border:1px solid #3b82f6;border-radius:14px;padding:2px 9px;font-size:9px;font-weight:700;margin-left:6px;cursor:pointer}
+body.light .autorefresh-pill{background:#dbeafe;color:#1e40af;border-color:#3b82f6}
+.autorefresh-dot{width:6px;height:6px;border-radius:50%;background:#3b82f6;animation:pulseDot 2s infinite}
 @media(max-width:480px){
   body{padding:1px}
   h2{font-size:11px;margin:2px 0 3px}
@@ -215,6 +219,11 @@ body.light .autosave-pill{background:#ecfdf5;color:#047857;border-color:#10b981}
     <span class="carry-badge" id="carryBadge" style="display:none">⏪ Carried</span>
   </div>
   <span class="autosave-pill"><span class="autosave-dot"></span> AUTO-SAVE ON</span>
+  <!-- ✅ NEW: Auto-refresh indicator with toggle -->
+  <span class="autorefresh-pill" id="autoRefreshPill" onclick="toggleAutoRefresh()" title="Click to toggle auto-refresh">
+    <span class="autorefresh-dot" id="autoRefreshDot"></span>
+    <span id="autoRefreshLabel">🔄 Auto-Refresh: ON</span>
+  </span>
 </div>
 <div class="carry-info" id="carryInfo" style="display:none"></div>
 <div class="carry-source-bar" id="carrySourceBar"></div>
@@ -481,6 +490,16 @@ const SUPABASE_KEY = 'sb_publishable_VA7UkQqRwCxdeVwHuxzsjw_dQxOPiIj';
 const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
 const COMPANY_CODE = 'composite';
 const OFFLINE_KEY = 'composite_needle_offline_v4';
+
+// =========================================
+// ✅ AUTO-REFRESH CONFIG
+// =========================================
+const AUTO_REFRESH_INTERVAL_MS = 30000; // 30 seconds
+let autoRefreshTimer = null;
+let autoRefreshEnabled = true;
+let lastKnownUpdatedAt = null; // ✅ track last server update timestamp
+let isUserEditing = false;     // ✅ don't refresh while user is typing
+let editingTimeout = null;
 
 // =========================================
 // 📦 FLOOR DATA
@@ -926,6 +945,160 @@ function buildPrevMap(savedRows){
 }
 
 // =========================================
+// ✅ AUTO-REFRESH FUNCTIONS
+// =========================================
+function startAutoRefresh(){
+  stopAutoRefresh();
+  if(!autoRefreshEnabled) return;
+  autoRefreshTimer = setInterval(silentRefreshCheck, AUTO_REFRESH_INTERVAL_MS);
+  updateAutoRefreshUI(true);
+}
+
+function stopAutoRefresh(){
+  if(autoRefreshTimer){ clearInterval(autoRefreshTimer); autoRefreshTimer=null; }
+}
+
+function toggleAutoRefresh(){
+  autoRefreshEnabled = !autoRefreshEnabled;
+  localStorage.setItem('autoRefreshEnabled', autoRefreshEnabled ? '1' : '0');
+  if(autoRefreshEnabled){ startAutoRefresh(); showToast('🔄 Auto-Refresh চালু হয়েছে (৩০ সেকেন্ড)'); }
+  else{ stopAutoRefresh(); showToast('⏸️ Auto-Refresh বন্ধ করা হয়েছে'); }
+  updateAutoRefreshUI(autoRefreshEnabled);
+}
+
+function updateAutoRefreshUI(on){
+  const pill = document.getElementById('autoRefreshPill');
+  const dot = document.getElementById('autoRefreshDot');
+  const label = document.getElementById('autoRefreshLabel');
+  if(on){
+    pill.style.background=''; dot.style.background='#3b82f6';
+    label.textContent='🔄 Auto-Refresh: ON';
+  } else {
+    pill.style.background='#374151'; dot.style.background='#6b7280';
+    label.textContent='⏸️ Auto-Refresh: OFF';
+  }
+}
+
+// ✅ CORE FIX: Smart silent refresh — only reload if server has newer data
+async function silentRefreshCheck(){
+  if(!navigator.onLine) return;
+  if(isUserEditing) return; // don't disrupt user typing
+  if(autoSaveInFlight) return;
+  if(suppressAutoSave) return;
+
+  const date = document.getElementById('postDate').value;
+  const floor = document.getElementById('floor').value;
+  if(!date || !floor) return;
+
+  // Check if any popup is open — don't refresh then
+  const popups = ['reqPopup','transferPopup','negativePopup','addRowPopup'];
+  if(popups.some(p => document.getElementById(p).style.display === 'flex')) return;
+
+  try{
+    const companyId = await getCompanyId();
+    if(!companyId) return;
+
+    // ✅ Only fetch updated_at — lightweight check
+    const {data, error} = await supabase
+      .from('needle_reports')
+      .select('updated_at, rows')
+      .eq('company_id', companyId)
+      .eq('floor', floor)
+      .eq('report_date', date)
+      .maybeSingle();
+
+    if(error || !data) return;
+
+    const serverUpdatedAt = data.updated_at;
+
+    // ✅ If server has newer data than what we loaded — silently reload
+    if(lastKnownUpdatedAt && serverUpdatedAt && serverUpdatedAt !== lastKnownUpdatedAt){
+      console.log('[AutoRefresh] New data detected, reloading silently...');
+      lastKnownUpdatedAt = serverUpdatedAt;
+      await silentApplyServerData(data.rows, floor, date);
+      updateLastSync('🔄 Auto-refreshed — '+new Date().toLocaleTimeString());
+    }
+  }catch(e){
+    console.warn('[AutoRefresh] Check failed:', e);
+  }
+}
+
+// ✅ Apply server data without full page reload — preserves user's unsaved changes if any
+async function silentApplyServerData(serverRows, floor, date){
+  if(!serverRows || !serverRows.length) return;
+
+  // ✅ FIX: Detect new custom rows from server that aren't in current table
+  const baseKeys = new Set((floorData[floor]||[]).map(b => b[1]+'__'+b[3]));
+  const currentKeys = new Set(currentFloorData.map(r => r.itemCode+'__'+r.size));
+
+  let newRowsAdded = false;
+  serverRows.forEach(row => {
+    const key = row.itemCode+'__'+row.size;
+    if(!currentKeys.has(key)){
+      // ✅ New row found on server — add to currentFloorData
+      currentFloorData.push({
+        sl: currentFloorData.length+1,
+        itemCode: row.itemCode,
+        needleType: row.needleType||'',
+        size: row.size,
+        brand: row.brand||'',
+        unitPrice: row.unitPrice||0,
+        opening: Number(row.previous)||0,
+        isCustom: true
+      });
+      newRowsAdded = true;
+    }
+  });
+
+  if(newRowsAdded){
+    // Need to rebuild table to add new rows
+    rebuildTableKeepingValues();
+    showToast('🔄 নতুন row sync হয়েছে অন্য device থেকে!');
+  }
+
+  // ✅ Update values for existing rows (only if user hasn't touched them)
+  serverRows.forEach(row => {
+    const idx = currentFloorData.findIndex(r => r.itemCode===row.itemCode && r.size===row.size);
+    if(idx < 0) return;
+
+    const rEl = document.getElementById('r'+idx);
+    const dEl = document.getElementById('d'+idx);
+    const bnEl = document.getElementById('bn'+idx);
+
+    // Only update if element has no local unsaved changes
+    // We check by comparing with what server says
+    const serverRcvd = Number(row.receive)||0;
+    const serverDvld = Number(row.delivery)||0;
+    const serverBN = Number(row.bn)||0;
+
+    const localRcvd = Number(rEl?.value)||0;
+    const localDvld = Number(dEl?.value)||0;
+
+    // If local values differ from server AND autoSave wasn't just done — skip (user editing)
+    // Simple heuristic: if they match server, update; if different, user may have changed
+    if(rEl && localRcvd === serverRcvd) rEl.value = serverRcvd || '';
+    if(dEl && localDvld === serverDvld) dEl.value = serverDvld || '';
+    if(bnEl) bnEl.value = serverBN || '';
+
+    // Update req tags
+    if(row.receiveReqNo && !rowReqNo[idx]){
+      rowReqNo[idx] = row.receiveReqNo;
+      const tag = document.getElementById('reqTag'+idx);
+      if(tag) tag.textContent = '📋 '+row.receiveReqNo;
+      if(!floorReqNo) floorReqNo = row.receiveReqNo;
+    }
+    // Transfer tags
+    if(row.transferOut && row.transferOut.length){ rowTransferOut[idx]=row.transferOut; updateTransferOutTag(idx); }
+    if(row.transferIn && row.transferIn.length){ rowTransferIn[idx]=row.transferIn; updateTransferInTag(idx); }
+
+    calc(idx);
+  });
+
+  updateFloorReqBanner();
+  updateTotal();
+}
+
+// =========================================
 // 📊 UI HELPERS
 // =========================================
 function updateCategoryBadge(){
@@ -1007,7 +1180,6 @@ function loadTable(prevMap={}, customRows=[], carried=false, prevDate=null){
           size: cr.size,
           brand: cr.brand||'',
           unitPrice: cr.unitPrice||0,
-          // ✅ FIX: custom row এর সঠিক opening value ব্যবহার করছি
           opening: Number(cr.opening)||0,
           isCustom: true
         });
@@ -1034,15 +1206,15 @@ function loadTable(prevMap={}, customRows=[], carried=false, prevDate=null){
         <td style="text-align:right">${Number(item.unitPrice).toFixed(4)}</td>
         <td id="p${i}">${previous}</td>
         <td id="rcvdCell${i}">
-          <input class="qtyInput" type="number" id="r${i}" oninput="calc(${i})" onblur="checkReqNo(${i})" step="1" min="0">
+          <input class="qtyInput" type="number" id="r${i}" oninput="calc(${i})" onblur="checkReqNo(${i})" onfocus="setUserEditing()" step="1" min="0">
           <span class="req-tag" id="reqTag${i}"></span>
         </td>
         <td id="dvldCell${i}">
-          <input class="qtyInput" type="number" id="d${i}" oninput="calc(${i})" step="1" min="0">
+          <input class="qtyInput" type="number" id="d${i}" oninput="calc(${i})" onfocus="setUserEditing()" step="1" min="0">
           <span class="transfer-tag" id="trfOutTag${i}"></span>
         </td>
         <td id="b${i}" style="font-weight:bold">${previous}</td>
-        <td><input class="qtyInput" type="number" id="bn${i}" oninput="updateTotal();scheduleAutoSave()" step="1" min="0"></td>
+        <td><input class="qtyInput" type="number" id="bn${i}" oninput="updateTotal();scheduleAutoSave()" onfocus="setUserEditing()" step="1" min="0"></td>
         <td>
           <button class="transferBtn" onclick="openTransferPopup(${i})">🔄 Trf</button>
           <span class="transfer-tag" id="trfInTag${i}"></span>
@@ -1057,6 +1229,13 @@ function loadTable(prevMap={}, customRows=[], carried=false, prevDate=null){
   updateTotal();
   updateCarryIndicator(carried, prevDate);
   setTimeout(checkNegativeStock, 100);
+}
+
+// ✅ Track user editing to prevent auto-refresh disruption
+function setUserEditing(){
+  isUserEditing = true;
+  clearTimeout(editingTimeout);
+  editingTimeout = setTimeout(()=>{ isUserEditing = false; }, 5000);
 }
 
 // =========================================
@@ -1100,15 +1279,15 @@ function confirmAddRow(){
     <td style="text-align:right">${unitPrice.toFixed(4)}</td>
     <td id="p${i}">${opening}</td>
     <td id="rcvdCell${i}">
-      <input class="qtyInput" type="number" id="r${i}" oninput="calc(${i})" onblur="checkReqNo(${i})" step="1" min="0">
+      <input class="qtyInput" type="number" id="r${i}" oninput="calc(${i})" onblur="checkReqNo(${i})" onfocus="setUserEditing()" step="1" min="0">
       <span class="req-tag" id="reqTag${i}"></span>
     </td>
     <td id="dvldCell${i}">
-      <input class="qtyInput" type="number" id="d${i}" oninput="calc(${i})" step="1" min="0">
+      <input class="qtyInput" type="number" id="d${i}" oninput="calc(${i})" onfocus="setUserEditing()" step="1" min="0">
       <span class="transfer-tag" id="trfOutTag${i}"></span>
     </td>
     <td id="b${i}" style="font-weight:bold">${opening}</td>
-    <td><input class="qtyInput" type="number" id="bn${i}" oninput="updateTotal();scheduleAutoSave()" step="1" min="0"></td>
+    <td><input class="qtyInput" type="number" id="bn${i}" oninput="updateTotal();scheduleAutoSave()" onfocus="setUserEditing()" step="1" min="0"></td>
     <td>
       <button class="transferBtn" onclick="openTransferPopup(${i})">🔄 Trf</button>
       <span class="transfer-tag" id="trfInTag${i}"></span>
@@ -1156,15 +1335,15 @@ function rebuildTableKeepingValues(){
         <td style="text-align:right">${Number(item.unitPrice).toFixed(4)}</td>
         <td id="p${i}">${prev}</td>
         <td id="rcvdCell${i}">
-          <input class="qtyInput" type="number" id="r${i}" value="${v.r}" oninput="calc(${i})" onblur="checkReqNo(${i})" step="1" min="0">
+          <input class="qtyInput" type="number" id="r${i}" value="${v.r}" oninput="calc(${i})" onblur="checkReqNo(${i})" onfocus="setUserEditing()" step="1" min="0">
           <span class="req-tag" id="reqTag${i}">${rowReqNo[i]?'📋 '+rowReqNo[i]:''}</span>
         </td>
         <td id="dvldCell${i}">
-          <input class="qtyInput" type="number" id="d${i}" value="${v.d}" oninput="calc(${i})" step="1" min="0">
+          <input class="qtyInput" type="number" id="d${i}" value="${v.d}" oninput="calc(${i})" onfocus="setUserEditing()" step="1" min="0">
           <span class="transfer-tag" id="trfOutTag${i}"></span>
         </td>
         <td id="b${i}" style="font-weight:bold">${prev + (Number(v.r)||0) - (Number(v.d)||0)}</td>
-        <td><input class="qtyInput" type="number" id="bn${i}" value="${v.bn}" oninput="updateTotal();scheduleAutoSave()" step="1" min="0"></td>
+        <td><input class="qtyInput" type="number" id="bn${i}" value="${v.bn}" oninput="updateTotal();scheduleAutoSave()" onfocus="setUserEditing()" step="1" min="0"></td>
         <td>
           <button class="transferBtn" onclick="openTransferPopup(${i})">🔄 Trf</button>
           <span class="transfer-tag" id="trfInTag${i}"></span>
@@ -1575,7 +1754,11 @@ async function saveData(){
     showLoading('Saving...');
     const result=await saveToSupabase(floor, date, operator, rows);
     hideLoading();
-    if(result.success) updateLastSync(`☁️ Supabase এ Saved — ${new Date().toLocaleTimeString()}`);
+    if(result.success){
+      updateLastSync(`☁️ Supabase এ Saved — ${new Date().toLocaleTimeString()}`);
+      // ✅ Update lastKnownUpdatedAt after save so auto-refresh doesn't re-trigger
+      lastKnownUpdatedAt = new Date().toISOString();
+    }
   }else{
     saveOffline(floor, date, operator, rows);
     showToast('📴 Offline — Local এ Save হয়েছে');
@@ -1628,6 +1811,8 @@ async function autoSaveNow(){
         showAutoSaveStatus('✅ Auto-saved — '+new Date().toLocaleTimeString());
         saveOffline(floor, date, operator, rows);
         markOfflineSynced(floor, date);
+        // ✅ Update timestamp so auto-refresh won't trigger on our own save
+        lastKnownUpdatedAt = new Date().toISOString();
       }else{
         saveOffline(floor, date, operator, rows);
         showAutoSaveStatus('📴 Saved locally (sync pending) — '+new Date().toLocaleTimeString());
@@ -1660,36 +1845,39 @@ function showAutoSaveStatus(msg){
 }
 
 // =========================================
-// ✅ MAIN loadData  ← ✅ FIXED HERE
+// ✅ MAIN loadData — FIXED CUSTOM ROW SYNC
 // =========================================
 async function loadData(){
   const date=document.getElementById('postDate').value;
   const floor=document.getElementById('floor').value;
   suppressAutoSave = true;
-  if(!date||!floor){ loadTable({}, [], false, null); updateMonthlySummary([]); suppressAutoSave=false; return; }
+  stopAutoRefresh(); // pause during load
+  if(!date||!floor){ loadTable({}, [], false, null); updateMonthlySummary([]); suppressAutoSave=false; startAutoRefresh(); return; }
   showLoading('Loading...');
   rowReqNo={}; rowTransferOut={}; rowTransferIn={};
   floorReqNo=null;
+  lastKnownUpdatedAt=null; // ✅ reset on full reload
   updateFloorReqBanner();
   try{
     let todayData=null, prevData=null, prevDateUsed=null;
     if(navigator.onLine){
       [todayData, prevData] = await Promise.all([loadFromSupabase(floor, date), findLastSavedBefore(floor, date)]);
       if(prevData) prevDateUsed=prevData.report_date;
+      // ✅ Store server timestamp for change detection
+      if(todayData) lastKnownUpdatedAt = todayData.updated_at || null;
     }else{
       todayData=getOffline(floor, date);
       showToast('📴 Offline — Local data দেখাচ্ছে');
     }
 
-    // ✅ FIX: prevMap শুধু base items এর জন্য (present stock carry)
     const prevMap = prevData ? buildPrevMap(prevData.rows) : {};
     const hasPrevData = !!(prevData && prevData.rows && prevData.rows.length > 0);
     const baseKeys = new Set((floorData[floor]||[]).map(b => b[1]+'__'+b[3]));
 
-    // ✅ FIX: custom rows আলাদাভাবে সঠিক opening value সহ build করছি
+    // ✅ FIXED: Build customRowMap properly with correct opening values
     const customRowMap = {};
 
-    // prevData থেকে custom rows (lower priority) — opening = prev দিনের present
+    // prevData থেকে custom rows — opening = prev দিনের present (carry forward)
     if(prevData && prevData.rows){
       prevData.rows.forEach(r=>{
         const key = r.itemCode+'__'+r.size;
@@ -1700,15 +1888,14 @@ async function loadData(){
             size: r.size,
             brand: r.brand||'',
             unitPrice: r.unitPrice||0,
-            // ✅ FIX: আগের দিনের present → আজকের opening (carry)
-            opening: Number(r.present)||0,
+            opening: Number(r.present)||0, // prev day's present → today's opening
             isCustom: true
           };
         }
       });
     }
 
-    // todayData থেকে custom rows (higher priority — override করবে)
+    // todayData থেকে custom rows — higher priority, use saved previous value
     if(todayData && todayData.rows){
       todayData.rows.forEach(r=>{
         const key = r.itemCode+'__'+r.size;
@@ -1719,7 +1906,6 @@ async function loadData(){
             size: r.size,
             brand: r.brand||'',
             unitPrice: r.unitPrice||0,
-            // ✅ FIX: আজকের saved previous value ব্যবহার করছি
             opening: Number(r.previous)||Number(r.present)||0,
             isCustom: true
           };
@@ -1764,6 +1950,7 @@ async function loadData(){
   }
   hideLoading();
   suppressAutoSave = false;
+  startAutoRefresh(); // ✅ restart auto-refresh after load
 }
 
 async function manualRefresh(){
@@ -1790,7 +1977,10 @@ async function syncOfflineData(){
   }catch(e){}
 }
 
-function onFloorChange(){ loadData(); }
+function onFloorChange(){
+  stopAutoRefresh();
+  loadData();
+}
 
 async function deleteData(){
   const date=document.getElementById('postDate').value;
@@ -2170,6 +2360,10 @@ function updateOfflineIndicator(){
   const op=localStorage.getItem('lastOperator');
   if(op) document.getElementById('operatorName').value=op;
   if(localStorage.getItem('theme')==='light') document.body.classList.add('light');
+  // ✅ Restore auto-refresh preference
+  const savedARPref = localStorage.getItem('autoRefreshEnabled');
+  if(savedARPref === '0') autoRefreshEnabled = false;
+  updateAutoRefreshUI(autoRefreshEnabled);
   updateOfflineIndicator();
   updateCategoryBadge();
   loadTable({}, [], false, null);
@@ -2186,7 +2380,15 @@ function updateOfflineIndicator(){
 })();
 
 window.addEventListener('online',()=>{ updateOfflineIndicator(); syncOfflineData(); });
-window.addEventListener('offline',()=>updateOfflineIndicator());
+window.addEventListener('offline',()=>{ updateOfflineIndicator(); stopAutoRefresh(); });
+window.addEventListener('online',()=>{ if(autoRefreshEnabled) startAutoRefresh(); });
+
+// ✅ Pause auto-refresh when tab is hidden, resume when visible
+document.addEventListener('visibilitychange',()=>{
+  if(document.hidden){ stopAutoRefresh(); }
+  else if(autoRefreshEnabled){ startAutoRefresh(); silentRefreshCheck(); }
+});
+
 document.getElementById('postDate').addEventListener('change', loadData);
 document.addEventListener('keydown',e=>{
   if(e.target.tagName!=='INPUT'||!e.target.id.match(/^(r|d|bn)\d+$/)) return;
@@ -2216,6 +2418,8 @@ window.showReqSearch=showReqSearch; window.closeReqSearchPopup=closeReqSearchPop
 window.openAddRowPopup=openAddRowPopup; window.closeAddRowPopup=closeAddRowPopup; window.confirmAddRow=confirmAddRow;
 window.deleteCustomRow=deleteCustomRow;
 window.scheduleAutoSave=scheduleAutoSave;
+window.setUserEditing=setUserEditing;
+window.toggleAutoRefresh=toggleAutoRefresh;
 </script>
 </body>
 </html>
