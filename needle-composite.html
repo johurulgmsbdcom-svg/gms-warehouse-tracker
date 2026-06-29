@@ -480,7 +480,7 @@ const SUPABASE_URL = 'https://hmatleeearcaltguosiz.supabase.co';
 const SUPABASE_KEY = 'sb_publishable_VA7UkQqRwCxdeVwHuxzsjw_dQxOPiIj';
 const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
 const COMPANY_CODE = 'composite';
-const OFFLINE_KEY = 'composite_needle_offline_v4';
+const OFFLINE_KEY = 'composite_needle_offline_v5';
 
 // =========================================
 // 📦 FLOOR DATA
@@ -844,22 +844,44 @@ let pendingTransferIndex = null;
 let autoSaveTimer = null;
 let autoSaveInFlight = false;
 let suppressAutoSave = false;
+let lastAutoSaveTime = 0; // ✅ Track last save time to prevent beforeunload overwrite
 
 // =========================================
 // 💾 OFFLINE STORAGE
 // =========================================
-function saveOffline(floor, date, operator, rows){
+function saveOffline(floor, date, operator, rows, forceSynced = false){
   try{
     const data = JSON.parse(localStorage.getItem(OFFLINE_KEY)||'{}');
-    data[`${floor}__${date}`] = {operator, rows, savedAt: new Date().toISOString(), synced:false};
+    const key = `${floor}__${date}`;
+    // ✅ FIX: If already synced, keep it synced. Don't reset to false!
+    const existing = data[key];
+    const shouldBeSynced = forceSynced || (existing && existing.synced);
+    
+    data[key] = {
+      operator, 
+      rows, 
+      savedAt: new Date().toISOString(), 
+      synced: shouldBeSynced
+    };
     localStorage.setItem(OFFLINE_KEY, JSON.stringify(data));
-  }catch(e){}
+  }catch(e){ console.error('saveOffline error', e); }
 }
 function getOffline(floor, date){
   try{
     const data = JSON.parse(localStorage.getItem(OFFLINE_KEY)||'{}');
     return data[`${floor}__${date}`] || null;
   }catch(e){ return null; }
+}
+function markOfflineSynced(floor, date){
+  try{
+    const data = JSON.parse(localStorage.getItem(OFFLINE_KEY)||'{}');
+    const key = `${floor}__${date}`;
+    if(data[key]){
+      data[key].synced = true;
+      data[key].savedAt = new Date().toISOString(); // Update timestamp
+    }
+    localStorage.setItem(OFFLINE_KEY, JSON.stringify(data));
+  }catch(e){}
 }
 
 // =========================================
@@ -1007,7 +1029,6 @@ function loadTable(prevMap={}, customRows=[], carried=false, prevDate=null){
           size: cr.size,
           brand: cr.brand||'',
           unitPrice: cr.unitPrice||0,
-          // ✅ FIX: custom row এর সঠিক opening value ব্যবহার করছি
           opening: Number(cr.opening)||0,
           isCustom: true
         });
@@ -1575,9 +1596,14 @@ async function saveData(){
     showLoading('Saving...');
     const result=await saveToSupabase(floor, date, operator, rows);
     hideLoading();
-    if(result.success) updateLastSync(`☁️ Supabase এ Saved — ${new Date().toLocaleTimeString()}`);
+    if(result.success){
+      // ✅ FIX: Save offline backup AND mark as synced
+      saveOffline(floor, date, operator, rows, true); // true = force synced
+      lastAutoSaveTime = Date.now();
+      updateLastSync(`☁️ Supabase এ Saved — ${new Date().toLocaleTimeString()}`);
+    }
   }else{
-    saveOffline(floor, date, operator, rows);
+    saveOffline(floor, date, operator, rows, false);
     showToast('📴 Offline — Local এ Save হয়েছে');
     updateLastSync(`📴 Offline saved — ${new Date().toLocaleTimeString()}`);
   }
@@ -1626,32 +1652,24 @@ async function autoSaveNow(){
       const result = await saveToSupabase(floor, date, operator, rows, false);
       if(result.success){
         showAutoSaveStatus('✅ Auto-saved — '+new Date().toLocaleTimeString());
-        saveOffline(floor, date, operator, rows);
-        markOfflineSynced(floor, date);
+        // ✅ FIX: Mark as synced so beforeunload won't overwrite
+        saveOffline(floor, date, operator, rows, true);
+        lastAutoSaveTime = Date.now();
       }else{
-        saveOffline(floor, date, operator, rows);
+        saveOffline(floor, date, operator, rows, false);
         showAutoSaveStatus('📴 Saved locally (sync pending) — '+new Date().toLocaleTimeString());
       }
     }else{
-      saveOffline(floor, date, operator, rows);
+      saveOffline(floor, date, operator, rows, false);
       showAutoSaveStatus('📴 Offline auto-saved — '+new Date().toLocaleTimeString());
     }
   }catch(e){
     console.error('autoSaveNow error:', e);
-    saveOffline(floor, date, operator, rows);
+    saveOffline(floor, date, operator, rows, false);
     showAutoSaveStatus('⚠️ Save error — local এ রাখা হয়েছে');
   }finally{
     autoSaveInFlight = false;
   }
-}
-
-function markOfflineSynced(floor, date){
-  try{
-    const data = JSON.parse(localStorage.getItem(OFFLINE_KEY)||'{}');
-    const key = `${floor}__${date}`;
-    if(data[key]) data[key].synced = true;
-    localStorage.setItem(OFFLINE_KEY, JSON.stringify(data));
-  }catch(e){}
 }
 
 function showAutoSaveStatus(msg){
@@ -1660,7 +1678,7 @@ function showAutoSaveStatus(msg){
 }
 
 // =========================================
-// ✅ MAIN loadData  ← ✅ FIXED HERE
+// ✅ MAIN loadData
 // =========================================
 async function loadData(){
   const date=document.getElementById('postDate').value;
@@ -1681,15 +1699,12 @@ async function loadData(){
       showToast('📴 Offline — Local data দেখাচ্ছে');
     }
 
-    // ✅ FIX: prevMap শুধু base items এর জন্য (present stock carry)
     const prevMap = prevData ? buildPrevMap(prevData.rows) : {};
     const hasPrevData = !!(prevData && prevData.rows && prevData.rows.length > 0);
     const baseKeys = new Set((floorData[floor]||[]).map(b => b[1]+'__'+b[3]));
 
-    // ✅ FIX: custom rows আলাদাভাবে সঠিক opening value সহ build করছি
     const customRowMap = {};
 
-    // prevData থেকে custom rows (lower priority) — opening = prev দিনের present
     if(prevData && prevData.rows){
       prevData.rows.forEach(r=>{
         const key = r.itemCode+'__'+r.size;
@@ -1700,7 +1715,6 @@ async function loadData(){
             size: r.size,
             brand: r.brand||'',
             unitPrice: r.unitPrice||0,
-            // ✅ FIX: আগের দিনের present → আজকের opening (carry)
             opening: Number(r.present)||0,
             isCustom: true
           };
@@ -1708,7 +1722,6 @@ async function loadData(){
       });
     }
 
-    // todayData থেকে custom rows (higher priority — override করবে)
     if(todayData && todayData.rows){
       todayData.rows.forEach(r=>{
         const key = r.itemCode+'__'+r.size;
@@ -1719,7 +1732,6 @@ async function loadData(){
             size: r.size,
             brand: r.brand||'',
             unitPrice: r.unitPrice||0,
-            // ✅ FIX: আজকের saved previous value ব্যবহার করছি
             opening: Number(r.previous)||Number(r.present)||0,
             isCustom: true
           };
@@ -1773,21 +1785,65 @@ async function manualRefresh(){
   showToast('🔄 Refreshed!');
 }
 
+// =========================================
+// 🔄 SYNC OFFLINE DATA (COMPLETELY FIXED)
+// =========================================
 async function syncOfflineData(){
   try{
     const data=JSON.parse(localStorage.getItem(OFFLINE_KEY)||'{}');
     const keys=Object.keys(data);
     let synced=0;
+    const companyId = await getCompanyId();
+    if(!companyId) return;
+
     for(const key of keys){
       const [floor,date]=key.split('__');
       const entry=data[key];
-      if(entry&&!entry.synced){
-        const result=await saveToSupabase(floor,date,entry.operator,entry.rows,false);
-        if(result.success){ data[key].synced=true; synced++; }
+      
+      // ✅ FIX: Skip if already synced
+      if(!entry || entry.synced) continue;
+      
+      try {
+        // ✅ FIX: Check if Supabase has newer data
+        const {data: existing} = await supabase.from('needle_reports')
+          .select('updated_at')
+          .eq('company_id', companyId)
+          .eq('floor', floor)
+          .eq('report_date', date)
+          .maybeSingle();
+        
+        if(existing && existing.updated_at){
+          const supabaseTime = new Date(existing.updated_at).getTime();
+          const localTime = new Date(entry.savedAt).getTime();
+          
+          // ✅ If Supabase is newer, DON'T overwrite - just mark local as synced
+          if(supabaseTime > localTime){
+            console.log(`[Sync] Skipping ${floor} ${date} - Supabase is newer`);
+            data[key].synced = true;
+            continue;
+          }
+        }
+        
+        // ✅ Only upload if local is newer or Supabase has no data
+        const result = await saveToSupabase(floor, date, entry.operator, entry.rows, false);
+        if(result.success){ 
+          data[key].synced = true;
+          synced++; 
+        }
+      } catch(e) { 
+        console.error('Sync error for', key, e); 
       }
     }
-    if(synced>0){ localStorage.setItem(OFFLINE_KEY,JSON.stringify(data)); showToast(`☁️ ${synced}টি offline data sync হয়েছে`); }
-  }catch(e){}
+    
+    if(Object.keys(data).length > 0){
+      localStorage.setItem(OFFLINE_KEY, JSON.stringify(data));
+    }
+    
+    // ✅ No annoying popup - just silent status update
+    if(synced > 0) {
+        updateLastSync(`☁️ ${synced}টি offline data sync হয়েছে — ${new Date().toLocaleTimeString()}`);
+    }
+  }catch(e){ console.error('syncOfflineData error', e); }
 }
 
 function onFloorChange(){ loadData(); }
@@ -2153,7 +2209,7 @@ function showLoading(text='Loading...'){
   document.getElementById('loadingOverlay').classList.add('show');
 }
 function hideLoading(){ document.getElementById('loadingOverlay').classList.remove('show'); }
-function updateLastSync(t){ const el=document.getElementById('lastSync'); if(el) el.textContent=t; }
+function updateLastSync(t){ const el = document.getElementById('lastSync'); if(el) el.textContent=t; }
 function toggleTheme(){
   document.body.classList.toggle('light');
   localStorage.setItem('theme',document.body.classList.contains('light')?'light':'dark');
@@ -2175,12 +2231,20 @@ function updateOfflineIndicator(){
   loadTable({}, [], false, null);
   if(navigator.onLine) setTimeout(syncOfflineData,2000);
   document.addEventListener('keydown',e=>{ if(e.ctrlKey&&e.key==='s'){e.preventDefault();saveData();} });
+  
+  // ✅ FIX: beforeunload - Only save if offline OR if recent auto-save hasn't happened
   window.addEventListener('beforeunload', ()=>{
     const date=document.getElementById('postDate').value;
     const floor=document.getElementById('floor').value;
     if(date && floor && currentFloorData.length){
       const operator=document.getElementById('operatorName').value.trim()||localStorage.getItem('lastOperator')||'Unknown';
-      try{ saveOffline(floor, date, operator, buildRows()); }catch(e){}
+      try{
+        // ✅ Only save offline if we're offline OR last save was more than 5 seconds ago
+        const timeSinceLastSave = Date.now() - lastAutoSaveTime;
+        if(!navigator.onLine || timeSinceLastSave > 5000){
+          saveOffline(floor, date, operator, buildRows(), !navigator.onLine);
+        }
+      }catch(e){}
     }
   });
 })();
