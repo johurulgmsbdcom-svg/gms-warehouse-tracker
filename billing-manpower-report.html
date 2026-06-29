@@ -706,7 +706,7 @@ body.light tr:nth-child(even){
 <div id="toast" class="toast">Saved ✅</div>
 
 <!-- ================================================================
-🔥 FIREBASE MODULE + GATE PLAN LOGIC + ROI TRACKING + SMART CACHE
+🔥 FIREBASE MODULE + REAL-TIME SYNC + SMART CACHE
 ================================================================ -->
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-app.js";
@@ -741,13 +741,13 @@ if(!user){
 }
 
 // ================================================================
-// 📦 SMART CACHE MANAGER — Gate Plan এর মতো
+// 📦 SMART CACHE MANAGER
 // ================================================================
 window.GMS_CACHE = {
   CACHE_KEY: 'GMS_SMART_CACHE',
   READ_COUNT_KEY: 'GMS_READ_COUNT_TODAY',
   READ_DATE_KEY: 'GMS_READ_COUNT_DATE',
-  CACHE_EXPIRY_MS: 5 * 60 * 1000, // ★ 5 minutes cache expiry
+  CACHE_EXPIRY_MS: 5 * 60 * 1000, // 5 minutes cache expiry
   
   getReadCount: function(){
     var today = new Date().toDateString();
@@ -784,7 +784,7 @@ window.GMS_CACHE = {
     var entry = all[key];
     if(!entry) return null;
     
-    // ★ NEW: Check cache expiry (5 minutes)
+    // Check cache expiry (5 minutes)
     var age = Date.now() - entry.savedAt;
     if(age > this.CACHE_EXPIRY_MS){
       console.log('⏰ Cache expired for:', key, 'Age:', Math.round(age/1000), 'seconds');
@@ -815,7 +815,7 @@ const CACHE_KEYS = {
 const LOCAL_TIMESTAMPS_KEY = 'GMS_LOCAL_TIMESTAMPS';
 
 // ================================================================
-// 🕐 TIMESTAMP HELPER — Firebase system_sync collection এ লেখে
+// 🕐 TIMESTAMP HELPER
 // ================================================================
 async function updateCollectionTimestamp(collectionName){
   try{
@@ -830,7 +830,7 @@ async function updateCollectionTimestamp(collectionName){
 window.updateCollectionTimestamp = updateCollectionTimestamp;
 
 // ================================================================
-// 🔍 shouldUpdate — Firebase vs local timestamp তুলনা
+// 🔍 shouldUpdate
 // ================================================================
 function buildShouldUpdate(remoteTimestamps, forceAll){
   return function(col){
@@ -843,7 +843,7 @@ function buildShouldUpdate(remoteTimestamps, forceAll){
 }
 
 // ================================================================
-// 📦 SMART SELECTIVE CACHE — শুধু পরিবর্তিত data Firebase থেকে
+// 📦 SMART SELECTIVE CACHE
 // ================================================================
 async function cachedGetDocs(collectionName, cacheKey, shouldUpdate){
   var statusEl = document.getElementById('cacheStatusText');
@@ -1069,7 +1069,7 @@ window.switchView=function(view){
 };
 
 // ================================================================
-// 💾 SAVE REPORT — Firebase write + Timestamp update + ROI tracking
+// 💾 SAVE REPORT
 // ================================================================
 window.saveReport=async function(){
   calculatePresent();
@@ -1125,15 +1125,15 @@ window.saveReport=async function(){
     createdAt:new Date().toISOString()
   });
 
-  // 🔥 Timestamp update — পরের বার cache skip হবে
+  // 🔥 Timestamp update
   await updateCollectionTimestamp('billingManpowerReport');
   
-  // 🔥 Local timestamp মুছে দাও — পরের বার fresh load হবে
+  // 🔥 Local timestamp মুছে দাও
   var localTS = JSON.parse(localStorage.getItem(LOCAL_TIMESTAMPS_KEY) || '{}');
   delete localTS['billingManpowerReport'];
   localStorage.setItem(LOCAL_TIMESTAMPS_KEY, JSON.stringify(localTS));
   
-  // 🔥 Cache invalidate — fresh data দরকার
+  // 🔥 Cache invalidate
   window.GMS_CACHE.invalidate([CACHE_KEYS.billingManpowerReport]);
 
   // 🔥 ROI Tracking
@@ -1154,7 +1154,8 @@ window.saveReport=async function(){
   document.getElementById("medicalBox").style.display="none";
   document.getElementById("offDayBox").style.display="none";
 
-  loadReport();
+  // 🔥 Real-time listener auto-update করবে, manual load দরকার নেই
+  // loadReport();
 };
 
 window.loadReport=async function(){
@@ -1165,7 +1166,7 @@ window.loadReport=async function(){
 };
 
 // ================================================================
-// 🔥 SMART SELECTIVE LOAD — Gate Plan এর মতো
+// 🔥 SMART SELECTIVE LOAD
 // ================================================================
 window.loadRangeReport=async function(){
   let from=document.getElementById("fromDate").value;
@@ -1510,7 +1511,7 @@ function renderChart(total,leave,absent,medical,offday,present){
 }
 
 // ================================================================
-// 🗑 DELETE ROW — Firebase delete + Timestamp update + Cache invalidate
+// 🗑 DELETE ROW
 // ================================================================
 window.deleteRow=async function(id){
   if(confirm("🗑 Delete this report?")){
@@ -1524,7 +1525,7 @@ window.deleteRow=async function(id){
     window.GMS_CACHE.invalidate([CACHE_KEYS.billingManpowerReport]);
     
     toast("Deleted ✅");
-    loadRangeReport();
+    // 🔥 Real-time listener auto-update করবে
   }
 };
 
@@ -1538,22 +1539,28 @@ window.exportExcel=function(){
 };
 
 // ================================================================
-// 🔄 REALTIME SYNC — Gate Plan এর মতো onSnapshot listener
+// 🔄 REAL-TIME SYNC — onSnapshot listener
 // ================================================================
 function setupRealtimeSync(){
   console.log('🔔 Setting up realtime sync for billingManpowerReport...');
   
-  // ★ NEW: billingManpowerReport collection এ onSnapshot listener
+  // ★ billingManpowerReport collection এ onSnapshot listener
   var billingCol = collection(db, 'billingManpowerReport');
   onSnapshot(billingCol, function(snapshot){
     console.log('🔔 Realtime: billingManpowerReport changed, docs:', snapshot.size);
     
-    // Cache invalidate করো
-    window.GMS_CACHE.invalidate([CACHE_KEYS.billingManpowerReport]);
+    // 🔥 Data update করো cache এ
+    var rows = [];
+    snapshot.forEach(function(d){
+      rows.push({...d.data(), _docId: d.id});
+    });
     
-    // Local timestamp মুছে ফেলো
+    // Cache update
+    window.GMS_CACHE.set(CACHE_KEYS.billingManpowerReport, rows);
+    
+    // Local timestamp আপডেট
     var localTS = JSON.parse(localStorage.getItem(LOCAL_TIMESTAMPS_KEY) || '{}');
-    delete localTS['billingManpowerReport'];
+    localTS['billingManpowerReport'] = Date.now();
     localStorage.setItem(LOCAL_TIMESTAMPS_KEY, JSON.stringify(localTS));
     
     // Status update
@@ -1563,37 +1570,31 @@ function setupRealtimeSync(){
       setTimeout(function(){ if(syncStatus) syncStatus.innerText = 'Active'; }, 2000);
     }
     
-    // যদি page active থাকে, তাহলে reload করো
+    // 🔥 UI auto-update (0 Firebase reads!)
     if(!document.hidden){
-      console.log('🔄 Reloading report due to realtime change...');
+      console.log('🔄 Realtime update → reloading from cache (0 reads)...');
       var statusEl = document.getElementById('cacheStatusText');
-      if(statusEl) statusEl.innerText = '🔔 Realtime update detected...';
-      loadRangeReport();
+      if(statusEl) statusEl.innerText = '🔔 Realtime update → Cache 📦';
+      
+      // শুধু cache থেকে reload করো
+      var from=document.getElementById("fromDate").value;
+      var to=document.getElementById("toDate").value;
+      
+      var filteredRows = [];
+      rows.forEach(function(r){
+        if(r.date >= from && r.date <= to){
+          filteredRows.push(r);
+        }
+      });
+      
+      filteredRows.sort((a,b)=>a.date.localeCompare(b.date));
+      allRows = filteredRows;
+      
+      renderTable(filteredRows);
     }
   });
   
-  // system_sync collection এও listener
-  var syncCol = collection(db, 'system_sync');
-  onSnapshot(syncCol, function(snapshot){
-    var remoteTS = {};
-    snapshot.forEach(function(d){ 
-      remoteTS[d.id] = d.data().lastUpdated || 0; 
-    });
-    
-    var localTS = JSON.parse(localStorage.getItem(LOCAL_TIMESTAMPS_KEY) || '{}');
-    var changed = Object.keys(remoteTS).filter(function(col){
-      return !localTS[col] || remoteTS[col] > localTS[col];
-    });
-    
-    if(changed.length > 0 && changed.includes('billingManpowerReport')){
-      console.log('🔔 Realtime: system_sync changed for billingManpowerReport');
-      if(!document.hidden){
-        loadRangeReport();
-      }
-    }
-  });
-  
-  console.log('✅ Realtime sync setup complete');
+  console.log('✅ Realtime sync setup complete — PC1 to PC3 auto-sync active');
 }
 
 // ================================================================
@@ -1614,32 +1615,49 @@ loadReport();
 // Realtime sync setup
 setupRealtimeSync();
 
-// ★ NEW: Page visibility change এ auto refresh
+// ★ Page visibility change এ শুধু cache থেকে reload
 document.addEventListener('visibilitychange', function(){
   if(!document.hidden){
-    console.log('🔄 Page visible — reloading report...');
-    loadRangeReport();
+    console.log('🔄 Page visible — reloading from cache...');
+    // 🔥 Cache থেকে reload করো, Firebase read নয়
+    var cached = window.GMS_CACHE.get(CACHE_KEYS.billingManpowerReport);
+    if(cached){
+      var from=document.getElementById("fromDate").value;
+      var to=document.getElementById("toDate").value;
+      
+      var filteredRows = [];
+      cached.forEach(function(r){
+        if(r.date >= from && r.date <= to){
+          filteredRows.push(r);
+        }
+      });
+      
+      filteredRows.sort((a,b)=>a.date.localeCompare(b.date));
+      allRows = filteredRows;
+      
+      renderTable(filteredRows);
+    }
   }
 });
 
-// ★ NEW: প্রতি 30 সেকেন্ড পর auto refresh
-setInterval(function(){
-  if(!document.hidden){
-    console.log('⏰ Auto-refresh triggered (30 seconds)');
-    loadRangeReport();
-  }
-}, 30000);
+// ❌ 30 সেকেন্ডের auto-refresh বাদ দিলাম (unnecessary Firebase reads)
+// setInterval(function(){
+//   if(!document.hidden){
+//     console.log('⏰ Auto-refresh triggered (30 seconds)');
+//     loadRangeReport();
+//   }
+// }, 30000);
 
 // Console log
 console.log('%c═══════════════════════════════════════════', 'color: #22c55e; font-weight: bold;');
 console.log('%c  📊 BILLING MANPOWER REPORT - READY', 'color: #22c55e; font-weight: bold; font-size: 14px;');
 console.log('%c═══════════════════════════════════════════', 'color: #22c55e; font-weight: bold;');
 console.log('%c  ✅ Smart Selective Cache: Active', 'color: #3b82f6;');
-console.log('%c  ✅ Realtime Sync: Active', 'color: #22c55e;');
+console.log('%c  ✅ Realtime Sync: Active (PC1 to PC3)', 'color: #22c55e;');
 console.log('%c  ✅ ROI Tracking: Active', 'color: #8b5cf6;');
 console.log('%c  ✅ Cache Expiry: 5 minutes', 'color: #f59e0b;');
-console.log('%c  ✅ Auto Refresh: Every 30 seconds', 'color: #f59e0b;');
-console.log('%c  ✅ Firebase Reads Minimized: Yes', 'color: #f59e0b;');
+console.log('%c  ✅ Firebase Reads: Minimized (only initial load)', 'color: #f59e0b;');
+console.log('%c  ✅ Auto Refresh: Disabled (real-time instead)', 'color: #f59e0b;');
 console.log('%c═══════════════════════════════════════════', 'color: #22c55e; font-weight: bold;');
 </script>
 
