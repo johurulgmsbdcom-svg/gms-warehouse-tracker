@@ -257,7 +257,7 @@ body.light .checkItem:hover{background:var(--card2)!important;}
 
     <!-- 🔥 Section 2: Manpower MCD Access (Hidden by default) -->
     <div id="manpowerSection" style="display:none; margin-top:16px;">
-      <h3>👨‍ Manpower MCD Access (Manpower Module)</h3>
+      <h3>👨‍💼 Manpower MCD Access (Manpower Module)</h3>
       <div class="smallNote">✅ এখানে টিক করা MCD শুধু Manpower পেজে কাজ করবে। Normal MCD থেকে আলাদা।</div>
       <div id="manpowerMcdChecks" class="mcdBox"></div>
     </div>
@@ -285,7 +285,7 @@ body.light .checkItem:hover{background:var(--card2)!important;}
           <th>MCD Access</th>
           <th>🪡 Needle</th>
           <th>🪡 Composite</th>
-          <th>👨‍ Manpower</th>
+          <th>👨‍💼 Manpower</th>
           <th>Action</th>
         </tr>
       </thead>
@@ -706,12 +706,97 @@ async function loadUsers(){
   }
 }
 
+// ═══════════════════════════════════════════════════════
+// 🔄 AUTO MIGRATION: Set userCompanies for legacy users
+// ═══════════════════════════════════════════════════════
+const COMPOSITE_MCDS = ['SHIPMENT MCD','BILLING SECTION','OUTER WEAR MCD'];
+const TEXTILE_MCDS   = ['GREY FABRIC MCD','YARN MCD','ACCESSORIES MCD','GENERAL MCD',
+                        'PRINTING MCD','JHUT MCD','LEFTOVER MCD','FINISH FABRIC MCD',
+                        'YARN DYEING MCD','CHEMICAL MCD','GENERAL TECHNICAL MCD'];
+
+async function autoMigrateLegacyUsers(){
+  try{
+    console.log('🔄 Auto-migration: checking legacy users...');
+    var snap = await getDocs(collection(db,'users'));
+    var migrated = 0;
+
+    for(var d of snap.docs){
+      var u = d.data();
+
+      // Skip if already has userCompanies
+      if(Array.isArray(u.userCompanies) && u.userCompanies.length > 0){
+        continue;
+      }
+
+      // Skip admin/full — they get both companies
+      if(u.role === 'admin' || u.role === 'full'){
+        await updateDoc(doc(db,'users',d.id),{
+          userCompanies: ['GMS TEXTILES LTD','GMS COMPOSITE KNITTING']
+        });
+        migrated++;
+        console.log('✅ Admin/Full migrated:', u.name);
+        continue;
+      }
+
+      // Get user MCD list
+      var userMcds = Array.isArray(u.mcdAccess) ? u.mcdAccess : (u.mcd ? [u.mcd] : []);
+
+      if(userMcds.length === 0){
+        // No MCD info — default to textile
+        await updateDoc(doc(db,'users',d.id),{
+          userCompanies: ['GMS TEXTILES LTD']
+        });
+        migrated++;
+        console.log('⚠️ No MCD found, defaulted to Textile:', u.name);
+        continue;
+      }
+
+      var hasTextile  = userMcds.some(function(m){ return TEXTILE_MCDS.includes(m); });
+      var hasComposite = userMcds.some(function(m){ return COMPOSITE_MCDS.includes(m); });
+
+      var companies = [];
+      if(hasTextile)   companies.push('GMS TEXTILES LTD');
+      if(hasComposite) companies.push('GMS COMPOSITE KNITTING');
+      if(companies.length === 0) companies.push('GMS TEXTILES LTD'); // fallback
+
+      await updateDoc(doc(db,'users',d.id),{
+        userCompanies: companies
+      });
+      migrated++;
+      console.log('✅ Migrated:', u.name, '→', companies);
+    }
+
+    if(migrated > 0){
+      console.log('✅ Migration complete:', migrated, 'users updated');
+      toast('✅ Auto-migration: '+migrated+' users updated!');
+      loadUsers(); // Refresh table
+    } else {
+      console.log('✅ All users already have userCompanies — no migration needed');
+    }
+
+  }catch(e){
+    console.error('❌ Migration error:', e);
+  }
+}
+
 // 🚀 Initialize
 renderMcdChecks("mcdChecks", [], []);
 renderMcdChecks("manpowerMcdChecks", [], []);
 updateCompanyUI();
 toggleManpowerSections();
 loadUsers();
+
+// Run migration once automatically
+// Uses localStorage to avoid running every time
+var migrationKey = 'GMS_MIGRATION_V1_DONE';
+if(!localStorage.getItem(migrationKey)){
+  autoMigrateLegacyUsers().then(function(){
+    localStorage.setItem(migrationKey, new Date().toISOString());
+    console.log('🔒 Migration flag set — will not run again');
+  });
+} else {
+  console.log('✅ Migration already done previously — skipping');
+}
 </script>
 
 </body>
