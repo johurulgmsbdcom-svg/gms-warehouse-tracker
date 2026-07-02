@@ -1103,7 +1103,10 @@ function confirmAddRow(){
   const size = document.getElementById('newSize').value.trim();
   const brand = document.getElementById('newBrand').value.trim().toUpperCase();
   const unitPrice = parseFloat(document.getElementById('newPrice').value)||0;
-  const opening = parseInt(document.getElementById('newOpening').value)||0;
+  // ✅ FIX: opening কে সরাসরি input থেকে parse করা হয় — "0" দিলে 0-ই থাকবে,
+  // কোনো fallback / localStorage / আগের data দিয়ে override হবে না।
+  const openingRaw = document.getElementById('newOpening').value;
+  const opening = openingRaw === '' ? 0 : (parseInt(openingRaw, 10) || 0);
   if(!itemCode){ alert('❌ Item Code দিন'); return; }
   if(!needleType){ alert('❌ Needle Type দিন'); return; }
   if(!size){ alert('❌ Size দিন'); return; }
@@ -1145,18 +1148,57 @@ function confirmAddRow(){
   scheduleAutoSave();
 }
 
+// =========================================
+// 🗑️ DELETE CUSTOM ROW (FIXED — no more index-shift bug)
+// =========================================
 function deleteCustomRow(i){
   if(!currentFloorData[i]?.isCustom){ showToast('❌ শুধু নতুন যোগ করা row মুছা যাবে'); return; }
   if(!confirm(`⚠️ ${currentFloorData[i].itemCode} (Size ${currentFloorData[i].size}) মুছবেন?`)) return;
+
+  // ✅ আগে সব row-এর বর্তমান ভ্যালু OLD index অনুযায়ী capture করে নাও —
+  // এটাই আসল ফিক্স: delete করার আগে DOM থেকে প্রতিটি row-এর real value
+  // পুরনো index সহ snapshot নেওয়া হচ্ছে, যাতে splice করার পরে কোনো
+  // row-এর data অন্য row-এ shift হয়ে না যায়।
+  const oldVals = currentFloorData.map((_,idx) => ({
+    r: document.getElementById(`r${idx}`)?.value||'',
+    d: document.getElementById(`d${idx}`)?.value||'',
+    bn: document.getElementById(`bn${idx}`)?.value||'',
+    prev: document.getElementById(`p${idx}`)?.innerText||'0'
+  }));
+  const oldReqNo = {...rowReqNo};
+  const oldTrfOut = {...rowTransferOut};
+  const oldTrfIn = {...rowTransferIn};
+
+  oldVals.splice(i,1);
   currentFloorData.splice(i,1);
-  delete rowReqNo[i]; delete rowTransferOut[i]; delete rowTransferIn[i];
-  rebuildTableKeepingValues();
+
+  // ✅ reqNo/transfer ম্যাপ re-index করো (i-এর পরের সব index এক ঘর কমাও)
+  rowReqNo = {}; rowTransferOut = {}; rowTransferIn = {};
+  Object.keys(oldReqNo).forEach(k=>{
+    const idx = Number(k);
+    if(idx < i) rowReqNo[idx] = oldReqNo[k];
+    else if(idx > i) rowReqNo[idx-1] = oldReqNo[k];
+  });
+  Object.keys(oldTrfOut).forEach(k=>{
+    const idx = Number(k);
+    if(idx < i) rowTransferOut[idx] = oldTrfOut[k];
+    else if(idx > i) rowTransferOut[idx-1] = oldTrfOut[k];
+  });
+  Object.keys(oldTrfIn).forEach(k=>{
+    const idx = Number(k);
+    if(idx < i) rowTransferIn[idx] = oldTrfIn[k];
+    else if(idx > i) rowTransferIn[idx-1] = oldTrfIn[k];
+  });
+
+  rebuildTableKeepingValues(oldVals);
   showToast('✅ Row মুছা হয়েছে');
   scheduleAutoSave();
 }
 
-function rebuildTableKeepingValues(){
-  const vals = currentFloorData.map((_,i) => ({
+function rebuildTableKeepingValues(providedVals){
+  // ✅ providedVals থাকলে সেটাই ব্যবহার করো (delete-এর পর সঠিক mapping),
+  // না থাকলে normal ভাবে বর্তমান DOM থেকে পড়ো
+  const vals = providedVals || currentFloorData.map((_,i) => ({
     r: document.getElementById(`r${i}`)?.value||'',
     d: document.getElementById(`d${i}`)?.value||'',
     bn: document.getElementById(`bn${i}`)?.value||'',
