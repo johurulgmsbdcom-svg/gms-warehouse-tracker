@@ -1726,13 +1726,17 @@ async function loadData(){
       todayData.rows.forEach(r=>{
         const key = r.itemCode+'__'+r.size;
         if(!baseKeys.has(key)){
+          // ✅ BUG FIX: আগে ছিল Number(r.previous)||Number(r.present)||0
+          // সমস্যা: r.previous যদি সত্যিকারের 0 হয়, তাহলে JS 0 কে falsy ধরে
+          // পরের fallback (r.present) ব্যবহার করে ফেলতো, ফলে Opening 0 এর বদলে
+          // ভুলভাবে Present-এর ভ্যালু (যেমন 20) দেখাতো।
           customRowMap[key] = {
             itemCode: r.itemCode,
             needleType: r.needleType||'',
             size: r.size,
             brand: r.brand||'',
             unitPrice: r.unitPrice||0,
-            opening: Number(r.previous)||Number(r.present)||0,
+            opening: (r.previous!==undefined && r.previous!==null) ? Number(r.previous) : (Number(r.present)||0),
             isCustom: true
           };
         }
@@ -1846,7 +1850,19 @@ async function syncOfflineData(){
   }catch(e){ console.error('syncOfflineData error', e); }
 }
 
-function onFloorChange(){ loadData(); }
+// ✅ BUG FIX: আগে ছিল শুধু `function onFloorChange(){ loadData(); }`
+// সমস্যা: page load হওয়ার পর 2 সেকেন্ড ধরে background-এ syncOfflineData()
+// চলে (init() এ setTimeout দেখুন)। কেউ যদি সেই 2 সেকেন্ডের মধ্যেই Floor
+// select করে ফেলে, তাহলে loadData() সরাসরি Supabase থেকে data আনে —
+// আর local এ পড়ে থাকা unsynced (এখনো push না হওয়া) data উপেক্ষা হয়ে যায়।
+// ফলে "save করা data মাঝে মাঝে পাওয়া যাচ্ছে না" এমন মনে হয়।
+// Fix: Floor change করার সময় আগে sync শেষ হতে দেওয়া, তারপর loadData().
+async function onFloorChange(){
+  if(navigator.onLine){
+    try{ await syncOfflineData(); }catch(e){}
+  }
+  await loadData();
+}
 
 async function deleteData(){
   const date=document.getElementById('postDate').value;
@@ -2251,7 +2267,11 @@ function updateOfflineIndicator(){
 
 window.addEventListener('online',()=>{ updateOfflineIndicator(); syncOfflineData(); });
 window.addEventListener('offline',()=>updateOfflineIndicator());
-document.getElementById('postDate').addEventListener('change', loadData);
+// ✅ BUG FIX: date পরিবর্তনের সময়েও আগে sync শেষ হতে দিয়ে তারপর loadData()
+document.getElementById('postDate').addEventListener('change', async ()=>{
+  if(navigator.onLine){ try{ await syncOfflineData(); }catch(e){} }
+  await loadData();
+});
 document.addEventListener('keydown',e=>{
   if(e.target.tagName!=='INPUT'||!e.target.id.match(/^(r|d|bn)\d+$/)) return;
   if(e.key==='Enter'){
