@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <title>GMS Admin Panel</title>
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
 
 <style>
 :root{
@@ -169,7 +169,7 @@ body.light .checkItem:hover{background:var(--card2)!important;}
     <img src="logo.png" onerror="this.style.display='none'">
     <div>
       <div class="logo">👑 GMS ADMIN PANEL</div>
-      <div class="sub">Company • User • MCD • Needle • Manpower</div>
+      <div class="sub">Company • User • MCD • Needle • Manpower • Grey Order</div>
     </div>
   </div>
 
@@ -194,7 +194,7 @@ body.light .checkItem:hover{background:var(--card2)!important;}
 
     <input type="hidden" id="editId">
 
-    <!-- 🔥 Company Selection -->
+    <!-- Company Selection -->
     <div style="margin-bottom:16px;">
       <label class="label">🏢 Assign Company (Select 1 or Both)</label>
       <div class="companyWrap">
@@ -222,14 +222,19 @@ body.light .checkItem:hover{background:var(--card2)!important;}
       </select>
 
       <select id="needleAccess">
-        <option value="no">Needle Access: No</option>
-        <option value="yes">Needle Access: Yes</option>
+        <option value="no">🪡 Needle Access: No</option>
+        <option value="yes">🪡 Needle Access: Yes</option>
       </select>
 
-      <!-- 🔥 NEW: Needle Composite Access -->
       <select id="needleCompositeAccess">
         <option value="no">🪡 Needle Composite: No</option>
         <option value="yes">🪡 Needle Composite: Yes</option>
+      </select>
+
+      <!-- 🔥 NEW: Grey Order Close Access -->
+      <select id="greyOrderCloseAccess">
+        <option value="no">📋 Grey Order Close: No</option>
+        <option value="yes">📋 Grey Order Close: Yes</option>
       </select>
 
       <select id="manpowerAccess" onchange="toggleManpowerSections()">
@@ -241,7 +246,6 @@ body.light .checkItem:hover{background:var(--card2)!important;}
       <button class="btn green" onclick="saveUser()">💾 Save User</button>
     </div>
 
-    <!-- 🔥 Password Security Note -->
     <div class="smallNote" style="border-left-color: var(--blue); background: rgba(37,99,235,.1); margin-top: 10px;">
       🔒 <b>Edit</b> করার সময় Password খালি রাখলে আগের Password-ই বহাল থাকবে। নতুন দিলে তা Hash (এনক্রিপ্ট) হয়ে সেভ হবে।
     </div>
@@ -250,12 +254,10 @@ body.light .checkItem:hover{background:var(--card2)!important;}
       Manpower None দিলে user manpower পাবে না।
     </div>
 
-    <!-- 🔥 Section 1: Normal MCD Access -->
     <h3 style="margin-top:16px;">📂 General MCD Access (Dashboard & Reports)</h3>
     <div class="smallNote">✅ এখানে টিক করা MCD Dashboard/Reports/Entries এ কাজ করবে।</div>
     <div id="mcdChecks" class="mcdBox"></div>
 
-    <!-- 🔥 Section 2: Manpower MCD Access (Hidden by default) -->
     <div id="manpowerSection" style="display:none; margin-top:16px;">
       <h3>👨‍💼 Manpower MCD Access (Manpower Module)</h3>
       <div class="smallNote">✅ এখানে টিক করা MCD শুধু Manpower পেজে কাজ করবে। Normal MCD থেকে আলাদা।</div>
@@ -285,6 +287,7 @@ body.light .checkItem:hover{background:var(--card2)!important;}
           <th>MCD Access</th>
           <th>🪡 Needle</th>
           <th>🪡 Composite</th>
+          <th>📋 Grey OC</th>
           <th>👨‍💼 Manpower</th>
           <th>Action</th>
         </tr>
@@ -321,14 +324,12 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
-// 🛡️ SECURITY: Admin Access Check
 const currentUser = JSON.parse(localStorage.getItem('gmsUser') || 'null');
 if (!currentUser || currentUser.role !== 'admin') {
     alert("🚫 Access Denied! Only Admins can access this page.");
     window.location.href = "login.html";
 }
 
-// 🔐 SECURITY: Password Hash Function (SHA-256)
 async function hashPassword(password) {
     try {
         const encoder = new TextEncoder();
@@ -347,7 +348,6 @@ async function hashPassword(password) {
     }
 }
 
-// 🔐 MCD to Company Mapping
 const MCD_COMPANY_MAP = {
   "GREY FABRIC MCD": "textile",
   "YARN MCD": "textile",
@@ -391,7 +391,6 @@ function toast(msg){
   setTimeout(()=>t.style.display="none",1800);
 }
 
-// 🔄 Toggle Manpower Section & Note
 window.toggleManpowerSections=function(){
   let v=document.getElementById("manpowerAccess").value;
   let note=document.getElementById("manpowerNote");
@@ -409,7 +408,6 @@ window.toggleManpowerSections=function(){
   }
 };
 
-// 🏢 Update Company UI + Refresh Both MCD Boxes
 window.updateCompanyUI=function(){
   const t = document.getElementById("cmpTextile");
   const c = document.getElementById("cmpComposite");
@@ -498,10 +496,11 @@ window.clearForm=function(){
   document.getElementById("name").value="";
   document.getElementById("email").value="";
   document.getElementById("password").value="";
-  document.getElementById("password").placeholder = "Password"; // Reset placeholder
+  document.getElementById("password").placeholder = "Password";
   document.getElementById("role").value="user";
   document.getElementById("needleAccess").value="no";
-  document.getElementById("needleCompositeAccess").value="no"; // Reset Needle Composite
+  document.getElementById("needleCompositeAccess").value="no";
+  document.getElementById("greyOrderCloseAccess").value="no"; // 🔥 NEW: Reset
   document.getElementById("manpowerAccess").value="none";
   document.getElementById("cmpTextile").checked = false;
   document.getElementById("cmpComposite").checked = false;
@@ -511,7 +510,6 @@ window.clearForm=function(){
   window.scrollTo({top:0,behavior:"smooth"});
 };
 
-// 💾 SMART SAVE: Hashes new passwords, keeps old 3-letter passwords intact
 window.saveUser=async function(){
   const cmps = [...document.querySelectorAll("#cmpTextile:checked,#cmpComposite:checked")].map(c => c.value);
   if(cmps.length === 0) { alert("⚠️ অন্তত ১টা কোম্পানি সিলেক্ট করুন!"); return; }
@@ -525,7 +523,8 @@ window.saveUser=async function(){
   let normalMCD = getNormalMCD();
   let mpMCD = getManpowerMCD();
   let needleAccess=document.getElementById("needleAccess").value==="yes";
-  let needleCompositeAccess=document.getElementById("needleCompositeAccess").value==="yes"; // NEW
+  let needleCompositeAccess=document.getElementById("needleCompositeAccess").value==="yes";
+  let greyOrderCloseAccess=document.getElementById("greyOrderCloseAccess").value==="yes"; // 🔥 NEW
   let manpowerAccess=document.getElementById("manpowerAccess").value;
 
   if(!name || !email){ alert("Name এবং Email লাগবে"); return; }
@@ -540,7 +539,8 @@ window.saveUser=async function(){
     userCompanies: cmps,
     mcdAccess: normalMCD,
     needleAccess: needleAccess,
-    needleCompositeAccess: needleCompositeAccess, // NEW FIELD
+    needleCompositeAccess: needleCompositeAccess,
+    greyOrderCloseAccess: greyOrderCloseAccess, // 🔥 NEW FIELD
     manpowerAccess: manpowerAccessBoolean,
     manpowerAccessLevel: manpowerAccess,
     manpowerMcdAccess: mpMCD,
@@ -548,18 +548,14 @@ window.saveUser=async function(){
   };
 
   if(editId){
-    // 🔥 EDITING EXISTING USER
     if(password) {
-      // If new password is provided, Hash it
       userData.passwordHash = await hashPassword(password);
     } else {
-      // If password is blank, keep the old password/hash exactly as it is
       let existingUser = allUsers.find(x => x.id === editId);
       if(existingUser) {
         if(existingUser.data.passwordHash) {
           userData.passwordHash = existingUser.data.passwordHash;
         } else if(existingUser.data.password) {
-          // Keep legacy plain text password (for your old 3-letter passwords)
           userData.password = existingUser.data.password; 
         }
       }
@@ -568,10 +564,8 @@ window.saveUser=async function(){
     await updateDoc(doc(db,"users",editId),userData);
     toast("User Updated ✅");
   } else {
-    // 🔥 CREATING NEW USER
     if(!password){ alert("নতুন ইউজারের জন্য Password লাগবে!"); return; }
     
-    // Hash the password before saving
     userData.passwordHash = await hashPassword(password);
     userData.createdAt=new Date().toISOString();
     
@@ -583,7 +577,6 @@ window.saveUser=async function(){
   loadUsers();
 };
 
-// ✏️ Edit User (Password field kept blank for security)
 window.editUser=function(id){
   let found=allUsers.find(x=>x.id===id);
   if(!found) return;
@@ -596,13 +589,13 @@ window.editUser=function(id){
   document.getElementById("name").value=u.name || "";
   document.getElementById("email").value=u.email || "";
   
-  // 🔥 SECURITY: Do NOT show password. Change placeholder to indicate it's optional
   document.getElementById("password").value = "";
   document.getElementById("password").placeholder = "Leave blank to keep current password";
   
   document.getElementById("role").value=u.role || "user";
   document.getElementById("needleAccess").value=u.needleAccess ? "yes" : "no";
-  document.getElementById("needleCompositeAccess").value=u.needleCompositeAccess ? "yes" : "no"; // NEW
+  document.getElementById("needleCompositeAccess").value=u.needleCompositeAccess ? "yes" : "no";
+  document.getElementById("greyOrderCloseAccess").value=u.greyOrderCloseAccess ? "yes" : "no"; // 🔥 NEW
   
   const companies = u.userCompanies || [];
   document.getElementById("cmpTextile").checked = companies.includes("GMS TEXTILES LTD");
@@ -670,9 +663,13 @@ async function loadUsers(){
         </span>`
       ).join('');
 
-      // Needle Composite Badge
       let needleCompBadge = u.needleCompositeAccess 
         ? '<span style="color:var(--purple);font-weight:900">✅ Yes</span>' 
+        : '<span style="color:var(--muted)">❌ No</span>';
+
+      // 🔥 NEW: Grey Order Close Badge
+      let greyOCBadge = u.greyOrderCloseAccess 
+        ? '<span style="color:var(--green);font-weight:900">✅ Yes</span>' 
         : '<span style="color:var(--muted)">❌ No</span>';
 
       html+=`
@@ -684,6 +681,7 @@ async function loadUsers(){
           <td style="text-align:left">${mcdText}</td>
           <td>${u.needleAccess ? "✅ Yes" : "❌ No"}</td>
           <td>${needleCompBadge}</td>
+          <td>${greyOCBadge}</td>
           <td>${manpowerText(u)}</td>
           <td>
             <button class="btn orange" onclick="editUser('${d.id}')" style="padding:4px 8px;font-size:11px">✏️</button>
@@ -693,7 +691,7 @@ async function loadUsers(){
       `;
     });
 
-    document.getElementById("userTable").innerHTML=html || '<tr><td colspan="9" style="padding:20px;color:var(--muted)">📭 No users found</td></tr>';
+    document.getElementById("userTable").innerHTML=html || '<tr><td colspan="10" style="padding:20px;color:var(--muted)">📭 No users found</td></tr>';
     document.getElementById("totalUsers").innerText=total;
     document.getElementById("totalAdmin").innerText=admin;
     document.getElementById("totalTextile").innerText=tx;
@@ -702,101 +700,16 @@ async function loadUsers(){
   } catch(err) {
     console.error("Load error:", err);
     document.getElementById("userTable").innerHTML = 
-      `<tr><td colspan="9" style="padding:20px;color:var(--red)">❌ Error loading users</td></tr>`;
+      `<tr><td colspan="10" style="padding:20px;color:var(--red)">❌ Error loading users</td></tr>`;
   }
 }
 
-// ═══════════════════════════════════════════════════════
-// 🔄 AUTO MIGRATION: Set userCompanies for legacy users
-// ═══════════════════════════════════════════════════════
-const COMPOSITE_MCDS = ['SHIPMENT MCD','BILLING SECTION','OUTER WEAR MCD'];
-const TEXTILE_MCDS   = ['GREY FABRIC MCD','YARN MCD','ACCESSORIES MCD','GENERAL MCD',
-                        'PRINTING MCD','JHUT MCD','LEFTOVER MCD','FINISH FABRIC MCD',
-                        'YARN DYEING MCD','CHEMICAL MCD','GENERAL TECHNICAL MCD'];
-
-async function autoMigrateLegacyUsers(){
-  try{
-    console.log('🔄 Auto-migration: checking legacy users...');
-    var snap = await getDocs(collection(db,'users'));
-    var migrated = 0;
-
-    for(var d of snap.docs){
-      var u = d.data();
-
-      // Skip if already has userCompanies
-      if(Array.isArray(u.userCompanies) && u.userCompanies.length > 0){
-        continue;
-      }
-
-      // Skip admin/full — they get both companies
-      if(u.role === 'admin' || u.role === 'full'){
-        await updateDoc(doc(db,'users',d.id),{
-          userCompanies: ['GMS TEXTILES LTD','GMS COMPOSITE KNITTING']
-        });
-        migrated++;
-        console.log('✅ Admin/Full migrated:', u.name);
-        continue;
-      }
-
-      // Get user MCD list
-      var userMcds = Array.isArray(u.mcdAccess) ? u.mcdAccess : (u.mcd ? [u.mcd] : []);
-
-      if(userMcds.length === 0){
-        // No MCD info — default to textile
-        await updateDoc(doc(db,'users',d.id),{
-          userCompanies: ['GMS TEXTILES LTD']
-        });
-        migrated++;
-        console.log('⚠️ No MCD found, defaulted to Textile:', u.name);
-        continue;
-      }
-
-      var hasTextile  = userMcds.some(function(m){ return TEXTILE_MCDS.includes(m); });
-      var hasComposite = userMcds.some(function(m){ return COMPOSITE_MCDS.includes(m); });
-
-      var companies = [];
-      if(hasTextile)   companies.push('GMS TEXTILES LTD');
-      if(hasComposite) companies.push('GMS COMPOSITE KNITTING');
-      if(companies.length === 0) companies.push('GMS TEXTILES LTD'); // fallback
-
-      await updateDoc(doc(db,'users',d.id),{
-        userCompanies: companies
-      });
-      migrated++;
-      console.log('✅ Migrated:', u.name, '→', companies);
-    }
-
-    if(migrated > 0){
-      console.log('✅ Migration complete:', migrated, 'users updated');
-      toast('✅ Auto-migration: '+migrated+' users updated!');
-      loadUsers(); // Refresh table
-    } else {
-      console.log('✅ All users already have userCompanies — no migration needed');
-    }
-
-  }catch(e){
-    console.error('❌ Migration error:', e);
-  }
-}
-
-// 🚀 Initialize
+// Initialize
 renderMcdChecks("mcdChecks", [], []);
 renderMcdChecks("manpowerMcdChecks", [], []);
 updateCompanyUI();
 toggleManpowerSections();
 loadUsers();
-
-// Run migration once automatically
-// Uses localStorage to avoid running every time
-var migrationKey = 'GMS_MIGRATION_V1_DONE';
-if(!localStorage.getItem(migrationKey)){
-  autoMigrateLegacyUsers().then(function(){
-    localStorage.setItem(migrationKey, new Date().toISOString());
-    console.log('🔒 Migration flag set — will not run again');
-  });
-} else {
-  console.log('✅ Migration already done previously — skipping');
-}
 </script>
 
 </body>
