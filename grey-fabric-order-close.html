@@ -386,7 +386,12 @@ async function loadDashboard() {
   const month = document.getElementById('dashMonth').value;
   const [year, mon] = month.split('-');
   const startDate = `${year}-${mon}-01`;
-  const endDate = `${year}-${mon}-31`;
+  // ✅ FIX #5: get the real last day of the month instead of hardcoding '31'
+  // new Date(year, mon, 0) rolls back to the last day of the *previous* month
+  // relative to `mon` (JS months are 0-indexed), so passing `mon` (1-indexed)
+  // correctly lands on the last day of the selected month.
+  const lastDay = new Date(Number(year), Number(mon), 0).getDate();
+  const endDate = `${year}-${mon}-${String(lastDay).padStart(2,'0')}`;
   
   try {
     const {data: bookings, error} = await supabase
@@ -814,7 +819,10 @@ function renderOrderClose() {
   const uniqueColors = new Set();
   
   allOrderClose.forEach((oc, idx) => {
-    uniqueColors.add(oc.booking_no + '__' + oc.fab_color);
+    // ✅ FIX #6: include fab_type in the uniqueness key, same as Stock Check,
+    // so two different fabric types under the same booking+color aren't
+    // collapsed into a single "Color Close" count.
+    uniqueColors.add(oc.booking_no + '__' + oc.fab_color + '__' + (oc.fab_type || ''));
     totalGrey += Number(oc.grey_qty || 0);
     totalFinish += Number(oc.finish_qty || 0);
     totalTfIn += Number(oc.transfer_in_qty || 0);
