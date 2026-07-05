@@ -83,6 +83,37 @@ body.light .sidebarNav button{color:#475569;}
 body.light .sidebarNav button:hover{color:#1e293b;}
 .sidebarNav button.active{background:linear-gradient(135deg,var(--blue),var(--purple));color:#fff!important;
 box-shadow:0 4px 20px rgba(59,130,246,.4);font-weight:600;}
+
+/* 🔥 NEW: Grey Order Close Button Special Style */
+.sidebarNav button.grey-order-btn{
+background:linear-gradient(135deg,#10b981,#059669)!important;
+color:#fff!important;
+border:none;
+font-weight:700;
+position:relative;
+overflow:hidden;
+}
+.sidebarNav button.grey-order-btn::before{
+content:'';
+position:absolute;
+top:0;left:-100%;
+width:100%;height:100%;
+background:linear-gradient(90deg,transparent,rgba(255,255,255,0.3),transparent);
+animation:shimmer 3s infinite;
+}
+.sidebarNav button.grey-order-btn:hover{
+transform:translateY(-2px);
+box-shadow:0 6px 20px rgba(16,185,129,0.5);
+}
+.sidebarNav button.grey-order-btn .live-dot{
+width:8px;height:8px;
+background:#fff;
+border-radius:50%;
+animation:livePulse 1.5s infinite;
+margin-left:auto;
+}
+@keyframes livePulse{0%{box-shadow:0 0 0 0 rgba(255,255,255,0.7);}70%{box-shadow:0 0 0 10px rgba(255,255,255,0);}100%{box-shadow:0 0 0 0 rgba(255,255,255,0);}}
+
 .notice-badge{position:absolute;right:10px;top:50%;transform:translateY(-50%);
 background:var(--red);color:#fff;font-size:10px;font-weight:700;min-width:18px;height:18px;
 border-radius:9px;display:flex;align-items:center;justify-content:center;padding:0 5px;animation:pulseBadge 2s infinite;}
@@ -167,6 +198,31 @@ box-shadow:0 2px 10px rgba(0,0,0,0.05);min-height:65px;}
 body.light .entryCard,body.light .reportCard{background:linear-gradient(135deg,#ffffff 0%,#f8fafc 100%);border-color:#e2e8f0;}
 .entryCard:hover,.reportCard:hover{transform:translateY(-3px);box-shadow:0 8px 25px rgba(59,130,246,0.15);border-color:rgba(59,130,246,0.3);}
 .entryCard i,.reportCard i{font-size:16px;color:var(--blue);}
+
+/* 🔥 NEW: Grey Order Close Card Special Style */
+.entryCard.grey-order-card{
+background:linear-gradient(135deg,rgba(16,185,129,0.15),rgba(5,150,105,0.15))!important;
+border:2px solid var(--green)!important;
+color:var(--green)!important;
+font-weight:700!important;
+position:relative;
+overflow:hidden;
+}
+.entryCard.grey-order-card::before{
+content:'';
+position:absolute;
+top:0;left:-100%;
+width:100%;height:100%;
+background:linear-gradient(90deg,transparent,rgba(16,185,129,0.2),transparent);
+animation:shimmer 3s infinite;
+}
+.entryCard.grey-order-card:hover{
+transform:translateY(-4px);
+box-shadow:0 10px 30px rgba(16,185,129,0.3);
+border-color:var(--green)!important;
+}
+.entryCard.grey-order-card i{color:var(--green)!important;font-size:18px;}
+
 .generalMcdBox{background:linear-gradient(135deg,var(--card) 0%,var(--card2) 100%);border:2px solid var(--purple);
 border-radius:16px;padding:20px;margin-bottom:20px;cursor:pointer;transition:all 0.3s cubic-bezier(0.4,0,0.2,1);
 position:relative;overflow:hidden;box-shadow:0 4px 20px rgba(139,92,246,0.2);}
@@ -436,6 +492,13 @@ padding:16px 20px;display:flex;align-items:center;gap:16px;box-shadow:0 8px 32px
 <button onclick="openPage('entry',this)">➕ New Entry</button>
 <button onclick="openPage('reports',this)">📑 Reports</button>
 <button onclick="window.open('https://johurulgmsbdcom-svg.github.io/gms-accessories-stock/','_blank')" style="background:linear-gradient(135deg,#10b981,#059669);color:#fff;border:none;">📦 Accessories Stock</button>
+
+<!-- 🔥 NEW: GREY ORDER CLOSE BUTTON - Admin Auto Access -->
+<button id="greyOrderCloseNav" class="grey-order-btn" onclick="window.location.href='grey-fabric-order-close.html'">
+📋 Grey Order Close
+<span class="live-dot"></span>
+</button>
+
 <button id="needleNav" onclick="openPage('needle',this)"> Needle</button>
 <div id="needleCompositeSection" style="margin-left:10px; border-left:2px solid var(--purple); padding-left:10px; margin-bottom:8px; display:none;">
 <div style="font-size:10px; color:var(--purple); font-weight:700; margin-bottom:4px;">🪡 NEEDLE COMPOSITE</div>
@@ -827,6 +890,7 @@ LIVE UPDATE SIGNAL
 </div>
 </div>
 </div>
+
 <!-- ================================================================
 GLOBAL NAVIGATION & HELPER FUNCTIONS
 ================================================================ -->
@@ -1128,6 +1192,30 @@ window.userAllowedCompanies = [];
 window.currentCompany = 'GMS TEXTILES LTD';
 window.userRole = 'user';
 window.userManpowerMcdAccess = [];
+
+// ═══════════════════════════════════════════════════════════════
+// 🔥 NEW: GREY ORDER CLOSE ACCESS CHECK FUNCTION
+// ═══════════════════════════════════════════════════════════════
+function isGreyOrderCloseAllowed(){
+  // Admin এবং Full Access user সবসময় পাবে
+  if(window.userRole === 'admin' || window.userRole === 'full') return true;
+  
+  // User data check করি
+  if(window.user){
+    // যদি greyOrderCloseAccess field থাকে এবং true হয়
+    if(window.user.greyOrderCloseAccess === true) return true;
+    
+    // যদি MCD Access এ GREY FABRIC MCD থাকে, তাহলেও access দিই
+    if(Array.isArray(window.user.mcdAccess) && 
+       window.user.mcdAccess.includes('GREY FABRIC MCD')){
+      return true;
+    }
+  }
+  
+  return false;
+}
+window.isGreyOrderCloseAllowed = isGreyOrderCloseAllowed;
+
 // ═══════════════════════════════════════════════════════════════
 // 🔽 FIX: COMPOSITE-ONLY USER CHECK (NEW ADDITION)
 // ═══════════════════════════════════════════════════════════════
@@ -1305,6 +1393,10 @@ document.getElementById('sidebarOverlay').classList.remove('show');
 }
 resetActivityTimestamp();
 };
+
+// ═══════════════════════════════════════════════════════════════
+// 🔥 UPDATED: loadEntry() - Grey Order Close Card Added
+// ═══════════════════════════════════════════════════════════════
 window.loadEntry = function(){
 var company=document.getElementById('entryCompany').value;
 var mcd=document.getElementById('entryMcd').value;
@@ -1318,7 +1410,8 @@ box.innerHTML='<div class="entryCard" onclick="location.href=\'sewing-thread.htm
 return;
 }
 if(mcd==='GREY FABRIC MCD'){
-box.innerHTML='<div class="entryCard" onclick="location.href=\'grey-fabric.html\'"><i class="fas fa-industry"></i> Grey Fabric Daily</div><div class="entryCard" onclick="location.href=\'grey-fabric-monthly.html\'"><i class="fas fa-calendar"></i> Grey Monthly</div>'+common;
+// 🔥 NEW: Grey Order Close card added here
+box.innerHTML='<div class="entryCard" onclick="location.href=\'grey-fabric.html\'"><i class="fas fa-industry"></i> Grey Fabric Daily</div><div class="entryCard" onclick="location.href=\'grey-fabric-monthly.html\'"><i class="fas fa-calendar"></i> Grey Monthly</div><div class="entryCard grey-order-card" onclick="location.href=\'grey-fabric-order-close.html\'"><i class="fas fa-clipboard-check"></i> Grey Order Close</div>'+common;
 return;
 }
 if(mcd==='BILLING SECTION'){
@@ -1331,6 +1424,10 @@ return;
 }
 box.innerHTML='<div class="entryCard"> '+mcd+' Daily Entry</div><div class="entryCard" onclick="location.href=\'billing-manpower-report.html\'"><i class="fas fa-users"></i> Billing Manpower</div>'+common;
 };
+
+// ═══════════════════════════════════════════════════════════════
+// 🔥 UPDATED: loadReport() - Grey Order Close Card Added
+// ═══════════════════════════════════════════════════════════════
 window.loadReport = function(){
 var company=(document.getElementById('reportCompany')||document.getElementById('entryCompany')).value;
 var mcd=document.getElementById('reportMcd').value;
@@ -1344,7 +1441,8 @@ box.innerHTML='<div class="reportCard" onclick="location.href=\'sewing-thread.ht
 return;
 }
 if(mcd==='GREY FABRIC MCD'){
-box.innerHTML='<div class="reportCard" onclick="location.href=\'grey-fabric.html\'"><i class="fas fa-industry"></i> Grey Fabric</div><div class="reportCard" onclick="location.href=\'grey-fabric-monthly.html\'"><i class="fas fa-calendar"></i> Grey Monthly</div>'+common;
+// 🔥 NEW: Grey Order Close card added here
+box.innerHTML='<div class="reportCard" onclick="location.href=\'grey-fabric.html\'"><i class="fas fa-industry"></i> Grey Fabric</div><div class="reportCard" onclick="location.href=\'grey-fabric-monthly.html\'"><i class="fas fa-calendar"></i> Grey Monthly</div><div class="reportCard grey-order-card" onclick="location.href=\'grey-fabric-order-close.html\'"><i class="fas fa-clipboard-check"></i> Grey Order Close</div>'+common;
 return;
 }
 if(mcd==='BILLING SECTION'){
@@ -1357,6 +1455,7 @@ return;
 }
 box.innerHTML='<div class="reportCard">📑 '+mcd+' Report</div><div class="reportCard" onclick="location.href=\'billing-manpower-report.html\'"><i class="fas fa-users"></i> Billing Manpower</div>'+common;
 };
+
 function autoSaveToROI(company, mcd){
 try{
 var autoReports = JSON.parse(localStorage.getItem('gms_all_reports') || '[]');
@@ -1421,132 +1520,8 @@ var c = window.GMS_CACHE.getReadCount();
 var el = document.getElementById('readCounter');
 if(el) el.innerText = c;
 })();
-
-// ═══════════════════════════════════════════════════════════════
-// 🔽 NEW ADDITION: ADVANCED BUTTON TRACKING & ADMIN LOGIC (BATON & ADMIN)
-// ═══════════════════════════════════════════════════════════════
-window.ADMIN_ACTIONS_LOG = [];
-
-window.logAdminAction = function(actionType, details) {
-    if (window.userRole !== 'admin' && window.userRole !== 'full') return;
-    var logEntry = {
-        user: window.user ? window.user.name : 'Admin',
-        action: actionType,
-        details: details,
-        timestamp: new Date().toISOString(),
-        company: window.currentCompany
-    };
-    window.ADMIN_ACTIONS_LOG.push(logEntry);
-    if (window.ADMIN_ACTIONS_LOG.length > 100) window.ADMIN_ACTIONS_LOG.shift();
-    console.log('👑 Admin Action Logged:', logEntry);
-};
-
-window.enforceAdminButtonLogic = function() {
-    var adminOnlyButtons = document.querySelectorAll('[data-admin-only="true"]');
-    adminOnlyButtons.forEach(function(btn) {
-        if (window.userRole !== 'admin' && window.userRole !== 'full') {
-            btn.style.display = 'none';
-            btn.disabled = true;
-            btn.title = 'Admin access required';
-        } else {
-            btn.style.display = '';
-            btn.disabled = false;
-        }
-    });
-    
-    var backupBtns = document.querySelectorAll('.backupActions .card');
-    backupBtns.forEach(function(btn) {
-        if (window.userRole !== 'admin' && window.userRole !== 'full') {
-            btn.style.pointerEvents = 'none';
-            btn.style.opacity = '0.5';
-            btn.onclick = function(e) {
-                e.preventDefault();
-                showToast('❌ Admin privileges required for this action', 'error');
-                window.logAdminAction('UNAUTHORIZED_ACCESS_ATTEMPT', 'Tried to access backup controls');
-            };
-        }
-    });
-};
-window.autoAttachButtonTracking = function() {
-    document.querySelectorAll('.entryCard').forEach(function(card) {
-        card.addEventListener('click', function(e) {
-            var text = card.innerText.trim();
-            window.trackButtonUsage('ENTRY_CARD_CLICK', text);
-        });
-    });
-
-    document.querySelectorAll('.reportCard').forEach(function(card) {
-        card.addEventListener('click', function(e) {
-            var text = card.innerText.trim();
-            window.trackButtonUsage('REPORT_CARD_CLICK', text);
-        });
-    });
-
-    document.querySelectorAll('.sidebarNav button').forEach(function(btn) {
-        btn.addEventListener('click', function(e) {
-            var text = btn.innerText.trim();
-            window.trackButtonUsage('NAV_BUTTON_CLICK', text);
-            if (text.includes('Admin') || text.includes('Backup')) {
-                window.logAdminAction('NAVIGATION', 'Clicked ' + text);
-            }
-        });
-    });
-
-    document.querySelectorAll('.openEntryBtn, .session-extend-btn, .session-logout-btn').forEach(function(btn) {
-        btn.addEventListener('click', function(e) {
-            var text = btn.innerText.trim();
-            window.trackButtonUsage('ACTION_BUTTON_CLICK', text);
-        });
-    });
-    
-    console.log('🔘 Advanced Button Tracking Attached');
-};
-
-var originalBackupAllData = window.backupAllData;
-window.backupAllData = async function() {
-    window.logAdminAction('BACKUP_INITIATED', 'Manual backup started');
-    if (typeof originalBackupAllData === 'function') {
-        await originalBackupAllData();
-        window.logAdminAction('BACKUP_COMPLETED', 'Manual backup finished');
-    }
-};
-
-var originalClearOldData = window.clearOldData;
-window.clearOldData = async function() {
-    window.logAdminAction('CLEAR_DATA_INITIATED', 'Old data clearing started');
-    if (typeof originalClearOldData === 'function') {
-        await originalClearOldData();
-        window.logAdminAction('CLEAR_DATA_COMPLETED', 'Old data clearing finished');
-    }
-};
-var originalRestoreSelectedMonth = window.restoreSelectedMonth;
-window.restoreSelectedMonth = async function() {
-    var month = document.getElementById('restoreMonthSelect') ? document.getElementById('restoreMonthSelect').value : 'Unknown';
-    window.logAdminAction('RESTORE_INITIATED', 'Restoring month: ' + month);
-    if (typeof originalRestoreSelectedMonth === 'function') {
-        await originalRestoreSelectedMonth();
-        window.logAdminAction('RESTORE_COMPLETED', 'Restored month: ' + month);
-    }
-};
-
-document.addEventListener('DOMContentLoaded', function() {
-    setTimeout(function() {
-        window.enforceAdminButtonLogic();
-        window.autoAttachButtonTracking();
-    }, 500);
-});
-
-var originalOpenPage = window.openPage;
-window.openPage = function(id, btn) {
-    if (typeof originalOpenPage === 'function') {
-        originalOpenPage(id, btn);
-    }
-    setTimeout(function() {
-        window.enforceAdminButtonLogic();
-        window.autoAttachButtonTracking();
-    }, 300);
-};
 </script>
+
 <!-- ================================================================
 FIREBASE MODULE — SMART SELECTIVE CACHE + TIMESTAMP SYSTEM
 ================================================================ -->
@@ -1766,7 +1741,6 @@ function allowedMCDList(){ return (window.userRole==='admin'||window.userRole===
 function canAccess(mcd){ return window.userRole==='admin'||window.userRole==='full'||userMCDs.includes(mcd); }
 window.canAccess = canAccess;
 function isNeedleAllowed(){ return window.userRole==='admin'||window.userRole==='full'||needleAccess===true; }
-// 🔽 FIX 2: Needle Composite Access — ONLY needleCompositeAccess
 function isNeedleCompositeAllowed(){ return window.userRole==='admin'||window.userRole==='full'||needleCompositeAccess===true; }
 function isAccessoriesAllowed(){ return window.userRole==='admin'||window.userRole==='full'||userMCDs.includes('ACCESSORIES MCD'); }
 function isGreyAllowed(){ return window.userRole==='admin'||window.userRole==='full'||userMCDs.includes('GREY FABRIC MCD'); }
@@ -1778,16 +1752,32 @@ if(manpowerAccess==='all') return true;
 if(manpowerAccess==='selected'&&manpowerMcdAccess.length>0) return true;
 return false;
 }
+
+// ═══════════════════════════════════════════════════════════════
+// 🔥 UPDATED: setupRoleUI() - Grey Order Close Button Show/Hide
+// ═══════════════════════════════════════════════════════════════
 function setupRoleUI(){
 if(window.userRole!=='admin'){
 document.getElementById('adminNav').style.display='none';
 document.getElementById('backupNav').style.display='none';
 }
-// 🔽 FIX 3: ROI button — Admin ONLY
 if(window.userRole==='admin'){
 var roiBtn = document.getElementById('roiNav');
 if(roiBtn) roiBtn.style.display='flex';
 }
+
+// 🔥 NEW: Grey Order Close Button Access Control
+var greyBtn = document.getElementById('greyOrderCloseNav');
+if(greyBtn){
+  if(isGreyOrderCloseAllowed()){
+    greyBtn.style.display = 'flex';
+    console.log('✅ Grey Order Close: Access Granted for', window.user?.name || 'User');
+  } else {
+    greyBtn.style.display = 'none';
+    console.log('❌ Grey Order Close: Access Denied for', window.user?.name || 'User');
+  }
+}
+
 if(!isManpowerAllowed()) document.getElementById('manpowerNav').style.display='none';
 if(!isNeedleAllowed()){
 document.getElementById('needleNav').style.display='none';
@@ -2203,20 +2193,15 @@ options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'bo
 });
 }
 }
-// ═══════════════════════════════════════════════════════════════
-// 🔽 FIX: loadDashboardStock — COMPOSITE-ONLY CHECK AT TOP
-// ═══════════════════════════════════════════════════════════════
 window.loadDashboardStock = async function(forceAll){
-// 🔽 COMPOSITE-ONLY USER: 0 Firebase reads, show composite dashboard
 if(window.isCompositeOnlyUser && window.isCompositeOnlyUser()){
 document.getElementById('textileDashboard').style.display='none';
 document.getElementById('compositeDashboard').style.display='block';
 var statusEl=document.getElementById('cacheStatusText');
 if(statusEl) statusEl.innerText='🏢 Composite Mode — 0 Reads';
 console.log('🏢 Composite-only — 0 Firebase reads');
-return; // ← এখানেই শেষ, কোনো read নেই
+return;
 }
-// ═══════════════════════════════════════════════════════════════
 if(!canUserSeeCompany(window.currentCompany)){
 document.getElementById('textileDashboard').style.display='none';
 document.getElementById('compositeDashboard').style.display='none';
@@ -2239,7 +2224,6 @@ console.log('🗑️ Force: all dashboard cache + timestamps cleared');
 var statusEl=document.getElementById('cacheStatusText');
 if(statusEl) statusEl.innerText='🔍 Checking updates...';
 try{
-// 🔽 FIX 1b: system_sync — ONLY admin/full
 var remoteTimestamps = {};
 if(window.userRole==='admin' || window.userRole==='full'){
 try{
@@ -2273,7 +2257,6 @@ manpower: manpowerNeedsUpdate?'Firebase':'📦Cache',
 generalMcdDaily: generalMcdNeedsUpdate?'🔥Firebase':'📦Cache',
 });
 if(statusEl) statusEl.innerText='⚡ Selective loading...';
-// 🔽 FIX 1a: Access-checked data fetching
 var sewing      = isAccessoriesAllowed() ? await getLatestPresent('sewingThread',133322, sewingNeedsUpdate) : 0;
 var twill       = isAccessoriesAllowed() ? await getLatestPresent('twillTape',171255, twillNeedsUpdate) : 0;
 var accessories = isAccessoriesAllowed() ? await getLatestPresent('accessoriesSample',21514393, accessoriesNeedsUpdate) : 0;
@@ -2553,7 +2536,6 @@ loadDashboardStock(false);
 })();
 smartLoadNotices();
 setupNoticeListener();
-// 🔽 FIX: Real-time sync wrapped — skipped for composite-only users
 if(!window.isCompositeOnlyUser || !window.isCompositeOnlyUser()){
 setupRealtimeDashboardSync();
 } else {
