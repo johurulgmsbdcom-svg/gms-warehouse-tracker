@@ -54,7 +54,7 @@ body.light .summary-card .value{color:#1e293b}
 .summary-card.blue{border-left-color:#3b82f6}
 .table-wrap{overflow-x:auto;background:#0f172a;border-radius:8px;border:1px solid #334155}
 body.light .table-wrap{background:#fff;border-color:#e2e8f0}
-table{width:100%;border-collapse:collapse;font-size:11px;min-width:1400px}
+table{width:100%;border-collapse:collapse;font-size:11px;min-width:2200px}
 th{background:#1e40af;color:#fff;padding:8px 6px;text-align:center;font-weight:600;position:sticky;top:0;white-space:nowrap;font-size:10px}
 body.light th{background:#3b82f6}
 td{padding:5px 4px;text-align:center;border:1px solid #334155;color:#e2e8f0;font-size:10px}
@@ -71,6 +71,8 @@ body.light .negative{background:#fecaca!important}
 input.cell-input{width:75px;padding:4px;border:1px solid #475569;border-radius:3px;background:#0f172a;color:#f1f5f9;text-align:center;font-size:10px;font-family:inherit}
 body.light input.cell-input{background:#fff;color:#1e293b;border-color:#cbd5e1}
 input.cell-input:focus{outline:none;border-color:#3b82f6;box-shadow:0 0 0 2px rgba(59,130,246,.2)}
+input.cell-input.wide{width:100px}
+input.cell-input.narrow{width:60px}
 .status-badge{padding:3px 8px;border-radius:10px;font-size:9px;font-weight:700}
 .status-open{background:#fef3c7;color:#92400e}
 .status-closed{background:#d1fae5;color:#065f46}
@@ -103,7 +105,7 @@ body.light .theme-toggle{background:rgba(0,0,0,.05);border-color:rgba(0,0,0,.1);
   .header h1{font-size:16px}
   .summary-grid{grid-template-columns:repeat(2,1fr)}
   .summary-card .value{font-size:14px}
-  table{font-size:9px;min-width:1200px}
+  table{font-size:9px;min-width:1800px}
   input.cell-input{width:60px;font-size:9px}
   .controls{flex-direction:column;align-items:stretch}
   .btn{padding:8px 12px;font-size:11px}
@@ -180,11 +182,29 @@ body.light .theme-toggle{background:rgba(0,0,0,.05);border-color:rgba(0,0,0,.1);
       <table id="entryTable">
         <thead>
           <tr>
-            <th>SL</th><th>Date</th><th>Buyer</th><th>Booking No</th><th>Fab Color</th>
-            <th>Fab Type</th><th>Finish Qty</th><th>PL %</th><th>Knit Rcvd</th>
-            <th>Trf In</th><th>Trf From</th><th>Grey Qty</th><th>Total Rcvd</th>
-            <th>Knit BL</th><th>Total Dlv</th><th>Inhand</th><th>Trf Out</th>
-            <th>Stock</th><th>Status</th><th>Action</th>
+            <th>SL</th>
+            <th>Date</th>
+            <th>Buyer</th>
+            <th>Booking No</th>
+            <th>Fab Color</th>
+            <th>Fab Type</th>
+            <th>Finish Qty</th>
+            <th>PL %</th>
+            <th>Knit Rcvd</th>
+            <th>Trf In</th>
+            <th>Trf From</th>
+            <th>Grey Qty</th>
+            <th>Total Rcvd</th>
+            <th>Knit BL</th>
+            <th>Total Dlv</th>
+            <th>Inhand</th>
+            <th>Trf Out</th>
+            <th>Trf To</th>
+            <th>Stock</th>
+            <th>ETD</th>
+            <th>Remarks</th>
+            <th>Status</th>
+            <th>Action</th>
           </tr>
         </thead>
         <tbody id="entryTableBody"></tbody>
@@ -234,7 +254,7 @@ body.light .theme-toggle{background:rgba(0,0,0,.05);border-color:rgba(0,0,0,.1);
 <!-- STOCK CHECK -->
 <div id="stock" class="page">
   <div class="card">
-    <h2><i class="fas fa-boxes"></i> Stock Check (Booking No + Color Match)</h2>
+    <h2><i class="fas fa-boxes"></i> Stock Check (Booking No + Color + Type Match)</h2>
     <div class="controls">
       <label>Booking No:</label>
       <input type="text" id="stockBookingNo" placeholder="GMST-FB-26-01187" style="width:200px">
@@ -276,10 +296,10 @@ body.light .theme-toggle{background:rgba(0,0,0,.05);border-color:rgba(0,0,0,.1);
 
 <script>
 // =========================================
-// 🔐 SUPABASE CONFIG - আপনার Supabase URL ও Key দিন
+// 🔐 SUPABASE CONFIG
 // =========================================
-const SUPABASE_URL = 'https://YOUR-PROJECT.supabase.co';  // ⚠️ এখানে আপনার Supabase URL
-const SUPABASE_KEY = 'YOUR-ANON-KEY';  // ⚠️ এখানে আপনার anon/public key
+const SUPABASE_URL = 'https://hmatleeearcaltguosiz.supabase.co';
+const SUPABASE_KEY = 'sb_publishable_VA7UkQqRwCxdeVwHuxzsjw_dQxOPiIj';
 const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 const COMPANY_CODE = 'textile';
 
@@ -505,7 +525,7 @@ function renderEntries() {
   const tbody = document.getElementById('entryTableBody');
   
   if(allEntries.length === 0) {
-    tbody.innerHTML = '<tr><td colspan="20" style="padding:30px;color:#94a3b8"><div class="empty-state"><i class="fas fa-inbox"></i><h3>No Entries</h3><p>Click "Add Row" to start</p></div></td></tr>';
+    tbody.innerHTML = '<tr><td colspan="23" style="padding:30px;color:#94a3b8"><div class="empty-state"><i class="fas fa-inbox"></i><h3>No Entries</h3><p>Click "Add Row" to start</p></div></td></tr>';
     return;
   }
   
@@ -518,22 +538,25 @@ function renderEntries() {
     tbody.innerHTML += `<tr data-idx="${idx}">
       <td>${idx+1}</td>
       <td><input type="date" class="cell-input" value="${e.report_date||''}" onchange="updateEntry(${idx},'report_date',this.value)"></td>
-      <td><input type="text" class="cell-input" value="${e.buyer||''}" onchange="updateEntry(${idx},'buyer',this.value)" style="width:90px"></td>
-      <td><input type="text" class="cell-input" value="${e.booking_no||''}" onchange="updateEntry(${idx},'booking_no',this.value)" style="width:120px"></td>
-      <td><input type="text" class="cell-input" value="${e.fab_color||''}" onchange="updateEntry(${idx},'fab_color',this.value)" style="width:100px"></td>
-      <td><input type="text" class="cell-input" value="${e.fab_type||''}" onchange="updateEntry(${idx},'fab_type',this.value)" style="width:90px"></td>
-      <td><input type="number" class="cell-input" value="${e.finish_qty||0}" onchange="updateEntry(${idx},'finish_qty',this.value);calcRow(${idx})"></td>
-      <td><input type="number" class="cell-input" value="${e.pl_percent||0}" onchange="updateEntry(${idx},'pl_percent',this.value)"></td>
-      <td><input type="number" class="cell-input" value="${e.knitting_receive||0}" onchange="updateEntry(${idx},'knitting_receive',this.value);calcRow(${idx})"></td>
-      <td><input type="number" class="cell-input" value="${e.transfer_in_qty||0}" onchange="updateEntry(${idx},'transfer_in_qty',this.value);calcRow(${idx})"></td>
+      <td><input type="text" class="cell-input wide" value="${e.buyer||''}" onchange="updateEntry(${idx},'buyer',this.value)"></td>
+      <td><input type="text" class="cell-input wide" value="${e.booking_no||''}" onchange="updateEntry(${idx},'booking_no',this.value)"></td>
+      <td><input type="text" class="cell-input" value="${e.fab_color||''}" onchange="updateEntry(${idx},'fab_color',this.value)"></td>
+      <td><input type="text" class="cell-input" value="${e.fab_type||''}" onchange="updateEntry(${idx},'fab_type',this.value)"></td>
+      <td><input type="number" class="cell-input narrow" value="${e.finish_qty||0}" onchange="updateEntry(${idx},'finish_qty',this.value);calcRow(${idx})"></td>
+      <td><input type="number" class="cell-input narrow" value="${e.pl_percent||0}" onchange="updateEntry(${idx},'pl_percent',this.value)"></td>
+      <td><input type="number" class="cell-input narrow" value="${e.knitting_receive||0}" onchange="updateEntry(${idx},'knitting_receive',this.value);calcRow(${idx})"></td>
+      <td><input type="number" class="cell-input narrow" value="${e.transfer_in_qty||0}" onchange="updateEntry(${idx},'transfer_in_qty',this.value);calcRow(${idx})"></td>
       <td><input type="text" class="cell-input" value="${e.transfer_from_order||''}" onchange="updateEntry(${idx},'transfer_from_order',this.value)"></td>
-      <td><input type="number" class="cell-input" value="${e.grey_qty||0}" onchange="updateEntry(${idx},'grey_qty',this.value)"></td>
+      <td><input type="number" class="cell-input narrow" value="${e.grey_qty||0}" onchange="updateEntry(${idx},'grey_qty',this.value);calcRow(${idx})"></td>
       <td id="trcvd${idx}"><b>${fmt(e.total_received_qty||0)}</b></td>
       <td id="tbl${idx}">${fmt(e.knit_rcvd_bl||0)}</td>
-      <td><input type="number" class="cell-input" value="${e.total_delivery_qty||0}" onchange="updateEntry(${idx},'total_delivery_qty',this.value);calcRow(${idx})"></td>
+      <td><input type="number" class="cell-input narrow" value="${e.total_delivery_qty||0}" onchange="updateEntry(${idx},'total_delivery_qty',this.value);calcRow(${idx})"></td>
       <td id="tinhand${idx}"><b>${fmt(e.inhand_stock_qty||0)}</b></td>
-      <td><input type="number" class="cell-input" value="${e.transfer_out_qty||0}" onchange="updateEntry(${idx},'transfer_out_qty',this.value);calcRow(${idx})"></td>
+      <td><input type="number" class="cell-input narrow" value="${e.transfer_out_qty||0}" onchange="updateEntry(${idx},'transfer_out_qty',this.value);calcRow(${idx})"></td>
+      <td><input type="text" class="cell-input" value="${e.transfer_to_order||''}" onchange="updateEntry(${idx},'transfer_to_order',this.value)"></td>
       <td id="tstock${idx}" class="${stockClass}"><b>${fmt(stock)}</b></td>
+      <td><input type="date" class="cell-input" value="${e.etd||''}" onchange="updateEntry(${idx},'etd',this.value)"></td>
+      <td><input type="text" class="cell-input wide" value="${e.remarks||''}" onchange="updateEntry(${idx},'remarks',this.value)"></td>
       <td><span class="status-badge ${e.status==='Closed'?'status-closed':'status-open'}">${e.status||'Open'}</span></td>
       <td>
         <button class="btn btn-success btn-sm" onclick="closeOrder(${idx})" ${e.status==='Closed'?'disabled':''}>
@@ -551,13 +574,15 @@ function updateEntry(idx, field, value) {
   allEntries[idx][field] = value;
 }
 
+// ✅ FIXED: Knit Rcvd BL formula - now uses grey_qty instead of finish_qty
 function calcRow(idx) {
   const e = allEntries[idx];
   const knitRcvd = Number(e.knitting_receive || 0);
   const trfIn = Number(e.transfer_in_qty || 0);
   const totalRcvd = knitRcvd + trfIn;
-  const finishQty = Number(e.finish_qty || 0);
-  const knitBL = totalRcvd - finishQty;
+  const greyQty = Number(e.grey_qty || 0);
+  // ✅ CORRECT FORMULA: Knit BL = Grey Qty - Total Received
+  const knitBL = greyQty - totalRcvd;
   const totalDlv = Number(e.total_delivery_qty || 0);
   const inhand = totalRcvd - totalDlv;
   const trfOut = Number(e.transfer_out_qty || 0);
@@ -597,6 +622,8 @@ function addNewRow() {
     inhand_stock_qty: 0,
     transfer_out_qty: 0,
     stock: 0,
+    etd: '',
+    remarks: '',
     status: 'Open'
   });
   renderEntries();
@@ -636,6 +663,8 @@ async function saveAllEntries() {
           inhand_stock_qty: e.inhand_stock_qty,
           transfer_out_qty: e.transfer_out_qty,
           stock: e.stock,
+          etd: e.etd || null,
+          remarks: e.remarks || '',
           status: e.status || 'Open',
           operator: operator,
           updated_at: new Date().toISOString()
@@ -654,7 +683,7 @@ async function saveAllEntries() {
 
 async function deleteEntry(idx) {
   const e = allEntries[idx];
-  if(!confirm(`Delete ${e.booking_no} - ${e.fab_color}?`)) return;
+  if(!confirm(`Delete ${e.booking_no} - ${e.fab_color} - ${e.fab_type}?`)) return;
   
   if(e.id) {
     await supabase.from('grey_bookings').delete().eq('id', e.id);
@@ -671,7 +700,7 @@ async function closeOrder(idx) {
   if(stock > 0) {
     pendingCloseIdx = idx;
     document.getElementById('warningMessage').innerHTML = 
-      `<b>${e.booking_no}</b> - <b>${e.fab_color}</b><br>
+      `<b>${e.booking_no}</b> - <b>${e.fab_color}</b> - <b>${e.fab_type}</b><br>
        ⚠️ Stock Available: <b style="color:#f59e0b">${fmt(stock)} Kg</b><br>
        Order close করলে এই stock Transfer Out করতে হবে।<br>
        Continue?`;
@@ -716,7 +745,7 @@ async function performCloseOrder(idx) {
       transfer_to_order: e.transfer_to_order,
       stock: stock,
       etd: e.etd || null,
-      remarks: stock > 0 ? `⚠️ Stock: ${fmt(stock)} Kg` : '✅ Order Clear',
+      remarks: stock > 0 ? `⚠️ Stock: ${fmt(stock)} Kg` : (e.remarks || '✅ Order Clear'),
       closed_by: document.getElementById('entryOperator').value
     };
     
@@ -831,7 +860,7 @@ function renderOrderClose() {
 }
 
 // =========================================
-// 📦 STOCK CHECK
+// 📦 STOCK CHECK - ✅ ALL BUGS FIXED
 // =========================================
 async function checkStock() {
   if(!companyId) return;
@@ -843,11 +872,13 @@ async function checkStock() {
   
   showLoading();
   try {
+    // ✅ FIX: Only fetch Open orders (exclude Closed)
     const {data, error} = await supabase
       .from('grey_bookings')
       .select('*')
       .eq('company_id', companyId)
-      .eq('booking_no', bookingNo);
+      .eq('booking_no', bookingNo)
+      .eq('status', 'Open');
     
     if(error) throw error;
     
@@ -855,11 +886,12 @@ async function checkStock() {
     tbody.innerHTML = '';
     
     if(!data || data.length === 0) {
-      tbody.innerHTML = '<tr><td colspan="9" style="padding:20px;color:#94a3b8">❌ No data found for this Booking No</td></tr>';
+      tbody.innerHTML = '<tr><td colspan="9" style="padding:20px;color:#94a3b8">❌ No Open data found for this Booking No</td></tr>';
     } else {
+      // ✅ FIX: Group by fab_color + fab_type (not just color)
       const grouped = {};
       data.forEach(d => {
-        const key = d.fab_color;
+        const key = (d.fab_color || '') + '__' + (d.fab_type || '');
         if(!grouped[key]) grouped[key] = {
           booking_no: d.booking_no,
           fab_color: d.fab_color,
@@ -918,9 +950,10 @@ async function loadAllStock() {
     const tbody = document.getElementById('stockTableBody');
     tbody.innerHTML = '';
     
+    // ✅ FIX: Group by booking_no + fab_color + fab_type
     const grouped = {};
     (data || []).forEach(d => {
-      const key = d.booking_no + '__' + d.fab_color;
+      const key = d.booking_no + '__' + (d.fab_color || '') + '__' + (d.fab_type || '');
       if(!grouped[key]) grouped[key] = {
         booking_no: d.booking_no,
         fab_color: d.fab_color,
@@ -992,7 +1025,7 @@ function exportEntryExcel() {
     ['GMS TEXTILES LTD - Booking Maintain Sheet'],
     ['Date: ' + document.getElementById('entryDate').value],
     [''],
-    ['SL', 'Date', 'Buyer', 'Booking No', 'Fab Color', 'Fab Type', 'Finish Qty', 'PL %', 'Knit Rcvd', 'Trf In', 'Trf From', 'Grey Qty', 'Total Rcvd', 'Knit BL', 'Total Dlv', 'Inhand', 'Trf Out', 'Stock', 'Status']
+    ['SL', 'Date', 'Buyer', 'Booking No', 'Fab Color', 'Fab Type', 'Finish Qty', 'PL %', 'Knit Rcvd', 'Trf In', 'Trf From', 'Grey Qty', 'Total Rcvd', 'Knit BL', 'Total Dlv', 'Inhand', 'Trf Out', 'Trf To', 'Stock', 'ETD', 'Remarks', 'Status']
   ];
   
   allEntries.forEach((e, i) => {
@@ -1000,7 +1033,8 @@ function exportEntryExcel() {
       i+1, e.report_date, e.buyer, e.booking_no, e.fab_color, e.fab_type,
       e.finish_qty, e.pl_percent, e.knitting_receive, e.transfer_in_qty,
       e.transfer_from_order, e.grey_qty, e.total_received_qty, e.knit_rcvd_bl,
-      e.total_delivery_qty, e.inhand_stock_qty, e.transfer_out_qty, e.stock, e.status
+      e.total_delivery_qty, e.inhand_stock_qty, e.transfer_out_qty, e.transfer_to_order,
+      e.stock, e.etd, e.remarks, e.status
     ]);
   });
   
