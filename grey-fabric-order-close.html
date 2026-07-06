@@ -126,6 +126,7 @@ body.light .search-result-table td{border-color:#e2e8f0;color:#1e293b}
   <h1>🏭 GMS TEXTILES - Grey Fabric MCD</h1>
   <p>Order Closing Report System <span class="live-dot"></span> LIVE | Supabase</p>
 </div>
+
 <div class="tabs">
   <button class="tab active" onclick="showPage('dashboard',this)">📊 Dashboard</button>
   <button class="tab" onclick="showPage('entry',this)">➕ Daily Entry</button>
@@ -316,7 +317,6 @@ const SUPABASE_URL = 'https://hmatleeearcaltguosiz.supabase.co';
 const SUPABASE_KEY = 'sb_publishable_VA7UkQqRwCxdeVwHuxzsjw_dQxOPiIj';
 const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
 const COMPANY_CODE = 'textile';
-const OFFLINE_KEY = 'grey_fabric_offline_v5';
 
 // =========================================
 // 🌐 GLOBAL STATE
@@ -331,43 +331,63 @@ let suppressAutoSave = false;
 let lastAutoSaveTime = 0;
 let bookingSearchMatches = [];
 
+// Columns that don't exist on a table get remembered here for this session,
+// so we don't keep re-sending them and re-failing.
+const unsupportedColumns = { grey_bookings: new Set(), grey_order_close: new Set() };
+
 // =========================================
-// 💾 OFFLINE STORAGE
+// 🧠 SCHEMA-SAFE WRITE HELPER
 // =========================================
-function saveOffline(date, operator, rows, forceSynced = false){
-  try{
-    const data = JSON.parse(localStorage.getItem(OFFLINE_KEY)||'{}');
-    const key = `${date}`;
-    const existing = data[key];
-    const shouldBeSynced = forceSynced || (existing && existing.synced);
-    
-    data[key] = {
-      operator, 
-      rows, 
-      savedAt: new Date().toISOString(), 
-      synced: shouldBeSynced
-    };
-    localStorage.setItem(OFFLINE_KEY, JSON.stringify(data));
-  }catch(e){ console.error('saveOffline error', e); }
+// grey_bookings / grey_order_close is a flat table (one row = one booking-color entry),
+// not a JSON blob. Some optional columns (operator, etd, remarks, transfer_to_order...)
+// may or may not exist depending on how the table was created. Instead of hardcoding an
+// assumption and breaking again later, we strip any column Postgres/PostgREST reports as
+// missing and retry automatically.
+function stripUnsupported(table, obj){
+  const copy = {...obj};
+  unsupportedColumns[table].forEach(col => { delete copy[col]; });
+  return copy;
 }
 
-function getOffline(date){
-  try{
-    const data = JSON.parse(localStorage.getItem(OFFLINE_KEY)||'{}');
-    return data[`${date}`] || null;
-  }catch(e){ return null; }
+function extractMissingColumn(message){
+  if(!message) return null;
+  const m = message.match(/'([a-zA-Z0-9_]+)'\s+column/);
+  return m ? m[1] : null;
 }
 
-function markOfflineSynced(date){
-  try{
-    const data = JSON.parse(localStorage.getItem(OFFLINE_KEY)||'{}');
-    const key = `${date}`;
-    if(data[key]){
-      data[key].synced = true;
-      data[key].savedAt = new Date().toISOString();
+// mode: {id:someId} => update by id | {conflict:'col1,col2'} => upsert | {} => insert
+async function safeWrite(table, payload, mode = {}){
+  let attempt = 0;
+  while(attempt < 10){
+    const clean = stripUnsupported(table, payload);
+    let query;
+    if(mode.id){
+      const body = {...clean};
+      delete body.id;
+      query = supabase.from(table).update(body).eq('id', mode.id).select().maybeSingle();
+    } else if(mode.conflict){
+      query = supabase.from(table).upsert(clean, {onConflict: mode.conflict}).select().maybeSingle();
+    } else {
+      const body = {...clean};
+      delete body.id;
+      query = supabase.from(table).insert(body).select().maybeSingle();
     }
-    localStorage.setItem(OFFLINE_KEY, JSON.stringify(data));
-  }catch(e){}
+    const {data, error} = await query;
+    if(!error) return {data, error: null};
+    const col = extractMissingColumn(error.message);
+    if(col && !unsupportedColumns[table].has(col)){
+      unsupportedColumns[table].add(col);
+      attempt++;
+      continue;
+    }
+    return {data: null, error};
+  }
+  return {data: null, error: {message: 'বারবার schema error — কলাম মিলছে না'}};
+}
+
+function numOrZero(v){
+  const n = Number(v);
+  return isNaN(n) ? 0 : n;
 }
 
 // =========================================
@@ -381,40 +401,58 @@ async function getCompanyId(){
   return companyId;
 }
 
-async function saveToSupabase(date, operator, rows, showSuccess=true){
-  const cid = await getCompanyId();
-  if(!cid){ if(showSuccess) alert('❌ Company config error!'); return {error:'no company'}; }
-  
-  const summary = {
-    total_entries: rows.length,
-    total_finish_qty: rows.reduce((s,r)=>s+(Number(r.finish_qty)||0),0),
-    total_received_qty: rows.reduce((s,r)=>s+(Number(r.total_received_qty)||0),0),
-    total_delivery_qty: rows.reduce((s,r)=>s+(Number(r.total_delivery_qty)||0),0),
-    total_inhand_stock: rows.reduce((s,r)=>s+(Number(r.inhand_stock_qty)||0),0),
-    total_transfer_out: rows.reduce((s,r)=>s+(Number(r.transfer_out_qty)||0),0)
+function buildRowPayload(entry, cid, operator){
+  return {
+    company_id: cid,
+    report_date: entry.report_date || null,
+    operator: operator,
+    buyer: entry.buyer || '',
+    booking_no: entry.booking_no || '',
+    fab_color: entry.fab_color || '',
+    fab_type: entry.fab_type || '',
+    finish_qty: numOrZero(entry.finish_qty),
+    pl_percent: numOrZero(entry.pl_percent),
+    knitting_receive: numOrZero(entry.knitting_receive),
+    transfer_in_qty: numOrZero(entry.transfer_in_qty),
+    transfer_from_order: entry.transfer_from_order || '',
+    grey_qty: numOrZero(entry.grey_qty),
+    total_received_qty: numOrZero(entry.total_received_qty),
+    knit_rcvd_bl: numOrZero(entry.knit_rcvd_bl),
+    total_delivery_qty: numOrZero(entry.total_delivery_qty),
+    inhand_stock_qty: numOrZero(entry.inhand_stock_qty),
+    transfer_out_qty: numOrZero(entry.transfer_out_qty),
+    transfer_to_order: entry.transfer_to_order || '',
+    stock: numOrZero(entry.stock),
+    etd: entry.etd || null,
+    remarks: entry.remarks || '',
+    status: entry.status || 'Open'
   };
-  
-  const {error} = await supabase.from('grey_bookings').upsert({
-    company_id:cid, report_date:date, operator, rows, summary,
-    updated_at: new Date().toISOString()
-  },{onConflict:'company_id,report_date'});
-  
-  if(error){ 
-    console.error(error); 
-    if(showSuccess) alert('❌ Save failed: '+error.message); 
-    return {error}; 
-  }
-  if(showSuccess) showToast('✅ Supabase এ Save হয়েছে');
-  return {success:true};
 }
 
-async function loadFromSupabase(date){
+async function saveEntryRow(entry, cid, operator){
+  const payload = buildRowPayload(entry, cid, operator);
+  const {data, error} = await safeWrite('grey_bookings', payload, entry.id ? {id: entry.id} : {});
+  if(error) return {error};
+  if(!entry.id && data && data.id) entry.id = data.id;
+  return {success: true};
+}
+
+async function saveAllEntryRows(showSuccess = true){
   const cid = await getCompanyId();
-  if(!cid) return null;
-  const {data,error} = await supabase.from('grey_bookings').select('*')
-    .eq('company_id',cid).eq('report_date',date).maybeSingle();
-  if(error){ console.error('loadFromSupabase error:', error); return null; }
-  return data;
+  if(!cid) return {error: 'no company'};
+  const operator = document.getElementById('entryOperator').value.trim() || localStorage.getItem('lastOperator') || 'Unknown';
+
+  let failed = 0;
+  for(const entry of allEntries){
+    const res = await saveEntryRow(entry, cid, operator);
+    if(res.error) failed++;
+  }
+
+  if(failed > 0){
+    if(showSuccess) showToast(`❌ ${failed} টা row save হয়নি`, 'error');
+    return {error: `${failed} rows failed`};
+  }
+  return {success: true};
 }
 
 // =========================================
@@ -500,18 +538,15 @@ async function loadDashboard() {
     let bookingQty = 0, receivedQty = 0, deliveryQty = 0, inhandStock = 0, tfOutQty = 0;
     
     (bookingsData || []).forEach(b => {
-      if(b.summary){
-        bookingQty += Number(b.summary.total_finish_qty || 0);
-        receivedQty += Number(b.summary.total_received_qty || 0);
-        deliveryQty += Number(b.summary.total_delivery_qty || 0);
-        inhandStock += Number(b.summary.total_inhand_stock || 0);
-        tfOutQty += Number(b.summary.total_transfer_out || 0);
-      }
+      bookingQty += numOrZero(b.finish_qty);
+      receivedQty += numOrZero(b.total_received_qty);
+      deliveryQty += numOrZero(b.total_delivery_qty);
+      inhandStock += numOrZero(b.inhand_stock_qty);
+      tfOutQty += numOrZero(b.transfer_out_qty);
     });
     
     const presentStock = inhandStock - tfOutQty;
     const deliveryPct = receivedQty > 0 ? (deliveryQty / receivedQty * 100) : 0;
-    const tfPct = receivedQty > 0 ? (tfOutQty / receivedQty * 100) : 0;
     
     document.getElementById('sumOrderClose').innerText = (ocData || []).length;
     document.getElementById('sumBookingQty').innerText = fmt(bookingQty);
@@ -537,32 +572,32 @@ async function loadDashboardTable() {
   
   const {data: allOC} = await supabase
     .from('grey_order_close')
-    .select('close_date, summary')
+    .select('close_date')
     .eq('company_id', cid)
     .order('close_date', {ascending: false});
   
   const {data: allBookings} = await supabase
     .from('grey_bookings')
-    .select('report_date, summary')
+    .select('report_date, finish_qty, total_received_qty, total_delivery_qty, inhand_stock_qty, transfer_out_qty')
     .eq('company_id', cid);
   
   const months = {};
   (allOC || []).forEach(oc => {
+    if(!oc.close_date) return;
     const m = oc.close_date.slice(0,7);
     if(!months[m]) months[m] = {orderClose: 0, bookingQty: 0, receivedQty: 0, deliveryQty: 0, inhandStock: 0, tfOutQty: 0};
     months[m].orderClose++;
   });
   
   (allBookings || []).forEach(b => {
+    if(!b.report_date) return;
     const m = b.report_date.slice(0,7);
     if(!months[m]) months[m] = {orderClose: 0, bookingQty: 0, receivedQty: 0, deliveryQty: 0, inhandStock: 0, tfOutQty: 0};
-    if(b.summary){
-      months[m].bookingQty += Number(b.summary.total_finish_qty || 0);
-      months[m].receivedQty += Number(b.summary.total_received_qty || 0);
-      months[m].deliveryQty += Number(b.summary.total_delivery_qty || 0);
-      months[m].inhandStock += Number(b.summary.total_inhand_stock || 0);
-      months[m].tfOutQty += Number(b.summary.total_transfer_out || 0);
-    }
+    months[m].bookingQty += numOrZero(b.finish_qty);
+    months[m].receivedQty += numOrZero(b.total_received_qty);
+    months[m].deliveryQty += numOrZero(b.total_delivery_qty);
+    months[m].inhandStock += numOrZero(b.inhand_stock_qty);
+    months[m].tfOutQty += numOrZero(b.transfer_out_qty);
   });
   
   const tbody = document.getElementById('dashTableBody');
@@ -603,29 +638,24 @@ async function loadEntries() {
   suppressAutoSave = true;
   
   try {
-    let todayData = null;
+    const {data, error} = await supabase
+      .from('grey_bookings')
+      .select('*')
+      .eq('company_id', cid)
+      .eq('report_date', date)
+      .order('id', {ascending: true});
     
-    if(navigator.onLine){
-      todayData = await loadFromSupabase(date);
-    } else {
-      todayData = getOffline(date);
-      showToast('📴 Offline — Local data দেখাচ্ছে');
-    }
+    if(error) throw error;
     
-    if(todayData && todayData.rows && todayData.rows.length > 0){
-      allEntries = todayData.rows;
-    } else {
-      // No carry-forward: always start fresh for a date with no saved data.
-      allEntries = [];
+    allEntries = data || [];
+    
+    if(allEntries.length === 0){
       showToast('📋 নতুন entry শুরু করুন');
+    } else if(allEntries[0].operator){
+      document.getElementById('entryOperator').value = allEntries[0].operator;
     }
     
     renderEntries();
-    
-    if(todayData && todayData.operator){
-      document.getElementById('entryOperator').value = todayData.operator;
-    }
-    
     updateLastSync('☁️ Loaded | ' + new Date().toLocaleTimeString());
     
   } catch(e) {
@@ -716,6 +746,7 @@ function calcRow(idx) {
   entry.knit_rcvd_bl = knitBL;
   entry.inhand_stock_qty = inhand;
   entry.transfer_out_qty = trfOut;
+  entry.stock = stock;
   
   document.getElementById(`trcvd${idx}`).innerHTML = `<b>${fmt(totalRcvd)}</b>`;
   document.getElementById(`tbl${idx}`).innerText = fmt(knitBL);
@@ -730,6 +761,7 @@ function calcRow(idx) {
 function addNewRow() {
   const date = document.getElementById('entryDate').value;
   allEntries.push({
+    id: null,
     report_date: date,
     buyer: '',
     booking_no: '',
@@ -765,20 +797,13 @@ async function saveAllEntries() {
   const operator = document.getElementById('entryOperator').value.trim() || localStorage.getItem('lastOperator') || 'Unknown';
   localStorage.setItem('lastOperator', operator);
   
-  const date = document.getElementById('entryDate').value;
-  
   try {
-    if(navigator.onLine){
-      const result = await saveToSupabase(date, operator, allEntries);
-      if(result.success){
-        saveOffline(date, operator, allEntries, true);
-        lastAutoSaveTime = Date.now();
-        updateLastSync(`☁️ Supabase এ Saved — ${new Date().toLocaleTimeString()}`);
-      }
-    } else {
-      saveOffline(date, operator, allEntries, false);
-      showToast('📴 Offline — Local এ Save হয়েছে');
-      updateLastSync(`📴 Offline saved — ${new Date().toLocaleTimeString()}`);
+    const result = await saveAllEntryRows(true);
+    if(result.success){
+      lastAutoSaveTime = Date.now();
+      updateLastSync(`☁️ Supabase এ Saved — ${new Date().toLocaleTimeString()}`);
+      showToast('✅ Supabase এ Save হয়েছে');
+      renderEntries(); // refresh so new ids show up correctly on next edit
     }
   } catch(e) {
     showToast('❌ ' + e.message, 'error');
@@ -787,11 +812,22 @@ async function saveAllEntries() {
 }
 
 async function deleteEntry(idx) {
-  if(!confirm(`⚠️ Delete ${allEntries[idx].booking_no} - ${allEntries[idx].fab_color}?`)) return;
+  const entry = allEntries[idx];
+  if(!confirm(`⚠️ Delete ${entry.booking_no} - ${entry.fab_color}?`)) return;
+  
+  if(entry.id){
+    showLoading();
+    const {error} = await supabase.from('grey_bookings').delete().eq('id', entry.id);
+    showLoading(false);
+    if(error){
+      showToast('❌ Delete failed: ' + error.message, 'error');
+      return;
+    }
+  }
+  
   allEntries.splice(idx, 1);
   renderEntries();
   showToast('🗑️ Deleted');
-  scheduleAutoSave();
 }
 
 async function closeOrder(idx) {
@@ -825,12 +861,6 @@ async function confirmCloseOrder() {
 
 async function performCloseOrder(idx) {
   const entry = allEntries[idx];
-  const totalRcvd = (Number(entry.knitting_receive) || 0) + (Number(entry.transfer_in_qty) || 0);
-  const totalDlv = Number(entry.total_delivery_qty) || 0;
-  const inhand = totalRcvd - totalDlv;
-  const trfOut = Number(entry.transfer_out_qty) || 0;
-  const stock = inhand - trfOut;
-  
   showLoading();
   
   try {
@@ -838,28 +868,26 @@ async function performCloseOrder(idx) {
     const closeDate = new Date().toISOString().slice(0,10);
     const operator = document.getElementById('entryOperator').value.trim() || 'Unknown';
     
-    // Save to order_close table
-    const {error} = await supabase.from('grey_order_close').insert({
-      company_id: cid,
-      close_date: closeDate,
-      operator: operator,
-      rows: [entry],
-      summary: {
-        booking_no: entry.booking_no,
-        fab_color: entry.fab_color,
-        stock: stock
-      }
-    });
+    entry.status = 'Closed';
     
+    // Persist the status + latest numbers on the live booking row
+    const saveRes = await saveEntryRow(entry, cid, operator);
+    if(saveRes.error) throw saveRes.error;
+    
+    // Also record it in the order-close history table
+    const closePayload = {
+      ...buildRowPayload(entry, cid, operator),
+      close_date: closeDate
+    };
+    delete closePayload.report_date;
+    const {error} = await safeWrite('grey_order_close', closePayload, {});
     if(error) throw error;
     
-    // Update status
-    entry.status = 'Closed';
     renderEntries();
     showToast(`✅ Order Closed: ${entry.booking_no}`);
-    scheduleAutoSave();
     
   } catch(e) {
+    entry.status = 'Open';
     showToast('❌ ' + e.message, 'error');
   }
   showLoading(false);
@@ -879,27 +907,22 @@ async function searchBookingForColor(){
   try{
     const {data, error} = await supabase
       .from('grey_bookings')
-      .select('report_date, rows')
-      .eq('company_id', cid);
+      .select('*')
+      .eq('company_id', cid)
+      .ilike('booking_no', `%${q}%`)
+      .order('report_date', {ascending: false});
     
     if(error) throw error;
     
     const seen = new Set();
     const matches = [];
-    (data || []).forEach(b => {
-      (b.rows || []).forEach(row => {
-        if(row.booking_no && row.booking_no.toLowerCase().includes(q.toLowerCase())){
-          const key = row.booking_no + '__' + (row.fab_color||'') + '__' + (row.fab_type||'') + '__' + b.report_date;
-          if(!seen.has(key)){
-            seen.add(key);
-            matches.push({ date: b.report_date, ...row });
-          }
-        }
-      });
+    (data || []).forEach(row => {
+      const key = row.booking_no + '__' + (row.fab_color||'') + '__' + (row.fab_type||'') + '__' + row.report_date;
+      if(!seen.has(key)){
+        seen.add(key);
+        matches.push(row);
+      }
     });
-    
-    // Most recent first
-    matches.sort((a,b) => (a.date < b.date ? 1 : -1));
     
     bookingSearchMatches = matches;
     renderBookingSearchResults(matches);
@@ -922,7 +945,7 @@ function renderBookingSearchResults(matches){
   tbody.innerHTML = '';
   matches.forEach((m, i) => {
     tbody.innerHTML += `<tr>
-      <td>${m.date}</td>
+      <td>${m.report_date||''}</td>
       <td>${m.buyer||''}</td>
       <td><b>${m.booking_no}</b></td>
       <td>${m.fab_color||''}</td>
@@ -939,6 +962,7 @@ function addColorRowFromBooking(i){
   const date = document.getElementById('entryDate').value;
   
   allEntries.push({
+    id: null,
     report_date: date,
     buyer: m.buyer || '',
     booking_no: m.booking_no || '',
@@ -983,23 +1007,18 @@ async function autoSaveNow(){
   const date = document.getElementById('entryDate').value;
   if(!date) return;
   
-  const operator = document.getElementById('entryOperator').value.trim() || localStorage.getItem('lastOperator') || 'Unknown';
-  
   autoSaveInFlight = true;
   try {
-    if(navigator.onLine){
-      const result = await saveToSupabase(date, operator, allEntries, false);
-      if(result.success){
-        saveOffline(date, operator, allEntries, true);
-        lastAutoSaveTime = Date.now();
-        updateLastSync(`☁️ Auto-saved — ${new Date().toLocaleTimeString()}`);
-      }
+    const result = await saveAllEntryRows(false);
+    if(result.success){
+      lastAutoSaveTime = Date.now();
+      updateLastSync(`☁️ Auto-saved — ${new Date().toLocaleTimeString()}`);
     } else {
-      saveOffline(date, operator, allEntries, false);
-      updateLastSync(`📴 Offline auto-saved — ${new Date().toLocaleTimeString()}`);
+      updateLastSync(`⚠️ Auto-save failed — ${new Date().toLocaleTimeString()}`);
     }
   } catch(e) {
     console.error('autoSaveNow error:', e);
+    updateLastSync(`⚠️ Auto-save failed — ${new Date().toLocaleTimeString()}`);
   } finally {
     autoSaveInFlight = false;
   }
@@ -1027,12 +1046,7 @@ async function loadOrderClose() {
     
     if(error) throw error;
     
-    allOrderClose = [];
-    (data || []).forEach(d => {
-      if(d.rows && Array.isArray(d.rows)){
-        d.rows.forEach(r => allOrderClose.push({...r, close_date: d.close_date}));
-      }
-    });
+    allOrderClose = data || [];
     
     renderOrderClose();
     showToast(`✅ ${allOrderClose.length} orders loaded`);
@@ -1074,7 +1088,7 @@ function renderOrderClose() {
     
     tbody.innerHTML += `<tr>
       <td>${idx+1}</td>
-      <td>${entry.close_date || entry.report_date}</td>
+      <td>${entry.close_date || entry.report_date || ''}</td>
       <td>${entry.buyer||''}</td>
       <td><b>${entry.booking_no}</b></td>
       <td>${entry.fab_color}</td>
@@ -1122,76 +1136,73 @@ async function checkStock() {
   showLoading();
   
   try {
-    const {data: bookingsData, error} = await supabase
+    const {data, error} = await supabase
       .from('grey_bookings')
       .select('*')
-      .eq('company_id', cid);
+      .eq('company_id', cid)
+      .eq('booking_no', bookingNo)
+      .neq('status', 'Closed');
     
     if(error) throw error;
     
     const tbody = document.getElementById('stockTableBody');
     tbody.innerHTML = '';
     
-    // Filter and group by booking_no
-    const filtered = [];
-    (bookingsData || []).forEach(b => {
-      if(b.rows && Array.isArray(b.rows)){
-        b.rows.forEach(row => {
-          if(row.booking_no === bookingNo && row.status !== 'Closed'){
-            filtered.push(row);
-          }
-        });
-      }
-    });
-    
-    if(filtered.length === 0) {
+    if(!data || data.length === 0) {
       tbody.innerHTML = '<tr><td colspan="9" style="padding:20px;color:#94a3b8;text-align:center">❌ No Open data found for this Booking No</td></tr>';
     } else {
-      // Group by color + type
-      const grouped = {};
-      filtered.forEach(row => {
-        const key = (row.fab_color || '') + '__' + (row.fab_type || '');
-        if(!grouped[key]) grouped[key] = {
-          booking_no: row.booking_no,
-          fab_color: row.fab_color,
-          fab_type: row.fab_type,
-          totalRcvd: 0,
-          totalDlv: 0,
-          inhand: 0,
-          trfOut: 0
-        };
-        const totalRcvd = (Number(row.knitting_receive) || 0) + (Number(row.transfer_in_qty) || 0);
-        grouped[key].totalRcvd += totalRcvd;
-        grouped[key].totalDlv += Number(row.total_delivery_qty) || 0;
-        grouped[key].inhand += (totalRcvd - (Number(row.total_delivery_qty) || 0));
-        grouped[key].trfOut += Number(row.transfer_out_qty) || 0;
-      });
-      
-      Object.values(grouped).forEach(g => {
-        const stock = g.inhand - g.trfOut;
-        const status = stock > 0 ? 
-          `<span class="status-badge status-open">⚠️ Stock: ${fmt(stock)} Kg</span>` :
-          stock < 0 ? 
-          `<span class="status-badge" style="background:#fecaca;color:#991b1b">Negative</span>` :
-          `<span class="status-badge status-closed">✅ Clear</span>`;
-        
-        tbody.innerHTML += `<tr>
-          <td><b>${g.booking_no}</b></td>
-          <td>${g.fab_color}</td>
-          <td>${g.fab_type||''}</td>
-          <td>${fmt(g.totalRcvd)}</td>
-          <td>${fmt(g.totalDlv)}</td>
-          <td>${fmt(g.inhand)}</td>
-          <td>${fmt(g.trfOut)}</td>
-          <td><b>${fmt(stock)}</b></td>
-          <td>${status}</td>
-        </tr>`;
-      });
+      const grouped = groupStockRows(data);
+      renderStockRows(grouped, tbody);
     }
   } catch(e) {
     showToast('❌ ' + e.message, 'error');
   }
   showLoading(false);
+}
+
+function groupStockRows(rows){
+  const grouped = {};
+  rows.forEach(row => {
+    const key = (row.booking_no||'') + '__' + (row.fab_color || '') + '__' + (row.fab_type || '');
+    if(!grouped[key]) grouped[key] = {
+      booking_no: row.booking_no,
+      fab_color: row.fab_color,
+      fab_type: row.fab_type,
+      totalRcvd: 0,
+      totalDlv: 0,
+      inhand: 0,
+      trfOut: 0
+    };
+    const totalRcvd = (Number(row.knitting_receive) || 0) + (Number(row.transfer_in_qty) || 0);
+    grouped[key].totalRcvd += totalRcvd;
+    grouped[key].totalDlv += Number(row.total_delivery_qty) || 0;
+    grouped[key].inhand += (totalRcvd - (Number(row.total_delivery_qty) || 0));
+    grouped[key].trfOut += Number(row.transfer_out_qty) || 0;
+  });
+  return grouped;
+}
+
+function renderStockRows(grouped, tbody){
+  Object.values(grouped).forEach(g => {
+    const stock = g.inhand - g.trfOut;
+    const status = stock > 0 ? 
+      `<span class="status-badge status-open">⚠️ Stock: ${fmt(stock)} Kg</span>` :
+      stock < 0 ? 
+      `<span class="status-badge" style="background:#fecaca;color:#991b1b">Negative</span>` :
+      `<span class="status-badge status-closed">✅ Clear</span>`;
+    
+    tbody.innerHTML += `<tr>
+      <td><b>${g.booking_no}</b></td>
+      <td>${g.fab_color}</td>
+      <td>${g.fab_type||''}</td>
+      <td>${fmt(g.totalRcvd)}</td>
+      <td>${fmt(g.totalDlv)}</td>
+      <td>${fmt(g.inhand)}</td>
+      <td>${fmt(g.trfOut)}</td>
+      <td><b>${fmt(stock)}</b></td>
+      <td>${status}</td>
+    </tr>`;
+  });
 }
 
 async function loadAllStock() {
@@ -1200,69 +1211,27 @@ async function loadAllStock() {
   showLoading();
   
   try {
-    const {data: bookingsData, error} = await supabase
+    const {data, error} = await supabase
       .from('grey_bookings')
       .select('*')
-      .eq('company_id', cid);
+      .eq('company_id', cid)
+      .neq('status', 'Closed');
     
     if(error) throw error;
     
     const tbody = document.getElementById('stockTableBody');
     tbody.innerHTML = '';
     
-    // Filter only open entries
-    const filtered = [];
-    (bookingsData || []).forEach(b => {
-      if(b.rows && Array.isArray(b.rows)){
-        b.rows.forEach(row => {
-          if(row.status !== 'Closed'){
-            filtered.push(row);
-          }
-        });
-      }
-    });
-    
-    // Group by booking_no + color + type
-    const grouped = {};
-    filtered.forEach(row => {
-      const key = (row.booking_no || '') + '__' + (row.fab_color || '') + '__' + (row.fab_type || '');
-      if(!grouped[key]) grouped[key] = {
-        booking_no: row.booking_no,
-        fab_color: row.fab_color,
-        fab_type: row.fab_type,
-        totalRcvd: 0,
-        totalDlv: 0,
-        inhand: 0,
-        trfOut: 0
-      };
-      const totalRcvd = (Number(row.knitting_receive) || 0) + (Number(row.transfer_in_qty) || 0);
-      grouped[key].totalRcvd += totalRcvd;
-      grouped[key].totalDlv += Number(row.total_delivery_qty) || 0;
-      grouped[key].inhand += (totalRcvd - (Number(row.total_delivery_qty) || 0));
-      grouped[key].trfOut += Number(row.transfer_out_qty) || 0;
-    });
-    
+    const grouped = groupStockRows(data || []);
     const items = Object.values(grouped).filter(g => (g.inhand - g.trfOut) > 0);
     
     if(items.length === 0) {
       tbody.innerHTML = '<tr><td colspan="9" style="padding:20px;color:#10b981;text-align:center">✅ No pending stock found!</td></tr>';
     } else {
-      items.sort((a,b) => (b.inhand - b.trfOut) - (a.inhand - a.trfOut)).forEach(g => {
-        const stock = g.inhand - g.trfOut;
-        const status = `<span class="status-badge status-open">⚠️ Stock: ${fmt(stock)} Kg</span>`;
-        
-        tbody.innerHTML += `<tr>
-          <td><b>${g.booking_no}</b></td>
-          <td>${g.fab_color}</td>
-          <td>${g.fab_type||''}</td>
-          <td>${fmt(g.totalRcvd)}</td>
-          <td>${fmt(g.totalDlv)}</td>
-          <td>${fmt(g.inhand)}</td>
-          <td>${fmt(g.trfOut)}</td>
-          <td><b>${fmt(stock)}</b></td>
-          <td>${status}</td>
-        </tr>`;
-      });
+      items.sort((a,b) => (b.inhand - b.trfOut) - (a.inhand - a.trfOut));
+      const fakeGrouped = {};
+      items.forEach((g,i) => fakeGrouped[i] = g);
+      renderStockRows(fakeGrouped, tbody);
     }
   } catch(e) {
     showToast('❌ ' + e.message, 'error');
@@ -1372,22 +1341,23 @@ function exportOrderCloseExcel() {
   // Load entries on page load
   loadEntries();
   
-  // Auto-save before unload
+  // Best-effort direct save before unload
   window.addEventListener('beforeunload', () => {
-    const date = document.getElementById('entryDate').value;
-    if(date && allEntries.length > 0){
-      const operator = document.getElementById('entryOperator').value.trim() || localStorage.getItem('lastOperator') || 'Unknown';
-      const timeSinceLastSave = Date.now() - lastAutoSaveTime;
-      if(!navigator.onLine || timeSinceLastSave > 5000){
-        saveOffline(date, operator, allEntries, !navigator.onLine);
-      }
+    const timeSinceLastSave = Date.now() - lastAutoSaveTime;
+    if(allEntries.length > 0 && timeSinceLastSave > 5000){
+      saveAllEntryRows(false);
     }
   });
   
-  // Sync on online
+  // Retry auto-save when connection returns
   window.addEventListener('online', () => {
     showToast('🌐 Online - Syncing...');
     scheduleAutoSave();
+  });
+
+  // Let the user know if they've gone offline (Supabase saves need a connection)
+  window.addEventListener('offline', () => {
+    showToast('📴 Internet সংযোগ নেই — Save হবে না, সংযোগ ফিরলে আবার চেষ্টা করুন', 'warning');
   });
 })();
 
@@ -1414,6 +1384,7 @@ window.scheduleAutoSave = scheduleAutoSave;
 window.searchBookingForColor = searchBookingForColor;
 window.addColorRowFromBooking = addColorRowFromBooking;
 window.closeBookingSearchModal = closeBookingSearchModal;
+
 </script>
 </body>
 </html>
