@@ -101,6 +101,11 @@ body.light .autosave-pill{background:#ecfdf5;color:#047857;border-color:#10b981}
 @keyframes pulseDot{0%,100%{opacity:1}50%{opacity:.3}}
 .last-sync{text-align:center;font-size:9px;color:#94a3b8;margin-top:3px}
 body.light .last-sync{color:#64748b}
+.modal-content.wide{max-width:760px}
+.search-result-table{width:100%;border-collapse:collapse;font-size:11px}
+.search-result-table th{background:#1e40af;color:#fff;padding:6px;font-size:10px}
+.search-result-table td{padding:6px;border:1px solid #334155;color:#e2e8f0;font-size:10px;text-align:center}
+body.light .search-result-table td{border-color:#e2e8f0;color:#1e293b}
 @media(max-width:768px){
   .header h1{font-size:16px}
   .summary-grid{grid-template-columns:repeat(2,1fr)}
@@ -178,6 +183,12 @@ body.light .last-sync{color:#64748b}
       <button class="btn btn-warning" onclick="saveAllEntries()"><i class="fas fa-save"></i> Save All</button>
       <button class="btn btn-danger" onclick="exportEntryExcel()"><i class="fas fa-file-excel"></i> Export</button>
       <span class="autosave-pill"><span class="autosave-dot"></span> AUTO-SAVE ON</span>
+    </div>
+    <div class="controls">
+      <label>Booking No:</label>
+      <input type="text" id="entrySearchBooking" placeholder="Search existing Booking No" style="width:200px">
+      <button class="btn btn-primary" onclick="searchBookingForColor()"><i class="fas fa-search"></i> Find Booking</button>
+      <span style="font-size:10px;color:#94a3b8">একই Booking No তে নতুন Color যোগ করতে এখানে Booking No দিয়ে খুঁজুন</span>
     </div>
     <div class="table-wrap">
       <table id="entryTable">
@@ -272,6 +283,23 @@ body.light .last-sync{color:#64748b}
   </div>
 </div>
 
+<!-- BOOKING SEARCH MODAL -->
+<div class="modal" id="bookingSearchModal">
+  <div class="modal-content wide">
+    <h3><i class="fas fa-search"></i> Booking Search Results</h3>
+    <p>নিচের যেকোনো row থেকে "Add Color" চাপলে এই Booking No তে নতুন color row হিসেবে যোগ হবে। শুধু Color ঘরটা পূরণ করে দিন।</p>
+    <div class="table-wrap" style="max-height:320px;overflow-y:auto">
+      <table class="search-result-table">
+        <thead><tr><th>Date</th><th>Buyer</th><th>Booking No</th><th>Color</th><th>Type</th><th>Status</th><th>Action</th></tr></thead>
+        <tbody id="bookingSearchResults"></tbody>
+      </table>
+    </div>
+    <div class="modal-buttons">
+      <button class="btn btn-danger" onclick="closeBookingSearchModal()">Close</button>
+    </div>
+  </div>
+</div>
+
 <div class="loading" id="loading">
   <div style="text-align:center">
     <div class="spinner"></div>
@@ -302,6 +330,7 @@ let autoSaveTimer = null;
 let autoSaveInFlight = false;
 let suppressAutoSave = false;
 let lastAutoSaveTime = 0;
+let bookingSearchMatches = [];
 
 // =========================================
 // 💾 OFFLINE STORAGE
@@ -389,20 +418,6 @@ async function loadFromSupabase(date){
   return data;
 }
 
-async function findLastSavedBefore(date){
-  const cid = await getCompanyId();
-  if(!cid) return null;
-  const {data,error} = await supabase.from('grey_bookings')
-    .select('report_date, rows, operator')
-    .eq('company_id',cid)
-    .lt('report_date', date)
-    .order('report_date',{ascending:false})
-    .limit(1)
-    .maybeSingle();
-  if(error){ console.error('[CarryForward] Query error:', error); return null; }
-  return data;
-}
-
 // =========================================
 // 🎨 UI HELPERS
 // =========================================
@@ -441,6 +456,10 @@ function toggleTheme() {
 function closeModal() {
   document.getElementById('warningModal').classList.remove('show');
   pendingCloseIdx = null;
+}
+
+function closeBookingSearchModal(){
+  document.getElementById('bookingSearchModal').classList.remove('show');
 }
 
 function updateLastSync(t){ 
@@ -585,14 +604,10 @@ async function loadEntries() {
   suppressAutoSave = true;
   
   try {
-    let todayData = null, prevData = null, prevDateUsed = null;
+    let todayData = null;
     
     if(navigator.onLine){
-      [todayData, prevData] = await Promise.all([
-        loadFromSupabase(date), 
-        findLastSavedBefore(date)
-      ]);
-      if(prevData) prevDateUsed = prevData.report_date;
+      todayData = await loadFromSupabase(date);
     } else {
       todayData = getOffline(date);
       showToast('📴 Offline — Local data দেখাচ্ছে');
@@ -600,20 +615,8 @@ async function loadEntries() {
     
     if(todayData && todayData.rows && todayData.rows.length > 0){
       allEntries = todayData.rows;
-    } else if(prevData && prevData.rows && prevData.rows.length > 0){
-      // Carry forward from previous day
-      allEntries = prevData.rows.map(r => ({
-        ...r,
-        report_date: date,
-        previous: Number(r.present) || 0,
-        receive: 0,
-        delivery: 0,
-        present: Number(r.present) || 0,
-        bn: 0,
-        status: 'Open'
-      }));
-      showToast(`⏪ ${prevDateUsed} থেকে carry হয়েছে`);
     } else {
+      // No carry-forward: always start fresh for a date with no saved data.
       allEntries = [];
       showToast('📋 নতুন entry শুরু করুন');
     }
@@ -624,7 +627,7 @@ async function loadEntries() {
       document.getElementById('entryOperator').value = todayData.operator;
     }
     
-    updateLastSync('☁️ Loaded | Prev: '+(prevDateUsed||'none')+' | '+new Date().toLocaleTimeString());
+    updateLastSync('☁️ Loaded | ' + new Date().toLocaleTimeString());
     
   } catch(e) {
     console.error(e);
@@ -665,7 +668,7 @@ function renderEntries() {
       <td><input type="text" class="cell-input wide" value="${entry.booking_no||''}" onchange="updateEntry(${idx},'booking_no',this.value)"></td>
       <td><input type="text" class="cell-input" value="${entry.fab_color||''}" onchange="updateEntry(${idx},'fab_color',this.value)"></td>
       <td><input type="text" class="cell-input" value="${entry.fab_type||''}" onchange="updateEntry(${idx},'fab_type',this.value)"></td>
-      <td><input type="number" class="cell-input narrow" value="${e.finish_qty||0}" onchange="updateEntry(${idx},'finish_qty',this.value);calcRow(${idx})"></td>
+      <td><input type="number" class="cell-input narrow" value="${entry.finish_qty||0}" onchange="updateEntry(${idx},'finish_qty',this.value);calcRow(${idx})"></td>
       <td><input type="number" class="cell-input narrow" value="${entry.pl_percent||0}" onchange="updateEntry(${idx},'pl_percent',this.value)"></td>
       <td><input type="number" class="cell-input narrow" value="${entry.knitting_receive||0}" onchange="updateEntry(${idx},'knitting_receive',this.value);calcRow(${idx})"></td>
       <td><input type="number" class="cell-input narrow" value="${entry.transfer_in_qty||0}" onchange="updateEntry(${idx},'transfer_in_qty',this.value);calcRow(${idx})"></td>
@@ -695,6 +698,7 @@ function renderEntries() {
 
 function updateEntry(idx, field, value) {
   allEntries[idx][field] = value;
+  scheduleAutoSave();
 }
 
 function calcRow(idx) {
@@ -751,6 +755,7 @@ function addNewRow() {
   });
   renderEntries();
   showToast('➕ New row added');
+  scheduleAutoSave();
 }
 
 async function saveAllEntries() {
@@ -853,11 +858,115 @@ async function performCloseOrder(idx) {
     entry.status = 'Closed';
     renderEntries();
     showToast(`✅ Order Closed: ${entry.booking_no}`);
+    scheduleAutoSave();
     
   } catch(e) {
     showToast('❌ ' + e.message, 'error');
   }
   showLoading(false);
+}
+
+// =========================================
+// 🔎 BOOKING NO SEARCH (add another color to an existing booking)
+// =========================================
+async function searchBookingForColor(){
+  const cid = await getCompanyId();
+  if(!cid) return;
+  
+  const q = document.getElementById('entrySearchBooking').value.trim();
+  if(!q){ showToast('❌ Booking No লিখুন', 'warning'); return; }
+  
+  showLoading();
+  try{
+    const {data, error} = await supabase
+      .from('grey_bookings')
+      .select('report_date, rows')
+      .eq('company_id', cid);
+    
+    if(error) throw error;
+    
+    const seen = new Set();
+    const matches = [];
+    (data || []).forEach(b => {
+      (b.rows || []).forEach(row => {
+        if(row.booking_no && row.booking_no.toLowerCase().includes(q.toLowerCase())){
+          const key = row.booking_no + '__' + (row.fab_color||'') + '__' + (row.fab_type||'') + '__' + b.report_date;
+          if(!seen.has(key)){
+            seen.add(key);
+            matches.push({ date: b.report_date, ...row });
+          }
+        }
+      });
+    });
+    
+    // Most recent first
+    matches.sort((a,b) => (a.date < b.date ? 1 : -1));
+    
+    bookingSearchMatches = matches;
+    renderBookingSearchResults(matches);
+    document.getElementById('bookingSearchModal').classList.add('show');
+    
+  }catch(e){
+    showToast('❌ ' + e.message, 'error');
+  }
+  showLoading(false);
+}
+
+function renderBookingSearchResults(matches){
+  const tbody = document.getElementById('bookingSearchResults');
+  
+  if(matches.length === 0){
+    tbody.innerHTML = '<tr><td colspan="7" style="padding:16px;text-align:center;color:#94a3b8">এই Booking No তে কোনো data পাওয়া যায়নি</td></tr>';
+    return;
+  }
+  
+  tbody.innerHTML = '';
+  matches.forEach((m, i) => {
+    tbody.innerHTML += `<tr>
+      <td>${m.date}</td>
+      <td>${m.buyer||''}</td>
+      <td><b>${m.booking_no}</b></td>
+      <td>${m.fab_color||''}</td>
+      <td>${m.fab_type||''}</td>
+      <td><span class="status-badge ${m.status==='Closed'?'status-closed':'status-open'}">${m.status||'Open'}</span></td>
+      <td><button class="btn btn-success" style="padding:4px 8px;font-size:10px" onclick="addColorRowFromBooking(${i})"><i class="fas fa-plus"></i> Add Color</button></td>
+    </tr>`;
+  });
+}
+
+function addColorRowFromBooking(i){
+  const m = bookingSearchMatches[i];
+  if(!m) return;
+  const date = document.getElementById('entryDate').value;
+  
+  allEntries.push({
+    report_date: date,
+    buyer: m.buyer || '',
+    booking_no: m.booking_no || '',
+    fab_color: '',
+    fab_type: m.fab_type || '',
+    finish_qty: 0,
+    pl_percent: m.pl_percent || 0,
+    knitting_receive: 0,
+    transfer_in_qty: 0,
+    transfer_from_order: '',
+    transfer_to_order: '',
+    grey_qty: 0,
+    total_received_qty: 0,
+    knit_rcvd_bl: 0,
+    total_delivery_qty: 0,
+    inhand_stock_qty: 0,
+    transfer_out_qty: 0,
+    stock: 0,
+    etd: m.etd || '',
+    remarks: '',
+    status: 'Open'
+  });
+  
+  renderEntries();
+  closeBookingSearchModal();
+  showToast(`➕ ${m.booking_no} এ নতুন Color row যোগ হয়েছে — Color ঘরে নতুন রং লিখুন`);
+  scheduleAutoSave();
 }
 
 // =========================================
@@ -884,9 +993,11 @@ async function autoSaveNow(){
       if(result.success){
         saveOffline(date, operator, allEntries, true);
         lastAutoSaveTime = Date.now();
+        updateLastSync(`☁️ Auto-saved — ${new Date().toLocaleTimeString()}`);
       }
     } else {
       saveOffline(date, operator, allEntries, false);
+      updateLastSync(`📴 Offline auto-saved — ${new Date().toLocaleTimeString()}`);
     }
   } catch(e) {
     console.error('autoSaveNow error:', e);
@@ -920,7 +1031,7 @@ async function loadOrderClose() {
     allOrderClose = [];
     (data || []).forEach(d => {
       if(d.rows && Array.isArray(d.rows)){
-        allOrderClose = allOrderClose.concat(d.rows);
+        d.rows.forEach(r => allOrderClose.push({...r, close_date: d.close_date}));
       }
     });
     
@@ -976,7 +1087,7 @@ function renderOrderClose() {
       <td>${fmt(entry.transfer_in_qty)}</td>
       <td>${entry.transfer_from_order||''}</td>
       <td>${fmt(totalRcvd)}</td>
-      <td>${fmt(e.knit_rcvd_bl)}</td>
+      <td>${fmt(entry.knit_rcvd_bl)}</td>
       <td>${fmt(totalDlv)}</td>
       <td>${fmt(inhand)}</td>
       <td>${fmt(trfOut)}</td>
@@ -1277,7 +1388,7 @@ function exportOrderCloseExcel() {
   // Sync on online
   window.addEventListener('online', () => {
     showToast('🌐 Online - Syncing...');
-    // Sync logic here if needed
+    scheduleAutoSave();
   });
 })();
 
@@ -1301,6 +1412,9 @@ window.toggleTheme = toggleTheme;
 window.updateEntry = updateEntry;
 window.calcRow = calcRow;
 window.scheduleAutoSave = scheduleAutoSave;
+window.searchBookingForColor = searchBookingForColor;
+window.addColorRowFromBooking = addColorRowFromBooking;
+window.closeBookingSearchModal = closeBookingSearchModal;
 </script>
 </body>
 </html>
