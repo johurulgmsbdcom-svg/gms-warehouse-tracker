@@ -4,7 +4,6 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>GMS Grey Fabric MCD - Order Closing Report</title>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 <style>
@@ -39,7 +38,6 @@ body.light .controls input,body.light .controls select{background:#f8fafc;color:
 .btn-success{background:linear-gradient(135deg,#10b981,#059669);color:#fff}
 .btn-danger{background:linear-gradient(135deg,#ef4444,#dc2626);color:#fff}
 .btn-warning{background:linear-gradient(135deg,#f59e0b,#d97706);color:#000}
-.btn-sm{padding:5px 10px;font-size:10px}
 .summary-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin-bottom:16px}
 .summary-card{background:linear-gradient(135deg,#1e293b,#334155);padding:14px;border-radius:10px;border-left:4px solid #3b82f6;transition:transform .2s}
 body.light .summary-card{background:linear-gradient(135deg,#fff,#f1f5f9)}
@@ -97,10 +95,12 @@ body.light .modal-content p{color:#475569}
 .theme-toggle{position:fixed;top:16px;right:16px;z-index:101;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.2);color:#fff;padding:8px 12px;border-radius:8px;cursor:pointer;font-size:14px}
 body.light .theme-toggle{background:rgba(0,0,0,.05);border-color:rgba(0,0,0,.1);color:#1e293b}
 .home-btn{position:fixed;top:16px;left:16px;z-index:101;background:rgba(59,130,246,.2);border:1px solid rgba(59,130,246,.3);color:#3b82f6;padding:8px 12px;border-radius:8px;cursor:pointer;font-size:12px;font-weight:600;text-decoration:none;display:flex;align-items:center;gap:6px}
-.empty-state{text-align:center;padding:40px 20px;color:#94a3b8}
-.empty-state i{font-size:48px;margin-bottom:12px;opacity:.5}
-.empty-state h3{color:#cbd5e1;margin-bottom:8px;font-size:16px}
-.empty-state p{font-size:12px}
+.autosave-pill{display:inline-flex;align-items:center;gap:4px;background:#022c22;color:#34d399;border:1px solid #059669;border-radius:14px;padding:2px 9px;font-size:9px;font-weight:700;margin-left:6px}
+body.light .autosave-pill{background:#ecfdf5;color:#047857;border-color:#10b981}
+.autosave-dot{width:6px;height:6px;border-radius:50%;background:#34d399;animation:pulseDot 1.4s infinite}
+@keyframes pulseDot{0%,100%{opacity:1}50%{opacity:.3}}
+.last-sync{text-align:center;font-size:9px;color:#94a3b8;margin-top:3px}
+body.light .last-sync{color:#64748b}
 @media(max-width:768px){
   .header h1{font-size:16px}
   .summary-grid{grid-template-columns:repeat(2,1fr)}
@@ -139,7 +139,7 @@ body.light .theme-toggle{background:rgba(0,0,0,.05);border-color:rgba(0,0,0,.1);
       <button class="btn btn-primary" onclick="loadDashboard()"><i class="fas fa-sync"></i> Refresh</button>
       <button class="btn btn-success" onclick="exportDashboardExcel()"><i class="fas fa-file-excel"></i> Export</button>
     </div>
-    <div class="summary-grid" id="dashSummary">
+    <div class="summary-grid">
       <div class="summary-card blue"><h4>Order Close</h4><div class="value" id="sumOrderClose">0</div></div>
       <div class="summary-card green"><h4>Booking Qty</h4><div class="value" id="sumBookingQty">0</div></div>
       <div class="summary-card"><h4>Received Qty</h4><div class="value" id="sumReceivedQty">0</div></div>
@@ -172,44 +172,29 @@ body.light .theme-toggle{background:rgba(0,0,0,.05);border-color:rgba(0,0,0,.1);
       <label>Date:</label>
       <input type="date" id="entryDate">
       <label>Operator:</label>
-      <input type="text" id="entryOperator" placeholder="Your Name" style="width:140px">
+      <input type="text" id="entryOperator" placeholder="Your Name" style="width:140px" onchange="scheduleAutoSave()">
       <button class="btn btn-primary" onclick="loadEntries()"><i class="fas fa-sync"></i> Load</button>
       <button class="btn btn-success" onclick="addNewRow()"><i class="fas fa-plus"></i> Add Row</button>
       <button class="btn btn-warning" onclick="saveAllEntries()"><i class="fas fa-save"></i> Save All</button>
       <button class="btn btn-danger" onclick="exportEntryExcel()"><i class="fas fa-file-excel"></i> Export</button>
+      <span class="autosave-pill"><span class="autosave-dot"></span> AUTO-SAVE ON</span>
     </div>
     <div class="table-wrap">
       <table id="entryTable">
         <thead>
           <tr>
-            <th>SL</th>
-            <th>Date</th>
-            <th>Buyer</th>
-            <th>Booking No</th>
-            <th>Fab Color</th>
-            <th>Fab Type</th>
-            <th>Finish Qty</th>
-            <th>PL %</th>
-            <th>Knit Rcvd</th>
-            <th>Trf In</th>
-            <th>Trf From</th>
-            <th>Grey Qty</th>
-            <th>Total Rcvd</th>
-            <th>Knit BL</th>
-            <th>Total Dlv</th>
-            <th>Inhand</th>
-            <th>Trf Out</th>
-            <th>Trf To</th>
-            <th>Stock</th>
-            <th>ETD</th>
-            <th>Remarks</th>
-            <th>Status</th>
-            <th>Action</th>
+            <th>SL</th><th>Date</th><th>Buyer</th><th>Booking No</th><th>Fab Color</th>
+            <th>Fab Type</th><th>Finish Qty</th><th>PL %</th><th>Knit Rcvd</th>
+            <th>Trf In</th><th>Trf From</th><th>Grey Qty</th><th>Total Rcvd</th>
+            <th>Knit BL</th><th>Total Dlv</th><th>Inhand</th><th>Trf Out</th>
+            <th>Trf To</th><th>Stock</th><th>ETD</th><th>Remarks</th>
+            <th>Status</th><th>Action</th>
           </tr>
         </thead>
         <tbody id="entryTableBody"></tbody>
       </table>
     </div>
+    <div class="last-sync" id="lastSync"></div>
   </div>
 </div>
 
@@ -225,7 +210,7 @@ body.light .theme-toggle{background:rgba(0,0,0,.05);border-color:rgba(0,0,0,.1);
       <button class="btn btn-primary" onclick="loadOrderClose()"><i class="fas fa-search"></i> Search</button>
       <button class="btn btn-success" onclick="exportOrderCloseExcel()"><i class="fas fa-file-excel"></i> Export</button>
     </div>
-    <div class="summary-grid" id="ocSummary">
+    <div class="summary-grid">
       <div class="summary-card blue"><h4>Order Close</h4><div class="value" id="ocCount">0</div></div>
       <div class="summary-card green"><h4>Color Close</h4><div class="value" id="ocColorCount">0</div></div>
       <div class="summary-card"><h4>Grey Qty</h4><div class="value" id="ocGreyQty">0</div></div>
@@ -294,47 +279,128 @@ body.light .theme-toggle{background:rgba(0,0,0,.05);border-color:rgba(0,0,0,.1);
   </div>
 </div>
 
-<script>
+<script type="module">
+import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm";
+
 // =========================================
 // 🔐 SUPABASE CONFIG
 // =========================================
 const SUPABASE_URL = 'https://hmatleeearcaltguosiz.supabase.co';
 const SUPABASE_KEY = 'sb_publishable_VA7UkQqRwCxdeVwHuxzsjw_dQxOPiIj';
-const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
 const COMPANY_CODE = 'textile';
+const OFFLINE_KEY = 'grey_fabric_offline_v5';
 
+// =========================================
+// 🌐 GLOBAL STATE
+// =========================================
 let companyId = null;
 let allEntries = [];
 let allOrderClose = [];
 let pendingCloseIdx = null;
+let autoSaveTimer = null;
+let autoSaveInFlight = false;
+let suppressAutoSave = false;
+let lastAutoSaveTime = 0;
 
 // =========================================
-// 🚀 INITIALIZATION
+// 💾 OFFLINE STORAGE
 // =========================================
-async function init() {
-  document.getElementById('entryDate').value = new Date().toISOString().slice(0,10);
-  const now = new Date();
-  document.getElementById('dashMonth').value = now.toISOString().slice(0,7);
-  document.getElementById('ocFrom').value = now.toISOString().slice(0,8) + '01';
-  document.getElementById('ocTo').value = now.toISOString().slice(0,10);
-
-  const lastOp = localStorage.getItem('greyOperator');
-  if(lastOp) document.getElementById('entryOperator').value = lastOp;
-
-  if(localStorage.getItem('greyTheme') === 'light') document.body.classList.add('light');
-
-  await loadCompanyId();
-  loadDashboard();
+function saveOffline(date, operator, rows, forceSynced = false){
+  try{
+    const data = JSON.parse(localStorage.getItem(OFFLINE_KEY)||'{}');
+    const key = `${date}`;
+    const existing = data[key];
+    const shouldBeSynced = forceSynced || (existing && existing.synced);
+    
+    data[key] = {
+      operator, 
+      rows, 
+      savedAt: new Date().toISOString(), 
+      synced: shouldBeSynced
+    };
+    localStorage.setItem(OFFLINE_KEY, JSON.stringify(data));
+  }catch(e){ console.error('saveOffline error', e); }
 }
 
-async function loadCompanyId() {
-  const {data, error} = await supabase
-    .from('companies')
-    .select('id')
-    .eq('code', COMPANY_CODE)
-    .single();
-  if(data) companyId = data.id;
-  else console.error('Company not found');
+function getOffline(date){
+  try{
+    const data = JSON.parse(localStorage.getItem(OFFLINE_KEY)||'{}');
+    return data[`${date}`] || null;
+  }catch(e){ return null; }
+}
+
+function markOfflineSynced(date){
+  try{
+    const data = JSON.parse(localStorage.getItem(OFFLINE_KEY)||'{}');
+    const key = `${date}`;
+    if(data[key]){
+      data[key].synced = true;
+      data[key].savedAt = new Date().toISOString();
+    }
+    localStorage.setItem(OFFLINE_KEY, JSON.stringify(data));
+  }catch(e){}
+}
+
+// =========================================
+// 🔌 SUPABASE FUNCTIONS
+// =========================================
+async function getCompanyId(){
+  if(companyId) return companyId;
+  const {data,error} = await supabase.from('companies').select('id').eq('code',COMPANY_CODE).single();
+  if(error||!data){ console.error('Company not found'); return null; }
+  companyId = data.id;
+  return companyId;
+}
+
+async function saveToSupabase(date, operator, rows, showSuccess=true){
+  const cid = await getCompanyId();
+  if(!cid){ if(showSuccess) alert('❌ Company config error!'); return {error:'no company'}; }
+  
+  const summary = {
+    total_entries: rows.length,
+    total_finish_qty: rows.reduce((s,r)=>s+(Number(r.finish_qty)||0),0),
+    total_received_qty: rows.reduce((s,r)=>s+(Number(r.total_received_qty)||0),0),
+    total_delivery_qty: rows.reduce((s,r)=>s+(Number(r.total_delivery_qty)||0),0),
+    total_inhand_stock: rows.reduce((s,r)=>s+(Number(r.inhand_stock_qty)||0),0),
+    total_transfer_out: rows.reduce((s,r)=>s+(Number(r.transfer_out_qty)||0),0)
+  };
+  
+  const {error} = await supabase.from('grey_bookings').upsert({
+    company_id:cid, report_date:date, operator, rows, summary,
+    updated_at: new Date().toISOString()
+  },{onConflict:'company_id,report_date'});
+  
+  if(error){ 
+    console.error(error); 
+    if(showSuccess) alert('❌ Save failed: '+error.message); 
+    return {error}; 
+  }
+  if(showSuccess) showToast('✅ Supabase এ Save হয়েছে');
+  return {success:true};
+}
+
+async function loadFromSupabase(date){
+  const cid = await getCompanyId();
+  if(!cid) return null;
+  const {data,error} = await supabase.from('grey_bookings').select('*')
+    .eq('company_id',cid).eq('report_date',date).maybeSingle();
+  if(error){ console.error('loadFromSupabase error:', error); return null; }
+  return data;
+}
+
+async function findLastSavedBefore(date){
+  const cid = await getCompanyId();
+  if(!cid) return null;
+  const {data,error} = await supabase.from('grey_bookings')
+    .select('report_date, rows, operator')
+    .eq('company_id',cid)
+    .lt('report_date', date)
+    .order('report_date',{ascending:false})
+    .limit(1)
+    .maybeSingle();
+  if(error){ console.error('[CarryForward] Query error:', error); return null; }
+  return data;
 }
 
 // =========================================
@@ -345,7 +411,7 @@ function showPage(id, btn) {
   document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
   document.getElementById(id).classList.add('active');
   if(btn) btn.classList.add('active');
-
+  
   if(id === 'dashboard') loadDashboard();
   else if(id === 'entry') loadEntries();
   else if(id === 'orderclose') loadOrderClose();
@@ -354,6 +420,7 @@ function showPage(id, btn) {
 function showLoading(show=true) {
   document.getElementById('loading').classList.toggle('show', show);
 }
+
 function showToast(msg, type='success') {
   const t = document.createElement('div');
   t.className = 'toast ' + type;
@@ -376,56 +443,58 @@ function closeModal() {
   pendingCloseIdx = null;
 }
 
-// ✅ FIX: Correct last-day-of-month calculation (avoids invalid '31' in Feb/Apr/Jun/Sep/Nov
-// and avoids timezone shift bugs from using toISOString() on a local Date object)
-function lastDayOfMonth(year, month) {
-  // month is 1-indexed (e.g. 7 = July). Date.UTC(year, month, 0) = last day of that month in UTC.
-  const d = new Date(Date.UTC(Number(year), Number(month), 0));
-  return String(d.getUTCDate()).padStart(2, '0');
+function updateLastSync(t){ 
+  const el = document.getElementById('lastSync'); 
+  if(el) el.textContent=t; 
 }
 
 // =========================================
 // 📊 DASHBOARD
 // =========================================
 async function loadDashboard() {
-  if(!companyId) return;
+  const cid = await getCompanyId();
+  if(!cid) return;
   showLoading();
-
-  const month = document.getElementById('dashMonth').value; // 'YYYY-MM'
+  
+  const month = document.getElementById('dashMonth').value;
   const [year, mon] = month.split('-');
   const startDate = `${year}-${mon}-01`;
-  const endDate = `${year}-${mon}-${lastDayOfMonth(year, mon)}`; // ✅ FIXED
-
+  const lastDay = new Date(Number(year), Number(mon), 0).getDate();
+  const endDate = `${year}-${mon}-${String(lastDay).padStart(2,'0')}`;
+  
   try {
-    const {data: bookings, error} = await supabase
+    const {data: bookingsData, error} = await supabase
       .from('grey_bookings')
       .select('*')
-      .eq('company_id', companyId)
+      .eq('company_id', cid)
       .gte('report_date', startDate)
       .lte('report_date', endDate);
-
+    
     if(error) throw error;
-
+    
     const {data: ocData} = await supabase
       .from('grey_order_close')
       .select('*')
-      .eq('company_id', companyId)
+      .eq('company_id', cid)
       .gte('close_date', startDate)
       .lte('close_date', endDate);
-
+    
     let bookingQty = 0, receivedQty = 0, deliveryQty = 0, inhandStock = 0, tfOutQty = 0;
-
-    (bookings || []).forEach(b => {
-      bookingQty += Number(b.finish_qty || 0);
-      receivedQty += Number(b.total_received_qty || 0);
-      deliveryQty += Number(b.total_delivery_qty || 0);
-      inhandStock += Number(b.inhand_stock_qty || 0);
-      tfOutQty += Number(b.transfer_out_qty || 0);
+    
+    (bookingsData || []).forEach(b => {
+      if(b.summary){
+        bookingQty += Number(b.summary.total_finish_qty || 0);
+        receivedQty += Number(b.summary.total_received_qty || 0);
+        deliveryQty += Number(b.summary.total_delivery_qty || 0);
+        inhandStock += Number(b.summary.total_inhand_stock || 0);
+        tfOutQty += Number(b.summary.total_transfer_out || 0);
+      }
     });
-
+    
     const presentStock = inhandStock - tfOutQty;
     const deliveryPct = receivedQty > 0 ? (deliveryQty / receivedQty * 100) : 0;
-
+    const tfPct = receivedQty > 0 ? (tfOutQty / receivedQty * 100) : 0;
+    
     document.getElementById('sumOrderClose').innerText = (ocData || []).length;
     document.getElementById('sumBookingQty').innerText = fmt(bookingQty);
     document.getElementById('sumReceivedQty').innerText = fmt(receivedQty);
@@ -434,9 +503,9 @@ async function loadDashboard() {
     document.getElementById('sumDeliveryPct').innerText = deliveryPct.toFixed(2) + '%';
     document.getElementById('sumTfOutQty').innerText = fmt(tfOutQty);
     document.getElementById('sumPresentStock').innerText = fmt(presentStock);
-
+    
     await loadDashboardTable();
-
+    
   } catch(e) {
     console.error(e);
     showToast('❌ Error: ' + e.message, 'error');
@@ -445,47 +514,50 @@ async function loadDashboard() {
 }
 
 async function loadDashboardTable() {
-  if(!companyId) return;
-
+  const cid = await getCompanyId();
+  if(!cid) return;
+  
   const {data: allOC} = await supabase
     .from('grey_order_close')
-    .select('close_date')
-    .eq('company_id', companyId)
+    .select('close_date, summary')
+    .eq('company_id', cid)
     .order('close_date', {ascending: false});
-
+  
   const {data: allBookings} = await supabase
     .from('grey_bookings')
-    .select('*')
-    .eq('company_id', companyId);
-
+    .select('report_date, summary')
+    .eq('company_id', cid);
+  
   const months = {};
   (allOC || []).forEach(oc => {
     const m = oc.close_date.slice(0,7);
     if(!months[m]) months[m] = {orderClose: 0, bookingQty: 0, receivedQty: 0, deliveryQty: 0, inhandStock: 0, tfOutQty: 0};
     months[m].orderClose++;
   });
-
+  
   (allBookings || []).forEach(b => {
     const m = b.report_date.slice(0,7);
     if(!months[m]) months[m] = {orderClose: 0, bookingQty: 0, receivedQty: 0, deliveryQty: 0, inhandStock: 0, tfOutQty: 0};
-    months[m].bookingQty += Number(b.finish_qty || 0);
-    months[m].receivedQty += Number(b.total_received_qty || 0);
-    months[m].deliveryQty += Number(b.total_delivery_qty || 0);
-    months[m].inhandStock += Number(b.inhand_stock_qty || 0);
-    months[m].tfOutQty += Number(b.transfer_out_qty || 0);
+    if(b.summary){
+      months[m].bookingQty += Number(b.summary.total_finish_qty || 0);
+      months[m].receivedQty += Number(b.summary.total_received_qty || 0);
+      months[m].deliveryQty += Number(b.summary.total_delivery_qty || 0);
+      months[m].inhandStock += Number(b.summary.total_inhand_stock || 0);
+      months[m].tfOutQty += Number(b.summary.total_transfer_out || 0);
+    }
   });
-
+  
   const tbody = document.getElementById('dashTableBody');
   tbody.innerHTML = '';
-
+  
   Object.keys(months).sort().reverse().forEach(m => {
     const d = months[m];
     const dPct = d.receivedQty > 0 ? (d.deliveryQty / d.receivedQty * 100) : 0;
     const tfPct = d.receivedQty > 0 ? (d.tfOutQty / d.receivedQty * 100) : 0;
     const present = d.inhandStock - d.tfOutQty;
     const [y, mo] = m.split('-');
-    const monthName = new Date(Date.UTC(y, mo-1, 1)).toLocaleString('en', {month:'short', timeZone:'UTC'}) + '-' + y.slice(2);
-
+    const monthName = new Date(y, mo-1).toLocaleString('en', {month:'short'}) + '-' + y.slice(2);
+    
     tbody.innerHTML += `<tr>
       <td><b>${monthName}</b></td>
       <td>${d.orderClose}</td>
@@ -502,74 +574,118 @@ async function loadDashboardTable() {
 }
 
 // =========================================
-// ➕ DAILY ENTRY (Pvot)
+// ➕ DAILY ENTRY
 // =========================================
 async function loadEntries() {
-  if(!companyId) return;
+  const cid = await getCompanyId();
+  if(!cid) return;
   showLoading();
-
+  
   const date = document.getElementById('entryDate').value;
-
+  suppressAutoSave = true;
+  
   try {
-    const {data, error} = await supabase
-      .from('grey_bookings')
-      .select('*')
-      .eq('company_id', companyId)
-      .eq('report_date', date)
-      .order('id');
-
-    if(error) throw error;
-    allEntries = data || [];
+    let todayData = null, prevData = null, prevDateUsed = null;
+    
+    if(navigator.onLine){
+      [todayData, prevData] = await Promise.all([
+        loadFromSupabase(date), 
+        findLastSavedBefore(date)
+      ]);
+      if(prevData) prevDateUsed = prevData.report_date;
+    } else {
+      todayData = getOffline(date);
+      showToast('📴 Offline — Local data দেখাচ্ছে');
+    }
+    
+    if(todayData && todayData.rows && todayData.rows.length > 0){
+      allEntries = todayData.rows;
+    } else if(prevData && prevData.rows && prevData.rows.length > 0){
+      // Carry forward from previous day
+      allEntries = prevData.rows.map(r => ({
+        ...r,
+        report_date: date,
+        previous: Number(r.present) || 0,
+        receive: 0,
+        delivery: 0,
+        present: Number(r.present) || 0,
+        bn: 0,
+        status: 'Open'
+      }));
+      showToast(`⏪ ${prevDateUsed} থেকে carry হয়েছে`);
+    } else {
+      allEntries = [];
+      showToast('📋 নতুন entry শুরু করুন');
+    }
+    
     renderEntries();
-    showToast(`✅ ${allEntries.length} entries loaded`);
+    
+    if(todayData && todayData.operator){
+      document.getElementById('entryOperator').value = todayData.operator;
+    }
+    
+    updateLastSync('☁️ Loaded | Prev: '+(prevDateUsed||'none')+' | '+new Date().toLocaleTimeString());
+    
   } catch(e) {
-    showToast('❌ ' + e.message, 'error');
+    console.error(e);
+    showToast('❌ Load error: ' + e.message, 'error');
+    allEntries = [];
+    renderEntries();
   }
+  
   showLoading(false);
+  suppressAutoSave = false;
 }
 
 function renderEntries() {
   const tbody = document.getElementById('entryTableBody');
-
+  
   if(allEntries.length === 0) {
-    tbody.innerHTML = '<tr><td colspan="23" style="padding:30px;color:#94a3b8"><div class="empty-state"><i class="fas fa-inbox"></i><h3>No Entries</h3><p>Click "Add Row" to start</p></div></td></tr>';
+    tbody.innerHTML = '<tr><td colspan="23" style="padding:30px;color:#94a3b8;text-align:center"><i class="fas fa-inbox" style="font-size:48px;margin-bottom:12px;opacity:.5"></i><br>No Entries<br><small>Click "Add Row" to start</small></td></tr>';
     return;
   }
-
+  
   tbody.innerHTML = '';
-
-  allEntries.forEach((e, idx) => {
-    const stock = Number(e.inhand_stock_qty || 0) - Number(e.transfer_out_qty || 0);
+  
+  allEntries.forEach((entry, idx) => {
+    const totalRcvd = (Number(entry.knitting_receive) || 0) + (Number(entry.transfer_in_qty) || 0);
+    const greyQty = Number(entry.grey_qty) || 0;
+    const knitBL = greyQty - totalRcvd;
+    const totalDlv = Number(entry.total_delivery_qty) || 0;
+    const inhand = totalRcvd - totalDlv;
+    const trfOut = Number(entry.transfer_out_qty) || 0;
+    const stock = inhand - trfOut;
+    
     const stockClass = stock > 0 ? 'stock-warning' : (stock < 0 ? 'negative' : 'stock-clear');
-
+    
     tbody.innerHTML += `<tr data-idx="${idx}">
       <td>${idx+1}</td>
-      <td><input type="date" class="cell-input" value="${e.report_date||''}" onchange="updateEntry(${idx},'report_date',this.value)"></td>
-      <td><input type="text" class="cell-input wide" value="${e.buyer||''}" onchange="updateEntry(${idx},'buyer',this.value)"></td>
-      <td><input type="text" class="cell-input wide" value="${e.booking_no||''}" onchange="updateEntry(${idx},'booking_no',this.value)"></td>
-      <td><input type="text" class="cell-input" value="${e.fab_color||''}" onchange="updateEntry(${idx},'fab_color',this.value)"></td>
-      <td><input type="text" class="cell-input" value="${e.fab_type||''}" onchange="updateEntry(${idx},'fab_type',this.value)"></td>
+      <td><input type="date" class="cell-input" value="${entry.report_date||''}" onchange="updateEntry(${idx},'report_date',this.value)"></td>
+      <td><input type="text" class="cell-input wide" value="${entry.buyer||''}" onchange="updateEntry(${idx},'buyer',this.value)"></td>
+      <td><input type="text" class="cell-input wide" value="${entry.booking_no||''}" onchange="updateEntry(${idx},'booking_no',this.value)"></td>
+      <td><input type="text" class="cell-input" value="${entry.fab_color||''}" onchange="updateEntry(${idx},'fab_color',this.value)"></td>
+      <td><input type="text" class="cell-input" value="${entry.fab_type||''}" onchange="updateEntry(${idx},'fab_type',this.value)"></td>
       <td><input type="number" class="cell-input narrow" value="${e.finish_qty||0}" onchange="updateEntry(${idx},'finish_qty',this.value);calcRow(${idx})"></td>
-      <td><input type="number" class="cell-input narrow" value="${e.pl_percent||0}" onchange="updateEntry(${idx},'pl_percent',this.value)"></td>
-      <td><input type="number" class="cell-input narrow" value="${e.knitting_receive||0}" onchange="updateEntry(${idx},'knitting_receive',this.value);calcRow(${idx})"></td>
-      <td><input type="number" class="cell-input narrow" value="${e.transfer_in_qty||0}" onchange="updateEntry(${idx},'transfer_in_qty',this.value);calcRow(${idx})"></td>
-      <td><input type="text" class="cell-input" value="${e.transfer_from_order||''}" onchange="updateEntry(${idx},'transfer_from_order',this.value)"></td>
-      <td><input type="number" class="cell-input narrow" value="${e.grey_qty||0}" onchange="updateEntry(${idx},'grey_qty',this.value);calcRow(${idx})"></td>
-      <td id="trcvd${idx}"><b>${fmt(e.total_received_qty||0)}</b></td>
-      <td id="tbl${idx}">${fmt(e.knit_rcvd_bl||0)}</td>
-      <td><input type="number" class="cell-input narrow" value="${e.total_delivery_qty||0}" onchange="updateEntry(${idx},'total_delivery_qty',this.value);calcRow(${idx})"></td>
-      <td id="tinhand${idx}"><b>${fmt(e.inhand_stock_qty||0)}</b></td>
-      <td><input type="number" class="cell-input narrow" value="${e.transfer_out_qty||0}" onchange="updateEntry(${idx},'transfer_out_qty',this.value);calcRow(${idx})"></td>
-      <td><input type="text" class="cell-input" value="${e.transfer_to_order||''}" onchange="updateEntry(${idx},'transfer_to_order',this.value)"></td>
+      <td><input type="number" class="cell-input narrow" value="${entry.pl_percent||0}" onchange="updateEntry(${idx},'pl_percent',this.value)"></td>
+      <td><input type="number" class="cell-input narrow" value="${entry.knitting_receive||0}" onchange="updateEntry(${idx},'knitting_receive',this.value);calcRow(${idx})"></td>
+      <td><input type="number" class="cell-input narrow" value="${entry.transfer_in_qty||0}" onchange="updateEntry(${idx},'transfer_in_qty',this.value);calcRow(${idx})"></td>
+      <td><input type="text" class="cell-input" value="${entry.transfer_from_order||''}" onchange="updateEntry(${idx},'transfer_from_order',this.value)"></td>
+      <td><input type="number" class="cell-input narrow" value="${entry.grey_qty||0}" onchange="updateEntry(${idx},'grey_qty',this.value);calcRow(${idx})"></td>
+      <td id="trcvd${idx}"><b>${fmt(totalRcvd)}</b></td>
+      <td id="tbl${idx}">${fmt(knitBL)}</td>
+      <td><input type="number" class="cell-input narrow" value="${entry.total_delivery_qty||0}" onchange="updateEntry(${idx},'total_delivery_qty',this.value);calcRow(${idx})"></td>
+      <td id="tinhand${idx}"><b>${fmt(inhand)}</b></td>
+      <td><input type="number" class="cell-input narrow" value="${entry.transfer_out_qty||0}" onchange="updateEntry(${idx},'transfer_out_qty',this.value);calcRow(${idx})"></td>
+      <td><input type="text" class="cell-input" value="${entry.transfer_to_order||''}" onchange="updateEntry(${idx},'transfer_to_order',this.value)"></td>
       <td id="tstock${idx}" class="${stockClass}"><b>${fmt(stock)}</b></td>
-      <td><input type="date" class="cell-input" value="${e.etd||''}" onchange="updateEntry(${idx},'etd',this.value)"></td>
-      <td><input type="text" class="cell-input wide" value="${e.remarks||''}" onchange="updateEntry(${idx},'remarks',this.value)"></td>
-      <td><span class="status-badge ${e.status==='Closed'?'status-closed':'status-open'}">${e.status||'Open'}</span></td>
+      <td><input type="date" class="cell-input" value="${entry.etd||''}" onchange="updateEntry(${idx},'etd',this.value)"></td>
+      <td><input type="text" class="cell-input wide" value="${entry.remarks||''}" onchange="updateEntry(${idx},'remarks',this.value)"></td>
+      <td><span class="status-badge ${entry.status==='Closed'?'status-closed':'status-open'}">${entry.status||'Open'}</span></td>
       <td>
-        <button class="btn btn-success btn-sm" onclick="closeOrder(${idx})" ${e.status==='Closed'?'disabled':''}>
+        <button class="btn btn-success" onclick="closeOrder(${idx})" ${entry.status==='Closed'?'disabled':''} style="padding:4px 8px;font-size:10px">
           <i class="fas fa-check"></i> Close
         </button>
-        <button class="btn btn-danger btn-sm" onclick="deleteEntry(${idx})">
+        <button class="btn btn-danger" onclick="deleteEntry(${idx})" style="padding:4px 8px;font-size:10px">
           <i class="fas fa-trash"></i>
         </button>
       </td>
@@ -581,30 +697,31 @@ function updateEntry(idx, field, value) {
   allEntries[idx][field] = value;
 }
 
-// ✅ Knit Rcvd BL = Grey Qty - Total Received (matches Excel: N = I - J - K)
 function calcRow(idx) {
-  const e = allEntries[idx];
-  const knitRcvd = Number(e.knitting_receive || 0);
-  const trfIn = Number(e.transfer_in_qty || 0);
+  const entry = allEntries[idx];
+  const knitRcvd = Number(entry.knitting_receive) || 0;
+  const trfIn = Number(entry.transfer_in_qty) || 0;
   const totalRcvd = knitRcvd + trfIn;
-  const greyQty = Number(e.grey_qty || 0);
+  const greyQty = Number(entry.grey_qty) || 0;
   const knitBL = greyQty - totalRcvd;
-  const totalDlv = Number(e.total_delivery_qty || 0);
+  const totalDlv = Number(entry.total_delivery_qty) || 0;
   const inhand = totalRcvd - totalDlv;
-  const trfOut = Number(e.transfer_out_qty || 0);
+  const trfOut = Number(entry.transfer_out_qty) || 0;
   const stock = inhand - trfOut;
-
-  e.total_received_qty = totalRcvd;
-  e.knit_rcvd_bl = knitBL;
-  e.inhand_stock_qty = inhand;
-  e.stock = stock;
-
+  
+  entry.total_received_qty = totalRcvd;
+  entry.knit_rcvd_bl = knitBL;
+  entry.inhand_stock_qty = inhand;
+  entry.transfer_out_qty = trfOut;
+  
   document.getElementById(`trcvd${idx}`).innerHTML = `<b>${fmt(totalRcvd)}</b>`;
   document.getElementById(`tbl${idx}`).innerText = fmt(knitBL);
   document.getElementById(`tinhand${idx}`).innerHTML = `<b>${fmt(inhand)}</b>`;
   const stockEl = document.getElementById(`tstock${idx}`);
   stockEl.innerHTML = `<b>${fmt(stock)}</b>`;
   stockEl.className = stock > 0 ? 'stock-warning' : (stock < 0 ? 'negative' : 'stock-clear');
+  
+  scheduleAutoSave();
 }
 
 function addNewRow() {
@@ -637,50 +754,28 @@ function addNewRow() {
 }
 
 async function saveAllEntries() {
-  if(!companyId) return;
+  const cid = await getCompanyId();
+  if(!cid) return;
   showLoading();
-
-  const operator = document.getElementById('entryOperator').value.trim();
-  localStorage.setItem('greyOperator', operator);
-
+  
+  const operator = document.getElementById('entryOperator').value.trim() || localStorage.getItem('lastOperator') || 'Unknown';
+  localStorage.setItem('lastOperator', operator);
+  
+  const date = document.getElementById('entryDate').value;
+  
   try {
-    for(const e of allEntries) {
-      if(!e.booking_no || !e.fab_color) continue;
-
-      const {error} = await supabase
-        .from('grey_bookings')
-        .upsert({
-          company_id: companyId,
-          report_date: e.report_date,
-          buyer: e.buyer,
-          booking_no: e.booking_no,
-          fab_color: e.fab_color,
-          fab_type: e.fab_type,
-          finish_qty: e.finish_qty,
-          pl_percent: e.pl_percent,
-          knitting_receive: e.knitting_receive,
-          transfer_in_qty: e.transfer_in_qty,
-          transfer_from_order: e.transfer_from_order,
-          transfer_to_order: e.transfer_to_order,
-          grey_qty: e.grey_qty,
-          total_received_qty: e.total_received_qty,
-          knit_rcvd_bl: e.knit_rcvd_bl,
-          total_delivery_qty: e.total_delivery_qty,
-          inhand_stock_qty: e.inhand_stock_qty,
-          transfer_out_qty: e.transfer_out_qty,
-          stock: e.stock,
-          etd: e.etd || null,
-          remarks: e.remarks || '',
-          status: e.status || 'Open',
-          operator: operator,
-          updated_at: new Date().toISOString()
-        }, {
-          onConflict: 'company_id,booking_no,fab_color,fab_type,report_date'
-        });
-
-      if(error) console.error(error);
+    if(navigator.onLine){
+      const result = await saveToSupabase(date, operator, allEntries);
+      if(result.success){
+        saveOffline(date, operator, allEntries, true);
+        lastAutoSaveTime = Date.now();
+        updateLastSync(`☁️ Supabase এ Saved — ${new Date().toLocaleTimeString()}`);
+      }
+    } else {
+      saveOffline(date, operator, allEntries, false);
+      showToast('📴 Offline — Local এ Save হয়েছে');
+      updateLastSync(`📴 Offline saved — ${new Date().toLocaleTimeString()}`);
     }
-    showToast(`✅ ${allEntries.length} entries saved to Supabase`);
   } catch(e) {
     showToast('❌ ' + e.message, 'error');
   }
@@ -688,32 +783,32 @@ async function saveAllEntries() {
 }
 
 async function deleteEntry(idx) {
-  const e = allEntries[idx];
-  if(!confirm(`Delete ${e.booking_no} - ${e.fab_color} - ${e.fab_type}?`)) return;
-
-  if(e.id) {
-    await supabase.from('grey_bookings').delete().eq('id', e.id);
-  }
+  if(!confirm(`⚠️ Delete ${allEntries[idx].booking_no} - ${allEntries[idx].fab_color}?`)) return;
   allEntries.splice(idx, 1);
   renderEntries();
   showToast('🗑️ Deleted');
+  scheduleAutoSave();
 }
 
 async function closeOrder(idx) {
-  const e = allEntries[idx];
-  const stock = Number(e.inhand_stock_qty || 0) - Number(e.transfer_out_qty || 0);
-
+  const entry = allEntries[idx];
+  const totalRcvd = (Number(entry.knitting_receive) || 0) + (Number(entry.transfer_in_qty) || 0);
+  const totalDlv = Number(entry.total_delivery_qty) || 0;
+  const inhand = totalRcvd - totalDlv;
+  const trfOut = Number(entry.transfer_out_qty) || 0;
+  const stock = inhand - trfOut;
+  
   if(stock > 0) {
     pendingCloseIdx = idx;
-    document.getElementById('warningMessage').innerHTML =
-      `<b>${e.booking_no}</b> - <b>${e.fab_color}</b> - <b>${e.fab_type}</b><br>
+    document.getElementById('warningMessage').innerHTML = 
+      `<b>${entry.booking_no}</b> - <b>${entry.fab_color}</b> - <b>${entry.fab_type}</b><br>
        ⚠️ Stock Available: <b style="color:#f59e0b">${fmt(stock)} Kg</b><br>
        Order close করলে এই stock Transfer Out করতে হবে।<br>
        Continue?`;
     document.getElementById('warningModal').classList.add('show');
     return;
   }
-
+  
   await performCloseOrder(idx);
 }
 
@@ -725,54 +820,40 @@ async function confirmCloseOrder() {
 }
 
 async function performCloseOrder(idx) {
-  const e = allEntries[idx];
-  const stock = Number(e.inhand_stock_qty || 0) - Number(e.transfer_out_qty || 0);
-
+  const entry = allEntries[idx];
+  const totalRcvd = (Number(entry.knitting_receive) || 0) + (Number(entry.transfer_in_qty) || 0);
+  const totalDlv = Number(entry.total_delivery_qty) || 0;
+  const inhand = totalRcvd - totalDlv;
+  const trfOut = Number(entry.transfer_out_qty) || 0;
+  const stock = inhand - trfOut;
+  
   showLoading();
+  
   try {
-    const ocData = {
-      company_id: companyId,
-      close_date: e.report_date,
-      buyer: e.buyer,
-      booking_no: e.booking_no,
-      fab_color: e.fab_color,
-      fab_type: e.fab_type,
-      finish_qty: e.finish_qty,
-      pl_percent: e.pl_percent,
-      grey_qty: e.grey_qty,
-      knitting_receive: e.knitting_receive,
-      transfer_in_qty: e.transfer_in_qty,
-      transfer_from_order: e.transfer_from_order,
-      total_received_qty: e.total_received_qty,
-      knit_rcvd_bl: e.knit_rcvd_bl,
-      total_delivery_qty: e.total_delivery_qty,
-      inhand_stock_qty: e.inhand_stock_qty,
-      transfer_out_qty: e.transfer_out_qty,
-      transfer_to_order: e.transfer_to_order,
-      stock: stock,
-      etd: e.etd || null,
-      remarks: stock > 0 ? `⚠️ Stock: ${fmt(stock)} Kg` : (e.remarks || '✅ Order Clear'),
-      closed_by: document.getElementById('entryOperator').value
-    };
-
-    const {error} = await supabase
-      .from('grey_order_close')
-      .upsert(ocData, {
-        onConflict: 'company_id,booking_no,fab_color,fab_type,close_date'
-      });
-
+    const cid = await getCompanyId();
+    const closeDate = new Date().toISOString().slice(0,10);
+    const operator = document.getElementById('entryOperator').value.trim() || 'Unknown';
+    
+    // Save to order_close table
+    const {error} = await supabase.from('grey_order_close').insert({
+      company_id: cid,
+      close_date: closeDate,
+      operator: operator,
+      rows: [entry],
+      summary: {
+        booking_no: entry.booking_no,
+        fab_color: entry.fab_color,
+        stock: stock
+      }
+    });
+    
     if(error) throw error;
-
-    if(e.id) {
-      await supabase
-        .from('grey_bookings')
-        .update({status: 'Closed'})
-        .eq('id', e.id);
-    }
-
-    e.status = 'Closed';
+    
+    // Update status
+    entry.status = 'Closed';
     renderEntries();
-    showToast(`✅ Order Closed: ${e.booking_no}`);
+    showToast(`✅ Order Closed: ${entry.booking_no}`);
+    
   } catch(e) {
     showToast('❌ ' + e.message, 'error');
   }
@@ -780,28 +861,72 @@ async function performCloseOrder(idx) {
 }
 
 // =========================================
+// ⚡ AUTO-SAVE
+// =========================================
+function scheduleAutoSave(){
+  if(suppressAutoSave) return;
+  clearTimeout(autoSaveTimer);
+  autoSaveTimer = setTimeout(autoSaveNow, 900);
+}
+
+async function autoSaveNow(){
+  if(autoSaveInFlight) return;
+  
+  const date = document.getElementById('entryDate').value;
+  if(!date) return;
+  
+  const operator = document.getElementById('entryOperator').value.trim() || localStorage.getItem('lastOperator') || 'Unknown';
+  
+  autoSaveInFlight = true;
+  try {
+    if(navigator.onLine){
+      const result = await saveToSupabase(date, operator, allEntries, false);
+      if(result.success){
+        saveOffline(date, operator, allEntries, true);
+        lastAutoSaveTime = Date.now();
+      }
+    } else {
+      saveOffline(date, operator, allEntries, false);
+    }
+  } catch(e) {
+    console.error('autoSaveNow error:', e);
+  } finally {
+    autoSaveInFlight = false;
+  }
+}
+
+// =========================================
 // 📋 ORDER CLOSE REPORT
 // =========================================
 async function loadOrderClose() {
-  if(!companyId) return;
+  const cid = await getCompanyId();
+  if(!cid) return;
   showLoading();
-
-  const from = document.getElementById('ocFrom').value;
-  const to = document.getElementById('ocTo').value;
-
+  
+  const fromDate = document.getElementById('ocFrom').value;
+  const toDate = document.getElementById('ocTo').value;
+  
   try {
     const {data, error} = await supabase
       .from('grey_order_close')
       .select('*')
-      .eq('company_id', companyId)
-      .gte('close_date', from)
-      .lte('close_date', to)
+      .eq('company_id', cid)
+      .gte('close_date', fromDate)
+      .lte('close_date', toDate)
       .order('close_date', {ascending: false});
-
+    
     if(error) throw error;
-    allOrderClose = data || [];
+    
+    allOrderClose = [];
+    (data || []).forEach(d => {
+      if(d.rows && Array.isArray(d.rows)){
+        allOrderClose = allOrderClose.concat(d.rows);
+      }
+    });
+    
     renderOrderClose();
     showToast(`✅ ${allOrderClose.length} orders loaded`);
+    
   } catch(e) {
     showToast('❌ ' + e.message, 'error');
   }
@@ -810,54 +935,60 @@ async function loadOrderClose() {
 
 function renderOrderClose() {
   const tbody = document.getElementById('ocTableBody');
-
+  
   if(allOrderClose.length === 0) {
-    tbody.innerHTML = '<tr><td colspan="21" style="padding:30px;color:#94a3b8"><div class="empty-state"><i class="fas fa-clipboard"></i><h3>No Closed Orders</h3><p>Select date range and click Search</p></div></td></tr>';
+    tbody.innerHTML = '<tr><td colspan="21" style="padding:30px;color:#94a3b8;text-align:center"><i class="fas fa-clipboard" style="font-size:48px;margin-bottom:12px;opacity:.5"></i><br>No Closed Orders<br><small>Select date range and click Search</small></td></tr>';
     return;
   }
-
+  
   tbody.innerHTML = '';
-
+  
   let totalGrey = 0, totalFinish = 0, totalTfIn = 0, totalTfOut = 0, totalStock = 0;
-  const uniqueBookingColorType = new Set(); // ✅ FIX: includes fab_type now
-
-  allOrderClose.forEach((oc, idx) => {
-    uniqueBookingColorType.add(oc.booking_no + '__' + oc.fab_color + '__' + (oc.fab_type || ''));
-    totalGrey += Number(oc.grey_qty || 0);
-    totalFinish += Number(oc.finish_qty || 0);
-    totalTfIn += Number(oc.transfer_in_qty || 0);
-    totalTfOut += Number(oc.transfer_out_qty || 0);
-    totalStock += Number(oc.stock || 0);
-
-    const stockClass = Number(oc.stock || 0) > 0 ? 'stock-warning' : 'stock-clear';
-
+  const uniqueColors = new Set();
+  
+  allOrderClose.forEach((entry, idx) => {
+    uniqueColors.add(entry.booking_no + '__' + entry.fab_color + '__' + (entry.fab_type || ''));
+    totalGrey += Number(entry.grey_qty || 0);
+    totalFinish += Number(entry.finish_qty || 0);
+    totalTfIn += Number(entry.transfer_in_qty || 0);
+    totalTfOut += Number(entry.transfer_out_qty || 0);
+    
+    const totalRcvd = (Number(entry.knitting_receive) || 0) + (Number(entry.transfer_in_qty) || 0);
+    const totalDlv = Number(entry.total_delivery_qty) || 0;
+    const inhand = totalRcvd - totalDlv;
+    const trfOut = Number(entry.transfer_out_qty) || 0;
+    const stock = inhand - trfOut;
+    totalStock += stock;
+    
+    const stockClass = stock > 0 ? 'stock-warning' : 'stock-clear';
+    
     tbody.innerHTML += `<tr>
       <td>${idx+1}</td>
-      <td>${oc.close_date}</td>
-      <td>${oc.buyer||''}</td>
-      <td><b>${oc.booking_no}</b></td>
-      <td>${oc.fab_color}</td>
-      <td>${oc.fab_type||''}</td>
-      <td>${fmt(oc.finish_qty)}</td>
-      <td>${fmt(oc.pl_percent)}</td>
-      <td>${fmt(oc.grey_qty)}</td>
-      <td>${fmt(oc.knitting_receive)}</td>
-      <td>${fmt(oc.transfer_in_qty)}</td>
-      <td>${oc.transfer_from_order||''}</td>
-      <td>${fmt(oc.total_received_qty)}</td>
-      <td>${fmt(oc.knit_rcvd_bl)}</td>
-      <td>${fmt(oc.total_delivery_qty)}</td>
-      <td>${fmt(oc.inhand_stock_qty)}</td>
-      <td>${fmt(oc.transfer_out_qty)}</td>
-      <td>${oc.transfer_to_order||''}</td>
-      <td class="${stockClass}"><b>${fmt(oc.stock)}</b></td>
-      <td>${oc.etd||''}</td>
-      <td style="font-size:9px">${oc.remarks||''}</td>
+      <td>${entry.close_date || entry.report_date}</td>
+      <td>${entry.buyer||''}</td>
+      <td><b>${entry.booking_no}</b></td>
+      <td>${entry.fab_color}</td>
+      <td>${entry.fab_type||''}</td>
+      <td>${fmt(entry.finish_qty)}</td>
+      <td>${fmt(entry.pl_percent)}</td>
+      <td>${fmt(entry.grey_qty)}</td>
+      <td>${fmt(entry.knitting_receive)}</td>
+      <td>${fmt(entry.transfer_in_qty)}</td>
+      <td>${entry.transfer_from_order||''}</td>
+      <td>${fmt(totalRcvd)}</td>
+      <td>${fmt(e.knit_rcvd_bl)}</td>
+      <td>${fmt(totalDlv)}</td>
+      <td>${fmt(inhand)}</td>
+      <td>${fmt(trfOut)}</td>
+      <td>${entry.transfer_to_order||''}</td>
+      <td class="${stockClass}"><b>${fmt(stock)}</b></td>
+      <td>${entry.etd||''}</td>
+      <td style="font-size:9px">${entry.remarks||''}</td>
     </tr>`;
   });
-
+  
   document.getElementById('ocCount').innerText = allOrderClose.length;
-  document.getElementById('ocColorCount').innerText = uniqueBookingColorType.size; // ✅ FIXED count
+  document.getElementById('ocColorCount').innerText = uniqueColors.size;
   document.getElementById('ocGreyQty').innerText = fmt(totalGrey);
   document.getElementById('ocFinishQty').innerText = fmt(totalFinish);
   document.getElementById('ocTfIn').innerText = fmt(totalTfIn);
@@ -869,56 +1000,71 @@ function renderOrderClose() {
 // 📦 STOCK CHECK
 // =========================================
 async function checkStock() {
-  if(!companyId) return;
+  const cid = await getCompanyId();
+  if(!cid) return;
+  
   const bookingNo = document.getElementById('stockBookingNo').value.trim();
   if(!bookingNo) {
     showToast('❌ Enter Booking No', 'warning');
     return;
   }
-
+  
   showLoading();
+  
   try {
-    const {data, error} = await supabase
+    const {data: bookingsData, error} = await supabase
       .from('grey_bookings')
       .select('*')
-      .eq('company_id', companyId)
-      .eq('booking_no', bookingNo)
-      .eq('status', 'Open');
-
+      .eq('company_id', cid);
+    
     if(error) throw error;
-
+    
     const tbody = document.getElementById('stockTableBody');
     tbody.innerHTML = '';
-
-    if(!data || data.length === 0) {
-      tbody.innerHTML = '<tr><td colspan="9" style="padding:20px;color:#94a3b8">❌ No Open data found for this Booking No</td></tr>';
+    
+    // Filter and group by booking_no
+    const filtered = [];
+    (bookingsData || []).forEach(b => {
+      if(b.rows && Array.isArray(b.rows)){
+        b.rows.forEach(row => {
+          if(row.booking_no === bookingNo && row.status !== 'Closed'){
+            filtered.push(row);
+          }
+        });
+      }
+    });
+    
+    if(filtered.length === 0) {
+      tbody.innerHTML = '<tr><td colspan="9" style="padding:20px;color:#94a3b8;text-align:center">❌ No Open data found for this Booking No</td></tr>';
     } else {
+      // Group by color + type
       const grouped = {};
-      data.forEach(d => {
-        const key = (d.fab_color || '') + '__' + (d.fab_type || '');
+      filtered.forEach(row => {
+        const key = (row.fab_color || '') + '__' + (row.fab_type || '');
         if(!grouped[key]) grouped[key] = {
-          booking_no: d.booking_no,
-          fab_color: d.fab_color,
-          fab_type: d.fab_type,
+          booking_no: row.booking_no,
+          fab_color: row.fab_color,
+          fab_type: row.fab_type,
           totalRcvd: 0,
           totalDlv: 0,
           inhand: 0,
           trfOut: 0
         };
-        grouped[key].totalRcvd += Number(d.total_received_qty || 0);
-        grouped[key].totalDlv += Number(d.total_delivery_qty || 0);
-        grouped[key].inhand += Number(d.inhand_stock_qty || 0);
-        grouped[key].trfOut += Number(d.transfer_out_qty || 0);
+        const totalRcvd = (Number(row.knitting_receive) || 0) + (Number(row.transfer_in_qty) || 0);
+        grouped[key].totalRcvd += totalRcvd;
+        grouped[key].totalDlv += Number(row.total_delivery_qty) || 0;
+        grouped[key].inhand += (totalRcvd - (Number(row.total_delivery_qty) || 0));
+        grouped[key].trfOut += Number(row.transfer_out_qty) || 0;
       });
-
+      
       Object.values(grouped).forEach(g => {
         const stock = g.inhand - g.trfOut;
-        const status = stock > 0 ?
+        const status = stock > 0 ? 
           `<span class="status-badge status-open">⚠️ Stock: ${fmt(stock)} Kg</span>` :
-          stock < 0 ?
+          stock < 0 ? 
           `<span class="status-badge" style="background:#fecaca;color:#991b1b">Negative</span>` :
           `<span class="status-badge status-closed">✅ Clear</span>`;
-
+        
         tbody.innerHTML += `<tr>
           <td><b>${g.booking_no}</b></td>
           <td>${g.fab_color}</td>
@@ -939,48 +1085,62 @@ async function checkStock() {
 }
 
 async function loadAllStock() {
-  if(!companyId) return;
+  const cid = await getCompanyId();
+  if(!cid) return;
   showLoading();
-
+  
   try {
-    const {data, error} = await supabase
+    const {data: bookingsData, error} = await supabase
       .from('grey_bookings')
-      .select('booking_no, fab_color, fab_type, total_received_qty, total_delivery_qty, inhand_stock_qty, transfer_out_qty, status')
-      .eq('company_id', companyId)
-      .eq('status', 'Open');
-
+      .select('*')
+      .eq('company_id', cid);
+    
     if(error) throw error;
-
+    
     const tbody = document.getElementById('stockTableBody');
     tbody.innerHTML = '';
-
+    
+    // Filter only open entries
+    const filtered = [];
+    (bookingsData || []).forEach(b => {
+      if(b.rows && Array.isArray(b.rows)){
+        b.rows.forEach(row => {
+          if(row.status !== 'Closed'){
+            filtered.push(row);
+          }
+        });
+      }
+    });
+    
+    // Group by booking_no + color + type
     const grouped = {};
-    (data || []).forEach(d => {
-      const key = d.booking_no + '__' + (d.fab_color || '') + '__' + (d.fab_type || '');
+    filtered.forEach(row => {
+      const key = (row.booking_no || '') + '__' + (row.fab_color || '') + '__' + (row.fab_type || '');
       if(!grouped[key]) grouped[key] = {
-        booking_no: d.booking_no,
-        fab_color: d.fab_color,
-        fab_type: d.fab_type,
+        booking_no: row.booking_no,
+        fab_color: row.fab_color,
+        fab_type: row.fab_type,
         totalRcvd: 0,
         totalDlv: 0,
         inhand: 0,
         trfOut: 0
       };
-      grouped[key].totalRcvd += Number(d.total_received_qty || 0);
-      grouped[key].totalDlv += Number(d.total_delivery_qty || 0);
-      grouped[key].inhand += Number(d.inhand_stock_qty || 0);
-      grouped[key].trfOut += Number(d.transfer_out_qty || 0);
+      const totalRcvd = (Number(row.knitting_receive) || 0) + (Number(row.transfer_in_qty) || 0);
+      grouped[key].totalRcvd += totalRcvd;
+      grouped[key].totalDlv += Number(row.total_delivery_qty) || 0;
+      grouped[key].inhand += (totalRcvd - (Number(row.total_delivery_qty) || 0));
+      grouped[key].trfOut += Number(row.transfer_out_qty) || 0;
     });
-
+    
     const items = Object.values(grouped).filter(g => (g.inhand - g.trfOut) > 0);
-
+    
     if(items.length === 0) {
-      tbody.innerHTML = '<tr><td colspan="9" style="padding:20px;color:#10b981">✅ No pending stock found!</td></tr>';
+      tbody.innerHTML = '<tr><td colspan="9" style="padding:20px;color:#10b981;text-align:center">✅ No pending stock found!</td></tr>';
     } else {
       items.sort((a,b) => (b.inhand - b.trfOut) - (a.inhand - a.trfOut)).forEach(g => {
         const stock = g.inhand - g.trfOut;
         const status = `<span class="status-badge status-open">⚠️ Stock: ${fmt(stock)} Kg</span>`;
-
+        
         tbody.innerHTML += `<tr>
           <td><b>${g.booking_no}</b></td>
           <td>${g.fab_color}</td>
@@ -1010,12 +1170,12 @@ function exportDashboardExcel() {
     [''],
     ['Month', 'Order Close', 'Booking Qty', 'Received Qty', 'Delivery Qty', 'Inhand Stock', 'Delivery %', 'T.F %', 'T.F Out Qty', 'Present Stock']
   ];
-
+  
   document.querySelectorAll('#dashTableBody tr').forEach(tr => {
     const cells = Array.from(tr.children).map(td => td.innerText);
     rows.push(cells);
   });
-
+  
   const ws = XLSX.utils.aoa_to_sheet(rows);
   XLSX.utils.book_append_sheet(wb, ws, 'Summary');
   XLSX.writeFile(wb, `Monthly-Summary-${new Date().toISOString().slice(0,10)}.xlsx`);
@@ -1030,17 +1190,24 @@ function exportEntryExcel() {
     [''],
     ['SL', 'Date', 'Buyer', 'Booking No', 'Fab Color', 'Fab Type', 'Finish Qty', 'PL %', 'Knit Rcvd', 'Trf In', 'Trf From', 'Grey Qty', 'Total Rcvd', 'Knit BL', 'Total Dlv', 'Inhand', 'Trf Out', 'Trf To', 'Stock', 'ETD', 'Remarks', 'Status']
   ];
-
-  allEntries.forEach((e, i) => {
+  
+  allEntries.forEach((entry, i) => {
+    const totalRcvd = (Number(entry.knitting_receive) || 0) + (Number(entry.transfer_in_qty) || 0);
+    const greyQty = Number(entry.grey_qty) || 0;
+    const knitBL = greyQty - totalRcvd;
+    const totalDlv = Number(entry.total_delivery_qty) || 0;
+    const inhand = totalRcvd - totalDlv;
+    const trfOut = Number(entry.transfer_out_qty) || 0;
+    const stock = inhand - trfOut;
+    
     rows.push([
-      i+1, e.report_date, e.buyer, e.booking_no, e.fab_color, e.fab_type,
-      e.finish_qty, e.pl_percent, e.knitting_receive, e.transfer_in_qty,
-      e.transfer_from_order, e.grey_qty, e.total_received_qty, e.knit_rcvd_bl,
-      e.total_delivery_qty, e.inhand_stock_qty, e.transfer_out_qty, e.transfer_to_order,
-      e.stock, e.etd, e.remarks, e.status
+      i+1, entry.report_date, entry.buyer, entry.booking_no, entry.fab_color, entry.fab_type,
+      entry.finish_qty, entry.pl_percent, entry.knitting_receive, entry.transfer_in_qty,
+      entry.transfer_from_order, entry.grey_qty, totalRcvd, knitBL,
+      totalDlv, inhand, trfOut, entry.transfer_to_order, stock, entry.etd, entry.remarks, entry.status
     ]);
   });
-
+  
   const ws = XLSX.utils.aoa_to_sheet(rows);
   XLSX.utils.book_append_sheet(wb, ws, 'Pvot');
   XLSX.writeFile(wb, `Booking-Maintain-${document.getElementById('entryDate').value}.xlsx`);
@@ -1055,25 +1222,85 @@ function exportOrderCloseExcel() {
     [''],
     ['SL', 'Date', 'Buyer', 'Booking No', 'Fab Color', 'Fab Type', 'Finish Qty', 'PL %', 'Grey Qty', 'Knit Rcvd', 'Trf In', 'Trf From', 'Total Rcvd', 'Knit BL', 'Total Dlv', 'Inhand', 'Trf Out', 'Trf To', 'Stock', 'ETD', 'Remarks']
   ];
-
-  allOrderClose.forEach((oc, i) => {
+  
+  allOrderClose.forEach((entry, i) => {
+    const totalRcvd = (Number(entry.knitting_receive) || 0) + (Number(entry.transfer_in_qty) || 0);
+    const totalDlv = Number(entry.total_delivery_qty) || 0;
+    const inhand = totalRcvd - totalDlv;
+    const trfOut = Number(entry.transfer_out_qty) || 0;
+    const stock = inhand - trfOut;
+    
     rows.push([
-      i+1, oc.close_date, oc.buyer, oc.booking_no, oc.fab_color, oc.fab_type,
-      oc.finish_qty, oc.pl_percent, oc.grey_qty, oc.knitting_receive,
-      oc.transfer_in_qty, oc.transfer_from_order, oc.total_received_qty,
-      oc.knit_rcvd_bl, oc.total_delivery_qty, oc.inhand_stock_qty,
-      oc.transfer_out_qty, oc.transfer_to_order, oc.stock, oc.etd, oc.remarks
+      i+1, entry.close_date || entry.report_date, entry.buyer, entry.booking_no, entry.fab_color, entry.fab_type,
+      entry.finish_qty, entry.pl_percent, entry.grey_qty, entry.knitting_receive,
+      entry.transfer_in_qty, entry.transfer_from_order, totalRcvd, entry.knit_rcvd_bl,
+      totalDlv, inhand, trfOut, entry.transfer_to_order, stock, entry.etd, entry.remarks
     ]);
   });
-
+  
   const ws = XLSX.utils.aoa_to_sheet(rows);
   XLSX.utils.book_append_sheet(wb, ws, 'Order Close');
   XLSX.writeFile(wb, `Order-Close-${new Date().toISOString().slice(0,10)}.xlsx`);
   showToast('✅ Excel exported');
 }
 
-// Start
-init();
+// =========================================
+// 🚀 INIT
+// =========================================
+(function init(){
+  document.getElementById('entryDate').value = new Date().toISOString().slice(0,10);
+  const now = new Date();
+  document.getElementById('dashMonth').value = now.toISOString().slice(0,7);
+  document.getElementById('ocFrom').value = now.toISOString().slice(0,8) + '01';
+  document.getElementById('ocTo').value = now.toISOString().slice(0,10);
+  
+  const lastOp = localStorage.getItem('lastOperator');
+  if(lastOp) document.getElementById('entryOperator').value = lastOp;
+  
+  if(localStorage.getItem('greyTheme') === 'light') document.body.classList.add('light');
+  
+  // Load entries on page load
+  loadEntries();
+  
+  // Auto-save before unload
+  window.addEventListener('beforeunload', () => {
+    const date = document.getElementById('entryDate').value;
+    if(date && allEntries.length > 0){
+      const operator = document.getElementById('entryOperator').value.trim() || localStorage.getItem('lastOperator') || 'Unknown';
+      const timeSinceLastSave = Date.now() - lastAutoSaveTime;
+      if(!navigator.onLine || timeSinceLastSave > 5000){
+        saveOffline(date, operator, allEntries, !navigator.onLine);
+      }
+    }
+  });
+  
+  // Sync on online
+  window.addEventListener('online', () => {
+    showToast('🌐 Online - Syncing...');
+    // Sync logic here if needed
+  });
+})();
+
+// Expose globals
+window.showPage = showPage;
+window.loadDashboard = loadDashboard;
+window.loadEntries = loadEntries;
+window.addNewRow = addNewRow;
+window.saveAllEntries = saveAllEntries;
+window.deleteEntry = deleteEntry;
+window.closeOrder = closeOrder;
+window.confirmCloseOrder = confirmCloseOrder;
+window.closeModal = closeModal;
+window.loadOrderClose = loadOrderClose;
+window.checkStock = checkStock;
+window.loadAllStock = loadAllStock;
+window.exportDashboardExcel = exportDashboardExcel;
+window.exportEntryExcel = exportEntryExcel;
+window.exportOrderCloseExcel = exportOrderCloseExcel;
+window.toggleTheme = toggleTheme;
+window.updateEntry = updateEntry;
+window.calcRow = calcRow;
+window.scheduleAutoSave = scheduleAutoSave;
 </script>
 </body>
 </html>
