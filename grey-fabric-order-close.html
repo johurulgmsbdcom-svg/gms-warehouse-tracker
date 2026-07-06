@@ -333,8 +333,12 @@ async function loadCompanyId() {
     .select('id')
     .eq('code', COMPANY_CODE)
     .single();
-  if(data) companyId = data.id;
-  else console.error('Company not found');
+  if(data) {
+    companyId = data.id;
+  } else {
+    console.error('Company not found:', error);
+    showToast('❌ Company setup না পাওয়া গেছে (code: ' + COMPANY_CODE + '). Supabase এ companies table check করুন।', 'error');
+  }
 }
 
 // =========================================
@@ -345,6 +349,11 @@ function showPage(id, btn) {
   document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
   document.getElementById(id).classList.add('active');
   if(btn) btn.classList.add('active');
+  
+  if(!companyId) {
+    showToast('⚠️ Supabase company সেটআপ লোড হয়নি — Console (F12) চেক করুন', 'warning');
+    return;
+  }
   
   if(id === 'dashboard') loadDashboard();
   else if(id === 'entry') loadEntries();
@@ -386,10 +395,6 @@ async function loadDashboard() {
   const month = document.getElementById('dashMonth').value;
   const [year, mon] = month.split('-');
   const startDate = `${year}-${mon}-01`;
-  // ✅ FIX #5: get the real last day of the month instead of hardcoding '31'
-  // new Date(year, mon, 0) rolls back to the last day of the *previous* month
-  // relative to `mon` (JS months are 0-indexed), so passing `mon` (1-indexed)
-  // correctly lands on the last day of the selected month.
   const lastDay = new Date(Number(year), Number(mon), 0).getDate();
   const endDate = `${year}-${mon}-${String(lastDay).padStart(2,'0')}`;
   
@@ -585,7 +590,6 @@ function calcRow(idx) {
   const trfIn = Number(e.transfer_in_qty || 0);
   const totalRcvd = knitRcvd + trfIn;
   const greyQty = Number(e.grey_qty || 0);
-  // ✅ CORRECT FORMULA: Knit BL = Grey Qty - Total Received
   const knitBL = greyQty - totalRcvd;
   const totalDlv = Number(e.total_delivery_qty || 0);
   const inhand = totalRcvd - totalDlv;
@@ -819,9 +823,6 @@ function renderOrderClose() {
   const uniqueColors = new Set();
   
   allOrderClose.forEach((oc, idx) => {
-    // ✅ FIX #6: include fab_type in the uniqueness key, same as Stock Check,
-    // so two different fabric types under the same booking+color aren't
-    // collapsed into a single "Color Close" count.
     uniqueColors.add(oc.booking_no + '__' + oc.fab_color + '__' + (oc.fab_type || ''));
     totalGrey += Number(oc.grey_qty || 0);
     totalFinish += Number(oc.finish_qty || 0);
@@ -866,7 +867,7 @@ function renderOrderClose() {
 }
 
 // =========================================
-// 📦 STOCK CHECK - ✅ ALL BUGS FIXED
+// 📦 STOCK CHECK
 // =========================================
 async function checkStock() {
   if(!companyId) return;
@@ -878,7 +879,6 @@ async function checkStock() {
   
   showLoading();
   try {
-    // ✅ FIX: Only fetch Open orders (exclude Closed)
     const {data, error} = await supabase
       .from('grey_bookings')
       .select('*')
@@ -894,7 +894,6 @@ async function checkStock() {
     if(!data || data.length === 0) {
       tbody.innerHTML = '<tr><td colspan="9" style="padding:20px;color:#94a3b8">❌ No Open data found for this Booking No</td></tr>';
     } else {
-      // ✅ FIX: Group by fab_color + fab_type (not just color)
       const grouped = {};
       data.forEach(d => {
         const key = (d.fab_color || '') + '__' + (d.fab_type || '');
@@ -956,7 +955,6 @@ async function loadAllStock() {
     const tbody = document.getElementById('stockTableBody');
     tbody.innerHTML = '';
     
-    // ✅ FIX: Group by booking_no + fab_color + fab_type
     const grouped = {};
     (data || []).forEach(d => {
       const key = d.booking_no + '__' + (d.fab_color || '') + '__' + (d.fab_type || '');
