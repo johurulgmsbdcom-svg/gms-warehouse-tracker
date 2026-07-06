@@ -317,12 +317,12 @@ async function init() {
   document.getElementById('dashMonth').value = now.toISOString().slice(0,7);
   document.getElementById('ocFrom').value = now.toISOString().slice(0,8) + '01';
   document.getElementById('ocTo').value = now.toISOString().slice(0,10);
-  
+
   const lastOp = localStorage.getItem('greyOperator');
   if(lastOp) document.getElementById('entryOperator').value = lastOp;
-  
+
   if(localStorage.getItem('greyTheme') === 'light') document.body.classList.add('light');
-  
+
   await loadCompanyId();
   loadDashboard();
 }
@@ -333,12 +333,8 @@ async function loadCompanyId() {
     .select('id')
     .eq('code', COMPANY_CODE)
     .single();
-  if(data) {
-    companyId = data.id;
-  } else {
-    console.error('Company not found:', error);
-    showToast('❌ Company setup না পাওয়া গেছে (code: ' + COMPANY_CODE + '). Supabase এ companies table check করুন।', 'error');
-  }
+  if(data) companyId = data.id;
+  else console.error('Company not found');
 }
 
 // =========================================
@@ -349,12 +345,7 @@ function showPage(id, btn) {
   document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
   document.getElementById(id).classList.add('active');
   if(btn) btn.classList.add('active');
-  
-  if(!companyId) {
-    showToast('⚠️ Supabase company সেটআপ লোড হয়নি — Console (F12) চেক করুন', 'warning');
-    return;
-  }
-  
+
   if(id === 'dashboard') loadDashboard();
   else if(id === 'entry') loadEntries();
   else if(id === 'orderclose') loadOrderClose();
@@ -385,19 +376,26 @@ function closeModal() {
   pendingCloseIdx = null;
 }
 
+// ✅ FIX: Correct last-day-of-month calculation (avoids invalid '31' in Feb/Apr/Jun/Sep/Nov
+// and avoids timezone shift bugs from using toISOString() on a local Date object)
+function lastDayOfMonth(year, month) {
+  // month is 1-indexed (e.g. 7 = July). Date.UTC(year, month, 0) = last day of that month in UTC.
+  const d = new Date(Date.UTC(Number(year), Number(month), 0));
+  return String(d.getUTCDate()).padStart(2, '0');
+}
+
 // =========================================
 // 📊 DASHBOARD
 // =========================================
 async function loadDashboard() {
   if(!companyId) return;
   showLoading();
-  
-  const month = document.getElementById('dashMonth').value;
+
+  const month = document.getElementById('dashMonth').value; // 'YYYY-MM'
   const [year, mon] = month.split('-');
   const startDate = `${year}-${mon}-01`;
-  const lastDay = new Date(Number(year), Number(mon), 0).getDate();
-  const endDate = `${year}-${mon}-${String(lastDay).padStart(2,'0')}`;
-  
+  const endDate = `${year}-${mon}-${lastDayOfMonth(year, mon)}`; // ✅ FIXED
+
   try {
     const {data: bookings, error} = await supabase
       .from('grey_bookings')
@@ -405,18 +403,18 @@ async function loadDashboard() {
       .eq('company_id', companyId)
       .gte('report_date', startDate)
       .lte('report_date', endDate);
-    
+
     if(error) throw error;
-    
+
     const {data: ocData} = await supabase
       .from('grey_order_close')
       .select('*')
       .eq('company_id', companyId)
       .gte('close_date', startDate)
       .lte('close_date', endDate);
-    
+
     let bookingQty = 0, receivedQty = 0, deliveryQty = 0, inhandStock = 0, tfOutQty = 0;
-    
+
     (bookings || []).forEach(b => {
       bookingQty += Number(b.finish_qty || 0);
       receivedQty += Number(b.total_received_qty || 0);
@@ -424,10 +422,10 @@ async function loadDashboard() {
       inhandStock += Number(b.inhand_stock_qty || 0);
       tfOutQty += Number(b.transfer_out_qty || 0);
     });
-    
+
     const presentStock = inhandStock - tfOutQty;
     const deliveryPct = receivedQty > 0 ? (deliveryQty / receivedQty * 100) : 0;
-    
+
     document.getElementById('sumOrderClose').innerText = (ocData || []).length;
     document.getElementById('sumBookingQty').innerText = fmt(bookingQty);
     document.getElementById('sumReceivedQty').innerText = fmt(receivedQty);
@@ -436,9 +434,9 @@ async function loadDashboard() {
     document.getElementById('sumDeliveryPct').innerText = deliveryPct.toFixed(2) + '%';
     document.getElementById('sumTfOutQty').innerText = fmt(tfOutQty);
     document.getElementById('sumPresentStock').innerText = fmt(presentStock);
-    
+
     await loadDashboardTable();
-    
+
   } catch(e) {
     console.error(e);
     showToast('❌ Error: ' + e.message, 'error');
@@ -448,25 +446,25 @@ async function loadDashboard() {
 
 async function loadDashboardTable() {
   if(!companyId) return;
-  
+
   const {data: allOC} = await supabase
     .from('grey_order_close')
     .select('close_date')
     .eq('company_id', companyId)
     .order('close_date', {ascending: false});
-  
+
   const {data: allBookings} = await supabase
     .from('grey_bookings')
     .select('*')
     .eq('company_id', companyId);
-  
+
   const months = {};
   (allOC || []).forEach(oc => {
     const m = oc.close_date.slice(0,7);
     if(!months[m]) months[m] = {orderClose: 0, bookingQty: 0, receivedQty: 0, deliveryQty: 0, inhandStock: 0, tfOutQty: 0};
     months[m].orderClose++;
   });
-  
+
   (allBookings || []).forEach(b => {
     const m = b.report_date.slice(0,7);
     if(!months[m]) months[m] = {orderClose: 0, bookingQty: 0, receivedQty: 0, deliveryQty: 0, inhandStock: 0, tfOutQty: 0};
@@ -476,18 +474,18 @@ async function loadDashboardTable() {
     months[m].inhandStock += Number(b.inhand_stock_qty || 0);
     months[m].tfOutQty += Number(b.transfer_out_qty || 0);
   });
-  
+
   const tbody = document.getElementById('dashTableBody');
   tbody.innerHTML = '';
-  
+
   Object.keys(months).sort().reverse().forEach(m => {
     const d = months[m];
     const dPct = d.receivedQty > 0 ? (d.deliveryQty / d.receivedQty * 100) : 0;
     const tfPct = d.receivedQty > 0 ? (d.tfOutQty / d.receivedQty * 100) : 0;
     const present = d.inhandStock - d.tfOutQty;
     const [y, mo] = m.split('-');
-    const monthName = new Date(y, mo-1).toLocaleString('en', {month:'short'}) + '-' + y.slice(2);
-    
+    const monthName = new Date(Date.UTC(y, mo-1, 1)).toLocaleString('en', {month:'short', timeZone:'UTC'}) + '-' + y.slice(2);
+
     tbody.innerHTML += `<tr>
       <td><b>${monthName}</b></td>
       <td>${d.orderClose}</td>
@@ -509,9 +507,9 @@ async function loadDashboardTable() {
 async function loadEntries() {
   if(!companyId) return;
   showLoading();
-  
+
   const date = document.getElementById('entryDate').value;
-  
+
   try {
     const {data, error} = await supabase
       .from('grey_bookings')
@@ -519,7 +517,7 @@ async function loadEntries() {
       .eq('company_id', companyId)
       .eq('report_date', date)
       .order('id');
-    
+
     if(error) throw error;
     allEntries = data || [];
     renderEntries();
@@ -532,18 +530,18 @@ async function loadEntries() {
 
 function renderEntries() {
   const tbody = document.getElementById('entryTableBody');
-  
+
   if(allEntries.length === 0) {
     tbody.innerHTML = '<tr><td colspan="23" style="padding:30px;color:#94a3b8"><div class="empty-state"><i class="fas fa-inbox"></i><h3>No Entries</h3><p>Click "Add Row" to start</p></div></td></tr>';
     return;
   }
-  
+
   tbody.innerHTML = '';
-  
+
   allEntries.forEach((e, idx) => {
     const stock = Number(e.inhand_stock_qty || 0) - Number(e.transfer_out_qty || 0);
     const stockClass = stock > 0 ? 'stock-warning' : (stock < 0 ? 'negative' : 'stock-clear');
-    
+
     tbody.innerHTML += `<tr data-idx="${idx}">
       <td>${idx+1}</td>
       <td><input type="date" class="cell-input" value="${e.report_date||''}" onchange="updateEntry(${idx},'report_date',this.value)"></td>
@@ -583,7 +581,7 @@ function updateEntry(idx, field, value) {
   allEntries[idx][field] = value;
 }
 
-// ✅ FIXED: Knit Rcvd BL formula - now uses grey_qty instead of finish_qty
+// ✅ Knit Rcvd BL = Grey Qty - Total Received (matches Excel: N = I - J - K)
 function calcRow(idx) {
   const e = allEntries[idx];
   const knitRcvd = Number(e.knitting_receive || 0);
@@ -595,12 +593,12 @@ function calcRow(idx) {
   const inhand = totalRcvd - totalDlv;
   const trfOut = Number(e.transfer_out_qty || 0);
   const stock = inhand - trfOut;
-  
+
   e.total_received_qty = totalRcvd;
   e.knit_rcvd_bl = knitBL;
   e.inhand_stock_qty = inhand;
   e.stock = stock;
-  
+
   document.getElementById(`trcvd${idx}`).innerHTML = `<b>${fmt(totalRcvd)}</b>`;
   document.getElementById(`tbl${idx}`).innerText = fmt(knitBL);
   document.getElementById(`tinhand${idx}`).innerHTML = `<b>${fmt(inhand)}</b>`;
@@ -641,14 +639,14 @@ function addNewRow() {
 async function saveAllEntries() {
   if(!companyId) return;
   showLoading();
-  
+
   const operator = document.getElementById('entryOperator').value.trim();
   localStorage.setItem('greyOperator', operator);
-  
+
   try {
     for(const e of allEntries) {
       if(!e.booking_no || !e.fab_color) continue;
-      
+
       const {error} = await supabase
         .from('grey_bookings')
         .upsert({
@@ -679,7 +677,7 @@ async function saveAllEntries() {
         }, {
           onConflict: 'company_id,booking_no,fab_color,fab_type,report_date'
         });
-      
+
       if(error) console.error(error);
     }
     showToast(`✅ ${allEntries.length} entries saved to Supabase`);
@@ -692,7 +690,7 @@ async function saveAllEntries() {
 async function deleteEntry(idx) {
   const e = allEntries[idx];
   if(!confirm(`Delete ${e.booking_no} - ${e.fab_color} - ${e.fab_type}?`)) return;
-  
+
   if(e.id) {
     await supabase.from('grey_bookings').delete().eq('id', e.id);
   }
@@ -704,10 +702,10 @@ async function deleteEntry(idx) {
 async function closeOrder(idx) {
   const e = allEntries[idx];
   const stock = Number(e.inhand_stock_qty || 0) - Number(e.transfer_out_qty || 0);
-  
+
   if(stock > 0) {
     pendingCloseIdx = idx;
-    document.getElementById('warningMessage').innerHTML = 
+    document.getElementById('warningMessage').innerHTML =
       `<b>${e.booking_no}</b> - <b>${e.fab_color}</b> - <b>${e.fab_type}</b><br>
        ⚠️ Stock Available: <b style="color:#f59e0b">${fmt(stock)} Kg</b><br>
        Order close করলে এই stock Transfer Out করতে হবে।<br>
@@ -715,7 +713,7 @@ async function closeOrder(idx) {
     document.getElementById('warningModal').classList.add('show');
     return;
   }
-  
+
   await performCloseOrder(idx);
 }
 
@@ -729,7 +727,7 @@ async function confirmCloseOrder() {
 async function performCloseOrder(idx) {
   const e = allEntries[idx];
   const stock = Number(e.inhand_stock_qty || 0) - Number(e.transfer_out_qty || 0);
-  
+
   showLoading();
   try {
     const ocData = {
@@ -756,22 +754,22 @@ async function performCloseOrder(idx) {
       remarks: stock > 0 ? `⚠️ Stock: ${fmt(stock)} Kg` : (e.remarks || '✅ Order Clear'),
       closed_by: document.getElementById('entryOperator').value
     };
-    
+
     const {error} = await supabase
       .from('grey_order_close')
       .upsert(ocData, {
         onConflict: 'company_id,booking_no,fab_color,fab_type,close_date'
       });
-    
+
     if(error) throw error;
-    
+
     if(e.id) {
       await supabase
         .from('grey_bookings')
         .update({status: 'Closed'})
         .eq('id', e.id);
     }
-    
+
     e.status = 'Closed';
     renderEntries();
     showToast(`✅ Order Closed: ${e.booking_no}`);
@@ -780,16 +778,17 @@ async function performCloseOrder(idx) {
   }
   showLoading(false);
 }
+
 // =========================================
 // 📋 ORDER CLOSE REPORT
 // =========================================
 async function loadOrderClose() {
   if(!companyId) return;
   showLoading();
-  
+
   const from = document.getElementById('ocFrom').value;
   const to = document.getElementById('ocTo').value;
-  
+
   try {
     const {data, error} = await supabase
       .from('grey_order_close')
@@ -798,7 +797,7 @@ async function loadOrderClose() {
       .gte('close_date', from)
       .lte('close_date', to)
       .order('close_date', {ascending: false});
-    
+
     if(error) throw error;
     allOrderClose = data || [];
     renderOrderClose();
@@ -811,27 +810,27 @@ async function loadOrderClose() {
 
 function renderOrderClose() {
   const tbody = document.getElementById('ocTableBody');
-  
+
   if(allOrderClose.length === 0) {
     tbody.innerHTML = '<tr><td colspan="21" style="padding:30px;color:#94a3b8"><div class="empty-state"><i class="fas fa-clipboard"></i><h3>No Closed Orders</h3><p>Select date range and click Search</p></div></td></tr>';
     return;
   }
-  
+
   tbody.innerHTML = '';
-  
+
   let totalGrey = 0, totalFinish = 0, totalTfIn = 0, totalTfOut = 0, totalStock = 0;
-  const uniqueColors = new Set();
-  
+  const uniqueBookingColorType = new Set(); // ✅ FIX: includes fab_type now
+
   allOrderClose.forEach((oc, idx) => {
-    uniqueColors.add(oc.booking_no + '__' + oc.fab_color + '__' + (oc.fab_type || ''));
+    uniqueBookingColorType.add(oc.booking_no + '__' + oc.fab_color + '__' + (oc.fab_type || ''));
     totalGrey += Number(oc.grey_qty || 0);
     totalFinish += Number(oc.finish_qty || 0);
     totalTfIn += Number(oc.transfer_in_qty || 0);
     totalTfOut += Number(oc.transfer_out_qty || 0);
     totalStock += Number(oc.stock || 0);
-    
+
     const stockClass = Number(oc.stock || 0) > 0 ? 'stock-warning' : 'stock-clear';
-    
+
     tbody.innerHTML += `<tr>
       <td>${idx+1}</td>
       <td>${oc.close_date}</td>
@@ -856,9 +855,9 @@ function renderOrderClose() {
       <td style="font-size:9px">${oc.remarks||''}</td>
     </tr>`;
   });
-  
+
   document.getElementById('ocCount').innerText = allOrderClose.length;
-  document.getElementById('ocColorCount').innerText = uniqueColors.size;
+  document.getElementById('ocColorCount').innerText = uniqueBookingColorType.size; // ✅ FIXED count
   document.getElementById('ocGreyQty').innerText = fmt(totalGrey);
   document.getElementById('ocFinishQty').innerText = fmt(totalFinish);
   document.getElementById('ocTfIn').innerText = fmt(totalTfIn);
@@ -876,7 +875,7 @@ async function checkStock() {
     showToast('❌ Enter Booking No', 'warning');
     return;
   }
-  
+
   showLoading();
   try {
     const {data, error} = await supabase
@@ -885,12 +884,12 @@ async function checkStock() {
       .eq('company_id', companyId)
       .eq('booking_no', bookingNo)
       .eq('status', 'Open');
-    
+
     if(error) throw error;
-    
+
     const tbody = document.getElementById('stockTableBody');
     tbody.innerHTML = '';
-    
+
     if(!data || data.length === 0) {
       tbody.innerHTML = '<tr><td colspan="9" style="padding:20px;color:#94a3b8">❌ No Open data found for this Booking No</td></tr>';
     } else {
@@ -911,15 +910,15 @@ async function checkStock() {
         grouped[key].inhand += Number(d.inhand_stock_qty || 0);
         grouped[key].trfOut += Number(d.transfer_out_qty || 0);
       });
-      
+
       Object.values(grouped).forEach(g => {
         const stock = g.inhand - g.trfOut;
-        const status = stock > 0 ? 
+        const status = stock > 0 ?
           `<span class="status-badge status-open">⚠️ Stock: ${fmt(stock)} Kg</span>` :
-          stock < 0 ? 
+          stock < 0 ?
           `<span class="status-badge" style="background:#fecaca;color:#991b1b">Negative</span>` :
           `<span class="status-badge status-closed">✅ Clear</span>`;
-        
+
         tbody.innerHTML += `<tr>
           <td><b>${g.booking_no}</b></td>
           <td>${g.fab_color}</td>
@@ -942,19 +941,19 @@ async function checkStock() {
 async function loadAllStock() {
   if(!companyId) return;
   showLoading();
-  
+
   try {
     const {data, error} = await supabase
       .from('grey_bookings')
       .select('booking_no, fab_color, fab_type, total_received_qty, total_delivery_qty, inhand_stock_qty, transfer_out_qty, status')
       .eq('company_id', companyId)
       .eq('status', 'Open');
-    
+
     if(error) throw error;
-    
+
     const tbody = document.getElementById('stockTableBody');
     tbody.innerHTML = '';
-    
+
     const grouped = {};
     (data || []).forEach(d => {
       const key = d.booking_no + '__' + (d.fab_color || '') + '__' + (d.fab_type || '');
@@ -972,16 +971,16 @@ async function loadAllStock() {
       grouped[key].inhand += Number(d.inhand_stock_qty || 0);
       grouped[key].trfOut += Number(d.transfer_out_qty || 0);
     });
-    
+
     const items = Object.values(grouped).filter(g => (g.inhand - g.trfOut) > 0);
-    
+
     if(items.length === 0) {
       tbody.innerHTML = '<tr><td colspan="9" style="padding:20px;color:#10b981">✅ No pending stock found!</td></tr>';
     } else {
       items.sort((a,b) => (b.inhand - b.trfOut) - (a.inhand - a.trfOut)).forEach(g => {
         const stock = g.inhand - g.trfOut;
         const status = `<span class="status-badge status-open">⚠️ Stock: ${fmt(stock)} Kg</span>`;
-        
+
         tbody.innerHTML += `<tr>
           <td><b>${g.booking_no}</b></td>
           <td>${g.fab_color}</td>
@@ -1011,12 +1010,12 @@ function exportDashboardExcel() {
     [''],
     ['Month', 'Order Close', 'Booking Qty', 'Received Qty', 'Delivery Qty', 'Inhand Stock', 'Delivery %', 'T.F %', 'T.F Out Qty', 'Present Stock']
   ];
-  
+
   document.querySelectorAll('#dashTableBody tr').forEach(tr => {
     const cells = Array.from(tr.children).map(td => td.innerText);
     rows.push(cells);
   });
-  
+
   const ws = XLSX.utils.aoa_to_sheet(rows);
   XLSX.utils.book_append_sheet(wb, ws, 'Summary');
   XLSX.writeFile(wb, `Monthly-Summary-${new Date().toISOString().slice(0,10)}.xlsx`);
@@ -1031,7 +1030,7 @@ function exportEntryExcel() {
     [''],
     ['SL', 'Date', 'Buyer', 'Booking No', 'Fab Color', 'Fab Type', 'Finish Qty', 'PL %', 'Knit Rcvd', 'Trf In', 'Trf From', 'Grey Qty', 'Total Rcvd', 'Knit BL', 'Total Dlv', 'Inhand', 'Trf Out', 'Trf To', 'Stock', 'ETD', 'Remarks', 'Status']
   ];
-  
+
   allEntries.forEach((e, i) => {
     rows.push([
       i+1, e.report_date, e.buyer, e.booking_no, e.fab_color, e.fab_type,
@@ -1041,7 +1040,7 @@ function exportEntryExcel() {
       e.stock, e.etd, e.remarks, e.status
     ]);
   });
-  
+
   const ws = XLSX.utils.aoa_to_sheet(rows);
   XLSX.utils.book_append_sheet(wb, ws, 'Pvot');
   XLSX.writeFile(wb, `Booking-Maintain-${document.getElementById('entryDate').value}.xlsx`);
@@ -1056,7 +1055,7 @@ function exportOrderCloseExcel() {
     [''],
     ['SL', 'Date', 'Buyer', 'Booking No', 'Fab Color', 'Fab Type', 'Finish Qty', 'PL %', 'Grey Qty', 'Knit Rcvd', 'Trf In', 'Trf From', 'Total Rcvd', 'Knit BL', 'Total Dlv', 'Inhand', 'Trf Out', 'Trf To', 'Stock', 'ETD', 'Remarks']
   ];
-  
+
   allOrderClose.forEach((oc, i) => {
     rows.push([
       i+1, oc.close_date, oc.buyer, oc.booking_no, oc.fab_color, oc.fab_type,
@@ -1066,7 +1065,7 @@ function exportOrderCloseExcel() {
       oc.transfer_out_qty, oc.transfer_to_order, oc.stock, oc.etd, oc.remarks
     ]);
   });
-  
+
   const ws = XLSX.utils.aoa_to_sheet(rows);
   XLSX.utils.book_append_sheet(wb, ws, 'Order Close');
   XLSX.writeFile(wb, `Order-Close-${new Date().toISOString().slice(0,10)}.xlsx`);
