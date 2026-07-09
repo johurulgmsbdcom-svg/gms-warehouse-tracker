@@ -331,6 +331,8 @@ let suppressAutoSave = false;
 let lastAutoSaveTime = 0;
 let bookingSearchMatches = [];
 let stockDisplayData = [];
+let ocEditingRows = new Set();
+let ocRowBackups = {};
 
 // Columns that don't exist on a table get remembered here for this session,
 // so we don't keep re-sending them and re-failing.
@@ -1102,6 +1104,8 @@ async function loadOrderClose() {
     if(error) throw error;
     
     allOrderClose = data || [];
+    ocEditingRows = new Set();
+    ocRowBackups = {};
     
     renderOrderClose();
     showToast(`✅ ${allOrderClose.length} orders loaded`);
@@ -1150,34 +1154,65 @@ function renderOrderClose() {
     totalStock += stock;
     
     const stockClass = stock > 0 ? 'stock-warning' : (stock < 0 ? 'negative' : 'stock-clear');
+    const isEditing = ocEditingRows.has(idx);
     
-    tbody.innerHTML += `<tr data-idx="${idx}">
-      <td>${idx+1}</td>
-      <td><input type="date" class="cell-input" value="${entry.close_date||entry.report_date||''}" onchange="updateOCEntry(${idx},'close_date',this.value)"></td>
-      <td><input type="text" class="cell-input wide" value="${entry.buyer||''}" onchange="updateOCEntry(${idx},'buyer',this.value)"></td>
-      <td><input type="text" class="cell-input wide" value="${entry.booking_no||''}" onchange="updateOCEntry(${idx},'booking_no',this.value)"></td>
-      <td><input type="text" class="cell-input" value="${entry.fab_color||''}" onchange="updateOCEntry(${idx},'fab_color',this.value)"></td>
-      <td><input type="text" class="cell-input" value="${entry.fab_type||''}" onchange="updateOCEntry(${idx},'fab_type',this.value)"></td>
-      <td><input type="number" class="cell-input narrow" value="${entry.finish_qty||0}" onchange="updateOCEntry(${idx},'finish_qty',this.value)"></td>
-      <td><input type="number" class="cell-input narrow" value="${entry.pl_percent||0}" onchange="updateOCEntry(${idx},'pl_percent',this.value)"></td>
-      <td><input type="number" class="cell-input narrow" value="${entry.grey_qty||0}" onchange="updateOCEntry(${idx},'grey_qty',this.value);calcOCRow(${idx})"></td>
-      <td><input type="number" class="cell-input narrow" value="${entry.knitting_receive||0}" onchange="updateOCEntry(${idx},'knitting_receive',this.value);calcOCRow(${idx})"></td>
-      <td><input type="number" class="cell-input narrow" value="${entry.transfer_in_qty||0}" onchange="updateOCEntry(${idx},'transfer_in_qty',this.value);calcOCRow(${idx})"></td>
-      <td><input type="text" class="cell-input" value="${entry.transfer_from_order||''}" onchange="updateOCEntry(${idx},'transfer_from_order',this.value)"></td>
-      <td id="octrcvd${idx}"><b>${fmt(totalRcvd)}</b></td>
-      <td id="octbl${idx}">${fmt(knitBL)}</td>
-      <td><input type="number" class="cell-input narrow" value="${entry.total_delivery_qty||0}" onchange="updateOCEntry(${idx},'total_delivery_qty',this.value);calcOCRow(${idx})"></td>
-      <td id="ocinhand${idx}"><b>${fmt(inhand)}</b></td>
-      <td><input type="number" class="cell-input narrow" value="${entry.transfer_out_qty||0}" onchange="updateOCEntry(${idx},'transfer_out_qty',this.value);calcOCRow(${idx})"></td>
-      <td><input type="text" class="cell-input" value="${entry.transfer_to_order||''}" onchange="updateOCEntry(${idx},'transfer_to_order',this.value)"></td>
-      <td id="ocstock${idx}" class="${stockClass}"><b>${fmt(stock)}</b></td>
-      <td><input type="date" class="cell-input" value="${entry.etd||''}" onchange="updateOCEntry(${idx},'etd',this.value)"></td>
-      <td><input type="text" class="cell-input wide" value="${entry.remarks||''}" onchange="updateOCEntry(${idx},'remarks',this.value)"></td>
-      <td>
-        <button class="btn btn-success" onclick="saveOCRow(${idx})" style="padding:4px 8px;font-size:10px"><i class="fas fa-save"></i></button>
-        <button class="btn btn-danger" onclick="deleteOCRow(${idx})" style="padding:4px 8px;font-size:10px"><i class="fas fa-trash"></i></button>
-      </td>
-    </tr>`;
+    if(isEditing){
+      tbody.innerHTML += `<tr data-idx="${idx}">
+        <td>${idx+1}</td>
+        <td><input type="date" class="cell-input" value="${entry.close_date||entry.report_date||''}" onchange="updateOCEntry(${idx},'close_date',this.value)"></td>
+        <td><input type="text" class="cell-input wide" value="${entry.buyer||''}" onchange="updateOCEntry(${idx},'buyer',this.value)"></td>
+        <td><input type="text" class="cell-input wide" value="${entry.booking_no||''}" onchange="updateOCEntry(${idx},'booking_no',this.value)"></td>
+        <td><input type="text" class="cell-input" value="${entry.fab_color||''}" onchange="updateOCEntry(${idx},'fab_color',this.value)"></td>
+        <td><input type="text" class="cell-input" value="${entry.fab_type||''}" onchange="updateOCEntry(${idx},'fab_type',this.value)"></td>
+        <td><input type="number" class="cell-input narrow" value="${entry.finish_qty||0}" onchange="updateOCEntry(${idx},'finish_qty',this.value)"></td>
+        <td><input type="number" class="cell-input narrow" value="${entry.pl_percent||0}" onchange="updateOCEntry(${idx},'pl_percent',this.value)"></td>
+        <td><input type="number" class="cell-input narrow" value="${entry.grey_qty||0}" onchange="updateOCEntry(${idx},'grey_qty',this.value);calcOCRow(${idx})"></td>
+        <td><input type="number" class="cell-input narrow" value="${entry.knitting_receive||0}" onchange="updateOCEntry(${idx},'knitting_receive',this.value);calcOCRow(${idx})"></td>
+        <td><input type="number" class="cell-input narrow" value="${entry.transfer_in_qty||0}" onchange="updateOCEntry(${idx},'transfer_in_qty',this.value);calcOCRow(${idx})"></td>
+        <td><input type="text" class="cell-input" value="${entry.transfer_from_order||''}" onchange="updateOCEntry(${idx},'transfer_from_order',this.value)"></td>
+        <td id="octrcvd${idx}"><b>${fmt(totalRcvd)}</b></td>
+        <td id="octbl${idx}">${fmt(knitBL)}</td>
+        <td><input type="number" class="cell-input narrow" value="${entry.total_delivery_qty||0}" onchange="updateOCEntry(${idx},'total_delivery_qty',this.value);calcOCRow(${idx})"></td>
+        <td id="ocinhand${idx}"><b>${fmt(inhand)}</b></td>
+        <td><input type="number" class="cell-input narrow" value="${entry.transfer_out_qty||0}" onchange="updateOCEntry(${idx},'transfer_out_qty',this.value);calcOCRow(${idx})"></td>
+        <td><input type="text" class="cell-input" value="${entry.transfer_to_order||''}" onchange="updateOCEntry(${idx},'transfer_to_order',this.value)"></td>
+        <td id="ocstock${idx}" class="${stockClass}"><b>${fmt(stock)}</b></td>
+        <td><input type="date" class="cell-input" value="${entry.etd||''}" onchange="updateOCEntry(${idx},'etd',this.value)"></td>
+        <td><input type="text" class="cell-input wide" value="${entry.remarks||''}" onchange="updateOCEntry(${idx},'remarks',this.value)"></td>
+        <td style="white-space:nowrap">
+          <button class="btn btn-success" onclick="saveOCRow(${idx})" style="padding:4px 8px;font-size:10px"><i class="fas fa-save"></i> Save</button>
+          <button class="btn btn-warning" onclick="cancelOCEdit(${idx})" style="padding:4px 8px;font-size:10px"><i class="fas fa-times"></i></button>
+        </td>
+      </tr>`;
+    } else {
+      tbody.innerHTML += `<tr data-idx="${idx}">
+        <td>${idx+1}</td>
+        <td>${entry.close_date || entry.report_date || ''}</td>
+        <td>${entry.buyer||''}</td>
+        <td><b>${entry.booking_no||''}</b></td>
+        <td>${entry.fab_color||''}</td>
+        <td>${entry.fab_type||''}</td>
+        <td>${fmt(entry.finish_qty)}</td>
+        <td>${fmt(entry.pl_percent)}</td>
+        <td>${fmt(entry.grey_qty)}</td>
+        <td>${fmt(entry.knitting_receive)}</td>
+        <td>${fmt(entry.transfer_in_qty)}</td>
+        <td>${entry.transfer_from_order||''}</td>
+        <td><b>${fmt(totalRcvd)}</b></td>
+        <td>${fmt(knitBL)}</td>
+        <td>${fmt(totalDlv)}</td>
+        <td><b>${fmt(inhand)}</b></td>
+        <td>${fmt(trfOut)}</td>
+        <td>${entry.transfer_to_order||''}</td>
+        <td class="${stockClass}"><b>${fmt(stock)}</b></td>
+        <td>${entry.etd||''}</td>
+        <td style="font-size:9px">${entry.remarks||''}</td>
+        <td style="white-space:nowrap">
+          <button class="btn btn-primary" onclick="toggleOCEdit(${idx})" style="padding:4px 8px;font-size:10px"><i class="fas fa-pen"></i></button>
+          <button class="btn btn-danger" onclick="deleteOCRow(${idx})" style="padding:4px 8px;font-size:10px"><i class="fas fa-trash"></i></button>
+        </td>
+      </tr>`;
+    }
   });
   
   document.getElementById('ocCount').innerText = uniqueBookings.size;
@@ -1187,6 +1222,19 @@ function renderOrderClose() {
   document.getElementById('ocTfIn').innerText = fmt(totalTfIn);
   document.getElementById('ocTfOut').innerText = fmt(totalTfOut);
   document.getElementById('ocStock').innerText = fmt(totalStock);
+}
+
+function toggleOCEdit(idx){
+  ocRowBackups[idx] = {...allOrderClose[idx]};
+  ocEditingRows.add(idx);
+  renderOrderClose();
+}
+
+function cancelOCEdit(idx){
+  if(ocRowBackups[idx]) allOrderClose[idx] = ocRowBackups[idx];
+  ocEditingRows.delete(idx);
+  delete ocRowBackups[idx];
+  renderOrderClose();
 }
 
 function updateOCEntry(idx, field, value){
@@ -1232,7 +1280,10 @@ async function saveOCRow(idx){
     delete payload.report_date;
     const {error} = await safeWrite('grey_order_close', payload, entry.id ? {id: entry.id} : {});
     if(error) throw error;
+    ocEditingRows.delete(idx);
+    delete ocRowBackups[idx];
     showToast(`✅ Updated: ${entry.booking_no}`);
+    renderOrderClose();
   } catch(e){
     showToast('❌ Update failed: ' + e.message, 'error');
   }
@@ -1253,6 +1304,8 @@ async function deleteOCRow(idx){
     }
   }
 
+  ocEditingRows.delete(idx);
+  delete ocRowBackups[idx];
   allOrderClose.splice(idx, 1);
   renderOrderClose();
   showToast('🗑️ Order Close থেকে Deleted');
@@ -1556,6 +1609,8 @@ window.updateOCEntry = updateOCEntry;
 window.calcOCRow = calcOCRow;
 window.saveOCRow = saveOCRow;
 window.deleteOCRow = deleteOCRow;
+window.toggleOCEdit = toggleOCEdit;
+window.cancelOCEdit = cancelOCEdit;
 window.exportStockExcel = exportStockExcel;
 
 </script>
