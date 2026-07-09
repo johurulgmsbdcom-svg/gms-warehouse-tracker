@@ -337,11 +337,6 @@ const unsupportedColumns = { grey_bookings: new Set(), grey_order_close: new Set
 // =========================================
 // 🧠 SCHEMA-SAFE WRITE HELPER
 // =========================================
-// grey_bookings / grey_order_close is a flat table (one row = one booking-color entry),
-// not a JSON blob. Some optional columns (operator, etd, remarks, transfer_to_order...)
-// may or may not exist depending on how the table was created. Instead of hardcoding an
-// assumption and breaking again later, we strip any column Postgres/PostgREST reports as
-// missing and retry automatically.
 function stripUnsupported(table, obj){
   const copy = {...obj};
   unsupportedColumns[table].forEach(col => { delete copy[col]; });
@@ -430,10 +425,61 @@ function buildRowPayload(entry, cid, operator){
 
 async function saveEntryRow(entry, cid, operator){
   const payload = buildRowPayload(entry, cid, operator);
+  const wasNew = !entry.id;
   const {data, error} = await safeWrite('grey_bookings', payload, entry.id ? {id: entry.id} : {});
-  if(error) return {error};
-  if(!entry.id && data && data.id) entry.id = data.id;
+
+  if(error){
+    // If this was a fresh row and the insert failed as a duplicate, it likely means
+    // a previous insert of the SAME row already succeeded but its id never made it
+    // back to us (commonly because a Supabase RLS policy blocks the SELECT that
+    // .select().maybeSingle() runs right after INSERT). Look the row up by its
+    // natural key instead of failing outright.
+    const msg = (error.message || '').toLowerCase();
+    const looksLikeDuplicate = msg.includes('duplicate') || msg.includes('unique') || msg.includes('already exists');
+    if(wasNew && looksLikeDuplicate){
+      const found = await findExistingBookingRow(payload, cid);
+      if(found){
+        entry.id = found.id;
+        return {success: true, recovered: true};
+      }
+    }
+    return {error};
+  }
+
+  if(wasNew){
+    if(data && data.id){
+      entry.id = data.id;
+    } else {
+      // Insert reported success but returned no row (again, usually a missing/limited
+      // SELECT policy in Supabase RLS). Look it up so the NEXT save updates instead
+      // of inserting a second copy of this row.
+      const found = await findExistingBookingRow(payload, cid);
+      if(found) entry.id = found.id;
+    }
+  }
   return {success: true};
+}
+
+// Looks up a booking row by its natural key (company + booking no + color + type + date)
+// so we can recover the id when INSERT succeeded but didn't return data to us.
+async function findExistingBookingRow(payload, cid){
+  try {
+    const {data} = await supabase
+      .from('grey_bookings')
+      .select('id')
+      .eq('company_id', cid)
+      .eq('booking_no', payload.booking_no)
+      .eq('fab_color', payload.fab_color)
+      .eq('fab_type', payload.fab_type)
+      .eq('report_date', payload.report_date)
+      .order('id', {ascending: false})
+      .limit(1)
+      .maybeSingle();
+    return data || null;
+  } catch(e){
+    console.error('findExistingBookingRow error:', e);
+    return null;
+  }
 }
 
 async function saveAllEntryRows(showSuccess = true){
@@ -442,14 +488,21 @@ async function saveAllEntryRows(showSuccess = true){
   const operator = document.getElementById('entryOperator').value.trim() || localStorage.getItem('lastOperator') || 'Unknown';
 
   let failed = 0;
+  const failDetails = [];
   for(const entry of allEntries){
     const res = await saveEntryRow(entry, cid, operator);
-    if(res.error) failed++;
+    if(res.error){
+      failed++;
+      const label = [entry.booking_no, entry.fab_color].filter(Boolean).join(' - ') || '(no booking no)';
+      const reason = res.error.message || JSON.stringify(res.error);
+      failDetails.push(`${label}: ${reason}`);
+    }
   }
 
   if(failed > 0){
-    if(showSuccess) showToast(`❌ ${failed} টা row save হয়নি`, 'error');
-    return {error: `${failed} rows failed`};
+    console.error('Save failures:', failDetails);
+    if(showSuccess) showToast(`❌ ${failed} টা row save হয়নি — ${failDetails[0]}`, 'error');
+    return {error: failDetails.join(' | ')};
   }
   return {success: true};
 }
