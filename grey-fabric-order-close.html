@@ -220,6 +220,12 @@ body.light .search-result-table td{border-color:#e2e8f0;color:#1e293b}
       <button class="btn btn-primary" onclick="loadOrderClose()"><i class="fas fa-search"></i> Search</button>
       <button class="btn btn-success" onclick="exportOrderCloseExcel()"><i class="fas fa-file-excel"></i> Export</button>
     </div>
+    <div class="controls">
+      <label><i class="fas fa-filter"></i> Filter:</label>
+      <input type="text" id="ocFilterBox" placeholder="Buyer, Booking No, Color, Type, Remarks দিয়ে খুঁজুন..." style="width:320px" oninput="applyOCFilter()">
+      <button class="btn btn-warning" onclick="clearOCFilter()" style="padding:8px 10px"><i class="fas fa-times"></i> Clear</button>
+      <span style="font-size:10px;color:#94a3b8" id="ocFilterCount"></span>
+    </div>
     <div class="summary-grid">
       <div class="summary-card blue"><h4>Order Close</h4><div class="value" id="ocCount">0</div></div>
       <div class="summary-card green"><h4>Color Close</h4><div class="value" id="ocColorCount">0</div></div>
@@ -262,7 +268,7 @@ body.light .search-result-table td{border-color:#e2e8f0;color:#1e293b}
         <thead>
           <tr>
             <th>Booking No</th><th>Color</th><th>Type</th><th>Total Rcvd</th>
-            <th>Total Dlv</th><th>Inhand</th><th>Trf Out</th><th>Stock</th><th>Status</th>
+            <th>Total Dlv</th><th>Inhand</th><th>Trf Out</th><th>Stock</th><th>Status</th><th>Action</th>
           </tr>
         </thead>
         <tbody id="stockTableBody"></tbody>
@@ -300,6 +306,27 @@ body.light .search-result-table td{border-color:#e2e8f0;color:#1e293b}
   </div>
 </div>
 
+<!-- STOCK EDIT MODAL -->
+<div class="modal" id="stockEditModal">
+  <div class="modal-content wide">
+    <h3><i class="fas fa-pen"></i> Edit Rows — <span id="stockEditTitle"></span></h3>
+    <p>এখানে এই Booking + Color + Type এর প্রতিটা দিনের row আলাদাভাবে Edit বা Delete করা যাবে।</p>
+    <div class="table-wrap" style="max-height:320px;overflow-y:auto">
+      <table class="search-result-table">
+        <thead>
+          <tr>
+            <th>Date</th><th>Knit Rcvd</th><th>Trf In</th><th>Total Dlv</th><th>Trf Out</th><th>Status</th><th>Action</th>
+          </tr>
+        </thead>
+        <tbody id="stockEditRows"></tbody>
+      </table>
+    </div>
+    <div class="modal-buttons">
+      <button class="btn btn-danger" onclick="closeStockEditModal()">Close</button>
+    </div>
+  </div>
+</div>
+
 <div class="loading" id="loading">
   <div style="text-align:center">
     <div class="spinner"></div>
@@ -331,8 +358,10 @@ let suppressAutoSave = false;
 let lastAutoSaveTime = 0;
 let bookingSearchMatches = [];
 let stockDisplayData = [];
+let stockEditRows = [];
 let ocEditingRows = new Set();
 let ocRowBackups = {};
+let ocFilterText = '';
 
 // Columns that don't exist on a table get remembered here for this session,
 // so we don't keep re-sending them and re-failing.
@@ -826,6 +855,10 @@ function calcRow(idx) {
   stockEl.innerHTML = `<b>${fmt(stock)}</b>`;
   stockEl.className = stock > 0 ? 'stock-warning' : (stock < 0 ? 'negative' : 'stock-clear');
   
+  if(stock < 0){
+    showToast(`⚠️ ${entry.booking_no||'Row'} — Stock Negative (${fmt(stock)}) হয়ে গেছে, মান চেক করুন`, 'warning');
+  }
+  
   scheduleAutoSave();
 }
 
@@ -1127,6 +1160,9 @@ async function loadOrderClose() {
     allOrderClose = data || [];
     ocEditingRows = new Set();
     ocRowBackups = {};
+    ocFilterText = '';
+    const filterBox = document.getElementById('ocFilterBox');
+    if(filterBox) filterBox.value = '';
     
     renderOrderClose();
     showToast(`✅ ${allOrderClose.length} orders loaded`);
@@ -1137,11 +1173,52 @@ async function loadOrderClose() {
   showLoading(false);
 }
 
+function matchesOCFilter(entry){
+  if(!ocFilterText) return true;
+  const haystack = [
+    entry.buyer, entry.booking_no, entry.fab_color, entry.fab_type,
+    entry.remarks, entry.transfer_from_order, entry.transfer_to_order
+  ].map(v => (v||'').toString().toLowerCase()).join(' ');
+  return haystack.includes(ocFilterText);
+}
+
+function applyOCFilter(){
+  ocFilterText = document.getElementById('ocFilterBox').value.trim().toLowerCase();
+  renderOrderClose();
+}
+
+function clearOCFilter(){
+  ocFilterText = '';
+  document.getElementById('ocFilterBox').value = '';
+  renderOrderClose();
+}
+
 function renderOrderClose() {
   const tbody = document.getElementById('ocTableBody');
+  const countEl = document.getElementById('ocFilterCount');
   
   if(allOrderClose.length === 0) {
     tbody.innerHTML = '<tr><td colspan="22" style="padding:30px;color:#94a3b8;text-align:center"><i class="fas fa-clipboard" style="font-size:48px;margin-bottom:12px;opacity:.5"></i><br>No Closed Orders<br><small>Select date range and click Search</small></td></tr>';
+    document.getElementById('ocCount').innerText = 0;
+    document.getElementById('ocColorCount').innerText = 0;
+    document.getElementById('ocGreyQty').innerText = 0;
+    document.getElementById('ocFinishQty').innerText = 0;
+    document.getElementById('ocTfIn').innerText = 0;
+    document.getElementById('ocTfOut').innerText = 0;
+    document.getElementById('ocStock').innerText = 0;
+    if(countEl) countEl.innerText = '';
+    return;
+  }
+  
+  const matchedIdxSet = new Set();
+  allOrderClose.forEach((entry, idx) => { if(matchesOCFilter(entry)) matchedIdxSet.add(idx); });
+  
+  if(countEl){
+    countEl.innerText = ocFilterText ? `${matchedIdxSet.size} / ${allOrderClose.length} rows matched` : '';
+  }
+  
+  if(ocFilterText && matchedIdxSet.size === 0){
+    tbody.innerHTML = '<tr><td colspan="22" style="padding:30px;color:#94a3b8;text-align:center"><i class="fas fa-search" style="font-size:48px;margin-bottom:12px;opacity:.5"></i><br>Filter এ কোনো row মেলেনি<br><small>অন্য শব্দ দিয়ে চেষ্টা করুন অথবা Clear চাপুন</small></td></tr>';
     document.getElementById('ocCount').innerText = 0;
     document.getElementById('ocColorCount').innerText = 0;
     document.getElementById('ocGreyQty').innerText = 0;
@@ -1159,6 +1236,7 @@ function renderOrderClose() {
   const uniqueBookings = new Set();
   
   allOrderClose.forEach((entry, idx) => {
+    if(!matchedIdxSet.has(idx)) return;
     uniqueColors.add(entry.booking_no + '__' + entry.fab_color + '__' + (entry.fab_type || ''));
     if(entry.booking_no) uniqueBookings.add(entry.booking_no);
     totalGrey += Number(entry.grey_qty || 0);
@@ -1285,6 +1363,10 @@ function calcOCRow(idx){
   const stockEl = document.getElementById(`ocstock${idx}`);
   stockEl.innerHTML = `<b>${fmt(stock)}</b>`;
   stockEl.className = stock > 0 ? 'stock-warning' : (stock < 0 ? 'negative' : 'stock-clear');
+  
+  if(stock < 0){
+    showToast(`⚠️ ${entry.booking_no||'Row'} — Stock Negative (${fmt(stock)}) হয়ে গেছে, মান চেক করুন`, 'warning');
+  }
 }
 
 async function saveOCRow(idx){
@@ -1655,14 +1737,15 @@ function exportEntryExcel() {
 
 function exportOrderCloseExcel() {
   const wb = XLSX.utils.book_new();
+  const exportRows = ocFilterText ? allOrderClose.filter(matchesOCFilter) : allOrderClose;
   const rows = [
     ['GMS TEXTILES LTD - Order Close Report'],
-    [`From: ${document.getElementById('ocFrom').value} To: ${document.getElementById('ocTo').value}`],
+    [`From: ${document.getElementById('ocFrom').value} To: ${document.getElementById('ocTo').value}${ocFilterText ? ' | Filter: ' + document.getElementById('ocFilterBox').value : ''}`],
     [''],
     ['SL', 'Date', 'Buyer', 'Booking No', 'Fab Color', 'Fab Type', 'Finish Qty', 'PL %', 'Grey Qty', 'Knit Rcvd', 'Trf In', 'Trf From', 'Total Rcvd', 'Knit BL', 'Total Dlv', 'Inhand', 'Trf Out', 'Trf To', 'Stock', 'ETD', 'Remarks']
   ];
   
-  allOrderClose.forEach((entry, i) => {
+  exportRows.forEach((entry, i) => {
     const totalRcvd = (Number(entry.knitting_receive) || 0) + (Number(entry.transfer_in_qty) || 0);
     const totalDlv = Number(entry.total_delivery_qty) || 0;
     const inhand = totalRcvd - totalDlv;
@@ -1732,6 +1815,8 @@ window.closeOrder = closeOrder;
 window.confirmCloseOrder = confirmCloseOrder;
 window.closeModal = closeModal;
 window.loadOrderClose = loadOrderClose;
+window.applyOCFilter = applyOCFilter;
+window.clearOCFilter = clearOCFilter;
 window.checkStock = checkStock;
 window.loadAllStock = loadAllStock;
 window.exportDashboardExcel = exportDashboardExcel;
@@ -1751,6 +1836,13 @@ window.deleteOCRow = deleteOCRow;
 window.toggleOCEdit = toggleOCEdit;
 window.cancelOCEdit = cancelOCEdit;
 window.exportStockExcel = exportStockExcel;
+window.openStockEdit = openStockEdit;
+window.renderStockEditModal = renderStockEditModal;
+window.updateStockEditRow = updateStockEditRow;
+window.saveStockEditRow = saveStockEditRow;
+window.deleteStockEditRow = deleteStockEditRow;
+window.closeStockEditModal = closeStockEditModal;
+window.deleteStockGroup = deleteStockGroup;
 
 </script>
 </body>
