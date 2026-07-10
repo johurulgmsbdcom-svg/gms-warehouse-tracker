@@ -713,6 +713,7 @@ async function loadEntries() {
       .select('*')
       .eq('company_id', cid)
       .eq('report_date', date)
+      .neq('status', 'Closed')
       .order('id', {ascending: true});
     
     if(error) throw error;
@@ -957,6 +958,9 @@ async function performCloseOrder(idx) {
     const {error} = await safeWrite('grey_order_close', closePayload, {conflict: 'company_id,close_date,booking_no,fab_color,fab_type'});
     if(error) throw error;
     
+    // Closed rows belong on the Order Close page now — remove it from this
+    // Daily Entry view instead of leaving it sitting here with a Closed badge.
+    allEntries.splice(idx, 1);
     renderEntries();
     showToast(`✅ Order Closed: ${entry.booking_no}`);
     
