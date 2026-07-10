@@ -1364,11 +1364,11 @@ async function checkStock() {
     
     if(!data || data.length === 0) {
       stockDisplayData = [];
-      tbody.innerHTML = '<tr><td colspan="9" style="padding:20px;color:#94a3b8;text-align:center">❌ এই Booking No তে কোনো data পাওয়া যায়নি</td></tr>';
+      tbody.innerHTML = '<tr><td colspan="10" style="padding:20px;color:#94a3b8;text-align:center">❌ এই Booking No তে কোনো data পাওয়া যায়নি</td></tr>';
     } else {
       const grouped = groupStockRows(data);
       stockDisplayData = Object.values(grouped);
-      renderStockRows(grouped, tbody);
+      renderStockRows(stockDisplayData, tbody);
     }
   } catch(e) {
     showToast('❌ ' + e.message, 'error');
@@ -1387,19 +1387,21 @@ function groupStockRows(rows){
       totalRcvd: 0,
       totalDlv: 0,
       inhand: 0,
-      trfOut: 0
+      trfOut: 0,
+      ids: []
     };
     const totalRcvd = (Number(row.knitting_receive) || 0) + (Number(row.transfer_in_qty) || 0);
     grouped[key].totalRcvd += totalRcvd;
     grouped[key].totalDlv += Number(row.total_delivery_qty) || 0;
     grouped[key].inhand += (totalRcvd - (Number(row.total_delivery_qty) || 0));
     grouped[key].trfOut += Number(row.transfer_out_qty) || 0;
+    grouped[key].ids.push(row.id);
   });
   return grouped;
 }
 
-function renderStockRows(grouped, tbody){
-  Object.values(grouped).forEach(g => {
+function renderStockRows(items, tbody){
+  items.forEach((g, idx) => {
     const stock = g.inhand - g.trfOut;
     const status = stock > 0 ? 
       `<span class="status-badge status-open">⚠️ Stock: ${fmt(stock)} Kg</span>` :
@@ -1408,8 +1410,8 @@ function renderStockRows(grouped, tbody){
       `<span class="status-badge status-closed">✅ Clear</span>`;
     
     tbody.innerHTML += `<tr>
-      <td><b>${g.booking_no}</b></td>
-      <td>${g.fab_color}</td>
+      <td><b>${g.booking_no||''}</b></td>
+      <td>${g.fab_color||''}</td>
       <td>${g.fab_type||''}</td>
       <td>${fmt(g.totalRcvd)}</td>
       <td>${fmt(g.totalDlv)}</td>
@@ -1417,6 +1419,10 @@ function renderStockRows(grouped, tbody){
       <td>${fmt(g.trfOut)}</td>
       <td><b>${fmt(stock)}</b></td>
       <td>${status}</td>
+      <td style="white-space:nowrap">
+        <button class="btn btn-primary" onclick="openStockEdit(${idx})" style="padding:4px 8px;font-size:10px" title="Edit"><i class="fas fa-pen"></i></button>
+        <button class="btn btn-danger" onclick="deleteStockGroup(${idx})" style="padding:4px 8px;font-size:10px" title="Delete all rows"><i class="fas fa-trash"></i></button>
+      </td>
     </tr>`;
   });
 }
@@ -1445,14 +1451,125 @@ async function loadAllStock() {
     stockDisplayData = items;
     
     if(items.length === 0) {
-      tbody.innerHTML = '<tr><td colspan="9" style="padding:20px;color:#94a3b8;text-align:center">কোনো data পাওয়া যায়নি</td></tr>';
+      tbody.innerHTML = '<tr><td colspan="10" style="padding:20px;color:#94a3b8;text-align:center">কোনো data পাওয়া যায়নি</td></tr>';
     } else {
-      const fakeGrouped = {};
-      items.forEach((g,i) => fakeGrouped[i] = g);
-      renderStockRows(fakeGrouped, tbody);
+      renderStockRows(stockDisplayData, tbody);
     }
   } catch(e) {
     showToast('❌ ' + e.message, 'error');
+  }
+  showLoading(false);
+}
+
+// =========================================
+// ✏️ STOCK CHECK — EDIT / DELETE underlying rows
+// =========================================
+async function openStockEdit(idx){
+  const g = stockDisplayData[idx];
+  if(!g) return;
+  const cid = await getCompanyId();
+  if(!cid) return;
+  showLoading();
+  try {
+    const {data, error} = await supabase
+      .from('grey_bookings')
+      .select('*')
+      .eq('company_id', cid)
+      .eq('booking_no', g.booking_no)
+      .eq('fab_color', g.fab_color || '')
+      .eq('fab_type', g.fab_type || '')
+      .order('report_date', {ascending: true});
+    if(error) throw error;
+    stockEditRows = data || [];
+    document.getElementById('stockEditTitle').innerText = `${g.booking_no||'(no booking no)'} — ${g.fab_color||''} — ${g.fab_type||''}`;
+    renderStockEditModal();
+    document.getElementById('stockEditModal').classList.add('show');
+  } catch(e){
+    showToast('❌ ' + e.message, 'error');
+  }
+  showLoading(false);
+}
+
+function renderStockEditModal(){
+  const tbody = document.getElementById('stockEditRows');
+  if(stockEditRows.length === 0){
+    tbody.innerHTML = '<tr><td colspan="7" style="padding:16px;text-align:center;color:#94a3b8">কোনো row নেই</td></tr>';
+    return;
+  }
+  tbody.innerHTML = '';
+  stockEditRows.forEach((row, i) => {
+    tbody.innerHTML += `<tr>
+      <td><input type="date" class="cell-input" value="${row.report_date||''}" onchange="updateStockEditRow(${i},'report_date',this.value)"></td>
+      <td><input type="number" class="cell-input narrow" value="${row.knitting_receive||0}" onchange="updateStockEditRow(${i},'knitting_receive',this.value)"></td>
+      <td><input type="number" class="cell-input narrow" value="${row.transfer_in_qty||0}" onchange="updateStockEditRow(${i},'transfer_in_qty',this.value)"></td>
+      <td><input type="number" class="cell-input narrow" value="${row.total_delivery_qty||0}" onchange="updateStockEditRow(${i},'total_delivery_qty',this.value)"></td>
+      <td><input type="number" class="cell-input narrow" value="${row.transfer_out_qty||0}" onchange="updateStockEditRow(${i},'transfer_out_qty',this.value)"></td>
+      <td><span class="status-badge ${row.status==='Closed'?'status-closed':'status-open'}">${row.status||'Open'}</span></td>
+      <td style="white-space:nowrap">
+        <button class="btn btn-success" onclick="saveStockEditRow(${i})" style="padding:4px 8px;font-size:10px"><i class="fas fa-save"></i></button>
+        <button class="btn btn-danger" onclick="deleteStockEditRow(${i})" style="padding:4px 8px;font-size:10px"><i class="fas fa-trash"></i></button>
+      </td>
+    </tr>`;
+  });
+}
+
+function updateStockEditRow(i, field, value){
+  stockEditRows[i][field] = value;
+}
+
+async function saveStockEditRow(i){
+  const cid = await getCompanyId();
+  if(!cid) return;
+  const row = stockEditRows[i];
+  showLoading();
+  try {
+    const operator = row.operator || document.getElementById('entryOperator')?.value || 'Unknown';
+    const payload = buildRowPayload(row, cid, operator);
+    const {error} = await safeWrite('grey_bookings', payload, {id: row.id});
+    if(error) throw error;
+    showToast('✅ Updated');
+  } catch(e){
+    showToast('❌ Update failed: ' + e.message, 'error');
+  }
+  showLoading(false);
+}
+
+async function deleteStockEditRow(i){
+  const row = stockEditRows[i];
+  if(!confirm(`⚠️ এই row (${row.report_date||''}) ডিলিট করবেন?`)) return;
+  showLoading();
+  try {
+    const {error} = await supabase.from('grey_bookings').delete().eq('id', row.id);
+    if(error) throw error;
+    stockEditRows.splice(i, 1);
+    renderStockEditModal();
+    showToast('🗑️ Deleted');
+  } catch(e){
+    showToast('❌ Delete failed: ' + e.message, 'error');
+  }
+  showLoading(false);
+}
+
+function closeStockEditModal(){
+  document.getElementById('stockEditModal').classList.remove('show');
+  // Refresh the underlying totals since edits/deletes may have changed them
+  if(document.getElementById('stockBookingNo').value.trim()) checkStock();
+  else loadAllStock();
+}
+
+async function deleteStockGroup(idx){
+  const g = stockDisplayData[idx];
+  if(!g || !g.ids || g.ids.length === 0) return;
+  if(!confirm(`⚠️ ${g.booking_no||'(no booking no)'} - ${g.fab_color||''} - ${g.fab_type||''} এর সবগুলো (${g.ids.length}টা) entry Daily Entry থেকে স্থায়ীভাবে ডিলিট হয়ে যাবে। Continue?`)) return;
+  showLoading();
+  try {
+    const {error} = await supabase.from('grey_bookings').delete().in('id', g.ids);
+    if(error) throw error;
+    showToast('🗑️ Deleted');
+    if(document.getElementById('stockBookingNo').value.trim()) await checkStock();
+    else await loadAllStock();
+  } catch(e){
+    showToast('❌ Delete failed: ' + e.message, 'error');
   }
   showLoading(false);
 }
