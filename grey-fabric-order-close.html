@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>GMS Grey Fabric MCD - Order Closing Report</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.4/chart.umd.min.js"></script>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap');
@@ -115,6 +116,102 @@ body.light .search-result-table td{border-color:#e2e8f0;color:#1e293b}
   .controls{flex-direction:column;align-items:stretch}
   .btn{padding:8px 12px;font-size:11px}
 }
+.oc-filter-icon{cursor:pointer;margin-left:6px;font-size:9px;opacity:.75;color:#dbeafe}
+.oc-filter-icon:hover{opacity:1;color:#fbbf24}
+.oc-filter-icon.oc-filter-active{color:#fbbf24;opacity:1}
+.oc-sortable-th{cursor:pointer;user-select:none}
+.oc-sortable-th:hover{background:#2563eb}
+.oc-sort-icon{font-size:9px;margin-left:2px}
+.oc-filter-dropdown{position:fixed;background:#1e293b;border:1px solid #475569;border-radius:8px;box-shadow:0 10px 30px rgba(0,0,0,.5);z-index:10000;width:230px;padding:10px;display:none}
+body.light .oc-filter-dropdown{background:#fff;border-color:#cbd5e1}
+.oc-filter-dropdown.show{display:block}
+.oc-filter-search{width:100%;padding:6px;margin-bottom:8px;border-radius:4px;border:1px solid #475569;background:#0f172a;color:#f1f5f9;font-size:11px;font-family:inherit}
+body.light .oc-filter-search{background:#f8fafc;color:#1e293b;border-color:#cbd5e1}
+.oc-filter-quick{display:flex;gap:10px;margin-bottom:6px;font-size:10px}
+.oc-filter-quick span{cursor:pointer;color:#60a5fa;font-weight:600}
+.oc-filter-quick span:hover{text-decoration:underline}
+.oc-filter-list{max-height:180px;overflow-y:auto;margin-bottom:8px;border-top:1px solid #334155;border-bottom:1px solid #334155;padding:4px 0}
+body.light .oc-filter-list{border-color:#e2e8f0}
+.oc-filter-item{display:flex;align-items:center;gap:6px;padding:3px 2px;font-size:11px;cursor:pointer}
+.oc-filter-item:hover{background:rgba(59,130,246,.15)}
+.oc-filter-actions{display:flex;gap:6px}
+.oc-filter-actions button{flex:1;padding:6px;font-size:10px}
+
+/* 🔮 Glassmorphism — Buyer Smart Analytics */
+.glass-card{
+  background:rgba(30,41,59,.55);
+  backdrop-filter:blur(16px) saturate(160%);
+  -webkit-backdrop-filter:blur(16px) saturate(160%);
+  border:1px solid rgba(148,163,184,.18);
+  border-radius:18px;
+  padding:20px;
+  box-shadow:0 8px 32px rgba(0,0,0,.28), inset 0 1px 0 rgba(255,255,255,.05);
+  margin-bottom:16px;
+  position:relative;
+  overflow:hidden;
+}
+body.light .glass-card{
+  background:rgba(255,255,255,.55);
+  border-color:rgba(148,163,184,.35);
+  box-shadow:0 8px 32px rgba(15,23,42,.08), inset 0 1px 0 rgba(255,255,255,.6);
+}
+.glass-card::before{
+  content:'';position:absolute;top:-40%;right:-10%;width:280px;height:280px;
+  background:radial-gradient(circle, rgba(59,130,246,.18), transparent 70%);
+  pointer-events:none;
+}
+.buyer-charts-grid{display:grid;grid-template-columns:1fr 1fr;gap:18px;position:relative;z-index:1}
+.chart-panel{
+  background:rgba(15,23,42,.35);
+  border:1px solid rgba(148,163,184,.12);
+  border-radius:14px;
+  padding:14px;
+}
+body.light .chart-panel{background:rgba(248,250,252,.55);border-color:rgba(148,163,184,.25)}
+.chart-panel h4{font-size:11px;color:#94a3b8;margin-bottom:10px;text-transform:uppercase;letter-spacing:.4px;font-weight:700}
+.chart-wrap{position:relative;height:280px}
+.top-buyer-banner{
+  background:linear-gradient(135deg, rgba(245,158,11,.16), rgba(220,38,38,.08));
+  border:1px solid rgba(245,158,11,.35);
+  border-radius:14px;
+  padding:16px 18px;
+  display:flex;
+  align-items:center;
+  gap:16px;
+  margin-bottom:16px;
+  position:relative;
+  z-index:1;
+}
+.top-buyer-banner .trophy{font-size:32px}
+.top-buyer-banner .tb-name{font-size:16px;font-weight:800;color:#f1f5f9}
+body.light .top-buyer-banner .tb-name{color:#1e293b}
+.top-buyer-banner .tb-sub{font-size:11px;color:#fbbf24;font-weight:700;margin-top:2px}
+.buyer-rank-list{display:flex;flex-direction:column;gap:8px;max-height:340px;overflow-y:auto;position:relative;z-index:1}
+.buyer-rank-item{
+  display:flex;align-items:center;justify-content:space-between;gap:10px;
+  padding:10px 14px;border-radius:12px;
+  background:rgba(59,130,246,.07);
+  border:1px solid rgba(59,130,246,.15);
+  transition:transform .15s;
+}
+.buyer-rank-item:hover{transform:translateX(3px);background:rgba(59,130,246,.13)}
+.buyer-rank-item .rank-badge{
+  min-width:26px;height:26px;border-radius:50%;
+  background:linear-gradient(135deg,#3b82f6,#8b5cf6);
+  color:#fff;display:flex;align-items:center;justify-content:center;
+  font-size:11px;font-weight:800;flex-shrink:0;
+}
+.buyer-rank-item .rank-badge.gold{background:linear-gradient(135deg,#fbbf24,#d97706)}
+.buyer-rank-item .rank-badge.silver{background:linear-gradient(135deg,#cbd5e1,#94a3b8)}
+.buyer-rank-item .rank-badge.bronze{background:linear-gradient(135deg,#d97706,#92400e)}
+.buyer-rank-item .rn-name{flex:1;font-size:12px;font-weight:600;color:#e2e8f0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+body.light .buyer-rank-item .rn-name{color:#1e293b}
+.buyer-rank-item .rn-stats{display:flex;gap:10px;font-size:10px;color:#94a3b8;flex-shrink:0}
+.buyer-rank-item .rn-stats b{color:#60a5fa}
+@media(max-width:768px){
+  .buyer-charts-grid{grid-template-columns:1fr}
+  .chart-wrap{height:220px}
+}
 </style>
 </head>
 <body>
@@ -165,6 +262,33 @@ body.light .search-result-table td{border-color:#e2e8f0;color:#1e293b}
         <tbody id="dashTableBody"></tbody>
       </table>
     </div>
+  </div>
+
+  <!-- 🔮 BUYER-WISE SMART ANALYTICS (Glass Theme) -->
+  <div class="card glass-card">
+    <h2><i class="fas fa-chart-pie"></i> Buyer-wise Smart Analytics <span style="font-size:10px;font-weight:500;color:#94a3b8">(All-time)</span></h2>
+
+    <div id="topBuyerBanner" class="top-buyer-banner" style="display:none">
+      <div class="trophy">🏆</div>
+      <div>
+        <div class="tb-name" id="topBuyerName">—</div>
+        <div class="tb-sub" id="topBuyerStat">—</div>
+      </div>
+    </div>
+
+    <div class="buyer-charts-grid">
+      <div class="chart-panel">
+        <h4>📦 Booking Qty by Buyer (Top 10)</h4>
+        <div class="chart-wrap"><canvas id="buyerBookingChart"></canvas></div>
+      </div>
+      <div class="chart-panel">
+        <h4>✅ Order Close Count by Buyer (Top 10)</h4>
+        <div class="chart-wrap"><canvas id="buyerCloseChart"></canvas></div>
+      </div>
+    </div>
+
+    <h4 style="font-size:11px;color:#94a3b8;margin:18px 0 8px;text-transform:uppercase;letter-spacing:.4px;font-weight:700;position:relative;z-index:1">🏅 Full Buyer Ranking (by Order Close)</h4>
+    <div class="buyer-rank-list" id="buyerRankList"></div>
   </div>
 </div>
 
@@ -241,13 +365,35 @@ body.light .search-result-table td{border-color:#e2e8f0;color:#1e293b}
       <table id="ocBookingListTable">
         <thead>
           <tr>
-            <th>SL</th><th>Booking No</th><th>Buyer</th><th>Colors Closed</th>
-            <th>Grey Qty</th><th>Finish Qty</th><th>Trf Out</th><th>Stock</th>
-            <th>Last Close Date</th><th>Action</th>
+            <th>SL</th>
+            <th class="oc-sortable-th" onclick="sortOCList('booking_no')">Booking No<span class="oc-sort-icon" id="sortIcon_booking_no"></span> <i class="fas fa-filter oc-filter-icon" id="filterIcon_booking_no" onclick="event.stopPropagation();openOCColumnFilter(event,'booking_no')"></i></th>
+            <th class="oc-sortable-th" onclick="sortOCList('buyer')">Buyer<span class="oc-sort-icon" id="sortIcon_buyer"></span> <i class="fas fa-filter oc-filter-icon" id="filterIcon_buyer" onclick="event.stopPropagation();openOCColumnFilter(event,'buyer')"></i></th>
+            <th class="oc-sortable-th" onclick="sortOCList('colorCount')">Colors Closed<span class="oc-sort-icon" id="sortIcon_colorCount"></span> <i class="fas fa-filter oc-filter-icon" id="filterIcon_colorCount" onclick="event.stopPropagation();openOCColumnFilter(event,'colorCount')"></i></th>
+            <th class="oc-sortable-th" onclick="sortOCList('greyQty')">Grey Qty<span class="oc-sort-icon" id="sortIcon_greyQty"></span> <i class="fas fa-filter oc-filter-icon" id="filterIcon_greyQty" onclick="event.stopPropagation();openOCColumnFilter(event,'greyQty')"></i></th>
+            <th class="oc-sortable-th" onclick="sortOCList('finishQty')">Finish Qty<span class="oc-sort-icon" id="sortIcon_finishQty"></span> <i class="fas fa-filter oc-filter-icon" id="filterIcon_finishQty" onclick="event.stopPropagation();openOCColumnFilter(event,'finishQty')"></i></th>
+            <th class="oc-sortable-th" onclick="sortOCList('trfOut')">Trf Out<span class="oc-sort-icon" id="sortIcon_trfOut"></span> <i class="fas fa-filter oc-filter-icon" id="filterIcon_trfOut" onclick="event.stopPropagation();openOCColumnFilter(event,'trfOut')"></i></th>
+            <th class="oc-sortable-th" onclick="sortOCList('stock')">Stock<span class="oc-sort-icon" id="sortIcon_stock"></span> <i class="fas fa-filter oc-filter-icon" id="filterIcon_stock" onclick="event.stopPropagation();openOCColumnFilter(event,'stock')"></i></th>
+            <th class="oc-sortable-th" onclick="sortOCList('lastCloseDate')">Last Close Date<span class="oc-sort-icon" id="sortIcon_lastCloseDate"></span> <i class="fas fa-filter oc-filter-icon" id="filterIcon_lastCloseDate" onclick="event.stopPropagation();openOCColumnFilter(event,'lastCloseDate')"></i></th>
+            <th>Action</th>
           </tr>
         </thead>
         <tbody id="ocBookingListBody"></tbody>
       </table>
+    </div>
+
+    <!-- EXCEL-STYLE COLUMN FILTER DROPDOWN -->
+    <div id="ocFilterPanel" class="oc-filter-dropdown">
+      <div style="font-weight:700;font-size:12px;margin-bottom:8px;color:#60a5fa" id="ocFilterPanelTitle">Filter</div>
+      <input type="text" id="ocFilterSearchBox" class="oc-filter-search" placeholder="খুঁজুন..." oninput="ocFilterSearchInput()">
+      <div class="oc-filter-quick">
+        <span onclick="ocFilterSelectAll(true)">Select All</span>
+        <span onclick="ocFilterSelectAll(false)">Clear All</span>
+      </div>
+      <div class="oc-filter-list" id="ocFilterListBody"></div>
+      <div class="oc-filter-actions">
+        <button class="btn btn-success" onclick="applyOCColumnFilter()"><i class="fas fa-check"></i> OK</button>
+        <button class="btn btn-danger" onclick="clearOCColumnFilter()"><i class="fas fa-times"></i> Clear</button>
+      </div>
     </div>
 
     <!-- DETAIL VIEW (shown after clicking a Booking No) -->
@@ -385,6 +531,16 @@ let ocEditingRows = new Set();
 let ocRowBackups = {};
 let ocFilterText = '';
 let ocSelectedBooking = null;
+let ocColumnFilters = {};
+let ocSortCol = null;
+let ocSortDir = 'asc';
+let ocActiveFilterCol = null;
+const OC_NUMERIC_COLS = new Set(['colorCount','greyQty','finishQty','trfOut','stock']);
+const ocColumnLabels = {
+  booking_no: 'Booking No', buyer: 'Buyer', colorCount: 'Colors Closed',
+  greyQty: 'Grey Qty', finishQty: 'Finish Qty', trfOut: 'Trf Out',
+  stock: 'Stock', lastCloseDate: 'Last Close Date'
+};
 
 // Columns that don't exist on a table get remembered here for this session,
 // so we don't keep re-sending them and re-failing.
@@ -601,6 +757,11 @@ function fmt(n) {
 function toggleTheme() {
   document.body.classList.toggle('light');
   localStorage.setItem('greyTheme', document.body.classList.contains('light') ? 'light' : 'dark');
+  // Chart.js caches label/border colors at creation time, so redraw the
+  // buyer charts if they're already on screen so text stays readable.
+  if(document.getElementById('dashboard')?.classList.contains('active') && typeof Chart !== 'undefined'){
+    loadBuyerAnalytics();
+  }
 }
 
 function closeModal() {
@@ -675,6 +836,7 @@ async function loadDashboard() {
     document.getElementById('sumPresentStock').innerText = fmt(presentStock);
     
     await loadDashboardTable();
+    await loadBuyerAnalytics();
     
   } catch(e) {
     console.error(e);
@@ -745,6 +907,168 @@ async function loadDashboardTable() {
       <td>${fmt(d.tfOutQty)}</td>
       <td>${fmt(present)}</td>
     </tr>`;
+  });
+}
+
+// =========================================
+// 🔮 BUYER-WISE SMART ANALYTICS (Glass Theme)
+// =========================================
+let buyerBookingChartInstance = null;
+let buyerCloseChartInstance = null;
+const BUYER_CHART_PALETTE = ['#3b82f6','#8b5cf6','#10b981','#f59e0b','#ef4444','#06b6d4','#ec4899','#84cc16','#f97316','#6366f1'];
+
+function chartTextColor(){
+  return document.body.classList.contains('light') ? '#334155' : '#cbd5e1';
+}
+function chartGridColor(){
+  return document.body.classList.contains('light') ? 'rgba(51,65,85,.1)' : 'rgba(203,213,225,.1)';
+}
+
+async function loadBuyerAnalytics(){
+  const cid = await getCompanyId();
+  if(!cid) return;
+  
+  try {
+    const [bookingsRes, ocRes] = await Promise.all([
+      supabase.from('grey_bookings').select('buyer, finish_qty').eq('company_id', cid),
+      supabase.from('grey_order_close').select('buyer, booking_no').eq('company_id', cid)
+    ]);
+    if(bookingsRes.error) throw bookingsRes.error;
+    if(ocRes.error) throw ocRes.error;
+    
+    // Booking Qty per buyer
+    const bookingQtyByBuyer = {};
+    (bookingsRes.data || []).forEach(b => {
+      const buyer = (b.buyer || '').trim() || '(Unknown)';
+      bookingQtyByBuyer[buyer] = (bookingQtyByBuyer[buyer] || 0) + numOrZero(b.finish_qty);
+    });
+    
+    // Order Close count per buyer (unique booking_no per buyer)
+    const closedBookingsByBuyer = {};
+    (ocRes.data || []).forEach(o => {
+      const buyer = (o.buyer || '').trim() || '(Unknown)';
+      if(!closedBookingsByBuyer[buyer]) closedBookingsByBuyer[buyer] = new Set();
+      if(o.booking_no) closedBookingsByBuyer[buyer].add(o.booking_no);
+    });
+    const closeCountByBuyer = {};
+    Object.keys(closedBookingsByBuyer).forEach(b => { closeCountByBuyer[b] = closedBookingsByBuyer[b].size; });
+    
+    renderBuyerBookingChart(bookingQtyByBuyer);
+    renderBuyerCloseChart(closeCountByBuyer);
+    renderBuyerRanking(closeCountByBuyer, bookingQtyByBuyer);
+    
+  } catch(e){
+    console.error('loadBuyerAnalytics error:', e);
+  }
+}
+
+function renderBuyerBookingChart(bookingQtyByBuyer){
+  const canvas = document.getElementById('buyerBookingChart');
+  if(!canvas || typeof Chart === 'undefined') return;
+  
+  const sorted = Object.entries(bookingQtyByBuyer).sort((a,b) => b[1]-a[1]).slice(0, 10);
+  const labels = sorted.map(x => x[0]);
+  const values = sorted.map(x => x[1]);
+  
+  if(buyerBookingChartInstance) buyerBookingChartInstance.destroy();
+  
+  buyerBookingChartInstance = new Chart(canvas.getContext('2d'), {
+    type: 'bar',
+    data: {
+      labels,
+      datasets: [{
+        label: 'Booking Qty',
+        data: values,
+        backgroundColor: labels.map((_, i) => BUYER_CHART_PALETTE[i % BUYER_CHART_PALETTE.length] + 'cc'),
+        borderColor: labels.map((_, i) => BUYER_CHART_PALETTE[i % BUYER_CHART_PALETTE.length]),
+        borderWidth: 1.5,
+        borderRadius: 6,
+        maxBarThickness: 34
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: { display: false },
+        tooltip: { callbacks: { label: (ctx) => ' ' + fmt(ctx.parsed.y) + ' Kg' } }
+      },
+      scales: {
+        x: { ticks: { color: chartTextColor(), font: { size: 9 }, maxRotation: 35, minRotation: 0 }, grid: { display: false } },
+        y: { ticks: { color: chartTextColor(), font: { size: 9 } }, grid: { color: chartGridColor() } }
+      }
+    }
+  });
+}
+
+function renderBuyerCloseChart(closeCountByBuyer){
+  const canvas = document.getElementById('buyerCloseChart');
+  if(!canvas || typeof Chart === 'undefined') return;
+  
+  const sorted = Object.entries(closeCountByBuyer).sort((a,b) => b[1]-a[1]).slice(0, 10);
+  const labels = sorted.map(x => x[0]);
+  const values = sorted.map(x => x[1]);
+  
+  if(buyerCloseChartInstance) buyerCloseChartInstance.destroy();
+  
+  buyerCloseChartInstance = new Chart(canvas.getContext('2d'), {
+    type: 'doughnut',
+    data: {
+      labels,
+      datasets: [{
+        data: values,
+        backgroundColor: labels.map((_, i) => BUYER_CHART_PALETTE[i % BUYER_CHART_PALETTE.length]),
+        borderColor: document.body.classList.contains('light') ? '#fff' : '#1e293b',
+        borderWidth: 2
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      cutout: '62%',
+      plugins: {
+        legend: { position: 'right', labels: { color: chartTextColor(), font: { size: 9 }, boxWidth: 10, padding: 8 } },
+        tooltip: { callbacks: { label: (ctx) => ' ' + ctx.label + ': ' + ctx.parsed + ' order(s)' } }
+      }
+    }
+  });
+  
+  // Top buyer banner
+  const banner = document.getElementById('topBuyerBanner');
+  if(sorted.length > 0){
+    document.getElementById('topBuyerName').innerText = sorted[0][0];
+    document.getElementById('topBuyerStat').innerText = `সবচেয়ে বেশি Order Close — ${sorted[0][1]} টা Booking`;
+    banner.style.display = 'flex';
+  } else {
+    banner.style.display = 'none';
+  }
+}
+
+function renderBuyerRanking(closeCountByBuyer, bookingQtyByBuyer){
+  const listEl = document.getElementById('buyerRankList');
+  if(!listEl) return;
+  
+  const allBuyers = new Set([...Object.keys(closeCountByBuyer), ...Object.keys(bookingQtyByBuyer)]);
+  const ranked = [...allBuyers]
+    .map(b => ({ buyer: b, closeCount: closeCountByBuyer[b] || 0, bookingQty: bookingQtyByBuyer[b] || 0 }))
+    .sort((a, b) => b.closeCount - a.closeCount || b.bookingQty - a.bookingQty);
+  
+  if(ranked.length === 0){
+    listEl.innerHTML = '<div style="text-align:center;padding:20px;color:#94a3b8;font-size:11px">কোনো Buyer data পাওয়া যায়নি</div>';
+    return;
+  }
+  
+  listEl.innerHTML = '';
+  ranked.forEach((r, i) => {
+    const badgeClass = i === 0 ? 'gold' : i === 1 ? 'silver' : i === 2 ? 'bronze' : '';
+    listEl.innerHTML += `<div class="buyer-rank-item">
+      <div class="rank-badge ${badgeClass}">${i+1}</div>
+      <div class="rn-name" title="${r.buyer}">${r.buyer}</div>
+      <div class="rn-stats">
+        <span>Close: <b>${r.closeCount}</b></span>
+        <span>Booking: <b>${fmt(r.bookingQty)}</b> Kg</span>
+      </div>
+    </div>`;
   });
 }
 
@@ -1185,6 +1509,9 @@ async function loadOrderClose() {
     ocRowBackups = {};
     ocFilterText = '';
     ocSelectedBooking = null;
+    ocColumnFilters = {};
+    ocSortCol = null;
+    ocSortDir = 'asc';
     const filterBox = document.getElementById('ocFilterBox');
     if(filterBox) filterBox.value = '';
     
@@ -1327,13 +1654,40 @@ function renderOrderClose() {
   }
 }
 
+function getOCBaseGroups(){
+  const visibleEntries = ocFilterText ? allOrderClose.filter(matchesOCFilter) : allOrderClose;
+  return groupOCByBooking(visibleEntries);
+}
+
+function passesOCColumnFilters(g){
+  for(const col in ocColumnFilters){
+    const allowed = ocColumnFilters[col];
+    if(allowed && allowed.size > 0 && !allowed.has(String(g[col]))) return false;
+  }
+  return true;
+}
+
 function renderOCBookingList(){
   const tbody = document.getElementById('ocBookingListBody');
-  const visibleEntries = ocFilterText ? allOrderClose.filter(matchesOCFilter) : allOrderClose;
-  const groups = groupOCByBooking(visibleEntries);
+  let groups = getOCBaseGroups().filter(passesOCColumnFilters);
+  
+  if(ocSortCol){
+    groups.sort((a, b) => {
+      let va = a[ocSortCol], vb = b[ocSortCol];
+      if(typeof va === 'string' || typeof vb === 'string'){
+        va = (va||'').toString().toLowerCase();
+        vb = (vb||'').toString().toLowerCase();
+      }
+      if(va < vb) return ocSortDir === 'asc' ? -1 : 1;
+      if(va > vb) return ocSortDir === 'asc' ? 1 : -1;
+      return 0;
+    });
+  }
+  
+  updateOCSortFilterIndicators();
   
   if(groups.length === 0){
-    tbody.innerHTML = '<tr><td colspan="10" style="padding:30px;color:#94a3b8;text-align:center"><i class="fas fa-search" style="font-size:48px;margin-bottom:12px;opacity:.5"></i><br>Filter এ কোনো booking মেলেনি<br><small>অন্য শব্দ দিয়ে চেষ্টা করুন অথবা Clear চাপুন</small></td></tr>';
+    tbody.innerHTML = '<tr><td colspan="10" style="padding:30px;color:#94a3b8;text-align:center"><i class="fas fa-search" style="font-size:48px;margin-bottom:12px;opacity:.5"></i><br>Filter এ কোনো booking মেলেনি<br><small>অন্য শব্দ বা filter দিয়ে চেষ্টা করুন অথবা Clear চাপুন</small></td></tr>';
     return;
   }
   
@@ -1356,6 +1710,108 @@ function renderOCBookingList(){
       </td>
     </tr>`;
   });
+}
+
+// =========================================
+// 🔽 EXCEL-STYLE COLUMN SORT / FILTER (Booking List)
+// =========================================
+function sortOCList(col){
+  if(ocSortCol === col){
+    ocSortDir = ocSortDir === 'asc' ? 'desc' : 'asc';
+  } else {
+    ocSortCol = col;
+    ocSortDir = 'asc';
+  }
+  renderOrderClose();
+}
+
+function updateOCSortFilterIndicators(){
+  Object.keys(ocColumnLabels).forEach(col => {
+    const sortEl = document.getElementById('sortIcon_' + col);
+    if(sortEl) sortEl.innerHTML = ocSortCol === col ? (ocSortDir === 'asc' ? '▲' : '▼') : '';
+    const filterIcon = document.getElementById('filterIcon_' + col);
+    if(filterIcon) filterIcon.classList.toggle('oc-filter-active', !!ocColumnFilters[col]);
+  });
+}
+
+function openOCColumnFilter(evt, col){
+  ocActiveFilterCol = col;
+  const groups = getOCBaseGroups();
+  const uniqueVals = [...new Set(groups.map(g => String(g[col] === undefined || g[col] === null ? '' : g[col])))]
+    .sort((a, b) => a.localeCompare(b, undefined, {numeric: true}));
+  const selected = ocColumnFilters[col] || new Set(uniqueVals);
+  
+  const panel = document.getElementById('ocFilterPanel');
+  const rect = evt.target.getBoundingClientRect();
+  panel.style.top = (rect.bottom + 6) + 'px';
+  panel.style.left = Math.min(rect.left, window.innerWidth - 250) + 'px';
+  
+  document.getElementById('ocFilterPanelTitle').innerText = '🔽 ' + (ocColumnLabels[col] || col);
+  document.getElementById('ocFilterSearchBox').value = '';
+  panel.dataset.allValues = JSON.stringify(uniqueVals);
+  renderOCFilterList(col, uniqueVals, selected);
+  
+  panel.classList.add('show');
+}
+
+function renderOCFilterList(col, values, selectedSet){
+  const listEl = document.getElementById('ocFilterListBody');
+  const isNumeric = OC_NUMERIC_COLS.has(col);
+  listEl.innerHTML = '';
+  values.forEach(v => {
+    const checked = selectedSet.has(v) ? 'checked' : '';
+    let displayV;
+    if(v === '') displayV = '(Blank)';
+    else displayV = isNumeric ? fmt(Number(v)) : v;
+    listEl.innerHTML += `<label class="oc-filter-item"><input type="checkbox" value="${v.replace(/"/g,'&quot;')}" ${checked}> ${displayV}</label>`;
+  });
+}
+
+function ocFilterSearchInput(){
+  const col = ocActiveFilterCol;
+  if(!col) return;
+  const q = document.getElementById('ocFilterSearchBox').value.trim().toLowerCase();
+  const panel = document.getElementById('ocFilterPanel');
+  const allValues = JSON.parse(panel.dataset.allValues || '[]');
+  const isNumeric = OC_NUMERIC_COLS.has(col);
+  const filteredValues = q
+    ? allValues.filter(v => (isNumeric ? fmt(Number(v)) : v).toLowerCase().includes(q))
+    : allValues;
+  const selected = ocColumnFilters[col] || new Set(allValues);
+  renderOCFilterList(col, filteredValues, selected);
+}
+
+function ocFilterSelectAll(check){
+  document.querySelectorAll('#ocFilterListBody input[type=checkbox]').forEach(cb => cb.checked = check);
+}
+
+function applyOCColumnFilter(){
+  const col = ocActiveFilterCol;
+  if(!col) return;
+  const panel = document.getElementById('ocFilterPanel');
+  const allValues = JSON.parse(panel.dataset.allValues || '[]');
+  const checked = new Set();
+  document.querySelectorAll('#ocFilterListBody input[type=checkbox]:checked').forEach(cb => checked.add(cb.value));
+  
+  if(checked.size >= allValues.length){
+    delete ocColumnFilters[col];
+  } else {
+    ocColumnFilters[col] = checked;
+  }
+  closeOCFilterPanel();
+  renderOrderClose();
+}
+
+function clearOCColumnFilter(){
+  if(ocActiveFilterCol) delete ocColumnFilters[ocActiveFilterCol];
+  closeOCFilterPanel();
+  renderOrderClose();
+}
+
+function closeOCFilterPanel(){
+  const panel = document.getElementById('ocFilterPanel');
+  if(panel) panel.classList.remove('show');
+  ocActiveFilterCol = null;
 }
 
 function selectOCBooking(bookingNo){
@@ -1939,6 +2395,16 @@ function exportOrderCloseExcel() {
   window.addEventListener('offline', () => {
     showToast('📴 Internet সংযোগ নেই — Save হবে না, সংযোগ ফিরলে আবার চেষ্টা করুন', 'warning');
   });
+
+  // Close the Excel-style column filter dropdown when clicking anywhere outside it
+  document.addEventListener('click', (e) => {
+    const panel = document.getElementById('ocFilterPanel');
+    if(panel && panel.classList.contains('show')){
+      if(!panel.contains(e.target) && !e.target.classList.contains('oc-filter-icon')){
+        closeOCFilterPanel();
+      }
+    }
+  });
 })();
 
 // Expose globals
@@ -1956,6 +2422,13 @@ window.applyOCFilter = applyOCFilter;
 window.clearOCFilter = clearOCFilter;
 window.selectOCBooking = selectOCBooking;
 window.backToOCBookingList = backToOCBookingList;
+window.sortOCList = sortOCList;
+window.openOCColumnFilter = openOCColumnFilter;
+window.ocFilterSearchInput = ocFilterSearchInput;
+window.ocFilterSelectAll = ocFilterSelectAll;
+window.applyOCColumnFilter = applyOCColumnFilter;
+window.clearOCColumnFilter = clearOCColumnFilter;
+window.closeOCFilterPanel = closeOCFilterPanel;
 window.checkStock = checkStock;
 window.loadAllStock = loadAllStock;
 window.exportDashboardExcel = exportDashboardExcel;
