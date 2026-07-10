@@ -235,19 +235,41 @@ body.light .search-result-table td{border-color:#e2e8f0;color:#1e293b}
       <div class="summary-card red"><h4>T.F Out Qty</h4><div class="value" id="ocTfOut">0</div></div>
       <div class="summary-card green"><h4>Stock Qty</h4><div class="value" id="ocStock">0</div></div>
     </div>
-    <div class="table-wrap">
-      <table id="ocTable">
+
+    <!-- BOOKING LIST VIEW (default) -->
+    <div id="ocBookingListWrap" class="table-wrap">
+      <table id="ocBookingListTable">
         <thead>
           <tr>
-            <th>SL</th><th>Date</th><th>Buyer</th><th>Booking No</th><th>Fab Color</th>
-            <th>Fab Type</th><th>Finish Qty</th><th>PL %</th><th>Grey Qty</th>
-            <th>Knit Rcvd</th><th>Trf In</th><th>Trf From</th><th>Total Rcvd</th>
-            <th>Knit BL</th><th>Total Dlv</th><th>Inhand</th><th>Trf Out</th>
-            <th>Trf To</th><th>Stock</th><th>ETD</th><th>Remarks</th><th>Action</th>
+            <th>SL</th><th>Booking No</th><th>Buyer</th><th>Colors Closed</th>
+            <th>Grey Qty</th><th>Finish Qty</th><th>Trf Out</th><th>Stock</th>
+            <th>Last Close Date</th><th>Action</th>
           </tr>
         </thead>
-        <tbody id="ocTableBody"></tbody>
+        <tbody id="ocBookingListBody"></tbody>
       </table>
+    </div>
+
+    <!-- DETAIL VIEW (shown after clicking a Booking No) -->
+    <div id="ocDetailWrap" style="display:none">
+      <div class="controls">
+        <button class="btn btn-warning" onclick="backToOCBookingList()"><i class="fas fa-arrow-left"></i> Back to Booking List</button>
+        <span style="font-size:13px;font-weight:700;color:#60a5fa" id="ocDetailTitle"></span>
+      </div>
+      <div class="table-wrap">
+        <table id="ocTable">
+          <thead>
+            <tr>
+              <th>SL</th><th>Date</th><th>Buyer</th><th>Booking No</th><th>Fab Color</th>
+              <th>Fab Type</th><th>Finish Qty</th><th>PL %</th><th>Grey Qty</th>
+              <th>Knit Rcvd</th><th>Trf In</th><th>Trf From</th><th>Total Rcvd</th>
+              <th>Knit BL</th><th>Total Dlv</th><th>Inhand</th><th>Trf Out</th>
+              <th>Trf To</th><th>Stock</th><th>ETD</th><th>Remarks</th><th>Action</th>
+            </tr>
+          </thead>
+          <tbody id="ocTableBody"></tbody>
+        </table>
+      </div>
     </div>
   </div>
 </div>
@@ -362,6 +384,7 @@ let stockEditRows = [];
 let ocEditingRows = new Set();
 let ocRowBackups = {};
 let ocFilterText = '';
+let ocSelectedBooking = null;
 
 // Columns that don't exist on a table get remembered here for this session,
 // so we don't keep re-sending them and re-failing.
@@ -1161,6 +1184,7 @@ async function loadOrderClose() {
     ocEditingRows = new Set();
     ocRowBackups = {};
     ocFilterText = '';
+    ocSelectedBooking = null;
     const filterBox = document.getElementById('ocFilterBox');
     if(filterBox) filterBox.value = '';
     
@@ -1193,12 +1217,54 @@ function clearOCFilter(){
   renderOrderClose();
 }
 
+function bookingMatchesOCFilter(bookingNo, entries){
+  if(!ocFilterText) return true;
+  return entries.some(e => e.booking_no === bookingNo && matchesOCFilter(e));
+}
+
+function groupOCByBooking(entries){
+  const order = [];
+  const groups = {};
+  entries.forEach(entry => {
+    const key = entry.booking_no || '(no booking no)';
+    if(!groups[key]){
+      groups[key] = {
+        booking_no: entry.booking_no || '',
+        buyer: entry.buyer || '',
+        colorCount: 0,
+        greyQty: 0,
+        finishQty: 0,
+        trfOut: 0,
+        stock: 0,
+        lastCloseDate: entry.close_date || entry.report_date || ''
+      };
+      order.push(key);
+    }
+    const g = groups[key];
+    g.colorCount += 1;
+    g.greyQty += Number(entry.grey_qty || 0);
+    g.finishQty += Number(entry.finish_qty || 0);
+    const totalRcvd = (Number(entry.knitting_receive) || 0) + (Number(entry.transfer_in_qty) || 0);
+    const totalDlv = Number(entry.total_delivery_qty) || 0;
+    const inhand = totalRcvd - totalDlv;
+    const trfOut = Number(entry.transfer_out_qty) || 0;
+    g.trfOut += trfOut;
+    g.stock += (inhand - trfOut);
+    const d = entry.close_date || entry.report_date || '';
+    if(d > g.lastCloseDate) g.lastCloseDate = d;
+  });
+  return order.map(k => groups[k]);
+}
+
 function renderOrderClose() {
-  const tbody = document.getElementById('ocTableBody');
   const countEl = document.getElementById('ocFilterCount');
+  const listWrap = document.getElementById('ocBookingListWrap');
+  const detailWrap = document.getElementById('ocDetailWrap');
   
   if(allOrderClose.length === 0) {
-    tbody.innerHTML = '<tr><td colspan="22" style="padding:30px;color:#94a3b8;text-align:center"><i class="fas fa-clipboard" style="font-size:48px;margin-bottom:12px;opacity:.5"></i><br>No Closed Orders<br><small>Select date range and click Search</small></td></tr>';
+    listWrap.style.display = '';
+    detailWrap.style.display = 'none';
+    document.getElementById('ocBookingListBody').innerHTML = '<tr><td colspan="10" style="padding:30px;color:#94a3b8;text-align:center"><i class="fas fa-clipboard" style="font-size:48px;margin-bottom:12px;opacity:.5"></i><br>No Closed Orders<br><small>Select date range and click Search</small></td></tr>';
     document.getElementById('ocCount').innerText = 0;
     document.getElementById('ocColorCount').innerText = 0;
     document.getElementById('ocGreyQty').innerText = 0;
@@ -1210,6 +1276,8 @@ function renderOrderClose() {
     return;
   }
   
+  // Overall summary always reflects ALL rows matching the current filter,
+  // regardless of whether we're on the list or detail view.
   const matchedIdxSet = new Set();
   allOrderClose.forEach((entry, idx) => { if(matchesOCFilter(entry)) matchedIdxSet.add(idx); });
   
@@ -1217,24 +1285,9 @@ function renderOrderClose() {
     countEl.innerText = ocFilterText ? `${matchedIdxSet.size} / ${allOrderClose.length} rows matched` : '';
   }
   
-  if(ocFilterText && matchedIdxSet.size === 0){
-    tbody.innerHTML = '<tr><td colspan="22" style="padding:30px;color:#94a3b8;text-align:center"><i class="fas fa-search" style="font-size:48px;margin-bottom:12px;opacity:.5"></i><br>Filter এ কোনো row মেলেনি<br><small>অন্য শব্দ দিয়ে চেষ্টা করুন অথবা Clear চাপুন</small></td></tr>';
-    document.getElementById('ocCount').innerText = 0;
-    document.getElementById('ocColorCount').innerText = 0;
-    document.getElementById('ocGreyQty').innerText = 0;
-    document.getElementById('ocFinishQty').innerText = 0;
-    document.getElementById('ocTfIn').innerText = 0;
-    document.getElementById('ocTfOut').innerText = 0;
-    document.getElementById('ocStock').innerText = 0;
-    return;
-  }
-  
-  tbody.innerHTML = '';
-  
   let totalGrey = 0, totalFinish = 0, totalTfIn = 0, totalTfOut = 0, totalStock = 0;
   const uniqueColors = new Set();
   const uniqueBookings = new Set();
-  
   allOrderClose.forEach((entry, idx) => {
     if(!matchedIdxSet.has(idx)) return;
     uniqueColors.add(entry.booking_no + '__' + entry.fab_color + '__' + (entry.fab_type || ''));
@@ -1243,21 +1296,113 @@ function renderOrderClose() {
     totalFinish += Number(entry.finish_qty || 0);
     totalTfIn += Number(entry.transfer_in_qty || 0);
     totalTfOut += Number(entry.transfer_out_qty || 0);
-    
+    const totalRcvd = (Number(entry.knitting_receive) || 0) + (Number(entry.transfer_in_qty) || 0);
+    const totalDlv = Number(entry.total_delivery_qty) || 0;
+    const inhand = totalRcvd - totalDlv;
+    const trfOut = Number(entry.transfer_out_qty) || 0;
+    totalStock += (inhand - trfOut);
+  });
+  document.getElementById('ocCount').innerText = uniqueBookings.size;
+  document.getElementById('ocColorCount').innerText = uniqueColors.size;
+  document.getElementById('ocGreyQty').innerText = fmt(totalGrey);
+  document.getElementById('ocFinishQty').innerText = fmt(totalFinish);
+  document.getElementById('ocTfIn').innerText = fmt(totalTfIn);
+  document.getElementById('ocTfOut').innerText = fmt(totalTfOut);
+  document.getElementById('ocStock').innerText = fmt(totalStock);
+  
+  // If the selected booking no longer has any rows (e.g. deleted), fall back to list view
+  if(ocSelectedBooking && !allOrderClose.some(e => e.booking_no === ocSelectedBooking)){
+    ocSelectedBooking = null;
+  }
+  
+  if(ocSelectedBooking === null){
+    listWrap.style.display = '';
+    detailWrap.style.display = 'none';
+    renderOCBookingList();
+  } else {
+    listWrap.style.display = 'none';
+    detailWrap.style.display = '';
+    document.getElementById('ocDetailTitle').innerText = `📦 ${ocSelectedBooking} — সব Color/Type`;
+    renderOCDetail();
+  }
+}
+
+function renderOCBookingList(){
+  const tbody = document.getElementById('ocBookingListBody');
+  const visibleEntries = ocFilterText ? allOrderClose.filter(matchesOCFilter) : allOrderClose;
+  const groups = groupOCByBooking(visibleEntries);
+  
+  if(groups.length === 0){
+    tbody.innerHTML = '<tr><td colspan="10" style="padding:30px;color:#94a3b8;text-align:center"><i class="fas fa-search" style="font-size:48px;margin-bottom:12px;opacity:.5"></i><br>Filter এ কোনো booking মেলেনি<br><small>অন্য শব্দ দিয়ে চেষ্টা করুন অথবা Clear চাপুন</small></td></tr>';
+    return;
+  }
+  
+  tbody.innerHTML = '';
+  groups.forEach((g, i) => {
+    const stockClass = g.stock > 0 ? 'stock-warning' : (g.stock < 0 ? 'negative' : 'stock-clear');
+    const safeBooking = (g.booking_no || '').replace(/'/g, "\\'");
+    tbody.innerHTML += `<tr>
+      <td>${i+1}</td>
+      <td style="cursor:pointer" onclick="selectOCBooking('${safeBooking}')"><b style="color:#60a5fa;text-decoration:underline">${g.booking_no||'(no booking no)'}</b></td>
+      <td>${g.buyer||''}</td>
+      <td><span class="status-badge status-closed">${g.colorCount} Color${g.colorCount>1?'s':''}</span></td>
+      <td>${fmt(g.greyQty)}</td>
+      <td>${fmt(g.finishQty)}</td>
+      <td>${fmt(g.trfOut)}</td>
+      <td class="${stockClass}"><b>${fmt(g.stock)}</b></td>
+      <td>${g.lastCloseDate||''}</td>
+      <td>
+        <button class="btn btn-primary" onclick="selectOCBooking('${safeBooking}')" style="padding:4px 8px;font-size:10px"><i class="fas fa-eye"></i> View</button>
+      </td>
+    </tr>`;
+  });
+}
+
+function selectOCBooking(bookingNo){
+  ocSelectedBooking = bookingNo;
+  ocEditingRows = new Set();
+  ocRowBackups = {};
+  renderOrderClose();
+}
+
+function backToOCBookingList(){
+  ocSelectedBooking = null;
+  ocEditingRows = new Set();
+  ocRowBackups = {};
+  renderOrderClose();
+}
+
+function renderOCDetail() {
+  const tbody = document.getElementById('ocTableBody');
+  tbody.innerHTML = '';
+  
+  const rowIndices = [];
+  allOrderClose.forEach((entry, idx) => {
+    if(entry.booking_no !== ocSelectedBooking) return;
+    if(ocFilterText && !matchesOCFilter(entry)) return;
+    rowIndices.push(idx);
+  });
+  
+  if(rowIndices.length === 0){
+    tbody.innerHTML = '<tr><td colspan="22" style="padding:30px;color:#94a3b8;text-align:center"><i class="fas fa-search" style="font-size:48px;margin-bottom:12px;opacity:.5"></i><br>Filter এ কোনো row মেলেনি<br><small>অন্য শব্দ দিয়ে চেষ্টা করুন অথবা Clear চাপুন</small></td></tr>';
+    return;
+  }
+  
+  rowIndices.forEach((idx, i) => {
+    const entry = allOrderClose[idx];
     const totalRcvd = (Number(entry.knitting_receive) || 0) + (Number(entry.transfer_in_qty) || 0);
     const totalDlv = Number(entry.total_delivery_qty) || 0;
     const inhand = totalRcvd - totalDlv;
     const trfOut = Number(entry.transfer_out_qty) || 0;
     const stock = inhand - trfOut;
     const knitBL = (Number(entry.grey_qty)||0) - totalRcvd;
-    totalStock += stock;
     
     const stockClass = stock > 0 ? 'stock-warning' : (stock < 0 ? 'negative' : 'stock-clear');
     const isEditing = ocEditingRows.has(idx);
     
     if(isEditing){
       tbody.innerHTML += `<tr data-idx="${idx}">
-        <td>${idx+1}</td>
+        <td>${i+1}</td>
         <td><input type="date" class="cell-input" value="${entry.close_date||entry.report_date||''}" onchange="updateOCEntry(${idx},'close_date',this.value)"></td>
         <td><input type="text" class="cell-input wide" value="${entry.buyer||''}" onchange="updateOCEntry(${idx},'buyer',this.value)"></td>
         <td><input type="text" class="cell-input wide" value="${entry.booking_no||''}" onchange="updateOCEntry(${idx},'booking_no',this.value)"></td>
@@ -1285,7 +1430,7 @@ function renderOrderClose() {
       </tr>`;
     } else {
       tbody.innerHTML += `<tr data-idx="${idx}">
-        <td>${idx+1}</td>
+        <td>${i+1}</td>
         <td>${entry.close_date || entry.report_date || ''}</td>
         <td>${entry.buyer||''}</td>
         <td><b>${entry.booking_no||''}</b></td>
@@ -1313,14 +1458,6 @@ function renderOrderClose() {
       </tr>`;
     }
   });
-  
-  document.getElementById('ocCount').innerText = uniqueBookings.size;
-  document.getElementById('ocColorCount').innerText = uniqueColors.size;
-  document.getElementById('ocGreyQty').innerText = fmt(totalGrey);
-  document.getElementById('ocFinishQty').innerText = fmt(totalFinish);
-  document.getElementById('ocTfIn').innerText = fmt(totalTfIn);
-  document.getElementById('ocTfOut').innerText = fmt(totalTfOut);
-  document.getElementById('ocStock').innerText = fmt(totalStock);
 }
 
 function toggleOCEdit(idx){
@@ -1817,6 +1954,8 @@ window.closeModal = closeModal;
 window.loadOrderClose = loadOrderClose;
 window.applyOCFilter = applyOCFilter;
 window.clearOCFilter = clearOCFilter;
+window.selectOCBooking = selectOCBooking;
+window.backToOCBookingList = backToOCBookingList;
 window.checkStock = checkStock;
 window.loadAllStock = loadAllStock;
 window.exportDashboardExcel = exportDashboardExcel;
