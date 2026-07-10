@@ -430,14 +430,18 @@ function buildRowPayload(entry, cid, operator){
 async function saveEntryRow(entry, cid, operator){
   const payload = buildRowPayload(entry, cid, operator);
   const wasNew = !entry.id;
-  const {data, error} = await safeWrite('grey_bookings', payload, entry.id ? {id: entry.id} : {});
+  // For a brand-new row, upsert on the natural key (company+date+booking+color+type)
+  // instead of a plain insert. This means saving the "same" row twice (e.g. after an
+  // auto-save race, or a retry) updates it instead of colliding on a unique constraint.
+  const mode = entry.id
+    ? {id: entry.id}
+    : {conflict: 'company_id,report_date,booking_no,fab_color,fab_type'};
+  const {data, error} = await safeWrite('grey_bookings', payload, mode);
 
   if(error){
-    // If this was a fresh row and the insert failed as a duplicate, it likely means
-    // a previous insert of the SAME row already succeeded but its id never made it
-    // back to us (commonly because a Supabase RLS policy blocks the SELECT that
-    // .select().maybeSingle() runs right after INSERT). Look the row up by its
-    // natural key instead of failing outright.
+    // Defensive fallback: if the DB's unique constraint doesn't exactly match the
+    // upsert conflict target, an insert can still fail as a duplicate. In that case,
+    // look the row up by its natural key so we recover its id instead of losing it.
     const msg = (error.message || '').toLowerCase();
     const looksLikeDuplicate = msg.includes('duplicate') || msg.includes('unique') || msg.includes('already exists');
     if(wasNew && looksLikeDuplicate){
@@ -454,9 +458,9 @@ async function saveEntryRow(entry, cid, operator){
     if(data && data.id){
       entry.id = data.id;
     } else {
-      // Insert reported success but returned no row (again, usually a missing/limited
+      // Upsert reported success but returned no row (usually a missing/limited
       // SELECT policy in Supabase RLS). Look it up so the NEXT save updates instead
-      // of inserting a second copy of this row.
+      // of creating a second copy of this row.
       const found = await findExistingBookingRow(payload, cid);
       if(found) entry.id = found.id;
     }
@@ -576,21 +580,24 @@ async function loadDashboard() {
   const endDate = `${year}-${mon}-${String(lastDay).padStart(2,'0')}`;
   
   try {
-    const {data: bookingsData, error} = await supabase
-      .from('grey_bookings')
-      .select('*')
-      .eq('company_id', cid)
-      .gte('report_date', startDate)
-      .lte('report_date', endDate);
+    // Run both queries concurrently instead of one-after-another, and only pull the
+    // columns we actually aggregate — much lighter payload than select('*').
+    const [bookingsRes, ocRes] = await Promise.all([
+      supabase.from('grey_bookings')
+        .select('finish_qty, total_received_qty, total_delivery_qty, inhand_stock_qty, transfer_out_qty')
+        .eq('company_id', cid)
+        .gte('report_date', startDate)
+        .lte('report_date', endDate),
+      supabase.from('grey_order_close')
+        .select('booking_no')
+        .eq('company_id', cid)
+        .gte('close_date', startDate)
+        .lte('close_date', endDate)
+    ]);
     
-    if(error) throw error;
-    
-    const {data: ocData} = await supabase
-      .from('grey_order_close')
-      .select('*')
-      .eq('company_id', cid)
-      .gte('close_date', startDate)
-      .lte('close_date', endDate);
+    if(bookingsRes.error) throw bookingsRes.error;
+    const bookingsData = bookingsRes.data;
+    const ocData = ocRes.data;
     
     let bookingQty = 0, receivedQty = 0, deliveryQty = 0, inhandStock = 0, tfOutQty = 0;
     
@@ -604,8 +611,9 @@ async function loadDashboard() {
     
     const presentStock = inhandStock - tfOutQty;
     const deliveryPct = receivedQty > 0 ? (deliveryQty / receivedQty * 100) : 0;
+    const uniqueOrderCloseBookings = new Set((ocData || []).map(o => o.booking_no).filter(Boolean));
     
-    document.getElementById('sumOrderClose').innerText = (ocData || []).length;
+    document.getElementById('sumOrderClose').innerText = uniqueOrderCloseBookings.size;
     document.getElementById('sumBookingQty').innerText = fmt(bookingQty);
     document.getElementById('sumReceivedQty').innerText = fmt(receivedQty);
     document.getElementById('sumDeliveryQty').innerText = fmt(deliveryQty);
@@ -627,23 +635,28 @@ async function loadDashboardTable() {
   const cid = await getCompanyId();
   if(!cid) return;
   
-  const {data: allOC} = await supabase
-    .from('grey_order_close')
-    .select('close_date')
-    .eq('company_id', cid)
-    .order('close_date', {ascending: false});
-  
-  const {data: allBookings} = await supabase
-    .from('grey_bookings')
-    .select('report_date, finish_qty, total_received_qty, total_delivery_qty, inhand_stock_qty, transfer_out_qty')
-    .eq('company_id', cid);
+  // Run both full-history queries concurrently instead of sequentially.
+  const [ocRes, bookingsRes] = await Promise.all([
+    supabase.from('grey_order_close')
+      .select('close_date, booking_no')
+      .eq('company_id', cid)
+      .order('close_date', {ascending: false}),
+    supabase.from('grey_bookings')
+      .select('report_date, finish_qty, total_received_qty, total_delivery_qty, inhand_stock_qty, transfer_out_qty')
+      .eq('company_id', cid)
+  ]);
+  const allOC = ocRes.data;
+  const allBookings = bookingsRes.data;
   
   const months = {};
+  const monthBookingSets = {};
   (allOC || []).forEach(oc => {
     if(!oc.close_date) return;
     const m = oc.close_date.slice(0,7);
     if(!months[m]) months[m] = {orderClose: 0, bookingQty: 0, receivedQty: 0, deliveryQty: 0, inhandStock: 0, tfOutQty: 0};
-    months[m].orderClose++;
+    if(!monthBookingSets[m]) monthBookingSets[m] = new Set();
+    if(oc.booking_no) monthBookingSets[m].add(oc.booking_no);
+    months[m].orderClose = monthBookingSets[m].size;
   });
   
   (allBookings || []).forEach(b => {
@@ -931,13 +944,17 @@ async function performCloseOrder(idx) {
     const saveRes = await saveEntryRow(entry, cid, operator);
     if(saveRes.error) throw saveRes.error;
     
-    // Also record it in the order-close history table
+    // Also record it in the order-close history table. Upsert on the natural key
+    // (company + close_date + booking + color + type) so closing a DIFFERENT
+    // color/type for the same booking on the same day creates its own record
+    // instead of colliding with an existing one — and re-closing the same
+    // color/type updates it instead of erroring out.
     const closePayload = {
       ...buildRowPayload(entry, cid, operator),
       close_date: closeDate
     };
     delete closePayload.report_date;
-    const {error} = await safeWrite('grey_order_close', closePayload, {});
+    const {error} = await safeWrite('grey_order_close', closePayload, {conflict: 'company_id,close_date,booking_no,fab_color,fab_type'});
     if(error) throw error;
     
     renderEntries();
@@ -1278,7 +1295,8 @@ async function saveOCRow(idx){
       close_date: entry.close_date || entry.report_date || new Date().toISOString().slice(0,10)
     };
     delete payload.report_date;
-    const {error} = await safeWrite('grey_order_close', payload, entry.id ? {id: entry.id} : {});
+    const mode = entry.id ? {id: entry.id} : {conflict: 'company_id,close_date,booking_no,fab_color,fab_type'};
+    const {error} = await safeWrite('grey_order_close', payload, mode);
     if(error) throw error;
     ocEditingRows.delete(idx);
     delete ocRowBackups[idx];
