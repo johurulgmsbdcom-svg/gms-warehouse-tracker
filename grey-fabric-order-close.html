@@ -478,12 +478,12 @@ body.light .buyer-rank-item .rn-name{color:#1e293b}
 <div class="modal" id="stockEditModal">
   <div class="modal-content wide">
     <h3><i class="fas fa-pen"></i> Edit Rows — <span id="stockEditTitle"></span></h3>
-    <p>এখানে এই Booking + Color + Type এর প্রতিটা দিনের row আলাদাভাবে Edit বা Delete করা যাবে।</p>
+    <p>এখানে এই Booking + Color + Type এর প্রতিটা দিনের row আলাদাভাবে Edit বা Delete করা যাবে। Booking No / Color / Type ভুল বা ফাঁকা থাকলে এখান থেকেই ঠিক করতে পারবেন।</p>
     <div class="table-wrap" style="max-height:320px;overflow-y:auto">
       <table class="search-result-table">
         <thead>
           <tr>
-            <th>Date</th><th>Knit Rcvd</th><th>Trf In</th><th>Total Dlv</th><th>Trf Out</th><th>Status</th><th>Action</th>
+            <th>Date</th><th>Booking No</th><th>Color</th><th>Type</th><th>Knit Rcvd</th><th>Trf In</th><th>Total Dlv</th><th>Trf Out</th><th>Status</th><th>Action</th>
           </tr>
         </thead>
         <tbody id="stockEditRows"></tbody>
@@ -703,9 +703,25 @@ async function saveAllEntryRows(showSuccess = true){
   if(!cid) return {error: 'no company'};
   const operator = document.getElementById('entryOperator').value.trim() || localStorage.getItem('lastOperator') || 'Unknown';
 
+  // A row with no Booking No or no Fab Color yet is still "being typed" — saving it
+  // now would create a permanent blank-color ghost row in the database (it would
+  // then show up forever in Stock Check as a phantom entry with 0 values). Skip
+  // incomplete rows until the user actually fills in both fields; they stay in the
+  // local table and will save automatically as soon as they're complete.
+  const incompleteRows = [];
+  const readyEntries = allEntries.filter(entry => {
+    const hasBookingNo = (entry.booking_no || '').trim() !== '';
+    const hasColor = (entry.fab_color || '').trim() !== '';
+    if(!hasBookingNo || !hasColor){
+      incompleteRows.push(entry);
+      return false;
+    }
+    return true;
+  });
+
   let failed = 0;
   const failDetails = [];
-  for(const entry of allEntries){
+  for(const entry of readyEntries){
     const res = await saveEntryRow(entry, cid, operator);
     if(res.error){
       failed++;
@@ -720,7 +736,12 @@ async function saveAllEntryRows(showSuccess = true){
     if(showSuccess) showToast(`❌ ${failed} টা row save হয়নি — ${failDetails[0]}`, 'error');
     return {error: failDetails.join(' | ')};
   }
-  return {success: true};
+  
+  if(incompleteRows.length > 0 && showSuccess){
+    showToast(`⚠️ ${incompleteRows.length} টা row-এ Booking No বা Color খালি আছে — সেগুলো এখনো save হয়নি, পূরণ করলে অটো-সেভ হবে`, 'warning');
+  }
+  
+  return {success: true, skipped: incompleteRows.length};
 }
 
 // =========================================
@@ -1264,6 +1285,7 @@ async function saveAllEntries() {
 
 async function deleteEntry(idx) {
   const entry = allEntries[idx];
+  if(!entry) return;
   if(!confirm(`⚠️ Delete ${entry.booking_no} - ${entry.fab_color}?`)) return;
   
   if(entry.id){
@@ -1276,7 +1298,13 @@ async function deleteEntry(idx) {
     }
   }
   
-  allEntries.splice(idx, 1);
+  // Re-locate this exact entry by object identity right before removing it —
+  // if another async action (e.g. a rapid second click on Close/Delete) already
+  // shifted the array while this request was in flight, `idx` may now point at
+  // a different row. Using indexOf(entry) guarantees we remove the right one.
+  const currentIdx = allEntries.indexOf(entry);
+  if(currentIdx === -1) return;
+  allEntries.splice(currentIdx, 1);
   renderEntries();
   showToast('🗑️ Deleted');
 }
@@ -1312,6 +1340,7 @@ async function confirmCloseOrder() {
 
 async function performCloseOrder(idx) {
   const entry = allEntries[idx];
+  if(!entry) return;
   showLoading();
   
   try {
@@ -1340,7 +1369,10 @@ async function performCloseOrder(idx) {
     
     // Closed rows belong on the Order Close page now — remove it from this
     // Daily Entry view instead of leaving it sitting here with a Closed badge.
-    allEntries.splice(idx, 1);
+    // Re-locate by object identity (not the original idx) in case a concurrent
+    // close/delete on another row already shifted the array while this awaited.
+    const currentIdx = allEntries.indexOf(entry);
+    if(currentIdx !== -1) allEntries.splice(currentIdx, 1);
     renderEntries();
     showToast(`✅ Order Closed: ${entry.booking_no}`);
     
@@ -2168,13 +2200,17 @@ async function openStockEdit(idx){
 function renderStockEditModal(){
   const tbody = document.getElementById('stockEditRows');
   if(stockEditRows.length === 0){
-    tbody.innerHTML = '<tr><td colspan="7" style="padding:16px;text-align:center;color:#94a3b8">কোনো row নেই</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="10" style="padding:16px;text-align:center;color:#94a3b8">কোনো row নেই</td></tr>';
     return;
   }
   tbody.innerHTML = '';
   stockEditRows.forEach((row, i) => {
-    tbody.innerHTML += `<tr>
+    const isGhost = !(row.booking_no||'').trim() || !(row.fab_color||'').trim();
+    tbody.innerHTML += `<tr${isGhost ? ' style="background:rgba(245,158,11,.12)"' : ''}>
       <td><input type="date" class="cell-input" value="${row.report_date||''}" onchange="updateStockEditRow(${i},'report_date',this.value)"></td>
+      <td><input type="text" class="cell-input wide" value="${row.booking_no||''}" placeholder="Booking No" onchange="updateStockEditRow(${i},'booking_no',this.value)"></td>
+      <td><input type="text" class="cell-input" value="${row.fab_color||''}" placeholder="Color" onchange="updateStockEditRow(${i},'fab_color',this.value)"></td>
+      <td><input type="text" class="cell-input" value="${row.fab_type||''}" placeholder="Type" onchange="updateStockEditRow(${i},'fab_type',this.value)"></td>
       <td><input type="number" class="cell-input narrow" value="${row.knitting_receive||0}" onchange="updateStockEditRow(${i},'knitting_receive',this.value)"></td>
       <td><input type="number" class="cell-input narrow" value="${row.transfer_in_qty||0}" onchange="updateStockEditRow(${i},'transfer_in_qty',this.value)"></td>
       <td><input type="number" class="cell-input narrow" value="${row.total_delivery_qty||0}" onchange="updateStockEditRow(${i},'total_delivery_qty',this.value)"></td>
