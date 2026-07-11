@@ -465,7 +465,7 @@ body.light .oc-sticky-filters{
 <!-- STOCK CHECK -->
 <div id="stock" class="page">
   <div class="card">
-    <h2><i class="fas fa-boxes"></i> Stock Check (Booking No + Color + Type Match)</h2>
+    <h2><i class="fas fa-boxes"></i> Stock Check (Booking No + Color + Type + Date Match)</h2>
     <div class="controls">
       <label>Booking No:</label>
       <input type="text" id="stockBookingNo" placeholder="GMST-FB-26-01187" style="width:200px">
@@ -477,7 +477,7 @@ body.light .oc-sticky-filters{
       <table id="stockTable">
         <thead>
           <tr>
-            <th>Booking No</th><th>Color</th><th>Type</th><th>Total Rcvd</th>
+            <th>Date</th><th>Booking No</th><th>Color</th><th>Type</th><th>Total Rcvd</th>
             <th>Total Dlv</th><th>Inhand</th><th>Trf Out</th><th>Stock</th><th>Status</th><th>Action</th>
           </tr>
         </thead>
@@ -2087,6 +2087,29 @@ async function deleteOCRow(idx){
 
 // =========================================
 // 📦 STOCK CHECK
+//
+// GROUPING NOTE (changed on user request): grouping key now includes
+// report_date, i.e. booking_no + fab_color + fab_type + report_date.
+// Previously this merged every row that shared booking+color+type
+// REGARDLESS of date into a single summed group — so if the same
+// color+type had 2 rows on 2 different dates (e.g. from a duplicate
+// close), Stock Check silently summed them into 1 group and hid the
+// duplicate. Order Close, meanwhile, listed every closed record without
+// merging, so its "Colors Closed" count could show 4 while Stock Check
+// and Daily Entry Search showed 3 for the exact same booking.
+//
+// The user explicitly asked for all three views (Order Close, Daily
+// Entry Search, Stock Check) to show the SAME row/color count so any
+// duplicate is equally visible everywhere and can be found & deleted
+// manually. Including report_date in the key achieves that: each row
+// is now its own group, so counts always match 1:1 with what's really
+// in the database — nothing is silently merged or hidden anymore.
+//
+// TRADE-OFF the user accepted: Total Rcvd / Total Dlv / Stock per group
+// are no longer summed across multiple dates for the same color+type —
+// each group only reflects that single date's row. If a genuine
+// duplicate exists, its quantities will show as a SEPARATE line here
+// too (matching Order Close) instead of being folded into one number.
 // =========================================
 async function checkStock() {
   const cid = await getCompanyId();
@@ -2116,7 +2139,7 @@ async function checkStock() {
     
     if(!data || data.length === 0) {
       stockDisplayData = [];
-      tbody.innerHTML = '<tr><td colspan="10" style="padding:20px;color:#94a3b8;text-align:center">❌ এই Booking No তে কোনো data পাওয়া যায়নি</td></tr>';
+      tbody.innerHTML = '<tr><td colspan="11" style="padding:20px;color:#94a3b8;text-align:center">❌ এই Booking No তে কোনো data পাওয়া যায়নি</td></tr>';
     } else {
       const grouped = groupStockRows(data);
       stockDisplayData = Object.values(grouped);
@@ -2131,11 +2154,15 @@ async function checkStock() {
 function groupStockRows(rows){
   const grouped = {};
   rows.forEach(row => {
-    const key = (row.booking_no||'') + '__' + (row.fab_color || '') + '__' + (row.fab_type || '');
+    // Key now includes report_date so rows on different dates are NOT merged —
+    // this keeps the row/color count consistent with Order Close and Daily
+    // Entry Search (see note above the checkStock function).
+    const key = (row.booking_no||'') + '__' + (row.fab_color || '') + '__' + (row.fab_type || '') + '__' + (row.report_date || '');
     if(!grouped[key]) grouped[key] = {
       booking_no: row.booking_no,
       fab_color: row.fab_color,
       fab_type: row.fab_type,
+      report_date: row.report_date || '',
       totalRcvd: 0,
       totalDlv: 0,
       inhand: 0,
@@ -2162,6 +2189,7 @@ function renderStockRows(items, tbody){
       `<span class="status-badge status-closed">✅ Clear</span>`;
     
     tbody.innerHTML += `<tr>
+      <td>${g.report_date||''}</td>
       <td><b>${g.booking_no||''}</b></td>
       <td>${g.fab_color||''}</td>
       <td>${g.fab_type||''}</td>
@@ -2203,7 +2231,7 @@ async function loadAllStock() {
     stockDisplayData = items;
     
     if(items.length === 0) {
-      tbody.innerHTML = '<tr><td colspan="10" style="padding:20px;color:#94a3b8;text-align:center">কোনো data পাওয়া যায়নি</td></tr>';
+      tbody.innerHTML = '<tr><td colspan="11" style="padding:20px;color:#94a3b8;text-align:center">কোনো data পাওয়া যায়নি</td></tr>';
     } else {
       renderStockRows(stockDisplayData, tbody);
     }
@@ -2316,7 +2344,7 @@ function closeStockEditModal(){
 async function deleteStockGroup(idx){
   const g = stockDisplayData[idx];
   if(!g || !g.ids || g.ids.length === 0) return;
-  if(!confirm(`⚠️ ${g.booking_no||'(no booking no)'} - ${g.fab_color||''} - ${g.fab_type||''} এর সবগুলো (${g.ids.length}টা) entry Daily Entry থেকে স্থায়ীভাবে ডিলিট হয়ে যাবে। Continue?`)) return;
+  if(!confirm(`⚠️ ${g.booking_no||'(no booking no)'} - ${g.fab_color||''} - ${g.fab_type||''} (${g.report_date||''}) এর সবগুলো (${g.ids.length}টা) entry Daily Entry থেকে স্থায়ীভাবে ডিলিট হয়ে যাবে। Continue?`)) return;
   showLoading();
   try {
     const {error} = await supabase.from('grey_bookings').delete().in('id', g.ids);
@@ -2340,13 +2368,13 @@ function exportStockExcel(){
     ['GMS TEXTILES LTD - Stock Check'],
     ['Generated: ' + new Date().toLocaleString()],
     [''],
-    ['Booking No', 'Color', 'Type', 'Total Rcvd', 'Total Dlv', 'Inhand', 'Trf Out', 'Stock', 'Status']
+    ['Date', 'Booking No', 'Color', 'Type', 'Total Rcvd', 'Total Dlv', 'Inhand', 'Trf Out', 'Stock', 'Status']
   ];
   
   stockDisplayData.forEach(g => {
     const stock = g.inhand - g.trfOut;
     const status = stock > 0 ? 'Pending' : (stock < 0 ? 'Negative' : 'Clear');
-    rows.push([g.booking_no, g.fab_color, g.fab_type||'', g.totalRcvd, g.totalDlv, g.inhand, g.trfOut, stock, status]);
+    rows.push([g.report_date||'', g.booking_no, g.fab_color, g.fab_type||'', g.totalRcvd, g.totalDlv, g.inhand, g.trfOut, stock, status]);
   });
   
   const ws = XLSX.utils.aoa_to_sheet(rows);
