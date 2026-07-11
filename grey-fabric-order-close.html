@@ -53,6 +53,28 @@ body.light .summary-card .value{color:#1e293b}
 .summary-card.blue{border-left-color:#3b82f6}
 .table-wrap{overflow-x:auto;background:#0f172a;border-radius:8px;border:1px solid #334155}
 body.light .table-wrap{background:#fff;border-color:#e2e8f0}
+
+/* 🧊 Excel-style Freeze Panes (header row + leading columns) */
+.freeze-wrap{overflow:auto;max-height:65vh;position:relative}
+.freeze-wrap table{border-collapse:separate;border-spacing:0}
+.freeze-wrap thead th{position:sticky;top:0;z-index:5}
+.freeze-th-sl, .freeze-td-sl{position:sticky;left:0;z-index:3;background:#0f172a;width:42px;min-width:42px;max-width:42px}
+.freeze-th-date, .freeze-td-date{position:sticky;left:42px;z-index:3;background:#0f172a;width:88px;min-width:88px;max-width:88px}
+.freeze-th-booking, .freeze-td-booking{position:sticky;left:130px;z-index:3;background:#0f172a;width:130px;min-width:130px;max-width:130px}
+.freeze-th-booking2, .freeze-td-booking2{position:sticky;left:42px;z-index:3;background:#0f172a;width:150px;min-width:150px;max-width:150px}
+.freeze-wrap thead .freeze-th-booking2{z-index:6;background:#1e40af}
+body.light .freeze-td-booking2{background:#fff}
+body.light .freeze-wrap thead .freeze-th-booking2{background:#3b82f6}
+tbody tr:nth-child(even) .freeze-td-booking2{background:rgba(30,41,59,.95)}
+body.light tbody tr:nth-child(even) .freeze-td-booking2{background:#f8fafc}
+.freeze-td-booking2, .freeze-th-booking2{box-shadow:3px 0 6px rgba(0,0,0,.25)}
+.freeze-wrap thead .freeze-th-sl, .freeze-wrap thead .freeze-th-date, .freeze-wrap thead .freeze-th-booking{z-index:6;background:#1e40af}
+body.light .freeze-td-sl, body.light .freeze-td-date, body.light .freeze-td-booking{background:#fff}
+body.light .freeze-wrap thead .freeze-th-sl, body.light .freeze-wrap thead .freeze-th-date, body.light .freeze-wrap thead .freeze-th-booking{background:#3b82f6}
+tbody tr:nth-child(even) .freeze-td-sl, tbody tr:nth-child(even) .freeze-td-date, tbody tr:nth-child(even) .freeze-td-booking{background:rgba(30,41,59,.95)}
+body.light tbody tr:nth-child(even) .freeze-td-sl, body.light tbody tr:nth-child(even) .freeze-td-date, body.light tbody tr:nth-child(even) .freeze-td-booking{background:#f8fafc}
+.freeze-td-booking, .freeze-th-booking{box-shadow:3px 0 6px rgba(0,0,0,.25)}
+
 table{width:100%;border-collapse:collapse;font-size:11px;min-width:2200px}
 th{background:#1e40af;color:#fff;padding:8px 6px;text-align:center;font-weight:600;position:sticky;top:0;white-space:nowrap;font-size:10px}
 body.light th{background:#3b82f6}
@@ -361,12 +383,12 @@ body.light .buyer-rank-item .rn-name{color:#1e293b}
     </div>
 
     <!-- BOOKING LIST VIEW (default) -->
-    <div id="ocBookingListWrap" class="table-wrap">
+    <div id="ocBookingListWrap" class="table-wrap freeze-wrap">
       <table id="ocBookingListTable">
         <thead>
           <tr>
-            <th>SL</th>
-            <th class="oc-sortable-th" onclick="sortOCList('booking_no')">Booking No<span class="oc-sort-icon" id="sortIcon_booking_no"></span> <i class="fas fa-filter oc-filter-icon" id="filterIcon_booking_no" onclick="event.stopPropagation();openOCColumnFilter(event,'booking_no')"></i></th>
+            <th class="freeze-th-sl">SL</th>
+            <th class="oc-sortable-th freeze-th-booking2" onclick="sortOCList('booking_no')">Booking No<span class="oc-sort-icon" id="sortIcon_booking_no"></span> <i class="fas fa-filter oc-filter-icon" id="filterIcon_booking_no" onclick="event.stopPropagation();openOCColumnFilter(event,'booking_no')"></i></th>
             <th class="oc-sortable-th" onclick="sortOCList('buyer')">Buyer<span class="oc-sort-icon" id="sortIcon_buyer"></span> <i class="fas fa-filter oc-filter-icon" id="filterIcon_buyer" onclick="event.stopPropagation();openOCColumnFilter(event,'buyer')"></i></th>
             <th class="oc-sortable-th" onclick="sortOCList('colorCount')">Colors Closed<span class="oc-sort-icon" id="sortIcon_colorCount"></span> <i class="fas fa-filter oc-filter-icon" id="filterIcon_colorCount" onclick="event.stopPropagation();openOCColumnFilter(event,'colorCount')"></i></th>
             <th class="oc-sortable-th" onclick="sortOCList('greyQty')">Grey Qty<span class="oc-sort-icon" id="sortIcon_greyQty"></span> <i class="fas fa-filter oc-filter-icon" id="filterIcon_greyQty" onclick="event.stopPropagation();openOCColumnFilter(event,'greyQty')"></i></th>
@@ -402,11 +424,11 @@ body.light .buyer-rank-item .rn-name{color:#1e293b}
         <button class="btn btn-warning" onclick="backToOCBookingList()"><i class="fas fa-arrow-left"></i> Back to Booking List</button>
         <span style="font-size:13px;font-weight:700;color:#60a5fa" id="ocDetailTitle"></span>
       </div>
-      <div class="table-wrap">
+      <div class="table-wrap freeze-wrap">
         <table id="ocTable">
           <thead>
             <tr>
-              <th>SL</th><th>Date</th><th>Buyer</th><th>Booking No</th><th>Fab Color</th>
+              <th class="freeze-th-sl">SL</th><th class="freeze-th-date">Date</th><th class="freeze-th-booking">Booking No</th><th>Buyer</th><th>Fab Color</th>
               <th>Fab Type</th><th>Finish Qty</th><th>PL %</th><th>Grey Qty</th>
               <th>Knit Rcvd</th><th>Trf In</th><th>Trf From</th><th>Total Rcvd</th>
               <th>Knit BL</th><th>Total Dlv</th><th>Inhand</th><th>Trf Out</th>
@@ -1359,11 +1381,15 @@ async function performCloseOrder(idx) {
     // color/type for the same booking on the same day creates its own record
     // instead of colliding with an existing one — and re-closing the same
     // color/type updates it instead of erroring out.
+    // NOTE: report_date is intentionally KEPT here (not deleted) — it's the
+    // original Daily Entry date for this booking/color, which the Order Close
+    // page's "Date" column now displays instead of the close_date. If the
+    // grey_order_close table doesn't have a report_date column, safeWrite's
+    // schema-safe retry will silently drop it and fall back to close_date.
     const closePayload = {
       ...buildRowPayload(entry, cid, operator),
       close_date: closeDate
     };
-    delete closePayload.report_date;
     const {error} = await safeWrite('grey_order_close', closePayload, {conflict: 'company_id,close_date,booking_no,fab_color,fab_type'});
     if(error) throw error;
     
@@ -1890,10 +1916,10 @@ function renderOCDetail() {
     
     if(isEditing){
       tbody.innerHTML += `<tr data-idx="${idx}">
-        <td>${i+1}</td>
-        <td><input type="date" class="cell-input" value="${entry.close_date||entry.report_date||''}" onchange="updateOCEntry(${idx},'close_date',this.value)"></td>
+        <td class="freeze-td-sl">${i+1}</td>
+        <td class="freeze-td-date"><input type="date" class="cell-input" value="${entry.report_date||entry.close_date||''}" onchange="updateOCEntry(${idx},'report_date',this.value)"></td>
+        <td class="freeze-td-booking"><input type="text" class="cell-input wide" value="${entry.booking_no||''}" onchange="updateOCEntry(${idx},'booking_no',this.value)"></td>
         <td><input type="text" class="cell-input wide" value="${entry.buyer||''}" onchange="updateOCEntry(${idx},'buyer',this.value)"></td>
-        <td><input type="text" class="cell-input wide" value="${entry.booking_no||''}" onchange="updateOCEntry(${idx},'booking_no',this.value)"></td>
         <td><input type="text" class="cell-input" value="${entry.fab_color||''}" onchange="updateOCEntry(${idx},'fab_color',this.value)"></td>
         <td><input type="text" class="cell-input" value="${entry.fab_type||''}" onchange="updateOCEntry(${idx},'fab_type',this.value)"></td>
         <td><input type="number" class="cell-input narrow" value="${entry.finish_qty||0}" onchange="updateOCEntry(${idx},'finish_qty',this.value)"></td>
@@ -1918,10 +1944,10 @@ function renderOCDetail() {
       </tr>`;
     } else {
       tbody.innerHTML += `<tr data-idx="${idx}">
-        <td>${i+1}</td>
-        <td>${entry.close_date || entry.report_date || ''}</td>
+        <td class="freeze-td-sl">${i+1}</td>
+        <td class="freeze-td-date">${entry.report_date || entry.close_date || ''}</td>
+        <td class="freeze-td-booking"><b>${entry.booking_no||''}</b></td>
         <td>${entry.buyer||''}</td>
-        <td><b>${entry.booking_no||''}</b></td>
         <td>${entry.fab_color||''}</td>
         <td>${entry.fab_type||''}</td>
         <td>${fmt(entry.finish_qty)}</td>
@@ -2005,7 +2031,6 @@ async function saveOCRow(idx){
       ...buildRowPayload(entry, cid, operator),
       close_date: entry.close_date || entry.report_date || new Date().toISOString().slice(0,10)
     };
-    delete payload.report_date;
     const mode = entry.id ? {id: entry.id} : {conflict: 'company_id,close_date,booking_no,fab_color,fab_type'};
     const {error} = await safeWrite('grey_order_close', payload, mode);
     if(error) throw error;
@@ -2371,7 +2396,7 @@ function exportOrderCloseExcel() {
     ['GMS TEXTILES LTD - Order Close Report'],
     [`From: ${document.getElementById('ocFrom').value} To: ${document.getElementById('ocTo').value}${ocFilterText ? ' | Filter: ' + document.getElementById('ocFilterBox').value : ''}`],
     [''],
-    ['SL', 'Date', 'Buyer', 'Booking No', 'Fab Color', 'Fab Type', 'Finish Qty', 'PL %', 'Grey Qty', 'Knit Rcvd', 'Trf In', 'Trf From', 'Total Rcvd', 'Knit BL', 'Total Dlv', 'Inhand', 'Trf Out', 'Trf To', 'Stock', 'ETD', 'Remarks']
+    ['SL', 'Date', 'Booking No', 'Buyer', 'Fab Color', 'Fab Type', 'Finish Qty', 'PL %', 'Grey Qty', 'Knit Rcvd', 'Trf In', 'Trf From', 'Total Rcvd', 'Knit BL', 'Total Dlv', 'Inhand', 'Trf Out', 'Trf To', 'Stock', 'ETD', 'Remarks']
   ];
   
   exportRows.forEach((entry, i) => {
@@ -2382,7 +2407,7 @@ function exportOrderCloseExcel() {
     const stock = inhand - trfOut;
     
     rows.push([
-      i+1, entry.close_date || entry.report_date, entry.buyer, entry.booking_no, entry.fab_color, entry.fab_type,
+      i+1, entry.report_date || entry.close_date, entry.booking_no, entry.buyer, entry.fab_color, entry.fab_type,
       entry.finish_qty, entry.pl_percent, entry.grey_qty, entry.knitting_receive,
       entry.transfer_in_qty, entry.transfer_from_order, totalRcvd, entry.knit_rcvd_bl,
       totalDlv, inhand, trfOut, entry.transfer_to_order, stock, entry.etd, entry.remarks
