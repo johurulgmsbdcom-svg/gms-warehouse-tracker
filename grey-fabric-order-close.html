@@ -234,6 +234,22 @@ body.light .buyer-rank-item .rn-name{color:#1e293b}
   .buyer-charts-grid{grid-template-columns:1fr}
   .chart-wrap{height:220px}
 }
+
+/* 🧊 Sticky / Freeze Filter Bar (Order Close) */
+.oc-sticky-filters{
+  position:sticky;
+  top: var(--sticky-offset, 130px);
+  z-index:50;
+  background:#1e293b;
+  padding:10px 6px 4px;
+  margin:-6px -6px 14px;
+  border-radius:10px;
+  box-shadow:0 6px 16px rgba(0,0,0,.3);
+}
+body.light .oc-sticky-filters{
+  background:#fff;
+  box-shadow:0 6px 16px rgba(0,0,0,.1);
+}
 </style>
 </head>
 <body>
@@ -358,20 +374,24 @@ body.light .buyer-rank-item .rn-name{color:#1e293b}
 <div id="orderclose" class="page">
   <div class="card">
     <h2><i class="fas fa-clipboard-check"></i> Order Close Report</h2>
-    <div class="controls">
-      <label>From:</label>
-      <input type="date" id="ocFrom">
-      <label>To:</label>
-      <input type="date" id="ocTo">
-      <button class="btn btn-primary" onclick="loadOrderClose()"><i class="fas fa-search"></i> Search</button>
-      <button class="btn btn-success" onclick="exportOrderCloseExcel()"><i class="fas fa-file-excel"></i> Export</button>
+
+    <div class="oc-sticky-filters">
+      <div class="controls">
+        <label>From:</label>
+        <input type="date" id="ocFrom">
+        <label>To:</label>
+        <input type="date" id="ocTo">
+        <button class="btn btn-primary" onclick="loadOrderClose()"><i class="fas fa-search"></i> Search</button>
+        <button class="btn btn-success" onclick="exportOrderCloseExcel()"><i class="fas fa-file-excel"></i> Export</button>
+      </div>
+      <div class="controls">
+        <label><i class="fas fa-filter"></i> Filter:</label>
+        <input type="text" id="ocFilterBox" placeholder="Buyer, Booking No, Color, Type, Remarks দিয়ে খুঁজুন..." style="width:320px" oninput="applyOCFilter()">
+        <button class="btn btn-warning" onclick="clearOCFilter()" style="padding:8px 10px"><i class="fas fa-times"></i> Clear</button>
+        <span style="font-size:10px;color:#94a3b8" id="ocFilterCount"></span>
+      </div>
     </div>
-    <div class="controls">
-      <label><i class="fas fa-filter"></i> Filter:</label>
-      <input type="text" id="ocFilterBox" placeholder="Buyer, Booking No, Color, Type, Remarks দিয়ে খুঁজুন..." style="width:320px" oninput="applyOCFilter()">
-      <button class="btn btn-warning" onclick="clearOCFilter()" style="padding:8px 10px"><i class="fas fa-times"></i> Clear</button>
-      <span style="font-size:10px;color:#94a3b8" id="ocFilterCount"></span>
-    </div>
+
     <div class="summary-grid">
       <div class="summary-card blue"><h4>Order Close</h4><div class="value" id="ocCount">0</div></div>
       <div class="summary-card green"><h4>Color Close</h4><div class="value" id="ocColorCount">0</div></div>
@@ -2421,6 +2441,18 @@ function exportOrderCloseExcel() {
 }
 
 // =========================================
+// 🧊 STICKY OFFSET (header + tabs height)
+// =========================================
+function setStickyOffset(){
+  const header = document.querySelector('.header');
+  const tabs = document.querySelector('.tabs');
+  const offset = (header?.offsetHeight || 0) + (tabs?.offsetHeight || 0);
+  document.documentElement.style.setProperty('--sticky-offset', offset + 'px');
+}
+window.addEventListener('resize', setStickyOffset);
+window.addEventListener('load', setStickyOffset);
+
+// =========================================
 // 🚀 INIT
 // =========================================
 (function init(){
@@ -2434,6 +2466,8 @@ function exportOrderCloseExcel() {
   if(lastOp) document.getElementById('entryOperator').value = lastOp;
   
   if(localStorage.getItem('greyTheme') === 'light') document.body.classList.add('light');
+  
+  setStickyOffset();
   
   // Load entries on page load
   loadEntries();
@@ -2516,6 +2550,7 @@ window.saveStockEditRow = saveStockEditRow;
 window.deleteStockEditRow = deleteStockEditRow;
 window.closeStockEditModal = closeStockEditModal;
 window.deleteStockGroup = deleteStockGroup;
+window.setStickyOffset = setStickyOffset;
 
 </script>
 </body>
