@@ -2054,6 +2054,26 @@ async function saveOCRow(idx){
     const mode = entry.id ? {id: entry.id} : {conflict: 'company_id,close_date,booking_no,fab_color,fab_type'};
     const {error} = await safeWrite('grey_order_close', payload, mode);
     if(error) throw error;
+
+    // 🔧 BUG FIX (sync grey_bookings): saving an edit here previously only
+    // updated grey_order_close. grey_bookings — the table Stock Check and
+    // Daily Entry Search actually read from — silently kept the OLD values,
+    // or in the worst case had NO matching row at all if the color/type was
+    // changed here. That exact mismatch is what caused the missing
+    // "COCOA / S/J" row earlier. Now every Order Close save also
+    // upserts the same row into grey_bookings on its natural key, so both
+    // tables always describe the same reality.
+    const bookingPayload = buildRowPayload(entry, cid, operator);
+    const {error: syncErr} = await safeWrite(
+      'grey_bookings',
+      bookingPayload,
+      {conflict: 'company_id,report_date,booking_no,fab_color,fab_type'}
+    );
+    if(syncErr){
+      console.warn('grey_bookings sync warning (Order Close row still saved):', syncErr);
+      showToast(`⚠️ Order Close-এ saved হয়েছে, কিন্তু Stock Check-এ sync করতে সমস্যা হয়েছে: ${syncErr.message}`, 'warning');
+    }
+
     ocEditingRows.delete(idx);
     delete ocRowBackups[idx];
     showToast(`✅ Updated: ${entry.booking_no}`);
@@ -2311,6 +2331,26 @@ async function saveStockEditRow(i){
     const payload = buildRowPayload(row, cid, operator);
     const {error} = await safeWrite('grey_bookings', payload, {id: row.id});
     if(error) throw error;
+
+    // 🔧 BUG FIX (sync grey_order_close): if this row is already Closed, it
+    // has a matching grey_order_close history record. Editing quantities
+    // here without updating that record would desync Order Close from
+    // Stock Check in the OPPOSITE direction of the saveOCRow fix above.
+    // Best-effort sync: only attempt it for Closed rows, and never block
+    // the main save on it.
+    if(row.status === 'Closed'){
+      const closePayload = {
+        ...buildRowPayload(row, cid, operator),
+        close_date: row.close_date || row.report_date
+      };
+      const {error: syncErr} = await safeWrite(
+        'grey_order_close',
+        closePayload,
+        {conflict: 'company_id,close_date,booking_no,fab_color,fab_type'}
+      );
+      if(syncErr) console.warn('grey_order_close sync warning (Stock Check row still saved):', syncErr);
+    }
+
     showToast('✅ Updated');
   } catch(e){
     showToast('❌ Update failed: ' + e.message, 'error');
@@ -2320,7 +2360,17 @@ async function saveStockEditRow(i){
 
 async function deleteStockEditRow(i){
   const row = stockEditRows[i];
-  if(!confirm(`⚠️ এই row (${row.report_date||''}) ডিলিট করবেন?`)) return;
+  // 🔧 SAFETY WARNING (root cause #1 of the missing-row bug): deleting a
+  // Closed row here removes it from grey_bookings — which Stock Check and
+  // Daily Entry Search read from — but grey_order_close's history record
+  // is intentionally left alone. That gap is exactly what made the
+  // COCOA/S/J row "disappear" earlier while still showing in Order Close.
+  // This extra confirmation makes that consequence explicit before it
+  // happens again, instead of it being a silent surprise later.
+  const warning = row.status === 'Closed'
+    ? `⚠️ এই row (${row.report_date||''}) টা ইতিমধ্যে Closed — Order Close history-তে থেকেই যাবে, কিন্তু Stock Check/Daily Search থেকে হারিয়ে যাবে (ঠিক যেভাবে COCOA/S/J row হারিয়েছিল)।\n\nসত্যিই ডিলিট করতে চান?`
+    : `⚠️ এই row (${row.report_date||''}) ডিলিট করবেন?`;
+  if(!confirm(warning)) return;
   showLoading();
   try {
     const {error} = await supabase.from('grey_bookings').delete().eq('id', row.id);
