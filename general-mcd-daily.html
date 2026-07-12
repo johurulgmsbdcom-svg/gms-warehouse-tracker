@@ -673,9 +673,6 @@ return '';
 
 async function saveToFirebase(data, fileName) {
 updateStatus('Saving to Firebase...');
-const now = new Date();
-const currentMonth = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
-const prevMonth = `${now.getFullYear()}-${String(now.getMonth()).padStart(2, '0')}`;
 
 await purgeExpiredData();
 
@@ -690,7 +687,13 @@ else { skippedCount++; }
 try {
 const writes = [];
 for (const [month, rows] of Object.entries(grouped)) {
-const col = (month === currentMonth || month === prevMonth) ? ACTIVE_COL : ARCHIVE_COL;
+// FIX: previously only "this month" and "last month" data was routed to
+// ACTIVE_COL (the collection the dashboard actually reads); anything else
+// -- including FUTURE-dated rows, like an upload for next month -- went to
+// ARCHIVE_COL and never showed up on the dashboard, even though the save
+// reported success. Now every upload always goes to ACTIVE_COL; the
+// 30-day auto-expiry (purgeExpiredData) is what removes old data instead.
+const col = ACTIVE_COL;
 const docRef = doc(db, col, month);
 
 // FIX: merge newly uploaded rows with whatever is already saved for this
@@ -769,9 +772,9 @@ let deletedAny = false;
 
 snapshot.forEach(docSnap => {
 const id = docSnap.id; // format: YYYY-MM
-if (id === currentMonth) return; // always keep the current month
+if (id >= currentMonth) return; // current month AND any future month (e.g. an early upload for next month) are always kept
 if (id === prevMonth && dayOfMonth <= GRACE_DAYS) return; // still inside the 1-day grace window
-// Anything else (last month past the grace window, or anything older) gets deleted
+// Anything strictly older than last month, or last month past the grace window, gets deleted
 deletions.push(deleteDoc(doc(db, ACTIVE_COL, id)));
 deletedAny = true;
 });
