@@ -461,6 +461,13 @@ var all = this._all();
 if(typeof keys === 'string') keys = [keys];
 keys.forEach(function(k){ delete all[k]; });
 localStorage.setItem(this.CACHE_KEY, JSON.stringify(all));
+// Also reset the local timestamp so the next load is forced to refetch,
+// even if the remote timestamp write races with this invalidation.
+if(Array.isArray(keys)){
+var timestamps = JSON.parse(localStorage.getItem(this.LOCAL_TS_KEY) || '{}');
+keys.forEach(function(k){ timestamps[k] = 0; });
+localStorage.setItem(this.LOCAL_TS_KEY, JSON.stringify(timestamps));
+}
 },
 
 clear: function(){
@@ -584,6 +591,8 @@ saveToFirebase(normalized, file.name);
 } catch (err) { showToast('Error: ' + err.message, true); }
 };
 reader.readAsArrayBuffer(file);
+// Reset the input so selecting the same file again re-triggers the change event
+event.target.value = '';
 }
 
 function normalizeData(raw) {
@@ -611,6 +620,7 @@ if (typeof d === 'number') { const date = XLSX.SSF.parse_date_code(d); if (date)
 return String(d);
 }
 function getMonthKey(dateStr) {
+// Expects DD-MM-YYYY (the format row.date is stored in)
 if (!dateStr) return '';
 const parts = dateStr.split('-');
 if (parts.length === 3) return `${parts[2]}-${parts[1].padStart(2, '0')}`;
@@ -623,7 +633,7 @@ const now = new Date();
 const currentMonth = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
 const prevMonth = `${now.getFullYear()}-${String(now.getMonth()).padStart(2, '0')}`;
 
-await deleteOldData(currentMonth);
+await purgeExpiredData();
 
 const grouped = {};
 data.forEach(row => {
@@ -635,14 +645,34 @@ try {
 const writes = [];
 for (const [month, rows] of Object.entries(grouped)) {
 const col = (month === currentMonth || month === prevMonth) ? ACTIVE_COL : ARCHIVE_COL;
-writes.push(setDoc(doc(db, col, month), { data: rows, updatedAt: Date.now() }));
+const docRef = doc(db, col, month);
+
+// FIX: merge newly uploaded rows with whatever is already saved for this
+// month instead of overwriting the whole month's data. This makes each
+// upload ADD data on top of the previous data, instead of replacing it.
+writes.push((async () => {
+let existingRows = [];
+try {
+const existingSnap = await getDoc(docRef);
+if (existingSnap.exists() && Array.isArray(existingSnap.data().data)) {
+existingRows = existingSnap.data().data;
 }
+} catch (e) {
+console.warn('Could not read existing data for merge:', e);
+}
+const mergedRows = existingRows.concat(rows).map((r, idx) => ({ ...r, sl: idx + 1 }));
+await setDoc(docRef, { data: mergedRows, updatedAt: Date.now() });
+})());
+}
+
+// Wait for all month documents to be fully written BEFORE announcing the
+// update and reloading, so the UI never reloads stale/half-written data.
+await Promise.all(writes);
 
 await setDoc(doc(db, SYNC_COL, ACTIVE_COL), { lastUpdated: Date.now(), collection: ACTIVE_COL }, { merge: true });
 window.GMS_CACHE.invalidate([ACTIVE_COL]);
 
-await Promise.all(writes);
-showToast(`✅ Saved ${data.length} rows!`);
+showToast(`✅ Added ${data.length} rows (merged with existing data)!`);
 updateStatus('✅ Saved successfully!');
 
 try{
@@ -654,51 +684,103 @@ var roiStatus = document.getElementById('roiStatus');
 if(roiStatus){ roiStatus.innerText = 'Tracked ✅'; setTimeout(function(){ if(roiStatus) roiStatus.innerText = 'Active'; }, 2000); }
 }catch(e){}
 
-loadActiveData();
+await loadActiveData();
 } catch (err) { showToast('Save failed: ' + err.message, true); }
 }
 
-async function deleteOldData(currentMonth) {
+// ==================== 30-DAY AUTO-EXPIRY ====================
+// Rule (as requested):
+//  - This month's data always stays.
+//  - Last month's data is only visible on the 1st day of the new month.
+//  - Starting the 2nd day of the new month, last month's data (and anything
+//    older) is permanently deleted from Firebase.
+// Example: today = 12 July -> nothing happens yet (July is "this month").
+//          1 Aug  -> July data still visible (grace day).
+//          2 Aug  -> ALL July data is deleted from Firebase.
+//          1 Sep  -> Aug data still visible (grace day).
+//          2 Sep  -> ALL Aug data is deleted from Firebase.
+const GRACE_DAYS = 1; // previous month is kept visible only for this many days into the new month
+
+function monthKeyOf(d) {
+return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+}
+
+async function purgeExpiredData() {
 try {
-const twoMonthsAgo = new Date();
-twoMonthsAgo.setMonth(twoMonthsAgo.getMonth() - 2);
-const oldMonth = `${twoMonthsAgo.getFullYear()}-${String(twoMonthsAgo.getMonth() + 1).padStart(2, '0')}`;
+const now = new Date();
+const dayOfMonth = now.getDate();
+const currentMonth = monthKeyOf(now);
+const prevMonthDate = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+const prevMonth = monthKeyOf(prevMonthDate);
+
 const snapshot = await getDocs(collection(db, ACTIVE_COL));
-snapshot.forEach(async docSnap => {
-if (docSnap.id === oldMonth) await deleteDoc(doc(db, ACTIVE_COL, docSnap.id));
+const deletions = [];
+let deletedAny = false;
+
+snapshot.forEach(docSnap => {
+const id = docSnap.id; // format: YYYY-MM
+if (id === currentMonth) return; // always keep the current month
+if (id === prevMonth && dayOfMonth <= GRACE_DAYS) return; // still inside the 1-day grace window
+// Anything else (last month past the grace window, or anything older) gets deleted
+deletions.push(deleteDoc(doc(db, ACTIVE_COL, id)));
+deletedAny = true;
 });
-} catch (err) { console.error('Error deleting old data:', err); }
+
+if (deletions.length) {
+await Promise.all(deletions);
+// Bump the sync timestamp so every open tab refreshes and drops the purged data
+await setDoc(doc(db, SYNC_COL, ACTIVE_COL), { lastUpdated: Date.now() }, { merge: true });
+window.GMS_CACHE.invalidate([ACTIVE_COL]);
+}
+
+return deletedAny;
+} catch (err) { console.error('Error purging expired data:', err); return false; }
 }
 
 window.deleteDateData = async function() {
 const dateInput = document.getElementById('reportDate').value;
 if (!dateInput) { showToast('Please select a date to delete', true); return; }
 
+// FIX: the <input type="date"> gives "YYYY-MM-DD", but row.date is stored
+// as "DD-MM-YYYY" (4 digit year). The old code built a 2-digit-year string
+// and also mis-used getMonthKey() (which expects DD-MM-YYYY) directly on
+// this ISO string, producing a wrong month key AND a date string that could
+// never match a stored row.date. Both are fixed below.
 const [year, month, day] = dateInput.split('-');
-const formattedDate = `${day}-${month}-${year.slice(2)}`;
+const formattedDate = `${day}-${month}-${year}`; // matches row.date format, 4-digit year
+const monthKey = `${year}-${month}`; // matches the Firestore doc id format (YYYY-MM)
 
 if (!confirm(`Are you sure you want to delete ALL data for ${formattedDate}? This cannot be undone!`)) return;
 
 try {
 updateStatus('Deleting data...');
-const monthKey = getMonthKey(dateInput);
-if (!monthKey) { showToast('Invalid date format', true); return; }
 
+// Data could be in the active collection or already moved to archive
 const docRef = doc(db, ACTIVE_COL, monthKey);
 const docSnap = await getDoc(docRef);
 
 if (docSnap.exists()) {
 const docData = docSnap.data();
-if (docData.data) {
+if (docData.data && docData.data.length) {
+const beforeCount = docData.data.length;
 const filtered = docData.data.filter(row => row.date !== formattedDate);
+
+if (filtered.length === beforeCount) {
+showToast(`No data found for ${formattedDate}`, true);
+updateStatus('Live Sync Active ✅');
+return;
+}
+
 await setDoc(docRef, { data: filtered, updatedAt: Date.now() });
 await setDoc(doc(db, SYNC_COL, ACTIVE_COL), { lastUpdated: Date.now() }, { merge: true });
 window.GMS_CACHE.invalidate([ACTIVE_COL]);
 
 allData = allData.filter(row => row.date !== formattedDate);
+updateFilterTotals();
 applyFilters();
 
-showToast(`✅ Data for ${formattedDate} deleted successfully!`);
+showToast(`✅ Deleted ${beforeCount - filtered.length} row(s) for ${formattedDate}`);
+updateStatus('Live Sync Active ✅');
 } else {
 showToast('No data found for this month', true);
 }
@@ -712,6 +794,9 @@ showToast('Delete failed: ' + err.message, true);
 
 async function loadActiveData() {
 updateStatus('Loading live data...');
+// Auto-expire anything past the 30-day retention window every time data loads
+// (app open, periodic refresh, or after a save) - not just on upload.
+await purgeExpiredData();
 const data = await smartLoadData();
 allData = data;
 allData.sort((a, b) => (b.date || '').localeCompare(a.date || ''));
@@ -731,11 +816,22 @@ if(!document.hidden) loadActiveData();
 window.applyDateFilter = function() {
 const dateInput = document.getElementById('reportDate').value;
 if (!dateInput) { showToast('Please select a date', true); return; }
+
+// FIX: build the filter date with a 4-digit year so it matches the format
+// row.date is actually stored in ("DD-MM-YYYY"). Previously this used a
+// 2-digit year ("DD-MM-YY"), so it could never equal any real row.date and
+// the date filter silently showed nothing.
 const [year, month, day] = dateInput.split('-');
-const formattedDate = `${day}-${month}-${year.slice(2)}`;
+const formattedDate = `${day}-${month}-${year}`;
 currentFilter.date = formattedDate;
 applyFilters();
-showToast(`Filter applied: ${formattedDate}`);
+
+const matchCount = allData.filter(r => r.date === formattedDate).length;
+if (matchCount === 0) {
+showToast(`No data found for ${formattedDate}`, true);
+} else {
+showToast(`Filter applied: ${formattedDate} (${matchCount} rows)`);
+}
 };
 
 window.clearDateFilter = function() {
