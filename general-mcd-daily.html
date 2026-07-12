@@ -614,13 +614,57 @@ remarks: String(row['Remarks'] || '').trim()
 }
 
 function parseNum(v) { if (typeof v === 'number') return v; return Number(String(v || 0).replace(/,/g, '')) || 0; }
-function formatDate(d) {
-if (!d) return '';
-if (typeof d === 'number') { const date = XLSX.SSF.parse_date_code(d); if (date) return `${String(date.d).padStart(2, '0')}-${String(date.m).padStart(2, '0')}-${date.y}`; }
-return String(d);
+
+// FIX: the old formatDate() only handled Excel serial-number dates correctly;
+// any date typed/pasted as text in a different format (YYYY-MM-DD, DD/MM/YYYY,
+// "12 Jul 2026", etc.) was passed through unchanged. That broke getMonthKey()
+// later, which silently sent those rows to the wrong Firebase collection (or
+// dropped them entirely), so the upload reported "success" but the rows never
+// showed up on the dashboard. parseAnyDate() below understands all common
+// formats and always normalizes to day/month/year numbers.
+function parseAnyDate(raw) {
+if (raw === null || raw === undefined || raw === '') return null;
+
+// Excel serial date number
+if (typeof raw === 'number') {
+const parsed = XLSX.SSF.parse_date_code(raw);
+if (parsed) return { d: parsed.d, m: parsed.m, y: parsed.y };
+return null;
 }
+
+// JS Date object
+if (raw instanceof Date && !isNaN(raw.getTime())) {
+return { d: raw.getDate(), m: raw.getMonth() + 1, y: raw.getFullYear() };
+}
+
+const str = String(raw).trim();
+if (!str) return null;
+
+// DD-MM-YYYY or DD/MM/YYYY (day first - this app's own display format)
+let m = str.match(/^(\d{1,2})[-\/](\d{1,2})[-\/](\d{4})$/);
+if (m) return { d: parseInt(m[1], 10), m: parseInt(m[2], 10), y: parseInt(m[3], 10) };
+
+// YYYY-MM-DD or YYYY/MM/DD (ISO-like)
+m = str.match(/^(\d{4})[-\/](\d{1,2})[-\/](\d{1,2})$/);
+if (m) return { d: parseInt(m[3], 10), m: parseInt(m[2], 10), y: parseInt(m[1], 10) };
+
+// Fallback: let the browser's date parser try ("12 Jul 2026", "Jul 12, 2026", etc.)
+const parsedDate = new Date(str);
+if (!isNaN(parsedDate.getTime())) {
+return { d: parsedDate.getDate(), m: parsedDate.getMonth() + 1, y: parsedDate.getFullYear() };
+}
+
+return null;
+}
+
+function formatDate(d) {
+const parts = parseAnyDate(d);
+if (!parts) return '';
+return `${String(parts.d).padStart(2, '0')}-${String(parts.m).padStart(2, '0')}-${parts.y}`;
+}
+
 function getMonthKey(dateStr) {
-// Expects DD-MM-YYYY (the format row.date is stored in)
+// dateStr is always DD-MM-YYYY here because formatDate() above guarantees it
 if (!dateStr) return '';
 const parts = dateStr.split('-');
 if (parts.length === 3) return `${parts[2]}-${parts[1].padStart(2, '0')}`;
@@ -636,9 +680,11 @@ const prevMonth = `${now.getFullYear()}-${String(now.getMonth()).padStart(2, '0'
 await purgeExpiredData();
 
 const grouped = {};
+let skippedCount = 0;
 data.forEach(row => {
 const m = getMonthKey(row.date);
 if (m) { if (!grouped[m]) grouped[m] = []; grouped[m].push(row); }
+else { skippedCount++; }
 });
 
 try {
@@ -672,7 +718,11 @@ await Promise.all(writes);
 await setDoc(doc(db, SYNC_COL, ACTIVE_COL), { lastUpdated: Date.now(), collection: ACTIVE_COL }, { merge: true });
 window.GMS_CACHE.invalidate([ACTIVE_COL]);
 
-showToast(`✅ Added ${data.length} rows (merged with existing data)!`);
+const savedCount = data.length - skippedCount;
+showToast(`✅ Added ${savedCount} rows (merged with existing data)!`);
+if (skippedCount > 0) {
+setTimeout(() => showToast(`⚠️ Skipped ${skippedCount} row(s): could not detect a valid date`, true), 2500);
+}
 updateStatus('✅ Saved successfully!');
 
 try{
