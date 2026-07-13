@@ -478,7 +478,7 @@ body.light .oc-sticky-filters{
       <table id="stockTable">
         <thead>
           <tr>
-            <th>Date</th><th>Booking No</th><th>Color</th><th>Type</th><th>Total Rcvd</th>
+            <th>Date</th><th>Booking No</th><th>Buyer</th><th>Color</th><th>Type</th><th>Total Rcvd</th>
             <th>Total Dlv</th><th>Inhand</th><th>Trf Out</th><th>Stock</th><th>Status</th><th>Action</th>
           </tr>
         </thead>
@@ -2188,25 +2188,56 @@ async function saveOCRow(idx){
   showLoading(false);
 }
 
+// =========================================
+// FIXED (per user request): deleteOCRow now ALSO deletes the matching
+// grey_bookings row(s), so a booking/color deleted from Order Close is
+// removed from Stock Check / Daily Entry Search as well - instead of only
+// deleting the grey_order_close record and leaving a ghost row behind in
+// grey_bookings that Stock Check would keep showing.
+// =========================================
 async function deleteOCRow(idx){
+  const cid = await getCompanyId();
   const entry = allOrderClose[idx];
-  if(!confirm(`Delete closed order ${entry.booking_no} - ${entry.fab_color}?`)) return;
+  if(!confirm(`Delete closed order ${entry.booking_no} - ${entry.fab_color}? Eta Order Close aar Stock Check - dutu jaygatei theke delete hoye jabe.`)) return;
 
-  if(entry.id){
-    showLoading();
-    const {error} = await supabase.from('grey_order_close').delete().eq('id', entry.id);
-    showLoading(false);
-    if(error){
-      showToast('Delete failed: ' + error.message, 'error');
-      return;
+  showLoading();
+  try {
+    if(entry.id){
+      const {error} = await supabase.from('grey_order_close').delete().eq('id', entry.id);
+      if(error) throw error;
     }
-  }
 
-  ocEditingRows.delete(idx);
-  delete ocRowBackups[idx];
-  allOrderClose.splice(idx, 1);
-  renderOrderClose();
-  showToast('Order Close theke Deleted');
+    // Also remove the matching grey_bookings row(s) so Stock Check / Daily
+    // Entry Search stay in sync with Order Close.
+    if(cid){
+      try {
+        const {data: matchingRows} = await supabase
+          .from('grey_bookings')
+          .select('id')
+          .eq('company_id', cid)
+          .eq('booking_no', normKey(entry.booking_no))
+          .eq('fab_color', (entry.fab_color || '').toString().trim())
+          .eq('fab_type', (entry.fab_type || '').toString().trim())
+          .eq('report_date', entry.report_date || entry.close_date || '');
+        const ids = (matchingRows || []).map(r => r.id);
+        if(ids.length > 0){
+          const {error: delErr} = await supabase.from('grey_bookings').delete().in('id', ids);
+          if(delErr) console.warn('grey_bookings delete-sync warning:', delErr);
+        }
+      } catch(syncE){
+        console.warn('grey_bookings delete-sync warning:', syncE);
+      }
+    }
+
+    ocEditingRows.delete(idx);
+    delete ocRowBackups[idx];
+    allOrderClose.splice(idx, 1);
+    renderOrderClose();
+    showToast('Order Close aar Stock Check dutu jayga theke Deleted');
+  } catch(e){
+    showToast('Delete failed: ' + e.message, 'error');
+  }
+  showLoading(false);
 }
 
 // =========================================
@@ -2245,7 +2276,7 @@ async function checkStock() {
     
     if(!data || data.length === 0) {
       stockDisplayData = [];
-      tbody.innerHTML = '<tr><td colspan="11" style="padding:20px;color:#94a3b8;text-align:center">Ei Booking No te kono data paoya jayni</td></tr>';
+      tbody.innerHTML = '<tr><td colspan="12" style="padding:20px;color:#94a3b8;text-align:center">Ei Booking No te kono data paoya jayni</td></tr>';
     } else {
       const grouped = groupStockRows(data);
       stockDisplayData = Object.values(grouped);
@@ -2263,6 +2294,7 @@ function groupStockRows(rows){
     const key = normKey(row.booking_no) + '__' + normKey(row.fab_color) + '__' + normKey(row.fab_type) + '__' + (row.report_date || '');
     if(!grouped[key]) grouped[key] = {
       booking_no: row.booking_no,
+      buyer: row.buyer,
       fab_color: row.fab_color,
       fab_type: row.fab_type,
       report_date: row.report_date || '',
@@ -2272,6 +2304,7 @@ function groupStockRows(rows){
       trfOut: 0,
       ids: []
     };
+    if(!grouped[key].buyer && row.buyer) grouped[key].buyer = row.buyer;
     const totalRcvd = (Number(row.knitting_receive) || 0) + (Number(row.transfer_in_qty) || 0);
     grouped[key].totalRcvd += totalRcvd;
     grouped[key].totalDlv += Number(row.total_delivery_qty) || 0;
@@ -2294,6 +2327,7 @@ function renderStockRows(items, tbody){
     tbody.innerHTML += `<tr>
       <td>${g.report_date||''}</td>
       <td><b>${g.booking_no||''}</b></td>
+      <td>${g.buyer||''}</td>
       <td>${g.fab_color||''}</td>
       <td>${g.fab_type||''}</td>
       <td>${fmt(g.totalRcvd)}</td>
@@ -2332,7 +2366,7 @@ async function loadAllStock() {
     stockDisplayData = items;
     
     if(items.length === 0) {
-      tbody.innerHTML = '<tr><td colspan="11" style="padding:20px;color:#94a3b8;text-align:center">Kono data paoya jayni</td></tr>';
+      tbody.innerHTML = '<tr><td colspan="12" style="padding:20px;color:#94a3b8;text-align:center">Kono data paoya jayni</td></tr>';
     } else {
       renderStockRows(stockDisplayData, tbody);
     }
@@ -2505,13 +2539,13 @@ function exportStockExcel(){
     ['GMS TEXTILES LTD - Stock Check'],
     ['Generated: ' + new Date().toLocaleString()],
     [''],
-    ['Date', 'Booking No', 'Color', 'Type', 'Total Rcvd', 'Total Dlv', 'Inhand', 'Trf Out', 'Stock', 'Status']
+    ['Date', 'Booking No', 'Buyer', 'Color', 'Type', 'Total Rcvd', 'Total Dlv', 'Inhand', 'Trf Out', 'Stock', 'Status']
   ];
   
   stockDisplayData.forEach(g => {
     const stock = g.inhand - g.trfOut;
     const status = stock > 0 ? 'Pending' : (stock < 0 ? 'Negative' : 'Clear');
-    rows.push([g.report_date||'', g.booking_no, g.fab_color, g.fab_type||'', g.totalRcvd, g.totalDlv, g.inhand, g.trfOut, stock, status]);
+    rows.push([g.report_date||'', g.booking_no, g.buyer||'', g.fab_color, g.fab_type||'', g.totalRcvd, g.totalDlv, g.inhand, g.trfOut, stock, status]);
   });
   
   const ws = XLSX.utils.aoa_to_sheet(rows);
