@@ -656,6 +656,24 @@ const ocColumnLabels = {
   stock: 'Stock', lastCloseDate: 'Last Close Date'
 };
 
+// =========================================
+// ROUNDING TOLERANCE (BUG FIX)
+// All Kg quantities are rounded to 2 decimals in numOrZero() below. Even so,
+// repeated add/subtract across many saves can leave a value like 0.0000001
+// or -0.0000001 sitting in the DB instead of a clean 0. Comparing against a
+// bare "> 0" / "< 0" then wrongly treats that as "still has stock" (row
+// stays in Inhand tab forever, popup keeps showing on Close, etc). EPS is
+// the tolerance used everywhere a stock/available amount is checked against
+// zero, so tiny floating-point noise is treated as exactly 0.
+// =========================================
+const EPS = 0.01;
+
+// Prevents a double-click / slow network double-submit on "Close" from
+// creating two close operations for the same row at once, which could
+// otherwise leave a duplicate/ghost row behind in grey_bookings or
+// grey_order_close.
+let closingInProgress = new Set();
+
 // Columns that don't exist on a table get remembered here for this session,
 // so we don't keep re-sending them and re-failing.
 const unsupportedColumns = { grey_bookings: new Set(), grey_order_close: new Set() };
@@ -719,9 +737,17 @@ async function safeWrite(table, payload, mode = {}){
   return {data: null, error: {message: 'Bar bar schema error - column milche na'}};
 }
 
+// numOrZero now ROUNDS to 2 decimals (BUG FIX). Previously it only cast to
+// Number, so tiny binary floating-point remainders (e.g. 12.000000000002 or
+// -0.0000000004) accumulated through repeated saves/transfers and stuck
+// around in the DB forever, which is what caused rows to show as
+// "Available Qty: 0" in the Inhand tab yet still remain listed instead of
+// disappearing (0 displayed on screen, but the real stored value was a
+// non-zero speck).
 function numOrZero(v){
   const n = Number(v);
-  return isNaN(n) ? 0 : n;
+  if(isNaN(n)) return 0;
+  return Math.round(n * 100) / 100;
 }
 
 // =========================================
@@ -1291,7 +1317,7 @@ function renderEntries() {
     const trfOut = Number(entry.transfer_out_qty) || 0;
     const stock = inhand - trfOut;
     
-    const stockClass = stock > 0 ? 'stock-warning' : (stock < 0 ? 'negative' : 'stock-clear');
+    const stockClass = stock > EPS ? 'stock-warning' : (stock < -EPS ? 'negative' : 'stock-clear');
     
     tbody.innerHTML += `<tr data-idx="${idx}">
       <td>${idx+1}</td>
@@ -1359,9 +1385,9 @@ function calcRow(idx) {
   document.getElementById(`tinhand${idx}`).innerHTML = `<b>${fmt(inhand)}</b>`;
   const stockEl = document.getElementById(`tstock${idx}`);
   stockEl.innerHTML = `<b>${fmt(stock)}</b>`;
-  stockEl.className = stock > 0 ? 'stock-warning' : (stock < 0 ? 'negative' : 'stock-clear');
+  stockEl.className = stock > EPS ? 'stock-warning' : (stock < -EPS ? 'negative' : 'stock-clear');
   
-  if(stock < 0){
+  if(stock < -EPS){
     showToast(`${entry.booking_no||'Row'} - Stock Negative (${fmt(stock)}) hoye geche, man check korun`, 'warning');
   }
   
@@ -1444,6 +1470,10 @@ async function deleteEntry(idx) {
 }
 
 async function closeOrder(idx) {
+  // BUG FIX: guard against double-click / double-submit while a close for
+  // this same row is already being processed.
+  if(closingInProgress.has(idx)) return;
+
   const entry = allEntries[idx];
   const totalRcvd = (Number(entry.knitting_receive) || 0) + (Number(entry.transfer_in_qty) || 0);
   const totalDlv = Number(entry.total_delivery_qty) || 0;
@@ -1451,7 +1481,10 @@ async function closeOrder(idx) {
   const trfOut = Number(entry.transfer_out_qty) || 0;
   const stock = inhand - trfOut;
   
-  if(stock > 0) {
+  // BUG FIX: use EPS tolerance instead of a bare "> 0" so tiny floating
+  // point noise (e.g. 0.0000001) doesn't wrongly trigger the "you still
+  // have stock, transfer it out first" popup when the real stock is 0.
+  if(stock > EPS) {
     pendingCloseIdx = idx;
     document.getElementById('warningMessage').innerHTML = 
       `<b>${entry.booking_no}</b> - <b>${entry.fab_color}</b> - <b>${entry.fab_type}</b><br>
@@ -1475,6 +1508,11 @@ async function confirmCloseOrder() {
 async function performCloseOrder(idx) {
   const entry = allEntries[idx];
   if(!entry) return;
+  // BUG FIX: second half of the double-submit guard - if this row is
+  // already mid-close (e.g. triggered from both the direct Close button and
+  // the warning modal's "Yes, Close Anyway" almost simultaneously), skip.
+  if(closingInProgress.has(idx)) return;
+  closingInProgress.add(idx);
   showLoading();
   
   try {
@@ -1502,6 +1540,8 @@ async function performCloseOrder(idx) {
   } catch(e) {
     entry.status = 'Open';
     showToast(e.message, 'error');
+  } finally {
+    closingInProgress.delete(idx);
   }
   showLoading(false);
 }
@@ -1849,7 +1889,7 @@ function renderOCBookingList(){
   
   tbody.innerHTML = '';
   groups.forEach((g, i) => {
-    const stockClass = g.stock > 0 ? 'stock-warning' : (g.stock < 0 ? 'negative' : 'stock-clear');
+    const stockClass = g.stock > EPS ? 'stock-warning' : (g.stock < -EPS ? 'negative' : 'stock-clear');
     const safeBooking = (g.booking_no || '').replace(/'/g, "\\'");
     tbody.innerHTML += `<tr>
       <td>${i+1}</td>
@@ -2009,7 +2049,7 @@ function renderOCDetail() {
     const stock = inhand - trfOut;
     const knitBL = (Number(entry.grey_qty)||0) - totalRcvd;
     
-    const stockClass = stock > 0 ? 'stock-warning' : (stock < 0 ? 'negative' : 'stock-clear');
+    const stockClass = stock > EPS ? 'stock-warning' : (stock < -EPS ? 'negative' : 'stock-clear');
     const isEditing = ocEditingRows.has(idx);
     
     if(isEditing){
@@ -2116,9 +2156,9 @@ function calcOCRow(idx){
   document.getElementById(`ocinhand${idx}`).innerHTML = `<b>${fmt(inhand)}</b>`;
   const stockEl = document.getElementById(`ocstock${idx}`);
   stockEl.innerHTML = `<b>${fmt(stock)}</b>`;
-  stockEl.className = stock > 0 ? 'stock-warning' : (stock < 0 ? 'negative' : 'stock-clear');
+  stockEl.className = stock > EPS ? 'stock-warning' : (stock < -EPS ? 'negative' : 'stock-clear');
   
-  if(stock < 0){
+  if(stock < -EPS){
     showToast(`${entry.booking_no||'Row'} - Stock Negative (${fmt(stock)}) hoye geche, man check korun`, 'warning');
   }
 }
@@ -2318,9 +2358,9 @@ function groupStockRows(rows){
 function renderStockRows(items, tbody){
   items.forEach((g, idx) => {
     const stock = g.inhand - g.trfOut;
-    const status = stock > 0 ? 
+    const status = stock > EPS ? 
       `<span class="status-badge status-open">Stock: ${fmt(stock)} Kg</span>` :
-      stock < 0 ? 
+      stock < -EPS ? 
       `<span class="status-badge" style="background:#fecaca;color:#991b1b">Negative</span>` :
       `<span class="status-badge status-closed">Clear</span>`;
     
@@ -2544,7 +2584,7 @@ function exportStockExcel(){
   
   stockDisplayData.forEach(g => {
     const stock = g.inhand - g.trfOut;
-    const status = stock > 0 ? 'Pending' : (stock < 0 ? 'Negative' : 'Clear');
+    const status = stock > EPS ? 'Pending' : (stock < -EPS ? 'Negative' : 'Clear');
     rows.push([g.report_date||'', g.booking_no, g.buyer||'', g.fab_color, g.fab_type||'', g.totalRcvd, g.totalDlv, g.inhand, g.trfOut, stock, status]);
   });
   
@@ -2559,7 +2599,7 @@ function exportStockExcel(){
 //
 // "Inhand" for a given grey_bookings row = (Knit Rcvd + Trf In) - Total Dlv.
 // "Available" (what's left to use/transfer) = Inhand - Trf Out already done.
-// This section lets a user browse every row that still has Available > 0
+// This section lets a user browse every row that still has Available > EPS
 // across ALL bookings, and either:
 //   1) PUSH some of it to another booking (existing color/type row or a
 //      brand-new one) - from the Inhand tab, or
@@ -2570,6 +2610,13 @@ function exportStockExcel(){
 // up and the target row's Trf In goes up by the exact same qty, and both
 // rows are written back to Supabase (and synced to grey_order_close too, if
 // either side is already Closed).
+//
+// BUG FIX: computeAvailable() now returns a value ROUNDED to 2 decimals
+// (via the numOrZero-style rounding below) and every comparison against it
+// uses the EPS tolerance, so a row that has effectively been fully
+// transferred out (Available = 0.00) actually disappears from the Inhand
+// list, instead of lingering there forever showing "0" while still being
+// counted as an open row.
 // =========================================
 
 function appendToken(existing, token){
@@ -2584,7 +2631,7 @@ function computeAvailable(row){
   const totalRcvd = (Number(row.knitting_receive) || 0) + (Number(row.transfer_in_qty) || 0);
   const inhand = totalRcvd - (Number(row.total_delivery_qty) || 0);
   const trfOut = Number(row.transfer_out_qty) || 0;
-  return inhand - trfOut;
+  return Math.round((inhand - trfOut) * 100) / 100;
 }
 
 async function loadInhand(){
@@ -2599,7 +2646,10 @@ async function loadInhand(){
       .order('report_date', {ascending: false});
     if(error) throw error;
 
-    inhandRawRows = (data || []).filter(row => computeAvailable(row) > 0);
+    // BUG FIX: use EPS tolerance instead of a bare "> 0" - rows whose real
+    // Available qty is effectively zero (but not exactly 0 due to old
+    // floating-point drift) no longer show up here.
+    inhandRawRows = (data || []).filter(row => computeAvailable(row) > EPS);
     renderInhandTable();
   } catch(e){
     showToast(e.message, 'error');
@@ -2796,7 +2846,10 @@ async function confirmInhandTransfer(){
   const qty = numOrZero(document.getElementById('inhandTransferQty').value);
   const avail = computeAvailable(inhandSourceRow);
   if(qty <= 0){ showToast('Sothik Qty din', 'warning'); return; }
-  if(qty > avail){ showToast(`Max Available: ${fmt(avail)} Kg`, 'warning'); return; }
+  // BUG FIX: allow a small EPS tolerance so "transfer the full available
+  // amount" doesn't get rejected by floating-point rounding noise (e.g.
+  // avail stored as 49.999999 but qty typed as 50).
+  if(qty > avail + EPS){ showToast(`Max Available: ${fmt(avail)} Kg`, 'warning'); return; }
 
   let targetKey;
   if(inhandPullTargetIdx !== null){
@@ -2851,7 +2904,7 @@ async function doInhandTransfer(sourceRow, targetKey, qty){
 
   // --- update source row ---
   const updatedSource = {...sourceRow};
-  updatedSource.transfer_out_qty = (Number(sourceRow.transfer_out_qty) || 0) + qty;
+  updatedSource.transfer_out_qty = numOrZero((Number(sourceRow.transfer_out_qty) || 0) + qty);
   updatedSource.transfer_to_order = appendToken(sourceRow.transfer_to_order, targetKey.booking_no);
   const sourcePayload = buildRowPayload(updatedSource, cid, operator);
   const {error: srcErr} = await safeWrite('grey_bookings', sourcePayload, {id: sourceRow.id});
@@ -2881,11 +2934,11 @@ async function doInhandTransfer(sourceRow, targetKey, qty){
 
   if(targetRow && targetRow.id){
     const updatedTarget = {...targetRow};
-    updatedTarget.transfer_in_qty = (Number(targetRow.transfer_in_qty) || 0) + qty;
+    updatedTarget.transfer_in_qty = numOrZero((Number(targetRow.transfer_in_qty) || 0) + qty);
     updatedTarget.transfer_from_order = appendToken(targetRow.transfer_from_order, sourceRow.booking_no);
-    const totalRcvd = (Number(updatedTarget.knitting_receive) || 0) + (Number(updatedTarget.transfer_in_qty) || 0);
+    const totalRcvd = numOrZero((Number(updatedTarget.knitting_receive) || 0) + (Number(updatedTarget.transfer_in_qty) || 0));
     updatedTarget.total_received_qty = totalRcvd;
-    updatedTarget.inhand_stock_qty = totalRcvd - (Number(updatedTarget.total_delivery_qty) || 0);
+    updatedTarget.inhand_stock_qty = numOrZero(totalRcvd - (Number(updatedTarget.total_delivery_qty) || 0));
     const targetPayload = buildRowPayload(updatedTarget, cid, operator);
     const {error: tgtErr} = await safeWrite('grey_bookings', targetPayload, {id: targetRow.id});
     if(tgtErr) throw tgtErr;
@@ -3106,6 +3159,15 @@ window.deleteStockEditRow = deleteStockEditRow;
 window.closeStockEditModal = closeStockEditModal;
 window.deleteStockGroup = deleteStockGroup;
 window.setStickyOffset = setStickyOffset;
+window.openInhandTransfer = openInhandTransfer;
+window.openInhandPull = openInhandPull;
+window.selectInhandPullSource = selectInhandPullSource;
+window.findInhandTargetRows = findInhandTargetRows;
+window.pickInhandTarget = pickInhandTarget;
+window.closeInhandTransferModal = closeInhandTransferModal;
+window.confirmInhandTransfer = confirmInhandTransfer;
+window.loadInhand = loadInhand;
+window.renderInhandTable = renderInhandTable;
 
 </script>
 </body>
