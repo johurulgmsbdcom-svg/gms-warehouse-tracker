@@ -909,7 +909,7 @@ async function loadFromSupabase(floor, date){
 }
 
 // =========================================
-// 📅 MONTH-CUMULATIVE CARRY FORWARD (Firebase-style, self-correcting)
+// 📅 MONTH-CUMULATIVE CARRY FORWARD
 // =========================================
 function getMonthStr(date){ return date.slice(0,7); }
 function getPrevMonthStr(m){
@@ -1340,7 +1340,7 @@ function updateTotal(){
 }
 
 // =========================================
-// ✅ REQUISITION POPUP (no longer blocks autosave)
+// ✅ REQUISITION POPUP
 // =========================================
 function checkReqNo(i){
   const val = Number(document.getElementById(`r${i}`)?.value)||0;
@@ -1662,7 +1662,7 @@ function fixNegativeRow(){
 }
 
 // =========================================
-// 💾 BUILD ROWS FOR SAVE (snapshot — pure function of the DOM at call time)
+// 💾 BUILD ROWS FOR SAVE
 // =========================================
 function buildRowsFrom(floorSnapshotData){
   return floorSnapshotData.map((item,i)=>({
@@ -1715,7 +1715,7 @@ async function saveData(){
 }
 
 // =========================================
-// ⚡ TRUE REAL-TIME AUTO-SAVE (snapshot-based, race-condition safe)
+// ⚡ TRUE REAL-TIME AUTO-SAVE
 // =========================================
 function captureSnapshot(){
   return {
@@ -1795,7 +1795,7 @@ function showAutoSaveStatus(msg){
 }
 
 // =========================================
-// ✅ MAIN loadData (uses month-cumulative carry-forward)
+// ✅ MAIN loadData
 // =========================================
 async function loadData(){
   const date=document.getElementById('postDate').value;
@@ -1927,7 +1927,7 @@ async function syncOfflineData(){
 }
 
 // =========================================
-// 🔀 FLOOR / DATE CHANGE — flush pending edits FIRST, then load new context
+// 🔀 FLOOR / DATE CHANGE — ✅ FIXED: Only save if pendingSnapshot exists
 // =========================================
 async function onFloorChange(){
   sessionToken++;
