@@ -156,7 +156,7 @@ body.light .autosave-pill{background:#ecfdf5;color:#047857;border-color:#10b981}
 <div style="display:flex;flex-wrap:wrap;gap:6px;justify-content:center;align-items:center;margin-bottom:6px">
   <div>
     <label style="font-weight:600;color:#cbd5e1;margin-right:4px">Operator:</label>
-    <input type="text" id="operatorName" placeholder="Name" style="max-width:110px" onchange="scheduleAutoSave()">
+    <input type="text" id="operatorName" placeholder="Name" style="max-width:110px" oninput="scheduleAutoSave()" onchange="scheduleAutoSave()">
   </div>
   <div>
     <label style="font-weight:600;color:#cbd5e1;margin-right:4px">Date:</label>
@@ -843,7 +843,10 @@ let pendingTransferIndex = null;
 let autoSaveTimer = null;
 let autoSaveInFlight = false;
 let suppressAutoSave = false;
-let lastAutoSaveTime = 0; // ✅ Track last save time to prevent beforeunload overwrite
+let lastAutoSaveTime = 0; // ✅ Track last successful cloud save time (for status display)
+let isDirty = false; // ✅ NEW: true হলে বোঝায় এখনো Save না-হওয়া কিছু পরিবর্তন আছে
+let activeFloor = null; // ✅ NEW: বর্তমানে টেবিলে যে Floor-এর data লোড আছে
+let activePostDate = null; // ✅ NEW: বর্তমানে টেবিলে যে Date-এর data লোড আছে
 
 // =========================================
 // 💾 OFFLINE STORAGE
@@ -1633,6 +1636,8 @@ async function saveData(){
   }
   const rows=buildRows();
   localStorage.setItem('lastOperator', operator);
+  // ✅ ম্যানুয়াল Save করলেও আগে local এ guaranteed save করে রাখা হয়
+  saveOffline(floor, date, operator, rows, false);
   if(navigator.onLine){
     showLoading('Saving...');
     const result=await saveToSupabase(floor, date, operator, rows);
@@ -1641,10 +1646,10 @@ async function saveData(){
       // ✅ FIX: Save offline backup AND mark as synced
       saveOffline(floor, date, operator, rows, true); // true = force synced
       lastAutoSaveTime = Date.now();
+      isDirty = false;
       updateLastSync(`☁️ Supabase এ Saved — ${new Date().toLocaleTimeString()}`);
     }
   }else{
-    saveOffline(floor, date, operator, rows, false);
     showToast('📴 Offline — Local এ Save হয়েছে');
     updateLastSync(`📴 Offline saved — ${new Date().toLocaleTimeString()}`);
   }
@@ -1655,6 +1660,8 @@ async function saveData(){
 // =========================================
 function scheduleAutoSave(){
   if(suppressAutoSave) return;
+  // ✅ NEW: প্রতিটা keystroke/change-এ dirty flag সেট হয় — data হারানো ঠেকানোর মূল চাবিকাঠি
+  isDirty = true;
   clearTimeout(autoSaveTimer);
   showAutoSaveStatus('⏳ Auto-saving...');
   autoSaveTimer = setTimeout(autoSaveNow, 900);
@@ -1665,6 +1672,16 @@ async function autoSaveNow(){
   const date = document.getElementById('postDate').value;
   const floor = document.getElementById('floor').value;
   if(!date || !floor){ showAutoSaveStatus('⏸️ Date/Floor select করুন'); return; }
+
+  const operator = document.getElementById('operatorName').value.trim() || localStorage.getItem('lastOperator') || 'Unknown';
+  const rows = buildRows();
+  localStorage.setItem('lastOperator', operator);
+
+  // ✅ CRITICAL FIX: সবার আগে LOCAL (browser storage) এ save করে ফেলো —
+  // Requisition No থাকুক বা না থাকুক, Online থাকুক বা না থাকুক।
+  // এতে টাইপ করা কোনো ডাটা কখনো হারাবে না — ব্রাউজার বন্ধ/রিফ্রেশ/ক্র্যাশ হলেও
+  // local এ ঠিকই থেকে যাবে এবং পরে load করলে ফিরে পাওয়া যাবে।
+  try{ saveOffline(floor, date, operator, rows, false); }catch(e){ console.error('local save error', e); }
 
   let blockedByReq = false;
   for(let i=0;i<currentFloorData.length;i++){
@@ -1679,38 +1696,59 @@ async function autoSaveNow(){
     }
   }
   if(blockedByReq){
-    showAutoSaveStatus('⏸️ Requisition No দিন — তারপর Auto-save হবে');
+    // ✅ Local এ data ইতিমধ্যে নিরাপদে save হয়ে গেছে (উপরে)।
+    // শুধু Cloud sync-টা Requisition No দেওয়া পর্যন্ত pending থাকবে — data হারাবে না।
+    showAutoSaveStatus('💾 Local এ Save হয়েছে | ⏸️ Requisition No দিলে Cloud এ sync হবে');
     return;
   }
 
-  const operator = document.getElementById('operatorName').value.trim() || localStorage.getItem('lastOperator') || 'Unknown';
-  const rows = buildRows();
-  localStorage.setItem('lastOperator', operator);
+  // rowReqNo আপডেট হলে rows আবার fresh করে build করে নাও
+  const finalRows = buildRows();
 
   autoSaveInFlight = true;
   try{
     if(navigator.onLine){
-      const result = await saveToSupabase(floor, date, operator, rows, false);
+      const result = await saveToSupabase(floor, date, operator, finalRows, false);
       if(result.success){
         showAutoSaveStatus('✅ Auto-saved — '+new Date().toLocaleTimeString());
         // ✅ FIX: Mark as synced so beforeunload won't overwrite
-        saveOffline(floor, date, operator, rows, true);
+        saveOffline(floor, date, operator, finalRows, true);
         lastAutoSaveTime = Date.now();
+        isDirty = false;
       }else{
-        saveOffline(floor, date, operator, rows, false);
-        showAutoSaveStatus('📴 Saved locally (sync pending) — '+new Date().toLocaleTimeString());
+        saveOffline(floor, date, operator, finalRows, false);
+        showAutoSaveStatus('📴 Local এ Saved (sync pending) — '+new Date().toLocaleTimeString());
       }
     }else{
-      saveOffline(floor, date, operator, rows, false);
-      showAutoSaveStatus('📴 Offline auto-saved — '+new Date().toLocaleTimeString());
+      saveOffline(floor, date, operator, finalRows, false);
+      showAutoSaveStatus('📴 Offline — Local এ Saved — '+new Date().toLocaleTimeString());
     }
   }catch(e){
     console.error('autoSaveNow error:', e);
-    saveOffline(floor, date, operator, rows, false);
-    showAutoSaveStatus('⚠️ Save error — local এ রাখা হয়েছে');
+    saveOffline(floor, date, operator, finalRows, false);
+    showAutoSaveStatus('⚠️ Save error — Local এ রাখা হয়েছে, ডাটা নিরাপদ');
   }finally{
     autoSaveInFlight = false;
   }
+}
+
+// ✅ NEW: বর্তমানে load থাকা floor/date-এর জন্য কোনো unsaved (dirty) পরিবর্তন
+// থাকলে, floor/date পরিবর্তনের আগেই বাধ্যতামূলক ভাবে save করে দেওয়া হয়।
+// এটা ছাড়া floor পাল্টালে আগের floor-এ টাইপ করা শেষ মুহূর্তের পরিবর্তন
+// হারিয়ে যেতে পারতো (debounce timer শেষ হওয়ার আগেই user সুইচ করলে)।
+async function flushPendingSave(){
+  if(!isDirty || !activeFloor || !activePostDate) return;
+  clearTimeout(autoSaveTimer);
+  const operator = document.getElementById('operatorName').value.trim() || localStorage.getItem('lastOperator') || 'Unknown';
+  try{
+    const rows = buildRows();
+    saveOffline(activeFloor, activePostDate, operator, rows, false);
+    if(navigator.onLine){
+      const result = await saveToSupabase(activeFloor, activePostDate, operator, rows, false);
+      if(result.success){ saveOffline(activeFloor, activePostDate, operator, rows, true); lastAutoSaveTime = Date.now(); }
+    }
+    isDirty = false;
+  }catch(e){ console.error('flushPendingSave error:', e); }
 }
 
 function showAutoSaveStatus(msg){
@@ -1725,7 +1763,7 @@ async function loadData(){
   const date=document.getElementById('postDate').value;
   const floor=document.getElementById('floor').value;
   suppressAutoSave = true;
-  if(!date||!floor){ loadTable({}, [], false, null); updateMonthlySummary([]); suppressAutoSave=false; return; }
+  if(!date||!floor){ loadTable({}, [], false, null); updateMonthlySummary([]); activeFloor=null; activePostDate=null; isDirty=false; suppressAutoSave=false; return; }
   showLoading('Loading...');
   rowReqNo={}; rowTransferOut={}; rowTransferIn={};
   floorReqNo=null;
@@ -1738,6 +1776,17 @@ async function loadData(){
     }else{
       todayData=getOffline(floor, date);
       showToast('📴 Offline — Local data দেখাচ্ছে');
+    }
+
+    // ✅ NEW: Cloud-এ data না থাকলেও local (offline) এ যদি এই floor+date-এর
+    // অসম্পূর্ণ/unsynced কোনো data পড়ে থাকে (যেমন reqNo না দেওয়ার কারণে
+    // আগে cloud-এ sync হতে পারেনি), সেটা যেন হারিয়ে না যায় — সেটাকেও
+    // todayData হিসেবে ব্যবহার করা হয়।
+    if(!todayData){
+      const localBackup = getOffline(floor, date);
+      if(localBackup && localBackup.rows && localBackup.rows.length){
+        todayData = { rows: localBackup.rows, operator: localBackup.operator };
+      }
     }
 
     const prevMap = prevData ? buildPrevMap(prevData.rows) : {};
@@ -1814,6 +1863,10 @@ async function loadData(){
       if(hasPrevData){ updateLastSync('⏪ '+prevDateUsed+' থেকে carry — '+new Date().toLocaleTimeString()); showToast('⏪ '+prevDateUsed+' তারিখ থেকে stock carry হয়েছে!'); }
       else{ updateLastSync('📋 Opening stock — '+new Date().toLocaleTimeString()); showToast('📋 Opening stock দেখাচ্ছে'); }
     }
+    // ✅ এই floor+date এখন "active" — flushPendingSave() ভবিষ্যতে দরকার হলে এটাই ব্যবহার করবে
+    activeFloor = floor;
+    activePostDate = date;
+    isDirty = false;
   }catch(e){
     console.error('loadData error:', e);
     loadTable({}, [], false, null);
@@ -1824,6 +1877,7 @@ async function loadData(){
 }
 
 async function manualRefresh(){
+  await flushPendingSave();
   showLoading('Refreshing...');
   if(navigator.onLine) await syncOfflineData();
   await loadData();
@@ -1847,6 +1901,13 @@ async function syncOfflineData(){
       
       // ✅ FIX: Skip if already synced
       if(!entry || entry.synced) continue;
+
+      // ✅ NEW: এই local entry-তে যদি এমন কোনো row থাকে যার Rcvd>0 কিন্তু
+      // Requisition No এখনো ফাঁকা, তাহলে Cloud sync স্কিপ করা হয় (কারণ ব্যবসায়িক
+      // নিয়ম অনুযায়ী Req No বাধ্যতামূলক) — কিন্তু ডাটা local এ ঠিকই সংরক্ষিত থাকে,
+      // হারায় না। User পরে Req No দিলে এটা নিজে থেকেই sync হয়ে যাবে।
+      const hasMissingReq = (entry.rows||[]).some(r => (Number(r.receive)||0) > 0 && !r.receiveReqNo);
+      if(hasMissingReq) continue;
       
       try {
         // ✅ FIX: Check if Supabase has newer data
@@ -1897,8 +1958,9 @@ async function syncOfflineData(){
 // select করে ফেলে, তাহলে loadData() সরাসরি Supabase থেকে data আনে —
 // আর local এ পড়ে থাকা unsynced (এখনো push না হওয়া) data উপেক্ষা হয়ে যায়।
 // ফলে "save করা data মাঝে মাঝে পাওয়া যাচ্ছে না" এমন মনে হয়।
-// Fix: Floor change করার সময় আগে sync শেষ হতে দেওয়া, তারপর loadData().
+// Fix: Floor change করার সময় আগে flushPendingSave() + sync শেষ হতে দেওয়া, তারপর loadData().
 async function onFloorChange(){
+  await flushPendingSave();
   if(navigator.onLine){
     try{ await syncOfflineData(); }catch(e){}
   }
@@ -1922,6 +1984,7 @@ async function deleteData(){
       if(error){ alert('❌ Delete failed: '+error.message); return; }
     }
   }
+  isDirty = false;
   showToast('✅ Deleted');
   loadData();
 }
@@ -2288,28 +2351,45 @@ function updateOfflineIndicator(){
   loadTable({}, [], false, null);
   if(navigator.onLine) setTimeout(syncOfflineData,2000);
   document.addEventListener('keydown',e=>{ if(e.ctrlKey&&e.key==='s'){e.preventDefault();saveData();} });
-  
-  // ✅ FIX: beforeunload - Only save if offline OR if recent auto-save hasn't happened
-  window.addEventListener('beforeunload', ()=>{
+
+  // ✅ CRITICAL FIX: এখন time-based আন্দাজ না করে, isDirty flag চেক করা হয়।
+  // কোনো unsaved change থাকলে (isDirty=true), page বন্ধ/hide হওয়ার আগে
+  // বাধ্যতামূলক ভাবে LOCAL এ save করে দেওয়া হয় — data কখনো হারাবে না।
+  function forceSaveOnExit(){
     const date=document.getElementById('postDate').value;
     const floor=document.getElementById('floor').value;
-    if(date && floor && currentFloorData.length){
+    if(date && floor && currentFloorData.length && isDirty){
       const operator=document.getElementById('operatorName').value.trim()||localStorage.getItem('lastOperator')||'Unknown';
       try{
-        // ✅ Only save offline if we're offline OR last save was more than 5 seconds ago
-        const timeSinceLastSave = Date.now() - lastAutoSaveTime;
-        if(!navigator.onLine || timeSinceLastSave > 5000){
-          saveOffline(floor, date, operator, buildRows(), !navigator.onLine);
-        }
+        saveOffline(floor, date, operator, buildRows(), false);
+        isDirty = false;
       }catch(e){}
     }
+  }
+  window.addEventListener('beforeunload', forceSaveOnExit);
+  window.addEventListener('pagehide', forceSaveOnExit);
+  document.addEventListener('visibilitychange', ()=>{
+    if(document.visibilityState === 'hidden'){
+      forceSaveOnExit();
+    }
   });
+
+  // ✅ SAFETY NET (একদম strong auto-save): প্রতি ১৫ সেকেন্ডে একবার চেক করা হয়,
+  // যদি কোনো কারণে (নেটওয়ার্ক গ্লিচ, ট্যাব ব্যাকগ্রাউন্ডে যাওয়া, ইত্যাদি)
+  // কোনো পরিবর্তন এখনো Save না হয়ে থাকে (isDirty=true), তাহলে জোর করে
+  // আবার auto-save চালানো হয়। এভাবেই "মাঝে মাঝে save বাদ যাওয়া" পুরোপুরি বন্ধ হয়।
+  setInterval(()=>{
+    if(isDirty && !autoSaveInFlight){
+      autoSaveNow();
+    }
+  }, 15000);
 })();
 
 window.addEventListener('online',()=>{ updateOfflineIndicator(); syncOfflineData(); });
 window.addEventListener('offline',()=>updateOfflineIndicator());
-// ✅ BUG FIX: date পরিবর্তনের সময়েও আগে sync শেষ হতে দিয়ে তারপর loadData()
+// ✅ BUG FIX: date পরিবর্তনের সময়েও আগে flushPendingSave() + sync শেষ হতে দিয়ে তারপর loadData()
 document.getElementById('postDate').addEventListener('change', async ()=>{
+  await flushPendingSave();
   if(navigator.onLine){ try{ await syncOfflineData(); }catch(e){} }
   await loadData();
 });
