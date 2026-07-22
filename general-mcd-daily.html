@@ -201,7 +201,7 @@ body{background:#fff!important;color:#000!important}
 </div>
 
 <div class="monthly-summary">
-<h3><i class="fas fa-chart-bar"></i> Monthly Summary - <span id="currentMonthLabel">June 2026</span></h3>
+<h3><i class="fas fa-chart-bar"></i> Summary - <span id="currentMonthLabel">June 2026</span></h3>
 <div class="summary-grid">
 <div class="summary-item">
 <span><i class="fas fa-calendar"></i> Total Days</span>
@@ -1011,28 +1011,17 @@ document.getElementById('statAvg').textContent = '৳' + avg.toLocaleString('en-
 document.getElementById('rowCount').textContent = total;
 }
 
-// Monthly Summary panel is intentionally independent from the day-filter:
-// it always reflects the whole current calendar month (still capped by the
-// 30-day retention window), so it keeps working as a "monthly overview"
-// even though the main charts/stats above only show one day at a time.
-function getCurrentMonthData() {
-const now = new Date();
-const mm = String(now.getMonth() + 1).padStart(2, '0');
-const yyyy = String(now.getFullYear());
-return allData.filter(r => {
-const parts = String(r.date || '').split('-');
-return parts.length === 3 && parts[1] === mm && parts[2] === yyyy;
-});
-}
-
+// Summary panel now follows whatever date is selected at the top date-picker
+// (currentFilter.date / filteredData) instead of always summing the whole
+// calendar month. So the numbers here always match the date shown above.
 function updateMonthlySummary() {
-const monthData = getCurrentMonthData();
-const days = new Set(monthData.map(r => r.date)).size;
-const amount = monthData.reduce((s, r) => s + r.amount, 0);
+const dayData = filteredData;
+const days = new Set(dayData.map(r => r.date)).size;
+const amount = dayData.reduce((s, r) => s + r.amount, 0);
 const avg = days > 0 ? amount / days : 0;
-const items = monthData.length;
-const depts = new Set(monthData.map(r => r.department).filter(v => v)).size;
-const cats = new Set(monthData.map(r => r.category).filter(v => v)).size;
+const items = dayData.length;
+const depts = new Set(dayData.map(r => r.department).filter(v => v)).size;
+const cats = new Set(dayData.map(r => r.category).filter(v => v)).size;
 
 document.getElementById('summaryDays').textContent = days;
 document.getElementById('summaryAmount').textContent = '৳' + amount.toLocaleString('en-US', { maximumFractionDigits: 0 });
@@ -1041,9 +1030,8 @@ document.getElementById('summaryItems').textContent = items;
 document.getElementById('summaryDepts').textContent = depts;
 document.getElementById('summaryCats').textContent = cats;
 
-const now = new Date();
-const months = ['January','February','March','April','May','June','July','August','September','October','November','December'];
-document.getElementById('currentMonthLabel').textContent = months[now.getMonth()] + ' ' + now.getFullYear();
+// Label now shows the actual selected date (top date-picker), not the month name.
+document.getElementById('currentMonthLabel').textContent = currentFilter.date || 'কোনো তারিখ সিলেক্ট করা নেই';
 }
 
 function renderCharts() {
