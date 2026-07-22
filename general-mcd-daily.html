@@ -600,6 +600,24 @@ const m = String(dmy || '').match(/^(\d{2})-(\d{2})-(\d{4})$/);
 if (!m) return null;
 return new Date(parseInt(m[3], 10), parseInt(m[2], 10) - 1, parseInt(m[1], 10));
 }
+// FIX: <input type="date">.valueAsDate is UTC-based - assigning it a Date
+// object built from LOCAL year/month/day (like dmyToJSDate above) shifts the
+// displayed date by 1 day in any timezone ahead of UTC (e.g. Bangladesh,
+// UTC+6). That's exactly why "latest date = 21-07-2026" was showing as
+// 07/20/2026 in the picker. Setting .value directly with a plain
+// "YYYY-MM-DD" string sidesteps the UTC conversion entirely.
+function dmyToISO(dmy) {
+const m = String(dmy || '').match(/^(\d{2})-(\d{2})-(\d{4})$/);
+if (!m) return '';
+return `${m[3]}-${m[2]}-${m[1]}`;
+}
+function todayISOLocal() {
+const d = new Date();
+const yyyy = d.getFullYear();
+const mm = String(d.getMonth() + 1).padStart(2, '0');
+const dd = String(d.getDate()).padStart(2, '0');
+return `${yyyy}-${mm}-${dd}`;
+}
 
 function processFile(file) {
 updateStatus('Processing file...');
