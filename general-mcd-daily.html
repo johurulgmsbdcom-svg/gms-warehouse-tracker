@@ -40,12 +40,17 @@ body{background:var(--bg);color:var(--text);font-family:'Poppins',sans-serif;lin
 .status-bar{display:flex;justify-content:space-between;align-items:center;padding:10px 16px;background:rgba(16,185,129,0.1);border-radius:10px;margin-bottom:20px;font-size:12px;font-weight:600;color:var(--green);flex-wrap:wrap;gap:8px}
 .status-bar.offline{background:rgba(245,158,11,0.1);color:var(--yellow)}
 
-.upload-box{border:2px dashed var(--blue);border-radius:12px;padding:16px;text-align:center;cursor:pointer;background:rgba(59,130,246,0.05);transition:all .3s;margin-bottom:20px}
+.upload-box{border:2px dashed var(--blue);border-radius:12px;padding:16px;text-align:center;cursor:pointer;background:rgba(59,130,246,0.05);transition:all .3s;margin-bottom:12px}
 .upload-box:hover{background:rgba(59,130,246,0.1);border-color:var(--green)}
 .upload-box.dragover{background:rgba(16,185,129,0.1);border-color:var(--green)}
 .upload-box i{font-size:24px;color:var(--blue);margin-bottom:6px}
 .upload-box h3{font-size:13px;margin-bottom:4px}
 .upload-box p{color:var(--muted);font-size:10px}
+
+.upload-date-box{display:flex;flex-wrap:wrap;align-items:center;justify-content:center;gap:10px;padding:12px 14px;background:var(--card);border:1px solid var(--border);border-radius:12px;margin-bottom:20px;font-size:12px}
+.upload-date-box label{font-weight:600;color:var(--muted);display:flex;align-items:center;gap:6px}
+.upload-date-box input[type="date"]{padding:8px 12px;border:2px solid var(--border);border-radius:8px;background:var(--bg);color:var(--text);font-size:12px;font-weight:600}
+.upload-date-box small{width:100%;text-align:center;color:var(--muted);display:block;margin-top:2px}
 
 .date-selection{display:flex;gap:12px;align-items:center;margin-bottom:20px;padding:14px;background:var(--card);border-radius:12px;box-shadow:var(--shadow);flex-wrap:wrap}
 .date-selection label{font-weight:600;color:var(--muted);font-size:12px;display:flex;align-items:center;gap:6px}
@@ -143,7 +148,7 @@ tr:hover{background:rgba(59,130,246,0.05)}
 
 @media print{
 body{background:#fff!important;color:#000!important}
-.theme-toggle,.back-btn,.upload-box,.action-bar,.filter-bar,.table-section,.status-bar,.date-selection,.team-section,.cacheStatusBar{display:none!important}
+.theme-toggle,.back-btn,.upload-box,.upload-date-box,.action-bar,.filter-bar,.table-section,.status-bar,.date-selection,.team-section,.cacheStatusBar{display:none!important}
 #dashboard-content{box-shadow:none!important;padding:0!important}
 .chart-box,.stat-card,.summary-item{break-inside:avoid;box-shadow:none!important;border:1px solid #ddd}
 }
@@ -156,7 +161,7 @@ body{background:#fff!important;color:#000!important}
 
 <div class="header">
 <h1><i class="fas fa-chart-line"></i> GMS General MCD Daily Issue Smart Chart</h1>
-<p>Real-time Sync • Smart Cache (24h) • Auto Archive • 13 Columns • Date: <span id="currentDate"></span></p>
+<p>Real-time Sync • Smart Cache (24h) • Auto Archive (30 days) • 13 Columns • Date: <span id="currentDate"></span></p>
 </div>
 
 <div class="container">
@@ -181,11 +186,17 @@ body{background:#fff!important;color:#000!important}
 </div>
 <input type="file" id="fileInput" accept=".xlsx,.xls,.csv" style="display:none" onchange="handleFile(event)">
 
+<div class="upload-date-box">
+<label><i class="fas fa-calendar-check"></i> Upload Date (optional):</label>
+<input type="date" id="uploadDateOverride">
+<small>তারিখ সিলেক্ট করে upload করলে ফাইলের সব row সেই তারিখেই সেভ হবে (Excel এর Trans. Date কলাম ignore হবে)। খালি রাখলে Excel এর নিজের তারিখ ব্যবহার হবে।</small>
+</div>
+
 <div class="date-selection">
 <label><i class="fas fa-calendar"></i> Select Date:</label>
 <input type="date" id="reportDate">
 <button class="btn-apply" onclick="applyDateFilter()"><i class="fas fa-filter"></i> Apply</button>
-<button class="btn-clear" onclick="clearDateFilter()"><i class="fas fa-times"></i> Clear</button>
+<button class="btn-clear" onclick="clearDateFilter()"><i class="fas fa-times"></i> Latest Date</button>
 <button class="btn-delete" onclick="deleteDateData()"><i class="fas fa-trash"></i> Delete Date</button>
 </div>
 
@@ -393,6 +404,7 @@ let allData = [];
 let filteredData = [];
 let charts = {};
 let currentFilter = {};
+let hasInitializedFilter = false; // ensures we only auto-jump to "latest date" once per page load
 
 window.GMS_CACHE = {
 CACHE_KEY: 'GMS_MCD_CACHE_V2',
@@ -461,8 +473,6 @@ var all = this._all();
 if(typeof keys === 'string') keys = [keys];
 keys.forEach(function(k){ delete all[k]; });
 localStorage.setItem(this.CACHE_KEY, JSON.stringify(all));
-// Also reset the local timestamp so the next load is forced to refetch,
-// even if the remote timestamp write races with this invalidation.
 if(Array.isArray(keys)){
 var timestamps = JSON.parse(localStorage.getItem(this.LOCAL_TS_KEY) || '{}');
 keys.forEach(function(k){ timestamps[k] = 0; });
@@ -577,6 +587,18 @@ uploadBox.addEventListener('drop', ev => { if (ev.dataTransfer.files.length) pro
 
 window.handleFile = function(event) { if (event.target.files[0]) processFile(event.target.files[0]); };
 
+// ---- Date helpers (row.date is always stored as "DD-MM-YYYY") ----
+function isoToDMY(iso) {
+// "YYYY-MM-DD" -> "DD-MM-YYYY"
+const [y, m, d] = iso.split('-');
+return `${d}-${m}-${y}`;
+}
+function dmyToJSDate(dmy) {
+const m = String(dmy || '').match(/^(\d{2})-(\d{2})-(\d{4})$/);
+if (!m) return null;
+return new Date(parseInt(m[3], 10), parseInt(m[2], 10) - 1, parseInt(m[1], 10));
+}
+
 function processFile(file) {
 updateStatus('Processing file...');
 const reader = new FileReader();
@@ -586,7 +608,13 @@ const data = new Uint8Array(e.target.result);
 const workbook = XLSX.read(data, { type: 'array' });
 const jsonData = XLSX.utils.sheet_to_json(workbook.Sheets[workbook.SheetNames[0]], { defval: '' });
 if (jsonData.length === 0) { showToast('No data found!', true); return; }
-const normalized = normalizeData(jsonData);
+
+// If the user picked an "Upload Date", every row in this file is force-tagged
+// with that date, overriding whatever is in the Excel "Trans. Date" column.
+const overrideInput = document.getElementById('uploadDateOverride').value;
+const overrideDate = overrideInput ? isoToDMY(overrideInput) : '';
+
+const normalized = normalizeData(jsonData, overrideDate);
 saveToFirebase(normalized, file.name);
 } catch (err) { showToast('Error: ' + err.message, true); }
 };
@@ -595,10 +623,10 @@ reader.readAsArrayBuffer(file);
 event.target.value = '';
 }
 
-function normalizeData(raw) {
+function normalizeData(raw, overrideDate) {
 return raw.map((row, idx) => ({
 sl: row['SL'] || (idx + 1),
-date: formatDate(row['Trans. Date'] || row['date']),
+date: overrideDate || formatDate(row['Trans. Date'] || row['date']),
 category: String(row['Category'] || '').trim(),
 division: String(row['Division'] || '').trim(),
 department: String(row['Department'] || '').trim(),
@@ -615,24 +643,15 @@ remarks: String(row['Remarks'] || '').trim()
 
 function parseNum(v) { if (typeof v === 'number') return v; return Number(String(v || 0).replace(/,/g, '')) || 0; }
 
-// FIX: the old formatDate() only handled Excel serial-number dates correctly;
-// any date typed/pasted as text in a different format (YYYY-MM-DD, DD/MM/YYYY,
-// "12 Jul 2026", etc.) was passed through unchanged. That broke getMonthKey()
-// later, which silently sent those rows to the wrong Firebase collection (or
-// dropped them entirely), so the upload reported "success" but the rows never
-// showed up on the dashboard. parseAnyDate() below understands all common
-// formats and always normalizes to day/month/year numbers.
 function parseAnyDate(raw) {
 if (raw === null || raw === undefined || raw === '') return null;
 
-// Excel serial date number
 if (typeof raw === 'number') {
 const parsed = XLSX.SSF.parse_date_code(raw);
 if (parsed) return { d: parsed.d, m: parsed.m, y: parsed.y };
 return null;
 }
 
-// JS Date object
 if (raw instanceof Date && !isNaN(raw.getTime())) {
 return { d: raw.getDate(), m: raw.getMonth() + 1, y: raw.getFullYear() };
 }
@@ -640,15 +659,12 @@ return { d: raw.getDate(), m: raw.getMonth() + 1, y: raw.getFullYear() };
 const str = String(raw).trim();
 if (!str) return null;
 
-// DD-MM-YYYY or DD/MM/YYYY (day first - this app's own display format)
 let m = str.match(/^(\d{1,2})[-\/](\d{1,2})[-\/](\d{4})$/);
 if (m) return { d: parseInt(m[1], 10), m: parseInt(m[2], 10), y: parseInt(m[3], 10) };
 
-// YYYY-MM-DD or YYYY/MM/DD (ISO-like)
 m = str.match(/^(\d{4})[-\/](\d{1,2})[-\/](\d{1,2})$/);
 if (m) return { d: parseInt(m[3], 10), m: parseInt(m[2], 10), y: parseInt(m[1], 10) };
 
-// Fallback: let the browser's date parser try ("12 Jul 2026", "Jul 12, 2026", etc.)
 const parsedDate = new Date(str);
 if (!isNaN(parsedDate.getTime())) {
 return { d: parsedDate.getDate(), m: parsedDate.getMonth() + 1, y: parsedDate.getFullYear() };
@@ -664,7 +680,6 @@ return `${String(parts.d).padStart(2, '0')}-${String(parts.m).padStart(2, '0')}-
 }
 
 function getMonthKey(dateStr) {
-// dateStr is always DD-MM-YYYY here because formatDate() above guarantees it
 if (!dateStr) return '';
 const parts = dateStr.split('-');
 if (parts.length === 3) return `${parts[2]}-${parts[1].padStart(2, '0')}`;
@@ -687,18 +702,9 @@ else { skippedCount++; }
 try {
 const writes = [];
 for (const [month, rows] of Object.entries(grouped)) {
-// FIX: previously only "this month" and "last month" data was routed to
-// ACTIVE_COL (the collection the dashboard actually reads); anything else
-// -- including FUTURE-dated rows, like an upload for next month -- went to
-// ARCHIVE_COL and never showed up on the dashboard, even though the save
-// reported success. Now every upload always goes to ACTIVE_COL; the
-// 30-day auto-expiry (purgeExpiredData) is what removes old data instead.
 const col = ACTIVE_COL;
 const docRef = doc(db, col, month);
 
-// FIX: merge newly uploaded rows with whatever is already saved for this
-// month instead of overwriting the whole month's data. This makes each
-// upload ADD data on top of the previous data, instead of replacing it.
 writes.push((async () => {
 let existingRows = [];
 try {
@@ -714,8 +720,6 @@ await setDoc(docRef, { data: mergedRows, updatedAt: Date.now() });
 })());
 }
 
-// Wait for all month documents to be fully written BEFORE announcing the
-// update and reloading, so the UI never reloads stale/half-written data.
 await Promise.all(writes);
 
 await setDoc(doc(db, SYNC_COL, ACTIVE_COL), { lastUpdated: Date.now(), collection: ACTIVE_COL }, { merge: true });
@@ -737,56 +741,57 @@ var roiStatus = document.getElementById('roiStatus');
 if(roiStatus){ roiStatus.innerText = 'Tracked ✅'; setTimeout(function(){ if(roiStatus) roiStatus.innerText = 'Active'; }, 2000); }
 }catch(e){}
 
+// After a fresh upload, always jump the view back to the newest date
+// (which is normally the date that was just uploaded).
+hasInitializedFilter = false;
+currentFilter.date = null;
 await loadActiveData();
 } catch (err) { showToast('Save failed: ' + err.message, true); }
 }
 
-// ==================== 30-DAY AUTO-EXPIRY ====================
-// Rule (as requested):
-//  - This month's data always stays.
-//  - Last month's data is only visible on the 1st day of the new month.
-//  - Starting the 2nd day of the new month, last month's data (and anything
-//    older) is permanently deleted from Firebase.
-// Example: today = 12 July -> nothing happens yet (July is "this month").
-//          1 Aug  -> July data still visible (grace day).
-//          2 Aug  -> ALL July data is deleted from Firebase.
-//          1 Sep  -> Aug data still visible (grace day).
-//          2 Sep  -> ALL Aug data is deleted from Firebase.
-const GRACE_DAYS = 1; // previous month is kept visible only for this many days into the new month
-
-function monthKeyOf(d) {
-return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
-}
+// ==================== ROLLING 30-DAY AUTO-EXPIRY ====================
+// Only the last 30 days of data (by row date, not by month-document) is kept
+// in Firebase. Anything older is permanently deleted automatically, every
+// time data loads. This runs per-row inside each month document, so a
+// month document is only fully removed once ALL its rows have expired.
+const RETENTION_DAYS = 30;
 
 async function purgeExpiredData() {
 try {
 const now = new Date();
-const dayOfMonth = now.getDate();
-const currentMonth = monthKeyOf(now);
-const prevMonthDate = new Date(now.getFullYear(), now.getMonth() - 1, 1);
-const prevMonth = monthKeyOf(prevMonthDate);
+now.setHours(0, 0, 0, 0);
+const cutoff = new Date(now);
+cutoff.setDate(cutoff.getDate() - RETENTION_DAYS);
 
 const snapshot = await getDocs(collection(db, ACTIVE_COL));
-const deletions = [];
-let deletedAny = false;
+const writes = [];
+let changed = false;
 
 snapshot.forEach(docSnap => {
-const id = docSnap.id; // format: YYYY-MM
-if (id >= currentMonth) return; // current month AND any future month (e.g. an early upload for next month) are always kept
-if (id === prevMonth && dayOfMonth <= GRACE_DAYS) return; // still inside the 1-day grace window
-// Anything strictly older than last month, or last month past the grace window, gets deleted
-deletions.push(deleteDoc(doc(db, ACTIVE_COL, id)));
-deletedAny = true;
+const docData = docSnap.data();
+const rows = Array.isArray(docData.data) ? docData.data : [];
+const kept = rows.filter(r => {
+const d = dmyToJSDate(r.date);
+return d && d >= cutoff;
+});
+if (kept.length !== rows.length) {
+changed = true;
+if (kept.length === 0) {
+writes.push(deleteDoc(doc(db, ACTIVE_COL, docSnap.id)));
+} else {
+const resequenced = kept.map((r, idx) => ({ ...r, sl: idx + 1 }));
+writes.push(setDoc(doc(db, ACTIVE_COL, docSnap.id), { data: resequenced, updatedAt: Date.now() }));
+}
+}
 });
 
-if (deletions.length) {
-await Promise.all(deletions);
-// Bump the sync timestamp so every open tab refreshes and drops the purged data
+if (writes.length) {
+await Promise.all(writes);
 await setDoc(doc(db, SYNC_COL, ACTIVE_COL), { lastUpdated: Date.now() }, { merge: true });
 window.GMS_CACHE.invalidate([ACTIVE_COL]);
 }
 
-return deletedAny;
+return changed;
 } catch (err) { console.error('Error purging expired data:', err); return false; }
 }
 
@@ -794,21 +799,15 @@ window.deleteDateData = async function() {
 const dateInput = document.getElementById('reportDate').value;
 if (!dateInput) { showToast('Please select a date to delete', true); return; }
 
-// FIX: the <input type="date"> gives "YYYY-MM-DD", but row.date is stored
-// as "DD-MM-YYYY" (4 digit year). The old code built a 2-digit-year string
-// and also mis-used getMonthKey() (which expects DD-MM-YYYY) directly on
-// this ISO string, producing a wrong month key AND a date string that could
-// never match a stored row.date. Both are fixed below.
 const [year, month, day] = dateInput.split('-');
-const formattedDate = `${day}-${month}-${year}`; // matches row.date format, 4-digit year
-const monthKey = `${year}-${month}`; // matches the Firestore doc id format (YYYY-MM)
+const formattedDate = `${day}-${month}-${year}`;
+const monthKey = `${year}-${month}`;
 
 if (!confirm(`Are you sure you want to delete ALL data for ${formattedDate}? This cannot be undone!`)) return;
 
 try {
 updateStatus('Deleting data...');
 
-// Data could be in the active collection or already moved to archive
 const docRef = doc(db, ACTIVE_COL, monthKey);
 const docSnap = await getDoc(docRef);
 
@@ -824,11 +823,19 @@ updateStatus('Live Sync Active ✅');
 return;
 }
 
+if (filtered.length === 0) {
+await deleteDoc(docRef);
+} else {
 await setDoc(docRef, { data: filtered, updatedAt: Date.now() });
+}
 await setDoc(doc(db, SYNC_COL, ACTIVE_COL), { lastUpdated: Date.now() }, { merge: true });
 window.GMS_CACHE.invalidate([ACTIVE_COL]);
 
 allData = allData.filter(row => row.date !== formattedDate);
+
+// If the date that got deleted was the one currently on screen, the page
+// intentionally goes blank (empty state) instead of silently jumping to
+// another date - matches the expected "delete this date -> blank page" flow.
 updateFilterTotals();
 applyFilters();
 
@@ -847,13 +854,23 @@ showToast('Delete failed: ' + err.message, true);
 
 async function loadActiveData() {
 updateStatus('Loading live data...');
-// Auto-expire anything past the 30-day retention window every time data loads
-// (app open, periodic refresh, or after a save) - not just on upload.
 await purgeExpiredData();
 const data = await smartLoadData();
 allData = data;
 allData.sort((a, b) => (b.date || '').localeCompare(a.date || ''));
 document.getElementById('lastUpdate').textContent = new Date().toLocaleString();
+
+// Default view = only the latest available date (never a combined
+// all-dates grand total). This only auto-applies once per page load so
+// it doesn't yank the user back while they're browsing an older date.
+if (!hasInitializedFilter) {
+const latestDate = allData.length ? allData[0].date : null;
+currentFilter.date = latestDate || null;
+const jsDate = latestDate ? dmyToJSDate(latestDate) : new Date();
+if (jsDate) document.getElementById('reportDate').valueAsDate = jsDate;
+hasInitializedFilter = true;
+}
+
 updateFilterTotals();
 applyFilters();
 updateStatus('Live Sync Active ✅');
@@ -870,10 +887,6 @@ window.applyDateFilter = function() {
 const dateInput = document.getElementById('reportDate').value;
 if (!dateInput) { showToast('Please select a date', true); return; }
 
-// FIX: build the filter date with a 4-digit year so it matches the format
-// row.date is actually stored in ("DD-MM-YYYY"). Previously this used a
-// 2-digit year ("DD-MM-YY"), so it could never equal any real row.date and
-// the date filter silently showed nothing.
 const [year, month, day] = dateInput.split('-');
 const formattedDate = `${day}-${month}-${year}`;
 currentFilter.date = formattedDate;
@@ -887,11 +900,15 @@ showToast(`Filter applied: ${formattedDate} (${matchCount} rows)`);
 }
 };
 
+// "Clear" now returns to the latest available date instead of combining
+// all dates into one grand total - per-day view stays the default always.
 window.clearDateFilter = function() {
-currentFilter.date = null;
-document.getElementById('reportDate').valueAsDate = new Date();
+const latestDate = allData.length ? allData[0].date : null;
+currentFilter.date = latestDate || null;
+const jsDate = latestDate ? dmyToJSDate(latestDate) : new Date();
+if (jsDate) document.getElementById('reportDate').valueAsDate = jsDate;
 applyFilters();
-showToast('Date filter cleared');
+showToast(latestDate ? `সর্বশেষ তারিখ দেখানো হচ্ছে: ${latestDate}` : 'কোনো ডেটা নেই');
 };
 
 window.filterReport = function(type) {
@@ -902,24 +919,28 @@ applyFilters();
 };
 
 window.showAllData = function() {
-currentFilter = {};
+currentFilter.reportType = null;
 document.querySelectorAll('.filter-btn').forEach(btn => btn.classList.remove('active'));
 document.getElementById('btnAll').classList.add('active');
 applyFilters();
 };
 
 function updateFilterTotals() {
+// Category quick-filter totals are scoped to the date currently on screen
+// (currentFilter.date), so they always match the day being viewed instead
+// of silently summing the whole month.
+const base = currentFilter.date ? allData.filter(r => r.date === currentFilter.date) : allData;
 const totals = {
-all: allData.reduce((s, r) => s + r.amount, 0),
-photocopy: allData.filter(r => r.itemDescription.toLowerCase().includes('photocopy')).reduce((s, r) => s + r.amount, 0),
-polybag: allData.filter(r => r.itemDescription.toLowerCase().includes('poly')).reduce((s, r) => s + r.amount, 0),
-aceton: allData.filter(r => r.itemDescription.toLowerCase().includes('aceton')).reduce((s, r) => s + r.amount, 0),
-stationery: allData.filter(r => r.category === 'STATIONERY').reduce((s, r) => s + r.amount, 0),
-printing: allData.filter(r => r.category === 'PRINTING').reduce((s, r) => s + r.amount, 0),
-laboratory: allData.filter(r => r.category === 'LABORATORY ITEMS').reduce((s, r) => s + r.amount, 0),
-medical: allData.filter(r => r.category === 'MEDICAL ITEMS').reduce((s, r) => s + r.amount, 0),
-miscellaneous: allData.filter(r => r.category === 'MISCELLANEOUS GOODS').reduce((s, r) => s + r.amount, 0),
-fire: allData.filter(r => r.category.includes('FIRE SAFETY')).reduce((s, r) => s + r.amount, 0)
+all: base.reduce((s, r) => s + r.amount, 0),
+photocopy: base.filter(r => r.itemDescription.toLowerCase().includes('photocopy')).reduce((s, r) => s + r.amount, 0),
+polybag: base.filter(r => r.itemDescription.toLowerCase().includes('poly')).reduce((s, r) => s + r.amount, 0),
+aceton: base.filter(r => r.itemDescription.toLowerCase().includes('aceton')).reduce((s, r) => s + r.amount, 0),
+stationery: base.filter(r => r.category === 'STATIONERY').reduce((s, r) => s + r.amount, 0),
+printing: base.filter(r => r.category === 'PRINTING').reduce((s, r) => s + r.amount, 0),
+laboratory: base.filter(r => r.category === 'LABORATORY ITEMS').reduce((s, r) => s + r.amount, 0),
+medical: base.filter(r => r.category === 'MEDICAL ITEMS').reduce((s, r) => s + r.amount, 0),
+miscellaneous: base.filter(r => r.category === 'MISCELLANEOUS GOODS').reduce((s, r) => s + r.amount, 0),
+fire: base.filter(r => r.category.includes('FIRE SAFETY')).reduce((s, r) => s + r.amount, 0)
 };
 
 document.getElementById('totalAll').textContent = '৳' + totals.all.toLocaleString('en-US', { maximumFractionDigits: 0 });
@@ -937,6 +958,7 @@ document.getElementById('totalFire').textContent = '৳' + totals.fire.toLocaleS
 function applyFilters() {
 filteredData = allData.filter(row => {
 if (currentFilter.date && row.date !== currentFilter.date) return false;
+if (!currentFilter.date && allData.length) return false; // never silently show a combined "all dates" set
 if (currentFilter.reportType) {
 if (currentFilter.reportType === 'photocopy' && !row.itemDescription.toLowerCase().includes('photocopy')) return false;
 if (currentFilter.reportType === 'polybag' && !row.itemDescription.toLowerCase().includes('poly')) return false;
@@ -951,7 +973,6 @@ if (currentFilter.reportType === 'fire' && !row.category.includes('FIRE SAFETY')
 return true;
 });
 
-// Show/hide empty state
 const emptyState = document.getElementById('emptyState');
 const chartGrid = document.getElementById('chartGrid');
 if (filteredData.length === 0) {
@@ -969,7 +990,7 @@ renderTable();
 }
 
 window.clearFilters = function() {
-currentFilter = {};
+currentFilter.reportType = null;
 document.querySelectorAll('.filter-btn').forEach(btn => btn.classList.remove('active'));
 document.getElementById('btnAll').classList.add('active');
 applyFilters();
@@ -990,13 +1011,28 @@ document.getElementById('statAvg').textContent = '৳' + avg.toLocaleString('en-
 document.getElementById('rowCount').textContent = total;
 }
 
+// Monthly Summary panel is intentionally independent from the day-filter:
+// it always reflects the whole current calendar month (still capped by the
+// 30-day retention window), so it keeps working as a "monthly overview"
+// even though the main charts/stats above only show one day at a time.
+function getCurrentMonthData() {
+const now = new Date();
+const mm = String(now.getMonth() + 1).padStart(2, '0');
+const yyyy = String(now.getFullYear());
+return allData.filter(r => {
+const parts = String(r.date || '').split('-');
+return parts.length === 3 && parts[1] === mm && parts[2] === yyyy;
+});
+}
+
 function updateMonthlySummary() {
-const days = new Set(filteredData.map(r => r.date)).size;
-const amount = filteredData.reduce((s, r) => s + r.amount, 0);
+const monthData = getCurrentMonthData();
+const days = new Set(monthData.map(r => r.date)).size;
+const amount = monthData.reduce((s, r) => s + r.amount, 0);
 const avg = days > 0 ? amount / days : 0;
-const items = filteredData.length;
-const depts = new Set(filteredData.map(r => r.department).filter(v => v)).size;
-const cats = new Set(filteredData.map(r => r.category).filter(v => v)).size;
+const items = monthData.length;
+const depts = new Set(monthData.map(r => r.department).filter(v => v)).size;
+const cats = new Set(monthData.map(r => r.category).filter(v => v)).size;
 
 document.getElementById('summaryDays').textContent = days;
 document.getElementById('summaryAmount').textContent = '৳' + amount.toLocaleString('en-US', { maximumFractionDigits: 0 });
@@ -1037,12 +1073,13 @@ ctx.restore();
 }
 };
 
-// Chart 1: Category Wise (Pie)
+// Chart 1: Category Wise (Pie) - total = sum of ALL categories (no slicing)
 const catData = {};
 filteredData.forEach(r => { const cat = r.category || 'Unknown'; catData[cat] = (catData[cat] || 0) + r.amount; });
-const catLabels = Object.keys(catData);
+const catAllLabels = Object.keys(catData);
+const catTotal = catAllLabels.reduce((s, l) => s + catData[l], 0);
+const catLabels = catAllLabels;
 const catValues = catLabels.map(l => catData[l]);
-const catTotal = catValues.reduce((a, b) => a + b, 0);
 
 charts.category = new Chart(document.getElementById('categoryChart'), {
 type: 'pie',
@@ -1051,12 +1088,15 @@ options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { po
 });
 document.getElementById('categoryTotal').textContent = 'Grand Total: ৳' + catTotal.toLocaleString('en-US', { maximumFractionDigits: 0 });
 
-// Chart 2: Section Wise (Bar)
+// Chart 2: Section Wise (Bar) - FIX: grand total is now computed from ALL
+// sections before slicing to the top 15 for display, so it always matches
+// the other charts' totals instead of silently dropping sections 16+.
 const secData = {};
 filteredData.forEach(r => { const sec = r.section || 'Unknown'; secData[sec] = (secData[sec] || 0) + r.amount; });
-const secLabels = Object.keys(secData).slice(0, 15);
+const secAllLabels = Object.keys(secData);
+const secTotal = secAllLabels.reduce((s, l) => s + secData[l], 0);
+const secLabels = secAllLabels.slice(0, 15);
 const secValues = secLabels.map(l => secData[l]);
-const secTotal = secValues.reduce((a, b) => a + b, 0);
 
 charts.section = new Chart(document.getElementById('sectionChart'), {
 type: 'bar',
@@ -1064,14 +1104,15 @@ data: { labels: secLabels.length ? secLabels : ['No Data'], datasets: [{ label: 
 options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { grid: { color: gridColor }, ticks: { color: textColor } }, x: { ticks: { color: textColor, maxRotation: 45, font: { size: 9 } } } } },
 plugins: [valueLabelPlugin]
 });
-document.getElementById('sectionTotal').textContent = 'Grand Total: ৳' + secTotal.toLocaleString('en-US', { maximumFractionDigits: 0 });
+document.getElementById('sectionTotal').textContent = 'Grand Total: ৳' + secTotal.toLocaleString('en-US', { maximumFractionDigits: 0 }) + (secAllLabels.length > 15 ? ` (showing top 15 of ${secAllLabels.length})` : '');
 
-// Chart 3: Issue ID Wise (Bar)
+// Chart 3: Issue ID Wise (Bar) - same fix: total from ALL issue IDs, top 10 shown
 const idData = {};
 filteredData.forEach(r => { const id = r.issueId || 'Unknown'; idData[id] = (idData[id] || 0) + r.amount; });
-const idLabels = Object.keys(idData).slice(0, 10);
+const idAllLabels = Object.keys(idData);
+const idTotal = idAllLabels.reduce((s, l) => s + idData[l], 0);
+const idLabels = idAllLabels.slice(0, 10);
 const idValues = idLabels.map(l => idData[l]);
-const idTotal = idValues.reduce((a, b) => a + b, 0);
 
 charts.issueId = new Chart(document.getElementById('issueIdChart'), {
 type: 'bar',
@@ -1079,9 +1120,9 @@ data: { labels: idLabels.length ? idLabels : ['No Data'], datasets: [{ label: 'A
 options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { grid: { color: gridColor }, ticks: { color: textColor } }, x: { ticks: { color: textColor, maxRotation: 45, font: { size: 9 } } } } },
 plugins: [valueLabelPlugin]
 });
-document.getElementById('issueIdTotal').textContent = 'Grand Total: ৳' + idTotal.toLocaleString('en-US', { maximumFractionDigits: 0 });
+document.getElementById('issueIdTotal').textContent = 'Grand Total: ৳' + idTotal.toLocaleString('en-US', { maximumFractionDigits: 0 }) + (idAllLabels.length > 10 ? ` (showing top 10 of ${idAllLabels.length})` : '');
 
-// Chart 4: Division Wise (Bar)
+// Chart 4: Division Wise (Bar) - already unsliced, kept as-is
 const divData = {};
 filteredData.forEach(r => { const div = r.division || 'Unknown'; divData[div] = (divData[div] || 0) + r.amount; });
 const divLabels = Object.keys(divData);
@@ -1156,12 +1197,10 @@ window.showToast = showToast;
 console.log('%c═══════════════════════════════════════════', 'color: #22c55e; font-weight: bold;');
 console.log('%c  📊 GENERAL MCD DAILY REPORT - READY', 'color: #22c55e; font-weight: bold; font-size: 14px;');
 console.log('%c═══════════════════════════════════════════', 'color: #22c55e; font-weight: bold;');
-console.log('%c  ✅ 13 Columns Support', 'color: #3b82f6;');
-console.log('%c  ✅ Smart Cache (24h): Active', 'color: #3b82f6;');
-console.log('%c  ✅ Realtime Sync: Active', 'color: #22c55e;');
-console.log('%c  ✅ ROI Tracking: Active', 'color: #8b5cf6;');
-console.log('%c  ✅ Auto Refresh: Every 5 minutes', 'color: #f59e0b;');
-console.log('%c  ✅ Firebase Reads Minimized: Yes', 'color: #f59e0b;');
+console.log('%c  ✅ Bug fixed: chart grand totals now match across all 4 charts', 'color: #3b82f6;');
+console.log('%c  ✅ Upload with explicit date override', 'color: #3b82f6;');
+console.log('%c  ✅ Default view = latest date only (no cross-date grand total)', 'color: #22c55e;');
+console.log('%c  ✅ Rolling 30-day auto-expiry (per row)', 'color: #8b5cf6;');
 console.log('%c═══════════════════════════════════════════', 'color: #22c55e; font-weight: bold;');
 </script>
 </body>
