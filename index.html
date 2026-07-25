@@ -112,6 +112,36 @@ border-radius:50%;
 animation:livePulse 1.5s infinite;
 margin-left:auto;
 }
+
+/* 🔥 NEW: GMS MCD ERP External Link Button Style */
+.sidebarNav button.gms-erp-btn{
+background:linear-gradient(135deg,#3b82f6,#8b5cf6)!important;
+color:#fff!important;
+border:none;
+font-weight:700;
+position:relative;
+overflow:hidden;
+}
+.sidebarNav button.gms-erp-btn::before{
+content:'';
+position:absolute;
+top:0;left:-100%;
+width:100%;height:100%;
+background:linear-gradient(90deg,transparent,rgba(255,255,255,0.3),transparent);
+animation:shimmer 3s infinite;
+}
+.sidebarNav button.gms-erp-btn:hover{
+transform:translateY(-2px);
+box-shadow:0 6px 20px rgba(59,130,246,0.5);
+}
+.sidebarNav button.gms-erp-btn .live-dot{
+width:8px;height:8px;
+background:#fff;
+border-radius:50%;
+animation:livePulse 1.5s infinite;
+margin-left:auto;
+}
+
 @keyframes livePulse{0%{box-shadow:0 0 0 0 rgba(255,255,255,0.7);}70%{box-shadow:0 0 0 10px rgba(255,255,255,0);}100%{box-shadow:0 0 0 0 rgba(255,255,255,0);}}
 
 .notice-badge{position:absolute;right:10px;top:50%;transform:translateY(-50%);
@@ -496,6 +526,12 @@ padding:16px 20px;display:flex;align-items:center;gap:16px;box-shadow:0 8px 32px
 <!-- 🔥 NEW: GREY ORDER CLOSE BUTTON - Admin Auto Access -->
 <button id="greyOrderCloseNav" class="grey-order-btn" onclick="window.location.href='grey-fabric-order-close.html'">
 📋 Grey Order Close
+<span class="live-dot"></span>
+</button>
+
+<!-- 🔥 NEW: GMS MCD ERP SYSTEM (External Site) Button -->
+<button id="gmsMcdErpNav" class="gms-erp-btn" onclick="window.open('https://johurulm875-afk.github.io/Gms-MCD-ERP/','_blank')">
+🌐 GMS MCD ERP System
 <span class="live-dot"></span>
 </button>
 
@@ -1903,10 +1939,60 @@ rows.sort(function(a,b){return (b.date||'').localeCompare(a.date||'');});
 var latest=rows[0]||{};
 return{broken:parseNum(latest.brokenNeedle),missing:parseNum(latest.missingNeedle),change:parseNum(latest.changeNeedle),date:latest.date||''};
 }
+
+// ═══════════════════════════════════════════════════════════════
+// 🔥 FIXED: getGeneralMcdDailyData()
+// ---------------------------------------------------------------
+// PROBLEM: This dashboard used to call cachedGetDocs('generalMcdDaily', ...)
+// which treats every Firestore DOCUMENT in the "generalMcdDaily" collection
+// as ONE data row (x.amount, x.department, x.date, etc. directly on the doc).
+//
+// But general-mcd-daily.html actually stores data completely differently:
+//   - Each document is keyed by MONTH ("YYYY-MM"), e.g. "2026-07"
+//   - Each document's shape is: { data: [ {row1}, {row2}, ... ], updatedAt }
+//   - Every row's "date" field is stored as "DD-MM-YYYY" (NOT "YYYY-MM-DD")
+//
+// So the old code was comparing x.date (undefined, since date lives one
+// level deeper inside doc.data array) against today() which returns
+// "YYYY-MM-DD" — a double mismatch. Result: todayRows was always empty,
+// which is exactly why the General MCD Smart Chart box on the dashboard
+// always showed "No Data" / ৳0, even though general-mcd-daily.html itself
+// displayed the data correctly (it reads the structure properly).
+//
+// FIX: flatten every month-document's "data" array into individual rows,
+// then match against today's date converted to "DD-MM-YYYY" format (same
+// format general-mcd-daily.html uses when saving/filtering).
+// ═══════════════════════════════════════════════════════════════
+function todayDMY(){
+var d = new Date();
+var dd = String(d.getDate()).padStart(2,'0');
+var mm = String(d.getMonth()+1).padStart(2,'0');
+var yyyy = d.getFullYear();
+return dd+'-'+mm+'-'+yyyy;
+}
 async function getGeneralMcdDailyData(shouldUpdate){
-var rows = await cachedGetDocs('generalMcdDaily', CACHE_KEYS.generalMcdDaily, shouldUpdate);
-var t = today();
+var monthDocs = await cachedGetDocs('generalMcdDaily', CACHE_KEYS.generalMcdDaily, shouldUpdate);
+// Flatten: each monthDoc = { data:[...rows], updatedAt, _docId }
+var rows = [];
+monthDocs.forEach(function(monthDoc){
+if(monthDoc && Array.isArray(monthDoc.data)){
+monthDoc.data.forEach(function(r){ rows.push(r); });
+}
+});
+var t = todayDMY(); // "DD-MM-YYYY" — matches how general-mcd-daily.html stores row.date
 var todayRows = rows.filter(function(x){ return x.date === t; });
+// Fallback: if nothing was entered yet today, show the most recent available date
+// instead of a blank/zero dashboard box (keeps the widget useful at all times).
+if(todayRows.length===0 && rows.length>0){
+var allDates = rows.map(function(x){return x.date;}).filter(Boolean);
+allDates.sort(function(a,b){
+// Compare as YYYY-MM-DD by rearranging DD-MM-YYYY
+function toISO(dmy){ var p=(dmy||'').split('-'); return p.length===3 ? (p[2]+'-'+p[1]+'-'+p[0]) : ''; }
+return toISO(b).localeCompare(toISO(a));
+});
+var latestDate = allDates[0];
+if(latestDate){ todayRows = rows.filter(function(x){ return x.date === latestDate; }); t = latestDate; }
+}
 var totalAmount = 0, totalQty = 0;
 var deptMap = {}, catMap = {};
 var dailyUsesDept = {}, photocopyDept = {}, polyBagDept = {}, acetonDept = {};
