@@ -478,7 +478,7 @@ document.getElementById('themeIcon').className = 'fas fa-sun';
 }
 
 document.getElementById('currentDate').textContent = new Date().toLocaleDateString('en-GB');
-document.getElementById('reportDate').valueAsDate = new Date();
+document.getElementById('reportDate').value = todayISOLocal();
 
 (function(){
 var c = window.GMS_CACHE.getReadCount();
@@ -509,6 +509,25 @@ function dmyToJSDate(dmy) {
 const m = String(dmy || '').match(/^(\d{2})-(\d{2})-(\d{4})$/);
 if (!m) return null;
 return new Date(parseInt(m[3], 10), parseInt(m[2], 10) - 1, parseInt(m[1], 10));
+}
+// FIX: <input type="date">.valueAsDate is UTC-based - assigning it a Date
+// object built from LOCAL year/month/day (like dmyToJSDate above) shifts the
+// displayed date back by 1 day in any timezone ahead of UTC (e.g. Bangladesh,
+// UTC+6). That's why deleting "10-07-2026" said "No data found" even though
+// data existed - it was actually saved as 11-07-2026 but the picker showed
+// 10-07-2026. Setting .value directly with a plain "YYYY-MM-DD" string
+// sidesteps the UTC conversion entirely.
+function dmyToISO(dmy) {
+const m = String(dmy || '').match(/^(\d{2})-(\d{2})-(\d{4})$/);
+if (!m) return '';
+return `${m[3]}-${m[2]}-${m[1]}`;
+}
+function todayISOLocal() {
+const d = new Date();
+const yyyy = d.getFullYear();
+const mm = String(d.getMonth() + 1).padStart(2, '0');
+const dd = String(d.getDate()).padStart(2, '0');
+return `${yyyy}-${mm}-${dd}`;
 }
 
 function processFile(file) {
@@ -764,8 +783,7 @@ document.getElementById('lastUpdate').textContent = new Date().toLocaleString();
 if (!hasInitializedFilter) {
 const latestDate = allData.length ? allData[0].date : null;
 currentFilter.date = latestDate || null;
-const jsDate = latestDate ? dmyToJSDate(latestDate) : new Date();
-if (jsDate) document.getElementById('reportDate').valueAsDate = jsDate;
+document.getElementById('reportDate').value = latestDate ? dmyToISO(latestDate) : todayISOLocal();
 hasInitializedFilter = true;
 }
 
@@ -802,8 +820,7 @@ showToast(`Filter applied: ${formattedDate} (${matchCount} rows)`);
 window.clearDateFilter = function() {
 const latestDate = allData.length ? allData[0].date : null;
 currentFilter.date = latestDate || null;
-const jsDate = latestDate ? dmyToJSDate(latestDate) : new Date();
-if (jsDate) document.getElementById('reportDate').valueAsDate = jsDate;
+document.getElementById('reportDate').value = latestDate ? dmyToISO(latestDate) : todayISOLocal();
 updateFilterTotals();
 applyFilters();
 showToast(latestDate ? `সর্বশেষ তারিখ দেখানো হচ্ছে: ${latestDate}` : 'কোনো ডেটা নেই');
