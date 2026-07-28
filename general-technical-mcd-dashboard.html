@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>GMS General Technical-MCD Daily Issue Smart Chart</title>
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/chartjs-plugin-datalabels/2.2.0/chartjs-plugin-datalabels.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
@@ -274,7 +275,7 @@ body{background:#fff!important;color:#000!important}
 <div class="dw-chart-title">DATE WISE TOTAL AMOUNT (TK)</div>
 <div class="dw-canvas-box" style="height:230px"><canvas id="dwBarChart"></canvas></div>
 <div class="dw-chart-title" style="margin-top:16px;background:#8b5cf6">SHARE BY DATE</div>
-<div class="dw-canvas-box" style="height:260px;margin-top:2px"><canvas id="dwPieChart"></canvas></div>
+<div class="dw-canvas-box" style="height:290px;margin-top:2px"><canvas id="dwPieChart"></canvas></div>
 </div>
 </div>
 <div class="dw-summary" id="dwSummary"></div>
@@ -377,6 +378,11 @@ let filteredData = [];
 let charts = {};
 let currentFilter = {};
 let hasInitializedFilter = false; // ensures we only auto-jump to "latest date" once per page load
+
+if (window.ChartDataLabels) {
+Chart.register(ChartDataLabels);
+Chart.defaults.set('plugins.datalabels', { display: false }); // off by default; enabled per-chart where wanted
+}
 
 window.GMS_CACHE = {
 CACHE_KEY: 'GMS_TECH_MCD_CACHE_V1',
@@ -1227,15 +1233,33 @@ y: { grid: { color: gridColor }, ticks: { color: textColor, callback: v => '৳'
 }
 });
 
-const piePalette = ['#38bdf8', '#22c55e', '#f59e0b', '#a855f7', '#ef4444', '#14b8a6', '#eab308', '#6366f1', '#ec4899', '#84cc16', '#0ea5e9', '#f97316'];
+const piePalette = ['#38bdf8', '#22c55e', '#f59e0b', '#a855f7', '#ef4444', '#14b8a6', '#eab308', '#6366f1', '#ec4899', '#84cc16', '#0ea5e9', '#f97316', '#4ade80', '#fb7185', '#c084fc', '#facc15', '#2dd4bf', '#818cf8', '#fdba74', '#a3e635'];
 const pieRows = rows.filter(r => r.value);
+const pieDataArr = pieRows.length ? pieRows.map(r => r.value) : [1];
 dwCharts.pie = new Chart(document.getElementById('dwPieChart'), {
 type: 'pie',
 data: {
 labels: pieRows.length ? pieRows.map(r => formatDMYShort(r.date)) : ['No Data'],
-datasets: [{ data: pieRows.length ? pieRows.map(r => r.value) : [1], backgroundColor: piePalette, borderWidth: 1, borderColor: isDark ? '#1e293b' : '#fff' }]
+datasets: [{ data: pieDataArr, backgroundColor: piePalette, borderWidth: 1, borderColor: isDark ? '#1e293b' : '#fff' }]
 },
-options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'right', labels: { color: textColor, font: { size: 9 }, boxWidth: 10 } } } }
+options: {
+responsive: true, maintainAspectRatio: false,
+plugins: {
+legend: { position: 'right', labels: { color: textColor, font: { size: 9 }, boxWidth: 10 } },
+datalabels: {
+display: pieRows.length > 0,
+color: isDark ? '#f1f5f9' : '#1e293b',
+anchor: 'end',
+align: 'end',
+offset: 6,
+font: { size: 9, weight: 'bold' },
+formatter: (value) => {
+const total = pieDataArr.reduce((a, b) => a + b, 0);
+return total ? Math.round((value / total) * 100) + '%' : '';
+}
+}
+}
+}
 });
 
 document.getElementById('dwSummary').innerHTML = `
