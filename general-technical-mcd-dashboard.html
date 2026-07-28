@@ -1225,7 +1225,19 @@ type: 'bar',
 data: { labels: barLabels, datasets: [{ label: 'Value (TK)', data: barValues, backgroundColor: '#84cc16', borderRadius: 4 }] },
 options: {
 responsive: true, maintainAspectRatio: false,
-plugins: { legend: { display: false } },
+layout: { padding: { top: 22 } },
+plugins: {
+legend: { display: false },
+datalabels: {
+display: (ctx) => ctx.dataset.data[ctx.dataIndex] > 0,
+anchor: 'end',
+align: 'end',
+color: textColor,
+font: { size: 8, weight: 'bold' },
+rotation: -60,
+formatter: (v) => '৳' + v.toLocaleString('en-US', { notation: 'compact', maximumFractionDigits: 1 })
+}
+},
 scales: {
 x: { grid: { display: false }, ticks: { color: textColor, maxRotation: 60, font: { size: 8 } } },
 y: { grid: { color: gridColor }, ticks: { color: textColor, callback: v => '৳' + v.toLocaleString('en-US', { notation: 'compact' }) } }
