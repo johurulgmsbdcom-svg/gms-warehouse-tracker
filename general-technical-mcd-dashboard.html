@@ -1248,14 +1248,19 @@ plugins: {
 legend: { position: 'right', labels: { color: textColor, font: { size: 9 }, boxWidth: 10 } },
 datalabels: {
 display: pieRows.length > 0,
-color: isDark ? '#f1f5f9' : '#1e293b',
-anchor: 'end',
-align: 'end',
-offset: 6,
-font: { size: 9, weight: 'bold' },
-formatter: (value) => {
+color: '#fff',
+textStrokeColor: 'rgba(0,0,0,0.65)',
+textStrokeWidth: 2,
+anchor: 'center',
+align: 'center',
+clamp: true,
+clip: false,
+font: { size: 8, weight: 'bold' },
+formatter: (value, ctx) => {
 const total = pieDataArr.reduce((a, b) => a + b, 0);
-return total ? Math.round((value / total) * 100) + '%' : '';
+const pct = total ? Math.round((value / total) * 100) : 0;
+const label = ctx.chart.data.labels[ctx.dataIndex];
+return [label, pct + '%'];
 }
 }
 }
