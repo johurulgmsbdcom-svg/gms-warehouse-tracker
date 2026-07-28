@@ -483,6 +483,14 @@ const COMPANY_CODE = 'composite';
 const OFFLINE_KEY = 'composite_needle_offline_v5';
 
 // =========================================
+// 🏢 COMPANY LETTERHEAD (used on every exported sheet)
+// =========================================
+const COMPANY_NAME = 'GMS COMPOSITE KNITTING IND LTD';
+const COMPANY_ADDRESS = 'SHARDAGONJ, KASHIMPUR, GAZIPUR';
+const COMPANY_DEPT = 'ACCESSORIES MCD';
+const REPORT_TITLE = 'DAILY SEWING NEEDLE PRESENT BALANCE REPORT';
+
+// =========================================
 // 📦 FLOOR DATA
 // =========================================
 const floorData = {
@@ -2004,37 +2012,74 @@ function updateMonthlySummary(rows){
 }
 
 // =========================================
-// 📊 SINGLE FLOOR EXCEL EXPORT
+// 📊 SINGLE FLOOR EXCEL EXPORT (styled letterhead)
 // =========================================
 function exportExcel(){
   const floor=document.getElementById('floor').value;
   const date=document.getElementById('postDate').value;
-  const operator=document.getElementById('operatorName').value;
-  let html=`<h2>GMS COMPOSITE - NEEDLE DAILY POSTING</h2><h3>Floor: ${floor} | Date: ${date} | Operator: ${operator}</h3>
-  <table border="1" style="border-collapse:collapse"><thead><tr style="background:#1e293b;color:white">
-  <th>SL</th><th>CODE</th><th>TYPE</th><th>SIZE</th><th>BRAND</th><th>PRICE</th>
-  <th>Prev</th><th>Rcvd</th><th>ReqNo</th><th>Dvld</th><th>Present</th><th>BNR/BNF</th><th>Custom</th></tr></thead><tbody>`;
+  const operator=document.getElementById('operatorName').value||'-';
+  const category = floor.includes('_NEW') ? 'NEW' : (floor.includes('_RUNNING') ? 'RUNNING' : '-');
+
+  let html = `
+  <html><head><meta charset="UTF-8"></head><body>
+  <table border="1" style="border-collapse:collapse;font-family:Arial,sans-serif">
+    <tr><td colspan="13" style="text-align:center;font-size:18px;font-weight:bold;padding:8px;border:none;text-decoration:underline">${COMPANY_NAME}</td></tr>
+    <tr><td colspan="13" style="text-align:center;font-size:12px;padding:2px;border:none">${COMPANY_ADDRESS}</td></tr>
+    <tr><td colspan="13" style="text-align:center;font-size:12px;padding:2px;border:none">${COMPANY_DEPT}</td></tr>
+    <tr><td colspan="13" style="text-align:center;font-size:14px;font-weight:bold;padding:6px;border:none">${REPORT_TITLE}</td></tr>
+    <tr><td colspan="13" style="text-align:left;font-size:11px;padding:4px;border:none;color:#1e3a8a">
+      Floor: ${floor} &nbsp;|&nbsp; Date: ${date} &nbsp;|&nbsp; Category: ${category} &nbsp;|&nbsp; Operator: ${operator}
+    </td></tr>
+    <tr><td colspan="13" style="border:none;padding:2px"></td></tr>
+    <tr style="background:#1e293b;color:#ffffff;font-weight:bold">
+      <th style="border:1px solid #000;padding:4px">SL</th>
+      <th style="border:1px solid #000;padding:4px">CODE</th>
+      <th style="border:1px solid #000;padding:4px">TYPE</th>
+      <th style="border:1px solid #000;padding:4px">SIZE</th>
+      <th style="border:1px solid #000;padding:4px">BRAND</th>
+      <th style="border:1px solid #000;padding:4px">UNIT PRICE</th>
+      <th style="border:1px solid #000;padding:4px">PREVIOUS</th>
+      <th style="border:1px solid #000;padding:4px">RECEIVED</th>
+      <th style="border:1px solid #000;padding:4px">REQ NO</th>
+      <th style="border:1px solid #000;padding:4px">DELIVERY</th>
+      <th style="border:1px solid #000;padding:4px;background:#d97706;color:#000">PRESENT BALANCE</th>
+      <th style="border:1px solid #000;padding:4px">BNR/BNF</th>
+      <th style="border:1px solid #000;padding:4px">CUSTOM</th>
+    </tr>`;
+
   currentFloorData.forEach((item,i)=>{
-    html+=`<tr ${item.isCustom?'style="background:#fef3c7"':''}>
-    <td>${i+1}</td><td>${item.itemCode}</td><td>${item.needleType}</td><td>${item.size}</td>
-    <td>${item.brand}</td><td>${Number(item.unitPrice).toFixed(4)}</td>
-    <td>${document.getElementById(`p${i}`).innerText}</td>
-    <td>${document.getElementById(`r${i}`).value||0}</td>
-    <td>${rowReqNo[i]||''}</td>
-    <td>${document.getElementById(`d${i}`).value||0}</td>
-    <td>${document.getElementById(`b${i}`).innerText}</td>
-    <td>${document.getElementById(`bn${i}`).value||0}</td>
-    <td>${item.isCustom?'YES':''}</td></tr>`;
+    const rowBg = i%2===0 ? '#ffffff' : '#f1f5f9';
+    const customBg = item.isCustom ? '#fef3c7' : rowBg;
+    html+=`<tr style="background:${customBg}">
+    <td style="border:1px solid #000;padding:3px;text-align:center">${i+1}</td>
+    <td style="border:1px solid #000;padding:3px;text-align:center">${item.itemCode}</td>
+    <td style="border:1px solid #000;padding:3px;text-align:center">${item.needleType}</td>
+    <td style="border:1px solid #000;padding:3px;text-align:center">${item.size}</td>
+    <td style="border:1px solid #000;padding:3px;text-align:center">${item.brand}</td>
+    <td style="border:1px solid #000;padding:3px;text-align:right">${Number(item.unitPrice).toFixed(4)}</td>
+    <td style="border:1px solid #000;padding:3px;text-align:center">${document.getElementById(`p${i}`).innerText}</td>
+    <td style="border:1px solid #000;padding:3px;text-align:center">${document.getElementById(`r${i}`).value||0}</td>
+    <td style="border:1px solid #000;padding:3px;text-align:center">${rowReqNo[i]||''}</td>
+    <td style="border:1px solid #000;padding:3px;text-align:center">${document.getElementById(`d${i}`).value||0}</td>
+    <td style="border:1px solid #000;padding:3px;text-align:center;font-weight:bold;background:#fff7ed">${document.getElementById(`b${i}`).innerText}</td>
+    <td style="border:1px solid #000;padding:3px;text-align:center">${document.getElementById(`bn${i}`).value||0}</td>
+    <td style="border:1px solid #000;padding:3px;text-align:center">${item.isCustom?'YES':''}</td></tr>`;
   });
-  html+=`</tbody><tfoot><tr><td colspan="6" style="text-align:right">TOTAL:</td>
-  <td>${document.getElementById('totalPrevious').innerText}</td>
-  <td>${document.getElementById('totalReceive').innerText}</td><td></td>
-  <td>${document.getElementById('totalDelivery').innerText}</td>
-  <td>${document.getElementById('totalPresent').innerText}</td>
-  <td>${document.getElementById('totalBN').innerText}</td><td></td></tr></tfoot></table>`;
+
+  html+=`<tr style="background:#334155;color:#ffffff;font-weight:bold">
+  <td colspan="6" style="border:1px solid #000;padding:4px;text-align:right">TOTAL:</td>
+  <td style="border:1px solid #000;padding:4px;text-align:center">${document.getElementById('totalPrevious').innerText}</td>
+  <td style="border:1px solid #000;padding:4px;text-align:center">${document.getElementById('totalReceive').innerText}</td>
+  <td style="border:1px solid #000;padding:4px"></td>
+  <td style="border:1px solid #000;padding:4px;text-align:center">${document.getElementById('totalDelivery').innerText}</td>
+  <td style="border:1px solid #000;padding:4px;text-align:center">${document.getElementById('totalPresent').innerText}</td>
+  <td style="border:1px solid #000;padding:4px;text-align:center">${document.getElementById('totalBN').innerText}</td>
+  <td style="border:1px solid #000;padding:4px"></td></tr>
+  </table></body></html>`;
+
   const blob=new Blob([html],{type:'application/vnd.ms-excel'});
   const a=document.createElement('a'); a.href=URL.createObjectURL(blob);
-  a.download=`needle-${floor.split('(')[0].trim()}-${date}.xls`; a.click();
+  a.download=`GMS-Needle-PresentBalance-${floor.split('(')[0].trim()}-${date}.xls`; a.click();
   showToast('✅ Excel exported');
 }
 
@@ -2055,22 +2100,131 @@ function openAllExcelPopup(){
 function closeAllExcelPopup(){ document.getElementById('allExcelPopup').style.display='none'; }
 
 // =========================================
-// 📥 ALL FLOORS EXCEL — MAIN EXPORT
+// 🎨 ExcelJS STYLE HELPERS (smart / professional look)
+// =========================================
+const XLSX_COLORS = {
+  navy:    'FF1E293B',
+  navyDk:  'FF0F172A',
+  slate:   'FF334155',
+  gold:    'FFF59E0B',
+  goldDk:  'FFD97706',
+  green:   'FF059669',
+  greenLt: 'FFD1FAE5',
+  orangeLt:'FFFEF3C7',
+  grayLt:  'FFF1F5F9',
+  white:   'FFFFFFFF',
+  black:   'FF000000',
+  red:     'FFDC2626'
+};
+
+function styleLetterheadSheet(ws, colCount, floorLine, category, operator, dataSource){
+  ws.mergeCells(1,1,1,colCount);
+  ws.getCell(1,1).value = COMPANY_NAME;
+  ws.getCell(1,1).font = { name:'Calibri', size:18, bold:true, underline:true, color:{argb:XLSX_COLORS.navyDk} };
+  ws.getCell(1,1).alignment = { horizontal:'center', vertical:'middle' };
+  ws.getRow(1).height = 26;
+
+  ws.mergeCells(2,1,2,colCount);
+  ws.getCell(2,1).value = COMPANY_ADDRESS;
+  ws.getCell(2,1).font = { name:'Calibri', size:11, italic:true, color:{argb:XLSX_COLORS.slate} };
+  ws.getCell(2,1).alignment = { horizontal:'center' };
+
+  ws.mergeCells(3,1,3,colCount);
+  ws.getCell(3,1).value = COMPANY_DEPT;
+  ws.getCell(3,1).font = { name:'Calibri', size:11, bold:true, color:{argb:XLSX_COLORS.slate} };
+  ws.getCell(3,1).alignment = { horizontal:'center' };
+
+  ws.mergeCells(4,1,4,colCount);
+  ws.getCell(4,1).value = REPORT_TITLE;
+  ws.getCell(4,1).font = { name:'Calibri', size:14, bold:true, color:{argb:XLSX_COLORS.white} };
+  ws.getCell(4,1).alignment = { horizontal:'center', vertical:'middle' };
+  ws.getCell(4,1).fill = { type:'pattern', pattern:'solid', fgColor:{argb:XLSX_COLORS.navy} };
+  ws.getRow(4).height = 22;
+
+  ws.mergeCells(5,1,5,colCount);
+  ws.getCell(5,1).value = floorLine + (category?`   |   Category: ${category}`:'') + `   |   Operator: ${operator}` + (dataSource?`   |   Source: ${dataSource}`:'');
+  ws.getCell(5,1).font = { name:'Calibri', size:10.5, bold:true, color:{argb:'FF1E3A8A'} };
+  ws.getCell(5,1).alignment = { horizontal:'left' };
+  ws.getCell(5,1).fill = { type:'pattern', pattern:'solid', fgColor:{argb:XLSX_COLORS.grayLt} };
+
+  // blank spacer row
+}
+
+function styleHeaderRow(row, boldWhite=true){
+  row.eachCell(cell=>{
+    cell.font = { name:'Calibri', size:10.5, bold:true, color:{argb:XLSX_COLORS.white} };
+    cell.fill = { type:'pattern', pattern:'solid', fgColor:{argb:XLSX_COLORS.navy} };
+    cell.alignment = { horizontal:'center', vertical:'middle', wrapText:true };
+    cell.border = {
+      top:{style:'thin',color:{argb:XLSX_COLORS.black}}, left:{style:'thin',color:{argb:XLSX_COLORS.black}},
+      bottom:{style:'thin',color:{argb:XLSX_COLORS.black}}, right:{style:'thin',color:{argb:XLSX_COLORS.black}}
+    };
+  });
+  row.height = 20;
+}
+
+function styleDataRow(row, {zebra=false, custom=false, presentColIdx=null} = {}){
+  row.eachCell((cell, colNumber)=>{
+    cell.border = {
+      top:{style:'thin',color:{argb:'FFBBBBBB'}}, left:{style:'thin',color:{argb:'FFBBBBBB'}},
+      bottom:{style:'thin',color:{argb:'FFBBBBBB'}}, right:{style:'thin',color:{argb:'FFBBBBBB'}}
+    };
+    cell.alignment = { horizontal:'center', vertical:'middle' };
+    cell.font = { name:'Calibri', size:10 };
+    if(custom){
+      cell.fill = { type:'pattern', pattern:'solid', fgColor:{argb:XLSX_COLORS.orangeLt} };
+    }else if(zebra){
+      cell.fill = { type:'pattern', pattern:'solid', fgColor:{argb:XLSX_COLORS.grayLt} };
+    }
+    if(presentColIdx && colNumber===presentColIdx){
+      cell.font = { name:'Calibri', size:10, bold:true, color:{argb:'FF92400E'} };
+      cell.fill = { type:'pattern', pattern:'solid', fgColor:{argb:'FFFFF3D6'} };
+    }
+  });
+}
+
+function styleTotalRow(row){
+  row.eachCell(cell=>{
+    cell.font = { name:'Calibri', size:10.5, bold:true, color:{argb:XLSX_COLORS.white} };
+    cell.fill = { type:'pattern', pattern:'solid', fgColor:{argb:XLSX_COLORS.slate} };
+    cell.alignment = { horizontal:'center', vertical:'middle' };
+    cell.border = {
+      top:{style:'double',color:{argb:XLSX_COLORS.black}}, left:{style:'thin',color:{argb:XLSX_COLORS.black}},
+      bottom:{style:'thin',color:{argb:XLSX_COLORS.black}}, right:{style:'thin',color:{argb:XLSX_COLORS.black}}
+    };
+  });
+  row.height = 20;
+}
+
+async function loadExcelJS(){
+  if(typeof ExcelJS !== 'undefined') return;
+  showToast('📦 Excel engine loading...');
+  await new Promise((resolve, reject)=>{
+    const s=document.createElement('script');
+    s.src='https://cdnjs.cloudflare.com/ajax/libs/exceljs/4.4.0/exceljs.min.js';
+    s.onload=resolve; s.onerror=()=>reject(new Error('ExcelJS load failed'));
+    document.head.appendChild(s);
+  });
+}
+
+async function downloadWorkbook(wb, fileName){
+  const buffer = await wb.xlsx.writeBuffer();
+  const blob = new Blob([buffer], {type:'application/octet-stream'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = fileName; a.click();
+  setTimeout(()=>URL.revokeObjectURL(url), 4000);
+}
+
+// =========================================
+// 📥 ALL FLOORS EXCEL — MAIN EXPORT (ExcelJS, styled, letterhead)
 // =========================================
 async function exportAllFloorsExcel(){
   const date = document.getElementById('allExcelDate').value;
   if(!date){ alert('❌ Date নির্বাচন করুন!'); return; }
   if(!navigator.onLine){ alert('❌ Internet connection দরকার!'); return; }
 
-  if(typeof XLSX === 'undefined'){
-    showToast('📦 SheetJS library loading...');
-    await new Promise((resolve, reject)=>{
-      const s=document.createElement('script');
-      s.src='https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js';
-      s.onload=resolve; s.onerror=()=>reject(new Error('SheetJS load failed'));
-      document.head.appendChild(s);
-    });
-  }
+  await loadExcelJS();
 
   const btn = document.getElementById('allExcelDownloadBtn');
   btn.disabled=true; btn.textContent='⏳ Loading...';
@@ -2128,14 +2282,17 @@ async function exportAllFloorsExcel(){
     progressFill.style.width='35%';
     progressLabel.textContent='📊 Excel workbook তৈরি করছি...';
 
-    const wb = XLSX.utils.book_new();
+    const wb = new ExcelJS.Workbook();
+    wb.creator = COMPANY_NAME;
+    wb.created = new Date();
 
-    const summaryRows = [];
-    summaryRows.push(['GMS COMPOSITE — NEEDLE DAILY POSTING']);
-    summaryRows.push([`📅 Date: ${date}   |   Generated: ${new Date().toLocaleString()}`]);
-    summaryRows.push(['ALL FLOORS SUMMARY — ' + date]);
-    summaryRows.push([]);
-    summaryRows.push(['SL', 'FLOOR NAME', 'CATEGORY', 'PREVIOUS', 'RECEIVED', 'DELIVERY', 'PRESENT STOCK', 'BNR/BNF', 'ITEMS', 'DATA SOURCE']);
+    // ---------- SUMMARY SHEET ----------
+    const summaryColCount = 10;
+    const wsSummary = wb.addWorksheet('SUMMARY', { views:[{state:'frozen', ySplit:7}] });
+    styleLetterheadSheet(wsSummary, summaryColCount, `📅 Date: ${date}`, '', 'All Floors', `Generated: ${new Date().toLocaleString()}`);
+    wsSummary.addRow([]); // row 6 spacer
+    const summaryHeader = wsSummary.addRow(['SL','FLOOR NAME','CATEGORY','PREVIOUS','RECEIVED','DELIVERY','PRESENT BALANCE','BNR/BNF','ITEMS','DATA SOURCE']);
+    styleHeaderRow(summaryHeader);
 
     let grandPrev=0, grandRcvd=0, grandDvld=0, grandPresent=0, grandBN=0;
 
@@ -2145,6 +2302,7 @@ async function exportAllFloorsExcel(){
       const shortName = floorName.replace(/\s*\(BUILDING NO[^)]*\)/gi,'').replace(/_NEW|_RUNNING/g,'').trim();
 
       let prev=0, rcvd=0, dvld=0, present=0, bn=0, itemCount=0, dataSource='';
+      let sourceKind = 'opening'; // ok | carry | opening
 
       if(todayMap[floorName] && todayMap[floorName].rows && todayMap[floorName].rows.length){
         const rows = todayMap[floorName].rows;
@@ -2157,6 +2315,7 @@ async function exportAllFloorsExcel(){
         });
         itemCount = rows.length;
         dataSource = '✅ ' + date;
+        sourceKind = 'ok';
       } else if(carryMap[floorName]){
         const rows = carryMap[floorName].rows;
         const carryDate = carryMap[floorName].report_date;
@@ -2167,6 +2326,7 @@ async function exportAllFloorsExcel(){
         });
         itemCount = rows.length;
         dataSource = '⏪ Carry: ' + carryDate;
+        sourceKind = 'carry';
       } else {
         const baseItems = floorData[floorName]||[];
         baseItems.forEach(it=>{
@@ -2176,119 +2336,120 @@ async function exportAllFloorsExcel(){
         });
         itemCount = baseItems.length;
         dataSource = '📋 Opening Stock';
+        sourceKind = 'opening';
       }
 
       grandPrev+=prev; grandRcvd+=rcvd; grandDvld+=dvld; grandPresent+=present; grandBN+=bn;
-      summaryRows.push([fi+1, floorName, category, prev, rcvd, dvld, present, bn, itemCount, dataSource]);
 
-      let statusClass = 'status-ok';
-      if(dataSource.startsWith('⏪')) statusClass = 'status-carry';
-      else if(dataSource.startsWith('📋')) statusClass = 'status-empty';
+      const dataRow = wsSummary.addRow([fi+1, shortName, category, prev, rcvd, dvld, present, bn, itemCount, dataSource]);
+      styleDataRow(dataRow, { zebra: fi%2===1, presentColIdx: 7 });
+      const srcCell = dataRow.getCell(10);
+      if(sourceKind==='ok') srcCell.font = { name:'Calibri', size:10, bold:true, color:{argb:XLSX_COLORS.green} };
+      else if(sourceKind==='carry') srcCell.font = { name:'Calibri', size:10, bold:true, color:{argb:XLSX_COLORS.goldDk} };
+      else srcCell.font = { name:'Calibri', size:10, italic:true, color:{argb:'FF94A3B8'} };
 
+      let statusClass = sourceKind==='ok' ? 'status-ok' : (sourceKind==='carry' ? 'status-carry' : 'status-empty');
       statusDiv.innerHTML += `<div class="${statusClass}"><b>${fi+1}. ${shortName}</b> (${category}) — ${dataSource} | Items: ${itemCount} | Present: ${present.toLocaleString()}</div>`;
       progressFill.style.width = (35 + Math.round((fi+1)/ALL_FLOORS.length*30))+'%';
       progressLabel.textContent = `Summary: ${fi+1}/${ALL_FLOORS.length}...`;
       if(fi % 7 === 0) await new Promise(r=>setTimeout(r,5));
     }
 
-    summaryRows.push([]);
-    summaryRows.push(['', 'GRAND TOTAL (28 Floors)', '', grandPrev, grandRcvd, grandDvld, grandPresent, grandBN, '', '']);
+    const summaryTotalRow = wsSummary.addRow(['', 'GRAND TOTAL (28 Floors)', '', grandPrev, grandRcvd, grandDvld, grandPresent, grandBN, '', '']);
+    styleTotalRow(summaryTotalRow);
+    wsSummary.mergeCells(summaryTotalRow.number, 2, summaryTotalRow.number, 3);
 
-    const wsSummary = XLSX.utils.aoa_to_sheet(summaryRows);
-    wsSummary['!cols'] = [{wch:4},{wch:44},{wch:10},{wch:10},{wch:10},{wch:10},{wch:14},{wch:10},{wch:8},{wch:20}];
-    wsSummary['!merges'] = [
-      {s:{r:0,c:0},e:{r:0,c:9}},
-      {s:{r:1,c:0},e:{r:1,c:9}},
-      {s:{r:2,c:0},e:{r:2,c:9}},
+    wsSummary.columns = [
+      {width:5},{width:44},{width:11},{width:11},{width:11},{width:11},{width:16},{width:11},{width:8},{width:22}
     ];
-    XLSX.utils.book_append_sheet(wb, wsSummary, 'SUMMARY');
 
+    // ---------- FLOOR SHEETS ----------
     progressLabel.textContent = 'Floor sheets তৈরি করছি...';
     progressFill.style.width='67%';
+
+    const usedSheetNames = new Set(['SUMMARY']);
 
     for(let fi=0; fi<ALL_FLOORS.length; fi++){
       const floorName = ALL_FLOORS[fi];
       const category = floorName.includes('_NEW') ? 'NEW' : 'RUNNING';
       const bnLabel = floorName.includes('_NEW') ? 'BNR' : 'BNF';
+      const colCount = 14;
 
       let sheetName = floorName
         .replace(/\s*\(BUILDING NO[^)]*\)/gi,'')
         .replace(/_NEW/,'_N').replace(/_RUNNING/,'_R')
-        .replace(/[\/\\\?\*\[\]]/g,'')
+        .replace(/[\/\\\?\*\[\]:]/g,'')
         .trim()
         .substring(0,31);
+      let uniqueName = sheetName, dupIdx=1;
+      while(usedSheetNames.has(uniqueName)){ uniqueName = (sheetName.substring(0,28)+'_'+(++dupIdx)); }
+      usedSheetNames.add(uniqueName);
 
-      const sheetRows = [];
+      const ws = wb.addWorksheet(uniqueName, { views:[{state:'frozen', ySplit:6}] });
+
       let operatorName = '-';
       let dataSource = '';
-
-      sheetRows.push(['GMS COMPOSITE — NEEDLE DAILY POSTING']);
-      sheetRows.push([`Floor: ${floorName}`]);
-      sheetRows.push(['']);
-      sheetRows.push([]);
-      sheetRows.push(['SL','CODE','TYPE','SIZE','BRAND','UNIT PRICE','PREVIOUS','RECEIVED','REQ NO','DELIVERY','PRESENT',bnLabel,'CUSTOM','NOTE']);
+      let sourceKind = 'opening';
+      const rowsForSheet = [];
 
       let tPrev=0, tRcvd=0, tDvld=0, tPresent=0, tBN=0;
 
       if(todayMap[floorName] && todayMap[floorName].rows && todayMap[floorName].rows.length){
         operatorName = todayMap[floorName].operator || '-';
         dataSource = '✅ Actual data: ' + date;
+        sourceKind = 'ok';
         todayMap[floorName].rows.forEach((row,idx)=>{
           const p=Number(row.previous)||0, r=Number(row.receive)||0;
           const d=Number(row.delivery)||0, ps=Number(row.present)||0, bn=Number(row.bn)||0;
           tPrev+=p; tRcvd+=r; tDvld+=d; tPresent+=ps; tBN+=bn;
-          sheetRows.push([
-            idx+1, row.itemCode||'', row.needleType||'', row.size||'', row.brand||'',
-            Number(row.unitPrice||0).toFixed(4),
-            p, r, row.receiveReqNo||'', d, ps, bn,
-            row.isCustom?'YES':'', ''
-          ]);
+          rowsForSheet.push([idx+1, row.itemCode||'', row.needleType||'', row.size||'', row.brand||'',
+            Number(row.unitPrice||0).toFixed(4), p, r, row.receiveReqNo||'', d, ps, bn,
+            row.isCustom?'YES':'', '']);
         });
       } else if(carryMap[floorName]){
         const carryDate = carryMap[floorName].report_date;
         operatorName = 'Carried from ' + carryDate;
         dataSource = '⏪ Carry from: ' + carryDate;
+        sourceKind = 'carry';
         carryMap[floorName].rows.forEach((row,idx)=>{
           const carryPresent = Number(row.present)||0;
           tPrev+=carryPresent; tPresent+=carryPresent;
-          sheetRows.push([
-            idx+1, row.itemCode||'', row.needleType||'', row.size||'', row.brand||'',
-            Number(row.unitPrice||0).toFixed(4),
-            carryPresent, 0, '', 0, carryPresent, 0,
-            row.isCustom?'YES':'',
-            '⏪ Carry: '+carryDate
-          ]);
+          rowsForSheet.push([idx+1, row.itemCode||'', row.needleType||'', row.size||'', row.brand||'',
+            Number(row.unitPrice||0).toFixed(4), carryPresent, 0, '', 0, carryPresent, 0,
+            row.isCustom?'YES':'', '⏪ Carry: '+carryDate]);
         });
       } else {
         operatorName = 'Opening Stock';
         dataSource = '📋 Opening stock (no saved data)';
+        sourceKind = 'opening';
         const baseItems = floorData[floorName]||[];
         baseItems.forEach((it,idx)=>{
           const opening = Number(it[6])||0;
           tPrev+=opening; tPresent+=opening;
-          sheetRows.push([
-            idx+1, it[1], it[2], it[3], it[4],
-            Number(it[5]).toFixed(4),
-            opening, 0, '', 0, opening, 0, '', '📋 Opening'
-          ]);
+          rowsForSheet.push([idx+1, it[1], it[2], it[3], it[4], Number(it[5]).toFixed(4),
+            opening, 0, '', 0, opening, 0, '', '📋 Opening']);
         });
       }
 
-      sheetRows[2] = [`Date: ${date}   |   Category: ${category}   |   Operator: ${operatorName}   |   Source: ${dataSource}`];
-      sheetRows.push([]);
-      sheetRows.push(['','','','','','TOTAL →', tPrev, tRcvd, '', tDvld, tPresent, tBN, '', '']);
+      styleLetterheadSheet(ws, colCount, `Floor: ${floorName}   |   Date: ${date}`, category, operatorName, dataSource);
+      ws.addRow([]); // spacer row 6
 
-      const ws = XLSX.utils.aoa_to_sheet(sheetRows);
-      ws['!cols'] = [
-        {wch:4},{wch:11},{wch:22},{wch:7},{wch:14},{wch:10},
-        {wch:10},{wch:9},{wch:16},{wch:9},{wch:10},{wch:9},{wch:7},{wch:22}
+      const properHeader = ws.addRow(['SL','CODE','TYPE','SIZE','BRAND','UNIT PRICE','PREVIOUS','RECEIVED','REQ NO','DELIVERY','PRESENT BALANCE',bnLabel,'CUSTOM','NOTE']);
+      styleHeaderRow(properHeader);
+
+      rowsForSheet.forEach((r,idx)=>{
+        const isCustomRow = r[12] === 'YES';
+        const dataRow = ws.addRow(r);
+        styleDataRow(dataRow, { zebra: idx%2===1, custom:isCustomRow, presentColIdx: 11 });
+      });
+
+      const totalRow = ws.addRow(['','','','','','TOTAL →', tPrev, tRcvd, '', tDvld, tPresent, tBN, '', '']);
+      styleTotalRow(totalRow);
+
+      ws.columns = [
+        {width:5},{width:11},{width:22},{width:8},{width:14},{width:11},
+        {width:11},{width:10},{width:16},{width:10},{width:15},{width:10},{width:8},{width:22}
       ];
-      ws['!merges'] = [
-        {s:{r:0,c:0},e:{r:0,c:13}},
-        {s:{r:1,c:0},e:{r:1,c:13}},
-        {s:{r:2,c:0},e:{r:2,c:13}},
-      ];
-      XLSX.utils.book_append_sheet(wb, ws, sheetName);
 
       progressFill.style.width = (67 + Math.round((fi+1)/ALL_FLOORS.length*30))+'%';
       if(fi % 7 === 0) await new Promise(r=>setTimeout(r,5));
@@ -2297,8 +2458,8 @@ async function exportAllFloorsExcel(){
     progressFill.style.width='100%';
     progressLabel.textContent='✅ Excel তৈরি সম্পন্ন! Downloading...';
 
-    const fileName = `GMS-Needle-AllFloors-${date}.xlsx`;
-    XLSX.writeFile(wb, fileName);
+    const fileName = `GMS-Needle-PresentBalance-AllFloors-${date}.xlsx`;
+    await downloadWorkbook(wb, fileName);
 
     btn.disabled=false;
     btn.textContent='✅ Downloaded!';
