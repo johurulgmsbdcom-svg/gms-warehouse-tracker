@@ -981,17 +981,25 @@ plugins: [valueLabelPlugin]
 });
 document.getElementById('sectionTotal').textContent = 'Grand Total: ৳' + secTotal.toLocaleString('en-US', { maximumFractionDigits: 0 }) + (secAllLabels.length > 15 ? ` (showing top 15 of ${secAllLabels.length})` : '');
 
-// Chart 3: Issue ID Wise (Bar) - total from ALL issue IDs, top 10 shown
+// Chart 3: Issue ID Wise (Bar) - total from ALL issue IDs, top 10 shown.
+// Label includes the Name of Person next to the Issue ID, e.g. "TTS-959 (Juel Mia)",
+// so it's clear at a glance who each issue ID belongs to.
 const idData = {};
-filteredData.forEach(r => { const id = r.issueId || 'Unknown'; idData[id] = (idData[id] || 0) + r.amount; });
-const idAllLabels = Object.keys(idData);
+const idNameMap = {};
+filteredData.forEach(r => {
+const id = r.issueId || 'Unknown';
+idData[id] = (idData[id] || 0) + r.amount;
+if (!idNameMap[id] && r.personName) idNameMap[id] = r.personName;
+});
+const idAllLabels = Object.keys(idData).sort((a, b) => idData[b] - idData[a]);
 const idTotal = idAllLabels.reduce((s, l) => s + idData[l], 0);
 const idLabels = idAllLabels.slice(0, 10);
 const idValues = idLabels.map(l => idData[l]);
+const idDisplayLabels = idLabels.map(l => idNameMap[l] ? `${l} (${idNameMap[l]})` : l);
 
 charts.issueId = new Chart(document.getElementById('issueIdChart'), {
 type: 'bar',
-data: { labels: idLabels.length ? idLabels : ['No Data'], datasets: [{ label: 'Amount', data: idValues.length ? idValues : [0], backgroundColor: '#f59e0b', borderRadius: 8 }] },
+data: { labels: idDisplayLabels.length ? idDisplayLabels : ['No Data'], datasets: [{ label: 'Amount', data: idValues.length ? idValues : [0], backgroundColor: '#f59e0b', borderRadius: 8 }] },
 options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { grid: { color: gridColor }, ticks: { color: textColor } }, x: { ticks: { color: textColor, maxRotation: 45, font: { size: 9 } } } } },
 plugins: [valueLabelPlugin]
 });
