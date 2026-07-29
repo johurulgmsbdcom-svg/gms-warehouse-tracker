@@ -489,6 +489,8 @@ const COMPANY_NAME = 'GMS COMPOSITE KNITTING IND LTD';
 const COMPANY_ADDRESS = 'SHARDAGONJ, KASHIMPUR, GAZIPUR';
 const COMPANY_DEPT = 'ACCESSORIES MCD';
 const REPORT_TITLE = 'DAILY SEWING NEEDLE PRESENT BALANCE REPORT';
+const DOCUMENT_NO = 'QA/03/310';
+const VERSION_NO = '01/2026';
 
 // =========================================
 // 📦 FLOOR DATA
@@ -2023,8 +2025,14 @@ function exportExcel(){
   let html = `
   <html><head><meta charset="UTF-8"></head><body>
   <table border="1" style="border-collapse:collapse;font-family:Arial,sans-serif">
-    <tr><td colspan="13" style="text-align:center;font-size:18px;font-weight:bold;padding:8px;border:none;text-decoration:underline">${COMPANY_NAME}</td></tr>
-    <tr><td colspan="13" style="text-align:center;font-size:12px;padding:2px;border:none">${COMPANY_ADDRESS}</td></tr>
+    <tr>
+      <td colspan="10" rowspan="2" style="text-align:center;font-size:18px;font-weight:bold;padding:8px;border:none;text-decoration:underline;vertical-align:middle">${COMPANY_NAME}<br>
+        <span style="font-size:12px;font-weight:normal;font-style:italic;text-decoration:none">${COMPANY_ADDRESS}</span></td>
+      <td colspan="3" rowspan="2" style="text-align:center;font-size:10px;font-weight:bold;padding:6px;border:2px solid #2563eb;background:#eff6ff;vertical-align:middle">
+        DOCUMENT NO : ${DOCUMENT_NO}<br>VERSION NO : ${VERSION_NO}
+      </td>
+    </tr>
+    <tr></tr>
     <tr><td colspan="13" style="text-align:center;font-size:12px;padding:2px;border:none">${COMPANY_DEPT}</td></tr>
     <tr><td colspan="13" style="text-align:center;font-size:14px;font-weight:bold;padding:6px;border:none">${REPORT_TITLE}</td></tr>
     <tr><td colspan="13" style="text-align:left;font-size:11px;padding:4px;border:none;color:#1e3a8a">
@@ -2118,16 +2126,35 @@ const XLSX_COLORS = {
 };
 
 function styleLetterheadSheet(ws, colCount, floorLine, category, operator, dataSource){
-  ws.mergeCells(1,1,1,colCount);
+  // Reserve the top-right corner (rows 1-2) for a Document No / Version No control box,
+  // so the company name/address/dept text sits to the left of it.
+  const boxCols = colCount >= 12 ? 4 : 3;
+  const boxStart = Math.max(2, colCount - boxCols + 1);
+  const leftEnd = boxStart - 1;
+
+  ws.mergeCells(1,1,1,leftEnd);
   ws.getCell(1,1).value = COMPANY_NAME;
   ws.getCell(1,1).font = { name:'Calibri', size:18, bold:true, underline:true, color:{argb:XLSX_COLORS.navyDk} };
   ws.getCell(1,1).alignment = { horizontal:'center', vertical:'middle' };
   ws.getRow(1).height = 26;
 
-  ws.mergeCells(2,1,2,colCount);
+  ws.mergeCells(2,1,2,leftEnd);
   ws.getCell(2,1).value = COMPANY_ADDRESS;
   ws.getCell(2,1).font = { name:'Calibri', size:11, italic:true, color:{argb:XLSX_COLORS.slate} };
   ws.getCell(2,1).alignment = { horizontal:'center' };
+  ws.getRow(2).height = 16;
+
+  // 📋 Document control box — DOCUMENT NO / VERSION NO — top-right corner, rows 1-2
+  ws.mergeCells(1, boxStart, 2, colCount);
+  const docBox = ws.getCell(1, boxStart);
+  docBox.value = `DOCUMENT NO : ${DOCUMENT_NO}\nVERSION NO : ${VERSION_NO}`;
+  docBox.font = { name:'Calibri', size:10, bold:true, color:{argb:XLSX_COLORS.navyDk} };
+  docBox.alignment = { horizontal:'center', vertical:'middle', wrapText:true };
+  docBox.fill = { type:'pattern', pattern:'solid', fgColor:{argb:'FFEFF6FF'} };
+  docBox.border = {
+    top:{style:'medium',color:{argb:'FF2563EB'}}, left:{style:'medium',color:{argb:'FF2563EB'}},
+    bottom:{style:'medium',color:{argb:'FF2563EB'}}, right:{style:'medium',color:{argb:'FF2563EB'}}
+  };
 
   ws.mergeCells(3,1,3,colCount);
   ws.getCell(3,1).value = COMPANY_DEPT;
