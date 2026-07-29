@@ -2033,7 +2033,10 @@ function exportExcel(){
       </td>
     </tr>
     <tr></tr>
-    <tr><td colspan="13" style="text-align:center;font-size:12px;padding:2px 2px 6px;border:none;border-bottom:2px solid #d97706">${COMPANY_DEPT}</td></tr>
+    <tr>
+      <td colspan="8" style="text-align:center;font-size:12px;padding:2px 2px 6px;border:none;border-bottom:2px solid #d97706">${COMPANY_DEPT}</td>
+      <td colspan="5" style="border:none;border-bottom:2px solid #d97706"></td>
+    </tr>
     <tr><td colspan="13" style="text-align:center;font-size:14px;font-weight:bold;padding:6px;border:none">${REPORT_TITLE}</td></tr>
     <tr><td colspan="13" style="text-align:left;font-size:11px;padding:4px;border:none;color:#1e3a8a">
       Floor: ${floor} &nbsp;|&nbsp; Date: ${date} &nbsp;|&nbsp; Category: ${category} &nbsp;|&nbsp; Operator: ${operator}
@@ -2168,10 +2171,14 @@ function styleLetterheadSheet(ws, colCount, floorLine, category, operator, dataS
     bottom:{style:'medium',color:{argb:'FF2563EB'}}, right:{style:'medium',color:{argb:'FF2563EB'}}
   });
 
-  ws.mergeCells(3,1,3,colCount);
+  ws.mergeCells(3,1,3,leftEnd);
   ws.getCell(3,1).value = COMPANY_DEPT;
   ws.getCell(3,1).font = { name:'Calibri', size:11, bold:true, color:{argb:XLSX_COLORS.slate} };
   ws.getCell(3,1).alignment = { horizontal:'center' };
+
+  // Keep the doc-box column area visually clean under itself on row 3 (no stray text)
+  ws.mergeCells(3, boxStart, 3, colCount);
+  ws.getCell(3, boxStart).value = '';
 
   // 🎯 A single, clean, perfectly straight divider line under the whole letterhead
   // block (company name + doc box), drawn cell-by-cell so it never looks crooked.
