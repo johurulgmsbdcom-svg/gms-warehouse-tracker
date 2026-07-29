@@ -2033,7 +2033,7 @@ function exportExcel(){
       </td>
     </tr>
     <tr></tr>
-    <tr><td colspan="13" style="text-align:center;font-size:12px;padding:2px;border:none">${COMPANY_DEPT}</td></tr>
+    <tr><td colspan="13" style="text-align:center;font-size:12px;padding:2px 2px 6px;border:none;border-bottom:2px solid #d97706">${COMPANY_DEPT}</td></tr>
     <tr><td colspan="13" style="text-align:center;font-size:14px;font-weight:bold;padding:6px;border:none">${REPORT_TITLE}</td></tr>
     <tr><td colspan="13" style="text-align:left;font-size:11px;padding:4px;border:none;color:#1e3a8a">
       Floor: ${floor} &nbsp;|&nbsp; Date: ${date} &nbsp;|&nbsp; Category: ${category} &nbsp;|&nbsp; Operator: ${operator}
@@ -2125,6 +2125,18 @@ const XLSX_COLORS = {
   red:     'FFDC2626'
 };
 
+// Apply the same border to every individual cell inside a range (not just the merge's
+// top-left/master cell). Some spreadsheet viewers (e.g. Google Sheets) only render a
+// border correctly across a merged region if every cell in that region carries it —
+// relying on just the master cell can make the line look broken/crooked.
+function applyBorderToRange(ws, r1, c1, r2, c2, border){
+  for(let r=r1; r<=r2; r++){
+    for(let c=c1; c<=c2; c++){
+      ws.getCell(r,c).border = border;
+    }
+  }
+}
+
 function styleLetterheadSheet(ws, colCount, floorLine, category, operator, dataSource){
   // Layout (left → right, rows 1-2):
   //   [ COMPANY NAME / ADDRESS ]  [ DOCUMENT NO / VERSION NO BOX ]
@@ -2151,15 +2163,21 @@ function styleLetterheadSheet(ws, colCount, floorLine, category, operator, dataS
   docBox.font = { name:'Calibri', size:10, bold:true, color:{argb:XLSX_COLORS.navyDk} };
   docBox.alignment = { horizontal:'center', vertical:'middle', wrapText:true };
   docBox.fill = { type:'pattern', pattern:'solid', fgColor:{argb:'FFEFF6FF'} };
-  docBox.border = {
+  applyBorderToRange(ws, 1, boxStart, 2, colCount, {
     top:{style:'medium',color:{argb:'FF2563EB'}}, left:{style:'medium',color:{argb:'FF2563EB'}},
     bottom:{style:'medium',color:{argb:'FF2563EB'}}, right:{style:'medium',color:{argb:'FF2563EB'}}
-  };
+  });
 
   ws.mergeCells(3,1,3,colCount);
   ws.getCell(3,1).value = COMPANY_DEPT;
   ws.getCell(3,1).font = { name:'Calibri', size:11, bold:true, color:{argb:XLSX_COLORS.slate} };
   ws.getCell(3,1).alignment = { horizontal:'center' };
+
+  // 🎯 A single, clean, perfectly straight divider line under the whole letterhead
+  // block (company name + doc box), drawn cell-by-cell so it never looks crooked.
+  applyBorderToRange(ws, 3, 1, 3, colCount, {
+    bottom:{style:'medium',color:{argb:'FFD97706'}}
+  });
 
   ws.mergeCells(4,1,4,colCount);
   ws.getCell(4,1).value = REPORT_TITLE;
