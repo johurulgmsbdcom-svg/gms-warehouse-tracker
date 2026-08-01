@@ -77,6 +77,7 @@ main{
 /* CARD */
 .card{
   display:flex;
+  flex-direction:column;
   width:820px;max-width:100%;
   min-height:460px;
   border-radius:24px;
@@ -90,6 +91,63 @@ main{
   animation:cardIn 1s cubic-bezier(.22,1,.36,1) .5s forwards;
 }
 @keyframes cardIn{to{opacity:1;transform:translateY(0) scale(1);}}
+
+/* TOP BANNER — নামাজের কথা মনে করিয়ে দেওয়া */
+.top-banner{
+  width:100%;
+  padding:12px 20px;
+  background:linear-gradient(90deg,rgba(37,99,235,0.12),rgba(124,58,237,0.12));
+  border-bottom:1px solid rgba(99,102,241,0.15);
+  display:flex;align-items:center;justify-content:center;gap:10px;
+  text-align:center;
+}
+.top-banner .icon{font-size:18px;flex-shrink:0;}
+.top-banner p{
+  font-family:'Exo 2',sans-serif;
+  font-size:13px;font-weight:600;
+  color:#1e293b;line-height:1.5;
+}
+.top-banner span{
+  background:linear-gradient(90deg,#2563eb,#7c3aed);
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;
+}
+
+/* CARD ROW (left + right panels) */
+.card-row{
+  display:flex;
+  flex:1;
+}
+
+/* BOTTOM BANNER — আল্লাহর ৯৯ নাম */
+.bottom-banner{
+  width:100%;
+  padding:14px 20px;
+  background:linear-gradient(90deg,rgba(6,182,212,0.08),rgba(37,99,235,0.1),rgba(124,58,237,0.08));
+  border-top:1px solid rgba(99,102,241,0.15);
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;
+  text-align:center;
+  min-height:64px;
+}
+.bottom-banner .bb-label{
+  font-size:9.5px;color:#7c3aed;font-weight:700;letter-spacing:2px;text-transform:uppercase;
+}
+#asmaName{
+  font-family:'Rajdhani',sans-serif;
+  font-size:20px;font-weight:700;
+  background:linear-gradient(90deg,#2563eb,#7c3aed,#06b6d4);
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;
+  transition:opacity .35s ease;
+  direction:rtl;
+}
+#asmaTrans{
+  font-size:11.5px;color:#475569;font-weight:600;
+  transition:opacity .35s ease;
+}
+#asmaMeaning{
+  font-size:11px;color:#64748b;
+  transition:opacity .35s ease;
+}
+.asma-fade{opacity:0;}
 
 /* LEFT PANEL */
 .left{
@@ -347,73 +405,91 @@ footer a{color:#2563eb;text-decoration:none;}
 
 <main>
   <div class="card">
-    <div class="left">
-      <div class="dot-grid">
-        <span></span><span></span><span></span><span></span><span></span><span></span>
-        <span></span><span></span><span></span><span></span><span></span><span></span>
-        <span></span><span></span><span></span><span></span><span></span><span></span>
-      </div>
-      <svg class="human-svg" viewBox="0 0 120 170" xmlns="http://www.w3.org/2000/svg">
-        <defs>
-          <linearGradient id="lg1" x1="0%" y1="0%" x2="100%" y2="100%">
-            <stop offset="0%" stop-color="#4f8ef7"/>
-            <stop offset="100%" stop-color="#a259ff"/>
-          </linearGradient>
-          <linearGradient id="lg2" x1="0%" y1="0%" x2="100%" y2="100%">
-            <stop offset="0%" stop-color="#00e5ff"/>
-            <stop offset="100%" stop-color="#4f8ef7"/>
-          </linearGradient>
-        </defs>
-        <style>
-          .wave-arm{transform-origin:82px 68px;animation:waveA 1.2s ease-in-out infinite alternate;}
-          @keyframes waveA{0%{transform:rotate(-15deg);}100%{transform:rotate(35deg);}}
-        </style>
-        <circle cx="60" cy="72" r="58" fill="none" stroke="rgba(79,142,247,0.15)" stroke-width="1.5" stroke-dasharray="6 5"/>
-        <circle cx="60" cy="28" r="20" fill="url(#lg1)"/>
-        <circle cx="53" cy="25" r="3" fill="white" opacity=".95"/>
-        <circle cx="67" cy="25" r="3" fill="white" opacity=".95"/>
-        <path d="M53 34 Q60 41 67 34" stroke="white" stroke-width="2" fill="none" stroke-linecap="round"/>
-        <rect x="42" y="50" width="36" height="48" rx="14" fill="url(#lg1)"/>
-        <rect x="22" y="54" width="20" height="10" rx="5" fill="url(#lg2)"/>
-        <rect class="wave-arm" x="82" y="54" width="20" height="10" rx="5" fill="url(#lg2)"/>
-        <rect x="44" y="98" width="14" height="38" rx="7" fill="url(#lg1)"/>
-        <rect x="62" y="98" width="14" height="38" rx="7" fill="url(#lg2)"/>
-      </svg>
-      <h2>Secure<br><span>ERP Access</span></h2>
-      <p>GMS Manufacturing Control Dashboard — login to manage your operations.</p>
+
+    <!-- 🕌 নামাজের কথা মনে করিয়ে দেওয়ার ব্যানার -->
+    <div class="top-banner">
+      <span class="icon">🕌</span>
+      <p>নামাজ বাদ দিও না — এই দুনিয়ার জীবনের চেয়ে <span>ওপারের জীবন</span> অনেক বেশি সুন্দর</p>
     </div>
 
-    <div class="right">
-      <div id="loginForm">
-        <div class="form-title">Sign In</div>
-        <div class="form-sub" id="net-status">Enter your credentials to continue</div>
-
-        <div class="field">
-          <label>Email Address</label>
-          <div class="inp-wrap">
-            <svg fill="none" viewBox="0 0 24 24" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M21.75 6.75v10.5a2.25 2.25 0 01-2.25 2.25H4.5a2.25 2.25 0 01-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0019.5 4.5H4.5a2.25 2.25 0 00-2.25 2.25m19.5 0l-9.75 6.75L2.25 6.75"/></svg>
-            <input id="email" type="email" placeholder="your@email.com" autocomplete="email">
-          </div>
+    <div class="card-row">
+      <div class="left">
+        <div class="dot-grid">
+          <span></span><span></span><span></span><span></span><span></span><span></span>
+          <span></span><span></span><span></span><span></span><span></span><span></span>
+          <span></span><span></span><span></span><span></span><span></span><span></span>
         </div>
-
-        <div class="field">
-          <label>Password</label>
-          <div class="inp-wrap">
-            <svg fill="none" viewBox="0 0 24 24" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 10-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 002.25-2.25v-6.75a2.25 2.25 0 00-2.25-2.25H6.75a2.25 2.25 0 00-2.25 2.25v6.75a2.25 2.25 0 002.25 2.25z"/></svg>
-            <input id="password" type="password" placeholder="••••••••" autocomplete="current-password">
-          </div>
-        </div>
-
-        <button class="btn" id="loginBtn">🔐 LOGIN</button>
-        <div id="msg"></div>
+        <svg class="human-svg" viewBox="0 0 120 170" xmlns="http://www.w3.org/2000/svg">
+          <defs>
+            <linearGradient id="lg1" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stop-color="#4f8ef7"/>
+              <stop offset="100%" stop-color="#a259ff"/>
+            </linearGradient>
+            <linearGradient id="lg2" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stop-color="#00e5ff"/>
+              <stop offset="100%" stop-color="#4f8ef7"/>
+            </linearGradient>
+          </defs>
+          <style>
+            .wave-arm{transform-origin:82px 68px;animation:waveA 1.2s ease-in-out infinite alternate;}
+            @keyframes waveA{0%{transform:rotate(-15deg);}100%{transform:rotate(35deg);}}
+          </style>
+          <circle cx="60" cy="72" r="58" fill="none" stroke="rgba(79,142,247,0.15)" stroke-width="1.5" stroke-dasharray="6 5"/>
+          <circle cx="60" cy="28" r="20" fill="url(#lg1)"/>
+          <circle cx="53" cy="25" r="3" fill="white" opacity=".95"/>
+          <circle cx="67" cy="25" r="3" fill="white" opacity=".95"/>
+          <path d="M53 34 Q60 41 67 34" stroke="white" stroke-width="2" fill="none" stroke-linecap="round"/>
+          <rect x="42" y="50" width="36" height="48" rx="14" fill="url(#lg1)"/>
+          <rect x="22" y="54" width="20" height="10" rx="5" fill="url(#lg2)"/>
+          <rect class="wave-arm" x="82" y="54" width="20" height="10" rx="5" fill="url(#lg2)"/>
+          <rect x="44" y="98" width="14" height="38" rx="7" fill="url(#lg1)"/>
+          <rect x="62" y="98" width="14" height="38" rx="7" fill="url(#lg2)"/>
+        </svg>
+        <h2>Secure<br><span>ERP Access</span></h2>
+        <p>GMS Manufacturing Control Dashboard — login to manage your operations.</p>
       </div>
 
-      <div id="postWelcome">
-        <div class="emoji">👋</div>
-        <h2 id="wName">Welcome!</h2>
-        <p>Redirecting to Dashboard…</p>
+      <div class="right">
+        <div id="loginForm">
+          <div class="form-title">Sign In</div>
+          <div class="form-sub" id="net-status">Enter your credentials to continue</div>
+
+          <div class="field">
+            <label>Email Address</label>
+            <div class="inp-wrap">
+              <svg fill="none" viewBox="0 0 24 24" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M21.75 6.75v10.5a2.25 2.25 0 01-2.25 2.25H4.5a2.25 2.25 0 01-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0019.5 4.5H4.5a2.25 2.25 0 00-2.25 2.25m19.5 0l-9.75 6.75L2.25 6.75"/></svg>
+              <input id="email" type="email" placeholder="your@email.com" autocomplete="email">
+            </div>
+          </div>
+
+          <div class="field">
+            <label>Password</label>
+            <div class="inp-wrap">
+              <svg fill="none" viewBox="0 0 24 24" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 10-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 002.25-2.25v-6.75a2.25 2.25 0 00-2.25-2.25H6.75a2.25 2.25 0 00-2.25 2.25v6.75a2.25 2.25 0 002.25 2.25z"/></svg>
+              <input id="password" type="password" placeholder="••••••••" autocomplete="current-password">
+            </div>
+          </div>
+
+          <button class="btn" id="loginBtn">🔐 LOGIN</button>
+          <div id="msg"></div>
+        </div>
+
+        <div id="postWelcome">
+          <div class="emoji">👋</div>
+          <h2 id="wName">Welcome!</h2>
+          <p>Redirecting to Dashboard…</p>
+        </div>
       </div>
     </div>
+
+    <!-- 🕋 আল্লাহর ৯৯ নাম (আসমাউল হুসনা) — একটার পর একটা চলতে থাকবে -->
+    <div class="bottom-banner">
+      <div class="bb-label">✨ আসমাউল হুসনা — আল্লাহর ৯৯ নাম ✨</div>
+      <div id="asmaName">الرَّحْمَنُ</div>
+      <div id="asmaTrans">Ar-Rahman</div>
+      <div id="asmaMeaning">পরম করুণাময়</div>
+    </div>
+
   </div>
 </main>
 
@@ -481,6 +557,127 @@ function updateOnlineStatus() {
 }
 window.addEventListener('online', updateOnlineStatus);
 window.addEventListener('offline', updateOnlineStatus);
+
+/* 🕋 আল্লাহর ৯৯ নাম — একটার পর একটা অটো-চলবে */
+const asmaUlHusna = [
+["الرَّحْمَنُ","Ar-Rahman","পরম করুণাময়"],
+["الرَّحِيمُ","Ar-Raheem","পরম দয়ালু"],
+["الْمَلِكُ","Al-Malik","সর্বাধিপতি"],
+["الْقُدُّوسُ","Al-Quddus","পরম পবিত্র"],
+["السَّلاَمُ","As-Salam","শান্তিদাতা"],
+["الْمُؤْمِنُ","Al-Mu'min","নিরাপত্তাদাতা"],
+["الْمُهَيْمِنُ","Al-Muhaymin","রক্ষণাবেক্ষণকারী"],
+["الْعَزِيزُ","Al-Aziz","পরাক্রমশালী"],
+["الْجَبَّارُ","Al-Jabbar","মহাপরাক্রমশালী"],
+["الْمُتَكَبِّرُ","Al-Mutakabbir","মহিমান্বিত"],
+["الْخَالِقُ","Al-Khaliq","সৃষ্টিকর্তা"],
+["الْبَارِئُ","Al-Bari","স্রষ্টা"],
+["الْمُصَوِّرُ","Al-Musawwir","রূপদানকারী"],
+["الْغَفَّارُ","Al-Ghaffar","মহাক্ষমাশীল"],
+["الْقَهَّارُ","Al-Qahhar","প্রবল দমনকারী"],
+["الْوَهَّابُ","Al-Wahhab","মহাদাতা"],
+["الرَّزَّاقُ","Ar-Razzaq","রিযিকদাতা"],
+["الْفَتَّاحُ","Al-Fattah","বিজয়দানকারী"],
+["الْعَلِيمُ","Al-Alim","সর্বজ্ঞ"],
+["الْقَابِضُ","Al-Qabid","সংকোচনকারী"],
+["الْبَاسِطُ","Al-Basit","প্রসারণকারী"],
+["الْخَافِضُ","Al-Khafid","অবনতকারী"],
+["الرَّافِعُ","Ar-Rafi","উন্নতকারী"],
+["الْمُعِزُّ","Al-Mu'izz","সম্মানদাতা"],
+["الْمُذِلُّ","Al-Muzil","অপমানকারী"],
+["السَّمِيعُ","As-Sami","সর্বশ্রোতা"],
+["الْبَصِيرُ","Al-Baseer","সর্বদ্রষ্টা"],
+["الْحَكَمُ","Al-Hakam","বিচারক"],
+["الْعَدْلُ","Al-Adl","ন্যায়পরায়ণ"],
+["اللَّطِيفُ","Al-Lateef","সূক্ষ্মদর্শী"],
+["الْخَبِيرُ","Al-Khabir","সম্যক অবহিত"],
+["الْحَلِيمُ","Al-Haleem","সহনশীল"],
+["الْعَظِيمُ","Al-Azeem","মহান"],
+["الْغَفُورُ","Al-Ghafoor","ক্ষমাশীল"],
+["الشَّكُورُ","Ash-Shakur","কদরদাতা"],
+["الْعَلِيُّ","Al-Aliyy","সমুন্নত"],
+["الْكَبِيرُ","Al-Kabeer","সুমহান"],
+["الْحَفِيظُ","Al-Hafiz","রক্ষাকারী"],
+["الْمُقِيتُ","Al-Muqeet","পুষ্টিদাতা"],
+["الْحَسِيبُ","Al-Haseeb","হিসাবগ্রহণকারী"],
+["الْجَلِيلُ","Al-Jaleel","মহিমান্বিত"],
+["الْكَرِيمُ","Al-Karim","মহানুভব"],
+["الرَّقِيبُ","Ar-Raqib","পর্যবেক্ষক"],
+["الْمُجِيبُ","Al-Mujeeb","সাড়াদানকারী"],
+["الْوَاسِعُ","Al-Wasi","প্রশস্ত"],
+["الْحَكِيمُ","Al-Hakeem","প্রজ্ঞাময়"],
+["الْوَدُودُ","Al-Wadud","প্রেমময়"],
+["الْمَجِيدُ","Al-Majeed","মহিমান্বিত"],
+["الْبَاعِثُ","Al-Ba'ith","পুনরুত্থানকারী"],
+["الشَّهِيدُ","Ash-Shaheed","সাক্ষী"],
+["الْحَقُّ","Al-Haqq","সত্য"],
+["الْوَكِيلُ","Al-Wakeel","অভিভাবক"],
+["الْقَوِيُّ","Al-Qawiyy","শক্তিমান"],
+["الْمَتِينُ","Al-Matin","দৃঢ়"],
+["الْوَلِيُّ","Al-Waliy","বন্ধু-অভিভাবক"],
+["الْحَمِيدُ","Al-Hameed","প্রশংসিত"],
+["الْمُحْصِي","Al-Muhsi","গণনাকারী"],
+["الْمُبْدِئُ","Al-Mubdi","সূচনাকারী"],
+["الْمُعِيدُ","Al-Muid","পুনঃসৃষ্টিকারী"],
+["الْمُحْيِي","Al-Muhyi","জীবনদাতা"],
+["الْمُمِيتُ","Al-Mumeet","মৃত্যুদাতা"],
+["الْحَيُّ","Al-Hayy","চিরঞ্জীব"],
+["الْقَيُّومُ","Al-Qayyum","চিরস্থায়ী ধারক"],
+["الْوَاجِدُ","Al-Wajid","স্বয়ংসমৃদ্ধ"],
+["الْمَاجِدُ","Al-Maajid","মহিমান্বিত"],
+["الْوَاحِدُ","Al-Wahid","অদ্বিতীয়"],
+["اَلْاَحَدُ","Al-Ahad","একক"],
+["الصَّمَدُ","As-Samad","অমুখাপেক্ষী"],
+["الْقَادِرُ","Al-Qadir","সর্বশক্তিমান"],
+["الْمُقْتَدِرُ","Al-Muqtadir","প্রবল ক্ষমতাবান"],
+["الْمُقَدِّمُ","Al-Muqaddim","অগ্রবর্তীকারী"],
+["الْمُؤَخِّرُ","Al-Muakhkhir","পশ্চাদবর্তীকারী"],
+["الْأَوَّلُ","Al-Awwal","প্রথম"],
+["الْآخِرُ","Al-Akhir","সর্বশেষ"],
+["الظَّاهِرُ","Az-Zaahir","প্রকাশ্য"],
+["الْبَاطِنُ","Al-Baatin","গুপ্ত"],
+["الْوَالِي","Al-Wali","অভিভাবক শাসক"],
+["الْمُتَعَالِي","Al-Mutaali","সর্বোচ্চ"],
+["الْبَرُّ","Al-Barr","কল্যাণকারী"],
+["التَّوَابُ","At-Tawwab","তওবা কবুলকারী"],
+["الْمُنْتَقِمُ","Al-Muntaqim","প্রতিশোধ গ্রহণকারী"],
+["الْعَفُوُّ","Al-Afuw","ক্ষমাকারী"],
+["الرَّؤُوفُ","Ar-Rauf","স্নেহশীল"],
+["مَالِكُ الْمُلْكِ","Malikul-Mulk","রাজ্যাধিপতি"],
+["ذُوالْجَلَالِ وَالْإِكْرَامِ","Dhul-Jalaali-Wal-Ikram","মহিমা ও সম্মানের অধিকারী"],
+["الْمُقْسِطُ","Al-Muqsit","ন্যায়বিচারক"],
+["الْجَامِعُ","Al-Jami","সমবেতকারী"],
+["الْغَنِيُّ","Al-Ghaniy","অভাবমুক্ত"],
+["الْمُغْنِي","Al-Mughni","প্রাচুর্যদাতা"],
+["الْمَانِعُ","Al-Mani","প্রতিরোধকারী"],
+["الضَّارَّ","Ad-Darr","ক্ষতি-নিয়ন্ত্রক"],
+["النَّافِعُ","An-Naafi","উপকারী"],
+["النُّورُ","An-Noor","জ্যোতি"],
+["الْهَادِي","Al-Hadi","পথপ্রদর্শক"],
+["الْبَدِيعُ","Al-Badi","অতুলনীয় উদ্ভাবক"],
+["الْبَاقِي","Al-Baaqi","চিরস্থায়ী"],
+["الْوَارِثُ","Al-Warith","উত্তরাধিকারী"],
+["الرَّشِيدُ","Ar-Rasheed","সৎপথপ্রদর্শক"],
+["الصَّبُورُ","As-Sabur","পরম ধৈর্যশীল"]
+];
+let asmaIndex = 0;
+function showAsma(i){
+  const nameEl = document.getElementById('asmaName');
+  const transEl = document.getElementById('asmaTrans');
+  const meanEl = document.getElementById('asmaMeaning');
+  if(!nameEl) return;
+  [nameEl, transEl, meanEl].forEach(el => el.classList.add('asma-fade'));
+  setTimeout(() => {
+    nameEl.textContent = asmaUlHusna[i][0];
+    transEl.textContent = (i+1) + '. ' + asmaUlHusna[i][1];
+    meanEl.textContent = asmaUlHusna[i][2];
+    [nameEl, transEl, meanEl].forEach(el => el.classList.remove('asma-fade'));
+  }, 350);
+}
+setInterval(() => {
+  asmaIndex = (asmaIndex + 1) % asmaUlHusna.length;
+  showAsma(asmaIndex);
+}, 2600);
 </script>
 
 <script type="module">
