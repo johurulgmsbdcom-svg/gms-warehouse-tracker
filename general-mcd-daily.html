@@ -567,7 +567,7 @@ document.getElementById('themeIcon').className = 'fas fa-sun';
 }
 
 document.getElementById('currentDate').textContent = new Date().toLocaleDateString('en-GB');
-document.getElementById('reportDate').valueAsDate = new Date();
+document.getElementById('reportDate').value = todayISOLocal();
 
 (function(){
 var c = window.GMS_CACHE.getReadCount();
@@ -900,8 +900,8 @@ document.getElementById('lastUpdate').textContent = new Date().toLocaleString();
 if (!hasInitializedFilter) {
 const latestDate = allData.length ? allData[0].date : null;
 currentFilter.date = latestDate || null;
-const jsDate = latestDate ? dmyToJSDate(latestDate) : new Date();
-if (jsDate) document.getElementById('reportDate').valueAsDate = jsDate;
+const isoDate = latestDate ? dmyToISO(latestDate) : todayISOLocal();
+if (isoDate) document.getElementById('reportDate').value = isoDate;
 hasInitializedFilter = true;
 }
 
@@ -939,8 +939,8 @@ showToast(`Filter applied: ${formattedDate} (${matchCount} rows)`);
 window.clearDateFilter = function() {
 const latestDate = allData.length ? allData[0].date : null;
 currentFilter.date = latestDate || null;
-const jsDate = latestDate ? dmyToJSDate(latestDate) : new Date();
-if (jsDate) document.getElementById('reportDate').valueAsDate = jsDate;
+const isoDate = latestDate ? dmyToISO(latestDate) : todayISOLocal();
+if (isoDate) document.getElementById('reportDate').value = isoDate;
 applyFilters();
 showToast(latestDate ? `সর্বশেষ তারিখ দেখানো হচ্ছে: ${latestDate}` : 'কোনো ডেটা নেই');
 };
