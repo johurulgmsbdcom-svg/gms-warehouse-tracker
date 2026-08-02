@@ -600,6 +600,17 @@ const m = String(dmy || '').match(/^(\d{2})-(\d{2})-(\d{4})$/);
 if (!m) return null;
 return new Date(parseInt(m[3], 10), parseInt(m[2], 10) - 1, parseInt(m[1], 10));
 }
+// Sortable "YYYY-MM-DD" key for a "DD-MM-YYYY" string, so date ordering is
+// always chronological (year -> month -> day), never a plain text compare.
+// Plain string compare on "DD-MM-YYYY" breaks across month/year boundaries -
+// e.g. "01-08-2026" (1 Aug) would sort BEFORE "28-07-2026" (28 Jul) as text,
+// even though August comes after July. That bug made freshly uploaded data
+// invisible because "latest date" picked the wrong row.
+function dmySortKey(dmy) {
+const m = String(dmy || '').match(/^(\d{2})-(\d{2})-(\d{4})$/);
+if (!m) return '';
+return `${m[3]}-${m[2]}-${m[1]}`; // YYYY-MM-DD
+}
 // FIX: <input type="date">.valueAsDate is UTC-based - assigning it a Date
 // object built from LOCAL year/month/day (like dmyToJSDate above) shifts the
 // displayed date by 1 day in any timezone ahead of UTC (e.g. Bangladesh,
@@ -877,7 +888,10 @@ updateStatus('Loading live data...');
 await purgeExpiredData();
 const data = await smartLoadData();
 allData = data;
-allData.sort((a, b) => (b.date || '').localeCompare(a.date || ''));
+// Sort by real chronological order (YYYY-MM-DD key), not raw "DD-MM-YYYY"
+// text - a plain text sort put "01-08-2026" before "28-07-2026" because
+// "01" < "28" as characters, which made brand-new uploads invisible.
+allData.sort((a, b) => dmySortKey(b.date).localeCompare(dmySortKey(a.date)));
 document.getElementById('lastUpdate').textContent = new Date().toLocaleString();
 
 // Default view = only the latest available date (never a combined
@@ -1334,6 +1348,7 @@ console.log('%c  ✅ Bug fixed: chart grand totals now match across all 4 charts
 console.log('%c  ✅ Upload with explicit date override', 'color: #3b82f6;');
 console.log('%c  ✅ Default view = latest date only (no cross-date grand total)', 'color: #22c55e;');
 console.log('%c  ✅ Rolling 30-day auto-expiry (per row)', 'color: #8b5cf6;');
+console.log('%c  ✅ Date sorting fixed: chronological (YYYY-MM-DD) instead of raw text compare', 'color: #ef4444;');
 console.log('%c═══════════════════════════════════════════', 'color: #22c55e; font-weight: bold;');
 </script>
 </body>
