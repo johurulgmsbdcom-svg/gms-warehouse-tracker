@@ -2975,7 +2975,11 @@ function buildStyledExcelHTML(opts){
     headers = [],
     rows = [],
     numericCols = new Set(),
-    stockCol = null
+    stockCol = null,
+    grandTotal = false,
+    totalExcludeCols = new Set(),
+    totalLabelCol = 0,
+    grandTotalLabel = 'GRAND TOTAL'
   } = opts;
 
   const colCount = headers.length;
@@ -3029,6 +3033,33 @@ function buildStyledExcelHTML(opts){
     html += '</tr>';
   });
 
+  // Grand total row
+  if(grandTotal && rows.length){
+    const totals = {};
+    numericCols.forEach(ci => {
+      if(totalExcludeCols.has(ci)) return;
+      let sum = 0;
+      rows.forEach(r => { sum += Number(r[ci]) || 0; });
+      totals[ci] = sum;
+    });
+
+    const totalStyleBase = `border:1px solid ${XLS_BORDER};padding:6px 8px;font-family:Calibri,Arial,sans-serif;font-size:11px;background:#fde68a;color:#78350f;font-weight:bold;border-top:2px solid ${XLS_NAVY};`;
+
+    html += '<tr>';
+    for(let ci = 0; ci < colCount; ci++){
+      let style = totalStyleBase;
+      let val = '';
+      if(ci === totalLabelCol){
+        val = xlsEsc(grandTotalLabel);
+      } else if(numericCols.has(ci)){
+        style += 'text-align:right;';
+        val = totals.hasOwnProperty(ci) ? fmt(totals[ci]) : '';
+      }
+      html += `<td style="${style}">${val}</td>`;
+    }
+    html += '</tr>';
+  }
+
   html += '</table></body></html>';
   return html;
 }
@@ -3060,7 +3091,10 @@ function exportDashboardExcel() {
     metaLine: 'Generated: ' + new Date().toLocaleString(),
     headers,
     rows,
-    numericCols: new Set([1,2,3,4,5,6,7,8,9])
+    numericCols: new Set([1,2,3,4,5,6,7,8,9]),
+    grandTotal: true,
+    totalExcludeCols: new Set([6,7]),
+    totalLabelCol: 0
   });
   downloadExcelHTML(html, `Monthly-Summary-${new Date().toISOString().slice(0,10)}.xls`);
   showToast('Excel exported');
@@ -3095,7 +3129,10 @@ function exportEntryExcel() {
     headers,
     rows,
     numericCols: new Set([0,6,7,8,9,11,12,13,14,15,16,18]),
-    stockCol: 18
+    stockCol: 18,
+    grandTotal: true,
+    totalExcludeCols: new Set([0,7]),
+    totalLabelCol: 1
   });
   downloadExcelHTML(html, `Booking-Maintain-${document.getElementById('entryDate').value}.xls`);
   showToast('Excel exported');
@@ -3137,7 +3174,10 @@ function exportOrderCloseExcel() {
     headers,
     rows,
     numericCols: new Set([0,6,7,8,9,10,12,13,14,15,16,18]),
-    stockCol: 18
+    stockCol: 18,
+    grandTotal: true,
+    totalExcludeCols: new Set([0,7]),
+    totalLabelCol: 1
   });
   downloadExcelHTML(html, `Order-Close-${new Date().toISOString().slice(0,10)}.xls`);
   showToast('Excel exported');
@@ -3165,7 +3205,9 @@ function exportStockExcel(){
     headers,
     rows,
     numericCols: new Set([5,6,7,8,9]),
-    stockCol: 9
+    stockCol: 9,
+    grandTotal: true,
+    totalLabelCol: 0
   });
   downloadExcelHTML(html, `Stock-Check-${new Date().toISOString().slice(0,10)}.xls`);
   showToast('Excel exported');
