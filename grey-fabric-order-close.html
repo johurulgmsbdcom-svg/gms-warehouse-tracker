@@ -4,7 +4,6 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>GMS Grey Fabric MCD - Order Closing Report</title>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.5.0/chart.umd.min.js"></script>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 <style>
@@ -2569,31 +2568,6 @@ async function deleteStockGroup(idx){
   showLoading(false);
 }
 
-function exportStockExcel(){
-  if(!stockDisplayData || stockDisplayData.length === 0){
-    showToast('Export korar moto kono data nei', 'warning');
-    return;
-  }
-  const wb = XLSX.utils.book_new();
-  const rows = [
-    ['GMS TEXTILES LTD - Stock Check'],
-    ['Generated: ' + new Date().toLocaleString()],
-    [''],
-    ['Date', 'Booking No', 'Buyer', 'Color', 'Type', 'Total Rcvd', 'Total Dlv', 'Inhand', 'Trf Out', 'Stock', 'Status']
-  ];
-  
-  stockDisplayData.forEach(g => {
-    const stock = g.inhand - g.trfOut;
-    const status = stock > EPS ? 'Pending' : (stock < -EPS ? 'Negative' : 'Clear');
-    rows.push([g.report_date||'', g.booking_no, g.buyer||'', g.fab_color, g.fab_type||'', g.totalRcvd, g.totalDlv, g.inhand, g.trfOut, stock, status]);
-  });
-  
-  const ws = XLSX.utils.aoa_to_sheet(rows);
-  XLSX.utils.book_append_sheet(wb, ws, 'Stock Check');
-  XLSX.writeFile(wb, `Stock-Check-${new Date().toISOString().slice(0,10)}.xlsx`);
-  showToast('Excel exported');
-}
-
 // =========================================
 // INHAND STOCK (booking-wise pool)
 //
@@ -2969,36 +2943,134 @@ async function doInhandTransfer(sourceRow, targetKey, qty){
 }
 
 // =========================================
-// EXCEL EXPORT
+// EXCEL EXPORT (styled: borders + colored header, like the sample report)
 // =========================================
+
+const XLS_NAVY   = '#1e40af';
+const XLS_LBLUE  = '#dbeafe';
+const XLS_GRAY   = '#f1f5f9';
+const XLS_BORDER = '#94a3b8';
+
+function xlsEsc(v){
+  return (v === null || v === undefined ? '' : String(v))
+    .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+// Builds one full styled "Excel sheet" as an HTML string.
+// opts = {
+//   companyName, companyAddress, reportTitle, subtitle, metaLine, summaryLine,
+//   headers: ['Col1','Col2',...],
+//   rows: [[v1,v2,...], ...],
+//   numericCols: Set of 0-based column indexes that should be right-aligned & number-formatted,
+//   stockCol: 0-based column index whose value should be color-coded (green/orange/red) like the app (optional)
+// }
+function buildStyledExcelHTML(opts){
+  const {
+    companyName = 'GMS Textiles Ltd.',
+    companyAddress = 'Tansutrapur, Kaliakoir, Gazipur',
+    reportTitle = '',
+    subtitle = '',
+    metaLine = '',
+    summaryLine = '',
+    headers = [],
+    rows = [],
+    numericCols = new Set(),
+    stockCol = null
+  } = opts;
+
+  const colCount = headers.length;
+
+  const cellStyleBase = `border:1px solid ${XLS_BORDER};padding:5px 8px;font-family:Calibri,Arial,sans-serif;font-size:11px;`;
+  const headerStyle = `${cellStyleBase}background:${XLS_NAVY};color:#ffffff;font-weight:bold;text-align:center;`;
+
+  let html = `<html><head><meta charset="UTF-8"></head><body>`;
+  html += `<table style="border-collapse:collapse;font-family:Calibri,Arial,sans-serif;">`;
+
+  // Title rows
+  html += `<tr><td colspan="${colCount}" style="background:${XLS_NAVY};color:#fff;font-size:18px;font-weight:bold;text-align:center;padding:12px;">${xlsEsc(companyName)}</td></tr>`;
+  if(companyAddress){
+    html += `<tr><td colspan="${colCount}" style="background:#93c5fd;color:#1e3a8a;font-size:11px;text-align:center;padding:6px;">${xlsEsc(companyAddress)}</td></tr>`;
+  }
+  if(reportTitle){
+    html += `<tr><td colspan="${colCount}" style="background:${XLS_LBLUE};color:#1e293b;font-size:14px;font-weight:bold;text-align:center;padding:8px;">${xlsEsc(reportTitle)}</td></tr>`;
+  }
+  if(subtitle){
+    html += `<tr><td colspan="${colCount}" style="background:${XLS_LBLUE};color:#1e293b;font-size:11px;text-align:center;padding:5px;">${xlsEsc(subtitle)}</td></tr>`;
+  }
+  if(metaLine){
+    html += `<tr><td colspan="${colCount}" style="background:${XLS_GRAY};color:#334155;font-size:10px;text-align:center;padding:4px;">${xlsEsc(metaLine)}</td></tr>`;
+  }
+  if(summaryLine){
+    html += `<tr><td colspan="${colCount}" style="background:${XLS_GRAY};color:#0f172a;font-size:11px;font-weight:bold;text-align:center;padding:6px;">${xlsEsc(summaryLine)}</td></tr>`;
+  }
+  // spacer row
+  html += `<tr>${'<td style="padding:2px;border:none;"></td>'.repeat(colCount)}</tr>`;
+
+  // Header row
+  html += '<tr>' + headers.map(h => `<th style="${headerStyle}">${xlsEsc(h)}</th>`).join('') + '</tr>';
+
+  // Data rows
+  rows.forEach((r, ri) => {
+    const rowBg = ri % 2 === 0 ? '#ffffff' : '#eef2ff';
+    html += '<tr>';
+    r.forEach((cell, ci) => {
+      let style = `${cellStyleBase}background:${rowBg};`;
+      const isNumeric = numericCols.has(ci);
+      style += isNumeric ? 'text-align:right;' : 'text-align:left;';
+      if(stockCol !== null && ci === stockCol){
+        const n = Number(cell) || 0;
+        if(n > 0.01) style += 'background:#fef3c7;color:#92400e;font-weight:bold;';
+        else if(n < -0.01) style += 'background:#fecaca;color:#991b1b;font-weight:bold;';
+        else style += 'background:#d1fae5;color:#065f46;';
+      }
+      const displayVal = isNumeric ? fmt(cell) : xlsEsc(cell);
+      html += `<td style="${style}">${displayVal}</td>`;
+    });
+    html += '</tr>';
+  });
+
+  html += '</table></body></html>';
+  return html;
+}
+
+function downloadExcelHTML(html, filename){
+  const blob = new Blob(['\ufeff', html], {type: 'application/vnd.ms-excel'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+
+// ---------- DASHBOARD ----------
 function exportDashboardExcel() {
-  const wb = XLSX.utils.book_new();
-  const rows = [
-    ['GMS TEXTILES LTD - Monthly Closing Report'],
-    [''],
-    ['Month', 'Order Close', 'Booking Qty', 'Received Qty', 'Delivery Qty', 'Inhand Stock', 'Delivery %', 'T.F %', 'T.F Out Qty', 'Present Stock']
-  ];
-  
+  const headers = ['Month','Order Close','Booking Qty','Received Qty','Delivery Qty','Inhand Stock','Delivery %','T.F %','T.F Out Qty','Present Stock'];
+  const rows = [];
   document.querySelectorAll('#dashTableBody tr').forEach(tr => {
-    const cells = Array.from(tr.children).map(td => td.innerText);
+    const cells = Array.from(tr.children).map(td => td.innerText.trim());
     rows.push(cells);
   });
-  
-  const ws = XLSX.utils.aoa_to_sheet(rows);
-  XLSX.utils.book_append_sheet(wb, ws, 'Summary');
-  XLSX.writeFile(wb, `Monthly-Summary-${new Date().toISOString().slice(0,10)}.xlsx`);
+
+  const html = buildStyledExcelHTML({
+    reportTitle: 'MONTHLY CLOSING SUMMARY',
+    subtitle: 'Grey Fabric MCD',
+    metaLine: 'Generated: ' + new Date().toLocaleString(),
+    headers,
+    rows,
+    numericCols: new Set([1,2,3,4,5,6,7,8,9])
+  });
+  downloadExcelHTML(html, `Monthly-Summary-${new Date().toISOString().slice(0,10)}.xls`);
   showToast('Excel exported');
 }
 
+// ---------- DAILY ENTRY ----------
 function exportEntryExcel() {
-  const wb = XLSX.utils.book_new();
-  const rows = [
-    ['GMS TEXTILES LTD - Booking Maintain Sheet'],
-    ['Date: ' + document.getElementById('entryDate').value],
-    [''],
-    ['SL', 'Date', 'Buyer', 'Booking No', 'Fab Color', 'Fab Type', 'Finish Qty', 'PL %', 'Knit Rcvd', 'Trf In', 'Trf From', 'Grey Qty', 'Total Rcvd', 'Knit BL', 'Total Dlv', 'Inhand', 'Trf Out', 'Trf To', 'Stock', 'ETD', 'Remarks', 'Status']
-  ];
-  
+  const headers = ['SL','Date','Buyer','Booking No','Fab Color','Fab Type','Finish Qty','PL %','Knit Rcvd','Trf In','Trf From','Grey Qty','Total Rcvd','Knit BL','Total Dlv','Inhand','Trf Out','Trf To','Stock','ETD','Remarks','Status'];
+  const rows = [];
+
   allEntries.forEach((entry, i) => {
     const totalRcvd = (Number(entry.knitting_receive) || 0) + (Number(entry.transfer_in_qty) || 0);
     const greyQty = Number(entry.grey_qty) || 0;
@@ -3007,49 +3079,95 @@ function exportEntryExcel() {
     const inhand = totalRcvd - totalDlv;
     const trfOut = Number(entry.transfer_out_qty) || 0;
     const stock = inhand - trfOut;
-    
+
     rows.push([
-      i+1, entry.report_date, entry.buyer, entry.booking_no, entry.fab_color, entry.fab_type,
-      entry.finish_qty, entry.pl_percent, entry.knitting_receive, entry.transfer_in_qty,
-      entry.transfer_from_order, entry.grey_qty, totalRcvd, knitBL,
-      totalDlv, inhand, trfOut, entry.transfer_to_order, stock, entry.etd, entry.remarks, entry.status
+      i+1, entry.report_date||'', entry.buyer||'', entry.booking_no||'', entry.fab_color||'', entry.fab_type||'',
+      entry.finish_qty||0, entry.pl_percent||0, entry.knitting_receive||0, entry.transfer_in_qty||0,
+      entry.transfer_from_order||'', entry.grey_qty||0, totalRcvd, knitBL,
+      totalDlv, inhand, trfOut, entry.transfer_to_order||'', stock, entry.etd||'', entry.remarks||'', entry.status||'Open'
     ]);
   });
-  
-  const ws = XLSX.utils.aoa_to_sheet(rows);
-  XLSX.utils.book_append_sheet(wb, ws, 'Pvot');
-  XLSX.writeFile(wb, `Booking-Maintain-${document.getElementById('entryDate').value}.xlsx`);
+
+  const html = buildStyledExcelHTML({
+    reportTitle: 'BOOKING MAINTAIN SHEET (DAILY ENTRY)',
+    subtitle: 'Date: ' + (document.getElementById('entryDate').value || ''),
+    metaLine: `Total Rows: ${rows.length}`,
+    headers,
+    rows,
+    numericCols: new Set([0,6,7,8,9,11,12,13,14,15,16,18]),
+    stockCol: 18
+  });
+  downloadExcelHTML(html, `Booking-Maintain-${document.getElementById('entryDate').value}.xls`);
   showToast('Excel exported');
 }
 
+// ---------- ORDER CLOSE ----------
 function exportOrderCloseExcel() {
-  const wb = XLSX.utils.book_new();
   const exportRows = ocFilterText ? allOrderClose.filter(matchesOCFilter) : allOrderClose;
-  const rows = [
-    ['GMS TEXTILES LTD - Order Close Report'],
-    [`From: ${document.getElementById('ocFrom').value} To: ${document.getElementById('ocTo').value}${ocFilterText ? ' | Filter: ' + document.getElementById('ocFilterBox').value : ''}`],
-    [''],
-    ['SL', 'Date', 'Booking No', 'Buyer', 'Fab Color', 'Fab Type', 'Finish Qty', 'PL %', 'Grey Qty', 'Knit Rcvd', 'Trf In', 'Trf From', 'Total Rcvd', 'Knit BL', 'Total Dlv', 'Inhand', 'Trf Out', 'Trf To', 'Stock', 'ETD', 'Remarks']
-  ];
-  
+  if(exportRows.length === 0){
+    showToast('Export korar moto kono data nei', 'warning');
+    return;
+  }
+  const headers = ['SL','Date','Booking No','Buyer','Fab Color','Fab Type','Finish Qty','PL %','Grey Qty','Knit Rcvd','Trf In','Trf From','Total Rcvd','Knit BL','Total Dlv','Inhand','Trf Out','Trf To','Stock','ETD','Remarks'];
+  const rows = [];
+
+  let bookingsSet = new Set(), colorsSet = new Set();
   exportRows.forEach((entry, i) => {
     const totalRcvd = (Number(entry.knitting_receive) || 0) + (Number(entry.transfer_in_qty) || 0);
     const totalDlv = Number(entry.total_delivery_qty) || 0;
     const inhand = totalRcvd - totalDlv;
     const trfOut = Number(entry.transfer_out_qty) || 0;
     const stock = inhand - trfOut;
-    
+    if(entry.booking_no) bookingsSet.add(normKey(entry.booking_no));
+    colorsSet.add(normKey(entry.booking_no)+'__'+normKey(entry.fab_color)+'__'+normKey(entry.fab_type));
+
     rows.push([
-      i+1, entry.report_date || entry.close_date, entry.booking_no, entry.buyer, entry.fab_color, entry.fab_type,
-      entry.finish_qty, entry.pl_percent, entry.grey_qty, entry.knitting_receive,
-      entry.transfer_in_qty, entry.transfer_from_order, totalRcvd, entry.knit_rcvd_bl,
-      totalDlv, inhand, trfOut, entry.transfer_to_order, stock, entry.etd, entry.remarks
+      i+1, entry.report_date||entry.close_date||'', entry.booking_no||'', entry.buyer||'', entry.fab_color||'', entry.fab_type||'',
+      entry.finish_qty||0, entry.pl_percent||0, entry.grey_qty||0, entry.knitting_receive||0,
+      entry.transfer_in_qty||0, entry.transfer_from_order||'', totalRcvd, entry.knit_rcvd_bl||0,
+      totalDlv, inhand, trfOut, entry.transfer_to_order||'', stock, entry.etd||'', entry.remarks||''
     ]);
   });
-  
-  const ws = XLSX.utils.aoa_to_sheet(rows);
-  XLSX.utils.book_append_sheet(wb, ws, 'Order Close');
-  XLSX.writeFile(wb, `Order-Close-${new Date().toISOString().slice(0,10)}.xlsx`);
+
+  const html = buildStyledExcelHTML({
+    reportTitle: 'ORDER CLOSING REPORT',
+    subtitle: `From: ${document.getElementById('ocFrom').value} — To: ${document.getElementById('ocTo').value}` + (ocFilterText ? ` | Filter: ${document.getElementById('ocFilterBox').value}` : ''),
+    metaLine: 'Generated: ' + new Date().toLocaleString(),
+    summaryLine: `Total Bookings Closed: ${bookingsSet.size}  |  Total Colors Closed: ${colorsSet.size}`,
+    headers,
+    rows,
+    numericCols: new Set([0,6,7,8,9,10,12,13,14,15,16,18]),
+    stockCol: 18
+  });
+  downloadExcelHTML(html, `Order-Close-${new Date().toISOString().slice(0,10)}.xls`);
+  showToast('Excel exported');
+}
+
+// ---------- STOCK CHECK ----------
+function exportStockExcel(){
+  if(!stockDisplayData || stockDisplayData.length === 0){
+    showToast('Export korar moto kono data nei', 'warning');
+    return;
+  }
+  const headers = ['Date','Booking No','Buyer','Color','Type','Total Rcvd','Total Dlv','Inhand','Trf Out','Stock','Status'];
+  const rows = [];
+
+  stockDisplayData.forEach(g => {
+    const stock = g.inhand - g.trfOut;
+    const status = stock > EPS ? 'Pending' : (stock < -EPS ? 'Negative' : 'Clear');
+    rows.push([g.report_date||'', g.booking_no||'', g.buyer||'', g.fab_color||'', g.fab_type||'', g.totalRcvd, g.totalDlv, g.inhand, g.trfOut, stock, status]);
+  });
+
+  const html = buildStyledExcelHTML({
+    reportTitle: 'STOCK CHECK REPORT',
+    metaLine: 'Generated: ' + new Date().toLocaleString(),
+    summaryLine: `Total Rows: ${rows.length}`,
+    headers,
+    rows,
+    numericCols: new Set([5,6,7,8,9]),
+    stockCol: 9
+  });
+  downloadExcelHTML(html, `Stock-Check-${new Date().toISOString().slice(0,10)}.xls`);
   showToast('Excel exported');
 }
 
