@@ -473,6 +473,10 @@ body.light .oc-sticky-filters{
       <button class="btn btn-warning" onclick="loadAllStock()"><i class="fas fa-list"></i> Show All Stock</button>
       <button class="btn btn-success" onclick="exportStockExcel()"><i class="fas fa-file-excel"></i> Export</button>
     </div>
+    <div id="stockMonthFilterBanner" style="display:none;margin-bottom:12px;padding:9px 14px;background:rgba(59,130,246,.12);border:1px solid #3b82f6;border-radius:8px;font-size:12px;color:#3b82f6;align-items:center;gap:10px;flex-wrap:wrap">
+      <i class="fas fa-filter"></i> <span id="stockMonthFilterText"></span>
+      <button class="btn btn-danger" style="padding:3px 10px;font-size:10px" onclick="loadAllStock()"><i class="fas fa-times"></i> Clear Filter</button>
+    </div>
     <div class="table-wrap">
       <table id="stockTable">
         <thead>
@@ -1079,17 +1083,17 @@ async function loadDashboardTable() {
     const [y, mo] = m.split('-');
     const monthName = new Date(y, mo-1).toLocaleString('en', {month:'short'}) + '-' + y.slice(2);
     
-    tbody.innerHTML += `<tr>
+    tbody.innerHTML += `<tr class="dash-month-row" style="cursor:pointer" onclick="goToStockForMonth('${m}', '${monthName}')" title="Click korle ei month-er sob booking-er Stock Check-e jaben, jekhane sorasori edit kora jabe">
       <td><b>${monthName}</b></td>
       <td>${d.orderClose}</td>
       <td>${fmt(d.bookingQty)}</td>
       <td>${fmt(d.receivedQty)}</td>
       <td>${fmt(d.deliveryQty)}</td>
-      <td>${fmt(d.inhandStock)}</td>
+      <td><b style="color:#3b82f6;text-decoration:underline">${fmt(d.inhandStock)}</b></td>
       <td>${dPct.toFixed(2)}%</td>
       <td>${tfPct.toFixed(2)}%</td>
       <td>${fmt(d.tfOutQty)}</td>
-      <td>${fmt(present)}</td>
+      <td><b style="color:#3b82f6;text-decoration:underline">${fmt(present)}</b></td>
     </tr>`;
   });
 }
@@ -2290,6 +2294,8 @@ async function deleteOCRow(idx){
 // type don't split what is really the same row into two.
 // =========================================
 async function checkStock() {
+  const banner = document.getElementById('stockMonthFilterBanner');
+  if(banner) banner.style.display = 'none';
   const cid = await getCompanyId();
   if(!cid) return;
   
@@ -2383,7 +2389,61 @@ function renderStockRows(items, tbody){
   });
 }
 
+// =========================================
+// DASHBOARD -> STOCK CHECK (click-through by month)
+// =========================================
+function goToStockForMonth(monthStr, monthLabel){
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.getElementById('stock').classList.add('active');
+  document.querySelectorAll('.tabs .tab').forEach(btn => {
+    if(btn.getAttribute('onclick') && btn.getAttribute('onclick').includes("'stock'")) btn.classList.add('active');
+  });
+  document.getElementById('stockBookingNo').value = '';
+  loadStockForMonth(monthStr, monthLabel);
+}
+
+async function loadStockForMonth(monthStr, monthLabel){
+  const cid = await getCompanyId();
+  if(!cid) return;
+  showLoading();
+  try {
+    const {data, error} = await supabase
+      .from('grey_bookings')
+      .select('*')
+      .eq('company_id', cid)
+      .gte('report_date', monthStr + '-01')
+      .lte('report_date', monthStr + '-31');
+    if(error) throw error;
+
+    const tbody = document.getElementById('stockTableBody');
+    tbody.innerHTML = '';
+
+    const grouped = groupStockRows(data || []);
+    const items = Object.values(grouped);
+    // Problem rows (non-zero stock) first, so exactly what needs fixing/editing surfaces on top
+    items.sort((a,b) => Math.abs(b.inhand - b.trfOut) - Math.abs(a.inhand - a.trfOut));
+    stockDisplayData = items;
+
+    const banner = document.getElementById('stockMonthFilterBanner');
+    banner.style.display = 'flex';
+    document.getElementById('stockMonthFilterText').innerText =
+      `${monthLabel || monthStr} — ${items.length} booking/color/type group dekhano hocche (report date onujayi). Pen icon-e click kore direct edit korun.`;
+
+    if(items.length === 0){
+      tbody.innerHTML = '<tr><td colspan="12" style="padding:20px;color:#94a3b8;text-align:center">Ei month-e kono data paoya jayni</td></tr>';
+    } else {
+      renderStockRows(stockDisplayData, tbody);
+    }
+  } catch(e){
+    showToast(e.message, 'error');
+  }
+  showLoading(false);
+}
+
 async function loadAllStock() {
+  const banner = document.getElementById('stockMonthFilterBanner');
+  if(banner) banner.style.display = 'none';
   const cid = await getCompanyId();
   if(!cid) return;
   showLoading();
