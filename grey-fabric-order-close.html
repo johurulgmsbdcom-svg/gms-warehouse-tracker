@@ -986,7 +986,7 @@ async function loadDashboard() {
   try {
     const [bookingsRes, ocRes] = await Promise.all([
       supabase.from('grey_bookings')
-        .select('finish_qty, total_received_qty, total_delivery_qty, inhand_stock_qty, transfer_out_qty')
+        .select('finish_qty, knitting_receive, transfer_in_qty, total_delivery_qty, transfer_out_qty')
         .eq('company_id', cid)
         .gte('report_date', startDate)
         .lte('report_date', endDate),
@@ -1004,10 +1004,12 @@ async function loadDashboard() {
     let bookingQty = 0, receivedQty = 0, deliveryQty = 0, inhandStock = 0, tfOutQty = 0;
     
     (bookingsData || []).forEach(b => {
+      const totalRcvd = numOrZero(b.knitting_receive) + numOrZero(b.transfer_in_qty);
+      const totalDlv = numOrZero(b.total_delivery_qty);
       bookingQty += numOrZero(b.finish_qty);
-      receivedQty += numOrZero(b.total_received_qty);
-      deliveryQty += numOrZero(b.total_delivery_qty);
-      inhandStock += numOrZero(b.inhand_stock_qty);
+      receivedQty += totalRcvd;
+      deliveryQty += totalDlv;
+      inhandStock += (totalRcvd - totalDlv);
       tfOutQty += numOrZero(b.transfer_out_qty);
     });
     
@@ -1044,7 +1046,7 @@ async function loadDashboardTable() {
       .eq('company_id', cid)
       .order('close_date', {ascending: false}),
     supabase.from('grey_bookings')
-      .select('report_date, finish_qty, total_received_qty, total_delivery_qty, inhand_stock_qty, transfer_out_qty')
+      .select('report_date, finish_qty, knitting_receive, transfer_in_qty, total_delivery_qty, transfer_out_qty')
       .eq('company_id', cid)
   ]);
   const allOC = ocRes.data;
@@ -1065,10 +1067,12 @@ async function loadDashboardTable() {
     if(!b.report_date) return;
     const m = b.report_date.slice(0,7);
     if(!months[m]) months[m] = {orderClose: 0, bookingQty: 0, receivedQty: 0, deliveryQty: 0, inhandStock: 0, tfOutQty: 0};
+    const totalRcvd = numOrZero(b.knitting_receive) + numOrZero(b.transfer_in_qty);
+    const totalDlv = numOrZero(b.total_delivery_qty);
     months[m].bookingQty += numOrZero(b.finish_qty);
-    months[m].receivedQty += numOrZero(b.total_received_qty);
-    months[m].deliveryQty += numOrZero(b.total_delivery_qty);
-    months[m].inhandStock += numOrZero(b.inhand_stock_qty);
+    months[m].receivedQty += totalRcvd;
+    months[m].deliveryQty += totalDlv;
+    months[m].inhandStock += (totalRcvd - totalDlv);
     months[m].tfOutQty += numOrZero(b.transfer_out_qty);
   });
   
