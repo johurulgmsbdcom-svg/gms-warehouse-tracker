@@ -16,6 +16,7 @@ button:active{transform:translateY(0)}
 .deleteBtn{background:#dc2626}.excelBtn{background:#16a34a}.pdfBtn{background:#7c3aed}
 .homeBtn{background:#2563eb}.saveBtn{background:#059669}.trfBtn{background:#f59e0b;color:#000}
 .reqSearchBtn{background:#8b5cf6}
+.repairBtn{background:#0ea5e9}
 input,select,textarea{font-size:16px}
 select,input[type="date"],input[type="text"]{padding:5px;border-radius:5px;border:1px solid #999;max-width:150px;background:#1e293b;color:white}
 .tableWrap{width:100%;max-width:100%;overflow-x:hidden}
@@ -269,6 +270,7 @@ select,input[type="date"],input[type="text"]{padding:5px;border-radius:5px;borde
     <button class="pdfBtn" onclick="exportPDF()">📄 PDF</button>
     <button class="trfBtn" onclick="showTrfReport()">🚚 Transfers</button>
     <button class="reqSearchBtn" onclick="openReqSearchPopup()">🔍 Req Search</button>
+    <button class="repairBtn" onclick="repairDuplicateDocs(true)">🛠️ Repair Duplicates</button>
     <button class="homeBtn" onclick="location.href='index.html'">🏠 Home</button>
   </div>
 </div>
@@ -620,6 +622,12 @@ function getPrevMonth(m){
 function getItems(){
   return floorData[document.getElementById('floor').value] || [];
 }
+// Canonical Firestore doc id for a given floor+date. ALWAYS use this helper
+// (never hand-build "floor_date" strings elsewhere) so online saves,
+// offline-queue saves, and offline-sync all agree on the same doc.
+function makeDocId(floor, date){
+  return `${floor}_${date}`;
+}
 function updateBNHeader(){
   const floor = document.getElementById('floor').value;
   const nm = floor.includes('N') ? 'BNF' : 'BNR';
@@ -932,7 +940,7 @@ async function confirmTransfer(){
   // -------------------------------------------------------
   // Update To Floor: load/create its doc, find matching row, add Rcvd
   // -------------------------------------------------------
-  const toDocId = `${toFloor}_${date}`;
+  const toDocId = makeDocId(toFloor, date);
   let toRows = null;
 
   try{
@@ -1201,7 +1209,7 @@ async function saveData(){
   }
 
   const rows = buildRows();
-  const docId = `${floor}_${date}`;
+  const docId = makeDocId(floor, date);
 
   if(navigator.onLine){
     try{
@@ -1212,13 +1220,18 @@ async function saveData(){
       try{ await addDoc(collection(db,'auditLogs'), {action, floor, date, operator, timestamp:serverTimestamp(), details:{itemsCount:rows.length}}); }catch(e){}
       showToast('✅ Saved to Firebase');
       trackActivity('save', {action, itemsCount:rows.length});
+      // Since we could reach Firestore, this save is authoritative for the
+      // day — drop any older pending offline entries for this exact
+      // floor+date so a delayed sync can never resurrect stale numbers.
+      const q = getOfflineQueue().filter(item => !(item.floor===floor && item.date===date && item.status==='pending'));
+      setOfflineQueue(q);
     }catch(e){
       console.error('Firebase save failed:', e);
-      const q = getOfflineQueue(); q.push({id:`${docId}_${Date.now()}`,floor,date,operator,rows,timestamp:new Date().toISOString(),status:'pending'}); setOfflineQueue(q);
+      queueOffline(floor, date, operator, rows);
       showToast('✅ Saved Offline', '#f59e0b');
     }
   }else{
-    const q = getOfflineQueue(); q.push({id:`${docId}_${Date.now()}`,floor,date,operator,rows,timestamp:new Date().toISOString(),status:'pending'}); setOfflineQueue(q);
+    queueOffline(floor, date, operator, rows);
     showToast('✅ Saved Offline', '#f59e0b');
     trackActivity('save_offline', {itemsCount:rows.length});
   }
@@ -1227,17 +1240,46 @@ async function saveData(){
   await loadData();
 }
 
+// Add/replace this floor+date's entry in the offline queue. Only ONE
+// pending entry per floor+date is kept (the latest one wins), so a
+// re-save before syncing never produces duplicate Firestore docs later.
+function queueOffline(floor, date, operator, rows){
+  const q = getOfflineQueue().filter(item => !(item.floor===floor && item.date===date && item.status==='pending'));
+  q.push({ id: makeDocId(floor, date), floor, date, operator, rows, timestamp: new Date().toISOString(), status:'pending' });
+  setOfflineQueue(q);
+}
+
 async function deleteData(){
   const date = document.getElementById('postDate').value;
   const floor = document.getElementById('floor').value;
   const operator = document.getElementById('operatorName').value.trim() || localStorage.getItem('lastOperator') || 'Unknown';
   if(!date){ alert('❌ Date select করুন'); return; }
   if(!confirm('⚠️ এই date এর data delete করবেন?')) return;
-  const docId = `${floor}_${date}`;
+  const docId = makeDocId(floor, date);
   try{
     const oldSnap = await getDoc(doc(db,'dailyPosting',docId));
     if(oldSnap.exists()){ try{ await addDoc(collection(db,'auditLogs'), {action:'DELETE',floor,date,operator,timestamp:serverTimestamp()}); }catch(e){} }
     await deleteDoc(doc(db,'dailyPosting',docId));
+
+    // Also clean up any legacy duplicate docs that earlier versions of this
+    // app created for the same floor+date with a mangled id
+    // (floor_date_<timestamp>) during offline-sync. Without this, a
+    // "deleted" day can keep silently contributing to monthly totals.
+    try{
+      const snap = await getDocs(collection(db,'dailyPosting'));
+      const dupDeletes = [];
+      snap.forEach(docSnap=>{
+        const data = docSnap.data();
+        if(docSnap.id !== docId && data.floor === floor && data.date === date){
+          dupDeletes.push(deleteDoc(doc(db,'dailyPosting', docSnap.id)));
+        }
+      });
+      if(dupDeletes.length){ await Promise.all(dupDeletes); showToast(`🧹 ${dupDeletes.length}টি পুরনো duplicate entry-ও মুছে ফেলা হয়েছে`, '#0ea5e9'); }
+    }catch(e){ console.error('Duplicate cleanup on delete failed:', e); }
+
+    // Remove any matching pending offline-queue entries too
+    setOfflineQueue(getOfflineQueue().filter(item => !(item.floor===floor && item.date===date)));
+
     const emptyRows = currentItems.map(it=>({present:it[3]}));
     await updateDashboardState(floor, emptyRows);
     trackActivity('delete');
@@ -1264,13 +1306,32 @@ async function loadData(){
   try{ allSnap = await getDocs(collection(db,'dailyPosting')); }
   catch(e){ console.error(e); loadTable(); return; }
 
-  const monthRows = [], prevMonthRows = [];
+  // Dedupe: keep only ONE doc per floor+date (the canonical docId if present,
+  // otherwise the most recently updated one). This protects against legacy
+  // duplicate docs (created by the old offline-sync bug) still double
+  // counting into monthly totals even before they're cleaned up.
+  const byFloorDate = new Map();
   allSnap.forEach(docSnap=>{
     const data = docSnap.data();
-    if(data.floor === floor){
-      if(data.month === month && data.date <= date) monthRows.push(data);
-      if(data.month === prevMonth) prevMonthRows.push(data);
+    if(data.floor !== floor) return;
+    const key = `${data.floor}_${data.date}`;
+    const isCanonical = docSnap.id === key;
+    const existing = byFloorDate.get(key);
+    if(!existing){ byFloorDate.set(key, {id:docSnap.id, data, isCanonical}); return; }
+    // Prefer the canonical-id doc; otherwise prefer the more recently updated one
+    if(isCanonical && !existing.isCanonical){ byFloorDate.set(key, {id:docSnap.id, data, isCanonical}); }
+    else if(isCanonical === existing.isCanonical){
+      const tExisting = existing.data.updatedAt?.toMillis?.() || 0;
+      const tNew = data.updatedAt?.toMillis?.() || 0;
+      if(tNew > tExisting) byFloorDate.set(key, {id:docSnap.id, data, isCanonical});
     }
+  });
+  const dedupedDocs = Array.from(byFloorDate.values()).map(v=>v.data);
+
+  const monthRows = [], prevMonthRows = [];
+  dedupedDocs.forEach(data=>{
+    if(data.month === month && data.date <= date) monthRows.push(data);
+    if(data.month === prevMonth) prevMonthRows.push(data);
   });
 
   prevMonthRows.sort((a,b)=>a.date.localeCompare(b.date));
@@ -1363,13 +1424,76 @@ async function syncOfflineQueue(){
   for(let i=0;i<queue.length;i++){
     if(queue[i].status==='pending'){
       try{
-        await setDoc(doc(db,'dailyPosting',queue[i].id), {date:queue[i].date,month:getMonth(queue[i].date),floor:queue[i].floor,rows:queue[i].rows,operator:queue[i].operator,updatedAt:serverTimestamp()});
+        // 🔧 FIX: always write to the canonical floor+date doc id, never to
+        // queue[i].id blindly — older versions pushed a mangled id
+        // (`${floor}_${date}_${Date.now()}`) here, which created a brand
+        // new duplicate Firestore document instead of updating/creating
+        // the real one. That duplicate then got summed a second time by
+        // loadData()'s monthly totals (inflating Prev/Present), and
+        // deleteData() never touched it because it only deletes the
+        // canonical doc id — so "delete" silently failed to fix things.
+        const canonicalId = makeDocId(queue[i].floor, queue[i].date);
+        await setDoc(doc(db,'dailyPosting',canonicalId), {date:queue[i].date,month:getMonth(queue[i].date),floor:queue[i].floor,rows:queue[i].rows,operator:queue[i].operator,updatedAt:serverTimestamp()});
         queue[i].status='synced'; synced++;
         await updateDashboardState(queue[i].floor, queue[i].rows);
       }catch(e){}
     }
   }
   if(synced>0){ setOfflineQueue(queue); showToast(`☁️ ${synced} items synced to Firebase`); }
+
+  // One-time-ish background repair pass for any duplicate docs the old
+  // buggy sync already created in Firestore before this fix was deployed.
+  repairDuplicateDocs(false);
+}
+
+// =========================================
+// 🧹 REPAIR: merge/remove legacy duplicate dailyPosting docs
+// =========================================
+// A "duplicate" is any doc whose Firestore ID does NOT match the canonical
+// `${floor}_${date}` pattern for its own floor/date fields (i.e. it was
+// created by the old offline-sync bug as `${floor}_${date}_${timestamp}`).
+// Strategy:
+//  - If a canonical doc already exists for that floor+date, the duplicate's
+//    data is redundant (it was already merged in whenever the canonical
+//    doc was last saved online) — delete the duplicate.
+//  - If no canonical doc exists yet, the duplicate IS the only copy of that
+//    day's data — promote it by copying its data into the canonical id,
+//    then delete the old mangled doc.
+async function repairDuplicateDocs(showResultToast){
+  if(!navigator.onLine){ if(showResultToast) showToast('❌ Online থাকতে হবে repair করার জন্য', '#dc2626'); return; }
+  try{
+    const snap = await getDocs(collection(db,'dailyPosting'));
+    const allDocs = []; // {id, data}
+    snap.forEach(d=>allDocs.push({id:d.id, data:d.data()}));
+    const byId = new Map(allDocs.map(d=>[d.id, d]));
+
+    let deleted = 0, promoted = 0;
+    for(const d of allDocs){
+      const canonicalId = makeDocId(d.data.floor, d.data.date);
+      if(d.id === canonicalId) continue; // already canonical, nothing to do
+
+      if(byId.has(canonicalId)){
+        // Canonical version exists — this mangled doc is a stale duplicate
+        await deleteDoc(doc(db,'dailyPosting', d.id));
+        deleted++;
+      } else {
+        // No canonical doc — promote this one to the canonical id
+        await setDoc(doc(db,'dailyPosting', canonicalId), {...d.data, updatedAt: serverTimestamp()});
+        await deleteDoc(doc(db,'dailyPosting', d.id));
+        byId.set(canonicalId, {id:canonicalId, data:d.data});
+        promoted++;
+      }
+    }
+    if(showResultToast || deleted || promoted){
+      showToast(`🧹 Repair সম্পন্ন: ${deleted}টি duplicate মুছা হয়েছে, ${promoted}টি ঠিক করে বসানো হয়েছে`, '#0ea5e9');
+    }
+    if(deleted || promoted){
+      await loadData();
+    }
+  }catch(e){
+    console.error('repairDuplicateDocs error:', e);
+    if(showResultToast) showToast('❌ Repair failed', '#dc2626');
+  }
 }
 
 // =========================================
@@ -1420,6 +1544,7 @@ window.openFloorNavFromItem=openFloorNavFromItem; window.selectFloorNavTarget=se
 window.openReqSearchPopup=openReqSearchPopup; window.closeReqSearchPopup=closeReqSearchPopup; window.liveReqSearch=liveReqSearch; window.goToReqFloor=goToReqFloor;
 window.showTrfReport=showTrfReport; window.closeTrfReportPopup=closeTrfReportPopup; window.loadTrfReport=loadTrfReport;
 window.onFloorChange=onFloorChange;
+window.repairDuplicateDocs=repairDuplicateDocs;
 </script>
 </body>
 </html>
