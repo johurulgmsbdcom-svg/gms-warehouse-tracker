@@ -6,8 +6,6 @@
 <title>GMS General Technical-MCD Daily Issue Smart Chart</title>
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/chartjs-plugin-datalabels/2.2.0/chartjs-plugin-datalabels.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -201,12 +199,12 @@ body{background:#fff!important;color:#000!important}
 <h3>Upload Excel File — "Issue Data" sheet (20 Columns)</h3>
 <p>SL | Issue Date | Issue Purposed | Category | Reqs no | Division | Department | Section | Required Section | Item Group | UOM | Item Description | Item Code | Issue Qty | Rate(TK) | Amount(TK) | Issue id | Name of Person | Required For | Remarks</p>
 </div>
-<input type="file" id="fileInput" accept=".xlsx,.xls,.csv" style="display:none" onchange="handleFile(event)">
+<input type="file" id="fileInput" accept=".xlsx,.xls,.csv" style="display:none">
 
 <div class="upload-date-box">
 <label><i class="fas fa-calendar-check"></i> Upload Date (optional):</label>
 <input type="date" id="uploadDateOverride">
-<small>তারিখ সিলেক্ট করে upload করলে ফাইলের সব row সেই তারিখেই সেভ হবে (Excel এর Issue Date কলাম ignore হবে)। খালি রাখলে Excel এর নিজের তারিখ ব্যবহার হবে। শীট থেকে upload করার আগে ফাইলে শুধু "Issue Data" শীটের ডেটা থাকতে হবে (SL, Issue Date, Issue Purposed... ইত্যাদি হেডার সহ)।</small>
+<small>তারিখ সিলেক্ট করে upload করলে ফাইলের সব row সেই তারিখেই সেভ হবে। খালি রাখলে Excel এর নিজের তারিখ ব্যবহার হবে।</small>
 </div>
 
 <div class="date-selection">
@@ -220,30 +218,12 @@ body{background:#fff!important;color:#000!important}
 <div class="monthly-summary">
 <h3><i class="fas fa-chart-bar"></i> Summary - <span id="currentMonthLabel">-</span></h3>
 <div class="summary-grid">
-<div class="summary-item">
-<span><i class="fas fa-calendar"></i> Total Days</span>
-<b id="summaryDays">0</b>
-</div>
-<div class="summary-item">
-<span><i class="fas fa-coins"></i> Total Amount</span>
-<b id="summaryAmount">৳0</b>
-</div>
-<div class="summary-item">
-<span><i class="fas fa-chart-line"></i> Avg Per Day</span>
-<b id="summaryAvg">৳0</b>
-</div>
-<div class="summary-item">
-<span><i class="fas fa-boxes"></i> Total Items</span>
-<b id="summaryItems">0</b>
-</div>
-<div class="summary-item">
-<span><i class="fas fa-building"></i> Departments</span>
-<b id="summaryDepts">0</b>
-</div>
-<div class="summary-item">
-<span><i class="fas fa-tags"></i> Categories</span>
-<b id="summaryCats">0</b>
-</div>
+<div class="summary-item"><span><i class="fas fa-calendar"></i> Total Days</span><b id="summaryDays">0</b></div>
+<div class="summary-item"><span><i class="fas fa-coins"></i> Total Amount</span><b id="summaryAmount">৳0</b></div>
+<div class="summary-item"><span><i class="fas fa-chart-line"></i> Avg Per Day</span><b id="summaryAvg">৳0</b></div>
+<div class="summary-item"><span><i class="fas fa-boxes"></i> Total Items</span><b id="summaryItems">0</b></div>
+<div class="summary-item"><span><i class="fas fa-building"></i> Departments</span><b id="summaryDepts">0</b></div>
+<div class="summary-item"><span><i class="fas fa-tags"></i> Categories</span><b id="summaryCats">0</b></div>
 </div>
 </div>
 
@@ -355,17 +335,20 @@ body{background:#fff!important;color:#000!important}
 
 </div>
 
+<!-- XLSX loaded last, before module script, so window.XLSX is guaranteed available -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
 import { getFirestore, doc, setDoc, onSnapshot, collection, getDocs, deleteDoc, getDoc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
 const firebaseConfig = {
-apiKey: "AIzaSyD-wBCF5eeWMHobLFOhBzKW7aB2pagz9-w",
-authDomain: "gms-warehouse-tracker-7f57e.firebaseapp.com",
-projectId: "gms-warehouse-tracker-7f57e",
-storageBucket: "gms-warehouse-tracker-7f57e.firebasestorage.app",
-messagingSenderId: "992250313291",
-appId: "1:992250313291:web:ee3bceae76d4d53bc26bce"
+  apiKey: "AIzaSyD-wBCF5eeWMHobLFOhBzKW7aB2pagz9-w",
+  authDomain: "gms-warehouse-tracker-7f57e.firebaseapp.com",
+  projectId: "gms-warehouse-tracker-7f57e",
+  storageBucket: "gms-warehouse-tracker-7f57e.firebasestorage.app",
+  messagingSenderId: "992250313291",
+  appId: "1:992250313291:web:ee3bceae76d4d53bc26bce"
 };
 
 const app = initializeApp(firebaseConfig);
@@ -373,1132 +356,821 @@ const db = getFirestore(app);
 const ACTIVE_COL = "generalTechnicalMcdDaily";
 const SYNC_COL = "system_sync";
 
+// ---- XLSX safe accessor ----
+// window.XLSX is set by the CDN script loaded above (before this module).
+// Using a getter function avoids any race-condition where the script tag
+// might not have finished by the time the module parses (extremely unlikely
+// with a sync <script> tag before the module, but defensive is better).
+function getXLSX() {
+  if (window.XLSX) return window.XLSX;
+  throw new Error('XLSX library লোড হয়নি। Page reload করুন এবং আবার চেষ্টা করুন।');
+}
+
 let allData = [];
 let filteredData = [];
 let charts = {};
 let currentFilter = {};
-let hasInitializedFilter = false; // ensures we only auto-jump to "latest date" once per page load
+let hasInitializedFilter = false;
 
 if (window.ChartDataLabels) {
-Chart.register(ChartDataLabels);
-Chart.defaults.set('plugins.datalabels', { display: false }); // off by default; enabled per-chart where wanted
+  Chart.register(ChartDataLabels);
+  Chart.defaults.set('plugins.datalabels', { display: false });
 }
 
+// ==================== CACHE SYSTEM ====================
 window.GMS_CACHE = {
-CACHE_KEY: 'GMS_TECH_MCD_CACHE_V1',
-READ_COUNT_KEY: 'GMS_TECH_MCD_READ_COUNT_TODAY',
-READ_DATE_KEY: 'GMS_TECH_MCD_READ_DATE',
-LOCAL_TS_KEY: 'GMS_TECH_MCD_LOCAL_TIMESTAMPS',
-CACHE_EXPIRY_MS: 24 * 60 * 60 * 1000,
+  CACHE_KEY: 'GMS_TECH_MCD_CACHE_V1',
+  READ_COUNT_KEY: 'GMS_TECH_MCD_READ_COUNT_TODAY',
+  READ_DATE_KEY: 'GMS_TECH_MCD_READ_DATE',
+  LOCAL_TS_KEY: 'GMS_TECH_MCD_LOCAL_TIMESTAMPS',
+  CACHE_EXPIRY_MS: 24 * 60 * 60 * 1000,
 
-getReadCount: function(){
-var today = new Date().toDateString();
-if(localStorage.getItem(this.READ_DATE_KEY) !== today){
-localStorage.setItem(this.READ_DATE_KEY, today);
-localStorage.setItem(this.READ_COUNT_KEY, '0');
-}
-return parseInt(localStorage.getItem(this.READ_COUNT_KEY) || '0');
-},
-
-incRead: function(n){
-n = n || 1;
-var count = this.getReadCount() + n;
-localStorage.setItem(this.READ_COUNT_KEY, String(count));
-var el = document.getElementById('readCounter');
-if(el) el.innerText = count;
-return count;
-},
-
-_all: function(){
-try{ return JSON.parse(localStorage.getItem(this.CACHE_KEY) || '{}'); }
-catch(e){ return {}; }
-},
-
-set: function(key, data, timestamp){
-var all = this._all();
-all[key] = { data: data, savedAt: Date.now(), timestamp: timestamp || Date.now() };
-try{ localStorage.setItem(this.CACHE_KEY, JSON.stringify(all)); }
-catch(e){ console.warn('Cache set failed:', e); }
-},
-
-get: function(key){
-var all = this._all();
-var entry = all[key];
-if(!entry) return null;
-var age = Date.now() - entry.savedAt;
-if(age > this.CACHE_EXPIRY_MS) return null;
-return entry.data;
-},
-
-getLocalTimestamp: function(collection){
-var timestamps = JSON.parse(localStorage.getItem(this.LOCAL_TS_KEY) || '{}');
-return timestamps[collection] || 0;
-},
-
-setLocalTimestamp: function(collection, timestamp){
-var timestamps = JSON.parse(localStorage.getItem(this.LOCAL_TS_KEY) || '{}');
-timestamps[collection] = timestamp;
-localStorage.setItem(this.LOCAL_TS_KEY, JSON.stringify(timestamps));
-},
-
-needsUpdate: function(collection, remoteTimestamp){
-var localTS = this.getLocalTimestamp(collection);
-return remoteTimestamp > localTS;
-},
-
-invalidate: function(keys){
-var all = this._all();
-if(typeof keys === 'string') keys = [keys];
-keys.forEach(function(k){ delete all[k]; });
-localStorage.setItem(this.CACHE_KEY, JSON.stringify(all));
-if(Array.isArray(keys)){
-var timestamps = JSON.parse(localStorage.getItem(this.LOCAL_TS_KEY) || '{}');
-keys.forEach(function(k){ timestamps[k] = 0; });
-localStorage.setItem(this.LOCAL_TS_KEY, JSON.stringify(timestamps));
-}
-},
-
-clear: function(){
-localStorage.removeItem(this.CACHE_KEY);
-localStorage.removeItem(this.LOCAL_TS_KEY);
-}
+  getReadCount() {
+    const today = new Date().toDateString();
+    if (localStorage.getItem(this.READ_DATE_KEY) !== today) {
+      localStorage.setItem(this.READ_DATE_KEY, today);
+      localStorage.setItem(this.READ_COUNT_KEY, '0');
+    }
+    return parseInt(localStorage.getItem(this.READ_COUNT_KEY) || '0');
+  },
+  incRead(n = 1) {
+    const count = this.getReadCount() + n;
+    localStorage.setItem(this.READ_COUNT_KEY, String(count));
+    const el = document.getElementById('readCounter');
+    if (el) el.innerText = count;
+    return count;
+  },
+  _all() {
+    try { return JSON.parse(localStorage.getItem(this.CACHE_KEY) || '{}'); } catch { return {}; }
+  },
+  set(key, data, timestamp) {
+    const all = this._all();
+    all[key] = { data, savedAt: Date.now(), timestamp: timestamp || Date.now() };
+    try { localStorage.setItem(this.CACHE_KEY, JSON.stringify(all)); } catch (e) { console.warn('Cache set failed:', e); }
+  },
+  get(key) {
+    const all = this._all();
+    const entry = all[key];
+    if (!entry) return null;
+    if (Date.now() - entry.savedAt > this.CACHE_EXPIRY_MS) return null;
+    return entry.data;
+  },
+  getLocalTimestamp(col) {
+    return (JSON.parse(localStorage.getItem(this.LOCAL_TS_KEY) || '{}'))[col] || 0;
+  },
+  setLocalTimestamp(col, ts) {
+    const t = JSON.parse(localStorage.getItem(this.LOCAL_TS_KEY) || '{}');
+    t[col] = ts;
+    localStorage.setItem(this.LOCAL_TS_KEY, JSON.stringify(t));
+  },
+  needsUpdate(col, remoteTS) {
+    return remoteTS > this.getLocalTimestamp(col);
+  },
+  invalidate(keys) {
+    const all = this._all();
+    if (typeof keys === 'string') keys = [keys];
+    keys.forEach(k => delete all[k]);
+    localStorage.setItem(this.CACHE_KEY, JSON.stringify(all));
+    const t = JSON.parse(localStorage.getItem(this.LOCAL_TS_KEY) || '{}');
+    keys.forEach(k => { t[k] = 0; });
+    localStorage.setItem(this.LOCAL_TS_KEY, JSON.stringify(t));
+  },
+  clear() {
+    localStorage.removeItem(this.CACHE_KEY);
+    localStorage.removeItem(this.LOCAL_TS_KEY);
+  }
 };
 
+// ==================== SMART LOAD ====================
 async function smartLoadData() {
-var statusEl = document.getElementById('cacheStatusText');
-try {
-if(statusEl) statusEl.innerText = '🔍 Checking for updates...';
+  const statusEl = document.getElementById('cacheStatusText');
+  try {
+    if (statusEl) statusEl.innerText = '🔍 Checking for updates...';
+    let remoteTS = 0;
+    try {
+      const syncDoc = await getDoc(doc(db, SYNC_COL, ACTIVE_COL));
+      if (syncDoc.exists()) remoteTS = syncDoc.data().lastUpdated || 0;
+      window.GMS_CACHE.incRead(1);
+    } catch (e) { console.warn('system_sync read failed:', e); }
 
-var remoteTimestamp = 0;
-try {
-var syncDoc = await getDoc(doc(db, SYNC_COL, ACTIVE_COL));
-if(syncDoc.exists()) remoteTimestamp = syncDoc.data().lastUpdated || 0;
-window.GMS_CACHE.incRead(1);
-} catch(e) { console.warn('system_sync read failed:', e); }
+    if (!window.GMS_CACHE.needsUpdate(ACTIVE_COL, remoteTS)) {
+      const cached = window.GMS_CACHE.get(ACTIVE_COL);
+      if (cached !== null) {
+        if (statusEl) statusEl.innerText = '✅ Report loaded (Cache 📦) - 0 Firebase reads';
+        return cached;
+      }
+    }
 
-var needsUpdate = window.GMS_CACHE.needsUpdate(ACTIVE_COL, remoteTimestamp);
-
-if(!needsUpdate) {
-var cachedData = window.GMS_CACHE.get(ACTIVE_COL);
-if(cachedData !== null) {
-if(statusEl) statusEl.innerText = '✅ Report loaded (Cache 📦) - 0 Firebase reads';
-return cachedData;
-}
-}
-
-if(statusEl) statusEl.innerText = '🔥 Fetching from Firebase...';
-var snapshot = await getDocs(collection(db, ACTIVE_COL));
-var rawData = [];
-snapshot.forEach(function(docSnap){
-var d = docSnap.data();
-if(d.data) rawData = rawData.concat(d.data.map(r => ({...r, _month: docSnap.id})));
-});
-
-window.GMS_CACHE.incRead(snapshot.size || 1);
-window.GMS_CACHE.set(ACTIVE_COL, rawData, remoteTimestamp);
-window.GMS_CACHE.setLocalTimestamp(ACTIVE_COL, remoteTimestamp);
-
-if(statusEl) statusEl.innerText = '✅ Report loaded (Firebase 🔥)';
-return rawData;
-
-} catch(error) {
-console.error('❌ Smart load error:', error);
-if(statusEl) statusEl.innerText = '❌ Load failed';
-var cachedData = window.GMS_CACHE.get(ACTIVE_COL);
-if(cachedData !== null) return cachedData;
-return [];
-}
+    if (statusEl) statusEl.innerText = '🔥 Fetching from Firebase...';
+    const snapshot = await getDocs(collection(db, ACTIVE_COL));
+    const rawData = [];
+    snapshot.forEach(docSnap => {
+      const d = docSnap.data();
+      if (d.data) rawData.push(...d.data.map(r => ({ ...r, _month: docSnap.id })));
+    });
+    window.GMS_CACHE.incRead(snapshot.size || 1);
+    window.GMS_CACHE.set(ACTIVE_COL, rawData, remoteTS);
+    window.GMS_CACHE.setLocalTimestamp(ACTIVE_COL, remoteTS);
+    if (statusEl) statusEl.innerText = '✅ Report loaded (Firebase 🔥)';
+    return rawData;
+  } catch (error) {
+    console.error('Smart load error:', error);
+    if (statusEl) statusEl.innerText = '❌ Load failed';
+    const cached = window.GMS_CACHE.get(ACTIVE_COL);
+    return cached !== null ? cached : [];
+  }
 }
 
-function setupRealtimeSync(){
-var syncCol = collection(db, SYNC_COL);
-onSnapshot(syncCol, function(snapshot){
-var remoteTS = {};
-snapshot.forEach(function(d){ remoteTS[d.id] = d.data().lastUpdated || 0; });
-var localTS = window.GMS_CACHE.getLocalTimestamp(ACTIVE_COL);
-var remoteForActive = remoteTS[ACTIVE_COL] || 0;
-
-if(remoteForActive > localTS){
-window.GMS_CACHE.invalidate([ACTIVE_COL]);
-var syncStatus = document.getElementById('syncStatus');
-if(syncStatus){
-syncStatus.innerText = 'Updated ✅';
-setTimeout(function(){ if(syncStatus) syncStatus.innerText = 'Active'; }, 2000);
-}
-if(!document.hidden) loadActiveData();
-}
-});
+function setupRealtimeSync() {
+  onSnapshot(collection(db, SYNC_COL), snapshot => {
+    const remoteTS = {};
+    snapshot.forEach(d => { remoteTS[d.id] = d.data().lastUpdated || 0; });
+    const localTS = window.GMS_CACHE.getLocalTimestamp(ACTIVE_COL);
+    const remoteForActive = remoteTS[ACTIVE_COL] || 0;
+    if (remoteForActive > localTS) {
+      window.GMS_CACHE.invalidate([ACTIVE_COL]);
+      const el = document.getElementById('syncStatus');
+      if (el) { el.innerText = 'Updated ✅'; setTimeout(() => { if (el) el.innerText = 'Active'; }, 2000); }
+      if (!document.hidden) loadActiveData();
+    }
+  });
 }
 
-window.toggleTheme = function() {
-document.body.classList.toggle('light');
-const icon = document.getElementById('themeIcon');
-icon.className = document.body.classList.contains('light') ? 'fas fa-sun' : 'fas fa-moon';
-localStorage.setItem('theme', document.body.classList.contains('light') ? 'light' : 'dark');
-renderCharts();
+// ==================== THEME ====================
+window.toggleTheme = function () {
+  document.body.classList.toggle('light');
+  document.getElementById('themeIcon').className = document.body.classList.contains('light') ? 'fas fa-sun' : 'fas fa-moon';
+  localStorage.setItem('theme', document.body.classList.contains('light') ? 'light' : 'dark');
+  renderCharts();
 };
 if (localStorage.getItem('theme') === 'light') {
-document.body.classList.add('light');
-document.getElementById('themeIcon').className = 'fas fa-sun';
+  document.body.classList.add('light');
+  document.getElementById('themeIcon').className = 'fas fa-sun';
 }
 
 document.getElementById('currentDate').textContent = new Date().toLocaleDateString('en-GB');
 document.getElementById('reportDate').value = todayISOLocal();
-
-(function(){
-var c = window.GMS_CACHE.getReadCount();
-var el = document.getElementById('readCounter');
-if(el) el.innerText = c;
+(function () {
+  const el = document.getElementById('readCounter');
+  if (el) el.innerText = window.GMS_CACHE.getReadCount();
 })();
 
 window.addEventListener('online', () => { updateStatus('Online - Syncing...'); loadActiveData(); });
 window.addEventListener('offline', () => { updateStatus('Offline Mode - Using Cache', true); });
 function updateStatus(msg, offline = false) {
-document.getElementById('statusText').textContent = msg;
-document.getElementById('statusBar').className = 'status-bar' + (offline ? ' offline' : '');
+  document.getElementById('statusText').textContent = msg;
+  document.getElementById('statusBar').className = 'status-bar' + (offline ? ' offline' : '');
 }
 
+// ==================== DRAG & DROP ====================
 const uploadBox = document.getElementById('uploadBox');
 ['dragenter', 'dragover'].forEach(e => uploadBox.addEventListener(e, ev => { ev.preventDefault(); uploadBox.classList.add('dragover'); }));
 ['dragleave', 'drop'].forEach(e => uploadBox.addEventListener(e, ev => { ev.preventDefault(); uploadBox.classList.remove('dragover'); }));
 uploadBox.addEventListener('drop', ev => { if (ev.dataTransfer.files.length) processFile(ev.dataTransfer.files[0]); });
 
-window.handleFile = function(event) { if (event.target.files[0]) processFile(event.target.files[0]); };
+// file input change — assigned after DOM ready
+document.getElementById('fileInput').addEventListener('change', function (event) {
+  if (event.target.files[0]) processFile(event.target.files[0]);
+  event.target.value = '';
+});
 
-// ---- Date helpers (row.date is always stored as "DD-MM-YYYY") ----
+// ==================== DATE HELPERS ====================
 function isoToDMY(iso) {
-const [y, m, d] = iso.split('-');
-return `${d}-${m}-${y}`;
+  const [y, m, d] = iso.split('-');
+  return `${d}-${m}-${y}`;
 }
 function dmyToJSDate(dmy) {
-const m = String(dmy || '').match(/^(\d{2})-(\d{2})-(\d{4})$/);
-if (!m) return null;
-return new Date(parseInt(m[3], 10), parseInt(m[2], 10) - 1, parseInt(m[1], 10));
+  const m = String(dmy || '').match(/^(\d{2})-(\d{2})-(\d{4})$/);
+  if (!m) return null;
+  return new Date(parseInt(m[3], 10), parseInt(m[2], 10) - 1, parseInt(m[1], 10));
 }
-// Sortable "YYYY-MM-DD" key for a "DD-MM-YYYY" string, so date ordering is
-// always chronological (year -> month -> day), never a plain text compare.
-// Plain string compare on "DD-MM-YYYY" breaks across month/year boundaries -
-// e.g. "01-08-2026" (1 Aug) would sort BEFORE "30-07-2026" (30 Jul) as text,
-// even though August comes after July. That bug made freshly uploaded data
-// invisible because "latest date" picked the wrong row.
 function dmySortKey(dmy) {
-const m = String(dmy || '').match(/^(\d{2})-(\d{2})-(\d{4})$/);
-if (!m) return '';
-return `${m[3]}-${m[2]}-${m[1]}`; // YYYY-MM-DD
+  const m = String(dmy || '').match(/^(\d{2})-(\d{2})-(\d{4})$/);
+  if (!m) return '';
+  return `${m[3]}-${m[2]}-${m[1]}`;
 }
-// FIX: <input type="date">.valueAsDate is UTC-based - assigning it a Date
-// object built from LOCAL year/month/day (like dmyToJSDate above) shifts the
-// displayed date back by 1 day in any timezone ahead of UTC (e.g. Bangladesh,
-// UTC+6). That's why deleting "10-07-2026" said "No data found" even though
-// data existed - it was actually saved as 11-07-2026 but the picker showed
-// 10-07-2026. Setting .value directly with a plain "YYYY-MM-DD" string
-// sidesteps the UTC conversion entirely.
 function dmyToISO(dmy) {
-const m = String(dmy || '').match(/^(\d{2})-(\d{2})-(\d{4})$/);
-if (!m) return '';
-return `${m[3]}-${m[2]}-${m[1]}`;
+  const m = String(dmy || '').match(/^(\d{2})-(\d{2})-(\d{4})$/);
+  if (!m) return '';
+  return `${m[3]}-${m[2]}-${m[1]}`;
 }
 function todayISOLocal() {
-const d = new Date();
-const yyyy = d.getFullYear();
-const mm = String(d.getMonth() + 1).padStart(2, '0');
-const dd = String(d.getDate()).padStart(2, '0');
-return `${yyyy}-${mm}-${dd}`;
+  const d = new Date();
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
 }
 
+// ==================== FILE PROCESSING ====================
 function processFile(file) {
-updateStatus('Processing file...');
-const reader = new FileReader();
-reader.onload = function(e) {
-try {
-const data = new Uint8Array(e.target.result);
-const workbook = XLSX.read(data, { type: 'array' });
-// Prefer a sheet literally named "Issue Data" if present, otherwise use the first sheet.
-const sheetName = workbook.SheetNames.find(n => n.trim().toLowerCase() === 'issue data') || workbook.SheetNames[0];
-const jsonData = XLSX.utils.sheet_to_json(workbook.Sheets[sheetName], { defval: '' });
-if (jsonData.length === 0) { showToast('No data found!', true); return; }
+  // Guard: ensure XLSX is available before touching the file
+  let XLSXLib;
+  try { XLSXLib = getXLSX(); } catch (e) { showToast(e.message, true); return; }
 
-// If the user picked an "Upload Date", every row in this file is force-tagged
-// with that date, overriding whatever is in the Excel "Issue Date" column.
-const overrideInput = document.getElementById('uploadDateOverride').value;
-const overrideDate = overrideInput ? isoToDMY(overrideInput) : '';
+  updateStatus('Processing file...');
+  const reader = new FileReader();
+  reader.onload = function (e) {
+    try {
+      const data = new Uint8Array(e.target.result);
+      const workbook = XLSXLib.read(data, { type: 'array' });
+      const sheetName = workbook.SheetNames.find(n => n.trim().toLowerCase() === 'issue data') || workbook.SheetNames[0];
+      const jsonData = XLSXLib.utils.sheet_to_json(workbook.Sheets[sheetName], { defval: '' });
+      if (!jsonData.length) { showToast('No data found!', true); return; }
 
-const normalized = normalizeData(jsonData, overrideDate);
-saveToFirebase(normalized, file.name);
-} catch (err) { showToast('Error: ' + err.message, true); }
-};
-reader.readAsArrayBuffer(file);
-event.target.value = '';
+      const overrideInput = document.getElementById('uploadDateOverride').value;
+      const overrideDate = overrideInput ? isoToDMY(overrideInput) : '';
+      const normalized = normalizeData(jsonData, overrideDate);
+      saveToFirebase(normalized, file.name);
+    } catch (err) {
+      showToast('Error: ' + err.message, true);
+      console.error(err);
+    }
+  };
+  reader.onerror = () => showToast('File পড়তে সমস্যা হয়েছে।', true);
+  reader.readAsArrayBuffer(file);
 }
 
 function normalizeData(raw, overrideDate) {
-return raw.map((row, idx) => ({
-sl: row['SL'] || (idx + 1),
-date: overrideDate || formatDate(row['Issue Date'] || row['Trans. Date'] || row['date']),
-issuePurposed: String(row['Issue Purposed'] || '').trim(),
-category: String(row['Category'] || '').trim(),
-reqsNo: String(row['Reqs no'] || row['Reqs No'] || '').trim(),
-division: String(row['Division'] || '').trim(),
-department: String(row['Department'] || '').trim(),
-section: String(row['Section'] || '').trim(),
-requiredSection: String(row['Required Section'] || '').trim(),
-itemGroup: String(row['Item Group'] || '').trim(),
-uom: String(row['UOM'] || '').trim(),
-itemDescription: String(row['Item Description'] || '').trim(),
-itemCode: String(row['Item Code'] || '').trim(),
-issueQty: parseNum(row['Issue Qty'] || row['qty']),
-rate: parseNum(row['Rate(TK)'] || row['Rate']),
-amount: parseNum(row['Amount(TK)'] || row['Amount']),
-issueId: String(row['Issue id'] || row['Issue ID'] || '').trim(),
-personName: String(row['Name of Person'] || '').trim(),
-requiredFor: String(row['Required For'] || '').trim(),
-remarks: String(row['Remarks'] || '').trim()
-})).filter(r => r.itemDescription || r.amount > 0);
+  return raw.map((row, idx) => ({
+    sl: row['SL'] || (idx + 1),
+    date: overrideDate || formatDate(row['Issue Date'] || row['Trans. Date'] || row['date']),
+    issuePurposed: String(row['Issue Purposed'] || '').trim(),
+    category: String(row['Category'] || '').trim(),
+    reqsNo: String(row['Reqs no'] || row['Reqs No'] || '').trim(),
+    division: String(row['Division'] || '').trim(),
+    department: String(row['Department'] || '').trim(),
+    section: String(row['Section'] || '').trim(),
+    requiredSection: String(row['Required Section'] || '').trim(),
+    itemGroup: String(row['Item Group'] || '').trim(),
+    uom: String(row['UOM'] || '').trim(),
+    itemDescription: String(row['Item Description'] || '').trim(),
+    itemCode: String(row['Item Code'] || '').trim(),
+    issueQty: parseNum(row['Issue Qty'] || row['qty']),
+    rate: parseNum(row['Rate(TK)'] || row['Rate']),
+    amount: parseNum(row['Amount(TK)'] || row['Amount']),
+    issueId: String(row['Issue id'] || row['Issue ID'] || '').trim(),
+    personName: String(row['Name of Person'] || '').trim(),
+    requiredFor: String(row['Required For'] || '').trim(),
+    remarks: String(row['Remarks'] || '').trim()
+  })).filter(r => r.itemDescription || r.amount > 0);
 }
 
-function parseNum(v) { if (typeof v === 'number') return v; return Number(String(v || 0).replace(/,/g, '')) || 0; }
+function parseNum(v) {
+  if (typeof v === 'number') return v;
+  return Number(String(v || 0).replace(/,/g, '')) || 0;
+}
 
 function parseAnyDate(raw) {
-if (raw === null || raw === undefined || raw === '') return null;
-
-if (typeof raw === 'number') {
-const parsed = XLSX.SSF.parse_date_code(raw);
-if (parsed) return { d: parsed.d, m: parsed.m, y: parsed.y };
-return null;
-}
-
-if (raw instanceof Date && !isNaN(raw.getTime())) {
-return { d: raw.getDate(), m: raw.getMonth() + 1, y: raw.getFullYear() };
-}
-
-const str = String(raw).trim();
-if (!str) return null;
-
-let m = str.match(/^(\d{1,2})[-\/](\d{1,2})[-\/](\d{4})$/);
-if (m) return { d: parseInt(m[1], 10), m: parseInt(m[2], 10), y: parseInt(m[3], 10) };
-
-m = str.match(/^(\d{4})[-\/](\d{1,2})[-\/](\d{1,2})$/);
-if (m) return { d: parseInt(m[3], 10), m: parseInt(m[2], 10), y: parseInt(m[1], 10) };
-
-const parsedDate = new Date(str);
-if (!isNaN(parsedDate.getTime())) {
-return { d: parsedDate.getDate(), m: parsedDate.getMonth() + 1, y: parsedDate.getFullYear() };
-}
-
-return null;
+  if (raw === null || raw === undefined || raw === '') return null;
+  if (typeof raw === 'number') {
+    // Use XLSX SSF only if XLSX is available (it always is here, but be safe)
+    try {
+      const parsed = getXLSX().SSF.parse_date_code(raw);
+      if (parsed) return { d: parsed.d, m: parsed.m, y: parsed.y };
+    } catch { /* ignore */ }
+    return null;
+  }
+  if (raw instanceof Date && !isNaN(raw.getTime())) {
+    return { d: raw.getDate(), m: raw.getMonth() + 1, y: raw.getFullYear() };
+  }
+  const str = String(raw).trim();
+  if (!str) return null;
+  let m = str.match(/^(\d{1,2})[-\/](\d{1,2})[-\/](\d{4})$/);
+  if (m) return { d: parseInt(m[1], 10), m: parseInt(m[2], 10), y: parseInt(m[3], 10) };
+  m = str.match(/^(\d{4})[-\/](\d{1,2})[-\/](\d{1,2})$/);
+  if (m) return { d: parseInt(m[3], 10), m: parseInt(m[2], 10), y: parseInt(m[1], 10) };
+  const pd = new Date(str);
+  if (!isNaN(pd.getTime())) return { d: pd.getDate(), m: pd.getMonth() + 1, y: pd.getFullYear() };
+  return null;
 }
 
 function formatDate(d) {
-const parts = parseAnyDate(d);
-if (!parts) return '';
-return `${String(parts.d).padStart(2, '0')}-${String(parts.m).padStart(2, '0')}-${parts.y}`;
+  const parts = parseAnyDate(d);
+  if (!parts) return '';
+  return `${String(parts.d).padStart(2, '0')}-${String(parts.m).padStart(2, '0')}-${parts.y}`;
 }
 
 function getMonthKey(dateStr) {
-if (!dateStr) return '';
-const parts = dateStr.split('-');
-if (parts.length === 3) return `${parts[2]}-${parts[1].padStart(2, '0')}`;
-return '';
+  if (!dateStr) return '';
+  const p = dateStr.split('-');
+  if (p.length === 3) return `${p[2]}-${p[1].padStart(2, '0')}`;
+  return '';
 }
 
+// ==================== FIREBASE SAVE ====================
 async function saveToFirebase(data, fileName) {
-updateStatus('Saving to Firebase...');
+  updateStatus('Saving to Firebase...');
+  await purgeExpiredData();
 
-await purgeExpiredData();
+  const grouped = {};
+  let skippedCount = 0;
+  data.forEach(row => {
+    const m = getMonthKey(row.date);
+    if (m) { if (!grouped[m]) grouped[m] = []; grouped[m].push(row); }
+    else skippedCount++;
+  });
 
-const grouped = {};
-let skippedCount = 0;
-data.forEach(row => {
-const m = getMonthKey(row.date);
-if (m) { if (!grouped[m]) grouped[m] = []; grouped[m].push(row); }
-else { skippedCount++; }
-});
+  try {
+    const writes = Object.entries(grouped).map(async ([month, rows]) => {
+      const docRef = doc(db, ACTIVE_COL, month);
+      let existingRows = [];
+      try {
+        const snap = await getDoc(docRef);
+        if (snap.exists() && Array.isArray(snap.data().data)) existingRows = snap.data().data;
+      } catch { /* ignore */ }
+      const merged = existingRows.concat(rows).map((r, idx) => ({ ...r, sl: idx + 1 }));
+      await setDoc(docRef, { data: merged, updatedAt: Date.now() });
+    });
+    await Promise.all(writes);
+    await setDoc(doc(db, SYNC_COL, ACTIVE_COL), { lastUpdated: Date.now(), collection: ACTIVE_COL }, { merge: true });
+    window.GMS_CACHE.invalidate([ACTIVE_COL]);
 
-try {
-const writes = [];
-for (const [month, rows] of Object.entries(grouped)) {
-const docRef = doc(db, ACTIVE_COL, month);
-
-writes.push((async () => {
-let existingRows = [];
-try {
-const existingSnap = await getDoc(docRef);
-if (existingSnap.exists() && Array.isArray(existingSnap.data().data)) {
-existingRows = existingSnap.data().data;
-}
-} catch (e) {
-console.warn('Could not read existing data for merge:', e);
-}
-const mergedRows = existingRows.concat(rows).map((r, idx) => ({ ...r, sl: idx + 1 }));
-await setDoc(docRef, { data: mergedRows, updatedAt: Date.now() });
-})());
-}
-
-await Promise.all(writes);
-
-await setDoc(doc(db, SYNC_COL, ACTIVE_COL), { lastUpdated: Date.now(), collection: ACTIVE_COL }, { merge: true });
-window.GMS_CACHE.invalidate([ACTIVE_COL]);
-
-const savedCount = data.length - skippedCount;
-showToast(`✅ Added ${savedCount} rows (merged with existing data)!`);
-if (skippedCount > 0) {
-setTimeout(() => showToast(`⚠️ Skipped ${skippedCount} row(s): could not detect a valid date`, true), 2500);
-}
-updateStatus('✅ Saved successfully!');
-
-hasInitializedFilter = false;
-currentFilter.date = null;
-await loadActiveData();
-} catch (err) { showToast('Save failed: ' + err.message, true); }
+    const savedCount = data.length - skippedCount;
+    showToast(`✅ Added ${savedCount} rows (merged with existing data)!`);
+    if (skippedCount > 0) setTimeout(() => showToast(`⚠️ Skipped ${skippedCount} row(s): valid date নেই`, true), 2500);
+    updateStatus('✅ Saved successfully!');
+    hasInitializedFilter = false;
+    currentFilter.date = null;
+    await loadActiveData();
+  } catch (err) {
+    showToast('Save failed: ' + err.message, true);
+  }
 }
 
-// ==================== ROLLING 30-DAY AUTO-EXPIRY ====================
+// ==================== AUTO-EXPIRY (30 days) ====================
 const RETENTION_DAYS = 30;
 
 async function purgeExpiredData() {
-try {
-const now = new Date();
-now.setHours(0, 0, 0, 0);
-const cutoff = new Date(now);
-cutoff.setDate(cutoff.getDate() - RETENTION_DAYS);
-
-const snapshot = await getDocs(collection(db, ACTIVE_COL));
-const writes = [];
-let changed = false;
-
-snapshot.forEach(docSnap => {
-const docData = docSnap.data();
-const rows = Array.isArray(docData.data) ? docData.data : [];
-const kept = rows.filter(r => {
-const d = dmyToJSDate(r.date);
-return d && d >= cutoff;
-});
-if (kept.length !== rows.length) {
-changed = true;
-if (kept.length === 0) {
-writes.push(deleteDoc(doc(db, ACTIVE_COL, docSnap.id)));
-} else {
-const resequenced = kept.map((r, idx) => ({ ...r, sl: idx + 1 }));
-writes.push(setDoc(doc(db, ACTIVE_COL, docSnap.id), { data: resequenced, updatedAt: Date.now() }));
-}
-}
-});
-
-if (writes.length) {
-await Promise.all(writes);
-await setDoc(doc(db, SYNC_COL, ACTIVE_COL), { lastUpdated: Date.now() }, { merge: true });
-window.GMS_CACHE.invalidate([ACTIVE_COL]);
+  try {
+    const now = new Date(); now.setHours(0, 0, 0, 0);
+    const cutoff = new Date(now); cutoff.setDate(cutoff.getDate() - RETENTION_DAYS);
+    const snapshot = await getDocs(collection(db, ACTIVE_COL));
+    const writes = [];
+    let changed = false;
+    snapshot.forEach(docSnap => {
+      const rows = Array.isArray(docSnap.data().data) ? docSnap.data().data : [];
+      const kept = rows.filter(r => { const d = dmyToJSDate(r.date); return d && d >= cutoff; });
+      if (kept.length !== rows.length) {
+        changed = true;
+        if (kept.length === 0) writes.push(deleteDoc(doc(db, ACTIVE_COL, docSnap.id)));
+        else writes.push(setDoc(doc(db, ACTIVE_COL, docSnap.id), { data: kept.map((r, i) => ({ ...r, sl: i + 1 })), updatedAt: Date.now() }));
+      }
+    });
+    if (writes.length) {
+      await Promise.all(writes);
+      await setDoc(doc(db, SYNC_COL, ACTIVE_COL), { lastUpdated: Date.now() }, { merge: true });
+      window.GMS_CACHE.invalidate([ACTIVE_COL]);
+    }
+    return changed;
+  } catch (err) { console.error('Purge error:', err); return false; }
 }
 
-return changed;
-} catch (err) { console.error('Error purging expired data:', err); return false; }
-}
-
-window.deleteDateData = async function() {
-const dateInput = document.getElementById('reportDate').value;
-if (!dateInput) { showToast('Please select a date to delete', true); return; }
-
-const [year, month, day] = dateInput.split('-');
-const formattedDate = `${day}-${month}-${year}`;
-const monthKey = `${year}-${month}`;
-
-if (!confirm(`Are you sure you want to delete ALL data for ${formattedDate}? This cannot be undone!`)) return;
-
-try {
-updateStatus('Deleting data...');
-
-const docRef = doc(db, ACTIVE_COL, monthKey);
-const docSnap = await getDoc(docRef);
-
-if (docSnap.exists()) {
-const docData = docSnap.data();
-if (docData.data && docData.data.length) {
-const beforeCount = docData.data.length;
-const filtered = docData.data.filter(row => row.date !== formattedDate);
-
-if (filtered.length === beforeCount) {
-showToast(`No data found for ${formattedDate}`, true);
-updateStatus('Live Sync Active ✅');
-return;
-}
-
-if (filtered.length === 0) {
-await deleteDoc(docRef);
-} else {
-await setDoc(docRef, { data: filtered, updatedAt: Date.now() });
-}
-await setDoc(doc(db, SYNC_COL, ACTIVE_COL), { lastUpdated: Date.now() }, { merge: true });
-window.GMS_CACHE.invalidate([ACTIVE_COL]);
-
-allData = allData.filter(row => row.date !== formattedDate);
-
-updateFilterTotals();
-applyFilters();
-
-showToast(`✅ Deleted ${beforeCount - filtered.length} row(s) for ${formattedDate}`);
-updateStatus('Live Sync Active ✅');
-} else {
-showToast('No data found for this month', true);
-}
-} else {
-showToast('No data found for this month', true);
-}
-} catch (err) {
-showToast('Delete failed: ' + err.message, true);
-}
+// ==================== DELETE DATE ====================
+window.deleteDateData = async function () {
+  const dateInput = document.getElementById('reportDate').value;
+  if (!dateInput) { showToast('Please select a date to delete', true); return; }
+  const [year, month, day] = dateInput.split('-');
+  const formattedDate = `${day}-${month}-${year}`;
+  const monthKey = `${year}-${month}`;
+  if (!confirm(`Are you sure you want to delete ALL data for ${formattedDate}?`)) return;
+  try {
+    updateStatus('Deleting data...');
+    const docRef = doc(db, ACTIVE_COL, monthKey);
+    const docSnap = await getDoc(docRef);
+    if (docSnap.exists() && docSnap.data().data && docSnap.data().data.length) {
+      const before = docSnap.data().data;
+      const filtered = before.filter(r => r.date !== formattedDate);
+      if (filtered.length === before.length) { showToast(`No data found for ${formattedDate}`, true); updateStatus('Live Sync Active ✅'); return; }
+      if (filtered.length === 0) await deleteDoc(docRef);
+      else await setDoc(docRef, { data: filtered, updatedAt: Date.now() });
+      await setDoc(doc(db, SYNC_COL, ACTIVE_COL), { lastUpdated: Date.now() }, { merge: true });
+      window.GMS_CACHE.invalidate([ACTIVE_COL]);
+      allData = allData.filter(r => r.date !== formattedDate);
+      updateFilterTotals(); applyFilters();
+      showToast(`✅ Deleted ${before.length - filtered.length} row(s) for ${formattedDate}`);
+      updateStatus('Live Sync Active ✅');
+    } else { showToast('No data found for this month', true); }
+  } catch (err) { showToast('Delete failed: ' + err.message, true); }
 };
 
+// ==================== LOAD DATA ====================
 async function loadActiveData() {
-updateStatus('Loading live data...');
-await purgeExpiredData();
-const data = await smartLoadData();
-allData = data;
-// Sort by real chronological order (YYYY-MM-DD key), not raw "DD-MM-YYYY"
-// text - a plain text sort put "01-08-2026" before "30-07-2026" because
-// "01" < "30" as characters, which made brand-new uploads invisible.
-allData.sort((a, b) => dmySortKey(b.date).localeCompare(dmySortKey(a.date)));
-document.getElementById('lastUpdate').textContent = new Date().toLocaleString();
-
-if (!hasInitializedFilter) {
-const latestDate = allData.length ? allData[0].date : null;
-currentFilter.date = latestDate || null;
-document.getElementById('reportDate').value = latestDate ? dmyToISO(latestDate) : todayISOLocal();
-hasInitializedFilter = true;
-}
-
-updateFilterTotals();
-applyFilters();
-if (document.getElementById('dateWiseModal').classList.contains('active')) renderDateWiseReport();
-updateStatus('Live Sync Active ✅');
+  updateStatus('Loading live data...');
+  await purgeExpiredData();
+  const data = await smartLoadData();
+  allData = data;
+  allData.sort((a, b) => dmySortKey(b.date).localeCompare(dmySortKey(a.date)));
+  document.getElementById('lastUpdate').textContent = new Date().toLocaleString();
+  if (!hasInitializedFilter) {
+    const latestDate = allData.length ? allData[0].date : null;
+    currentFilter.date = latestDate || null;
+    document.getElementById('reportDate').value = latestDate ? dmyToISO(latestDate) : todayISOLocal();
+    hasInitializedFilter = true;
+  }
+  updateFilterTotals();
+  applyFilters();
+  if (document.getElementById('dateWiseModal').classList.contains('active')) renderDateWiseReport();
+  updateStatus('Live Sync Active ✅');
 }
 
 loadActiveData();
 setupRealtimeSync();
+setInterval(() => { if (!document.hidden) loadActiveData(); }, 5 * 60 * 1000);
 
-setInterval(function(){
-if(!document.hidden) loadActiveData();
-}, 5 * 60 * 1000);
-
-window.applyDateFilter = function() {
-const dateInput = document.getElementById('reportDate').value;
-if (!dateInput) { showToast('Please select a date', true); return; }
-
-const [year, month, day] = dateInput.split('-');
-const formattedDate = `${day}-${month}-${year}`;
-currentFilter.date = formattedDate;
-updateFilterTotals();
-applyFilters();
-
-const matchCount = allData.filter(r => r.date === formattedDate).length;
-if (matchCount === 0) {
-showToast(`No data found for ${formattedDate}`, true);
-} else {
-showToast(`Filter applied: ${formattedDate} (${matchCount} rows)`);
-}
+// ==================== FILTERS ====================
+window.applyDateFilter = function () {
+  const dateInput = document.getElementById('reportDate').value;
+  if (!dateInput) { showToast('Please select a date', true); return; }
+  const [year, month, day] = dateInput.split('-');
+  const formattedDate = `${day}-${month}-${year}`;
+  currentFilter.date = formattedDate;
+  updateFilterTotals(); applyFilters();
+  const count = allData.filter(r => r.date === formattedDate).length;
+  if (count === 0) showToast(`No data found for ${formattedDate}`, true);
+  else showToast(`Filter applied: ${formattedDate} (${count} rows)`);
 };
 
-window.clearDateFilter = function() {
-const latestDate = allData.length ? allData[0].date : null;
-currentFilter.date = latestDate || null;
-document.getElementById('reportDate').value = latestDate ? dmyToISO(latestDate) : todayISOLocal();
-updateFilterTotals();
-applyFilters();
-showToast(latestDate ? `সর্বশেষ তারিখ দেখানো হচ্ছে: ${latestDate}` : 'কোনো ডেটা নেই');
+window.clearDateFilter = function () {
+  const latestDate = allData.length ? allData[0].date : null;
+  currentFilter.date = latestDate || null;
+  document.getElementById('reportDate').value = latestDate ? dmyToISO(latestDate) : todayISOLocal();
+  updateFilterTotals(); applyFilters();
+  showToast(latestDate ? `সর্বশেষ তারিখ দেখানো হচ্ছে: ${latestDate}` : 'কোনো ডেটা নেই');
 };
 
-window.filterReport = function(category) {
-currentFilter.reportType = category;
-updateFilterTotals();
-applyFilters();
+window.filterReport = function (category) {
+  currentFilter.reportType = category;
+  updateFilterTotals(); applyFilters();
+};
+window.showAllData = function () {
+  currentFilter.reportType = null;
+  updateFilterTotals(); applyFilters();
 };
 
-window.showAllData = function() {
-currentFilter.reportType = null;
-updateFilterTotals();
-applyFilters();
-};
-
-// Category quick-filter buttons are built dynamically from whatever
-// categories actually exist in the uploaded data (top 8 by value, scoped
-// to the date currently on screen) instead of a fixed hardcoded list -
-// General Technical-MCD categories vary a lot more than General MCD's.
 function updateFilterTotals() {
-const base = currentFilter.date ? allData.filter(r => r.date === currentFilter.date) : allData;
-const allTotal = base.reduce((s, r) => s + r.amount, 0);
-document.getElementById('totalAll').textContent = '৳' + allTotal.toLocaleString('en-US', { maximumFractionDigits: 0 });
-document.getElementById('btnAll').classList.toggle('active', !currentFilter.reportType);
+  const base = currentFilter.date ? allData.filter(r => r.date === currentFilter.date) : allData;
+  const allTotal = base.reduce((s, r) => s + r.amount, 0);
+  document.getElementById('totalAll').textContent = '৳' + allTotal.toLocaleString('en-US', { maximumFractionDigits: 0 });
+  document.getElementById('btnAll').classList.toggle('active', !currentFilter.reportType);
 
-const catTotals = {};
-base.forEach(r => { const c = r.category || 'Unknown'; catTotals[c] = (catTotals[c] || 0) + r.amount; });
-const sorted = Object.entries(catTotals).sort((a, b) => b[1] - a[1]).slice(0, 8);
-
-const container = document.getElementById('dynamicFilterButtons');
-container.innerHTML = sorted.map(([cat, val]) => {
-const active = currentFilter.reportType === cat ? ' active' : '';
-const safeCat = cat.replace(/'/g, "\\'");
-return `<button class="filter-btn${active}" onclick="filterReport('${safeCat}')">${cat}<small>৳${val.toLocaleString('en-US', { maximumFractionDigits: 0 })}</small></button>`;
-}).join('');
+  const catTotals = {};
+  base.forEach(r => { const c = r.category || 'Unknown'; catTotals[c] = (catTotals[c] || 0) + r.amount; });
+  const sorted = Object.entries(catTotals).sort((a, b) => b[1] - a[1]).slice(0, 8);
+  document.getElementById('dynamicFilterButtons').innerHTML = sorted.map(([cat, val]) => {
+    const active = currentFilter.reportType === cat ? ' active' : '';
+    const safeCat = cat.replace(/'/g, "\\'");
+    return `<button class="filter-btn${active}" onclick="filterReport('${safeCat}')">${cat}<small>৳${val.toLocaleString('en-US', { maximumFractionDigits: 0 })}</small></button>`;
+  }).join('');
 }
 
 function applyFilters() {
-filteredData = allData.filter(row => {
-if (currentFilter.date && row.date !== currentFilter.date) return false;
-if (!currentFilter.date && allData.length) return false; // never silently show a combined "all dates" set
-if (currentFilter.reportType && row.category !== currentFilter.reportType) return false;
-return true;
-});
-
-const emptyState = document.getElementById('emptyState');
-const chartGrid = document.getElementById('chartGrid');
-if (filteredData.length === 0) {
-emptyState.style.display = 'block';
-chartGrid.style.display = 'none';
-} else {
-emptyState.style.display = 'none';
-chartGrid.style.display = 'grid';
+  filteredData = allData.filter(row => {
+    if (currentFilter.date && row.date !== currentFilter.date) return false;
+    if (!currentFilter.date && allData.length) return false;
+    if (currentFilter.reportType && row.category !== currentFilter.reportType) return false;
+    return true;
+  });
+  const emptyState = document.getElementById('emptyState');
+  const chartGrid = document.getElementById('chartGrid');
+  if (filteredData.length === 0) { emptyState.style.display = 'block'; chartGrid.style.display = 'none'; }
+  else { emptyState.style.display = 'none'; chartGrid.style.display = 'grid'; }
+  updateStats(); updateMonthlySummary(); renderCharts(); renderTable();
 }
 
-updateStats();
-updateMonthlySummary();
-renderCharts();
-renderTable();
-}
+window.clearFilters = function () { currentFilter.reportType = null; updateFilterTotals(); applyFilters(); };
 
-window.clearFilters = function() {
-currentFilter.reportType = null;
-updateFilterTotals();
-applyFilters();
-};
-
+// ==================== STATS ====================
 function updateStats() {
-const total = filteredData.length;
-const amount = filteredData.reduce((s, r) => s + r.amount, 0);
-const depts = new Set(filteredData.map(r => r.department).filter(v => v)).size;
-const cats = new Set(filteredData.map(r => r.category).filter(v => v)).size;
-const avg = total > 0 ? amount / total : 0;
-
-document.getElementById('statAmount').textContent = '৳' + amount.toLocaleString('en-US', { maximumFractionDigits: 0 });
-document.getElementById('statItems').textContent = total.toLocaleString();
-document.getElementById('statDepts').textContent = depts;
-document.getElementById('statCats').textContent = cats;
-document.getElementById('statAvg').textContent = '৳' + avg.toLocaleString('en-US', { maximumFractionDigits: 0 });
-document.getElementById('rowCount').textContent = total;
+  const total = filteredData.length;
+  const amount = filteredData.reduce((s, r) => s + r.amount, 0);
+  const depts = new Set(filteredData.map(r => r.department).filter(Boolean)).size;
+  const cats = new Set(filteredData.map(r => r.category).filter(Boolean)).size;
+  const avg = total > 0 ? amount / total : 0;
+  document.getElementById('statAmount').textContent = '৳' + amount.toLocaleString('en-US', { maximumFractionDigits: 0 });
+  document.getElementById('statItems').textContent = total.toLocaleString();
+  document.getElementById('statDepts').textContent = depts;
+  document.getElementById('statCats').textContent = cats;
+  document.getElementById('statAvg').textContent = '৳' + avg.toLocaleString('en-US', { maximumFractionDigits: 0 });
+  document.getElementById('rowCount').textContent = total;
 }
 
 function updateMonthlySummary() {
-const dayData = filteredData;
-const days = new Set(dayData.map(r => r.date)).size;
-const amount = dayData.reduce((s, r) => s + r.amount, 0);
-const avg = days > 0 ? amount / days : 0;
-const items = dayData.length;
-const depts = new Set(dayData.map(r => r.department).filter(v => v)).size;
-const cats = new Set(dayData.map(r => r.category).filter(v => v)).size;
-
-document.getElementById('summaryDays').textContent = days;
-document.getElementById('summaryAmount').textContent = '৳' + amount.toLocaleString('en-US', { maximumFractionDigits: 0 });
-document.getElementById('summaryAvg').textContent = '৳' + avg.toLocaleString('en-US', { maximumFractionDigits: 0 });
-document.getElementById('summaryItems').textContent = items;
-document.getElementById('summaryDepts').textContent = depts;
-document.getElementById('summaryCats').textContent = cats;
-
-document.getElementById('currentMonthLabel').textContent = currentFilter.date || 'কোনো তারিখ সিলেক্ট করা নেই';
+  const days = new Set(filteredData.map(r => r.date)).size;
+  const amount = filteredData.reduce((s, r) => s + r.amount, 0);
+  const avg = days > 0 ? amount / days : 0;
+  document.getElementById('summaryDays').textContent = days;
+  document.getElementById('summaryAmount').textContent = '৳' + amount.toLocaleString('en-US', { maximumFractionDigits: 0 });
+  document.getElementById('summaryAvg').textContent = '৳' + avg.toLocaleString('en-US', { maximumFractionDigits: 0 });
+  document.getElementById('summaryItems').textContent = filteredData.length;
+  document.getElementById('summaryDepts').textContent = new Set(filteredData.map(r => r.department).filter(Boolean)).size;
+  document.getElementById('summaryCats').textContent = new Set(filteredData.map(r => r.category).filter(Boolean)).size;
+  document.getElementById('currentMonthLabel').textContent = currentFilter.date || 'কোনো তারিখ সিলেক্ট করা নেই';
 }
 
+// ==================== CHARTS ====================
 function renderCharts() {
-Object.values(charts).forEach(c => c && c.destroy());
-const isDark = document.body.classList.contains('light') === false;
-const textColor = isDark ? '#f1f5f9' : '#1e293b';
-const gridColor = isDark ? 'rgba(148,163,184,.2)' : 'rgba(0,0,0,.1)';
-const palette = ['#38bdf8', '#22c55e', '#f59e0b', '#a855f7', '#ef4444', '#14b8a6', '#eab308', '#6366f1', '#ec4899', '#84cc16'];
+  Object.values(charts).forEach(c => c && c.destroy());
+  const isDark = !document.body.classList.contains('light');
+  const textColor = isDark ? '#f1f5f9' : '#1e293b';
+  const gridColor = isDark ? 'rgba(148,163,184,.2)' : 'rgba(0,0,0,.1)';
+  const palette = ['#38bdf8','#22c55e','#f59e0b','#a855f7','#ef4444','#14b8a6','#eab308','#6366f1','#ec4899','#84cc16'];
 
-const valueLabelPlugin = {
-id: 'valueLabelPlugin',
-afterDatasetsDraw(chart) {
-const { ctx } = chart;
-ctx.save();
-ctx.font = '600 11px Poppins';
-ctx.fillStyle = textColor;
-ctx.textAlign = 'center';
-chart.data.datasets.forEach((dataset, di) => {
-const meta = chart.getDatasetMeta(di);
-meta.data.forEach((bar, i) => {
-const value = dataset.data[i];
-if (value === undefined || value === null) return;
-ctx.fillText('৳' + value.toLocaleString('en-US', { maximumFractionDigits: 0 }), bar.x, bar.y - 6);
-});
-});
-ctx.restore();
-}
-};
+  const valueLabelPlugin = {
+    id: 'valueLabelPlugin',
+    afterDatasetsDraw(chart) {
+      const { ctx } = chart;
+      ctx.save(); ctx.font = '600 11px Poppins'; ctx.fillStyle = textColor; ctx.textAlign = 'center';
+      chart.data.datasets.forEach((dataset, di) => {
+        const meta = chart.getDatasetMeta(di);
+        meta.data.forEach((bar, i) => {
+          const value = dataset.data[i];
+          if (value == null) return;
+          ctx.fillText('৳' + value.toLocaleString('en-US', { maximumFractionDigits: 0 }), bar.x, bar.y - 6);
+        });
+      });
+      ctx.restore();
+    }
+  };
 
-// Chart 1: Category Wise (Pie) - total = sum of ALL categories (no slicing)
-const catData = {};
-filteredData.forEach(r => { const cat = r.category || 'Unknown'; catData[cat] = (catData[cat] || 0) + r.amount; });
-const catLabels = Object.keys(catData);
-const catTotal = catLabels.reduce((s, l) => s + catData[l], 0);
-const catValues = catLabels.map(l => catData[l]);
+  // Chart 1: Category Pie
+  const catData = {};
+  filteredData.forEach(r => { const c = r.category || 'Unknown'; catData[c] = (catData[c] || 0) + r.amount; });
+  const catLabels = Object.keys(catData);
+  const catTotal = catLabels.reduce((s, l) => s + catData[l], 0);
+  charts.category = new Chart(document.getElementById('categoryChart'), {
+    type: 'pie',
+    data: { labels: catLabels.length ? catLabels : ['No Data'], datasets: [{ data: catLabels.length ? catLabels.map(l => catData[l]) : [1], backgroundColor: palette, borderWidth: 2, borderColor: isDark ? '#1e293b' : '#fff' }] },
+    options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom', labels: { color: textColor, font: { size: 10 } } } } }
+  });
+  document.getElementById('categoryTotal').textContent = 'Grand Total: ৳' + catTotal.toLocaleString('en-US', { maximumFractionDigits: 0 });
 
-charts.category = new Chart(document.getElementById('categoryChart'), {
-type: 'pie',
-data: { labels: catLabels.length ? catLabels : ['No Data'], datasets: [{ data: catValues.length ? catValues : [1], backgroundColor: palette, borderWidth: 2, borderColor: isDark ? '#1e293b' : '#fff' }] },
-options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom', labels: { color: textColor, font: { size: 10 } } } } }
-});
-document.getElementById('categoryTotal').textContent = 'Grand Total: ৳' + catTotal.toLocaleString('en-US', { maximumFractionDigits: 0 });
+  // Chart 2: Required Section Bar
+  const secData = {};
+  filteredData.forEach(r => { const s = r.requiredSection || r.section || 'Unknown'; secData[s] = (secData[s] || 0) + r.amount; });
+  const secAllLabels = Object.keys(secData);
+  const secTotal = secAllLabels.reduce((s, l) => s + secData[l], 0);
+  const secLabels = secAllLabels.slice(0, 15);
+  charts.section = new Chart(document.getElementById('sectionChart'), {
+    type: 'bar',
+    data: { labels: secLabels.length ? secLabels : ['No Data'], datasets: [{ label: 'Amount', data: secLabels.length ? secLabels.map(l => secData[l]) : [0], backgroundColor: '#22c55e', borderRadius: 8 }] },
+    options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { grid: { color: gridColor }, ticks: { color: textColor } }, x: { ticks: { color: textColor, maxRotation: 45, font: { size: 9 } } } } },
+    plugins: [valueLabelPlugin]
+  });
+  document.getElementById('sectionTotal').textContent = 'Grand Total: ৳' + secTotal.toLocaleString('en-US', { maximumFractionDigits: 0 }) + (secAllLabels.length > 15 ? ` (top 15 of ${secAllLabels.length})` : '');
 
-// Chart 2: Required Section Wise (Bar) - grand total from ALL sections before slicing to top 15
-const secData = {};
-filteredData.forEach(r => { const sec = r.requiredSection || r.section || 'Unknown'; secData[sec] = (secData[sec] || 0) + r.amount; });
-const secAllLabels = Object.keys(secData);
-const secTotal = secAllLabels.reduce((s, l) => s + secData[l], 0);
-const secLabels = secAllLabels.slice(0, 15);
-const secValues = secLabels.map(l => secData[l]);
+  // Chart 3: Issue ID Bar (top 10)
+  const idData = {}, idNameMap = {};
+  filteredData.forEach(r => {
+    const id = r.issueId || 'Unknown';
+    idData[id] = (idData[id] || 0) + r.amount;
+    if (!idNameMap[id] && r.personName) idNameMap[id] = r.personName;
+  });
+  const idAllLabels = Object.keys(idData).sort((a, b) => idData[b] - idData[a]);
+  const idTotal = idAllLabels.reduce((s, l) => s + idData[l], 0);
+  const idLabels = idAllLabels.slice(0, 10);
+  charts.issueId = new Chart(document.getElementById('issueIdChart'), {
+    type: 'bar',
+    data: { labels: idLabels.length ? idLabels.map(l => idNameMap[l] ? `${l} (${idNameMap[l]})` : l) : ['No Data'], datasets: [{ label: 'Amount', data: idLabels.length ? idLabels.map(l => idData[l]) : [0], backgroundColor: '#f59e0b', borderRadius: 8 }] },
+    options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { grid: { color: gridColor }, ticks: { color: textColor } }, x: { ticks: { color: textColor, maxRotation: 45, font: { size: 9 } } } } },
+    plugins: [valueLabelPlugin]
+  });
+  document.getElementById('issueIdTotal').textContent = 'Grand Total: ৳' + idTotal.toLocaleString('en-US', { maximumFractionDigits: 0 }) + (idAllLabels.length > 10 ? ` (top 10 of ${idAllLabels.length})` : '');
 
-charts.section = new Chart(document.getElementById('sectionChart'), {
-type: 'bar',
-data: { labels: secLabels.length ? secLabels : ['No Data'], datasets: [{ label: 'Amount', data: secValues.length ? secValues : [0], backgroundColor: '#22c55e', borderRadius: 8 }] },
-options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { grid: { color: gridColor }, ticks: { color: textColor } }, x: { ticks: { color: textColor, maxRotation: 45, font: { size: 9 } } } } },
-plugins: [valueLabelPlugin]
-});
-document.getElementById('sectionTotal').textContent = 'Grand Total: ৳' + secTotal.toLocaleString('en-US', { maximumFractionDigits: 0 }) + (secAllLabels.length > 15 ? ` (showing top 15 of ${secAllLabels.length})` : '');
+  // Chart 4: Division Bar
+  const divData = {};
+  filteredData.forEach(r => { const d = r.division || 'Unknown'; divData[d] = (divData[d] || 0) + r.amount; });
+  const divLabels = Object.keys(divData);
+  const divTotal = divLabels.reduce((s, l) => s + divData[l], 0);
+  charts.division = new Chart(document.getElementById('divisionChart'), {
+    type: 'bar',
+    data: { labels: divLabels.length ? divLabels : ['No Data'], datasets: [{ label: 'Amount', data: divLabels.length ? divLabels.map(l => divData[l]) : [0], backgroundColor: '#8b5cf6', borderRadius: 8 }] },
+    options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { grid: { color: gridColor }, ticks: { color: textColor } }, x: { ticks: { color: textColor, maxRotation: 45, font: { size: 9 } } } } },
+    plugins: [valueLabelPlugin]
+  });
+  document.getElementById('divisionTotal').textContent = 'Grand Total: ৳' + divTotal.toLocaleString('en-US', { maximumFractionDigits: 0 });
 
-// Chart 3: Issue ID Wise (Bar) - total from ALL issue IDs, top 10 shown.
-// Label includes the Name of Person next to the Issue ID, e.g. "TTS-959 (Juel Mia)",
-// so it's clear at a glance who each issue ID belongs to.
-const idData = {};
-const idNameMap = {};
-filteredData.forEach(r => {
-const id = r.issueId || 'Unknown';
-idData[id] = (idData[id] || 0) + r.amount;
-if (!idNameMap[id] && r.personName) idNameMap[id] = r.personName;
-});
-const idAllLabels = Object.keys(idData).sort((a, b) => idData[b] - idData[a]);
-const idTotal = idAllLabels.reduce((s, l) => s + idData[l], 0);
-const idLabels = idAllLabels.slice(0, 10);
-const idValues = idLabels.map(l => idData[l]);
-const idDisplayLabels = idLabels.map(l => idNameMap[l] ? `${l} (${idNameMap[l]})` : l);
+  // Chart 5: Item Wise (top 10, horizontal bar)
+  const itemData = {};
+  filteredData.forEach(r => { const it = r.itemDescription || 'Unknown'; itemData[it] = (itemData[it] || 0) + r.amount; });
+  const itemAllLabels = Object.keys(itemData);
+  const itemTotalAll = itemAllLabels.reduce((s, l) => s + itemData[l], 0);
+  const itemLabels = itemAllLabels.sort((a, b) => itemData[b] - itemData[a]).slice(0, 10);
+  charts.item = new Chart(document.getElementById('itemChart'), {
+    type: 'bar',
+    data: { labels: itemLabels.length ? itemLabels : ['No Data'], datasets: [{ label: 'Amount', data: itemLabels.length ? itemLabels.map(l => itemData[l]) : [0], backgroundColor: '#06b6d4', borderRadius: 8 }] },
+    options: { indexAxis: 'y', responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { x: { grid: { color: gridColor }, ticks: { color: textColor } }, y: { ticks: { color: textColor, font: { size: 9 } } } } }
+  });
+  document.getElementById('itemTotal').textContent = 'Grand Total: ৳' + itemTotalAll.toLocaleString('en-US', { maximumFractionDigits: 0 }) + (itemAllLabels.length > 10 ? ` (top 10 of ${itemAllLabels.length})` : '');
 
-charts.issueId = new Chart(document.getElementById('issueIdChart'), {
-type: 'bar',
-data: { labels: idDisplayLabels.length ? idDisplayLabels : ['No Data'], datasets: [{ label: 'Amount', data: idValues.length ? idValues : [0], backgroundColor: '#f59e0b', borderRadius: 8 }] },
-options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { grid: { color: gridColor }, ticks: { color: textColor } }, x: { ticks: { color: textColor, maxRotation: 45, font: { size: 9 } } } } },
-plugins: [valueLabelPlugin]
-});
-document.getElementById('issueIdTotal').textContent = 'Grand Total: ৳' + idTotal.toLocaleString('en-US', { maximumFractionDigits: 0 }) + (idAllLabels.length > 10 ? ` (showing top 10 of ${idAllLabels.length})` : '');
-
-// Chart 4: Division Wise (Bar) - unsliced
-const divData = {};
-filteredData.forEach(r => { const div = r.division || 'Unknown'; divData[div] = (divData[div] || 0) + r.amount; });
-const divLabels = Object.keys(divData);
-const divValues = divLabels.map(l => divData[l]);
-const divTotal = divValues.reduce((a, b) => a + b, 0);
-
-charts.division = new Chart(document.getElementById('divisionChart'), {
-type: 'bar',
-data: { labels: divLabels.length ? divLabels : ['No Data'], datasets: [{ label: 'Amount', data: divValues.length ? divValues : [0], backgroundColor: '#8b5cf6', borderRadius: 8 }] },
-options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { grid: { color: gridColor }, ticks: { color: textColor } }, x: { ticks: { color: textColor, maxRotation: 45, font: { size: 9 } } } } },
-plugins: [valueLabelPlugin]
-});
-document.getElementById('divisionTotal').textContent = 'Grand Total: ৳' + divTotal.toLocaleString('en-US', { maximumFractionDigits: 0 });
-
-// Chart 5: Item Wise (Bar) - total from ALL items, top 10 shown
-const itemData = {};
-filteredData.forEach(r => { const it = r.itemDescription || 'Unknown'; itemData[it] = (itemData[it] || 0) + r.amount; });
-const itemAllLabels = Object.keys(itemData);
-const itemTotalAll = itemAllLabels.reduce((s, l) => s + itemData[l], 0);
-const itemLabels = itemAllLabels.sort((a, b) => itemData[b] - itemData[a]).slice(0, 10);
-const itemValues = itemLabels.map(l => itemData[l]);
-
-charts.item = new Chart(document.getElementById('itemChart'), {
-type: 'bar',
-data: { labels: itemLabels.length ? itemLabels : ['No Data'], datasets: [{ label: 'Amount', data: itemValues.length ? itemValues : [0], backgroundColor: '#06b6d4', borderRadius: 8 }] },
-options: { indexAxis: 'y', responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { x: { grid: { color: gridColor }, ticks: { color: textColor } }, y: { ticks: { color: textColor, font: { size: 9 } } } } }
-});
-document.getElementById('itemTotal').textContent = 'Grand Total: ৳' + itemTotalAll.toLocaleString('en-US', { maximumFractionDigits: 0 }) + (itemAllLabels.length > 10 ? ` (showing top 10 of ${itemAllLabels.length})` : '');
-
-// Chart 6: Date Wise Amount Trend (Line) - uses allData (NOT filteredData), so it always
-// shows the full cached date range regardless of the single-date filter currently applied.
-// This mirrors the Excel "Date wise issue Value" sheet's daily trend chart.
-const trendData = {};
-allData.forEach(r => { const d = r.date || 'Unknown'; trendData[d] = (trendData[d] || 0) + r.amount; });
-const trendDates = Object.keys(trendData).sort((a, b) => dmySortKey(a).localeCompare(dmySortKey(b)));
-const trendValues = trendDates.map(d => trendData[d]);
-const trendTotal = trendValues.reduce((a, b) => a + b, 0);
-
-charts.dateTrend = new Chart(document.getElementById('dateTrendChart'), {
-type: 'line',
-data: {
-labels: trendDates.length ? trendDates : ['No Data'],
-datasets: [{
-label: 'Daily Amount',
-data: trendValues.length ? trendValues : [0],
-borderColor: '#ef4444',
-backgroundColor: 'rgba(239,68,68,.15)',
-tension: 0.3,
-fill: true,
-pointRadius: 3,
-pointBackgroundColor: '#ef4444'
-}]
-},
-options: {
-responsive: true,
-maintainAspectRatio: false,
-plugins: {
-legend: { display: false },
-tooltip: {
-callbacks: {
-label: (ctx) => '৳' + ctx.parsed.y.toLocaleString('en-US', { maximumFractionDigits: 0 })
-}
-}
-},
-scales: {
-y: { grid: { color: gridColor }, ticks: { color: textColor, callback: v => '৳' + v.toLocaleString('en-US', { notation: 'compact' }) } },
-x: { grid: { color: gridColor }, ticks: { color: textColor, maxRotation: 45, font: { size: 9 } } }
-}
-}
-});
-document.getElementById('dateTrendTotal').textContent = 'Grand Total: ৳' + trendTotal.toLocaleString('en-US', { maximumFractionDigits: 0 }) + ` (${trendDates.length} days)`;
+  // Chart 6: Date Trend Line (uses allData, full 30-day range)
+  const trendData = {};
+  allData.forEach(r => { trendData[r.date || 'Unknown'] = (trendData[r.date || 'Unknown'] || 0) + r.amount; });
+  const trendDates = Object.keys(trendData).sort((a, b) => dmySortKey(a).localeCompare(dmySortKey(b)));
+  const trendValues = trendDates.map(d => trendData[d]);
+  const trendTotal = trendValues.reduce((a, b) => a + b, 0);
+  charts.dateTrend = new Chart(document.getElementById('dateTrendChart'), {
+    type: 'line',
+    data: { labels: trendDates.length ? trendDates : ['No Data'], datasets: [{ label: 'Daily Amount', data: trendValues.length ? trendValues : [0], borderColor: '#ef4444', backgroundColor: 'rgba(239,68,68,.15)', tension: 0.3, fill: true, pointRadius: 3, pointBackgroundColor: '#ef4444' }] },
+    options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false }, tooltip: { callbacks: { label: ctx => '৳' + ctx.parsed.y.toLocaleString('en-US', { maximumFractionDigits: 0 }) } } }, scales: { y: { grid: { color: gridColor }, ticks: { color: textColor, callback: v => '৳' + v.toLocaleString('en-US', { notation: 'compact' }) } }, x: { grid: { color: gridColor }, ticks: { color: textColor, maxRotation: 45, font: { size: 9 } } } } }
+  });
+  document.getElementById('dateTrendTotal').textContent = 'Grand Total: ৳' + trendTotal.toLocaleString('en-US', { maximumFractionDigits: 0 }) + ` (${trendDates.length} days)`;
 }
 
-// ===== Date Wise Issue Value Report (modal) - replicates the Excel "Date wise issue Value" sheet =====
-// Full calendar-day breakdown (S.N | Date | Value | Remarks) + bar chart + pie chart + summary,
-// built from allData (rolling 30-day cache), scoped to the month of the latest available date.
+// ==================== DATE WISE MODAL ====================
 let dwCharts = {};
-
-function parseDMY(s) {
-const [d, m, y] = (s || '').split('-').map(Number);
-return new Date(y || 1970, (m || 1) - 1, d || 1);
-}
-
+function parseDMY(s) { const [d, m, y] = (s || '').split('-').map(Number); return new Date(y || 1970, (m || 1) - 1, d || 1); }
 function formatDMYShort(dateStr) {
-const [d, m, y] = dateStr.split('-');
-const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-return `${d}-${months[parseInt(m, 10) - 1]}-${y.slice(-2)}`;
+  const [d, m, y] = dateStr.split('-');
+  const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  return `${d}-${months[parseInt(m, 10) - 1]}-${y.slice(-2)}`;
 }
 
 function renderDateWiseReport() {
-const isDark = document.body.classList.contains('light') === false;
-const textColor = isDark ? '#f1f5f9' : '#1e293b';
-const gridColor = isDark ? 'rgba(148,163,184,.2)' : 'rgba(0,0,0,.1)';
+  const isDark = !document.body.classList.contains('light');
+  const textColor = isDark ? '#f1f5f9' : '#1e293b';
+  const gridColor = isDark ? 'rgba(148,163,184,.2)' : 'rgba(0,0,0,.1)';
+  if (!allData.length) {
+    document.getElementById('dwTableBody').innerHTML = '<tr><td colspan="4">No Data Available</td></tr>';
+    document.getElementById('dwTableFoot').innerHTML = '';
+    document.getElementById('dwSummary').innerHTML = '';
+    Object.values(dwCharts).forEach(c => c && c.destroy());
+    return;
+  }
+  const latest = allData.reduce((a, b) => parseDMY(a.date) > parseDMY(b.date) ? a : b, allData[0]);
+  const latestDt = parseDMY(latest.date);
+  const year = latestDt.getFullYear(), month = latestDt.getMonth();
+  const daysInMonth = new Date(year, month + 1, 0).getDate();
+  const monthName = latestDt.toLocaleString('en-US', { month: 'long' });
+  document.getElementById('dwReportTitle').textContent = `Date Wise Issue Value Report (${monthName}-${year})`;
 
-if (!allData.length) {
-document.getElementById('dwTableBody').innerHTML = '<tr><td colspan="4">No Data Available</td></tr>';
-document.getElementById('dwTableFoot').innerHTML = '';
-document.getElementById('dwSummary').innerHTML = '';
-Object.values(dwCharts).forEach(c => c && c.destroy());
-return;
+  const dayMap = {};
+  allData.forEach(r => {
+    const dt = parseDMY(r.date);
+    if (dt.getFullYear() === year && dt.getMonth() === month) {
+      if (!dayMap[r.date]) dayMap[r.date] = { amount: 0, remarks: new Set() };
+      dayMap[r.date].amount += r.amount || 0;
+      if (r.remarks) dayMap[r.date].remarks.add(r.remarks);
+    }
+  });
+
+  const rows = [];
+  for (let d = 1; d <= daysInMonth; d++) {
+    const dateStr = `${String(d).padStart(2, '0')}-${String(month + 1).padStart(2, '0')}-${year}`;
+    const entry = dayMap[dateStr];
+    rows.push({ sn: d, date: dateStr, value: entry ? entry.amount : null, remarks: entry ? [...entry.remarks].join('; ') : '' });
+  }
+
+  const grandTotal = rows.reduce((s, r) => s + (r.value || 0), 0);
+  const daysWithData = rows.filter(r => r.value).length;
+  const avgPerDay = daysWithData ? grandTotal / daysWithData : 0;
+
+  document.getElementById('dwTableBody').innerHTML = rows.map(r => `
+    <tr class="${r.value ? '' : 'dw-empty-row'}">
+      <td>${r.sn}</td><td class="dw-left">${formatDMYShort(r.date)}</td>
+      <td class="dw-right">${r.value ? r.value.toLocaleString('en-US', { maximumFractionDigits: 2 }) : ''}</td>
+      <td class="dw-left">${r.remarks}</td>
+    </tr>`).join('');
+  document.getElementById('dwTableFoot').innerHTML = `<tr class="dw-total-row"><td colspan="2">Total</td><td class="dw-right">${grandTotal.toLocaleString('en-US', { maximumFractionDigits: 2 })}</td><td></td></tr>`;
+
+  Object.values(dwCharts).forEach(c => c && c.destroy());
+
+  dwCharts.bar = new Chart(document.getElementById('dwBarChart'), {
+    type: 'bar',
+    data: { labels: rows.map(r => formatDMYShort(r.date)), datasets: [{ label: 'Value (TK)', data: rows.map(r => r.value || 0), backgroundColor: '#84cc16', borderRadius: 4 }] },
+    options: {
+      responsive: true, maintainAspectRatio: false, layout: { padding: { top: 22 } },
+      plugins: { legend: { display: false }, datalabels: { display: ctx => ctx.dataset.data[ctx.dataIndex] > 0, anchor: 'end', align: 'end', color: textColor, font: { size: 8, weight: 'bold' }, rotation: -60, formatter: v => '৳' + v.toLocaleString('en-US', { notation: 'compact', maximumFractionDigits: 1 }) } },
+      scales: { x: { grid: { display: false }, ticks: { color: textColor, maxRotation: 60, font: { size: 8 } } }, y: { grid: { color: gridColor }, ticks: { color: textColor, callback: v => '৳' + v.toLocaleString('en-US', { notation: 'compact' }) } } }
+    }
+  });
+
+  const piePalette = ['#38bdf8','#22c55e','#f59e0b','#a855f7','#ef4444','#14b8a6','#eab308','#6366f1','#ec4899','#84cc16','#0ea5e9','#f97316','#4ade80','#fb7185','#c084fc','#facc15','#2dd4bf','#818cf8','#fdba74','#a3e635'];
+  const pieRows = rows.filter(r => r.value);
+  dwCharts.pie = new Chart(document.getElementById('dwPieChart'), {
+    type: 'pie',
+    data: { labels: pieRows.length ? pieRows.map(r => formatDMYShort(r.date)) : ['No Data'], datasets: [{ data: pieRows.length ? pieRows.map(r => r.value) : [1], backgroundColor: piePalette, borderWidth: 1, borderColor: isDark ? '#1e293b' : '#fff' }] },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: {
+        legend: { position: 'right', labels: { color: textColor, font: { size: 9 }, boxWidth: 10 } },
+        datalabels: { display: pieRows.length > 0, color: '#fff', textStrokeColor: 'rgba(0,0,0,0.65)', textStrokeWidth: 2, anchor: 'center', align: 'center', clamp: true, clip: false, font: { size: 8, weight: 'bold' }, formatter: (value, ctx) => { const total = pieRows.reduce((a, b) => a + b.value, 0); const pct = total ? Math.round((value / total) * 100) : 0; return [ctx.chart.data.labels[ctx.dataIndex], pct + '%']; } }
+      }
+    }
+  });
+
+  document.getElementById('dwSummary').innerHTML = `
+    <div>Total Value of ${monthName}-${String(year).slice(-2)}<span>৳${grandTotal.toLocaleString('en-US', { maximumFractionDigits: 0 })}</span></div>
+    <div>Avg. Per Day Value<span>৳${avgPerDay.toLocaleString('en-US', { maximumFractionDigits: 0 })}</span></div>
+    <div>Days With Data<span>${daysWithData} / ${daysInMonth}</span></div>`;
 }
 
-const latest = allData.reduce((a, b) => (parseDMY(a.date) > parseDMY(b.date) ? a : b), allData[0]);
-const latestDt = parseDMY(latest.date);
-const year = latestDt.getFullYear(), month = latestDt.getMonth();
-const daysInMonth = new Date(year, month + 1, 0).getDate();
-const monthName = latestDt.toLocaleString('en-US', { month: 'long' });
-document.getElementById('dwReportTitle').textContent = `Date Wise Issue Value Report (${monthName}-${year})`;
+window.openDateWiseReport = function () { document.getElementById('dateWiseModal').classList.add('active'); renderDateWiseReport(); };
+window.closeDateWiseReport = function () { document.getElementById('dateWiseModal').classList.remove('active'); };
 
-const dayMap = {};
-allData.forEach(r => {
-const dt = parseDMY(r.date);
-if (dt.getFullYear() === year && dt.getMonth() === month) {
-if (!dayMap[r.date]) dayMap[r.date] = { amount: 0, remarks: new Set() };
-dayMap[r.date].amount += r.amount || 0;
-if (r.remarks) dayMap[r.date].remarks.add(r.remarks);
-}
-});
-
-const rows = [];
-for (let d = 1; d <= daysInMonth; d++) {
-const dateStr = `${String(d).padStart(2, '0')}-${String(month + 1).padStart(2, '0')}-${year}`;
-const entry = dayMap[dateStr];
-rows.push({ sn: d, date: dateStr, value: entry ? entry.amount : null, remarks: entry ? [...entry.remarks].join('; ') : '' });
-}
-
-const grandTotal = rows.reduce((s, r) => s + (r.value || 0), 0);
-const daysWithData = rows.filter(r => r.value).length;
-const avgPerDay = daysWithData ? grandTotal / daysWithData : 0;
-
-document.getElementById('dwTableBody').innerHTML = rows.map(r => `
-<tr class="${r.value ? '' : 'dw-empty-row'}">
-<td>${r.sn}</td>
-<td class="dw-left">${formatDMYShort(r.date)}</td>
-<td class="dw-right">${r.value ? r.value.toLocaleString('en-US', { maximumFractionDigits: 2 }) : ''}</td>
-<td class="dw-left">${r.remarks}</td>
-</tr>`).join('');
-document.getElementById('dwTableFoot').innerHTML = `<tr class="dw-total-row"><td colspan="2">Total</td><td class="dw-right">${grandTotal.toLocaleString('en-US', { maximumFractionDigits: 2 })}</td><td></td></tr>`;
-
-Object.values(dwCharts).forEach(c => c && c.destroy());
-
-const barLabels = rows.map(r => formatDMYShort(r.date));
-const barValues = rows.map(r => r.value || 0);
-
-dwCharts.bar = new Chart(document.getElementById('dwBarChart'), {
-type: 'bar',
-data: { labels: barLabels, datasets: [{ label: 'Value (TK)', data: barValues, backgroundColor: '#84cc16', borderRadius: 4 }] },
-options: {
-responsive: true, maintainAspectRatio: false,
-layout: { padding: { top: 22 } },
-plugins: {
-legend: { display: false },
-datalabels: {
-display: (ctx) => ctx.dataset.data[ctx.dataIndex] > 0,
-anchor: 'end',
-align: 'end',
-color: textColor,
-font: { size: 8, weight: 'bold' },
-rotation: -60,
-formatter: (v) => '৳' + v.toLocaleString('en-US', { notation: 'compact', maximumFractionDigits: 1 })
-}
-},
-scales: {
-x: { grid: { display: false }, ticks: { color: textColor, maxRotation: 60, font: { size: 8 } } },
-y: { grid: { color: gridColor }, ticks: { color: textColor, callback: v => '৳' + v.toLocaleString('en-US', { notation: 'compact' }) } }
-}
-}
-});
-
-const piePalette = ['#38bdf8', '#22c55e', '#f59e0b', '#a855f7', '#ef4444', '#14b8a6', '#eab308', '#6366f1', '#ec4899', '#84cc16', '#0ea5e9', '#f97316', '#4ade80', '#fb7185', '#c084fc', '#facc15', '#2dd4bf', '#818cf8', '#fdba74', '#a3e635'];
-const pieRows = rows.filter(r => r.value);
-const pieDataArr = pieRows.length ? pieRows.map(r => r.value) : [1];
-dwCharts.pie = new Chart(document.getElementById('dwPieChart'), {
-type: 'pie',
-data: {
-labels: pieRows.length ? pieRows.map(r => formatDMYShort(r.date)) : ['No Data'],
-datasets: [{ data: pieDataArr, backgroundColor: piePalette, borderWidth: 1, borderColor: isDark ? '#1e293b' : '#fff' }]
-},
-options: {
-responsive: true, maintainAspectRatio: false,
-plugins: {
-legend: { position: 'right', labels: { color: textColor, font: { size: 9 }, boxWidth: 10 } },
-datalabels: {
-display: pieRows.length > 0,
-color: '#fff',
-textStrokeColor: 'rgba(0,0,0,0.65)',
-textStrokeWidth: 2,
-anchor: 'center',
-align: 'center',
-clamp: true,
-clip: false,
-font: { size: 8, weight: 'bold' },
-formatter: (value, ctx) => {
-const total = pieDataArr.reduce((a, b) => a + b, 0);
-const pct = total ? Math.round((value / total) * 100) : 0;
-const label = ctx.chart.data.labels[ctx.dataIndex];
-return [label, pct + '%'];
-}
-}
-}
-}
-});
-
-document.getElementById('dwSummary').innerHTML = `
-<div>Total Value of ${monthName}-${String(year).slice(-2)}<span>৳${grandTotal.toLocaleString('en-US', { maximumFractionDigits: 0 })}</span></div>
-<div>Avg. Per Day Value<span>৳${avgPerDay.toLocaleString('en-US', { maximumFractionDigits: 0 })}</span></div>
-<div>Days With Data<span>${daysWithData} / ${daysInMonth}</span></div>
-`;
-}
-
-window.openDateWiseReport = function () {
-document.getElementById('dateWiseModal').classList.add('active');
-renderDateWiseReport();
-};
-
-window.closeDateWiseReport = function () {
-document.getElementById('dateWiseModal').classList.remove('active');
-};
-
+// ==================== TABLE ====================
 function renderTable() {
-const tbody = document.getElementById('tableBody');
-tbody.innerHTML = filteredData.slice(0, 500).map((r) => `
-<tr>
-<td>${r.sl}</td>
-<td>${r.date}</td>
-<td>${r.issuePurposed}</td>
-<td>${r.category}</td>
-<td>${r.reqsNo}</td>
-<td>${r.division}</td>
-<td>${r.department}</td>
-<td>${r.section}</td>
-<td>${r.requiredSection}</td>
-<td>${r.itemGroup}</td>
-<td>${r.uom}</td>
-<td style="max-width:300px;white-space:normal">${r.itemDescription}</td>
-<td>${r.itemCode}</td>
-<td style="text-align:center">${r.issueQty.toLocaleString()}</td>
-<td style="text-align:right">${r.rate.toLocaleString('en-US', { maximumFractionDigits: 2 })}</td>
-<td class="amount">৳${r.amount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
-<td>${r.issueId}</td>
-<td>${r.personName}</td>
-<td>${r.requiredFor}</td>
-<td>${r.remarks}</td>
-</tr>
-`).join('') + (filteredData.length > 500 ? `<tr><td colspan="20" style="text-align:center;color:var(--muted)">Showing first 500 of ${filteredData.length} rows</td></tr>` : '');
+  document.getElementById('tableBody').innerHTML = filteredData.slice(0, 500).map(r => `
+    <tr>
+      <td>${r.sl}</td><td>${r.date}</td><td>${r.issuePurposed}</td><td>${r.category}</td>
+      <td>${r.reqsNo}</td><td>${r.division}</td><td>${r.department}</td><td>${r.section}</td>
+      <td>${r.requiredSection}</td><td>${r.itemGroup}</td><td>${r.uom}</td>
+      <td style="max-width:300px;white-space:normal">${r.itemDescription}</td>
+      <td>${r.itemCode}</td>
+      <td style="text-align:center">${r.issueQty.toLocaleString()}</td>
+      <td style="text-align:right">${r.rate.toLocaleString('en-US', { maximumFractionDigits: 2 })}</td>
+      <td class="amount">৳${r.amount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
+      <td>${r.issueId}</td><td>${r.personName}</td><td>${r.requiredFor}</td><td>${r.remarks}</td>
+    </tr>`).join('') + (filteredData.length > 500 ? `<tr><td colspan="20" style="text-align:center;color:var(--muted)">Showing first 500 of ${filteredData.length} rows</td></tr>` : '');
 }
 
-window.exportToExcel = function() {
-const ws = XLSX.utils.json_to_sheet(filteredData.map(r => ({
-'SL': r.sl, 'Issue Date': r.date, 'Issue Purposed': r.issuePurposed, 'Category': r.category,
-'Reqs no': r.reqsNo, 'Division': r.division, 'Department': r.department, 'Section': r.section,
-'Required Section': r.requiredSection, 'Item Group': r.itemGroup, 'UOM': r.uom,
-'Item Description': r.itemDescription, 'Item Code': r.itemCode, 'Issue Qty': r.issueQty,
-'Rate(TK)': r.rate, 'Amount(TK)': r.amount, 'Issue id': r.issueId,
-'Name of Person': r.personName, 'Required For': r.requiredFor, 'Remarks': r.remarks
-})));
-const wb = XLSX.utils.book_new();
-XLSX.utils.book_append_sheet(wb, ws, 'Issue Data');
-XLSX.writeFile(wb, `GMS-General-Technical-MCD-${new Date().toISOString().slice(0, 10)}.xlsx`);
-showToast('✅ Excel exported!');
+// ==================== EXPORT EXCEL ====================
+window.exportToExcel = function () {
+  let XLSXLib;
+  try { XLSXLib = getXLSX(); } catch (e) { showToast(e.message, true); return; }
+  const ws = XLSXLib.utils.json_to_sheet(filteredData.map(r => ({
+    'SL': r.sl, 'Issue Date': r.date, 'Issue Purposed': r.issuePurposed, 'Category': r.category,
+    'Reqs no': r.reqsNo, 'Division': r.division, 'Department': r.department, 'Section': r.section,
+    'Required Section': r.requiredSection, 'Item Group': r.itemGroup, 'UOM': r.uom,
+    'Item Description': r.itemDescription, 'Item Code': r.itemCode, 'Issue Qty': r.issueQty,
+    'Rate(TK)': r.rate, 'Amount(TK)': r.amount, 'Issue id': r.issueId,
+    'Name of Person': r.personName, 'Required For': r.requiredFor, 'Remarks': r.remarks
+  })));
+  const wb = XLSXLib.utils.book_new();
+  XLSXLib.utils.book_append_sheet(wb, ws, 'Issue Data');
+  XLSXLib.writeFile(wb, `GMS-General-Technical-MCD-${new Date().toISOString().slice(0, 10)}.xlsx`);
+  showToast('✅ Excel exported!');
 };
 
-window.exportToPDF = function() {
-if (!filteredData.length) { showToast('কোনো ডেটা নেই, PDF বানানো যাবে না', true); return; }
-if (!window.jspdf) { showToast('PDF লাইব্রেরি লোড হয়নি, একটু পরে আবার চেষ্টা করুন', true); return; }
-
-showToast('🖨️ PDF তৈরি হচ্ছে...');
-
-const wasLight = document.body.classList.contains('light');
-if (!wasLight) {
-document.body.classList.add('light');
-renderCharts();
-}
-
-setTimeout(() => {
-try {
-buildAndSavePdf();
-} catch (err) {
-console.error(err);
-showToast('PDF তৈরি করতে সমস্যা হয়েছে: ' + err.message, true);
-} finally {
-if (!wasLight) {
-document.body.classList.remove('light');
-renderCharts();
-}
-}
-}, 300);
+// ==================== EXPORT PDF ====================
+window.exportToPDF = function () {
+  if (!filteredData.length) { showToast('কোনো ডেটা নেই', true); return; }
+  if (!window.jspdf) { showToast('PDF library লোড হয়নি', true); return; }
+  showToast('🖨️ PDF তৈরি হচ্ছে...');
+  const wasLight = document.body.classList.contains('light');
+  if (!wasLight) { document.body.classList.add('light'); renderCharts(); }
+  setTimeout(() => {
+    try { buildAndSavePdf(); }
+    catch (err) { console.error(err); showToast('PDF error: ' + err.message, true); }
+    finally { if (!wasLight) { document.body.classList.remove('light'); renderCharts(); } }
+  }, 300);
 };
 
 function buildAndSavePdf() {
-const { jsPDF } = window.jspdf;
-const pdf = new jsPDF({ orientation: 'landscape', unit: 'mm', format: 'a4' });
-const pageWidth = pdf.internal.pageSize.getWidth();
-const pageHeight = pdf.internal.pageSize.getHeight();
-const dateLabel = currentFilter.date || 'All Dates';
+  const { jsPDF } = window.jspdf;
+  const pdf = new jsPDF({ orientation: 'landscape', unit: 'mm', format: 'a4' });
+  const pageWidth = pdf.internal.pageSize.getWidth();
+  const pageHeight = pdf.internal.pageSize.getHeight();
+  const dateLabel = currentFilter.date || 'All Dates';
+  const totalAmount = filteredData.reduce((s, r) => s + r.amount, 0);
+  const totalQty = filteredData.reduce((s, r) => s + r.issueQty, 0);
+  const depts = new Set(filteredData.map(r => r.department).filter(Boolean)).size;
+  const cats = new Set(filteredData.map(r => r.category).filter(Boolean)).size;
+  const avg = filteredData.length ? totalAmount / filteredData.length : 0;
 
-const totalAmount = filteredData.reduce((s, r) => s + r.amount, 0);
-const totalQty = filteredData.reduce((s, r) => s + r.issueQty, 0);
-const depts = new Set(filteredData.map(r => r.department).filter(Boolean)).size;
-const cats = new Set(filteredData.map(r => r.category).filter(Boolean)).size;
-const avg = filteredData.length ? totalAmount / filteredData.length : 0;
+  function drawBrandHeader(title) {
+    pdf.setFillColor(31, 78, 120); pdf.rect(0, 0, pageWidth, 16, 'F');
+    pdf.setTextColor(255, 255, 255); pdf.setFont('helvetica', 'bold'); pdf.setFontSize(13);
+    pdf.text('GMS Textiles Ltd. — General Technical-MCD Daily Issue Report', pageWidth / 2, 7, { align: 'center' });
+    pdf.setFont('helvetica', 'normal'); pdf.setFontSize(9);
+    pdf.text(title, pageWidth / 2, 13, { align: 'center' });
+  }
 
-function drawBrandHeader(title) {
-pdf.setFillColor(31, 78, 120);
-pdf.rect(0, 0, pageWidth, 16, 'F');
-pdf.setTextColor(255, 255, 255);
-pdf.setFont('helvetica', 'bold');
-pdf.setFontSize(13);
-pdf.text('GMS Textiles Ltd. — General Technical-MCD Daily Issue Report', pageWidth / 2, 7, { align: 'center' });
-pdf.setFont('helvetica', 'normal');
-pdf.setFontSize(9);
-pdf.text(title, pageWidth / 2, 13, { align: 'center' });
+  drawBrandHeader(`Date: ${dateLabel}`);
+  pdf.setTextColor(55, 65, 81); pdf.setFont('helvetica', 'normal'); pdf.setFontSize(10);
+  pdf.text(`Total Amount: TK ${totalAmount.toLocaleString('en-US', { maximumFractionDigits: 0 })}   |   Items: ${filteredData.length}   |   Qty: ${totalQty.toLocaleString()}   |   Departments: ${depts}   |   Categories: ${cats}   |   Avg/Item: TK ${avg.toLocaleString('en-US', { maximumFractionDigits: 0 })}`, pageWidth / 2, 23, { align: 'center' });
+
+  const chartIds = ['categoryChart','sectionChart','divisionChart','issueIdChart','itemChart'];
+  const chartTitles = ['Category Wise','Required Section Wise','Division Wise','Issue ID Wise','Item Wise (Top 10)'];
+  const marginX = 10, gap = 8, startY = 30, chartH = 72;
+  const chartW = (pageWidth - marginX * 2 - gap * 2) / 3;
+  chartIds.forEach((id, i) => {
+    const canvas = document.getElementById(id);
+    if (!canvas) return;
+    const col = i % 3, row = Math.floor(i / 3);
+    const x = marginX + col * (chartW + gap), y = startY + row * (chartH + 10);
+    pdf.setFont('helvetica', 'bold'); pdf.setFontSize(9); pdf.setTextColor(31, 41, 55);
+    pdf.text(chartTitles[i], x, y - 2);
+    try { pdf.setDrawColor(220, 220, 220); pdf.rect(x, y, chartW, chartH); pdf.addImage(canvas.toDataURL('image/png', 1.0), 'PNG', x, y, chartW, chartH); } catch (e) { console.warn('Chart capture failed:', id, e); }
+  });
+  pdf.setFont('helvetica', 'normal'); pdf.setFontSize(8); pdf.setTextColor(150, 150, 150);
+  pdf.text('Page 1', pageWidth - 10, pageHeight - 6, { align: 'right' });
+
+  pdf.addPage();
+  const head = [['SL','Date','Issue Purposed','Category','Reqs No','Division','Department','Section','Required Section','Item Group','UOM','Item Description','Item Code','Qty','Rate','Amount (TK)','Issue ID','Name of Person','Required For','Remarks']];
+  const body = filteredData.map(r => [r.sl,r.date,r.issuePurposed,r.category,r.reqsNo,r.division,r.department,r.section,r.requiredSection,r.itemGroup,r.uom,r.itemDescription,r.itemCode,r.issueQty.toLocaleString(),r.rate.toLocaleString('en-US',{maximumFractionDigits:2}),r.amount.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2}),r.issueId,r.personName,r.requiredFor,r.remarks]);
+  pdf.autoTable({ head, body, startY: 20, margin: { left: 4, right: 4, top: 18 }, styles: { fontSize: 5.5, cellPadding: 1.1, valign: 'middle', overflow: 'linebreak' }, headStyles: { fillColor: [48, 84, 150], textColor: 255, fontStyle: 'bold', halign: 'center', fontSize: 6 }, alternateRowStyles: { fillColor: [242, 246, 252] }, columnStyles: { 0: { cellWidth: 7, halign: 'center' }, 13: { halign: 'right' }, 14: { halign: 'right' }, 15: { halign: 'right' } }, didDrawPage: () => { drawBrandHeader(`Detailed Data — ${dateLabel}  (${filteredData.length} rows)`); pdf.setFont('helvetica','normal'); pdf.setFontSize(8); pdf.setTextColor(150,150,150); pdf.text(`Page ${pdf.internal.getCurrentPageInfo().pageNumber}`, pageWidth - 10, pageHeight - 6, { align: 'right' }); } });
+  pdf.save(`GMS-General-Technical-MCD-${dateLabel}.pdf`);
+  showToast('✅ PDF Downloaded!');
 }
 
-// ---- Page 1: summary + charts (3 columns x 2 rows grid) ----
-drawBrandHeader(`Date: ${dateLabel}`);
-
-pdf.setTextColor(55, 65, 81);
-pdf.setFont('helvetica', 'normal');
-pdf.setFontSize(10);
-pdf.text(
-`Total Amount: TK ${totalAmount.toLocaleString('en-US', { maximumFractionDigits: 0 })}   |   Items: ${filteredData.length}   |   Qty: ${totalQty.toLocaleString('en-US', { maximumFractionDigits: 0 })}   |   Departments: ${depts}   |   Categories: ${cats}   |   Avg/Item: TK ${avg.toLocaleString('en-US', { maximumFractionDigits: 0 })}`,
-pageWidth / 2, 23, { align: 'center' }
-);
-
-const chartIds = ['categoryChart', 'sectionChart', 'divisionChart', 'issueIdChart', 'itemChart'];
-const chartTitles = ['Category Wise', 'Required Section Wise', 'Division Wise', 'Issue ID Wise', 'Item Wise (Top 10)'];
-const marginX = 10, gap = 8, startY = 30, chartH = 72;
-const chartW = (pageWidth - marginX * 2 - gap * 2) / 3;
-
-chartIds.forEach((id, i) => {
-const canvas = document.getElementById(id);
-if (!canvas) return;
-const col = i % 3;
-const row = Math.floor(i / 3);
-const x = marginX + col * (chartW + gap);
-const y = startY + row * (chartH + 10);
-
-pdf.setFont('helvetica', 'bold');
-pdf.setFontSize(9);
-pdf.setTextColor(31, 41, 55);
-pdf.text(chartTitles[i], x, y - 2);
-
-try {
-const dataUrl = canvas.toDataURL('image/png', 1.0);
-pdf.setDrawColor(220, 220, 220);
-pdf.rect(x, y, chartW, chartH);
-pdf.addImage(dataUrl, 'PNG', x, y, chartW, chartH);
-} catch (e) {
-console.warn('Chart image capture failed for', id, e);
-}
-});
-
-pdf.setFont('helvetica', 'normal');
-pdf.setFontSize(8);
-pdf.setTextColor(150, 150, 150);
-pdf.text('Page 1', pageWidth - 10, pageHeight - 6, { align: 'right' });
-
-// ---- Page 2+: full detailed data table (ALL rows, auto-paginated) ----
-pdf.addPage();
-
-const head = [[
-'SL', 'Date', 'Issue Purposed', 'Category', 'Reqs No', 'Division', 'Department', 'Section',
-'Required Section', 'Item Group', 'UOM', 'Item Description', 'Item Code', 'Qty', 'Rate',
-'Amount (TK)', 'Issue ID', 'Name of Person', 'Required For', 'Remarks',
-]];
-const body = filteredData.map(r => [
-r.sl, r.date, r.issuePurposed, r.category, r.reqsNo, r.division, r.department, r.section,
-r.requiredSection, r.itemGroup, r.uom, r.itemDescription, r.itemCode,
-r.issueQty.toLocaleString('en-US'), r.rate.toLocaleString('en-US', { maximumFractionDigits: 2 }),
-r.amount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }),
-r.issueId, r.personName, r.requiredFor, r.remarks,
-]);
-
-pdf.autoTable({
-head, body,
-startY: 20,
-margin: { left: 4, right: 4, top: 18 },
-styles: { fontSize: 5.5, cellPadding: 1.1, valign: 'middle', overflow: 'linebreak' },
-headStyles: { fillColor: [48, 84, 150], textColor: 255, fontStyle: 'bold', halign: 'center', fontSize: 6 },
-alternateRowStyles: { fillColor: [242, 246, 252] },
-columnStyles: { 0: { cellWidth: 7, halign: 'center' }, 13: { halign: 'right' }, 14: { halign: 'right' }, 15: { halign: 'right' } },
-didDrawPage: () => {
-drawBrandHeader(`Detailed Data — ${dateLabel}  (${filteredData.length} rows)`);
-pdf.setFont('helvetica', 'normal');
-pdf.setFontSize(8);
-pdf.setTextColor(150, 150, 150);
-pdf.text(`Page ${pdf.internal.getCurrentPageInfo().pageNumber}`, pageWidth - 10, pageHeight - 6, { align: 'right' });
-},
-});
-
-pdf.save(`GMS-General-Technical-MCD-${dateLabel}.pdf`);
-showToast('✅ PDF Downloaded!');
-}
-
+// ==================== TOAST ====================
 function showToast(msg, error = false) {
-const t = document.createElement('div');
-t.className = 'toast' + (error ? ' error' : '');
-t.innerText = msg;
-document.body.appendChild(t);
-setTimeout(() => t.remove(), 3000);
+  const t = document.createElement('div');
+  t.className = 'toast' + (error ? ' error' : '');
+  t.innerText = msg;
+  document.body.appendChild(t);
+  setTimeout(() => t.remove(), 3000);
 }
 window.showToast = showToast;
 
-console.log('%c═══════════════════════════════════════════', 'color: #22c55e; font-weight: bold;');
-console.log('%c  📊 GENERAL TECHNICAL-MCD DAILY REPORT - READY', 'color: #22c55e; font-weight: bold; font-size: 14px;');
-console.log('%c═══════════════════════════════════════════', 'color: #22c55e; font-weight: bold;');
-console.log('%c  ✅ 20-column Issue Data structure', 'color: #3b82f6;');
-console.log('%c  ✅ Dynamic category filter buttons (top 8 by value)', 'color: #3b82f6;');
-console.log('%c  ✅ Default view = latest date only (no cross-date grand total)', 'color: #22c55e;');
-console.log('%c  ✅ Rolling 30-day auto-expiry (per row)', 'color: #8b5cf6;');
-console.log('%c  ✅ Date sorting fixed: chronological (YYYY-MM-DD) instead of raw text compare', 'color: #ef4444;');
-console.log('%c═══════════════════════════════════════════', 'color: #22c55e; font-weight: bold;');
 </script>
 </body>
 </html>
