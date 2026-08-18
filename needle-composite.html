@@ -103,6 +103,11 @@ body.light .carry-source-bar{background:#dbeafe;color:#1e40af;border-color:#3b82
 body.light .autosave-pill{background:#ecfdf5;color:#047857;border-color:#10b981}
 .autosave-dot{width:6px;height:6px;border-radius:50%;background:#34d399;animation:pulseDot 1.4s infinite}
 @keyframes pulseDot{0%,100%{opacity:1}50%{opacity:.3}}
+/* ✅ NEW: Print-only signature block (Prepared By / Checked By / Authorised By) */
+.printSignature{display:none}
+.printSignature .sigBox{flex:1;text-align:center;padding-top:46px}
+.printSignature .sigLine{border-top:1.5px solid #000;width:82%;margin:0 auto}
+.printSignature .sigLabel{margin-top:4px;font-weight:700;font-size:11px;letter-spacing:0.5px;color:#000}
 @media(max-width:480px){
   body{padding:1px}
   h2{font-size:11px;margin:2px 0 3px}
@@ -137,6 +142,8 @@ body.light .autosave-pill{background:#ecfdf5;color:#047857;border-color:#10b981}
   #reportTable,#summaryTable{width:100%!important;color:black!important;background:white!important}
   #reportTable th,#reportTable td{font-size:8px;padding:2px}
   #negativePopup,#reqPopup,#transferPopup,#reportPopup,#reqSearchPopup,#addRowPopup,#allExcelPopup{display:none!important}
+  /* ✅ NEW: show the Prepared/Checked/Authorised By block only when printing */
+  .printSignature{display:flex!important;justify-content:space-between;gap:10px;margin-top:16px;page-break-inside:avoid}
 }
 </style>
 </head>
@@ -291,6 +298,13 @@ body.light .autosave-pill{background:#ecfdf5;color:#047857;border-color:#10b981}
 </tr>
 </tbody>
 </table>
+</div>
+
+<!-- ✅ NEW: Prepared By / Checked By / Authorised By — shown only when printing (Ctrl+P / PDF button) -->
+<div class="printSignature" id="printSignature">
+  <div class="sigBox"><div class="sigLine"></div><div class="sigLabel">PREPARED BY</div></div>
+  <div class="sigBox"><div class="sigLine"></div><div class="sigLabel">CHECKED BY</div></div>
+  <div class="sigBox"><div class="sigLine"></div><div class="sigLabel">AUTHORISED BY</div></div>
 </div>
 
 <!-- NEGATIVE POPUP -->
@@ -2023,7 +2037,29 @@ function exportExcel(){
   const category = floor.includes('_NEW') ? 'NEW' : (floor.includes('_RUNNING') ? 'RUNNING' : '-');
 
   let html = `
-  <html><head><meta charset="UTF-8"></head><body>
+  <html><head><meta charset="UTF-8">
+  <!--[if gte mso 9]><xml>
+    <x:ExcelWorkbook><x:ExcelWorksheets><x:ExcelWorksheet>
+      <x:Name>${(floor||'Sheet1').split('(')[0].trim().substring(0,28)}</x:Name>
+      <x:WorksheetOptions>
+        <x:PageSetup>
+          <x:Layout x:Orientation="Landscape"/>
+          <x:Header x:Margin="0.2"/>
+          <x:Footer x:Margin="0.2"/>
+          <x:PageMargins x:Bottom="0.3" x:Left="0.2" x:Right="0.2" x:Top="0.3"/>
+        </x:PageSetup>
+        <x:FitToPage/>
+        <x:Print>
+          <x:FitWidth>1</x:FitWidth>
+          <x:FitHeight>0</x:FitHeight>
+          <x:ValidPrinterInfo/>
+        </x:Print>
+        <x:Selected/>
+        <x:DoNotDisplayGridlines/>
+      </x:WorksheetOptions>
+    </x:ExcelWorksheet></x:ExcelWorksheets></x:ExcelWorkbook>
+  </xml><![endif]-->
+  </head><body>
   <table border="1" style="border-collapse:collapse;font-family:Arial,sans-serif">
     <tr>
       <td colspan="8" rowspan="2" style="text-align:center;font-size:18px;font-weight:bold;padding:8px;border:none;text-decoration:underline;vertical-align:middle">${COMPANY_NAME}<br>
@@ -2085,7 +2121,33 @@ function exportExcel(){
   <td style="border:1px solid #000;padding:4px;text-align:center">${document.getElementById('totalDelivery').innerText}</td>
   <td style="border:1px solid #000;padding:4px;text-align:center">${document.getElementById('totalPresent').innerText}</td>
   <td style="border:1px solid #000;padding:4px;text-align:center">${document.getElementById('totalBN').innerText}</td>
-  <td style="border:1px solid #000;padding:4px"></td></tr>
+  <td style="border:1px solid #000;padding:4px"></td></tr>`;
+
+  // ✅ NEW: Prepared By / Checked By / Authorised By — signature footer
+  // (blank spacer rows first, matching the space shown in the reference screenshot,
+  //  then a signature line row, then the label row — all colspans add up to 13
+  //  columns so it always fits the sheet width even if some columns are later
+  //  hidden/deleted in Excel).
+  html+=`
+  <tr><td colspan="13" style="border:none;padding:10px 2px 2px"></td></tr>
+  <tr><td colspan="13" style="border:none;padding:0"></td></tr>
+  <tr><td colspan="13" style="border:none;padding:0"></td></tr>
+  <tr><td colspan="13" style="border:none;padding:0"></td></tr>
+  <tr><td colspan="13" style="border:none;padding:0"></td></tr>
+  <tr>
+    <td colspan="4" style="border:none;border-top:1.5px solid #000;padding:2px"></td>
+    <td style="border:none"></td>
+    <td colspan="4" style="border:none;border-top:1.5px solid #000;padding:2px"></td>
+    <td style="border:none"></td>
+    <td colspan="3" style="border:none;border-top:1.5px solid #000;padding:2px"></td>
+  </tr>
+  <tr>
+    <td colspan="4" style="border:none;text-align:center;font-weight:bold;font-size:11px;padding:2px">PREPARED BY</td>
+    <td style="border:none"></td>
+    <td colspan="4" style="border:none;text-align:center;font-weight:bold;font-size:11px;padding:2px">CHECKED BY</td>
+    <td style="border:none"></td>
+    <td colspan="3" style="border:none;text-align:center;font-weight:bold;font-size:11px;padding:2px">AUTHORISED BY</td>
+  </tr>
   </table></body></html>`;
 
   const blob=new Blob([html],{type:'application/vnd.ms-excel'});
@@ -2248,6 +2310,59 @@ function styleTotalRow(row){
   row.height = 20;
 }
 
+// ✅ NEW: Prepared By / Checked By / Authorised By signature footer for ExcelJS sheets.
+// Leaves real signing space (blank rows) above a clean signature line, then centers
+// the three labels underneath — matching the reference layout, and automatically
+// adapts to however many columns the sheet has (so it stays centered/fit even if
+// columns are later hidden or deleted in Excel).
+function addSignatureFooter(ws, colCount){
+  // spacer rows — actual room for a pen signature (matches the gap in the reference sheet)
+  for(let i=0;i<5;i++) ws.addRow([]);
+
+  const gap = 1;
+  const usable = colCount - gap*2;
+  const seg1 = Math.max(2, Math.ceil(usable/3));
+  const seg3 = Math.max(2, Math.ceil((usable-seg1)/2));
+  const seg2 = Math.max(2, usable - seg1 - seg3);
+
+  const seg1Start = 1, seg1End = seg1;
+  const seg2Start = seg1End + gap + 1, seg2End = seg2Start + seg2 - 1;
+  const seg3Start = seg2End + gap + 1, seg3End = Math.max(seg3Start, colCount);
+
+  const lineRow = ws.addRow([]);
+  applyBorderToRange(ws, lineRow.number, seg1Start, lineRow.number, seg1End, {top:{style:'medium',color:{argb:XLSX_COLORS.black}}});
+  applyBorderToRange(ws, lineRow.number, seg2Start, lineRow.number, seg2End, {top:{style:'medium',color:{argb:XLSX_COLORS.black}}});
+  applyBorderToRange(ws, lineRow.number, seg3Start, lineRow.number, seg3End, {top:{style:'medium',color:{argb:XLSX_COLORS.black}}});
+
+  const labelRow = ws.addRow([]);
+  labelRow.height = 18;
+  const labels = [
+    {s:seg1Start, e:seg1End, text:'PREPARED BY'},
+    {s:seg2Start, e:seg2End, text:'CHECKED BY'},
+    {s:seg3Start, e:seg3End, text:'AUTHORISED BY'}
+  ];
+  labels.forEach(({s,e,text})=>{
+    if(e>s) ws.mergeCells(labelRow.number, s, labelRow.number, e);
+    const cell = ws.getCell(labelRow.number, s);
+    cell.value = text;
+    cell.font = { name:'Calibri', size:10.5, bold:true, color:{argb:XLSX_COLORS.navyDk} };
+    cell.alignment = { horizontal:'center' };
+  });
+}
+
+// ✅ NEW: Fit-to-page print setup so the sheet always prints/fits on one page width,
+// even after columns get hidden or deleted in Excel later.
+function applyPrintPageSetup(ws){
+  ws.pageSetup = {
+    orientation: 'landscape',
+    fitToPage: true,
+    fitToWidth: 1,
+    fitToHeight: 0,
+    margins: { left:0.25, right:0.25, top:0.3, bottom:0.3, header:0.1, footer:0.1 },
+    horizontalCentered: true
+  };
+}
+
 async function loadExcelJS(){
   if(typeof ExcelJS !== 'undefined') return;
   showToast('📦 Excel engine loading...');
@@ -2341,6 +2456,7 @@ async function exportAllFloorsExcel(){
     // ---------- SUMMARY SHEET ----------
     const summaryColCount = 10;
     const wsSummary = wb.addWorksheet('SUMMARY', { views:[{state:'frozen', ySplit:7}] });
+    applyPrintPageSetup(wsSummary);
     styleLetterheadSheet(wsSummary, summaryColCount, `📅 Date: ${date}`, '', 'All Floors', `Generated: ${new Date().toLocaleString()}`);
     wsSummary.addRow([]); // row 6 spacer
     const summaryHeader = wsSummary.addRow(['SL','FLOOR NAME','CATEGORY','PREVIOUS','RECEIVED','DELIVERY','PRESENT BALANCE','BNR/BNF','ITEMS','DATA SOURCE']);
@@ -2411,6 +2527,9 @@ async function exportAllFloorsExcel(){
     styleTotalRow(summaryTotalRow);
     wsSummary.mergeCells(summaryTotalRow.number, 2, summaryTotalRow.number, 3);
 
+    // ✅ NEW: Prepared By / Checked By / Authorised By footer on the SUMMARY sheet
+    addSignatureFooter(wsSummary, summaryColCount);
+
     wsSummary.columns = [
       {width:5},{width:44},{width:11},{width:11},{width:11},{width:11},{width:16},{width:11},{width:8},{width:22}
     ];
@@ -2438,6 +2557,7 @@ async function exportAllFloorsExcel(){
       usedSheetNames.add(uniqueName);
 
       const ws = wb.addWorksheet(uniqueName, { views:[{state:'frozen', ySplit:6}] });
+      applyPrintPageSetup(ws);
 
       let operatorName = '-';
       let dataSource = '';
@@ -2497,6 +2617,9 @@ async function exportAllFloorsExcel(){
 
       const totalRow = ws.addRow(['','','','','','TOTAL →', tPrev, tRcvd, '', tDvld, tPresent, tBN, '', '']);
       styleTotalRow(totalRow);
+
+      // ✅ NEW: Prepared By / Checked By / Authorised By footer on every floor sheet
+      addSignatureFooter(ws, colCount);
 
       ws.columns = [
         {width:5},{width:11},{width:22},{width:8},{width:14},{width:11},
